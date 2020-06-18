@@ -1,0 +1,16 @@
+# Sponsored by the Event Delivery WG
+# At least one WG lead from https://github.com/knative/community/blob/master/working-groups/WORKING-GROUPS.md#event-delivery
+# must be in the "approvers" list.
+approvers:
+- Harwayne
+- matzew
+# Also including TOC members as backup:
+- evankanderson
+- grantr
+- markusthoemmes
+- mattmoor
+- tcnghia
+
+reviewers:
+- Harwayne
+- matzew
