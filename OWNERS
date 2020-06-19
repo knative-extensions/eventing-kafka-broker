@@ -4,6 +4,7 @@
 approvers:
 - Harwayne
 - matzew
+- slinkydeveloper
 # Also including TOC members as backup:
 - evankanderson
 - grantr
@@ -14,3 +15,5 @@ approvers:
 reviewers:
 - Harwayne
 - matzew
+- slinkydeveloper
+- pierDipi
