@@ -1,0 +1,40 @@
+syntax = 'proto3';
+
+option go_package = "knative.dev/eventing-kafka-broker/pkg/core/config";
+option java_package = "dev.knative.eventing.kafka.broker.core.config";
+option java_outer_classname = "BrokersConfig";
+
+message Trigger {
+
+  // attributes filters events by exact match on event context attributes.
+  // Each key in the map is compared with the equivalent key in the event
+  // context. An event passes the filter if all values are equal to the
+  // specified values.
+  //
+  // Nested context attributes are not supported as keys. Only string values are supported.
+  map<string, string> attributes = 1;
+
+  // destination is the address that receives events from the Broker that pass the Filter.
+  string destination = 2;
+
+  // trigger identifier
+  string id = 3;
+}
+
+message Broker {
+
+  string id = 1;
+
+  // the Kafka topic to consume.
+  string topic = 2;
+
+  // dead letter sink URI
+  string deadLetterSink = 3;
+
+  // triggers associated with the broker
+  repeated Trigger triggers = 4;
+}
+
+message Brokers {
+  repeated Broker broker = 1;
+}

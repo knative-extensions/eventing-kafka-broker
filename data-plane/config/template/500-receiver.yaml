@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-broker-receiver
+  namespace: knative-eventing
+  labels:
+    app: kafka-broker-receiver
+    eventing.knative.dev/release: devel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-broker-receiver
+  template:
+    metadata:
+      name: kafka-broker-receiver
+      labels:
+        app: kafka-broker-receiver
+        eventing.knative.dev/release: devel
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+      containers:
+        - name: kafka-broker-receiver
+          image: ${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /etc/config
+              name: config-kafka-broker-receiver
+              readOnly: true
+            - mountPath: /tmp
+              name: cache
+          env:
+            - name: INGRESS_PORT
+              value: "8080"
+            - name: PRODUCER_CONFIG_FILE_PATH
+              value: /etc/config/config-kafka-broker-producer.properties
+            - name: LIVENESS_PROBE_PATH
+              value: /healthz
+            - name: READINESS_PROBE_PATH
+              value: /readyz
+          command:
+            - "java"
+          # TODO add JVM arguments
+          args:
+            - "-jar"
+            - "/app/app.jar"
+          # TODO set resources (limits and requests)
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              port: 8080
+              path: /healthz
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+          # TODO check kafka reachability
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              port: 8080
+              path: /readyz
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+          terminationMessagePolicy: FallbackToLogsOnError
+          terminationMessagePath: /dev/temination-log
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+      volumes:
+        - name: config-kafka-broker-receiver
+          configMap:
+            name: config-kafka-broker-receiver
+        - name: cache
+          emptyDir: {}
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-broker-ingress
+  namespace: knative-eventing
+spec:
+  selector:
+    app: kafka-broker-receiver
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+  type: NodePort

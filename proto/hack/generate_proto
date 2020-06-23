@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+DATA_PLANE_OUTPUT_DIR=./data-plane/generated/src/main/java
+
+rm -r $DATA_PLANE_OUTPUT_DIR
+mkdir -p $DATA_PLANE_OUTPUT_DIR
+docker run --rm -u "$(id -u)" -v "${PWD}":"${PWD}" -w "${PWD}" jaegertracing/protobuf:latest \
+  --proto_path="${PWD}" \
+  --java_out=$DATA_PLANE_OUTPUT_DIR \
+  "${PWD}"/proto/def/*

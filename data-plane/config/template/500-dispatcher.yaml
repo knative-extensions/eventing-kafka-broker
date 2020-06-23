@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-broker-dispatcher
+  namespace: knative-eventing
+  labels:
+    app: kafka-broker-dispatcher
+    eventing.knative.dev/release: devel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-broker-dispatcher
+  template:
+    metadata:
+      name: kafka-broker-dispatcher
+      labels:
+        app: kafka-broker-dispatcher
+        eventing.knative.dev/release: devel
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+      containers:
+        - name: kafka-broker-dispatcher
+          image: ${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /etc/config
+              name: config-kafka-broker-dispatcher
+              readOnly: true
+            - mountPath: /etc/brokers-triggers
+              name: kafka-broker-brokers-triggers
+              readOnly: true
+            - mountPath: /tmp
+              name: cache
+          env:
+            - name: PRODUCER_CONFIG_FILE_PATH
+              value: /etc/config/config-kafka-broker-producer.properties
+            - name: CONSUMER_CONFIG_FILE_PATH
+              value: /etc/config/config-kafka-broker-consumer.properties
+            - name: BROKERS_TRIGGERS_PATH
+              value: /etc/brokers-triggers/data
+            - name: BROKERS_INITIAL_CAPACITY
+              value: "100"
+            - name: TRIGGERS_INITIAL_CAPACITY
+              value: "20"
+          command:
+            - "java"
+          # TODO add JVM arguments
+          args:
+            - "-jar"
+            - "/app/app.jar"
+          terminationMessagePolicy: FallbackToLogsOnError
+          terminationMessagePath: /dev/temination-log
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+      volumes:
+        - name: config-kafka-broker-dispatcher
+          configMap:
+            name: config-kafka-broker-dispatcher
+        - name: kafka-broker-brokers-triggers
+          configMap:
+            name: kafka-broker-brokers-triggers
+        - name: cache
+          emptyDir: {}
+      restartPolicy: Always

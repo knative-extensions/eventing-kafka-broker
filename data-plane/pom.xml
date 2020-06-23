@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>dev.knative.eventing.kafka.broker</groupId>
+  <artifactId>data-plane</artifactId>
+  <packaging>pom</packaging>
+  <version>1.0-SNAPSHOT</version>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <java.version>14</java.version>
+    <!-- dependencies version -->
+    <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
+    <maven.surefire.plugin.version>3.0.0-M5</maven.surefire.plugin.version>
+    <junit.jupiter.version>5.6.2</junit.jupiter.version>
+    <junit.platform.version>1.6.2</junit.platform.version>
+    <mokito.junit.jupiter.version>3.3.3</mokito.junit.jupiter.version>
+    <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
+    <maven.checkstyle.plugin.version>3.1.1</maven.checkstyle.plugin.version>
+    <jacoco.plugin.version>0.8.5</jacoco.plugin.version>
+    <!-- vertx version should be aligned with cloud events SDK -->
+    <vertx.version>3.9.1</vertx.version>
+    <cloudevents.sdk.version>2.0.0-SNAPSHOT</cloudevents.sdk.version>
+    <assertj.version>3.16.1</assertj.version>
+    <protobuf.version>3.12.2</protobuf.version>
+    <build.helper.maven.plugin.version>3.1.0</build.helper.maven.plugin.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-stack-depchain</artifactId>
+        <version>${vertx.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <modules>
+    <module>core</module>
+    <module>receiver</module>
+    <module>dispatcher</module>
+    <module>generated</module>
+  </modules>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler.plugin.version}</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven.surefire.plugin.version}</version>
+        <configuration>
+          <argLine>${argLine}</argLine>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>${maven.checkstyle.plugin.version}</version>
+        <configuration>
+          <configLocation>google_checks.xml</configLocation>
+          <encoding>UTF-8</encoding>
+          <consoleOutput>true</consoleOutput>
+          <failsOnError>true</failsOnError>
+          <failOnViolation>true</failOnViolation>
+          <violationSeverity>warning</violationSeverity>
+          <linkXRef>false</linkXRef>
+          <suppressionsLocation>${user.dir}/checkstyle/suppression.xml</suppressionsLocation>
+        </configuration>
+        <executions>
+          <execution>
+            <id>validate</id>
+            <phase>package</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.plugin.version}</version>
+        <configuration>
+          <excludes>**/proto/**</excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <reportSets>
+          <reportSet>
+            <reports>
+              <report>report</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+      </plugin>
+    </plugins>
+  </reporting>
+
+  <repositories>
+    <repository>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+      <id>sonatype</id>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>io.cloudevents</groupId>
+      <artifactId>cloudevents-http-vertx</artifactId>
+      <version>${cloudevents.sdk.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.cloudevents</groupId>
+      <artifactId>cloudevents-kafka</artifactId>
+      <version>${cloudevents.sdk.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.cloudevents</groupId>
+      <artifactId>cloudevents-json-jackson</artifactId>
+      <version>${cloudevents.sdk.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-kafka-client</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-circuit-breaker</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-config</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-junit5</artifactId>
+      <version>${vertx.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>${protobuf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java-util</artifactId>
+      <version>${protobuf.version}</version>
+    </dependency>
+
+    <!-- TODO(pierDipi) structured logging  -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.30</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${mokito.junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${assertj.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+</project>
