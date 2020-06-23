@@ -21,39 +21,23 @@
 # Use the flags --build-tests, --unit-tests and --integration-tests
 # to run a specific set of tests.
 
-# Prefer sockpuppet over markdown presubmit checks, as it will correct
-# markdown issues with less human involvement.
-
-#
-## We use the default build, unit and integration test runners.
-#
-#main $@
-
-./proto/hack/generate_proto
-
-export DISABLE_MD_LINTING=1
 export GO111MODULE=on
 
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/presubmit-tests.sh
 source $(dirname $0)/data-plane/library.sh
 
-if [ "$1" == "--unit-tests" ]; then
-  header "Running data-plane unit tests"
-  if data_plane_unit_tests; then
-    exit $?
-  fi
-fi
+./proto/hack/generate_proto
 
-if [ "$1" == "--build-tests" ]; then
+function build_tests() {
   header "Running data-plane build tests"
-  if data_plane_build_tests; then
-    exit $?
-  fi
-fi
+  data_plane_build_tests
+  return $?
+}
 
-# TODO enable for e2e tests
-#./test/kafka/kafka_setup.sh
+function unit_tests() {
+  header "Running data-plane unit tests"
+  data_plane_unit_tests
+  return $?
+}
 
-# We use the default build, unit and integration test runners for the control-plane.
-# TODO enable control-plane tests
-#main $@
+main $@
