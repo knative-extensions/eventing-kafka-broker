@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-kafka-broker-receiver
+  namespace: knative-eventing
+data:
+  config-kafka-broker-producer.properties: |
+    bootstrap.servers=my-cluster-kafka-bootstrap.kafka:9092
+    # key.serializer=org.apache.kafka.common.serialization.StringSerializer
+    # value.serializer=org.apache.kafka.common.serialization.StringSerializer
+    acks=1
+    buffer.memory=33554432
+    compression.type=snappy
+    retries=2147483647
+    batch.size=16384
+    client.dns.lookup=use_all_dns_ips
+    client.id=KKBR # Knative Kafka Broker Receiver
+    connections.max.idle.ms=600000
+    delivery.timeout.ms=120000
+    linger.ms=0
+    max.block.ms=60000
+    max.request.size=1048576
+    partitioner.class=org.apache.kafka.clients.producer.internals.DefaultPartitioner
+    receive.buffer.bytes=-1
+    request.timeout.ms=30000
+    enable.idempotence=false
+    # interceptor.classes=""
+    max.in.flight.requests.per.connection=5
+    metadata.max.age.ms=300000
+    # metric.reporters=""
+    metrics.num.samples=2
+    metrics.recording.level=INFO
+    metrics.sample.window.ms=30000
+    reconnect.backoff.max.ms=1000
+    reconnect.backoff.ms=50
+    retry.backoff.ms=100
+    # transaction.timeout.ms=60000
+    # transactional.id=null
