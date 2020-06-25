@@ -13,10 +13,15 @@ Before submitting a PR, see also [contribution guidelines](./CONTRIBUTING.md).
 
 ### Requirements
 
-You must have installed:
+You need to install:
 
-- [`ko`](https://github.com/google/ko)
-- [`docker`](https://www.docker.com/)
+- [`ko`](https://github.com/google/ko) - (_required_)
+- [`docker`](https://www.docker.com/) - (_required_)
+- [`Go`](https://golang.org/) - (_required_)
+- [`Java`](https://www.java.com/en/) (we recommend an `openjdk` build) - (_optional_)
+- [`Maven`](https://maven.apache.org/) - (_optional_)
+
+Requirements signaled as "optional" are not required, but it's highly recommended having them installed.
 
 ### Create a cluster and a repo
 
