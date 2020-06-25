@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM maven:3.6.3-openjdk-14 as builder
+ARG MAVEN_VERSION=3.6.3-openjdk-14
+ARG APP_DIR
+ARG APP_JAR
+
+FROM maven:${MAVEN_VERSION} as builder
 
 WORKDIR /app
 
@@ -23,13 +27,17 @@ COPY dispatcher/pom.xml dispatcher/pom.xml
 COPY generated/pom.xml generated/pom.xml
 COPY checkstyle/suppression.xml checkstyle/suppression.xml
 
-RUN mvn install
+RUN mvn install -DskipTests -Dcheckstyle.skip
 
 COPY . .
 
-RUN mvn package
+RUN mvn package -DskipTests -Dcheckstyle.skip
 
 FROM adoptopenjdk:14-jre-hotspot as running
+
+ARG APP_DIR
+ARG APP_JAR
+
 RUN groupadd -g 999 appuser && useradd -r -u 999 -g appuser appuser
 RUN mkdir /tmp/vertx-cache && \
       chown -R appuser:appuser /tmp/vertx-cache && \
@@ -37,4 +45,4 @@ RUN mkdir /tmp/vertx-cache && \
       chown -R appuser:appuser /app
 USER appuser
 WORKDIR /app
-COPY --from=builder /app/receiver/target/receiver-1.0-SNAPSHOT.jar /app/app.jar
+COPY --from=builder /app/${APP_DIR}/target/${APP_JAR} /app/app.jar
