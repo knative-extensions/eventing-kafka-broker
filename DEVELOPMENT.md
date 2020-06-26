@@ -77,6 +77,10 @@ _Adding the `upstream` remote sets you up nicely for regularly
 Once you reach this point you are ready to do a full build and deploy as
 follows.
 
+# Code generation
+
+Run `./proto/hack/generate_proto` to generate protobuf code.
+
 # Deploy core configurations and Kafka
 
 ```bash
