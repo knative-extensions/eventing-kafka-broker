@@ -4,9 +4,6 @@
 
 **/?
 
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**
-!**/src/test/**
 
 ### STS ###
 **/.apt_generated
@@ -14,8 +11,6 @@
 **/.factorypath
 **/.project
 **/.settings
-**/.springBeans
-**/.sts4-cache
 
 ### IntelliJ IDEA ###
 **/.idea
