@@ -62,6 +62,7 @@
     <module>receiver</module>
     <module>dispatcher</module>
     <module>generated</module>
+    <module>tests</module>
   </modules>
 
   <build>
