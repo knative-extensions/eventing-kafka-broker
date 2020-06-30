@@ -100,6 +100,20 @@ public class DataPlaneTest {
     brokersManager = setUpDispatcher(vertx);
   }
 
+  /*
+                                                                                2
+                                                                   +-----------------------+
+                                                                   |                       |
+                                                                   v                       |
+  +------------+    1     +---------------+         2      +-------+-------+    1    +-------------+
+  | HTTPClient +--------->+    Receiver   |       +--------+   Dispatcher  +-------->+  Service    |
+  +------------+          +-------+-------+       |        +-------+-------+    2    +-------------+
+                                  |               |                ^
+                                  |               v                |
+                                  | 1     +-------+--------+     1 | 2
+                                  +------>+     Kafka      +-------+
+                                          +----------------+
+   */
   @Test
   public void execute(final Vertx vertx, final VertxTestContext context) {
 
@@ -143,7 +157,11 @@ public class DataPlaneTest {
                 .setId(UUID.randomUUID().toString())
                 .build())
         )
-    )).onFailure(context::failNow);
+    ))
+        // we don't handle or wait onSuccess, because it's fine to create the consumer at any point
+        // in time. (eg before or after starting the destination service, or before or after sending
+        // the event to the receiver)
+        .onFailure(context::failNow);
 
     // start service
     final Promise<HttpServer> serviceStarted = Promise.promise();
