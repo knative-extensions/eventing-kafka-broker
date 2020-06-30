@@ -123,8 +123,8 @@ public class DataPlaneTest {
 
     final var checkpoints = context.checkpoint(3);
 
-    // event written by the source to the Broker
-    final var requestEvent = CloudEventBuilder.v1()
+    // event sent by the source to the Broker (see 1 in diagram)
+    final var expectedRequestEvent = CloudEventBuilder.v1()
         .withId(UUID.randomUUID().toString())
         .withDataSchema(URI.create("/api/data-schema-ce-1"))
         .withSource(URI.create("/api/rossi"))
@@ -133,8 +133,8 @@ public class DataPlaneTest {
         .withType(TYPE_CE_1)
         .build();
 
-    // event sent in the response by the Callable service
-    final var responseEvent = CloudEventBuilder.v03()
+    // event sent in the response by the Callable service (see 2 in diagram)
+    final var expectedResponseEvent = CloudEventBuilder.v03()
         .withId(UUID.randomUUID().toString())
         .withDataSchema(URI.create("/api/data-schema-ce-2"))
         .withSubject("subject-ce-2")
@@ -179,18 +179,19 @@ public class DataPlaneTest {
               // service 1 receives event sent by the HTTPClient
               if (request.path().equals(PATH_SERVICE_1)) {
                 context.verify(() -> {
-                  assertThat(event).isEqualTo(requestEvent);
+                  assertThat(event).isEqualTo(expectedRequestEvent);
                   checkpoints.flag(); // 2
                 });
 
                 // write event to the response, the event will be handled by service 2
-                VertxMessageFactory.createWriter(request.response()).writeBinary(responseEvent);
+                VertxMessageFactory.createWriter(request.response())
+                    .writeBinary(expectedResponseEvent);
               }
 
               // service 2 receives event in the response
               if (request.path().equals(PATH_SERVICE_2)) {
                 context.verify(() -> {
-                  assertThat(event).isEqualTo(responseEvent);
+                  assertThat(event).isEqualTo(expectedResponseEvent);
                   checkpoints.flag(); // 3
                 });
               }
@@ -210,7 +211,7 @@ public class DataPlaneTest {
                 checkpoints.flag(); // 1
               }));
 
-          VertxMessageFactory.createWriter(request).writeBinary(requestEvent);
+          VertxMessageFactory.createWriter(request).writeBinary(expectedRequestEvent);
         });
   }
 
