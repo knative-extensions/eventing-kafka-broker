@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -94,13 +95,16 @@ public class DataPlaneTest {
   private static BrokersManager<CloudEvent> brokersManager;
 
   @BeforeAll
-  public static void setUp(final Vertx vertx, final VertxTestContext context) throws IOException {
+  public static void setUp(final Vertx vertx, final VertxTestContext context)
+      throws IOException, InterruptedException {
     setUpKafkaCluster();
-    setUpReceiver(vertx, context);
     brokersManager = setUpDispatcher(vertx);
+    setUpReceiver(vertx, context).await();
   }
 
   /*
+  1: event sent by the source to the Broker
+  2: event sent by the service in the response
                                                                                 2
                                                                    +-----------------------+
                                                                    |                       |
@@ -172,15 +176,19 @@ public class DataPlaneTest {
             .onFailure(context::failNow)
             .onSuccess(event -> {
 
-              if (request.path().equals(PATH_SERVICE_1)) { // service 1 receives requestEvent
+              // service 1 receives event sent by the HTTPClient
+              if (request.path().equals(PATH_SERVICE_1)) {
                 context.verify(() -> {
                   assertThat(event).isEqualTo(requestEvent);
                   checkpoints.flag(); // 2
                 });
 
+                // write event to the response, the event will be handled by service 2
                 VertxMessageFactory.createWriter(request.response()).writeBinary(responseEvent);
               }
-              if (request.path().equals(PATH_SERVICE_2)) { // service 2 receives responseEvent
+
+              // service 2 receives event in the response
+              if (request.path().equals(PATH_SERVICE_2)) {
                 context.verify(() -> {
                   assertThat(event).isEqualTo(responseEvent);
                   checkpoints.flag(); // 3
@@ -193,7 +201,7 @@ public class DataPlaneTest {
         .onFailure(context::failNow)
         .onSuccess(ignored -> {
 
-          // do the request to the Broker receiver
+          // send event to the Broker receiver
           final var request = vertx.createHttpClient()
               .post(INGRESS_PORT, "localhost", format("%s/%s", BROKER_NAMESPACE, BROKER_NAME))
               .exceptionHandler(context::failNow)
@@ -259,9 +267,7 @@ public class DataPlaneTest {
     );
   }
 
-  private static void setUpReceiver(final Vertx vertx, final VertxTestContext context) {
-
-    final var checkpoint = context.checkpoint(1);
+  private static CountDownLatch setUpReceiver(final Vertx vertx, final VertxTestContext context) {
 
     final Properties configs = producerConfigs();
     final KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, configs);
@@ -273,7 +279,9 @@ public class DataPlaneTest {
 
     final var verticle = new HttpVerticle(httpServerOptions, handler);
 
-    vertx.deployVerticle(verticle, context.succeeding(h -> checkpoint.flag()));
+    final CountDownLatch latch = new CountDownLatch(1);
+    vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));
+    return latch;
   }
 
   private static Properties producerConfigs() {
