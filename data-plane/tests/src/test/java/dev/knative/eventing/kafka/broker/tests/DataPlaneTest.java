@@ -189,7 +189,7 @@ public class DataPlaneTest {
   }
 
   @AfterAll
-  public static void teardown(final VertxTestContext context) {
+  public static void teardown() {
 
     // TODO figure out why shutdown times out Vertx context even with timeout increased.
     // kafkaCluster.shutdown();
@@ -197,8 +197,6 @@ public class DataPlaneTest {
     if (!dataDir.delete()) {
       dataDir.deleteOnExit();
     }
-
-    context.completeNow();
   }
 
   private static void setUpKafkaCluster() throws IOException {
