@@ -22,22 +22,32 @@
 # to run a specific set of tests.
 
 export GO111MODULE=on
+export DISABLE_MD_LINTING=1
 
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/presubmit-tests.sh
 source $(dirname $0)/data-plane/library.sh
 
 ./proto/hack/generate_proto
 
+function fail_test() {
+  header "$1"
+  exit 1
+}
+
 function build_tests() {
-  header "Running data-plane build tests"
-  data_plane_build_tests
-  return $?
+  header "Running control plane build tests"
+  default_build_test_runner || fail_test "Control plane unit tests failed"
+
+  header "Running data plane build tests"
+  data_plane_build_tests || fail_test "Data plane build tests failed"
 }
 
 function unit_tests() {
-  header "Running data-plane unit tests"
-  data_plane_unit_tests
-  return $?
+  header "Running control plane unit tests"
+  default_unit_test_runner || fail_test "Control plane unit tests failed"
+
+  header "Running data plane unit tests"
+  data_plane_unit_tests || fail_test "Data plane unit tests failed"
 }
 
 main $@

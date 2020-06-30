@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-broker-controller
+  namespace: knative-eventing
+  labels:
+    app: kafka-broker-controller
+    eventing.knative.dev/release: devel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-broker-controller
+  template:
+    metadata:
+      name: kafka-broker-controller
+      labels:
+        app: kafka-broker-controller
+        eventing.knative.dev/release: devel
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: kafka-broker-controller
+      containers:
+        - name: controller
+          image: ko://knative.dev/eventing-kafka-broker/control-plane/cmd/kafka-broker-controller
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: config-logging
+              mountPath: /etc/config-logging
+              readOnly: true
+          env:
+            - name: CONFIG_LOGGING_NAME
+              value: config-logging
+            - name: METRICS_DOMAIN
+              value: knative.dev/eventing
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          ports:
+            - containerPort: 9090
+              name: metrics
+          terminationMessagePolicy: FallbackToLogsOnError
+          terminationMessagePath: /dev/temination-log
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+      volumes:
+        - name: config-logging
+          configMap:
+            name: config-logging
+      restartPolicy: Always

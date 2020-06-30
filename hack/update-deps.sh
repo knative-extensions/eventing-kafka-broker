@@ -22,6 +22,7 @@ set -o nounset
 set -o pipefail
 
 export GO111MODULE=on
+export GOFLAGS=-mod=
 
 # This controls the release branch we track.
 VERSION="master"
@@ -33,6 +34,7 @@ cd "${ROOT_DIR}"
 FLOATING_DEPS=(
   "knative.dev/test-infra@${VERSION}"
   "knative.dev/pkg@${VERSION}"
+  "knative.dev/eventing@${VERSION}"
 )
 
 # Parse flags to determine any we should pass to dep.
@@ -60,5 +62,4 @@ find vendor/ -name '*_test.go'-delete
 
 export GOFLAGS=-mod=vendor
 
-# TODO re-enable: chmod: cannot access 'third_party/VENDOR-LICENSE': No such file or directory
-#update_licenses third_party/VENDOR-LICENSE "./..."
+update_licenses third_party/VENDOR-LICENSE "./..."
