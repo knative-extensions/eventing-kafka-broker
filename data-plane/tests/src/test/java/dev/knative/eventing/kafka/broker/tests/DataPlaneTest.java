@@ -198,7 +198,7 @@ public class DataPlaneTest {
               .post(INGRESS_PORT, "localhost", format("%s/%s", BROKER_NAMESPACE, BROKER_NAME))
               .exceptionHandler(context::failNow)
               .handler(response -> context.verify(() -> {
-                assertThat(response.statusCode()).isLessThan(300); // verify it's a 2xx response
+                assertThat(response.statusCode()).isEqualTo(202);
                 checkpoints.flag(); // 1
               }));
 
