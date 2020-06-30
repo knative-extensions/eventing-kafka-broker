@@ -141,7 +141,7 @@ public class DataPlaneTest {
                 .setId(UUID.randomUUID().toString())
                 .build())
         )
-    ));
+    )).onFailure(context::failNow);
 
     // start service
     vertx.createHttpServer()
