@@ -25,18 +25,18 @@ readonly SKIP_PUSH=${SKIP_PUSH:-false}
 readonly UUID=${UUID:-latest}
 
 readonly DATA_PLANE_DIR=data-plane
-readonly CONFIG_DIR=${DATA_PLANE_DIR}/config
-readonly CONFIG_TEMPLATE_DIR=${CONFIG_DIR}/template # no trailing slash
-readonly DISPATCHER_TEMPLATE_FILE=${CONFIG_TEMPLATE_DIR}/500-dispatcher.yaml
-readonly RECEIVER_TEMPLATE_FILE=${CONFIG_TEMPLATE_DIR}/500-receiver.yaml
+readonly DATA_PLANE_CONFIG_DIR=${DATA_PLANE_DIR}/config
+readonly DATA_PLANE_CONFIG_TEMPLATE_DIR=${DATA_PLANE_CONFIG_DIR}/template # no trailing slash
+readonly DISPATCHER_TEMPLATE_FILE=${DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-dispatcher.yaml
+readonly RECEIVER_TEMPLATE_FILE=${DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-receiver.yaml
 
 readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-knative-kafka-broker-receiver}":"${UUID}"
 readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-knative-kafka-broker-dispatcher}":"${UUID}"
 
-readonly RECEIVER_JAR=receiver-1.0-SNAPSHOT.jar
+readonly RECEIVER_JAR="receiver-1.0-SNAPSHOT.jar"
 readonly RECEIVER_DIRECTORY=receiver
 
-readonly DISPATCHER_JAR=dispatcher-1.0-SNAPSHOT.jar
+readonly DISPATCHER_JAR="dispatcher-1.0-SNAPSHOT.jar"
 readonly DISPATCHER_DIRECTORY=dispatcher
 
 # Checks whether the given function exists.
@@ -103,7 +103,7 @@ function k8s() {
   echo "dispatcher image ---> ${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}"
   echo "receiver image   ---> ${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}"
 
-  kubectl "$@" -f ${CONFIG_DIR}
+  kubectl "$@" -f ${DATA_PLANE_CONFIG_DIR}
 
   sed "s|\${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|g" ${DISPATCHER_TEMPLATE_FILE} |
     kubectl "$@" -f - || fail_test "Failed to $@ to ${DISPATCHER_TEMPLATE_FILE}"
@@ -130,9 +130,4 @@ function data_plane_setup() {
 function data_plane_teardown() {
   k8s delete --ignore-not-found
   return $?
-}
-
-function data_plane_integration_tests() {
-  wait_until_pods_running kafka || fail_test "Kafka did not come up"
-  wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
 }

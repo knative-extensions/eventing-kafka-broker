@@ -1,0 +1,37 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kafka-broker-controller
+  labels:
+    contrib.eventing.knative.dev/release: devel
+rules:
+  - apiGroups:
+      - "*"
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+
+  # Eventing resources and statuses we care about
+  - apiGroups:
+      - "eventing.knative.dev"
+    resources:
+      - "brokers"
+      - "brokers/status"
+      - "triggers"
+      - "triggers/status"
+    verbs:
+      - list
+      - get
+      - watch
+
+  # Eventing resources and finalizers we care about.
+  - apiGroups:
+      - "eventing.knative.dev"
+    resources:
+      - "brokers/finalizers"
+      - "triggers/finalizers"
+    verbs:
+      - "update"

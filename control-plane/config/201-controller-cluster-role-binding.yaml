@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kafka-broker-controller
+  labels:
+    contrib.eventing.knative.dev/release: devel
+subjects:
+  - kind: ServiceAccount
+    name: kafka-broker-controller
+    namespace: knative-eventing
+roleRef:
+  kind: ClusterRole
+  name: kafka-broker-controller
+  apiGroup: rbac.authorization.k8s.io
+

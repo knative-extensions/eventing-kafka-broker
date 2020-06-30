@@ -30,3 +30,5 @@ curl -L "https://github.com/strimzi/strimzi-kafka-operator/releases/download/${s
 
 header "Applying Strimzi Cluster file"
 kubectl -n kafka apply -f $(dirname $0)/kafka-ephemeral-single.yaml
+
+wait_until_pods_running kafka || fail_test "Failed to start up a Kafka cluster"
