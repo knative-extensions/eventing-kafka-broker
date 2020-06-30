@@ -97,7 +97,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
     final var triggerDestinationSender = createSender(trigger.destination(), circuitBreakerOptions);
 
     final ConsumerRecordSender<String, CloudEvent, HttpClientResponse> brokerDLQSender;
-    if ("".equals(broker.deadLetterSink())) {
+    if (broker.deadLetterSink() == null || broker.deadLetterSink().isEmpty()) {
       brokerDLQSender = new NoDLQSender();
     } else {
       brokerDLQSender = createSender(broker.deadLetterSink(), circuitBreakerOptions);
