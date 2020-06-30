@@ -97,7 +97,7 @@ public class DataPlaneTest {
   public static void setUp(final Vertx vertx, final VertxTestContext context) throws IOException {
     setUpKafkaCluster();
     setUpReceiver(vertx, context);
-    setUpDispatcher(vertx);
+    brokersManager = setUpDispatcher(vertx);
   }
 
   @Test
@@ -213,7 +213,7 @@ public class DataPlaneTest {
     kafkaCluster.createTopic(TOPIC, NUM_PARTITIONS, REPLICATION_FACTOR);
   }
 
-  private static void setUpDispatcher(final Vertx vertx) {
+  private static BrokersManager<CloudEvent> setUpDispatcher(final Vertx vertx) {
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
         consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.create();
@@ -233,7 +233,7 @@ public class DataPlaneTest {
         producerConfigs
     );
 
-    brokersManager = new BrokersManager<>(
+    return new BrokersManager<>(
         vertx,
         consumerVerticleFactory,
         10,
