@@ -20,14 +20,18 @@ import dev.knative.eventing.kafka.broker.core.Broker;
 import dev.knative.eventing.kafka.broker.core.Trigger;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientResponse;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import java.util.Objects;
 import java.util.Properties;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -92,7 +96,12 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
 
     final var triggerDestinationSender = createSender(trigger.destination(), circuitBreakerOptions);
 
-    final var brokerDLQSender = createSender(broker.deadLetterSink(), circuitBreakerOptions);
+    final ConsumerRecordSender<String, CloudEvent, HttpClientResponse> brokerDLQSender;
+    if (broker.deadLetterSink() == null || broker.deadLetterSink().isEmpty()) {
+      brokerDLQSender = new NoDLQSender();
+    } else {
+      brokerDLQSender = createSender(broker.deadLetterSink(), circuitBreakerOptions);
+    }
 
     final var consumerOffsetManager = consumerRecordOffsetStrategyFactory
         .get(consumer, broker, trigger);
@@ -156,5 +165,16 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
         client,
         target
     );
+  }
+
+  private static final class NoDLQSender implements
+      ConsumerRecordSender<String, CloudEvent, HttpClientResponse> {
+
+    @Override
+    public Future<HttpClientResponse> send(KafkaConsumerRecord<String, CloudEvent> record) {
+      final Promise<HttpClientResponse> promise = Promise.promise();
+      promise.tryFail("no DLQ set");
+      return promise.future();
+    }
   }
 }
