@@ -47,6 +47,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
@@ -58,6 +59,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -85,6 +87,7 @@ public class DataPlaneTest {
   private static final String TYPE_CE_2 = "type-ce-2";
   private static final String PATH_SERVICE_1 = "/service-1";
   private static final String PATH_SERVICE_2 = "/service-2";
+  private static final String PATH_SERVICE_3 = "/service-3";
 
   static {
     assertThat(PATH_SERVICE_1).isNotEqualTo(PATH_SERVICE_2);
@@ -99,7 +102,8 @@ public class DataPlaneTest {
       throws IOException, InterruptedException {
     setUpKafkaCluster();
     brokersManager = setUpDispatcher(vertx);
-    setUpReceiver(vertx, context).await();
+    setUpReceiver(vertx, context);
+    context.completeNow();
   }
 
   /*
@@ -119,6 +123,7 @@ public class DataPlaneTest {
                                           +----------------+
    */
   @Test
+  @Timeout(timeUnit = TimeUnit.MINUTES, value = 1)
   public void execute(final Vertx vertx, final VertxTestContext context) {
 
     final var checkpoints = context.checkpoint(3);
@@ -159,7 +164,16 @@ public class DataPlaneTest {
                 .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
                 .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_2)
                 .setId(UUID.randomUUID().toString())
-                .build())
+                .build()),
+            // the destination of the following trigger should never be reached because events
+            // don't pass filters.
+            new TriggerWrapper(Trigger.newBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_3))
+                .putAttributes(
+                    ContextAttributes.SOURCE.name().toLowerCase(),
+                    UUID.randomUUID().toString()
+                ).build())
         )
     ))
         // we don't handle or wait onSuccess, because it's fine to create the consumer at any point
@@ -194,6 +208,12 @@ public class DataPlaneTest {
                   assertThat(event).isEqualTo(expectedResponseEvent);
                   checkpoints.flag(); // 3
                 });
+              }
+
+              if (request.path().equals(PATH_SERVICE_3)) {
+                context.failNow(new IllegalStateException(
+                    PATH_SERVICE_3 + " should never be reached"
+                ));
               }
             }))
         .listen(SERVICE_PORT, "localhost", serviceStarted);
@@ -268,7 +288,8 @@ public class DataPlaneTest {
     );
   }
 
-  private static CountDownLatch setUpReceiver(final Vertx vertx, final VertxTestContext context) {
+  private static void setUpReceiver(final Vertx vertx, final VertxTestContext context)
+      throws InterruptedException {
 
     final Properties configs = producerConfigs();
     final KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, configs);
@@ -282,7 +303,7 @@ public class DataPlaneTest {
 
     final CountDownLatch latch = new CountDownLatch(1);
     vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));
-    return latch;
+    latch.await();
   }
 
   private static Properties producerConfigs() {
