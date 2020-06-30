@@ -43,7 +43,9 @@ import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.debezium.kafka.KafkaCluster;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -144,6 +146,7 @@ public class DataPlaneTest {
     )).onFailure(context::failNow);
 
     // start service
+    final Promise<HttpServer> serviceStarted = Promise.promise();
     vertx.createHttpServer()
         .exceptionHandler(context::failNow)
         .requestHandler(request -> VertxMessageFactory.createReader(request)
@@ -166,18 +169,23 @@ public class DataPlaneTest {
                 });
               }
             }))
-        .listen(SERVICE_PORT, "localhost");
+        .listen(SERVICE_PORT, "localhost", serviceStarted);
 
-    // do the request to the Broker receiver
-    final var request = vertx.createHttpClient()
-        .post(INGRESS_PORT, "localhost", format("%s/%s", BROKER_NAMESPACE, BROKER_NAME))
-        .exceptionHandler(context::failNow)
-        .handler(response -> context.verify(() -> {
-          assertThat(response.statusCode()).isLessThan(300); // verify it's a 2xx response
-          checkpoints.flag(); // 1
-        }));
+    serviceStarted.future()
+        .onFailure(context::failNow)
+        .onSuccess(ignored -> {
 
-    VertxMessageFactory.createWriter(request).writeBinary(requestEvent);
+          // do the request to the Broker receiver
+          final var request = vertx.createHttpClient()
+              .post(INGRESS_PORT, "localhost", format("%s/%s", BROKER_NAMESPACE, BROKER_NAME))
+              .exceptionHandler(context::failNow)
+              .handler(response -> context.verify(() -> {
+                assertThat(response.statusCode()).isLessThan(300); // verify it's a 2xx response
+                checkpoints.flag(); // 1
+              }));
+
+          VertxMessageFactory.createWriter(request).writeBinary(requestEvent);
+        });
   }
 
   @AfterAll
