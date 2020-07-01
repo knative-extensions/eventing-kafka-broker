@@ -18,15 +18,14 @@ You need to install:
 - [`ko`](https://github.com/google/ko) - (_required_)
 - [`docker`](https://www.docker.com/) - (_required_)
 - [`Go`](https://golang.org/) - (_required_)
-- [`Java`](https://www.java.com/en/) (we recommend an `openjdk` build) - (_optional_)
-- [`Maven`](https://maven.apache.org/) - (_optional_)
+- [`Java`](https://www.java.com/en/) (we recommend an `openjdk` build) - (_required_)
 
 Requirements signaled as "optional" are not required, but it's highly recommended having them installed.
 
 ### Create a cluster and a repo
 
 1. [Set up a kubernetes cluster](https://www.knative.dev/docs/install/)
-   - Follow an install guide up through "Creating a Kubernetes Cluster"
+   - Follow an installation guide up through "Creating a Kubernetes Cluster"
    - You do _not_ need to install Istio or Knative using the instructions in the
      guide. Simply create the cluster and come back here.
    - If you _did_ install Istio/Knative following those instructions, that's
@@ -93,8 +92,7 @@ kubectl apply -f config
 
 # Changing the data-plane
 
-- The [./hack/dev_data_plane_setup.sh](hack/dev_data_plane_setup.sh) script sets up a container with maven.
-    The script contains instructions on how to use it, and what it does.
+- Run data plane verification: `./mvnw clean verify`
     
 If you are using [KinD](https://kind.sigs.k8s.io/) we recommend executing:
 
@@ -113,6 +111,13 @@ the development cycle.
 # Changing the control-plane
 
 <!--- TODO add instruction for iterating on the control-plane --->
+
+# Unit and build tests
+
+```shell script
+./test/presubmit-tests.sh --unit-tests
+./test/presubmit-tests.sh --build-tests
+``` 
 
 # E2E Tests
 
