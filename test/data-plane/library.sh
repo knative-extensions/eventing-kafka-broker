@@ -125,8 +125,7 @@ function data_plane_unit_tests() {
 }
 
 function data_plane_build_tests() {
-  data_plane_unit_tests
-  return $?
+  return 0
 }
 
 function data_plane_setup() {
