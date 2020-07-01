@@ -28,7 +28,7 @@ COPY generated/pom.xml generated/pom.xml
 COPY tests/pom.xml tests/pom.xml
 COPY checkstyle/suppression.xml checkstyle/suppression.xml
 COPY ./mvnw .
-COPY ./.mvn .
+COPY ./.mvn/wrapper .mvn/wrapper
 
 RUN ./mvnw install -DskipTests -Dcheckstyle.skip
 
