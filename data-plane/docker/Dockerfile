@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG MAVEN_VERSION=3.6.3-openjdk-14
+ARG JAVA_IMAGE
 ARG APP_DIR
 ARG APP_JAR
 
-FROM maven:${MAVEN_VERSION} as builder
+FROM ${JAVA_IMAGE} as builder
 
 WORKDIR /app
 
@@ -27,17 +27,20 @@ COPY dispatcher/pom.xml dispatcher/pom.xml
 COPY generated/pom.xml generated/pom.xml
 COPY tests/pom.xml tests/pom.xml
 COPY checkstyle/suppression.xml checkstyle/suppression.xml
+COPY ./mvnw .
+COPY ./.mvn .
 
-RUN mvn install -DskipTests -Dcheckstyle.skip
+RUN ./mvnw install -DskipTests -Dcheckstyle.skip
 
 COPY . .
 
-RUN mvn package -DskipTests -Dcheckstyle.skip
+RUN ./mvnw package -DskipTests -Dcheckstyle.skip
 
-FROM adoptopenjdk:14-jre-hotspot as running
+FROM ${JAVA_IMAGE} as running
 
 ARG APP_DIR
 ARG APP_JAR
+ARG JAVA_IMAGE
 
 RUN groupadd -g 999 appuser && useradd -r -u 999 -g appuser appuser
 RUN mkdir /tmp/vertx-cache && \

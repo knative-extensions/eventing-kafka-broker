@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM maven:3.6.3-openjdk-14 as builder
+
+ARG JAVA_IMAGE
+
+FROM ${JAVA_IMAGE}
 
 WORKDIR /app
 
 COPY . .
 
-RUN mvn clean verify -B
+RUN ./mvnw clean verify -B

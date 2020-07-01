@@ -33,6 +33,8 @@ readonly RECEIVER_TEMPLATE_FILE=${DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-receiver.y
 readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-knative-kafka-broker-receiver}":"${UUID}"
 readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-knative-kafka-broker-dispatcher}":"${UUID}"
 
+readonly JAVA_IMAGE=adoptopenjdk:14-jre-hotspot
+
 readonly RECEIVER_JAR="receiver-1.0-SNAPSHOT.jar"
 readonly RECEIVER_DIRECTORY=receiver
 
@@ -67,6 +69,7 @@ function receiver_build_push() {
 
   docker build \
     -f ${DATA_PLANE_DIR}/docker/Dockerfile \
+    --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
     --build-arg APP_JAR=${RECEIVER_JAR} \
     --build-arg APP_DIR=${RECEIVER_DIRECTORY} \
     -t "${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}" ${DATA_PLANE_DIR} &&
@@ -81,6 +84,7 @@ function dispatcher_build_push() {
 
   docker build \
     -f ${DATA_PLANE_DIR}/docker/Dockerfile \
+    --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
     --build-arg APP_JAR=${DISPATCHER_JAR} \
     --build-arg APP_DIR=${DISPATCHER_DIRECTORY} \
     -t "${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}" ${DATA_PLANE_DIR} &&
@@ -113,7 +117,10 @@ function k8s() {
 }
 
 function data_plane_unit_tests() {
-  docker build --file ${DATA_PLANE_DIR}/docker/test/Dockerfile --tag tests ${DATA_PLANE_DIR}
+  docker build \
+    --file ${DATA_PLANE_DIR}/docker/test/Dockerfile \
+    --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
+    --tag tests ${DATA_PLANE_DIR}
   return $?
 }
 
