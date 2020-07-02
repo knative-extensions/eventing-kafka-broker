@@ -18,9 +18,11 @@ You need to install:
 - [`ko`](https://github.com/google/ko) - (_required_)
 - [`docker`](https://www.docker.com/) - (_required_)
 - [`Go`](https://golang.org/) - (_required_)
+  - check [go \<version\>](https://github.com/knative-sandbox/eventing-kafka-broker/blob/master/go.mod) for the required Go version used in this project
 - [`Java`](https://www.java.com/en/) (we recommend an `openjdk` build) - (_required_)
+  - check [java.version](https://github.com/knative-sandbox/eventing-kafka-broker/blob/master/data-plane/pom.xml) maven property for the required Java version used in this project
 
-Requirements signaled as "optional" are not required, but it's highly recommended having them installed.
+Requirements signaled as "optional" are not required, but it's highly recommended having them installed. If a specific version of a requirement is not explcitly defined above, any version will work during development.
 
 ### Create a cluster and a repo
 
