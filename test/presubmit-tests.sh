@@ -27,8 +27,6 @@ export DISABLE_MD_LINTING=1
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/presubmit-tests.sh
 source $(dirname $0)/data-plane/library.sh
 
-./proto/hack/generate_proto
-
 function fail_test() {
   header "$1"
   exit 1

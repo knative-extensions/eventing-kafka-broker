@@ -3,6 +3,7 @@ module knative.dev/eventing-kafka-broker
 go 1.13
 
 require (
+	github.com/golang/protobuf v1.3.5
 	github.com/stretchr/testify v1.5.1
 	go.uber.org/zap v1.14.1
 	k8s.io/api v0.17.6
