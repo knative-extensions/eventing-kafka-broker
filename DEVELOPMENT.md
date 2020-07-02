@@ -47,7 +47,7 @@ recommend adding them to your `.bashrc`):
 `.bashrc` example:
 
 ```shell
-export GOPATH="$HOME/go"
+export GOPATH="$(go env GOPATH)"
 export PATH="${PATH}:${GOPATH}/bin"
 export KO_DOCKER_REPO=docker.io/<your_docker_id>
 # export KO_DOCKER_REPO=gcr.io/<your_gcr_id>
