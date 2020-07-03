@@ -24,18 +24,12 @@ You need to install:
 
 Requirements signaled as "optional" are not required, but it's highly recommended having them installed. If a specific version of a requirement is not explcitly defined above, any version will work during development.
 
-### Create a cluster and a repo
+### Set up a Linux Container Registry
 
-1. [Set up a kubernetes cluster](https://www.knative.dev/docs/install/)
-   - Follow an installation guide up through "Creating a Kubernetes Cluster"
-   - You do _not_ need to install Istio or Knative using the instructions in the
-     guide. Simply create the cluster and come back here.
-   - If you _did_ install Istio/Knative following those instructions, that's
-     fine too, you'll just redeploy over them, below.
-1. Set up a Linux Container registry for pushing images. You can use any
-   container image registry by adjusting the authentication methods and
-   repository paths mentioned in the sections below.
-
+- Set up a Linux Container registry for pushing images. You can use any
+  container image registry by adjusting the authentication methods and
+  repository paths mentioned in the sections below.
+   
 > :information_source: You'll need to be authenticated with your
 > `KO_DOCKER_REPO` before pushing images.
 
@@ -78,15 +72,17 @@ _Adding the `upstream` remote sets you up nicely for regularly
 Once you reach this point you are ready to do a full build and deploy as
 follows.
 
-# Deploy core configurations and Kafka
+### Set up a Kubernetes cluster
 
-```bash
-# re-execute the script in case some errors appear. 
-# (this can happen when the CRDs hasn't been registered and we try to create a Kafka cluster)
-./test/kafka/kafka_setup.sh 
+- This guide assumes you have a Kubernetes cluster up and running. - https://kubernetes.io/docs/setup/
 
-kubectl apply -f config
-```
+1. Execute `source test/e2e-common.sh`
+1. Execute `knative_setup`
+    - This command deploys Knative Eventing.
+1. Execute `kubectl wait -n knative-eventing pods --all=true --for=condition=Ready`
+1. Execute `test_setup`
+
+If something goes wrong, re-execute these steps.
 
 # Changing the data-plane
 
