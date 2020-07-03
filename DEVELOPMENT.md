@@ -76,7 +76,7 @@ follows.
 
 - This guide assumes you have a Kubernetes cluster up and running. - https://kubernetes.io/docs/setup/
 
-1. Execute `source test/e2e-common.sh `
+1. Execute `source test/e2e-common.sh`
 1. Execute `knative_setup`
     - This command deploys Knative Eventing.
 1. Execute `kubectl wait -n knative-eventing pods --all=true --for=condition=Ready`
