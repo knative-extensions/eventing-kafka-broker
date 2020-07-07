@@ -13,6 +13,15 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - "*"
+    resources:
+      - pods
+    verbs:
+      - list
+      - update
+      - get
+      - watch
 
   # Eventing resources and statuses we care about
   - apiGroups:

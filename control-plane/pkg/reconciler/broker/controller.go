@@ -18,48 +18,97 @@ package broker
 
 import (
 	"context"
+	"strconv"
 
-	"k8s.io/apimachinery/pkg/types"
+	"github.com/Shopify/sarama"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
-
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/resolver"
 
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/broker"
-	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/trigger"
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1beta1/broker"
+	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
-func NewController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
+const (
+	defaultTopicNumPartitionConfigMapKey      = "default.topic.partitions"
+	defaultTopicReplicationFactorConfigMapKey = "default.topic.replication.factor"
+	bootstrapServersConfigMapKey              = "bootstrap.servers"
 
-	brokerInformer := brokerinformer.Get(ctx)
-	triggerInformer := triggerinformer.Get(ctx)
+	DefaultNumPartitions     = 10
+	DefaultReplicationFactor = 1
+)
+
+var NewClusterAdmin = sarama.NewClusterAdmin
+
+func NewController(ctx context.Context, watcher configmap.Watcher, configs *Configs) *controller.Impl {
 
 	reconciler := &Reconciler{
-		logger: logging.FromContext(ctx).Desugar(),
+		Reconciler: &base.Reconciler{
+			KubeClient:                        kubeclient.Get(ctx),
+			PodLister:                         podinformer.Get(ctx).Lister(),
+			BrokersTriggersConfigMapNamespace: configs.BrokersTriggersConfigMapNamespace,
+			BrokersTriggersConfigMapName:      configs.BrokersTriggersConfigMapName,
+			Format:                            configs.Format,
+			SystemNamespace:                   configs.SystemNamespace,
+		},
+		KafkaDefaultTopicDetails: sarama.TopicDetail{
+			NumPartitions:     DefaultNumPartitions,
+			ReplicationFactor: DefaultReplicationFactor,
+		},
+		Configs:  configs,
+		Recorder: controller.GetEventRecorder(ctx),
+	}
+
+	if configs.BootstrapServers != "" {
+		_ = reconciler.SetBootstrapServers(configs.BootstrapServers)
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass)
+
+	reconciler.Resolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
+
+	brokerInformer := brokerinformer.Get(ctx)
 
 	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: kafka.BrokerClassFilter(),
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 
-	triggerInformer.Informer().AddEventHandler(controller.HandleAll(
-		func(obj interface{}) {
-			if trigger, ok := obj.(*eventing.Trigger); ok {
-				impl.EnqueueKey(types.NamespacedName{
-					Namespace: trigger.Namespace,
-					Name:      trigger.Spec.Broker,
-				})
-			}
-		},
-	))
+	watcher.Watch(configs.GeneralConfigMapName, func(configMap *corev1.ConfigMap) {
+
+		numPartitionsStr := configMap.Data[defaultTopicNumPartitionConfigMapKey]
+		replicationFactorStr := configMap.Data[defaultTopicReplicationFactorConfigMapKey]
+		bootstrapServers := configMap.Data[bootstrapServersConfigMapKey]
+
+		logger := logging.FromContext(ctx)
+
+		numPartitions, err := strconv.Atoi(numPartitionsStr)
+		if err != nil {
+			logger.Warn("failed to read number of partitions from config map %s", configs.GeneralConfigMapName)
+			return
+		}
+
+		replicationFactor, err := strconv.Atoi(replicationFactorStr)
+		if err != nil {
+			logger.Warn("failed to read replication factor from config map %s", configs.GeneralConfigMapName)
+			return
+		}
+
+		reconciler.SetDefaultTopicDetails(sarama.TopicDetail{
+			NumPartitions:     int32(numPartitions),
+			ReplicationFactor: int16(replicationFactor),
+		})
+
+		_ = reconciler.SetBootstrapServers(bootstrapServers)
+	})
 
 	return impl
 }

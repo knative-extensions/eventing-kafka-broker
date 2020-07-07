@@ -2626,6 +2626,16 @@ public final class BrokersConfig {
      */
     dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder getBrokerOrBuilder(
         int index);
+
+    /**
+     * <pre>
+     * Count each config map update.
+     * Make sure each data plane pod has the same volume generation number.
+     * </pre>
+     *
+     * <code>uint64 volumeGeneration = 2;</code>
+     */
+    long getVolumeGeneration();
   }
   /**
    * Protobuf type {@code Brokers}
@@ -2681,6 +2691,11 @@ public final class BrokersConfig {
               }
               broker_.add(
                   input.readMessage(dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.parser(), extensionRegistry));
+              break;
+            }
+            case 16: {
+
+              volumeGeneration_ = input.readUInt64();
               break;
             }
             default: {
@@ -2753,6 +2768,20 @@ public final class BrokersConfig {
       return broker_.get(index);
     }
 
+    public static final int VOLUMEGENERATION_FIELD_NUMBER = 2;
+    private long volumeGeneration_;
+    /**
+     * <pre>
+     * Count each config map update.
+     * Make sure each data plane pod has the same volume generation number.
+     * </pre>
+     *
+     * <code>uint64 volumeGeneration = 2;</code>
+     */
+    public long getVolumeGeneration() {
+      return volumeGeneration_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2770,6 +2799,9 @@ public final class BrokersConfig {
       for (int i = 0; i < broker_.size(); i++) {
         output.writeMessage(1, broker_.get(i));
       }
+      if (volumeGeneration_ != 0L) {
+        output.writeUInt64(2, volumeGeneration_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -2782,6 +2814,10 @@ public final class BrokersConfig {
       for (int i = 0; i < broker_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, broker_.get(i));
+      }
+      if (volumeGeneration_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(2, volumeGeneration_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2800,6 +2836,8 @@ public final class BrokersConfig {
 
       if (!getBrokerList()
           .equals(other.getBrokerList())) return false;
+      if (getVolumeGeneration()
+          != other.getVolumeGeneration()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -2815,6 +2853,9 @@ public final class BrokersConfig {
         hash = (37 * hash) + BROKER_FIELD_NUMBER;
         hash = (53 * hash) + getBrokerList().hashCode();
       }
+      hash = (37 * hash) + VOLUMEGENERATION_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getVolumeGeneration());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -2955,6 +2996,8 @@ public final class BrokersConfig {
         } else {
           brokerBuilder_.clear();
         }
+        volumeGeneration_ = 0L;
+
         return this;
       }
 
@@ -2991,6 +3034,7 @@ public final class BrokersConfig {
         } else {
           result.broker_ = brokerBuilder_.build();
         }
+        result.volumeGeneration_ = volumeGeneration_;
         onBuilt();
         return result;
       }
@@ -3064,6 +3108,9 @@ public final class BrokersConfig {
               brokerBuilder_.addAllMessages(other.broker_);
             }
           }
+        }
+        if (other.getVolumeGeneration() != 0L) {
+          setVolumeGeneration(other.getVolumeGeneration());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -3334,6 +3381,47 @@ public final class BrokersConfig {
         }
         return brokerBuilder_;
       }
+
+      private long volumeGeneration_ ;
+      /**
+       * <pre>
+       * Count each config map update.
+       * Make sure each data plane pod has the same volume generation number.
+       * </pre>
+       *
+       * <code>uint64 volumeGeneration = 2;</code>
+       */
+      public long getVolumeGeneration() {
+        return volumeGeneration_;
+      }
+      /**
+       * <pre>
+       * Count each config map update.
+       * Make sure each data plane pod has the same volume generation number.
+       * </pre>
+       *
+       * <code>uint64 volumeGeneration = 2;</code>
+       */
+      public Builder setVolumeGeneration(long value) {
+        
+        volumeGeneration_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Count each config map update.
+       * Make sure each data plane pod has the same volume generation number.
+       * </pre>
+       *
+       * <code>uint64 volumeGeneration = 2;</code>
+       */
+      public Builder clearVolumeGeneration() {
+        
+        volumeGeneration_ = 0L;
+        onChanged();
+        return this;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -3422,10 +3510,11 @@ public final class BrokersConfig {
       "\017AttributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002" +
       " \001(\t:\0028\001\"W\n\006Broker\022\n\n\002id\030\001 \001(\t\022\r\n\005topic\030" +
       "\002 \001(\t\022\026\n\016deadLetterSink\030\003 \001(\t\022\032\n\010trigger" +
-      "s\030\004 \003(\0132\010.Trigger\"\"\n\007Brokers\022\027\n\006broker\030\001" +
-      " \003(\0132\007.BrokerB]\n-dev.knative.eventing.ka" +
-      "fka.broker.core.configB\rBrokersConfigZ\035c" +
-      "ontrol-plane/pkg/core/configb\006proto3"
+      "s\030\004 \003(\0132\010.Trigger\"<\n\007Brokers\022\027\n\006broker\030\001" +
+      " \003(\0132\007.Broker\022\030\n\020volumeGeneration\030\002 \001(\004B" +
+      "]\n-dev.knative.eventing.kafka.broker.cor" +
+      "e.configB\rBrokersConfigZ\035control-plane/p" +
+      "kg/core/configb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -3454,7 +3543,7 @@ public final class BrokersConfig {
     internal_static_Brokers_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Brokers_descriptor,
-        new java.lang.String[] { "Broker", });
+        new java.lang.String[] { "Broker", "VolumeGeneration", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

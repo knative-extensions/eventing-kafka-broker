@@ -31,6 +31,7 @@ import (
 
 	. "knative.dev/pkg/reconciler/testing"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 )
 
@@ -55,6 +56,8 @@ func TestTriggerReconciliation(t *testing.T) {
 
 	testKey := fmt.Sprintf("%s/%s", triggerNamespace, triggerName)
 
+	configs := *DefaultConfigs
+
 	table := TableTest{
 		{
 			Name: "Reconciled normal",
@@ -73,7 +76,7 @@ func TestTriggerReconciliation(t *testing.T) {
 		},
 	}
 
-	table.Test(t, NewFactory(func(ctx context.Context, listers *Listers) controller.Reconciler {
+	table.Test(t, NewFactory(&configs, func(ctx context.Context, listers *Listers, configs *broker.Configs, row *TableRow) controller.Reconciler {
 
 		logger := logging.FromContext(ctx)
 

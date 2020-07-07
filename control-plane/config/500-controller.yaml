@@ -30,10 +30,22 @@ spec:
               mountPath: /etc/config-logging
               readOnly: true
           env:
+            - name: BROKERS_TRIGGERS_CONFIG_MAP_NAMESPACE
+              value: knative-eventing
+            - name: BROKERS_TRIGGERS_CONFIG_MAP_NAME
+              value: kafka-broker-brokers-triggers
             - name: CONFIG_LOGGING_NAME
               value: config-logging
+            - name: CONFIG_OBSERVABILITY_NAME
+              value: config-observability
             - name: METRICS_DOMAIN
               value: knative.dev/eventing
+            - name: FORMAT
+              value: JSON
+            - name: BROKER_INGRESS_NAME
+              value: kafka-broker-ingress
+            - name: GENERAL_CONFIG_MAP_NAME
+              value: kafka-broker-config
             - name: SYSTEM_NAMESPACE
               valueFrom:
                 fieldRef:

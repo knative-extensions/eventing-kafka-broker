@@ -24,12 +24,15 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
+	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	pkgcontroller "knative.dev/pkg/controller"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/reconciler"
-
 	. "knative.dev/pkg/reconciler/testing"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
 
 const (
@@ -38,10 +41,23 @@ const (
 	recorderBufferSize = 20
 )
 
-// Ctor functions create a k8s controller with given params.
-type Ctor func(ctx context.Context, listers *Listers) pkgcontroller.Reconciler
+var DefaultConfigs = &broker.Configs{
 
-func NewFactory(ctor Ctor) Factory {
+	EnvConfigs: broker.EnvConfigs{
+		BrokersTriggersConfigMapNamespace: "kafka-broker-brokers-triggers",
+		BrokersTriggersConfigMapName:      "knative-eventing",
+		BrokerIngressName:                 "kafka-broker-receiver",
+		SystemNamespace:                   "knative-eventing",
+		Format:                            base.JSON,
+	},
+
+	BootstrapServers: "",
+}
+
+// Ctor functions create a k8s controller with given params.
+type Ctor func(ctx context.Context, listers *Listers, configs *broker.Configs, row *TableRow) pkgcontroller.Reconciler
+
+func NewFactory(configs *broker.Configs, ctor Ctor) Factory {
 	return func(t *testing.T, row *TableRow) (pkgcontroller.Reconciler, ActionRecorderList, EventList) {
 
 		listers := newListers(row.Objects)
@@ -66,7 +82,10 @@ func NewFactory(ctor Ctor) Factory {
 
 		eventRecorder := record.NewFakeRecorder(recorderBufferSize)
 		ctx = pkgcontroller.WithEventRecorder(ctx, eventRecorder)
-		controller := ctor(ctx, listers)
+
+		ctx = addressable.WithDuck(ctx)
+
+		controller := ctor(ctx, listers, configs, row)
 
 		if la, ok := controller.(reconciler.LeaderAware); ok {
 			_ = la.Promote(reconciler.UniversalBucket(), func(reconciler.Bucket, types.NamespacedName) {})

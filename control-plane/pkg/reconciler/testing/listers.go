@@ -17,8 +17,10 @@
 package testing
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
+	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	fakeeventingsclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
@@ -68,6 +70,10 @@ func (l *Listers) GetEventingObjects() []runtime.Object {
 
 func (l *Listers) GetBrokerLister() eventinglisters.BrokerLister {
 	return eventinglisters.NewBrokerLister(l.indexerFor(&eventing.Broker{}))
+}
+
+func (l *Listers) GetPodLister() corelisters.PodLister {
+	return corelisters.NewPodLister(l.indexerFor(&corev1.Pod{}))
 }
 
 func (l *Listers) GetTriggerLister() eventinglisters.TriggerLister {
