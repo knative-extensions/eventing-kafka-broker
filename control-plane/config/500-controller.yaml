@@ -40,7 +40,7 @@ spec:
               value: config-observability
             - name: METRICS_DOMAIN
               value: knative.dev/eventing
-            - name: FORMAT
+            - name: DATA_PLANE_CONFIG_FORMAT
               value: JSON
             - name: BROKER_INGRESS_NAME
               value: kafka-broker-ingress

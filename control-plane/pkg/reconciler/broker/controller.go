@@ -56,7 +56,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			PodLister:                         podinformer.Get(ctx).Lister(),
 			BrokersTriggersConfigMapNamespace: configs.BrokersTriggersConfigMapNamespace,
 			BrokersTriggersConfigMapName:      configs.BrokersTriggersConfigMapName,
-			Format:                            configs.Format,
+			Format:                            configs.DataPlaneConfigFormat,
 			SystemNamespace:                   configs.SystemNamespace,
 		},
 		KafkaDefaultTopicDetails: sarama.TopicDetail{

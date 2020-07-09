@@ -32,7 +32,7 @@ type EnvConfigs struct {
 	GeneralConfigMapName              string `required:"true" split_words:"true"`
 	BrokerIngressName                 string `required:"true" split_words:"true"`
 	SystemNamespace                   string `required:"true" split_words:"true"`
-	Format                            string `required:"true" split_words:"true"`
+	DataPlaneConfigFormat             string `required:"true" split_words:"true"`
 }
 
 func (c *EnvConfigs) BrokersTriggersConfigMapAsString() string {

@@ -91,7 +91,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 
 	testKey := fmt.Sprintf("%s/%s", brokerNamespace, brokerName)
 
-	configs.Format = format
+	configs.DataPlaneConfigFormat = format
 
 	// TODO add WantStatusUpdates assertions after https://github.com/knative/eventing/issues/3094
 
@@ -493,7 +493,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 
 	testKey := fmt.Sprintf("%s/%s", brokerNamespace, brokerName)
 
-	configs.Format = format
+	configs.DataPlaneConfigFormat = format
 
 	table := TableTest{
 		{
@@ -714,7 +714,7 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 				PodLister:                         listers.GetPodLister(),
 				BrokersTriggersConfigMapNamespace: configs.BrokersTriggersConfigMapNamespace,
 				BrokersTriggersConfigMapName:      configs.BrokersTriggersConfigMapName,
-				Format:                            configs.Format,
+				Format:                            configs.DataPlaneConfigFormat,
 				SystemNamespace:                   configs.SystemNamespace,
 			},
 			KafkaClusterAdmin:            clusterAdmin,
@@ -818,7 +818,7 @@ func NewConfigMap(configs *Configs, data []byte) runtime.Object {
 func NewConfigMapFromBrokers(brokers *coreconfig.Brokers, configs *Configs) runtime.Object {
 	var data []byte
 	var err error
-	if configs.Format == base.PROTOBUF {
+	if configs.DataPlaneConfigFormat == base.PROTOBUF {
 		data, err = proto.Marshal(brokers)
 	} else {
 		data, err = json.Marshal(brokers)
