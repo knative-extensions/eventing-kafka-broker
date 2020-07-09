@@ -63,7 +63,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger := logger(ctx, broker)
 
-	logger.Debug("reconciling broker")
+	logger.Debug("Reconciling broker")
 
 	statusConditionManager := statusConditionManager{
 		Broker:   broker,
@@ -77,7 +77,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 	statusConditionManager.topicCreated(topic)
 
-	logger.Debug("topic created", zap.Any("topic", topic))
+	logger.Debug("Topic created", zap.Any("topic", topic))
 
 	// Get brokers and triggers config map.
 	brokersTriggersConfigMap, err := r.GetBrokersTriggersConfigMap()
@@ -85,7 +85,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 		return statusConditionManager.failedToGetBrokersTriggersConfigMap(err)
 	}
 
-	logger.Debug("got brokers and triggers config map")
+	logger.Debug("Got brokers and triggers config map")
 
 	// Get brokersTriggers data.
 	brokersTriggers, err := r.GetBrokersTriggers(logger, brokersTriggersConfigMap)
@@ -94,7 +94,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 
 	logger.Debug(
-		"got brokers and triggers data from config map",
+		"Got brokers and triggers data from config map",
 		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: brokersTriggers}),
 	)
 
@@ -109,12 +109,12 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 	if brokerIndex != noBroker {
 		brokersTriggers.Broker[brokerIndex] = brokerConfig
 
-		logger.Debug("broker exists", zap.Int("index", brokerIndex))
+		logger.Debug("Broker exists", zap.Int("index", brokerIndex))
 
 	} else {
 		brokersTriggers.Broker = append(brokersTriggers.Broker, brokerConfig)
 
-		logger.Debug("broker doesn't exist")
+		logger.Debug("Broker doesn't exist")
 	}
 
 	// Increment volumeGeneration
@@ -126,7 +126,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 	statusConditionManager.brokersTriggersConfigMapUpdated()
 
-	logger.Debug("brokers and triggers config map updated")
+	logger.Debug("Brokers and triggers config map updated")
 
 	// Update volume generation annotation of dispatcher pods
 	if err := r.UpdateDispatcherPodsAnnotation(logger, brokersTriggers.VolumeGeneration); err != nil {
@@ -134,13 +134,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 		// For now, we use the configuration map only on the dispatcher side, which means we don't lose availability,
 		// since the receiver will accept events. So, log out the error and move on to the next step.
 		logger.Warn(
-			"failed to update dispatcher pod annotation to trigger an immediate config map refresh",
+			"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
 			zap.Error(err),
 		)
 
 		statusConditionManager.failedToUpdateDispatcherPodsAnnotation(broker, err)
 	} else {
-		logger.Debug("updated dispatcher pod annotation")
+		logger.Debug("Updated dispatcher pod annotation")
 	}
 
 	return statusConditionManager.reconciled()
@@ -149,7 +149,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	logger := logger(ctx, broker)
 
-	logger.Debug("finalizing broker")
+	logger.Debug("Finalizing broker")
 
 	// Get brokers and triggers config map.
 	brokersTriggersConfigMap, err := r.GetBrokersTriggersConfigMap()
@@ -157,7 +157,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return fmt.Errorf("failed to get brokers and triggers config map %s: %w", r.Configs.BrokersTriggersConfigMapAsString(), err)
 	}
 
-	logger.Debug("got brokers and triggers config map")
+	logger.Debug("Got brokers and triggers config map")
 
 	// Get brokersTriggers data.
 	brokersTriggers, err := r.GetBrokersTriggers(logger, brokersTriggersConfigMap)
@@ -166,7 +166,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 	}
 
 	logger.Debug(
-		"got brokers and triggers data from config map",
+		"Got brokers and triggers data from config map",
 		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: brokersTriggers}),
 	)
 
@@ -176,14 +176,14 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 	}
 	deleteBroker(brokersTriggers, brokerIndex)
 
-	logger.Debug("broker deleted", zap.Int("index", brokerIndex))
+	logger.Debug("Broker deleted", zap.Int("index", brokerIndex))
 
 	// Update the configuration map with the new brokersTriggers data.
 	if err := r.UpdateBrokersTriggersConfigMap(brokersTriggers, brokersTriggersConfigMap); err != nil {
 		return fmt.Errorf("failed to update configuration map: %w", err)
 	}
 
-	logger.Debug("brokers and triggers config map updated")
+	logger.Debug("Brokers and triggers config map updated")
 
 	// There is no need to update volume generation and dispatcher pod annotation, updates to the config map will
 	// eventually be seen by the dispatcher pod and resources will be deleted accordingly.
@@ -193,7 +193,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return fmt.Errorf("failed to delete topic %s: %w", topic, err)
 	}
 
-	logger.Debug("topic deleted", zap.String("topic", topic))
+	logger.Debug("Topic deleted", zap.String("topic", topic))
 
 	return reconciledNormal(broker.Namespace, broker.Name)
 }

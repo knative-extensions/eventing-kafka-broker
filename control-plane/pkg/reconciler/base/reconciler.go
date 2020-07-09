@@ -58,7 +58,7 @@ func (r *Reconciler) GetBrokersTriggers(logger *zap.Logger, brokersTriggersConfi
 	if !hasData || brokersTriggersRaw == nil {
 
 		logger.Debug(
-			fmt.Sprintf("config map has no %s key, so start from scratch", ConfigMapDataKey),
+			fmt.Sprintf("Config map has no %s key, so start from scratch", ConfigMapDataKey),
 		)
 
 		return &coreconfig.Brokers{}, nil
@@ -68,7 +68,7 @@ func (r *Reconciler) GetBrokersTriggers(logger *zap.Logger, brokersTriggersConfi
 	var err error
 
 	logger.Debug(
-		"unmarshalling configmap",
+		"Unmarshalling configmap",
 		zap.String("format", r.DataPlaneConfigFormat),
 	)
 
@@ -81,7 +81,7 @@ func (r *Reconciler) GetBrokersTriggers(logger *zap.Logger, brokersTriggersConfi
 	}
 	if err != nil {
 
-		logger.Warn("failed to unmarshal config map", zap.Error(err))
+		logger.Warn("Failed to unmarshal config map", zap.Error(err))
 
 		// let the caller decide if it want to continue or fail on an error.
 		return &coreconfig.Brokers{}, fmt.Errorf("failed to unmarshal brokers and triggers: %w", err)
@@ -128,7 +128,7 @@ func (r *Reconciler) UpdateDispatcherPodsAnnotation(logger *zap.Logger, volumeGe
 	for _, p := range pods {
 
 		logger.Debug(
-			"update dispatcher pod annotation",
+			"Update dispatcher pod annotation",
 			zap.String("pod", fmt.Sprintf("%s/%s", p.Namespace, p.Name)),
 			zap.Uint64("volumeGeneration", volumeGeneration),
 		)
