@@ -52,12 +52,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
-			KubeClient:                        kubeclient.Get(ctx),
-			PodLister:                         podinformer.Get(ctx).Lister(),
-			BrokersTriggersConfigMapNamespace: configs.BrokersTriggersConfigMapNamespace,
-			BrokersTriggersConfigMapName:      configs.BrokersTriggersConfigMapName,
-			Format:                            configs.DataPlaneConfigFormat,
-			SystemNamespace:                   configs.SystemNamespace,
+			KubeClient:                  kubeclient.Get(ctx),
+			PodLister:                   podinformer.Get(ctx).Lister(),
+			DataPlaneConfigMapNamespace: configs.BrokersTriggersConfigMapNamespace,
+			DataPlaneConfigMapName:      configs.BrokersTriggersConfigMapName,
+			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
+			SystemNamespace:             configs.SystemNamespace,
 		},
 		KafkaDefaultTopicDetails: sarama.TopicDetail{
 			NumPartitions:     DefaultNumPartitions,

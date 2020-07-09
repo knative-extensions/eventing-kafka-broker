@@ -710,12 +710,12 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
-				KubeClient:                        kubeclient.Get(ctx),
-				PodLister:                         listers.GetPodLister(),
-				BrokersTriggersConfigMapNamespace: configs.BrokersTriggersConfigMapNamespace,
-				BrokersTriggersConfigMapName:      configs.BrokersTriggersConfigMapName,
-				Format:                            configs.DataPlaneConfigFormat,
-				SystemNamespace:                   configs.SystemNamespace,
+				KubeClient:                  kubeclient.Get(ctx),
+				PodLister:                   listers.GetPodLister(),
+				DataPlaneConfigMapNamespace: configs.BrokersTriggersConfigMapNamespace,
+				DataPlaneConfigMapName:      configs.BrokersTriggersConfigMapName,
+				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
+				SystemNamespace:             configs.SystemNamespace,
 			},
 			KafkaClusterAdmin:            clusterAdmin,
 			KafkaDefaultTopicDetails:     defaultTopicDetail,

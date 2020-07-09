@@ -39,16 +39,16 @@ type Reconciler struct {
 	KubeClient kubernetes.Interface
 	PodLister  corelisters.PodLister
 
-	BrokersTriggersConfigMapNamespace string
-	BrokersTriggersConfigMapName      string
-	Format                            string
-	SystemNamespace                   string
+	DataPlaneConfigMapNamespace string
+	DataPlaneConfigMapName      string
+	DataPlaneConfigFormat       string
+	SystemNamespace             string
 }
 
 func (r *Reconciler) GetBrokersTriggersConfigMap() (*corev1.ConfigMap, error) {
 	return r.KubeClient.CoreV1().
-		ConfigMaps(r.BrokersTriggersConfigMapNamespace).
-		Get(r.BrokersTriggersConfigMapName, metav1.GetOptions{})
+		ConfigMaps(r.DataPlaneConfigMapNamespace).
+		Get(r.DataPlaneConfigMapName, metav1.GetOptions{})
 }
 
 // getBrokersTriggers extracts brokers and triggers data from the given config map.
@@ -69,11 +69,11 @@ func (r *Reconciler) GetBrokersTriggers(logger *zap.Logger, brokersTriggersConfi
 
 	logger.Debug(
 		"unmarshalling configmap",
-		zap.String("format", r.Format),
+		zap.String("format", r.DataPlaneConfigFormat),
 	)
 
 	// determine unmarshalling strategy
-	switch r.Format {
+	switch r.DataPlaneConfigFormat {
 	case Protobuf:
 		err = proto.Unmarshal(brokersTriggersRaw, brokersTriggers)
 	case Json:
@@ -94,7 +94,7 @@ func (r *Reconciler) UpdateBrokersTriggersConfigMap(brokersTriggers *coreconfig.
 
 	var data []byte
 	var err error
-	switch r.Format {
+	switch r.DataPlaneConfigFormat {
 	case Json:
 		data, err = json.Marshal(brokersTriggers)
 	case Protobuf:
