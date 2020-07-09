@@ -71,7 +71,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 		recorder: r.Recorder,
 	}
 
-	topic, err := r.createTopic(broker)
+	topic, err := r.CreateTopic(broker)
 	if err != nil {
 		return statusConditionManager.failedToCreateTopic(topic, err)
 	}
@@ -200,29 +200,6 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 func incrementVolumeGeneration(generation uint64) uint64 {
 	return (generation + 1) % (math.MaxUint64 - 1)
-}
-
-func (r *Reconciler) createTopic(broker *eventing.Broker) (string, error) {
-	topic := topic(broker)
-	topicDetail := r.topicDetailFromBrokerConfig(broker)
-
-	r.KafkaClusterAdminLock.Lock()
-	defer r.KafkaClusterAdminLock.Unlock()
-
-	return topic, r.KafkaClusterAdmin.CreateTopic(topic, topicDetail, true)
-}
-
-func (r *Reconciler) deleteTopic(broker *eventing.Broker) (string, error) {
-
-	r.KafkaClusterAdminLock.RLock()
-	defer r.KafkaClusterAdminLock.RUnlock()
-
-	topic := topic(broker)
-	return topic, r.KafkaClusterAdmin.DeleteTopic(topic)
-}
-
-func topic(broker *eventing.Broker) string {
-	return fmt.Sprintf("%s%s-%s", TopicPrefix, broker.Namespace, broker.Name)
 }
 
 func (r *Reconciler) topicDetailFromBrokerConfig(broker *eventing.Broker) *sarama.TopicDetail {
