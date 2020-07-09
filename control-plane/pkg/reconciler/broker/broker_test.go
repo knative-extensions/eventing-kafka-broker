@@ -26,6 +26,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -755,6 +756,37 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 	}))
 
 	cancel()
+}
+
+func TestConfigMapUpdate(t *testing.T) {
+
+	NewClusterAdmin = func(addrs []string, conf *sarama.Config) (sarama.ClusterAdmin, error) {
+		return MockKafkaClusterAdmin{}, nil
+	}
+
+	cm := corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "cmname",
+			Namespace: "cmnamespace",
+		},
+		Data: map[string]string{
+			DefaultTopicNumPartitionConfigMapKey:      "42",
+			DefaultTopicReplicationFactorConfigMapKey: "3",
+			BootstrapServersConfigMapKey:              "server1,server2",
+		},
+	}
+
+	reconciler := Reconciler{}
+
+	ctx, _ := SetupFakeContext(t)
+
+	reconciler.ConfigMapUpdated(ctx)(&cm)
+
+	assert.Equal(t, reconciler.KafkaDefaultTopicDetails, sarama.TopicDetail{
+		NumPartitions:     42,
+		ReplicationFactor: 3,
+	})
+	assert.NotNil(t, reconciler.KafkaClusterAdmin)
 }
 
 func topic() string {

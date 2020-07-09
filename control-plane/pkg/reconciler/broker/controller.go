@@ -18,15 +18,12 @@ package broker
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/Shopify/sarama"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/broker"
@@ -38,9 +35,9 @@ import (
 )
 
 const (
-	defaultTopicNumPartitionConfigMapKey      = "default.topic.partitions"
-	defaultTopicReplicationFactorConfigMapKey = "default.topic.replication.factor"
-	bootstrapServersConfigMapKey              = "bootstrap.servers"
+	DefaultTopicNumPartitionConfigMapKey      = "default.topic.partitions"
+	DefaultTopicReplicationFactorConfigMapKey = "default.topic.replication.factor"
+	BootstrapServersConfigMapKey              = "bootstrap.servers"
 
 	DefaultNumPartitions     = 10
 	DefaultReplicationFactor = 1
@@ -82,33 +79,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 
-	watcher.Watch(configs.GeneralConfigMapName, func(configMap *corev1.ConfigMap) {
-
-		numPartitionsStr := configMap.Data[defaultTopicNumPartitionConfigMapKey]
-		replicationFactorStr := configMap.Data[defaultTopicReplicationFactorConfigMapKey]
-		bootstrapServers := configMap.Data[bootstrapServersConfigMapKey]
-
-		logger := logging.FromContext(ctx)
-
-		numPartitions, err := strconv.Atoi(numPartitionsStr)
-		if err != nil {
-			logger.Warn("failed to read number of partitions from config map %s", configs.GeneralConfigMapName)
-			return
-		}
-
-		replicationFactor, err := strconv.Atoi(replicationFactorStr)
-		if err != nil {
-			logger.Warn("failed to read replication factor from config map %s", configs.GeneralConfigMapName)
-			return
-		}
-
-		reconciler.SetDefaultTopicDetails(sarama.TopicDetail{
-			NumPartitions:     int32(numPartitions),
-			ReplicationFactor: int16(replicationFactor),
-		})
-
-		_ = reconciler.SetBootstrapServers(bootstrapServers)
-	})
+	watcher.Watch(configs.GeneralConfigMapName, reconciler.ConfigMapUpdated(ctx))
 
 	return impl
 }
