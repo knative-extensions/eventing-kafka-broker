@@ -76,7 +76,7 @@ var (
 	createTopicError = fmt.Errorf("failed to create topic")
 	deleteTopicError = fmt.Errorf("failed to delete topic")
 
-	formats = []string{base.PROTOBUF, base.JSON}
+	formats = []string{base.Protobuf, base.Json}
 )
 
 func TestBrokeReconciler(t *testing.T) {
@@ -818,7 +818,7 @@ func NewConfigMap(configs *Configs, data []byte) runtime.Object {
 func NewConfigMapFromBrokers(brokers *coreconfig.Brokers, configs *Configs) runtime.Object {
 	var data []byte
 	var err error
-	if configs.DataPlaneConfigFormat == base.PROTOBUF {
+	if configs.DataPlaneConfigFormat == base.Protobuf {
 		data, err = proto.Marshal(brokers)
 	} else {
 		data, err = json.Marshal(brokers)
@@ -886,7 +886,7 @@ func WithDelivery() func(*eventing.Broker) {
 }
 
 func getUnmarshallableError(format string) interface{} {
-	if format == base.PROTOBUF {
+	if format == base.Protobuf {
 		return "unexpected EOF"
 	}
 	return "invalid character '-' after object key"

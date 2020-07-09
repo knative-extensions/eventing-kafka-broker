@@ -48,7 +48,7 @@ var DefaultConfigs = &broker.Configs{
 		BrokersTriggersConfigMapName:      "knative-eventing",
 		BrokerIngressName:                 "kafka-broker-receiver",
 		SystemNamespace:                   "knative-eventing",
-		DataPlaneConfigFormat:             base.JSON,
+		DataPlaneConfigFormat:             base.Json,
 	},
 
 	BootstrapServers: "",

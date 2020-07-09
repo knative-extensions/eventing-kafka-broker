@@ -29,8 +29,8 @@ const (
 	// volume generation annotation data plane pods.
 	VolumeGenerationAnnotationKey = "volumeGeneration"
 
-	PROTOBUF = "PROTOBUF"
-	JSON     = "JSON"
+	Protobuf = "protobuf"
+	Json     = "json"
 )
 
 // Base reconciler for broker and trigger reconciler.
@@ -74,9 +74,9 @@ func (r *Reconciler) GetBrokersTriggers(logger *zap.Logger, brokersTriggersConfi
 
 	// determine unmarshalling strategy
 	switch r.Format {
-	case PROTOBUF:
+	case Protobuf:
 		err = proto.Unmarshal(brokersTriggersRaw, brokersTriggers)
-	case JSON:
+	case Json:
 		err = json.Unmarshal(brokersTriggersRaw, brokersTriggers)
 	}
 	if err != nil {
@@ -95,9 +95,9 @@ func (r *Reconciler) UpdateBrokersTriggersConfigMap(brokersTriggers *coreconfig.
 	var data []byte
 	var err error
 	switch r.Format {
-	case JSON:
+	case Json:
 		data, err = json.Marshal(brokersTriggers)
-	case PROTOBUF:
+	case Protobuf:
 		data, err = proto.Marshal(brokersTriggers)
 	}
 	if err != nil {
