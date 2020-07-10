@@ -125,17 +125,16 @@ func (r *Reconciler) UpdateDispatcherPodsAnnotation(logger *zap.Logger, volumeGe
 		return fmt.Errorf("failed to list pods in namespace %s: %w", namespace, errors)
 	}
 
-	for _, p := range pods {
+	for _, pod := range pods {
 
 		logger.Debug(
 			"Update dispatcher pod annotation",
-			zap.String("pod", fmt.Sprintf("%s/%s", p.Namespace, p.Name)),
+			zap.String("pod", fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)),
 			zap.Uint64("volumeGeneration", volumeGeneration),
 		)
 
 		// do not update cache copy
-		pod := p.DeepCopy()
-		p = nil
+		pod := pod.DeepCopy()
 
 		annotations := pod.GetAnnotations()
 		if annotations == nil {
