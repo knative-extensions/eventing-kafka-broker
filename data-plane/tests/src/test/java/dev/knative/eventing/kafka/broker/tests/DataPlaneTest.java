@@ -26,6 +26,7 @@ import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.knative.eventing.kafka.broker.core.BrokerWrapper;
+import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
 import dev.knative.eventing.kafka.broker.core.TriggerWrapper;
 import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker;
 import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Trigger;
@@ -82,6 +83,7 @@ public class DataPlaneTest {
   private static final int REPLICATION_FACTOR = 1;
   private static final int INGRESS_PORT = 12345;
   private static final int SERVICE_PORT = INGRESS_PORT + 1;
+  private static final int TIMEOUT = 3;
 
   private static final String TYPE_CE_1 = "type-ce-1";
   private static final String TYPE_CE_2 = "type-ce-2";
@@ -95,14 +97,15 @@ public class DataPlaneTest {
 
   private static File dataDir;
   private static KafkaCluster kafkaCluster;
-  private static BrokersManager<CloudEvent> brokersManager;
+  private static ObjectsReconciler<CloudEvent> brokersManager;
+  private static ObjectsReconciler<CloudEvent> handler;
 
   @BeforeAll
   public static void setUp(final Vertx vertx, final VertxTestContext context)
       throws IOException, InterruptedException {
     setUpKafkaCluster();
     brokersManager = setUpDispatcher(vertx);
-    setUpReceiver(vertx, context);
+    handler = setUpReceiver(vertx, context);
     context.completeNow();
   }
 
@@ -134,7 +137,7 @@ public class DataPlaneTest {
    */
   @Test
   @Timeout(timeUnit = TimeUnit.MINUTES, value = 1)
-  public void execute(final Vertx vertx, final VertxTestContext context) {
+  public void execute(final Vertx vertx, final VertxTestContext context) throws Exception {
 
     final var checkpoints = context.checkpoint(3);
 
@@ -158,38 +161,51 @@ public class DataPlaneTest {
         .withType(TYPE_CE_2)
         .build();
 
+    final Map<dev.knative.eventing.kafka.broker.core.Broker, Set<dev.knative.eventing.kafka.broker.core.Trigger<CloudEvent>>> objectsToReconciler = Map
+        .of(
+            new BrokerWrapper(Broker.newBuilder()
+                .setTopic(TOPIC)
+                .setNamespace(BROKER_NAMESPACE)
+                .setName(BROKER_NAME)
+                .setId(UUID.randomUUID().toString())
+                .build()),
+            Set.of(
+                new TriggerWrapper(Trigger.newBuilder()
+                    .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_1))
+                    .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_1)
+                    .setId(UUID.randomUUID().toString())
+                    .build()),
+                new TriggerWrapper(Trigger.newBuilder()
+                    .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
+                    .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_2)
+                    .setId(UUID.randomUUID().toString())
+                    .build()),
+                // the destination of the following trigger should never be reached because events
+                // don't pass filters.
+                new TriggerWrapper(Trigger.newBuilder()
+                    .setId(UUID.randomUUID().toString())
+                    .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_3))
+                    .putAttributes(
+                        ContextAttributes.SOURCE.name().toLowerCase(),
+                        UUID.randomUUID().toString()
+                    ).build())
+            )
+        );
+
     // reconcile brokers/triggers
-    brokersManager.reconcile(Map.of(
-        new BrokerWrapper(Broker.newBuilder()
-            .setTopic(TOPIC)
-            .setId(UUID.randomUUID().toString())
-            .build()),
-        Set.of(
-            new TriggerWrapper(Trigger.newBuilder()
-                .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_1))
-                .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_1)
-                .setId(UUID.randomUUID().toString())
-                .build()),
-            new TriggerWrapper(Trigger.newBuilder()
-                .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
-                .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_2)
-                .setId(UUID.randomUUID().toString())
-                .build()),
-            // the destination of the following trigger should never be reached because events
-            // don't pass filters.
-            new TriggerWrapper(Trigger.newBuilder()
-                .setId(UUID.randomUUID().toString())
-                .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_3))
-                .putAttributes(
-                    ContextAttributes.SOURCE.name().toLowerCase(),
-                    UUID.randomUUID().toString()
-                ).build())
-        )
-    ))
+    brokersManager.reconcile(objectsToReconciler)
         // we don't handle or wait onSuccess, because it's fine to create the consumer at any point
         // in time. (eg before or after starting the destination service, or before or after sending
         // the event to the receiver)
         .onFailure(context::failNow);
+
+    final var waitReconciler = new CountDownLatch(1);
+
+    handler.reconcile(objectsToReconciler)
+        .onFailure(context::failNow)
+        .onSuccess(v -> waitReconciler.countDown());
+
+    waitReconciler.await(TIMEOUT, TimeUnit.SECONDS);
 
     // start service
     final Promise<HttpServer> serviceStarted = Promise.promise();
@@ -234,7 +250,7 @@ public class DataPlaneTest {
 
           // send event to the Broker receiver
           final var request = vertx.createHttpClient()
-              .post(INGRESS_PORT, "localhost", format("%s/%s", BROKER_NAMESPACE, BROKER_NAME))
+              .post(INGRESS_PORT, "localhost", format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME))
               .exceptionHandler(context::failNow)
               .handler(response -> context.verify(() -> {
                 assertThat(response.statusCode()).isEqualTo(202);
@@ -298,8 +314,9 @@ public class DataPlaneTest {
     );
   }
 
-  private static void setUpReceiver(final Vertx vertx, final VertxTestContext context)
-      throws InterruptedException {
+  private static ObjectsReconciler<CloudEvent> setUpReceiver(
+      final Vertx vertx,
+      final VertxTestContext context) throws InterruptedException {
 
     final Properties configs = producerConfigs();
     final KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, configs);
@@ -314,6 +331,8 @@ public class DataPlaneTest {
     final CountDownLatch latch = new CountDownLatch(1);
     vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));
     latch.await();
+
+    return handler;
   }
 
   private static Properties producerConfigs() {

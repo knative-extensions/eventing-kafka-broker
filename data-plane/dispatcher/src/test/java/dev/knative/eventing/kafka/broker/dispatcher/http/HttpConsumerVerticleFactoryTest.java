@@ -84,6 +84,16 @@ public class HttpConsumerVerticleFactoryTest {
           public String deadLetterSink() {
             return "http://localhost:43257";
           }
+
+          @Override
+          public String namespace() {
+            return null;
+          }
+
+          @Override
+          public String name() {
+            return null;
+          }
         },
         new Trigger<>() {
           @Override
@@ -145,6 +155,16 @@ public class HttpConsumerVerticleFactoryTest {
             @Override
             public String deadLetterSink() {
               return "";
+            }
+
+            @Override
+            public String namespace() {
+              return null;
+            }
+
+            @Override
+            public String name() {
+              return null;
             }
           },
           new Trigger<>() {

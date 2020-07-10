@@ -1309,6 +1309,42 @@ public final class BrokersConfig {
      */
     dev.knative.eventing.kafka.broker.core.config.BrokersConfig.TriggerOrBuilder getTriggersOrBuilder(
         int index);
+
+    /**
+     * <pre>
+     * broker namespace
+     * </pre>
+     *
+     * <code>string namespace = 5;</code>
+     */
+    java.lang.String getNamespace();
+    /**
+     * <pre>
+     * broker namespace
+     * </pre>
+     *
+     * <code>string namespace = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getNamespaceBytes();
+
+    /**
+     * <pre>
+     * broker name
+     * </pre>
+     *
+     * <code>string name = 6;</code>
+     */
+    java.lang.String getName();
+    /**
+     * <pre>
+     * broker name
+     * </pre>
+     *
+     * <code>string name = 6;</code>
+     */
+    com.google.protobuf.ByteString
+        getNameBytes();
   }
   /**
    * Protobuf type {@code Broker}
@@ -1327,6 +1363,8 @@ public final class BrokersConfig {
       topic_ = "";
       deadLetterSink_ = "";
       triggers_ = java.util.Collections.emptyList();
+      namespace_ = "";
+      name_ = "";
     }
 
     @java.lang.Override
@@ -1385,6 +1423,18 @@ public final class BrokersConfig {
               }
               triggers_.add(
                   input.readMessage(dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Trigger.parser(), extensionRegistry));
+              break;
+            }
+            case 42: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              namespace_ = s;
+              break;
+            }
+            case 50: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              name_ = s;
               break;
             }
             default: {
@@ -1595,6 +1645,90 @@ public final class BrokersConfig {
       return triggers_.get(index);
     }
 
+    public static final int NAMESPACE_FIELD_NUMBER = 5;
+    private volatile java.lang.Object namespace_;
+    /**
+     * <pre>
+     * broker namespace
+     * </pre>
+     *
+     * <code>string namespace = 5;</code>
+     */
+    public java.lang.String getNamespace() {
+      java.lang.Object ref = namespace_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        namespace_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * broker namespace
+     * </pre>
+     *
+     * <code>string namespace = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getNamespaceBytes() {
+      java.lang.Object ref = namespace_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        namespace_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int NAME_FIELD_NUMBER = 6;
+    private volatile java.lang.Object name_;
+    /**
+     * <pre>
+     * broker name
+     * </pre>
+     *
+     * <code>string name = 6;</code>
+     */
+    public java.lang.String getName() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        name_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * broker name
+     * </pre>
+     *
+     * <code>string name = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getNameBytes() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        name_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -1621,6 +1755,12 @@ public final class BrokersConfig {
       for (int i = 0; i < triggers_.size(); i++) {
         output.writeMessage(4, triggers_.get(i));
       }
+      if (!getNamespaceBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, namespace_);
+      }
+      if (!getNameBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, name_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -1642,6 +1782,12 @@ public final class BrokersConfig {
       for (int i = 0; i < triggers_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, triggers_.get(i));
+      }
+      if (!getNamespaceBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, namespace_);
+      }
+      if (!getNameBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, name_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1666,6 +1812,10 @@ public final class BrokersConfig {
           .equals(other.getDeadLetterSink())) return false;
       if (!getTriggersList()
           .equals(other.getTriggersList())) return false;
+      if (!getNamespace()
+          .equals(other.getNamespace())) return false;
+      if (!getName()
+          .equals(other.getName())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -1687,6 +1837,10 @@ public final class BrokersConfig {
         hash = (37 * hash) + TRIGGERS_FIELD_NUMBER;
         hash = (53 * hash) + getTriggersList().hashCode();
       }
+      hash = (37 * hash) + NAMESPACE_FIELD_NUMBER;
+      hash = (53 * hash) + getNamespace().hashCode();
+      hash = (37 * hash) + NAME_FIELD_NUMBER;
+      hash = (53 * hash) + getName().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1833,6 +1987,10 @@ public final class BrokersConfig {
         } else {
           triggersBuilder_.clear();
         }
+        namespace_ = "";
+
+        name_ = "";
+
         return this;
       }
 
@@ -1872,6 +2030,8 @@ public final class BrokersConfig {
         } else {
           result.triggers_ = triggersBuilder_.build();
         }
+        result.namespace_ = namespace_;
+        result.name_ = name_;
         onBuilt();
         return result;
       }
@@ -1957,6 +2117,14 @@ public final class BrokersConfig {
               triggersBuilder_.addAllMessages(other.triggers_);
             }
           }
+        }
+        if (!other.getNamespace().isEmpty()) {
+          namespace_ = other.namespace_;
+          onChanged();
+        }
+        if (!other.getName().isEmpty()) {
+          name_ = other.name_;
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2545,6 +2713,184 @@ public final class BrokersConfig {
           triggers_ = null;
         }
         return triggersBuilder_;
+      }
+
+      private java.lang.Object namespace_ = "";
+      /**
+       * <pre>
+       * broker namespace
+       * </pre>
+       *
+       * <code>string namespace = 5;</code>
+       */
+      public java.lang.String getNamespace() {
+        java.lang.Object ref = namespace_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          namespace_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * broker namespace
+       * </pre>
+       *
+       * <code>string namespace = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getNamespaceBytes() {
+        java.lang.Object ref = namespace_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          namespace_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * broker namespace
+       * </pre>
+       *
+       * <code>string namespace = 5;</code>
+       */
+      public Builder setNamespace(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        namespace_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * broker namespace
+       * </pre>
+       *
+       * <code>string namespace = 5;</code>
+       */
+      public Builder clearNamespace() {
+        
+        namespace_ = getDefaultInstance().getNamespace();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * broker namespace
+       * </pre>
+       *
+       * <code>string namespace = 5;</code>
+       */
+      public Builder setNamespaceBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        namespace_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object name_ = "";
+      /**
+       * <pre>
+       * broker name
+       * </pre>
+       *
+       * <code>string name = 6;</code>
+       */
+      public java.lang.String getName() {
+        java.lang.Object ref = name_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          name_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * broker name
+       * </pre>
+       *
+       * <code>string name = 6;</code>
+       */
+      public com.google.protobuf.ByteString
+          getNameBytes() {
+        java.lang.Object ref = name_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          name_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * broker name
+       * </pre>
+       *
+       * <code>string name = 6;</code>
+       */
+      public Builder setName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        name_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * broker name
+       * </pre>
+       *
+       * <code>string name = 6;</code>
+       */
+      public Builder clearName() {
+        
+        name_ = getDefaultInstance().getName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * broker name
+       * </pre>
+       *
+       * <code>string name = 6;</code>
+       */
+      public Builder setNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        name_ = value;
+        onChanged();
+        return this;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -3508,13 +3854,14 @@ public final class BrokersConfig {
       "\n\nattributes\030\001 \003(\0132\030.Trigger.AttributesE" +
       "ntry\022\023\n\013destination\030\002 \001(\t\022\n\n\002id\030\003 \001(\t\0321\n" +
       "\017AttributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002" +
-      " \001(\t:\0028\001\"W\n\006Broker\022\n\n\002id\030\001 \001(\t\022\r\n\005topic\030" +
+      " \001(\t:\0028\001\"x\n\006Broker\022\n\n\002id\030\001 \001(\t\022\r\n\005topic\030" +
       "\002 \001(\t\022\026\n\016deadLetterSink\030\003 \001(\t\022\032\n\010trigger" +
-      "s\030\004 \003(\0132\010.Trigger\"<\n\007Brokers\022\027\n\006broker\030\001" +
-      " \003(\0132\007.Broker\022\030\n\020volumeGeneration\030\002 \001(\004B" +
-      "]\n-dev.knative.eventing.kafka.broker.cor" +
-      "e.configB\rBrokersConfigZ\035control-plane/p" +
-      "kg/core/configb\006proto3"
+      "s\030\004 \003(\0132\010.Trigger\022\021\n\tnamespace\030\005 \001(\t\022\014\n\004" +
+      "name\030\006 \001(\t\"<\n\007Brokers\022\027\n\006broker\030\001 \003(\0132\007." +
+      "Broker\022\030\n\020volumeGeneration\030\002 \001(\004B]\n-dev." +
+      "knative.eventing.kafka.broker.core.confi" +
+      "gB\rBrokersConfigZ\035control-plane/pkg/core" +
+      "/configb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -3537,7 +3884,7 @@ public final class BrokersConfig {
     internal_static_Broker_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Broker_descriptor,
-        new java.lang.String[] { "Id", "Topic", "DeadLetterSink", "Triggers", });
+        new java.lang.String[] { "Id", "Topic", "DeadLetterSink", "Triggers", "Namespace", "Name", });
     internal_static_Brokers_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_Brokers_fieldAccessorTable = new

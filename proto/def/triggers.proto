@@ -33,6 +33,12 @@ message Broker {
 
   // triggers associated with the broker
   repeated Trigger triggers = 4;
+
+  // broker namespace
+  string namespace = 5;
+
+  // broker name
+  string name = 6;
 }
 
 message Brokers {

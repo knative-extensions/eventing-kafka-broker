@@ -18,8 +18,13 @@ package dev.knative.eventing.kafka.broker.receiver;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
 
+import dev.knative.eventing.kafka.broker.core.Broker;
+import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
+import dev.knative.eventing.kafka.broker.core.Trigger;
+import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -27,7 +32,12 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import io.vertx.kafka.client.producer.RecordMetadata;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,16 +48,19 @@ import org.slf4j.LoggerFactory;
  * @param <K> type of the records' key.
  * @param <V> type of the records' value.
  */
-public class RequestHandler<K, V> implements Handler<HttpServerRequest> {
+public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
+    ObjectsReconciler<CloudEvent> {
 
   public static final int MAPPER_FAILED = BAD_REQUEST.code();
   public static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
   public static final int RECORD_PRODUCED = ACCEPTED.code();
+  public static final int BROKER_NOT_FOUND = NOT_FOUND.code();
 
   private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
 
   private final KafkaProducer<K, V> producer;
   private final RequestToRecordMapper<K, V> requestToRecordMapper;
+  private final AtomicReference<Set<String>> brokers;
 
   /**
    * Create a new Request handler.
@@ -64,10 +77,17 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest> {
 
     this.producer = producer;
     this.requestToRecordMapper = requestToRecordMapper;
+    brokers = new AtomicReference<>(new HashSet<>());
   }
 
   @Override
   public void handle(final HttpServerRequest request) {
+
+    if (!brokers.get().contains(request.path())) {
+      request.response().setStatusCode(BROKER_NOT_FOUND).end();
+      return;
+    }
+
     requestToRecordMapper
         .recordFromRequest(request)
         .onSuccess(record -> send(record)
@@ -90,5 +110,17 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest> {
     final Promise<RecordMetadata> promise = Promise.promise();
     producer.send(record, promise);
     return promise.future();
+  }
+
+  @Override
+  public Future<Void> reconcile(Map<Broker, Set<Trigger<CloudEvent>>> objects) {
+
+    final var brokers = objects.keySet().stream()
+        .map(b -> "/" + b.namespace() + "/" + b.name())
+        .collect(Collectors.toSet());
+
+    this.brokers.set(brokers);
+
+    return Future.succeededFuture();
   }
 }

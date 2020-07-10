@@ -22,6 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.FloatNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import dev.knative.eventing.kafka.broker.core.Broker;
+import dev.knative.eventing.kafka.broker.core.BrokerWrapper;
+import dev.knative.eventing.kafka.broker.core.config.BrokersConfig;
 import dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.HttpVerticle;
 import dev.knative.eventing.kafka.broker.receiver.RequestHandler;
@@ -41,20 +44,18 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -68,6 +69,7 @@ public class ReceiverVerticleTest {
   private static HttpClient httpClient;
 
   private static MockProducer<String, CloudEvent> mockProducer;
+  private static RequestHandler<String, CloudEvent> handler;
 
   @BeforeAll
   public static void setUp(final Vertx vertx, final VertxTestContext testContext) {
@@ -78,7 +80,7 @@ public class ReceiverVerticleTest {
         new CloudEventSerializer()
     );
     KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, mockProducer);
-    final var handler = new RequestHandler<>(producer, new CloudEventRequestToRecordMapper());
+    handler = new RequestHandler<>(producer, new CloudEventRequestToRecordMapper());
 
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(PORT);
@@ -88,7 +90,7 @@ public class ReceiverVerticleTest {
   }
 
   @BeforeEach
-  public void deployVerticle() {
+  public void cleanUp() {
     mockProducer.clear();
   }
 
@@ -97,49 +99,41 @@ public class ReceiverVerticleTest {
     httpClient.close();
   }
 
-  @Test
-  public void shouldProduceMultipleMessagesReceivedConcurrently(final VertxTestContext context)
-      throws Throwable {
-    shouldProduceMessagesReceivedConcurrently(context, getValidNonValidEvents());
-  }
-
   @ParameterizedTest
   @MethodSource({"getValidNonValidEvents"})
-  public void shouldProduceMessageReceived(final TestCase testCase, final VertxTestContext context)
-      throws InterruptedException {
-    shouldProduceMessagesReceivedConcurrently(context, Collections.singleton(testCase));
-  }
+  public void shouldProduceMessagesReceivedConcurrently(
+      final TestCase tc,
+      final VertxTestContext context) throws InterruptedException {
 
-  private void shouldProduceMessagesReceivedConcurrently(
-      final VertxTestContext context,
-      final Collection<TestCase> testCases) throws InterruptedException {
+    final var checkpoints = context.checkpoint(1);
+    final var countDown = new CountDownLatch(1);
 
-    final var checkpoints = context.checkpoint(testCases.size());
-    final var countDown = new CountDownLatch(testCases.size());
+    final var wait = new CountDownLatch(1);
 
-    testCases.forEach(rr -> doRequest(rr.requestFinalizer, rr.path)
+    handler.reconcile(Map.of(tc.broker, new HashSet<>()))
+        .onFailure(context::failNow)
+        .onSuccess(v -> wait.countDown());
+
+    wait.await(TIMEOUT, TimeUnit.SECONDS);
+
+    doRequest(tc.requestFinalizer, tc.path)
         .onSuccess(response -> context.verify(() -> {
 
               assertThat(response.statusCode())
-                  .as("verify path: " + rr.path)
-                  .isEqualTo(rr.responseStatusCode);
+                  .as("verify path: " + tc.path)
+                  .isEqualTo(tc.responseStatusCode);
 
               checkpoints.flag();
               countDown.countDown();
             }
         ))
-        .onFailure(context::failNow)
-    );
+        .onFailure(context::failNow);
 
     countDown.await(TIMEOUT, TimeUnit.SECONDS);
 
-    final var expectedProducedRecord = testCases.stream()
-        .filter(tc -> tc.record != null)
-        .map(tc -> tc.record)
-        .collect(Collectors.toList());
-
-    assertThat(mockProducer.history())
-        .containsExactlyInAnyOrderElementsOf(expectedProducedRecord);
+    if (mockProducer.history().size() > 0) {
+      assertThat(mockProducer.history()).containsExactlyInAnyOrder(tc.record);
+    }
   }
 
   private static Future<HttpClientResponse> doRequest(
@@ -161,16 +155,7 @@ public class ReceiverVerticleTest {
   private static List<TestCase> getValidNonValidEvents() {
     return Arrays.asList(
         new TestCase(
-            new ProducerRecord<>(
-                TOPIC_PREFIX + "broker-ns-broker-name1",
-                "",
-                new CloudEventBuilder()
-                    .withSubject("subject")
-                    .withSource(URI.create("/hello"))
-                    .withType("type")
-                    .withId("1234")
-                    .build()
-            ),
+            null,
             "/broker-ns/broker-name1",
             ceRequestFinalizer(new CloudEventBuilder()
                 .withSubject("subject")
@@ -178,8 +163,13 @@ public class ReceiverVerticleTest {
                 .withType("type")
                 .withId("1234")
                 .build()),
-            RequestHandler.RECORD_PRODUCED
-        ),
+            RequestHandler.BROKER_NOT_FOUND,
+            new BrokerWrapper(
+                BrokersConfig.Broker.newBuilder()
+                    .setName("broker-name")
+                    .setNamespace("broker-ns")
+                    .build()
+            )),
         new TestCase(
             null,
             "/broker-ns/broker-name/hello",
@@ -189,8 +179,13 @@ public class ReceiverVerticleTest {
                 .withType("type")
                 .withId("1234")
                 .build()),
-            RequestHandler.MAPPER_FAILED
-        ),
+            RequestHandler.BROKER_NOT_FOUND,
+            new BrokerWrapper(
+                BrokersConfig.Broker.newBuilder()
+                    .setName("hello")
+                    .setNamespace("broker-name")
+                    .build()
+            )),
         new TestCase(
             null,
             "/broker-ns/h/hello",
@@ -200,8 +195,13 @@ public class ReceiverVerticleTest {
                 .withType("type")
                 .withId("1234")
                 .build()),
-            RequestHandler.MAPPER_FAILED
-        ),
+            RequestHandler.BROKER_NOT_FOUND,
+            new BrokerWrapper(
+                BrokersConfig.Broker.newBuilder()
+                    .setName("hello")
+                    .setNamespace("h")
+                    .build()
+            )),
         new TestCase(
             new ProducerRecord<>(
                 TOPIC_PREFIX + "broker-ns-broker-name1",
@@ -213,27 +213,42 @@ public class ReceiverVerticleTest {
                     .withId("1234")
                     .build()
             ),
-            "/broker-ns/broker-name1/",
+            "/broker-ns/broker-name1",
             ceRequestFinalizer(new io.cloudevents.core.v03.CloudEventBuilder()
                 .withSubject("subject")
                 .withSource(URI.create("/hello"))
                 .withType("type")
                 .withId("1234")
                 .build()),
-            RequestHandler.RECORD_PRODUCED
-        ),
+            RequestHandler.RECORD_PRODUCED,
+            new BrokerWrapper(
+                BrokersConfig.Broker.newBuilder()
+                    .setName("broker-name1")
+                    .setNamespace("broker-ns")
+                    .build()
+            )),
         new TestCase(
             null,
-            "/broker-ns/broker-name/",
+            "/broker-ns/broker-name",
             request -> request.end("this is not a cloud event"),
-            RequestHandler.MAPPER_FAILED
-        ),
+            RequestHandler.MAPPER_FAILED,
+            new BrokerWrapper(
+                BrokersConfig.Broker.newBuilder()
+                    .setName("broker-name")
+                    .setNamespace("broker-ns")
+                    .build()
+            )),
         new TestCase(
             null,
             "/broker-ns/broker-name/hello",
             request -> request.end("this is not a cloud event"),
-            RequestHandler.MAPPER_FAILED
-        ),
+            RequestHandler.BROKER_NOT_FOUND,
+            new BrokerWrapper(
+                BrokersConfig.Broker.newBuilder()
+                    .setName("broker-name")
+                    .setNamespace("broker-ns")
+                    .build()
+            )),
         new TestCase(
             null,
             "/broker-ns/broker-name3",
@@ -245,8 +260,13 @@ public class ReceiverVerticleTest {
               request.headers().set("Content-Type", "application/json");
               request.end(objectNode.asText());
             },
-            RequestHandler.MAPPER_FAILED
-        ),
+            RequestHandler.MAPPER_FAILED,
+            new BrokerWrapper(
+                BrokersConfig.Broker.newBuilder()
+                    .setName("broker-name3")
+                    .setNamespace("broker-ns")
+                    .build()
+            )),
         new TestCase(
             null,
             "/broker-ns/broker-name4",
@@ -260,8 +280,13 @@ public class ReceiverVerticleTest {
               request.headers().set("Content-Type", "application/json");
               request.end(objectNode.asText());
             },
-            RequestHandler.MAPPER_FAILED
-        ),
+            RequestHandler.MAPPER_FAILED,
+            new BrokerWrapper(
+                BrokersConfig.Broker.newBuilder()
+                    .setName("broker-name4")
+                    .setNamespace("broker-ns")
+                    .build()
+            )),
         new TestCase(
             new ProducerRecord<>(
                 TOPIC_PREFIX + "broker-ns-broker-name5",
@@ -280,8 +305,13 @@ public class ReceiverVerticleTest {
                 .withType("type")
                 .withId("1234")
                 .build()),
-            RequestHandler.RECORD_PRODUCED
-        )
+            RequestHandler.RECORD_PRODUCED,
+            new BrokerWrapper(
+                BrokersConfig.Broker.newBuilder()
+                    .setName("broker-name5")
+                    .setNamespace("broker-ns")
+                    .build()
+            ))
     );
   }
 
@@ -295,17 +325,19 @@ public class ReceiverVerticleTest {
     final String path;
     final Consumer<HttpClientRequest> requestFinalizer;
     final int responseStatusCode;
+    final Broker broker;
 
     public TestCase(
         final ProducerRecord<String, CloudEvent> record,
         final String path,
         final Consumer<HttpClientRequest> requestFinalizer,
-        final int responseStatusCode) {
+        final int responseStatusCode, Broker broker) {
 
       this.path = path;
       this.requestFinalizer = requestFinalizer;
       this.responseStatusCode = responseStatusCode;
       this.record = record;
+      this.broker = broker;
     }
   }
 }

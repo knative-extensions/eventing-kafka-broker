@@ -17,7 +17,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.brokers;
-import static dev.knative.eventing.kafka.broker.dispatcher.file.FileWatcherTest.write;
+import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
@@ -25,7 +25,7 @@ import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker;
 import dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.BrokersManager;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
-import dev.knative.eventing.kafka.broker.dispatcher.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventBuilder;

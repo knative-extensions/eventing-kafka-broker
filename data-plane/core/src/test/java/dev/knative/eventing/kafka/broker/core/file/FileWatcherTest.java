@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.dispatcher.file;
+package dev.knative.eventing.kafka.broker.core.file;
 
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.broker1Unwrapped;
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.broker2Unwrapped;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 import com.google.protobuf.util.JsonFormat;
 import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers;
@@ -89,9 +88,7 @@ public class FileWatcherTest {
     final var thread = new Thread(() -> {
       try {
         fw.watch();
-      } catch (IOException | InterruptedException e) {
-        e.printStackTrace();
-        fail(e.getMessage());
+      } catch (IOException | InterruptedException ignored) {
       }
     });
     thread.start();

@@ -18,11 +18,15 @@ package dev.knative.eventing.kafka.broker.receiver;
 
 import static io.vertx.kafka.client.producer.KafkaProducer.createShared;
 
+import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
+import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.util.Properties;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -79,5 +83,18 @@ public class Main {
 
       logger.info("receiver started");
     });
+
+    try {
+      final var fw = new FileWatcher(
+          FileSystems.getDefault().newWatchService(),
+          new ObjectsCreator(handler),
+          new File(env.getDataPlaneConfigFilePath())
+      );
+
+      fw.watch(); // block forever
+
+    } catch (InterruptedException | IOException ex) {
+      logger.error("failed during filesystem watch", ex);
+    }
   }
 }
