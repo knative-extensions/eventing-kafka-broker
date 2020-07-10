@@ -100,7 +100,7 @@ func (manager *statusConditionManager) brokersTriggersConfigMapUpdated() {
 
 	conditionSet.Manage(&manager.Broker.Status).MarkTrueWithReason(
 		ConditionConfigMapUpdated,
-		fmt.Sprintf("config map %s updated", manager.configs.DataPlaneConfigMapAsString()),
+		fmt.Sprintf("Config map %s updated", manager.configs.DataPlaneConfigMapAsString()),
 		"",
 	)
 }
@@ -121,7 +121,7 @@ func (manager *statusConditionManager) topicCreated(topic string) {
 
 	conditionSet.Manage(&manager.Broker.Status).MarkTrueWithReason(
 		ConditionTopicReady,
-		fmt.Sprintf("topic %s created", topic),
+		fmt.Sprintf("Topic %s created", topic),
 		"",
 	)
 }
@@ -159,7 +159,7 @@ func (manager *statusConditionManager) failedToGetBrokerConfig(broker *eventing.
 	manager.recorder.Eventf(
 		broker,
 		corev1.EventTypeWarning,
-		"failed to get broker configuration",
+		"Failed to get broker configuration",
 		"%v",
 		err,
 	)
