@@ -241,6 +241,8 @@ func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev
 
 		logger := logging.FromContext(ctx)
 
+		logger.Debug("config map updated", zap.String("configmap", configMap.Name))
+
 		topicDetail := sarama.TopicDetail{}
 
 		var replicationFactor int32
@@ -252,7 +254,7 @@ func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev
 			configmap.AsString(BootstrapServersConfigMapKey, &bootstrapServers),
 		)
 		if err != nil {
-			logger.Error("Failed to parse config map", zap.String("configmap", configMap.Name))
+			logger.Error("Failed to parse config map", zap.String("configmap", configMap.Name), zap.Error(err))
 			return
 		}
 
@@ -260,7 +262,9 @@ func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev
 
 		r.SetDefaultTopicDetails(topicDetail)
 
-		_ = r.SetBootstrapServers(bootstrapServers)
+		if err := r.SetBootstrapServers(bootstrapServers); err != nil {
+			logger.Error("Failed to set bootstrap servers", zap.Error(err))
+		}
 	}
 }
 
@@ -269,7 +273,9 @@ func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev
 func (r *Reconciler) SetBootstrapServers(servers string) error {
 	addrs := strings.Split(servers, ",")
 
-	kafkaClusterAdmin, err := NewClusterAdmin(addrs, sarama.NewConfig())
+	config := sarama.NewConfig()
+	config.Version = sarama.MaxVersion
+	kafkaClusterAdmin, err := NewClusterAdmin(addrs, config)
 	if err != nil {
 		return fmt.Errorf("failed to create kafka cluster admin: %w", err)
 	}

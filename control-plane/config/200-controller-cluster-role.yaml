@@ -13,6 +13,7 @@ rules:
       - get
       - list
       - watch
+      - update
   - apiGroups:
       - "*"
     resources:
@@ -22,6 +23,13 @@ rules:
       - update
       - get
       - watch
+  - apiGroups:
+      - "*"
+    resources:
+      - events
+    verbs:
+      - patch
+      - create
 
   # Eventing resources and statuses we care about
   - apiGroups:
@@ -35,6 +43,8 @@ rules:
       - list
       - get
       - watch
+      - patch
+      - update
 
   # Eventing resources and finalizers we care about.
   - apiGroups:
@@ -43,4 +53,4 @@ rules:
       - "brokers/finalizers"
       - "triggers/finalizers"
     verbs:
-      - "update"
+      - update

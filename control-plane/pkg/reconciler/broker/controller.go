@@ -18,8 +18,10 @@ package broker
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Shopify/sarama"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
@@ -78,6 +80,13 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 		FilterFunc: kafka.BrokerClassFilter(),
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
+
+	cm, err := reconciler.KubeClient.CoreV1().ConfigMaps(configs.SystemNamespace).Get(configs.GeneralConfigMapName, metav1.GetOptions{})
+	if err != nil {
+		panic(fmt.Errorf("failed to get config map %s/%s: %w", configs.SystemNamespace, configs.GeneralConfigMapName, err))
+	}
+
+	reconciler.ConfigMapUpdated(ctx)(cm)
 
 	watcher.Watch(configs.GeneralConfigMapName, reconciler.ConfigMapUpdated(ctx))
 
