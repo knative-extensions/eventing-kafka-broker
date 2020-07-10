@@ -17,6 +17,12 @@ limitations under the License.
 package main
 
 import (
+	"context"
+	"log"
+
+	"github.com/kelseyhightower/envconfig"
+	"knative.dev/pkg/configmap"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/sharedmain"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -28,10 +34,26 @@ const (
 )
 
 func main() {
+	brokerEnvConfigs := broker.EnvConfigs{}
+
+	if err := envconfig.Process("", &brokerEnvConfigs); err != nil {
+		log.Fatal("cannot process environment variables", err)
+	}
+
+	log.Printf("configs %+v\n", brokerEnvConfigs)
+
+	brokerConfigs := &broker.Configs{
+		EnvConfigs:       brokerEnvConfigs,
+		BootstrapServers: "",
+	}
+
 	sharedmain.Main(
 		component,
 
-		broker.NewController,
+		func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
+			return broker.NewController(ctx, watcher, brokerConfigs)
+		},
+
 		trigger.NewController,
 	)
 }

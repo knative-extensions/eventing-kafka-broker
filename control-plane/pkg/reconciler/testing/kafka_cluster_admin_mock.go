@@ -1,0 +1,116 @@
+package testing
+
+import (
+	"testing"
+
+	"github.com/Shopify/sarama"
+	"github.com/google/go-cmp/cmp"
+)
+
+var _ sarama.ClusterAdmin = &MockKafkaClusterAdmin{}
+
+type MockKafkaClusterAdmin struct {
+	// (Create|Delete)Topic
+	ExpectedTopicName string
+
+	// CreateTopic
+	ExpectedTopicDetail sarama.TopicDetail
+	ErrorOnCreateTopic  error
+
+	// DeleteTopic
+	ErrorOnDeleteTopic error
+
+	T *testing.T
+}
+
+func (m MockKafkaClusterAdmin) CreateTopic(topic string, detail *sarama.TopicDetail, validateOnly bool) error {
+	if topic != m.ExpectedTopicName {
+		m.T.Errorf("expected topic %s got %s", m.ExpectedTopicName, topic)
+	}
+
+	if diff := cmp.Diff(*detail, m.ExpectedTopicDetail); diff != "" {
+		m.T.Errorf("unexpected topic detail (-want +got) %s", diff)
+	}
+
+	return m.ErrorOnCreateTopic
+}
+
+func (m MockKafkaClusterAdmin) ListTopics() (map[string]sarama.TopicDetail, error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) DescribeTopics(topics []string) (metadata []*sarama.TopicMetadata, err error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) DeleteTopic(topic string) error {
+	if topic != m.ExpectedTopicName {
+		m.T.Errorf("expected topic %s got %s", m.ExpectedTopicName, topic)
+	}
+
+	return m.ErrorOnDeleteTopic
+}
+
+func (m MockKafkaClusterAdmin) CreatePartitions(topic string, count int32, assignment [][]int32, validateOnly bool) error {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) AlterPartitionReassignments(topic string, assignment [][]int32) error {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) ListPartitionReassignments(topics string, partitions []int32) (topicStatus map[string]map[int32]*sarama.PartitionReplicaReassignmentsStatus, err error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) DeleteRecords(topic string, partitionOffsets map[int32]int64) error {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) DescribeConfig(resource sarama.ConfigResource) ([]sarama.ConfigEntry, error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) AlterConfig(resourceType sarama.ConfigResourceType, name string, entries map[string]*string, validateOnly bool) error {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) CreateACL(resource sarama.Resource, acl sarama.Acl) error {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) ListAcls(filter sarama.AclFilter) ([]sarama.ResourceAcls, error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) DeleteACL(filter sarama.AclFilter, validateOnly bool) ([]sarama.MatchingAcl, error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) ListConsumerGroups() (map[string]string, error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) DescribeConsumerGroups(groups []string) ([]*sarama.GroupDescription, error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) ListConsumerGroupOffsets(group string, topicPartitions map[string][]int32) (*sarama.OffsetFetchResponse, error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) DeleteConsumerGroup(group string) error {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) DescribeCluster() (brokers []*sarama.Broker, controllerID int32, err error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) DescribeLogDirs(brokers []int32) (map[int32][]sarama.DescribeLogDirsResponseDirMetadata, error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClusterAdmin) Close() error {
+	return nil
+}
