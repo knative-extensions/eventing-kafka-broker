@@ -702,7 +702,7 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 		}
 
 		clusterAdmin := &MockKafkaClusterAdmin{
-			ExpectedTopicName:   fmt.Sprintf("knative-%s-%s", brokerNamespace, brokerName),
+			ExpectedTopicName:   fmt.Sprintf("%s%s-%s", TopicPrefix, brokerNamespace, brokerName),
 			ExpectedTopicDetail: defaultTopicDetail,
 			ErrorOnCreateTopic:  onCreateTopicError,
 			ErrorOnDeleteTopic:  onDeleteTopicError,

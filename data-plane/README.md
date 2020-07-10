@@ -10,11 +10,11 @@ The data-plane uses [Vertx](https://vertx.io/) and is composed of two components
 
 The receiver starts an HTTP server, and it accepts requests with a path of the form `/<broker-namespace>/<broker-name>/`.
 
-Once a request comes, it sends the event in the body to the topic `knative-<broker-namespace>-<broker-name>`.
+Once a request comes, it sends the event in the body to the topic `knative-broker-<broker-namespace>-<broker-name>`.
 
 ## Dispatcher 
 
-The dispatcher starts a file watcher, which watches changes to a [mounted ConfigMap](config/100-triggers-configmap.yaml).
+The dispatcher starts a file watcher, which watches changes to a mounted ConfigMap.
 Such ConfigMap contains configurations of Brokers and Triggers in the cluster. 
 (see [proto/def/triggers.proto](../proto/def/triggers.proto))
 

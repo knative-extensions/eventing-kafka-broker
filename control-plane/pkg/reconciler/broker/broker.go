@@ -39,8 +39,8 @@ import (
 )
 
 const (
-	// topic prefix - (topic name: knative-<broker-namespace>-<broker-name>)
-	TopicPrefix = "knative-"
+	// topic prefix - (topic name: knative-broker-<broker-namespace>-<broker-name>)
+	TopicPrefix = "knative-broker-"
 
 	// signal that the broker hasn't been added to the config map yet.
 	noBroker = -1
