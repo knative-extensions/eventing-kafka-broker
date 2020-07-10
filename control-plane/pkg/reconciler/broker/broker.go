@@ -282,16 +282,13 @@ func (r *Reconciler) SetBootstrapServers(servers string) error {
 
 	r.KafkaClusterAdminLock.Lock()
 	oldKafkaClusterAdmin := r.KafkaClusterAdmin
-
-	// first unlock and then close the old one.
-	defer func() {
-		if oldKafkaClusterAdmin != nil {
-			_ = oldKafkaClusterAdmin.Close()
-		}
-	}()
-	defer r.KafkaClusterAdminLock.Unlock()
-
 	r.KafkaClusterAdmin = kafkaClusterAdmin
+	r.KafkaClusterAdminLock.Unlock()
+
+	if oldKafkaClusterAdmin != nil {
+		_ = oldKafkaClusterAdmin.Close()
+	}
+
 	return nil
 }
 
