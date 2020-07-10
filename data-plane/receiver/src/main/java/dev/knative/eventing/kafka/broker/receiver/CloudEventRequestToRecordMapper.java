@@ -32,7 +32,7 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper<St
   static final int PATH_TOKEN_NUMBER = 2;
   static final String PATH_DELIMITER = "/";
   static final String TOPIC_DELIMITER = "-";
-  public static final String TOPIC_PREFIX = "knative-";
+  public static final String TOPIC_PREFIX = "knative-broker-";
 
   @Override
   public Future<KafkaProducerRecord<String, CloudEvent>> recordFromRequest(
