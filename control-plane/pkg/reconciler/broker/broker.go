@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -30,6 +29,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	"knative.dev/eventing/pkg/logging"
+	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -239,28 +239,26 @@ func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev
 
 	return func(configMap *corev1.ConfigMap) {
 
-		numPartitionsStr := configMap.Data[DefaultTopicNumPartitionConfigMapKey]
-		replicationFactorStr := configMap.Data[DefaultTopicReplicationFactorConfigMapKey]
-		bootstrapServers := configMap.Data[BootstrapServersConfigMapKey]
+		logger := logging.FromContext(ctx)
 
-		logger := logging.FromContext(ctx).Sugar()
+		topicDetail := sarama.TopicDetail{}
 
-		numPartitions, err := strconv.Atoi(numPartitionsStr)
+		var replicationFactor int32
+		var bootstrapServers string
+
+		err := configmap.Parse(configMap.Data,
+			configmap.AsInt32(DefaultTopicNumPartitionConfigMapKey, &topicDetail.NumPartitions),
+			configmap.AsInt32(DefaultTopicReplicationFactorConfigMapKey, &replicationFactor),
+			configmap.AsString(BootstrapServersConfigMapKey, &bootstrapServers),
+		)
 		if err != nil {
-			logger.Warnf("failed to read number of partitions from config map %s", configMap.Name)
+			logger.Error("Failed to parse config map", zap.String("configmap", configMap.Name))
 			return
 		}
 
-		replicationFactor, err := strconv.Atoi(replicationFactorStr)
-		if err != nil {
-			logger.Warnf("failed to read replication factor from config map %s", configMap.Name)
-			return
-		}
+		topicDetail.ReplicationFactor = int16(replicationFactor)
 
-		r.SetDefaultTopicDetails(sarama.TopicDetail{
-			NumPartitions:     int32(numPartitions),
-			ReplicationFactor: int16(replicationFactor),
-		})
+		r.SetDefaultTopicDetails(topicDetail)
 
 		_ = r.SetBootstrapServers(bootstrapServers)
 	}
