@@ -45,17 +45,17 @@ type Reconciler struct {
 	SystemNamespace             string
 }
 
-func (r *Reconciler) GetBrokersTriggersConfigMap() (*corev1.ConfigMap, error) {
+func (r *Reconciler) GetDataPlaneConfigMap() (*corev1.ConfigMap, error) {
 	return r.KubeClient.CoreV1().
 		ConfigMaps(r.DataPlaneConfigMapNamespace).
 		Get(r.DataPlaneConfigMapName, metav1.GetOptions{})
 }
 
-// getBrokersTriggers extracts brokers and triggers data from the given config map.
-func (r *Reconciler) GetBrokersTriggers(logger *zap.Logger, brokersTriggersConfigMap *corev1.ConfigMap) (*coreconfig.Brokers, error) {
+// GetDataPlaneConfigMapData extracts brokers and triggers data from the given config map.
+func (r *Reconciler) GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.ConfigMap) (*coreconfig.Brokers, error) {
 
-	brokersTriggersRaw, hasData := brokersTriggersConfigMap.BinaryData[ConfigMapDataKey]
-	if !hasData || brokersTriggersRaw == nil {
+	dataPlaneDataRaw, hasData := dataPlaneConfigMap.BinaryData[ConfigMapDataKey]
+	if !hasData || dataPlaneDataRaw == nil {
 
 		logger.Debug(
 			fmt.Sprintf("Config map has no %s key, so start from scratch", ConfigMapDataKey),
@@ -75,9 +75,9 @@ func (r *Reconciler) GetBrokersTriggers(logger *zap.Logger, brokersTriggersConfi
 	// determine unmarshalling strategy
 	switch r.DataPlaneConfigFormat {
 	case Protobuf:
-		err = proto.Unmarshal(brokersTriggersRaw, brokersTriggers)
+		err = proto.Unmarshal(dataPlaneDataRaw, brokersTriggers)
 	case Json:
-		err = json.Unmarshal(brokersTriggersRaw, brokersTriggers)
+		err = json.Unmarshal(dataPlaneDataRaw, brokersTriggers)
 	}
 	if err != nil {
 
@@ -90,7 +90,7 @@ func (r *Reconciler) GetBrokersTriggers(logger *zap.Logger, brokersTriggersConfi
 	return brokersTriggers, nil
 }
 
-func (r *Reconciler) UpdateBrokersTriggersConfigMap(brokersTriggers *coreconfig.Brokers, configMap *corev1.ConfigMap) error {
+func (r *Reconciler) UpdateDataPlaneConfigMap(brokersTriggers *coreconfig.Brokers, configMap *corev1.ConfigMap) error {
 
 	var data []byte
 	var err error

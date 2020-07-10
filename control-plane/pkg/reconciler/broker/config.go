@@ -27,14 +27,14 @@ type Configs struct {
 }
 
 type EnvConfigs struct {
-	BrokersTriggersConfigMapNamespace string `required:"true" split_words:"true"`
-	BrokersTriggersConfigMapName      string `required:"true" split_words:"true"`
-	GeneralConfigMapName              string `required:"true" split_words:"true"`
-	BrokerIngressName                 string `required:"true" split_words:"true"`
-	SystemNamespace                   string `required:"true" split_words:"true"`
-	DataPlaneConfigFormat             string `required:"true" split_words:"true"`
+	DataPlaneConfigMapNamespace string `required:"true" split_words:"true"`
+	DataPlaneConfigMapName      string `required:"true" split_words:"true"`
+	GeneralConfigMapName        string `required:"true" split_words:"true"`
+	BrokerIngressName           string `required:"true" split_words:"true"`
+	SystemNamespace             string `required:"true" split_words:"true"`
+	DataPlaneConfigFormat       string `required:"true" split_words:"true"`
 }
 
-func (c *EnvConfigs) BrokersTriggersConfigMapAsString() string {
-	return fmt.Sprintf("%s/%s", c.BrokersTriggersConfigMapNamespace, c.BrokersTriggersConfigMapName)
+func (c *EnvConfigs) DataPlaneConfigMapAsString() string {
+	return fmt.Sprintf("%s/%s", c.DataPlaneConfigMapNamespace, c.DataPlaneConfigMapName)
 }

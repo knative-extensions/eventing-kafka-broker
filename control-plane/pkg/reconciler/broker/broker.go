@@ -82,7 +82,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 	logger.Debug("Topic created", zap.Any("topic", topic))
 
 	// Get brokers and triggers config map.
-	brokersTriggersConfigMap, err := r.GetBrokersTriggersConfigMap()
+	brokersTriggersConfigMap, err := r.GetDataPlaneConfigMap()
 	if err != nil {
 		return statusConditionManager.failedToGetBrokersTriggersConfigMap(err)
 	}
@@ -90,7 +90,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 	logger.Debug("Got brokers and triggers config map")
 
 	// Get brokersTriggers data.
-	brokersTriggers, err := r.GetBrokersTriggers(logger, brokersTriggersConfigMap)
+	brokersTriggers, err := r.GetDataPlaneConfigMapData(logger, brokersTriggersConfigMap)
 	if err != nil && brokersTriggers == nil {
 		return statusConditionManager.failedToGetBrokersTriggersDataFromConfigMap(err)
 	}
@@ -123,7 +123,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 	brokersTriggers.VolumeGeneration = incrementVolumeGeneration(brokersTriggers.VolumeGeneration)
 
 	// Update the configuration map with the new brokersTriggers data.
-	if err := r.UpdateBrokersTriggersConfigMap(brokersTriggers, brokersTriggersConfigMap); err != nil {
+	if err := r.UpdateDataPlaneConfigMap(brokersTriggers, brokersTriggersConfigMap); err != nil {
 		return statusConditionManager.failedToUpdateBrokersTriggersConfigMap(err)
 	}
 	statusConditionManager.brokersTriggersConfigMapUpdated()
@@ -154,15 +154,15 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 	logger.Debug("Finalizing broker")
 
 	// Get brokers and triggers config map.
-	brokersTriggersConfigMap, err := r.GetBrokersTriggersConfigMap()
+	brokersTriggersConfigMap, err := r.GetDataPlaneConfigMap()
 	if err != nil {
-		return fmt.Errorf("failed to get brokers and triggers config map %s: %w", r.Configs.BrokersTriggersConfigMapAsString(), err)
+		return fmt.Errorf("failed to get brokers and triggers config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
 	}
 
 	logger.Debug("Got brokers and triggers config map")
 
 	// Get brokersTriggers data.
-	brokersTriggers, err := r.GetBrokersTriggers(logger, brokersTriggersConfigMap)
+	brokersTriggers, err := r.GetDataPlaneConfigMapData(logger, brokersTriggersConfigMap)
 	if err != nil {
 		return fmt.Errorf("failed to get brokers and triggers: %w", err)
 	}
@@ -181,7 +181,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 	logger.Debug("Broker deleted", zap.Int("index", brokerIndex))
 
 	// Update the configuration map with the new brokersTriggers data.
-	if err := r.UpdateBrokersTriggersConfigMap(brokersTriggers, brokersTriggersConfigMap); err != nil {
+	if err := r.UpdateDataPlaneConfigMap(brokersTriggers, brokersTriggersConfigMap); err != nil {
 		return fmt.Errorf("failed to update configuration map: %w", err)
 	}
 

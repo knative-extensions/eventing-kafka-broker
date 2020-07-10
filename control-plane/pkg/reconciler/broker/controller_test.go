@@ -22,11 +22,15 @@ import (
 	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/broker/fake"
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/trigger/fake"
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
+	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	"knative.dev/pkg/configmap"
+	dynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 )
 
@@ -37,6 +41,27 @@ func TestNewController(t *testing.T) {
 		return nil, nil
 	}
 
+	configs := &Configs{
+		EnvConfigs: EnvConfigs{
+			SystemNamespace:      "cm",
+			GeneralConfigMapName: "cm",
+		},
+	}
+
+	ctx, _ = fakekubeclient.With(
+		ctx,
+		&corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      configs.EnvConfigs.GeneralConfigMapName,
+				Namespace: configs.EnvConfigs.SystemNamespace,
+			},
+		},
+	)
+	dynamicScheme := runtime.NewScheme()
+	_ = fakekubeclientset.AddToScheme(dynamicScheme)
+
+	dynamicclient.With(ctx, dynamicScheme)
+
 	controller := NewController(
 		ctx,
 		configmap.NewStaticWatcher(&corev1.ConfigMap{
@@ -44,11 +69,8 @@ func TestNewController(t *testing.T) {
 				Name: "cm",
 			},
 		}),
-		&Configs{
-			EnvConfigs: EnvConfigs{
-				GeneralConfigMapName: "cm",
-			},
-		})
+		configs,
+	)
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
 	}

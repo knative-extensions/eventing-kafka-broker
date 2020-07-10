@@ -60,13 +60,13 @@ func (manager *statusConditionManager) failedToGetBrokersTriggersConfigMap(err e
 		ConditionConfigMapUpdated,
 		fmt.Sprintf(
 			"Failed to get ConfigMap: %s",
-			manager.configs.BrokersTriggersConfigMapAsString(),
+			manager.configs.DataPlaneConfigMapAsString(),
 		),
 		"%v",
 		err,
 	)
 
-	return fmt.Errorf("failed to get brokers and triggers config map %s: %w", manager.configs.BrokersTriggersConfigMapAsString(), err)
+	return fmt.Errorf("failed to get brokers and triggers config map %s: %w", manager.configs.DataPlaneConfigMapAsString(), err)
 }
 
 func (manager *statusConditionManager) failedToGetBrokersTriggersDataFromConfigMap(err error) reconciler.Event {
@@ -75,32 +75,32 @@ func (manager *statusConditionManager) failedToGetBrokersTriggersDataFromConfigM
 		ConditionConfigMapUpdated,
 		fmt.Sprintf(
 			"Failed to get brokers and trigger data from ConfigMap: %s",
-			manager.configs.BrokersTriggersConfigMapAsString(),
+			manager.configs.DataPlaneConfigMapAsString(),
 		),
 		"%v",
 		err,
 	)
 
-	return fmt.Errorf("failed to get broker and triggers data from config map %s: %w", manager.configs.BrokersTriggersConfigMapAsString(), err)
+	return fmt.Errorf("failed to get broker and triggers data from config map %s: %w", manager.configs.DataPlaneConfigMapAsString(), err)
 }
 
 func (manager *statusConditionManager) failedToUpdateBrokersTriggersConfigMap(err error) reconciler.Event {
 
 	conditionSet.Manage(&manager.Broker.Status).MarkFalse(
 		ConditionConfigMapUpdated,
-		fmt.Sprintf("Failed to update ConfigMap: %s", manager.configs.BrokersTriggersConfigMapAsString()),
+		fmt.Sprintf("Failed to update ConfigMap: %s", manager.configs.DataPlaneConfigMapAsString()),
 		"%s",
 		err,
 	)
 
-	return fmt.Errorf("failed to update brokers and triggers config map %s: %w", manager.configs.BrokersTriggersConfigMapAsString(), err)
+	return fmt.Errorf("failed to update brokers and triggers config map %s: %w", manager.configs.DataPlaneConfigMapAsString(), err)
 }
 
 func (manager *statusConditionManager) brokersTriggersConfigMapUpdated() {
 
 	conditionSet.Manage(&manager.Broker.Status).MarkTrueWithReason(
 		ConditionConfigMapUpdated,
-		fmt.Sprintf("config map %s updated", manager.configs.BrokersTriggersConfigMapAsString()),
+		fmt.Sprintf("config map %s updated", manager.configs.DataPlaneConfigMapAsString()),
 		"",
 	)
 }

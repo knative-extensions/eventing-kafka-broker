@@ -53,8 +53,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
 			PodLister:                   podinformer.Get(ctx).Lister(),
-			DataPlaneConfigMapNamespace: configs.BrokersTriggersConfigMapNamespace,
-			DataPlaneConfigMapName:      configs.BrokersTriggersConfigMapName,
+			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
+			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
 			SystemNamespace:             configs.SystemNamespace,
 		},

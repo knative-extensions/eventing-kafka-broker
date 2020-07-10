@@ -192,8 +192,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewBroker(),
 				&corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
-						Namespace: configs.BrokersTriggersConfigMapNamespace,
-						Name:      configs.BrokersTriggersConfigMapName + "a",
+						Namespace: configs.DataPlaneConfigMapNamespace,
+						Name:      configs.DataPlaneConfigMapName + "a",
 					},
 				},
 			},
@@ -205,7 +205,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					corev1.EventTypeWarning,
 					"InternalError",
 					"failed to get brokers and triggers config map %s: %v",
-					configs.BrokersTriggersConfigMapAsString(), `configmaps "knative-eventing" not found`,
+					configs.DataPlaneConfigMapAsString(), `configmaps "knative-eventing" not found`,
 				),
 			},
 		},
@@ -597,8 +597,8 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewDeletedBroker(),
 				&corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
-						Namespace: configs.BrokersTriggersConfigMapNamespace,
-						Name:      configs.BrokersTriggersConfigMapName + "a",
+						Namespace: configs.DataPlaneConfigMapNamespace,
+						Name:      configs.DataPlaneConfigMapName + "a",
 					},
 				},
 			},
@@ -609,7 +609,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					corev1.EventTypeWarning,
 					"InternalError",
 					"failed to get brokers and triggers config map %s: %v",
-					configs.BrokersTriggersConfigMapAsString(), `configmaps "knative-eventing" not found`,
+					configs.DataPlaneConfigMapAsString(), `configmaps "knative-eventing" not found`,
 				),
 			},
 		},
@@ -713,8 +713,8 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
 				PodLister:                   listers.GetPodLister(),
-				DataPlaneConfigMapNamespace: configs.BrokersTriggersConfigMapNamespace,
-				DataPlaneConfigMapName:      configs.BrokersTriggersConfigMapName,
+				DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
+				DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
 				SystemNamespace:             configs.SystemNamespace,
 			},
@@ -835,8 +835,8 @@ func NewService() *corev1.Service {
 
 func NewConfigMap(configs *Configs, data []byte) runtime.Object {
 	return reconcilertesting.NewConfigMap(
-		configs.BrokersTriggersConfigMapName,
-		configs.BrokersTriggersConfigMapNamespace,
+		configs.DataPlaneConfigMapName,
+		configs.DataPlaneConfigMapNamespace,
 		func(configMap *corev1.ConfigMap) {
 			if configMap.BinaryData == nil {
 				configMap.BinaryData = make(map[string][]byte, 1)
@@ -869,7 +869,7 @@ func ConfigMapUpdate(configs *Configs, brokers *coreconfig.Brokers) clientgotest
 			Version:  "v1",
 			Resource: "ConfigMap",
 		},
-		configs.BrokersTriggersConfigMapNamespace,
+		configs.DataPlaneConfigMapNamespace,
 		NewConfigMapFromBrokers(brokers, configs),
 	)
 }

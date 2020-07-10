@@ -30,9 +30,9 @@ spec:
               mountPath: /etc/config-logging
               readOnly: true
           env:
-            - name: BROKERS_TRIGGERS_CONFIG_MAP_NAMESPACE
+            - name: DATA_PLANE_CONFIG_MAP_NAMESPACE
               value: knative-eventing
-            - name: BROKERS_TRIGGERS_CONFIG_MAP_NAME
+            - name: DATA_PLANE_CONFIG_MAP_NAME
               value: kafka-broker-brokers-triggers
             - name: CONFIG_LOGGING_NAME
               value: config-logging
