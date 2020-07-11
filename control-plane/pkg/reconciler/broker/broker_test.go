@@ -103,6 +103,10 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewBroker(),
 				NewConfigMap(&configs, nil),
 				NewService(),
+				NewReceiverPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
 				NewDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -129,6 +133,10 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					},
 					VolumeGeneration: 1,
 				}),
+				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
 				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -138,26 +146,19 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 		{
 			Name: "Reconciled normal - with DLS",
 			Objects: []runtime.Object{
-				NewDeletedBroker(
+				NewBroker(
 					WithDelivery(),
 				),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
-						{
-							Id:             brokerUUID,
-							Topic:          topic(),
-							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
-							Namespace:      brokerNamespace,
-							Name:           brokerName,
-						},
-					},
 					VolumeGeneration: 1,
 				}, &configs),
 				NewService(),
+				NewReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
 				NewDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
 			},
 			Key: testKey,
 			WantEvents: []string{
+				finalizerUpdatedEvent,
 				Eventf(
 					corev1.EventTypeNormal,
 					Reconciled,
@@ -166,12 +167,25 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					VolumeGeneration: 1,
+					Broker: []*coreconfig.Broker{
+						{
+							Id:             brokerUUID,
+							Topic:          topic(),
+							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
+						},
+					},
+					VolumeGeneration: 2,
+				}),
+				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
 				}),
 			},
 		},
 		{
-			Name: "Failed to topic",
+			Name: "Failed to create topic",
 			Objects: []runtime.Object{
 				NewBroker(),
 			},
@@ -219,6 +233,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewBroker(),
 				NewConfigMap(&configs, []byte(`{"hello": "world"}`)),
 				NewService(),
+				NewReceiverPod(configs.SystemNamespace, nil),
 				NewDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
@@ -243,6 +258,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						},
 					},
 					VolumeGeneration: 1,
+				}),
+				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
 				}),
 				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -270,6 +288,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					},
 				}, &configs),
 				NewService(),
+				NewReceiverPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
 				NewDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
@@ -306,6 +327,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						},
 					},
 					VolumeGeneration: 1,
+				}),
+				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
 				}),
 				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -343,6 +367,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					},
 				}, &configs),
 				NewService(),
+				NewReceiverPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "5",
+				}),
 				NewDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
@@ -373,6 +400,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						},
 					},
 					VolumeGeneration: 1,
+				}),
+				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
 				}),
 				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -406,6 +436,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					},
 				}, &configs),
 				NewService(),
+				NewReceiverPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "5",
+				}),
 				NewDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
@@ -438,6 +471,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					},
 					VolumeGeneration: 1,
 				}),
+				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
 				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
@@ -466,6 +502,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					VolumeGeneration: 1,
 				}, &configs),
 				NewService(),
+				NewReceiverPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "5",
+				}),
 				NewDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
@@ -497,6 +536,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						},
 					},
 					VolumeGeneration: 2,
+				}),
+				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
 				}),
 				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
@@ -844,6 +886,23 @@ func NewDispatcherPod(namespace string, annotations map[string]string) runtime.O
 	}
 }
 
+func NewReceiverPod(namespace string, annotations map[string]string) runtime.Object {
+	return &corev1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "kafka-broker-receiver",
+			Namespace:   namespace,
+			Annotations: annotations,
+			Labels: map[string]string{
+				"app": base.ReceiverLabel,
+			},
+		},
+	}
+}
+
 func DispatcherPodUpdate(namespace string, annotations map[string]string) clientgotesting.UpdateActionImpl {
 	return clientgotesting.NewUpdateAction(
 		schema.GroupVersionResource{
@@ -853,6 +912,18 @@ func DispatcherPodUpdate(namespace string, annotations map[string]string) client
 		},
 		namespace,
 		NewDispatcherPod(namespace, annotations),
+	)
+}
+
+func ReceiverPodUpdate(namespace string, annotations map[string]string) clientgotesting.UpdateActionImpl {
+	return clientgotesting.NewUpdateAction(
+		schema.GroupVersionResource{
+			Group:    "*",
+			Version:  "v1",
+			Resource: "Pod",
+		},
+		namespace,
+		NewReceiverPod(namespace, annotations),
 	)
 }
 

@@ -25,6 +25,8 @@ const (
 
 	// label for selecting dispatcher pods.
 	DispatcherLabel = "kafka-broker-dispatcher"
+	// label for selecting receiver pods.
+	ReceiverLabel = "kafka-broker-receiver"
 
 	// volume generation annotation data plane pods.
 	VolumeGenerationAnnotationKey = "volumeGeneration"
@@ -117,13 +119,29 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(brokersTriggers *coreconfig.Broker
 
 func (r *Reconciler) UpdateDispatcherPodsAnnotation(logger *zap.Logger, volumeGeneration uint64) error {
 
-	namespace := r.SystemNamespace
-
 	labelSelector := labels.SelectorFromSet(map[string]string{"app": DispatcherLabel})
-	pods, errors := r.PodLister.Pods(namespace).List(labelSelector)
+	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)
 	if errors != nil {
-		return fmt.Errorf("failed to list pods in namespace %s: %w", namespace, errors)
+		return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
 	}
+
+	return r.updatePodsAnnotation(logger, volumeGeneration, pods)
+}
+
+func (r *Reconciler) UpdateReceiverPodsAnnotation(logger *zap.Logger, volumeGeneration uint64) error {
+
+	labelSelector := labels.SelectorFromSet(map[string]string{"app": ReceiverLabel})
+	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)
+	if errors != nil {
+		return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
+	}
+
+	return r.updatePodsAnnotation(logger, volumeGeneration, pods)
+}
+
+func (r *Reconciler) updatePodsAnnotation(logger *zap.Logger, volumeGeneration uint64, pods []*corev1.Pod) error {
+
+	var errors error
 
 	for _, pod := range pods {
 
@@ -144,7 +162,7 @@ func (r *Reconciler) UpdateDispatcherPodsAnnotation(logger *zap.Logger, volumeGe
 		annotations[VolumeGenerationAnnotationKey] = fmt.Sprint(volumeGeneration)
 		pod.SetAnnotations(annotations)
 
-		if _, err := r.KubeClient.CoreV1().Pods(namespace).Update(pod); err != nil {
+		if _, err := r.KubeClient.CoreV1().Pods(pod.Namespace).Update(pod); err != nil {
 
 			errors = multierr.Append(errors, fmt.Errorf(
 				"failed to update pod %s/%s: %w",
@@ -154,6 +172,5 @@ func (r *Reconciler) UpdateDispatcherPodsAnnotation(logger *zap.Logger, volumeGe
 			))
 		}
 	}
-
 	return errors
 }
