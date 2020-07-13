@@ -140,18 +140,23 @@ func (manager *statusConditionManager) reconciled() reconciler.Event {
 	return reconciledNormal(broker.Namespace, broker.Name)
 }
 
-func (manager *statusConditionManager) failedToUpdateDispatcherPodsAnnotation(broker *eventing.Broker, err error) {
+func (manager *statusConditionManager) failedToUpdateDispatcherPodsAnnotation(err error) {
 
 	// We don't set status conditions for dispatcher pods updates.
 
 	// Record the event.
 	manager.recorder.Eventf(
-		broker,
+		manager.Broker,
 		corev1.EventTypeWarning,
 		"failed to update dispatcher pods annotation",
 		"%v",
 		err,
 	)
+}
+
+func (manager *statusConditionManager) failedToUpdateReceiverPodsAnnotation(err error) reconciler.Event {
+
+	return fmt.Errorf("failed to update receiver pods annotation: %w", err)
 }
 
 func (manager *statusConditionManager) failedToGetBrokerConfig(broker *eventing.Broker, err error) reconciler.Event {

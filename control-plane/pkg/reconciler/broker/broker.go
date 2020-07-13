@@ -130,20 +130,33 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger.Debug("Brokers and triggers config map updated")
 
+	// After #37 we reject events to a non-existing Broker, which means that we cannot consider a Broker Ready if all
+	// receivers haven't got the Broker, so update failures to receiver pods is a hard failure.
+	// On the other side, dispatcher pods care about Triggers, and the Broker object is used as a configuration
+	// prototype for all associated Triggers, so we consider that it's fine on the dispatcher side to receive eventually
+	// the update even if here eventually means seconds or minutes after the actual update.
+
+	// Update volume generation annotation of receiver pods
+	if err := r.UpdateReceiverPodsAnnotation(logger, brokersTriggers.VolumeGeneration); err != nil {
+		return statusConditionManager.failedToUpdateReceiverPodsAnnotation(err)
+	}
+
 	// Update volume generation annotation of dispatcher pods
 	if err := r.UpdateDispatcherPodsAnnotation(logger, brokersTriggers.VolumeGeneration); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-		// For now, we use the configuration map only on the dispatcher side, which means we don't lose availability,
-		// since the receiver will accept events. So, log out the error and move on to the next step.
+		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Broker
+		// ready. So, log out the error and move on to the next step.
 		logger.Warn(
 			"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
 			zap.Error(err),
 		)
 
-		statusConditionManager.failedToUpdateDispatcherPodsAnnotation(broker, err)
+		statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
 	} else {
 		logger.Debug("Updated dispatcher pod annotation")
 	}
+
+	logger.Debug("Updated receiver pod annotation")
 
 	return statusConditionManager.reconciled()
 }
