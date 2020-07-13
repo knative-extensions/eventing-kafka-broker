@@ -159,7 +159,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
 						TopicReady,
-						BrokerReady,
 						Addressable(&configs),
 					),
 				},
@@ -217,7 +216,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
 						TopicReady,
-						BrokerReady,
 						Addressable(&configs),
 					),
 				},
@@ -251,7 +249,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnCreateTopic: true,
+				wantErrorOnCreateTopic: createTopicError,
 			},
 		},
 		{
@@ -337,7 +335,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
 						TopicReady,
-						BrokerReady,
 						Addressable(&configs),
 					),
 				},
@@ -420,7 +417,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
 						TopicReady,
-						BrokerReady,
 						Addressable(&configs),
 					),
 				},
@@ -517,7 +513,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
 						TopicReady,
-						BrokerReady,
 						Addressable(&configs),
 					),
 				},
@@ -604,7 +599,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
 						TopicReady,
-						BrokerReady,
 						Addressable(&configs),
 					),
 				},
@@ -684,8 +678,70 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
 						TopicReady,
-						BrokerReady,
 						Addressable(&configs),
+					),
+				},
+			},
+		},
+		{
+			Name: "Failed to resolve DLS",
+			Objects: []runtime.Object{
+				NewBroker(
+					func(broker *eventing.Broker) {
+						broker.Spec.Delivery = &eventingduck.DeliverySpec{
+							DeadLetterSink: &duckv1.Destination{},
+						}
+					},
+				),
+				NewConfigMapFromBrokers(&coreconfig.Brokers{
+					Broker: []*coreconfig.Broker{
+						{
+							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topic:          "my-existing-topic-a",
+							DeadLetterSink: "http://www.my-sink.com",
+							Namespace:      brokerNamespace,
+							Name:           brokerName,
+						},
+						{
+							Id:        brokerUUID,
+							Topic:     topic(),
+							Namespace: brokerNamespace,
+							Name:      brokerName,
+						},
+					},
+					VolumeGeneration: 1,
+				}, &configs),
+				NewReceiverPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "5",
+				}),
+				NewDispatcherPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "5",
+				}),
+			},
+			Key: testKey,
+			WantErr: true,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					"failed to get broker configuration: failed to resolve broker.Spec.Deliver.DeadLetterSink: %v",
+					"destination missing Ref and URI, expected at least one",
+				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						func(broker *eventing.Broker) {
+							broker.Spec.Delivery = &eventingduck.DeliverySpec{
+								DeadLetterSink: &duckv1.Destination{},
+							}
+						},
+						reconcilertesting.WithInitBrokerConditions,
+						TopicReady,
 					),
 				},
 			},
@@ -809,7 +865,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic: true,
+				wantErrorOnDeleteTopic: deleteTopicError,
 			},
 		},
 		{
@@ -892,6 +948,74 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				}),
 			},
 		},
+		{
+			Name: "Reconciled normal - topic doesn't exist",
+			Objects: []runtime.Object{
+				NewDeletedBroker(),
+				NewConfigMapFromBrokers(&coreconfig.Brokers{
+					Broker: []*coreconfig.Broker{
+						{
+							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topic:          "my-existing-topic-a",
+							DeadLetterSink: "http://www.my-sink.com",
+						},
+						{
+							Id:             brokerUUID,
+							Topic:          "my-existing-topic-b",
+							DeadLetterSink: "http://www.my-sink.com",
+						},
+					},
+					VolumeGeneration: 5,
+				}, &configs),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				Eventf(
+					corev1.EventTypeNormal,
+					Reconciled,
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+				),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &coreconfig.Brokers{
+					Broker: []*coreconfig.Broker{
+						{
+							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topic:          "my-existing-topic-a",
+							DeadLetterSink: "http://www.my-sink.com",
+						},
+					},
+					VolumeGeneration: 5,
+				}),
+			},
+			OtherTestData: map[string]interface{}{
+				wantErrorOnDeleteTopic: sarama.ErrUnknownTopicOrPartition,
+			},
+		},
+		{
+			Name: "Reconciled normal - no broker found in config map",
+			Objects: []runtime.Object{
+				NewDeletedBroker(),
+				NewConfigMapFromBrokers(&coreconfig.Brokers{
+					Broker: []*coreconfig.Broker{
+						{
+							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topic:          "my-existing-topic-a",
+							DeadLetterSink: "http://www.my-sink.com",
+						},
+					},
+					VolumeGeneration: 5,
+				}, &configs),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				Eventf(
+					corev1.EventTypeNormal,
+					Reconciled,
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+				),
+			},
+		},
 	}
 
 	for i := range table {
@@ -913,13 +1037,13 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 		}
 
 		var onCreateTopicError error
-		if want, ok := row.OtherTestData[wantErrorOnCreateTopic]; ok && want.(bool) {
-			onCreateTopicError = createTopicError
+		if want, ok := row.OtherTestData[wantErrorOnCreateTopic]; ok {
+			onCreateTopicError = want.(error)
 		}
 
 		var onDeleteTopicError error
-		if want, ok := row.OtherTestData[wantErrorOnDeleteTopic]; ok && want.(bool) {
-			onDeleteTopicError = deleteTopicError
+		if want, ok := row.OtherTestData[wantErrorOnDeleteTopic]; ok {
+			onDeleteTopicError = want.(error)
 		}
 
 		clusterAdmin := &MockKafkaClusterAdmin{
@@ -1190,10 +1314,6 @@ func TopicReady(broker *eventing.Broker) {
 		fmt.Sprintf("Topic %s created", Topic(broker)),
 		"",
 	)
-}
-
-func BrokerReady(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(ConditionReady)
 }
 
 func Addressable(configs *Configs) func(broker *eventing.Broker) {

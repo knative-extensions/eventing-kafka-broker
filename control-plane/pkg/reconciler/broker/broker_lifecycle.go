@@ -28,14 +28,12 @@ import (
 )
 
 const (
-	ConditionReady                               = apis.ConditionReady
 	ConditionAddressable      apis.ConditionType = "Addressable"
 	ConditionTopicReady       apis.ConditionType = "TopicReady"
 	ConditionConfigMapUpdated apis.ConditionType = "ConfigMapUpdated"
 )
 
 var ConditionSet = apis.NewLivingConditionSet(
-	ConditionReady,
 	ConditionAddressable,
 	ConditionTopicReady,
 	ConditionConfigMapUpdated,
@@ -159,15 +157,7 @@ func (manager *statusConditionManager) failedToUpdateReceiverPodsAnnotation(err 
 	return fmt.Errorf("failed to update receiver pods annotation: %w", err)
 }
 
-func (manager *statusConditionManager) failedToGetBrokerConfig(broker *eventing.Broker, err error) reconciler.Event {
-
-	manager.recorder.Eventf(
-		broker,
-		corev1.EventTypeWarning,
-		"Failed to get broker configuration",
-		"%v",
-		err,
-	)
+func (manager *statusConditionManager) failedToGetBrokerConfig(err error) reconciler.Event {
 
 	return fmt.Errorf("failed to get broker configuration: %w", err)
 }

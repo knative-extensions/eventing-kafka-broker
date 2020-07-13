@@ -105,7 +105,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 	// Get broker configuration.
 	brokerConfig, err := r.getBrokerConfig(topic, broker)
 	if err != nil {
-		return statusConditionManager.failedToGetBrokerConfig(broker, err)
+		return statusConditionManager.failedToGetBrokerConfig(err)
 	}
 	// Update brokersTriggers data with the new broker configuration
 	if brokerIndex != noBroker {
@@ -186,22 +186,21 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 	)
 
 	brokerIndex := findBroker(brokersTriggers, broker)
-	if brokerIndex == noBroker {
-		return fmt.Errorf("broker %s/%s not found in config map", broker.Namespace, broker.Name)
+	if brokerIndex != noBroker {
+		deleteBroker(brokersTriggers, brokerIndex)
+
+		logger.Debug("Broker deleted", zap.Int("index", brokerIndex))
+
+		// Update the configuration map with the new brokersTriggers data.
+		if err := r.UpdateDataPlaneConfigMap(brokersTriggers, brokersTriggersConfigMap); err != nil {
+			return fmt.Errorf("failed to update configuration map: %w", err)
+		}
+
+		logger.Debug("Brokers and triggers config map updated")
+
+		// There is no need to update volume generation and dispatcher pod annotation, updates to the config map will
+		// eventually be seen by the dispatcher pod and resources will be deleted accordingly.
 	}
-	deleteBroker(brokersTriggers, brokerIndex)
-
-	logger.Debug("Broker deleted", zap.Int("index", brokerIndex))
-
-	// Update the configuration map with the new brokersTriggers data.
-	if err := r.UpdateDataPlaneConfigMap(brokersTriggers, brokersTriggersConfigMap); err != nil {
-		return fmt.Errorf("failed to update configuration map: %w", err)
-	}
-
-	logger.Debug("Brokers and triggers config map updated")
-
-	// There is no need to update volume generation and dispatcher pod annotation, updates to the config map will
-	// eventually be seen by the dispatcher pod and resources will be deleted accordingly.
 
 	topic, err := r.deleteTopic(broker)
 	if err != nil {
