@@ -18,7 +18,6 @@ package broker_test // different package name due to import cycles. (broker -> t
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/url"
 	"sync"
@@ -26,16 +25,13 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
-	"knative.dev/eventing/pkg/reconciler/names"
 	"knative.dev/pkg/apis"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
@@ -57,14 +53,6 @@ import (
 )
 
 const (
-	brokerNamespace = "test-namespace"
-	brokerName      = "test-broker"
-
-	serviceNamespace = "test-service-namespace"
-	serviceName      = "test-service"
-
-	brokerUUID = "e7185016-5d98-4b54-84e8-3b1cd4acc6b4"
-
 	wantErrorOnCreateTopic = "wantErrorOnCreateTopic"
 	wantErrorOnDeleteTopic = "wantErrorOnDeleteTopic"
 )
@@ -77,13 +65,11 @@ var (
 	finalizerUpdatedEvent = Eventf(
 		corev1.EventTypeNormal,
 		"FinalizerUpdate",
-		fmt.Sprintf(`Updated %q finalizers`, brokerName),
+		fmt.Sprintf(`Updated %q finalizers`, BrokerName),
 	)
 
 	createTopicError = fmt.Errorf("failed to create topic")
 	deleteTopicError = fmt.Errorf("failed to delete topic")
-
-	formats = []string{base.Protobuf, base.Json}
 )
 
 func TestBrokeReconciler(t *testing.T) {
@@ -91,14 +77,14 @@ func TestBrokeReconciler(t *testing.T) {
 
 	t.Parallel()
 
-	for _, f := range formats {
+	for _, f := range Formats {
 		brokerReconciliation(t, f, *DefaultConfigs)
 	}
 }
 
 func brokerReconciliation(t *testing.T, format string, configs Configs) {
 
-	testKey := fmt.Sprintf("%s/%s", brokerNamespace, brokerName)
+	testKey := fmt.Sprintf("%s/%s", BrokerNamespace, BrokerName)
 
 	configs.DataPlaneConfigFormat = format
 
@@ -124,17 +110,17 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeNormal,
 					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					Broker: []*coreconfig.Broker{
 						{
-							Id:        brokerUUID,
-							Topic:     topic(),
-							Namespace: brokerNamespace,
-							Name:      brokerName,
+							Id:        BrokerUUID,
+							Topic:     GetTopic(),
+							Namespace: BrokerNamespace,
+							Name:      BrokerName,
 						},
 					},
 					VolumeGeneration: 1,
@@ -181,18 +167,18 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeNormal,
 					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					Broker: []*coreconfig.Broker{
 						{
-							Id:             brokerUUID,
-							Topic:          topic(),
+							Id:             BrokerUUID,
+							Topic:          GetTopic(),
 							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
-							Namespace:      brokerNamespace,
-							Name:           brokerName,
+							Namespace:      BrokerNamespace,
+							Name:           BrokerName,
 						},
 					},
 					VolumeGeneration: 2,
@@ -232,7 +218,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					corev1.EventTypeWarning,
 					"InternalError",
 					"failed to create topic: %s: %v",
-					topic(), createTopicError,
+					GetTopic(), createTopicError,
 				),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -302,17 +288,17 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeNormal,
 					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					Broker: []*coreconfig.Broker{
 						{
-							Id:        brokerUUID,
-							Topic:     topic(),
-							Namespace: brokerNamespace,
-							Name:      brokerName,
+							Id:        BrokerUUID,
+							Topic:     GetTopic(),
+							Namespace: BrokerNamespace,
+							Name:      BrokerName,
 						},
 					},
 					VolumeGeneration: 1,
@@ -348,8 +334,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      brokerNamespace,
-							Name:           brokerName,
+							Namespace:      BrokerNamespace,
+							Name:           BrokerName,
 						},
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
@@ -372,7 +358,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeNormal,
 					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -382,8 +368,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      brokerNamespace,
-							Name:           brokerName,
+							Namespace:      BrokerNamespace,
+							Name:           BrokerName,
 						},
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
@@ -391,10 +377,10 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							DeadLetterSink: "http://www.my-sink.com",
 						},
 						{
-							Id:        brokerUUID,
-							Topic:     topic(),
-							Namespace: brokerNamespace,
-							Name:      brokerName,
+							Id:        BrokerUUID,
+							Topic:     GetTopic(),
+							Namespace: BrokerNamespace,
+							Name:      BrokerName,
 						},
 					},
 					VolumeGeneration: 1,
@@ -444,8 +430,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							DeadLetterSink: "http://www.my-sink.com",
 						},
 						{
-							Id:             brokerUUID,
-							Topic:          topic(),
+							Id:             BrokerUUID,
+							Topic:          GetTopic(),
 							DeadLetterSink: "http://www.my-sink.com",
 						},
 					},
@@ -464,7 +450,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeNormal,
 					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -476,11 +462,11 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							DeadLetterSink: "http://www.my-sink.com",
 						},
 						{
-							Id:             brokerUUID,
-							Topic:          topic(),
+							Id:             BrokerUUID,
+							Topic:          GetTopic(),
 							DeadLetterSink: "http://www.my-sink.com/api",
-							Namespace:      brokerNamespace,
-							Name:           brokerName,
+							Namespace:      BrokerNamespace,
+							Name:           BrokerName,
 						},
 					},
 					VolumeGeneration: 1,
@@ -530,15 +516,15 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      brokerNamespace,
-							Name:           brokerName,
+							Namespace:      BrokerNamespace,
+							Name:           BrokerName,
 						},
 						{
-							Id:             brokerUUID,
-							Topic:          topic(),
+							Id:             BrokerUUID,
+							Topic:          GetTopic(),
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      brokerNamespace,
-							Name:           brokerName,
+							Namespace:      BrokerNamespace,
+							Name:           BrokerName,
 						},
 					},
 				}, &configs),
@@ -556,7 +542,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeNormal,
 					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -566,14 +552,14 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      brokerNamespace,
-							Name:           brokerName,
+							Namespace:      BrokerNamespace,
+							Name:           BrokerName,
 						},
 						{
-							Id:        brokerUUID,
-							Topic:     topic(),
-							Namespace: brokerNamespace,
-							Name:      brokerName,
+							Id:        BrokerUUID,
+							Topic:     GetTopic(),
+							Namespace: BrokerNamespace,
+							Name:      BrokerName,
 						},
 					},
 					VolumeGeneration: 1,
@@ -612,14 +598,14 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      brokerNamespace,
-							Name:           brokerName,
+							Namespace:      BrokerNamespace,
+							Name:           BrokerName,
 						},
 						{
-							Id:        brokerUUID,
-							Topic:     topic(),
-							Namespace: brokerNamespace,
-							Name:      brokerName,
+							Id:        BrokerUUID,
+							Topic:     GetTopic(),
+							Namespace: BrokerNamespace,
+							Name:      BrokerName,
 						},
 					},
 					VolumeGeneration: 1,
@@ -638,7 +624,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeNormal,
 					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -648,14 +634,14 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      brokerNamespace,
-							Name:           brokerName,
+							Namespace:      BrokerNamespace,
+							Name:           BrokerName,
 						},
 						{
-							Id:        brokerUUID,
-							Topic:     topic(),
-							Namespace: brokerNamespace,
-							Name:      brokerName,
+							Id:        BrokerUUID,
+							Topic:     GetTopic(),
+							Namespace: BrokerNamespace,
+							Name:      BrokerName,
 						},
 					},
 					VolumeGeneration: 2,
@@ -697,14 +683,14 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      brokerNamespace,
-							Name:           brokerName,
+							Namespace:      BrokerNamespace,
+							Name:           BrokerName,
 						},
 						{
-							Id:        brokerUUID,
-							Topic:     topic(),
-							Namespace: brokerNamespace,
-							Name:      brokerName,
+							Id:        BrokerUUID,
+							Topic:     GetTopic(),
+							Namespace: BrokerNamespace,
+							Name:      BrokerName,
 						},
 					},
 					VolumeGeneration: 1,
@@ -756,14 +742,14 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 func TestBrokerFinalizer(t *testing.T) {
 	t.Parallel()
 
-	for _, f := range formats {
+	for _, f := range Formats {
 		brokerFinalization(t, f, *DefaultConfigs)
 	}
 }
 
 func brokerFinalization(t *testing.T, format string, configs Configs) {
 
-	testKey := fmt.Sprintf("%s/%s", brokerNamespace, brokerName)
+	testKey := fmt.Sprintf("%s/%s", BrokerNamespace, BrokerName)
 
 	configs.DataPlaneConfigFormat = format
 
@@ -775,10 +761,10 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
 					Broker: []*coreconfig.Broker{
 						{
-							Id:        brokerUUID,
-							Topic:     topic(),
-							Namespace: brokerNamespace,
-							Name:      brokerName,
+							Id:        BrokerUUID,
+							Topic:     GetTopic(),
+							Namespace: BrokerNamespace,
+							Name:      BrokerName,
 						},
 					},
 					VolumeGeneration: 1,
@@ -789,7 +775,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeNormal,
 					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -808,11 +794,11 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
 					Broker: []*coreconfig.Broker{
 						{
-							Id:             brokerUUID,
-							Topic:          topic(),
+							Id:             BrokerUUID,
+							Topic:          GetTopic(),
 							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
-							Namespace:      brokerNamespace,
-							Name:           brokerName,
+							Namespace:      BrokerNamespace,
+							Name:           BrokerName,
 						},
 					},
 					VolumeGeneration: 1,
@@ -823,7 +809,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeNormal,
 					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -839,8 +825,8 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
 					Broker: []*coreconfig.Broker{
 						{
-							Id:             brokerUUID,
-							Topic:          topic(),
+							Id:             BrokerUUID,
+							Topic:          GetTopic(),
 							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
 						},
 					},
@@ -854,7 +840,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					corev1.EventTypeWarning,
 					"InternalError",
 					"failed to delete topic %s: %v",
-					topic(), deleteTopicError,
+					GetTopic(), deleteTopicError,
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -917,7 +903,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 							DeadLetterSink: "http://www.my-sink.com",
 						},
 						{
-							Id:             brokerUUID,
+							Id:             BrokerUUID,
 							Topic:          "my-existing-topic-b",
 							DeadLetterSink: "http://www.my-sink.com",
 						},
@@ -930,7 +916,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeNormal,
 					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -958,7 +944,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 							DeadLetterSink: "http://www.my-sink.com",
 						},
 						{
-							Id:             brokerUUID,
+							Id:             BrokerUUID,
 							Topic:          "my-existing-topic-b",
 							DeadLetterSink: "http://www.my-sink.com",
 						},
@@ -971,7 +957,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeNormal,
 					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -1010,7 +996,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeNormal,
 					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, brokerNamespace, brokerName),
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
 				),
 			},
 		},
@@ -1045,7 +1031,7 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 		}
 
 		clusterAdmin := &MockKafkaClusterAdmin{
-			ExpectedTopicName:   fmt.Sprintf("%s%s-%s", TopicPrefix, brokerNamespace, brokerName),
+			ExpectedTopicName:   fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName),
 			ExpectedTopicDetail: defaultTopicDetail,
 			ErrorOnCreateTopic:  onCreateTopicError,
 			ErrorOnDeleteTopic:  onDeleteTopicError,
@@ -1132,161 +1118,13 @@ func TestConfigMapUpdate(t *testing.T) {
 	assert.NotNil(t, reconciler.KafkaClusterAdmin)
 }
 
-func topic() string {
-	return fmt.Sprintf("%s%s-%s", TopicPrefix, brokerNamespace, brokerName)
-}
-
-func NewDispatcherPod(namespace string, annotations map[string]string) runtime.Object {
-	return &corev1.Pod{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        "kafka-broker-dispatcher",
-			Namespace:   namespace,
-			Annotations: annotations,
-			Labels: map[string]string{
-				"app": base.DispatcherLabel,
-			},
-		},
-	}
-}
-
-func NewReceiverPod(namespace string, annotations map[string]string) runtime.Object {
-	return &corev1.Pod{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        "kafka-broker-receiver",
-			Namespace:   namespace,
-			Annotations: annotations,
-			Labels: map[string]string{
-				"app": base.ReceiverLabel,
-			},
-		},
-	}
-}
-
-func DispatcherPodUpdate(namespace string, annotations map[string]string) clientgotesting.UpdateActionImpl {
-	return clientgotesting.NewUpdateAction(
-		schema.GroupVersionResource{
-			Group:    "*",
-			Version:  "v1",
-			Resource: "Pod",
-		},
-		namespace,
-		NewDispatcherPod(namespace, annotations),
-	)
-}
-
-func ReceiverPodUpdate(namespace string, annotations map[string]string) clientgotesting.UpdateActionImpl {
-	return clientgotesting.NewUpdateAction(
-		schema.GroupVersionResource{
-			Group:    "*",
-			Version:  "v1",
-			Resource: "Pod",
-		},
-		namespace,
-		NewReceiverPod(namespace, annotations),
-	)
-}
-
-func NewService() *corev1.Service {
-	return reconcilertesting.NewService(
-		serviceName,
-		serviceNamespace,
-		func(service *corev1.Service) {
-			service.APIVersion = "v1"
-			service.Kind = "Service"
-		},
-	)
-}
-
-func NewConfigMap(configs *Configs, data []byte) runtime.Object {
-	return reconcilertesting.NewConfigMap(
-		configs.DataPlaneConfigMapName,
-		configs.DataPlaneConfigMapNamespace,
-		func(configMap *corev1.ConfigMap) {
-			if configMap.BinaryData == nil {
-				configMap.BinaryData = make(map[string][]byte, 1)
-			}
-
-			configMap.BinaryData[base.ConfigMapDataKey] = data
-		},
-	)
-}
-
-func NewConfigMapFromBrokers(brokers *coreconfig.Brokers, configs *Configs) runtime.Object {
-	var data []byte
-	var err error
-	if configs.DataPlaneConfigFormat == base.Protobuf {
-		data, err = proto.Marshal(brokers)
-	} else {
-		data, err = json.Marshal(brokers)
-	}
-	if err != nil {
-		panic(err)
-	}
-
-	return NewConfigMap(configs, data)
-}
-
-func ConfigMapUpdate(configs *Configs, brokers *coreconfig.Brokers) clientgotesting.UpdateActionImpl {
-	return clientgotesting.NewUpdateAction(
-		schema.GroupVersionResource{
-			Group:    "*",
-			Version:  "v1",
-			Resource: "ConfigMap",
-		},
-		configs.DataPlaneConfigMapNamespace,
-		NewConfigMapFromBrokers(brokers, configs),
-	)
-}
-
-// NewBroker creates a new Broker with broker class equals to kafka.BrokerClass
-func NewBroker(options ...reconcilertesting.BrokerOption) runtime.Object {
-	return reconcilertesting.NewBroker(
-		brokerName,
-		brokerNamespace,
-		append(
-			options,
-			reconcilertesting.WithBrokerClass(kafka.BrokerClass),
-			func(broker *eventing.Broker) {
-				broker.UID = brokerUUID
-			},
-		)...,
-	)
-}
-
-func NewDeletedBroker(options ...reconcilertesting.BrokerOption) runtime.Object {
-	return NewBroker(
-		append(
-			options,
-			func(broker *eventing.Broker) {
-				broker.DeletionTimestamp = &metav1.Time{Time: time.Now()}
-			},
-		)...,
-	)
-}
-
-func WithDelivery() func(*eventing.Broker) {
-	service := NewService()
-
-	return func(broker *eventing.Broker) {
-		broker.Spec.Delivery = &eventingduck.DeliverySpec{
-			DeadLetterSink: &duckv1.Destination{
-				Ref: &duckv1.KReference{
-					Kind:       service.Kind,
-					Namespace:  service.Namespace,
-					Name:       service.Name,
-					APIVersion: service.APIVersion,
-				},
-			},
-		}
-	}
+func patchFinalizers() clientgotesting.PatchActionImpl {
+	action := clientgotesting.PatchActionImpl{}
+	action.Name = BrokerName
+	action.Namespace = BrokerNamespace
+	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
+	action.Patch = []byte(patch)
+	return action
 }
 
 func getUnmarshallableError(format string) interface{} {
@@ -1294,72 +1132,4 @@ func getUnmarshallableError(format string) interface{} {
 		return "unexpected EOF"
 	}
 	return "invalid character '-' after object key"
-}
-
-func ConfigMapUpdatedReady(configs *Configs) func(broker *eventing.Broker) {
-	return func(broker *eventing.Broker) {
-		broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrueWithReason(
-			ConditionConfigMapUpdated,
-			fmt.Sprintf("Config map %s updated", configs.DataPlaneConfigMapAsString()),
-			"",
-		)
-	}
-}
-
-func TopicReady(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrueWithReason(
-		ConditionTopicReady,
-		fmt.Sprintf("Topic %s created", Topic(broker)),
-		"",
-	)
-}
-
-func Addressable(configs *Configs) func(broker *eventing.Broker) {
-
-	return func(broker *eventing.Broker) {
-
-		broker.Status.Address.URL = &apis.URL{
-			Scheme: "http",
-			Host:   names.ServiceHostName(configs.BrokerIngressName, configs.SystemNamespace),
-			Path:   fmt.Sprintf("/%s/%s", broker.Namespace, broker.Name),
-		}
-
-		broker.GetConditionSet().Manage(&broker.Status).MarkTrue(ConditionAddressable)
-	}
-}
-
-func FailedToCreateTopic(broker *eventing.Broker) {
-
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
-		ConditionTopicReady,
-		fmt.Sprintf("Failed to create topic: %s", topic()),
-		"%v",
-		fmt.Errorf("failed to create topic"),
-	)
-
-}
-
-func FailedToGetConfigMap(configs *Configs) func(broker *eventing.Broker) {
-
-	return func(broker *eventing.Broker) {
-
-		broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
-			ConditionConfigMapUpdated,
-			fmt.Sprintf(
-				"Failed to get ConfigMap: %s",
-				configs.DataPlaneConfigMapAsString(),
-			),
-			`configmaps "knative-eventing" not found`,
-		)
-	}
-
-}
-
-func patchFinalizers() clientgotesting.PatchActionImpl {
-	action := clientgotesting.PatchActionImpl{}
-	action.Name = brokerName
-	action.Namespace = brokerNamespace
-	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
-	action.Patch = []byte(patch)
-	return action
 }

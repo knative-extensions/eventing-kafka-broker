@@ -19,38 +19,170 @@ package trigger
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"go.uber.org/zap"
-	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/tools/record"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1beta1"
 	"knative.dev/pkg/reconciler"
+	"knative.dev/pkg/resolver"
+
+	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/log"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
 
 const (
 	trigger           = "Trigger"
 	triggerReconciled = trigger + "Reconciled"
+
+	noTrigger = brokerreconciler.NoBroker
 )
 
 type Reconciler struct {
-	logger *zap.Logger
+	*base.Reconciler
+
+	BrokerLister eventinglisters.BrokerLister
+	Resolver     *resolver.URIResolver
+
+	Configs *brokerreconciler.EnvConfigs
+
+	Recorder record.EventRecorder
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	r.logger.Debug("reconciling Trigger", zap.Any("trigger", trigger))
 
-	return reconciledNormal(trigger.Namespace, trigger.Name)
+	logger := log.Logger(ctx, "trigger", trigger)
+
+	logger.Debug("Reconciling Trigger", zap.Any("trigger", trigger))
+
+	statusConditionManager := statusConditionManager{
+		Trigger: trigger,
+		Configs: r.Configs,
+	}
+
+	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return statusConditionManager.failedToGetBroker(err)
+	}
+
+	if apierrors.IsNotFound(err) || !broker.GetDeletionTimestamp().IsZero() {
+		// The associated broker doesn't exist anymore, so clean up Trigger resources.
+		return r.FinalizeKind(ctx, trigger)
+	}
+
+	statusConditionManager.propagateBrokerCondition(broker)
+
+	// Get data plane config map.
+	dataPlaneConfigMap, err := r.GetDataPlaneConfigMap()
+	if err != nil {
+		return statusConditionManager.failedToGetDataPlaneConfigMap(err)
+	}
+
+	logger.Debug("Got brokers and triggers config map")
+
+	// Get data plane config data.
+	dataPlaneConfig, err := r.GetDataPlaneConfigMapData(logger, dataPlaneConfigMap)
+	if err != nil || dataPlaneConfig == nil {
+		return statusConditionManager.failedToGetDataPlaneConfigFromConfigMap(err)
+	}
+
+	logger.Debug(
+		"Got brokers and triggers data from config map",
+		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: dataPlaneConfig}),
+	)
+
+	brokerIndex := brokerreconciler.FindBroker(dataPlaneConfig, broker)
+	if brokerIndex == brokerreconciler.NoBroker {
+		return statusConditionManager.brokerNotFoundInDataPlaneConfigMap()
+	}
+	triggerIndex := findTrigger(dataPlaneConfig.Broker[brokerIndex].Triggers, trigger)
+
+	triggerConfig, err := r.GetTriggerConfig(trigger)
+	if err != nil {
+		return statusConditionManager.failedToResolveTriggerConfig(err)
+	}
+
+	statusConditionManager.subscriberResolved()
+
+	if triggerIndex == noTrigger {
+		dataPlaneConfig.Broker[brokerIndex].Triggers = append(
+			dataPlaneConfig.Broker[brokerIndex].Triggers,
+			&triggerConfig,
+		)
+	} else {
+		dataPlaneConfig.Broker[brokerIndex].Triggers[triggerIndex] = &triggerConfig
+	}
+
+	// Increment volumeGeneration
+	dataPlaneConfig.VolumeGeneration = incrementVolumeGeneration(dataPlaneConfig.VolumeGeneration)
+
+	// Update the configuration map with the new dataPlaneConfig data.
+	if err := r.UpdateDataPlaneConfigMap(dataPlaneConfig, dataPlaneConfigMap); err != nil {
+		return fmt.Errorf("failed to update configuration map: %w", err)
+	}
+
+	// Update volume generation annotation of dispatcher pods
+	if err := r.UpdateDispatcherPodsAnnotation(logger, dataPlaneConfig.VolumeGeneration); err != nil {
+		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
+		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
+		// ready. So, log out the error and move on to the next step.
+		logger.Warn(
+			"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
+			zap.Error(err),
+		)
+
+		statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
+	} else {
+		logger.Debug("Updated dispatcher pod annotation")
+	}
+
+	logger.Debug("Brokers and triggers config map updated")
+
+	return statusConditionManager.reconciled()
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	r.logger.Debug("finalizing Trigger", zap.Any("trigger", trigger))
+
+	logger := log.Logger(ctx, "trigger", trigger)
+
+	logger.Debug("Finalizing Trigger", zap.Any("trigger", trigger))
 
 	return reconciledNormal(trigger.Namespace, trigger.Name)
 }
 
-func reconciledNormal(namespace, name string) reconciler.Event {
-	return reconciler.NewEvent(
-		corev1.EventTypeNormal,
-		triggerReconciled,
-		fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, namespace, name),
-	)
+func (r *Reconciler) GetTriggerConfig(trigger *eventing.Trigger) (coreconfig.Trigger, error) {
+
+	var attributes map[string]string
+	if trigger.Spec.Filter != nil {
+		attributes = trigger.Spec.Filter.Attributes
+	}
+
+	destination, err := r.Resolver.URIFromDestinationV1(trigger.Spec.Subscriber, trigger)
+	if err != nil {
+		return coreconfig.Trigger{}, fmt.Errorf("failed to resolve Trigger.Spec.Subscriber: %w", err)
+	}
+
+	return coreconfig.Trigger{
+		Attributes:  attributes,
+		Destination: destination.String(),
+		Id:          string(trigger.UID),
+	}, nil
+}
+
+func findTrigger(triggers []*coreconfig.Trigger, trigger *eventing.Trigger) int {
+
+	for i, t := range triggers {
+		if t.Id == string(trigger.UID) {
+			return i
+		}
+	}
+	return noTrigger
+}
+
+func incrementVolumeGeneration(generation uint64) uint64 {
+	return (generation + 1) % (math.MaxUint64 - 1)
 }

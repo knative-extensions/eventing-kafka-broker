@@ -19,19 +19,38 @@ package trigger
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/broker"
 	"knative.dev/pkg/configmap"
 
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/broker/fake"
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/trigger/fake"
+	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
+
+	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
 
 func TestNewController(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
-	controller := NewController(ctx, configmap.NewStaticWatcher())
+	controller := NewController(ctx, configmap.NewStaticWatcher(), &brokerreconciler.EnvConfigs{})
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
 	}
+}
+
+func TestFilterTriggers(t *testing.T) {
+	ctx, _ := reconcilertesting.SetupFakeContext(t)
+
+	pass := filterTriggers(brokerinformer.Get(ctx).Lister())(&eventing.Trigger{
+		Spec: eventing.TriggerSpec{
+			Broker: "not-exists",
+		},
+	})
+
+	assert.True(t, pass)
 }
