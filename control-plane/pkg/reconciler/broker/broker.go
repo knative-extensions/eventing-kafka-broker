@@ -130,6 +130,12 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger.Debug("Brokers and triggers config map updated")
 
+	// After #37 we reject events to a non-existing Broker, which means that we cannot consider a Broker Ready if all
+	// receivers haven't got the Broker, so update failures to receiver pods is a hard failure.
+	// On the other side, dispatcher pods care about Triggers, and the Broker object is used as a configuration
+	// prototype for all associated Triggers, so we consider that it's fine on the dispatcher side to receive eventually
+	// the update even if here eventually means seconds or minutes after the actual update.
+
 	// Update volume generation annotation of receiver pods
 	if err := r.UpdateReceiverPodsAnnotation(logger, brokersTriggers.VolumeGeneration); err != nil {
 		return statusConditionManager.failedToUpdateReceiverPodsAnnotation(err)

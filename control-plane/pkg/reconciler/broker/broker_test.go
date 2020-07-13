@@ -172,6 +172,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             brokerUUID,
 							Topic:          topic(),
 							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
+							Namespace: brokerNamespace,
+							Name:      brokerName,
 						},
 					},
 					VolumeGeneration: 2,
