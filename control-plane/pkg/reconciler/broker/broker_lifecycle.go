@@ -34,7 +34,7 @@ const (
 	ConditionConfigMapUpdated apis.ConditionType = "ConfigMapUpdated"
 )
 
-var conditionSet = apis.NewLivingConditionSet(
+var ConditionSet = apis.NewLivingConditionSet(
 	ConditionReady,
 	ConditionAddressable,
 	ConditionTopicReady,
@@ -56,7 +56,7 @@ type statusConditionManager struct {
 
 func (manager *statusConditionManager) failedToGetBrokersTriggersConfigMap(err error) reconciler.Event {
 
-	conditionSet.Manage(&manager.Broker.Status).MarkFalse(
+	manager.Broker.GetConditionSet().Manage(&manager.Broker.Status).MarkFalse(
 		ConditionConfigMapUpdated,
 		fmt.Sprintf(
 			"Failed to get ConfigMap: %s",
@@ -71,7 +71,7 @@ func (manager *statusConditionManager) failedToGetBrokersTriggersConfigMap(err e
 
 func (manager *statusConditionManager) failedToGetBrokersTriggersDataFromConfigMap(err error) reconciler.Event {
 
-	conditionSet.Manage(&manager.Broker.Status).MarkFalse(
+	manager.Broker.GetConditionSet().Manage(&manager.Broker.Status).MarkFalse(
 		ConditionConfigMapUpdated,
 		fmt.Sprintf(
 			"Failed to get brokers and trigger data from ConfigMap: %s",
@@ -86,7 +86,7 @@ func (manager *statusConditionManager) failedToGetBrokersTriggersDataFromConfigM
 
 func (manager *statusConditionManager) failedToUpdateBrokersTriggersConfigMap(err error) reconciler.Event {
 
-	conditionSet.Manage(&manager.Broker.Status).MarkFalse(
+	manager.Broker.GetConditionSet().Manage(&manager.Broker.Status).MarkFalse(
 		ConditionConfigMapUpdated,
 		fmt.Sprintf("Failed to update ConfigMap: %s", manager.configs.DataPlaneConfigMapAsString()),
 		"%s",
@@ -98,7 +98,7 @@ func (manager *statusConditionManager) failedToUpdateBrokersTriggersConfigMap(er
 
 func (manager *statusConditionManager) brokersTriggersConfigMapUpdated() {
 
-	conditionSet.Manage(&manager.Broker.Status).MarkTrueWithReason(
+	manager.Broker.GetConditionSet().Manage(&manager.Broker.Status).MarkTrueWithReason(
 		ConditionConfigMapUpdated,
 		fmt.Sprintf("Config map %s updated", manager.configs.DataPlaneConfigMapAsString()),
 		"",
@@ -107,7 +107,7 @@ func (manager *statusConditionManager) brokersTriggersConfigMapUpdated() {
 
 func (manager *statusConditionManager) failedToCreateTopic(topic string, err error) reconciler.Event {
 
-	conditionSet.Manage(&manager.Broker.Status).MarkFalse(
+	manager.Broker.GetConditionSet().Manage(&manager.Broker.Status).MarkFalse(
 		ConditionTopicReady,
 		fmt.Sprintf("Failed to create topic: %s", topic),
 		"%v",
@@ -119,7 +119,7 @@ func (manager *statusConditionManager) failedToCreateTopic(topic string, err err
 
 func (manager *statusConditionManager) topicCreated(topic string) {
 
-	conditionSet.Manage(&manager.Broker.Status).MarkTrueWithReason(
+	manager.Broker.GetConditionSet().Manage(&manager.Broker.Status).MarkTrueWithReason(
 		ConditionTopicReady,
 		fmt.Sprintf("Topic %s created", topic),
 		"",
@@ -135,7 +135,7 @@ func (manager *statusConditionManager) reconciled() reconciler.Event {
 		Host:   names.ServiceHostName(manager.configs.BrokerIngressName, manager.configs.SystemNamespace),
 		Path:   fmt.Sprintf("/%s/%s", broker.Namespace, broker.Name),
 	}
-	conditionSet.Manage(&broker.Status).MarkTrue(ConditionAddressable)
+	broker.GetConditionSet().Manage(&broker.Status).MarkTrue(ConditionAddressable)
 
 	return reconciledNormal(broker.Namespace, broker.Name)
 }

@@ -18,19 +18,21 @@ package testing
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	fakeapiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
-	fakeeventingsclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
+	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1beta1"
 	"knative.dev/pkg/reconciler/testing"
 )
 
 var clientSetSchemes = []func(*runtime.Scheme) error{
-	fakeeventingsclientset.AddToScheme,
+	fakeeventingclientset.AddToScheme,
 	fakekubeclientset.AddToScheme,
+	fakeapiextensionsclientset.AddToScheme,
 }
 
 type Listers struct {
@@ -65,7 +67,7 @@ func (l *Listers) GetKubeObjects() []runtime.Object {
 }
 
 func (l *Listers) GetEventingObjects() []runtime.Object {
-	return l.sorter.ObjectsForSchemeFunc(fakeeventingsclientset.AddToScheme)
+	return l.sorter.ObjectsForSchemeFunc(fakeeventingclientset.AddToScheme)
 }
 
 func (l *Listers) GetBrokerLister() eventinglisters.BrokerLister {

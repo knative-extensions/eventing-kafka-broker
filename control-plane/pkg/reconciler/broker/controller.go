@@ -23,6 +23,7 @@ import (
 	"github.com/Shopify/sarama"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -48,6 +49,8 @@ const (
 var NewClusterAdmin = sarama.NewClusterAdmin
 
 func NewController(ctx context.Context, watcher configmap.Watcher, configs *Configs) *controller.Impl {
+
+	eventing.RegisterAlternateBrokerConditionSet(ConditionSet)
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{

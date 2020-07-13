@@ -13,11 +13,12 @@ require (
 	go.uber.org/zap v1.14.1
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.17.6
+	k8s.io/apiextensions-apiserver v0.17.6
 	k8s.io/apimachinery v0.18.5
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/eventing v0.15.1-0.20200707083143-f960d82d596c
-	knative.dev/pkg v0.0.0-20200702222342-ea4d6e985ba0
-	knative.dev/test-infra v0.0.0-20200706175144-bf259f132900
+	knative.dev/eventing v0.16.1-0.20200710223037-c57ec355b284
+	knative.dev/pkg v0.0.0-20200708171447-5358179e7499
+	knative.dev/test-infra v0.0.0-20200713045417-850e4e37918d
 )
 
 replace (
