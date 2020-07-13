@@ -29,6 +29,9 @@ spec:
             - mountPath: /etc/config
               name: config-kafka-broker-receiver
               readOnly: true
+            - mountPath: /etc/brokers-triggers
+              name: kafka-broker-brokers-triggers
+              readOnly: true
             - mountPath: /tmp
               name: cache
           env:
@@ -36,6 +39,8 @@ spec:
               value: "8080"
             - name: PRODUCER_CONFIG_FILE_PATH
               value: /etc/config/config-kafka-broker-producer.properties
+            - name: DATA_PLANE_CONFIG_FILE_PATH
+              value: /etc/brokers-triggers/data
             - name: LIVENESS_PROBE_PATH
               value: /healthz
             - name: READINESS_PROBE_PATH
@@ -75,6 +80,9 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
       volumes:
+        - name: kafka-broker-brokers-triggers
+          configMap:
+            name: kafka-broker-brokers-triggers
         - name: config-kafka-broker-receiver
           configMap:
             name: config-kafka-broker-receiver

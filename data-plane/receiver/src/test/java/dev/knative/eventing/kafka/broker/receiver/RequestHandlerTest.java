@@ -16,6 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.receiver;
 
+import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.broker1;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -30,22 +32,29 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.RecordMetadata;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 public class RequestHandlerTest {
 
+  private static final int TIMEOUT = 3;
+
   @Test
-  public void shouldSendRecordAndTerminateRequestWithRecordProduced() {
+  public void shouldSendRecordAndTerminateRequestWithRecordProduced() throws InterruptedException {
     shouldSendRecord(false, RequestHandler.RECORD_PRODUCED);
   }
 
   @Test
-  public void shouldSendRecordAndTerminateRequestWithFailedToProduce() {
+  public void shouldSendRecordAndTerminateRequestWithFailedToProduce() throws InterruptedException {
     shouldSendRecord(true, RequestHandler.FAILED_TO_PRODUCE);
   }
 
   @SuppressWarnings("unchecked")
-  private static void shouldSendRecord(boolean failedToSend, int statusCode) {
+  private static void shouldSendRecord(boolean failedToSend, int statusCode)
+      throws InterruptedException {
     final var record = new KafkaProducerRecordImpl<>(
         "topic", "key", "value", 10
     );
@@ -68,10 +77,22 @@ public class RequestHandlerTest {
       return producer;
     });
 
+    final var broker = broker1();
+
     final var request = mock(HttpServerRequest.class);
+    when(request.path()).thenReturn(String.format("/%s/%s", broker.namespace(), broker.name()));
     final var response = mockResponse(request, statusCode);
 
     final var handler = new RequestHandler<>(producer, mapper);
+
+    final var countDown = new CountDownLatch(1);
+
+    handler.reconcile(Map.of(broker, new HashSet<>()))
+        .onFailure(cause -> fail())
+        .onSuccess(v -> countDown.countDown());
+
+    countDown.await(TIMEOUT, TimeUnit.SECONDS);
+
     handler.handle(request);
 
     verifySetStatusCodeAndTerminateResponse(statusCode, response);
@@ -79,16 +100,27 @@ public class RequestHandlerTest {
 
   @Test
   @SuppressWarnings({"unchecked"})
-  public void shouldReturnBadRequestIfNoRecordCanBeCreated() {
+  public void shouldReturnBadRequestIfNoRecordCanBeCreated() throws InterruptedException {
     final var producer = mock(KafkaProducer.class);
 
     final RequestToRecordMapper<Object, Object> mapper
         = (request) -> Future.failedFuture("");
 
+    final var broker = broker1();
+
     final var request = mock(HttpServerRequest.class);
+    when(request.path()).thenReturn(String.format("/%s/%s", broker.namespace(), broker.name()));
     final var response = mockResponse(request, RequestHandler.MAPPER_FAILED);
 
     final var handler = new RequestHandler<Object, Object>(producer, mapper);
+
+    final var countDown = new CountDownLatch(1);
+    handler.reconcile(Map.of(broker, new HashSet<>()))
+        .onFailure(cause -> fail())
+        .onSuccess(v -> countDown.countDown());
+
+    countDown.await(TIMEOUT, TimeUnit.SECONDS);
+
     handler.handle(request);
 
     verifySetStatusCodeAndTerminateResponse(RequestHandler.MAPPER_FAILED, response);

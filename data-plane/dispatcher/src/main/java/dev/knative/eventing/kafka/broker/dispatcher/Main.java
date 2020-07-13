@@ -17,7 +17,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
-import dev.knative.eventing.kafka.broker.dispatcher.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
 import io.vertx.config.ConfigRetriever;

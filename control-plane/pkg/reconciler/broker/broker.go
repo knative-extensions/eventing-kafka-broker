@@ -217,8 +217,10 @@ func (r *Reconciler) topicDetailFromBrokerConfig(broker *eventing.Broker) *saram
 
 func (r *Reconciler) getBrokerConfig(topic string, broker *eventing.Broker) (*coreconfig.Broker, error) {
 	brokerConfig := &coreconfig.Broker{
-		Id:    string(broker.UID),
-		Topic: topic,
+		Id:        string(broker.UID),
+		Topic:     topic,
+		Namespace: broker.Namespace,
+		Name:      broker.Name,
 	}
 
 	if broker.Spec.Delivery == nil || broker.Spec.Delivery.DeadLetterSink == nil {

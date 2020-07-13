@@ -53,6 +53,16 @@ public class BrokerWrapper implements dev.knative.eventing.kafka.broker.core.Bro
   }
 
   @Override
+  public String namespace() {
+    return broker.getNamespace();
+  }
+
+  @Override
+  public String name() {
+    return broker.getName();
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -64,11 +74,19 @@ public class BrokerWrapper implements dev.knative.eventing.kafka.broker.core.Bro
 
     return broker.getId().equals(that.id())
         && broker.getDeadLetterSink().equals(that.deadLetterSink())
-        && broker.getTopic().equals(that.topic());
+        && broker.getTopic().equals(that.topic())
+        && broker.getName().equals(that.name())
+        && broker.getNamespace().equals(that.name());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(broker.getId(), broker.getDeadLetterSink(), broker.getTopic());
+    return Objects.hash(
+        broker.getId(),
+        broker.getDeadLetterSink(),
+        broker.getTopic(),
+        broker.getNamespace(),
+        broker.getName()
+    );
   }
 }

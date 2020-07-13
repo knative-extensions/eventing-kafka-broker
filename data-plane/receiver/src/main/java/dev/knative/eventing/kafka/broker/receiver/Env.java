@@ -34,11 +34,15 @@ class Env {
   static final String READINESS_PROBE_PATH = "READINESS_PROBE_PATH";
   private final String readinessProbePath;
 
+  static final String DATA_PLANE_CONFIG_FILE_PATH = "DATA_PLANE_CONFIG_FILE_PATH";
+  private final String dataPlaneConfigFilePath;
+
   Env(final Function<String, String> envProvider) {
     this.ingressPort = Integer.parseInt(envProvider.apply(INGRESS_PORT));
     this.producerConfigFilePath = requireNonNull(envProvider.apply(PRODUCER_CONFIG_FILE_PATH));
     this.livenessProbePath = requireNonNull(envProvider.apply(LIVENESS_PROBE_PATH));
     this.readinessProbePath = requireNonNull(envProvider.apply(READINESS_PROBE_PATH));
+    this.dataPlaneConfigFilePath = requireNonNull(envProvider.apply(DATA_PLANE_CONFIG_FILE_PATH));
   }
 
   public int getIngressPort() {
@@ -57,6 +61,10 @@ class Env {
     return readinessProbePath;
   }
 
+  public String getDataPlaneConfigFilePath() {
+    return dataPlaneConfigFilePath;
+  }
+
   @Override
   public String toString() {
     return "Env{"
@@ -64,6 +72,7 @@ class Env {
         + ", producerConfigFilePath='" + producerConfigFilePath + '\''
         + ", livenessProbePath='" + livenessProbePath + '\''
         + ", readinessProbePath='" + readinessProbePath + '\''
+        + ", dataPlaneConfigFilePath='" + dataPlaneConfigFilePath + '\''
         + '}';
   }
 }

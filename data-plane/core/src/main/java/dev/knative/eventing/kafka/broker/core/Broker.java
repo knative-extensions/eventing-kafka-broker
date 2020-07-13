@@ -48,4 +48,18 @@ public interface Broker {
    * @return dead letter sink.
    */
   String deadLetterSink();
+
+  /**
+   * Get broker namespace.
+   *
+   * @return namespace.
+   */
+  String namespace();
+
+  /**
+   * Get broker name.
+   *
+   * @return name.
+   */
+  String name();
 }
