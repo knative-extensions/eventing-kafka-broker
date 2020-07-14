@@ -102,8 +102,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 
 	configs.DataPlaneConfigFormat = format
 
-	// TODO add WantStatusUpdates assertions after https://github.com/knative/eventing/issues/3094
-
 	table := TableTest{
 		{
 			Name: "Reconciled normal - no DLS",
@@ -718,7 +716,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
 			},
-			Key: testKey,
+			Key:     testKey,
 			WantErr: true,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
