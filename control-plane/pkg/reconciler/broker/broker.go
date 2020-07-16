@@ -43,7 +43,7 @@ const (
 	TopicPrefix = "knative-broker-"
 
 	// signal that the broker hasn't been added to the config map yet.
-	noBroker = -1
+	NoBroker = -1
 )
 
 type Reconciler struct {
@@ -63,7 +63,7 @@ type Reconciler struct {
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 
-	logger := logger(ctx, broker)
+	logger := log.Logger(ctx, "broker", broker)
 
 	logger.Debug("Reconciling broker")
 
@@ -100,7 +100,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: brokersTriggers}),
 	)
 
-	brokerIndex := findBroker(brokersTriggers, broker)
+	brokerIndex := FindBroker(brokersTriggers, broker)
 
 	// Get broker configuration.
 	brokerConfig, err := r.getBrokerConfig(topic, broker)
@@ -108,7 +108,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 		return statusConditionManager.failedToGetBrokerConfig(err)
 	}
 	// Update brokersTriggers data with the new broker configuration
-	if brokerIndex != noBroker {
+	if brokerIndex != NoBroker {
 		brokersTriggers.Broker[brokerIndex] = brokerConfig
 
 		logger.Debug("Broker exists", zap.Int("index", brokerIndex))
@@ -141,6 +141,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 		return statusConditionManager.failedToUpdateReceiverPodsAnnotation(err)
 	}
 
+	logger.Debug("Updated receiver pod annotation")
+
 	// Update volume generation annotation of dispatcher pods
 	if err := r.UpdateDispatcherPodsAnnotation(logger, brokersTriggers.VolumeGeneration); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
@@ -156,13 +158,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
-	logger.Debug("Updated receiver pod annotation")
-
 	return statusConditionManager.reconciled()
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
-	logger := logger(ctx, broker)
+	logger := log.Logger(ctx, "broker", broker)
 
 	logger.Debug("Finalizing broker")
 
@@ -185,8 +185,8 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: brokersTriggers}),
 	)
 
-	brokerIndex := findBroker(brokersTriggers, broker)
-	if brokerIndex != noBroker {
+	brokerIndex := FindBroker(brokersTriggers, broker)
+	if brokerIndex != NoBroker {
 		deleteBroker(brokersTriggers, brokerIndex)
 
 		logger.Debug("Broker deleted", zap.Int("index", brokerIndex))
@@ -313,9 +313,9 @@ func (r *Reconciler) SetDefaultTopicDetails(topicDetail sarama.TopicDetail) {
 	r.KafkaDefaultTopicDetails = topicDetail
 }
 
-func findBroker(brokersTriggers *coreconfig.Brokers, broker *eventing.Broker) int {
+func FindBroker(brokersTriggers *coreconfig.Brokers, broker *eventing.Broker) int {
 	// Find broker in brokersTriggers.
-	brokerIndex := noBroker
+	brokerIndex := NoBroker
 	for i, b := range brokersTriggers.Broker {
 		if b.Id == string(broker.UID) {
 			brokerIndex = i
@@ -337,12 +337,4 @@ func deleteBroker(brokersTriggers *coreconfig.Brokers, index int) {
 	brokersTriggers.Broker[index] = brokersTriggers.Broker[len(brokersTriggers.Broker)-1]
 	// truncate the array.
 	brokersTriggers.Broker = brokersTriggers.Broker[:len(brokersTriggers.Broker)-1]
-}
-
-func logger(ctx context.Context, broker *eventing.Broker) *zap.Logger {
-
-	return logging.FromContext(ctx).With(zap.String(
-		"broker",
-		fmt.Sprintf("%s/%s", broker.Namespace, broker.Name),
-	))
 }
