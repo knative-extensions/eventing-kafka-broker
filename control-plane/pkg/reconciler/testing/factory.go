@@ -22,8 +22,10 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	ktesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
+	eventingtesting "knative.dev/eventing/pkg/reconciler/testing"
 	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	pkgcontroller "knative.dev/pkg/controller"
@@ -68,17 +70,21 @@ func NewFactory(configs *broker.Configs, ctor Ctor) Factory {
 			ctx,
 			listers.GetKubeObjects()...,
 		)
+		ctx, dynamicClient := fakedynamicclient.With(ctx,
+			eventingtesting.NewScheme(), eventingtesting.ToUnstructured(t, row.Objects)...)
 
 		dynamicScheme := runtime.NewScheme()
 		for _, addTo := range clientSetSchemes {
 			_ = addTo(dynamicScheme)
 		}
 
-		ctx, dynamicClient := fakedynamicclient.With(
-			ctx,
-			dynamicScheme,
-			listers.GetAllObjects()...,
-		)
+		// The dynamic client's support for patching is BS.  Implement it
+		// here via PrependReactor (this can be overridden below by the
+		// provided reactors).
+		dynamicClient.PrependReactor("patch", "*",
+			func(action ktesting.Action) (bool, runtime.Object, error) {
+				return true, nil, nil
+			})
 
 		eventRecorder := record.NewFakeRecorder(recorderBufferSize)
 		ctx = pkgcontroller.WithEventRecorder(ctx, eventRecorder)
@@ -100,6 +106,7 @@ func NewFactory(configs *broker.Configs, ctor Ctor) Factory {
 		actionRecorderList := ActionRecorderList{
 			dynamicClient,
 			kubeClient,
+			eventingClient,
 		}
 
 		eventList := EventList{

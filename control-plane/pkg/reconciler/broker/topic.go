@@ -44,7 +44,16 @@ func (r *Reconciler) deleteTopic(broker *eventing.Broker) (string, error) {
 	defer r.KafkaClusterAdminLock.RUnlock()
 
 	topic := Topic(broker)
-	return topic, r.KafkaClusterAdmin.DeleteTopic(topic)
+
+	err := r.KafkaClusterAdmin.DeleteTopic(topic)
+	if sarama.ErrUnknownTopicOrPartition == err {
+		return topic, nil
+	}
+	if err != nil {
+		return topic, err
+	}
+
+	return topic, nil
 }
 
 func Topic(broker *eventing.Broker) string {

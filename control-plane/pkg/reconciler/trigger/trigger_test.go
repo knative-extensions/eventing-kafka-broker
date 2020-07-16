@@ -23,12 +23,12 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	clientgotesting "k8s.io/client-go/testing"
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1beta1/trigger"
 	"knative.dev/eventing/pkg/logging"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1beta1"
 	"knative.dev/pkg/controller"
-
 	. "knative.dev/pkg/reconciler/testing"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -42,6 +42,8 @@ const (
 	triggerNamespace = "test-namespace"
 	// broker name associated with trigger under test
 	brokerName = "test-broker"
+
+	finalizerName = "triggers.eventing.knative.dev"
 )
 
 var (
@@ -54,6 +56,7 @@ var (
 
 func TestTriggerReconciliation(t *testing.T) {
 
+	// TODO re-enable test when Trigger reconciler is ready.
 	testKey := fmt.Sprintf("%s/%s", triggerNamespace, triggerName)
 
 	configs := *DefaultConfigs
@@ -72,6 +75,14 @@ func TestTriggerReconciliation(t *testing.T) {
 					triggerReconciled,
 					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
 				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(reconcilertesting.WithInitTriggerConditions),
+				},
 			},
 		},
 	}
@@ -102,4 +113,13 @@ func newTrigger(options ...reconcilertesting.TriggerOption) runtime.Object {
 		brokerName,
 		options...,
 	)
+}
+
+func patchFinalizers() clientgotesting.PatchActionImpl {
+	action := clientgotesting.PatchActionImpl{}
+	action.Name = triggerName
+	action.Namespace = triggerNamespace
+	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
+	action.Patch = []byte(patch)
+	return action
 }
