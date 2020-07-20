@@ -16,6 +16,9 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
+import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_INSTANCE_ID_CONFIG;
+
 import dev.knative.eventing.kafka.broker.core.Broker;
 import dev.knative.eventing.kafka.broker.core.Trigger;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordHandler;
@@ -24,6 +27,8 @@ import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
+import io.cloudevents.kafka.CloudEventDeserializer;
+import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -34,9 +39,10 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import java.util.Objects;
 import java.util.Properties;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 
 public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<CloudEvent> {
 
@@ -138,7 +144,13 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
     // TODO check producer configurations to change per instance
     // producerConfigs is a shared object and it acts as a prototype for each consumer instance.
     final var producerConfigs = (Properties) this.producerConfigs.clone();
-    final var kafkaProducer = new KafkaProducer<String, CloudEvent>(producerConfigs);
+
+    final var kafkaProducer = new KafkaProducer<>(
+        producerConfigs,
+        new StringSerializer(),
+        new CloudEventSerializer()
+    );
+
     return io.vertx.kafka.client.producer.KafkaProducer.create(vertx, kafkaProducer);
   }
 
@@ -150,10 +162,17 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
     // TODO check consumer configurations to change per instance
     // consumerConfigs is a shared object and it acts as a prototype for each consumer instance.
     final var consumerConfigs = (Properties) this.consumerConfigs.clone();
-    consumerConfigs.setProperty(ConsumerConfig.GROUP_ID_CONFIG, trigger.id());
+    consumerConfigs.setProperty(GROUP_ID_CONFIG, trigger.id());
+    consumerConfigs.setProperty(GROUP_INSTANCE_ID_CONFIG, trigger.id()); // TODO this isn't unique
+
     // Note: KafkaConsumer instances are not thread-safe.
     // There are methods thread-safe, but in general they're not.
-    final var kafkaConsumer = new KafkaConsumer<String, CloudEvent>(consumerConfigs);
+    final var kafkaConsumer = new KafkaConsumer<>(
+        consumerConfigs,
+        new StringDeserializer(),
+        new CloudEventDeserializer()
+    );
+
     return io.vertx.kafka.client.consumer.KafkaConsumer.create(vertx, kafkaConsumer);
   }
 

@@ -886,7 +886,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"failed to get brokers and triggers: failed to unmarshal brokers and triggers: %v",
+					`failed to get brokers and triggers: failed to unmarshal brokers and triggers: '{"hello"-- "world"}' - %v`,
 					getUnmarshallableError(format),
 				),
 			},
@@ -1051,7 +1051,6 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 			KafkaDefaultTopicDetails:     defaultTopicDetail,
 			KafkaDefaultTopicDetailsLock: sync.RWMutex{},
 			Configs:                      configs,
-			Recorder:                     controller.GetEventRecorder(ctx),
 		}
 
 		r := brokerreconciler.NewReconciler(

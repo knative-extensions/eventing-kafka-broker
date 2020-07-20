@@ -18,6 +18,12 @@ if ! ${SKIP_INITIALIZE}; then
   initialize $@ --skip-istio-addon
 fi
 
+header "Waiting Knative eventing to come up"
+
 wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
+
+header "Running tests"
+
+go_test_e2e -timeout=10m ./test/... || fail_test "Integration test failed"
 
 success

@@ -22,14 +22,15 @@ import (
 	"math"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/tools/record"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/pkg/configmap"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -57,8 +58,6 @@ type Reconciler struct {
 	KafkaDefaultTopicDetailsLock sync.RWMutex
 
 	Configs *Configs
-
-	Recorder record.EventRecorder
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -70,7 +69,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 	statusConditionManager := statusConditionManager{
 		Broker:   broker,
 		configs:  r.Configs,
-		recorder: r.Recorder,
+		recorder: controller.GetEventRecorder(ctx),
 	}
 
 	topic, err := r.CreateTopic(broker)
@@ -289,6 +288,8 @@ func (r *Reconciler) SetBootstrapServers(servers string) error {
 
 	config := sarama.NewConfig()
 	config.Version = sarama.MaxVersion
+	config.Net.KeepAlive = time.Second * 60
+
 	kafkaClusterAdmin, err := NewClusterAdmin(addrs, config)
 	if err != nil {
 		return fmt.Errorf("failed to create kafka cluster admin: %w", err)

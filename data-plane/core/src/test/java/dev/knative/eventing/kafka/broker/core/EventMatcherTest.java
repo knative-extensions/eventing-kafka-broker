@@ -16,10 +16,12 @@
 
 package dev.knative.eventing.kafka.broker.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.knative.eventing.kafka.broker.core.EventMatcher.Constants;
 import io.cloudevents.CloudEvent;
+import io.cloudevents.core.builder.CloudEventBuilder;
 import java.net.URI;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -45,6 +47,99 @@ public class EventMatcherTest {
     final var match = matcher.match(event);
 
     assertEquals(shouldMatch, match);
+  }
+
+  @Test
+  public void shouldConsiderEmptyStringAsAnyValue() {
+
+    final var event = CloudEventBuilder.v1()
+        .withId("123")
+        .withType("type")
+        .withSubject("")
+        .withSource(URI.create("/api/source"))
+        .build();
+
+    final var attributes = Map.of(
+        "source", "/api/source",
+        "type", ""
+    );
+
+    final var eventMatcher = new EventMatcher(attributes);
+
+    final boolean match = eventMatcher.match(event);
+
+    assertThat(match).isTrue();
+  }
+
+
+  @Test
+  public void shouldPassOnMatchingExtensions() {
+
+    final var event = CloudEventBuilder.v1()
+        .withId("123")
+        .withType("type")
+        .withSubject("")
+        .withSource(URI.create("/api/source"))
+        .withExtension("extension2", "valueExtension2")
+        .build();
+
+    final var attributes = Map.of(
+        "source", "/api/source",
+        "extension1", "",
+        "extension2", "valueExtension2"
+    );
+
+    final var eventMatcher = new EventMatcher(attributes);
+
+    final boolean match = eventMatcher.match(event);
+
+    assertThat(match).isTrue();
+  }
+
+  @Test
+  public void shouldNotPassOnNonMatchingExtensions() {
+
+    final var event = CloudEventBuilder.v1()
+        .withId("123")
+        .withType("type")
+        .withSubject("")
+        .withSource(URI.create("/api/source"))
+        .withExtension("extension2", "valueExtension2")
+        .build();
+
+    final var attributes = Map.of(
+        "extension2", "valueExtension"
+    );
+
+    final var eventMatcher = new EventMatcher(attributes);
+
+    final boolean match = eventMatcher.match(event);
+
+    assertThat(match).isFalse();
+  }
+
+  @Test
+  public void test() {
+
+    final var event = CloudEventBuilder.v1()
+        .withId("f6bc4296-014b-4e67-9880-96f1b6b5610b")
+        .withSource(URI.create("http://source2.com"))
+        .withType("type2")
+        .withDataContentType("application/json")
+        .withExtension("nonmatchingextname", "extval1")
+        .build();
+
+    final var attributes = Map.of(
+        "extname1", "",
+        "source", "",
+        "type", ""
+    );
+
+    final var eventMatcher = new EventMatcher(attributes);
+
+    final boolean match = eventMatcher.match(event);
+
+    assertThat(match).isTrue();
   }
 
   public static Stream<Arguments> testCases() {

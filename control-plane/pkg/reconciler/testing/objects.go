@@ -137,7 +137,9 @@ func NewConfigMap(configs *Configs, data []byte) runtime.Object {
 			if configMap.BinaryData == nil {
 				configMap.BinaryData = make(map[string][]byte, 1)
 			}
-
+			if data == nil {
+				data = []byte("")
+			}
 			configMap.BinaryData[base.ConfigMapDataKey] = data
 		},
 	)

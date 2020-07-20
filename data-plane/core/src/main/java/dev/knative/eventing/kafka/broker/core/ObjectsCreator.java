@@ -47,7 +47,7 @@ public class ObjectsCreator implements Consumer<Brokers> {
    * @param objectsReconciler brokers and triggers consumer.
    */
   public ObjectsCreator(final ObjectsReconciler<CloudEvent> objectsReconciler) {
-    Objects.requireNonNull(objectsReconciler, "provider objectsReconciler");
+    Objects.requireNonNull(objectsReconciler, "provide objectsReconciler");
 
     this.objectsReconciler = objectsReconciler;
   }
@@ -63,10 +63,6 @@ public class ObjectsCreator implements Consumer<Brokers> {
     final Map<Broker, Set<Trigger<CloudEvent>>> objects = new HashMap<>();
 
     for (final var broker : brokers.getBrokerList()) {
-      if (broker.getTriggersCount() <= 0) {
-        continue;
-      }
-
       final var triggers = new HashSet<Trigger<CloudEvent>>(
           broker.getTriggersCount()
       );
@@ -81,7 +77,7 @@ public class ObjectsCreator implements Consumer<Brokers> {
       final var latch = new CountDownLatch(1);
       objectsReconciler.reconcile(objects).onComplete(result -> {
         if (result.succeeded()) {
-          logger.debug("reconciled objects {}", brokers);
+          logger.info("reconciled objects {}", brokers);
         } else {
           logger.error("failed to reconcile {}", brokers);
         }

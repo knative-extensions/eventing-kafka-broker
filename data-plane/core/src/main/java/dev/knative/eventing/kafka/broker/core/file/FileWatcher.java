@@ -115,7 +115,7 @@ public class FileWatcher {
         final var kind = event.kind();
 
         // check if we're interested in the updated file
-        if (kind != OVERFLOW && child.equals(toWatchPath)) {
+        if (kind != OVERFLOW) {
           shouldUpdate = true;
           break;
         }

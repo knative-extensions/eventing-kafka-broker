@@ -23,7 +23,10 @@ source $(pwd)/test/control-plane/library.sh
 
 SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
 
-EVENTING_CONFIG="./config"
+readonly EVENTING_CONFIG="./config"
+
+# Vendored eventing test iamges.
+readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
 
 function knative_setup() {
   knative_eventing "apply --strict"
@@ -50,6 +53,17 @@ function knative_eventing() {
 }
 
 function test_setup() {
+  # Publish test images.
+  echo ">> Publishing test images from eventing"
+  # We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
+  # path has to be a GOPATH.
+  sed -i 's@knative.dev/eventing/test/test_images@knative.dev/eventing-kafka-broker/vendor/knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"*/*.yaml
+  ./test/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
+  sed -i 's@knative.dev/eventing-kafka-broker/vendor/knative.dev/eventing/test/test_images@knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"*/*.yaml
+
+  # Enable when we have custom test images
+  # ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
+
   ./test/kafka/kafka_setup.sh || fail_test "Failed to set up Kafka cluster"
 
   header "Data plane setup"

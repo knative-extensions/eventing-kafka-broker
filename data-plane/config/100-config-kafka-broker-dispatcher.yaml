@@ -10,7 +10,7 @@ data:
     # value.serializer=org.apache.kafka.common.serialization.StringSerializer
     acks=1
     buffer.memory=33554432
-    compression.type=snappy
+    # compression.type=snappy
     retries=2147483647
     batch.size=16384
     client.dns.lookup=use_all_dns_ips

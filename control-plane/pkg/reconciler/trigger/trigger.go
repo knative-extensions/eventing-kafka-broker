@@ -23,9 +23,9 @@ import (
 
 	"go.uber.org/zap"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/client-go/tools/record"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1beta1"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -49,8 +49,6 @@ type Reconciler struct {
 	Resolver     *resolver.URIResolver
 
 	Configs *brokerreconciler.EnvConfigs
-
-	Recorder record.EventRecorder
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -60,8 +58,9 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 	logger.Debug("Reconciling Trigger", zap.Any("trigger", trigger))
 
 	statusConditionManager := statusConditionManager{
-		Trigger: trigger,
-		Configs: r.Configs,
+		Trigger:  trigger,
+		Configs:  r.Configs,
+		Recorder: controller.GetEventRecorder(ctx),
 	}
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
