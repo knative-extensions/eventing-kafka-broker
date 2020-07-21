@@ -59,7 +59,7 @@ public class EventMatcher implements Filter<CloudEvent> {
    */
   public EventMatcher(final Map<String, String> attributes) {
     this.attributes = attributes.entrySet().stream()
-        .filter(entry -> isNotAny(entry.getValue()))
+        .filter(entry -> isNotEmpty(entry.getValue()))
         .map(entry -> new SimpleImmutableEntry<>(
             attributesMapper.getOrDefault(
                 entry.getKey(),
@@ -107,7 +107,7 @@ public class EventMatcher implements Filter<CloudEvent> {
     return stringProvider.apply(s);
   }
 
-  private static boolean isNotAny(final String value) {
+  private static boolean isNotEmpty(final String value) {
     return !(value == null || value.isEmpty());
   }
 
