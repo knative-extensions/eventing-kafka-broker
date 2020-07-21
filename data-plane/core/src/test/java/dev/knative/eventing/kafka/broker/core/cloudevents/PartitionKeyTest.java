@@ -20,7 +20,7 @@ public class PartitionKeyTest {
 
     final var partitionKey = PartitionKey.extract(event);
 
-    assertThat(partitionKey).isEqualTo(PartitionKey.PARTITION_KEY_DEFAULT);
+    assertThat(partitionKey).isNull();
   }
 
   @Test

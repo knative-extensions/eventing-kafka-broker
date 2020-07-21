@@ -205,7 +205,7 @@ public class ReceiverVerticleTest {
         new TestCase(
             new ProducerRecord<>(
                 TOPIC_PREFIX + "broker-ns-broker-name1",
-                "",
+                null,
                 new io.cloudevents.core.v03.CloudEventBuilder()
                     .withSubject("subject")
                     .withSource(URI.create("/hello"))
@@ -290,7 +290,7 @@ public class ReceiverVerticleTest {
         new TestCase(
             new ProducerRecord<>(
                 TOPIC_PREFIX + "broker-ns-broker-name5",
-                "",
+                null,
                 new io.cloudevents.core.v1.CloudEventBuilder()
                     .withSubject("subject")
                     .withSource(URI.create("/hello"))
