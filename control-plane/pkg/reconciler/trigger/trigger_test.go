@@ -328,7 +328,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			},
 		},
 		{
-			Name: "Broker not found", // TODO add real assertions when finalizer is ready
+			Name: "Broker not found, no broker in config map",
 			Objects: []runtime.Object{
 				newTrigger(),
 			},
@@ -353,10 +353,270 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			},
 		},
 		{
-			Name: "Broker deleted", // TODO add real assertions when finalizer is ready
+			Name: "Broker deleted, no broker in config map",
 			Objects: []runtime.Object{
 				newTrigger(),
 				NewDeletedBroker(),
+				NewConfigMapFromBrokers(&coreconfig.Brokers{
+					VolumeGeneration: 8,
+				}, &configs),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeNormal,
+					triggerReconciled,
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+					),
+				},
+			},
+		},
+		{
+			Name: "Broker deleted, no trigger in config map",
+			Objects: []runtime.Object{
+				newTrigger(),
+				NewDeletedBroker(),
+				NewConfigMapFromBrokers(&coreconfig.Brokers{
+					Broker: []*coreconfig.Broker{
+						{
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+						},
+					},
+					VolumeGeneration: 8,
+				}, &configs),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeNormal,
+					triggerReconciled,
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+					),
+				},
+			},
+		},
+		{
+			Name: "Broker deleted, trigger in config map",
+			Objects: []runtime.Object{
+				newTrigger(),
+				NewDeletedBroker(),
+				NewConfigMapFromBrokers(&coreconfig.Brokers{
+					Broker: []*coreconfig.Broker{
+						{
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+							Triggers: []*coreconfig.Trigger{
+								{
+									Destination: ServiceURL,
+									Id:          TriggerUUID + "a",
+								},
+								{
+									Destination: ServiceURL,
+									Id:          TriggerUUID,
+								},
+							},
+						},
+					},
+					VolumeGeneration: 8,
+				}, &configs),
+				NewDispatcherPod(configs.SystemNamespace, nil),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeNormal,
+					triggerReconciled,
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
+				),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &coreconfig.Brokers{
+					Broker: []*coreconfig.Broker{
+						{
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+							Triggers: []*coreconfig.Trigger{
+								{
+									Destination: ServiceURL,
+									Id:          TriggerUUID + "a",
+								},
+							},
+						},
+					},
+					VolumeGeneration: 9,
+				}),
+				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "9",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+					),
+				},
+			},
+		},
+	}
+
+	for i := range table {
+		table[i].Name = table[i].Name + " - " + format
+	}
+
+	useTable(t, table, &configs)
+}
+
+func TestTriggerFinalizer(t *testing.T) {
+
+	t.Parallel()
+
+	for _, f := range Formats {
+		triggerFinalizer(t, f, *DefaultConfigs)
+	}
+
+}
+
+func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
+
+	testKey := fmt.Sprintf("%s/%s", triggerNamespace, triggerName)
+
+	configs.DataPlaneConfigFormat = format
+
+	table := TableTest{
+		{
+			Name: "Broker deleted, trigger in config map",
+			Objects: []runtime.Object{
+				newTrigger(),
+				NewDeletedBroker(),
+				NewConfigMapFromBrokers(&coreconfig.Brokers{
+					Broker: []*coreconfig.Broker{
+						{
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+							Triggers: []*coreconfig.Trigger{
+								{
+									Destination: ServiceURL,
+									Id:          TriggerUUID + "a",
+								},
+								{
+									Destination: ServiceURL,
+									Id:          TriggerUUID,
+								},
+							},
+						},
+					},
+					VolumeGeneration: 8,
+				}, &configs),
+				NewDispatcherPod(configs.SystemNamespace, nil),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeNormal,
+					triggerReconciled,
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
+				),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &coreconfig.Brokers{
+					Broker: []*coreconfig.Broker{
+						{
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+							Triggers: []*coreconfig.Trigger{
+								{
+									Destination: ServiceURL,
+									Id:          TriggerUUID + "a",
+								},
+							},
+						},
+					},
+					VolumeGeneration: 9,
+				}),
+				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "9",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+					),
+				},
+			},
+		},
+		{
+			Name: "Broker deleted, no trigger in config map",
+			Objects: []runtime.Object{
+				newTrigger(),
+				NewDeletedBroker(),
+				NewConfigMapFromBrokers(&coreconfig.Brokers{
+					Broker: []*coreconfig.Broker{
+						{
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+						},
+					},
+					VolumeGeneration: 8,
+				}, &configs),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeNormal,
+					triggerReconciled,
+					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+					),
+				},
+			},
+		},
+		{
+			Name: "Broker deleted, no broker in config map",
+			Objects: []runtime.Object{
+				newTrigger(),
+				NewDeletedBroker(),
+				NewConfigMapFromBrokers(&coreconfig.Brokers{
+					VolumeGeneration: 8,
+				}, &configs),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -380,11 +640,12 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 		},
 	}
 
-	for i := range table {
-		table[i].Name = table[i].Name + " - " + format
-	}
+	useTable(t, table, &configs)
+}
 
-	table.Test(t, NewFactory(&configs, func(ctx context.Context, listers *Listers, configs *broker.Configs, row *TableRow) controller.Reconciler {
+func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
+
+	table.Test(t, NewFactory(configs, func(ctx context.Context, listers *Listers, configs *broker.Configs, row *TableRow) controller.Reconciler {
 
 		logger := logging.FromContext(ctx)
 
