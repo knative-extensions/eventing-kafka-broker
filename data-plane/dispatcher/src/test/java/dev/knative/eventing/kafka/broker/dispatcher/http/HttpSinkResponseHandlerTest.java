@@ -122,7 +122,7 @@ public class HttpSinkResponseHandlerTest {
     wait.await();
 
     Assertions.assertThat(producer.history())
-        .containsExactlyInAnyOrder(new ProducerRecord<>(TOPIC, "", event));
+        .containsExactlyInAnyOrder(new ProducerRecord<>(TOPIC, null, event));
 
     context.completeNow();
   }
