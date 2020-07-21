@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.core;
 
 import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 
-import dev.knative.eventing.kafka.broker.core.Filter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.ContextAttributes;
 import io.cloudevents.lang.Nullable;
@@ -60,10 +59,17 @@ public class EventMatcher implements Filter<CloudEvent> {
    */
   public EventMatcher(final Map<String, String> attributes) {
     this.attributes = attributes.entrySet().stream()
+        .filter(entry -> isNotEmpty(entry.getValue()))
         .map(entry -> new SimpleImmutableEntry<>(
             attributesMapper.getOrDefault(
                 entry.getKey(),
-                event -> getOrDefault(event.getAttribute(entry.getKey()), Object::toString)
+                event -> {
+                  try {
+                    return getOrDefault(event.getAttribute(entry.getKey()), Object::toString);
+                  } catch (Exception ex) {
+                    return getOrDefault(event.getExtension(entry.getKey()), Object::toString);
+                  }
+                }
             ),
             entry.getValue()
         ))
@@ -99,6 +105,10 @@ public class EventMatcher implements Filter<CloudEvent> {
       return DEFAULT_STRING;
     }
     return stringProvider.apply(s);
+  }
+
+  private static boolean isNotEmpty(final String value) {
+    return !(value == null || value.isEmpty());
   }
 
   static class Constants {

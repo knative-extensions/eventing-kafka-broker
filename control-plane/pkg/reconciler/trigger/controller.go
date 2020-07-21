@@ -66,7 +66,6 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *broker.Env
 		},
 		BrokerLister: brokerInformer.Lister(),
 		Configs:      configs,
-		Recorder:     controller.GetEventRecorder(ctx),
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {

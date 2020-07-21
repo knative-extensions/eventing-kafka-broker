@@ -66,7 +66,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			ReplicationFactor: DefaultReplicationFactor,
 		},
 		Configs:  configs,
-		Recorder: controller.GetEventRecorder(ctx),
 	}
 
 	if configs.BootstrapServers != "" {

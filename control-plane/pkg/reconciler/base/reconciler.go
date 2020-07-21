@@ -66,6 +66,10 @@ func (r *Reconciler) GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConf
 		return &coreconfig.Brokers{}, nil
 	}
 
+	if string(dataPlaneDataRaw) == "" {
+		return &coreconfig.Brokers{}, nil
+	}
+
 	brokersTriggers := &coreconfig.Brokers{}
 	var err error
 
@@ -86,7 +90,7 @@ func (r *Reconciler) GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConf
 		logger.Warn("Failed to unmarshal config map", zap.Error(err))
 
 		// let the caller decide if it want to continue or fail on an error.
-		return &coreconfig.Brokers{}, fmt.Errorf("failed to unmarshal brokers and triggers: %w", err)
+		return &coreconfig.Brokers{}, fmt.Errorf("failed to unmarshal brokers and triggers: '%s' - %w", dataPlaneDataRaw, err)
 	}
 
 	return brokersTriggers, nil

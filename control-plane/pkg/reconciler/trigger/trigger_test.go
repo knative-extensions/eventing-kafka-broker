@@ -399,7 +399,6 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			},
 			BrokerLister: listers.GetBrokerLister(),
 			Configs:      &configs.EnvConfigs,
-			Recorder:     controller.GetEventRecorder(ctx),
 		}
 
 		reconciler.Resolver = resolver.NewURIResolver(ctx, func(name types.NamespacedName) {})

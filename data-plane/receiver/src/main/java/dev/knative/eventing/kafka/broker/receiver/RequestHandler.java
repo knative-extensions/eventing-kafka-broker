@@ -84,6 +84,9 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
   public void handle(final HttpServerRequest request) {
 
     if (!brokers.get().contains(request.path())) {
+
+      logger.warn("broker not found {} - brokers {}", request.path(), brokers.get());
+
       request.response().setStatusCode(BROKER_NOT_FOUND).end();
       return;
     }
@@ -95,14 +98,14 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
               request.response().setStatusCode(RECORD_PRODUCED).end();
               logger.debug("record produced - topic: {}", record.topic());
             })
-            .onFailure(ignore -> {
+            .onFailure(cause -> {
               request.response().setStatusCode(FAILED_TO_PRODUCE).end();
-              logger.error("failed to produce - topic: {}", record.topic());
+              logger.error("failed to produce - topic: {} - cause :{}", record.topic(), cause);
             })
         )
         .onFailure(cause -> {
           request.response().setStatusCode(MAPPER_FAILED).end();
-          logger.warn("failed to create cloud event - path: {}", request.path());
+          logger.warn("failed to create cloud event - path: {} - cause: {}", request.path(), cause);
         });
   }
 
@@ -120,6 +123,8 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
         .collect(Collectors.toSet());
 
     this.brokers.set(brokers);
+
+    logger.debug("brokers: {}", brokers);
 
     return Future.succeededFuture();
   }

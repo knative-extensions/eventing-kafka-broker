@@ -30,8 +30,8 @@ readonly DATA_PLANE_CONFIG_TEMPLATE_DIR=${DATA_PLANE_CONFIG_DIR}/template # no t
 readonly DISPATCHER_TEMPLATE_FILE=${DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-dispatcher.yaml
 readonly RECEIVER_TEMPLATE_FILE=${DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-receiver.yaml
 
-readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-knative-kafka-broker-receiver}":"${UUID}"
-readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-knative-kafka-broker-dispatcher}":"${UUID}"
+readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-knative-kafka-broker-receiver}"
+readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-knative-kafka-broker-dispatcher}"
 
 readonly JAVA_IMAGE=adoptopenjdk:14-jre-hotspot
 
@@ -95,9 +95,15 @@ function dispatcher_build_push() {
 }
 
 function data_plane_build_push() {
-  export KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${receiver}"
 
-  export KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE="${KO_DOCKER_REPO}"/"${dispatcher}"
+  local uuid=${UUID}
+  if [ "${uuid}" = "latest" ]; then
+    uuid="$(uuidgen --time)"
+  fi
+
+  export KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${receiver}":"${uuid}"
+
+  export KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE="${KO_DOCKER_REPO}"/"${dispatcher}":"${uuid}"
 
   receiver_build_push || fail_test "failed to build receiver"
   dispatcher_build_push || fail_test "failed to build dispatcher"
