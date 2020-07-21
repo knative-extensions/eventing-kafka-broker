@@ -16,16 +16,17 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.brokers;
 import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
+import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.brokers;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
+import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker;
+import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.BrokersManager;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
-import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventBuilder;
@@ -41,6 +42,7 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
@@ -137,8 +139,12 @@ public class UnorderedConsumerTest {
       final var history = producerEntry.getValue().history();
       assertThat(history).hasSameSizeAs(consumerRecords);
       assertThat(history.stream().map(ProducerRecord::value)).containsExactlyInAnyOrder(events);
-      // TODO add key check
-      assertThat(history.stream().map(ProducerRecord::key)).containsAnyOf("");
+
+      final var partitionKeys = Arrays.stream(events)
+          .map(PartitionKey::extract)
+          .collect(Collectors.toList());
+
+      assertThat(history.stream().map(ProducerRecord::key)).containsAnyElementsOf(partitionKeys);
     }
 
     executorService.shutdown();

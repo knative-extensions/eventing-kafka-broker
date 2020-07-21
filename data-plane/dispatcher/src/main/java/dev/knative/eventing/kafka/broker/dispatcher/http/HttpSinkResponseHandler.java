@@ -16,6 +16,7 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
+import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import dev.knative.eventing.kafka.broker.dispatcher.SinkResponseHandler;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
@@ -70,8 +71,9 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpCl
     if (event == null) {
       return Future.failedFuture(new IllegalArgumentException("event cannot be null"));
     }
-    // TODO set the correct producer record key
-    return Future.succeededFuture(KafkaProducerRecord.create(topic, "", event));
+
+    final var recordKey = PartitionKey.extract(event);
+    return Future.succeededFuture(KafkaProducerRecord.create(topic, recordKey, event));
   }
 
   private Future<Object> send(final KafkaProducerRecord<String, CloudEvent> record) {

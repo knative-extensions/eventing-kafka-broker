@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.receiver;
 
 import static java.lang.String.join;
 
+import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
@@ -52,8 +53,8 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper<St
             return Future.failedFuture(new IllegalArgumentException("unable to determine topic"));
           }
 
-          // TODO set the correct producer record key
-          return Future.succeededFuture(KafkaProducerRecord.create(topic, "", event));
+          final var recordKey = PartitionKey.extract(event);
+          return Future.succeededFuture(KafkaProducerRecord.create(topic, recordKey, event));
         });
   }
 
