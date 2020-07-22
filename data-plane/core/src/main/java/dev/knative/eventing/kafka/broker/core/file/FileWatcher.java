@@ -31,7 +31,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
-import java.nio.file.WatchEvent;
 import java.nio.file.WatchService;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -48,8 +47,6 @@ public class FileWatcher {
   private final Consumer<Brokers> brokersConsumer;
 
   private final WatchService watcher;
-  private final Path toWatchParentPath;
-  private final Path toWatchPath;
   private final File toWatch;
 
   /**
@@ -77,8 +74,7 @@ public class FileWatcher {
     toWatch = file.getAbsoluteFile();
     logger.info("start watching {}", toWatch);
 
-    toWatchPath = file.toPath();
-    toWatchParentPath = file.getParentFile().toPath();
+    Path toWatchParentPath = file.getParentFile().toPath();
 
     this.watcher = watcher;
 
@@ -110,8 +106,6 @@ public class FileWatcher {
       // has occurred.
       for (final var event : key.pollEvents()) {
 
-        final WatchEvent<Path> ev = cast(event);
-        final var child = toWatchParentPath.resolve(ev.context());
         final var kind = event.kind();
 
         // check if we're interested in the updated file
@@ -150,10 +144,5 @@ public class FileWatcher {
     } catch (final InvalidProtocolBufferException ex) {
       logger.warn("failed to parse from JSON", ex);
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  static <T> WatchEvent<T> cast(WatchEvent<?> event) {
-    return (WatchEvent<T>) event;
   }
 }

@@ -16,6 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.common.TopicPartition;
@@ -32,8 +34,6 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
 
   private static final Logger logger = LoggerFactory
       .getLogger(UnorderedConsumerRecordOffsetStrategy.class);
-
-  private static final String RECORD_LOG_SUFFIX_FORMAT = " - topic {} partition {} offset {}";
 
   private final KafkaConsumer<K, V> consumer;
 
@@ -64,8 +64,19 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
     // TODO evaluate if it's worth committing offsets at specified intervals per partition.
     // commit each record
     commit(record)
-        .onSuccess(ignored -> logDebug("committed", record))
-        .onFailure(cause -> logError("failed to commit", record, cause));
+        .onSuccess(ignored -> logger.debug(
+            "committed {} {} {}",
+            keyValue("topic", record.topic()),
+            keyValue("partition", record.partition()),
+            keyValue("offset", record.offset())
+        ))
+        .onFailure(cause -> logger.error(
+            "failed to commit {} {} {}",
+            keyValue("topic", record.topic()),
+            keyValue("partition", record.partition()),
+            keyValue("offset", record.offset()),
+            cause
+        ));
   }
 
   /**
@@ -109,30 +120,5 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
 
   private static <K, V> TopicPartition topicPartition(final KafkaConsumerRecord<K, V> record) {
     return new TopicPartition(record.topic(), record.partition());
-  }
-
-  private static <K, V> void logDebug(
-      final String message,
-      final KafkaConsumerRecord<K, V> record) {
-
-    logger.debug(
-        message + RECORD_LOG_SUFFIX_FORMAT,
-        record.topic(),
-        record.partition(),
-        record.offset()
-    );
-  }
-
-  private static <K, V> void logError(
-      final String message,
-      final KafkaConsumerRecord<K, V> record,
-      final Throwable ex) {
-    logger.debug(
-        message + RECORD_LOG_SUFFIX_FORMAT + " - cause {}",
-        record.topic(),
-        record.partition(),
-        record.offset(),
-        ex
-    );
   }
 }

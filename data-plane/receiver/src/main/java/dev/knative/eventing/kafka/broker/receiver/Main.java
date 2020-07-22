@@ -17,6 +17,7 @@
 package dev.knative.eventing.kafka.broker.receiver;
 
 import static io.vertx.kafka.client.producer.KafkaProducer.createShared;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
@@ -28,6 +29,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.Properties;
+import net.logstash.logback.encoder.LogstashEncoder;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
@@ -47,7 +49,14 @@ public class Main {
   public static void main(final String[] args) {
     final var env = new Env(System::getenv);
 
-    logger.info("receiver environment configuration {}", env);
+    // HACK HACK HACK
+    // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
+    // dependency with scope `provided` nor `runtime`, and adding include rules to
+    // maven-shade-plugin.
+    // Instantiating an Encoder here we force it to include the class.
+    new LogstashEncoder().getFieldNames();
+
+    logger.info("Starting Receiver {}", keyValue("env", env));
 
     final var producerConfigs = new Properties();
     try (final var configReader = new FileReader(env.getProducerConfigFilePath())) {

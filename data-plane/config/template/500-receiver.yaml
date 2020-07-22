@@ -34,6 +34,9 @@ spec:
               readOnly: true
             - mountPath: /tmp
               name: cache
+            - mountPath: /etc/logging
+              name: kafka-broker-config-logging
+              readOnly: true
           env:
             - name: INGRESS_PORT
               value: "8080"
@@ -49,6 +52,7 @@ spec:
             - "java"
           # TODO add JVM arguments
           args:
+            - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
           # TODO set resources (limits and requests)
@@ -88,6 +92,9 @@ spec:
             name: config-kafka-broker-receiver
         - name: cache
           emptyDir: {}
+        - name: kafka-broker-config-logging
+          configMap:
+            name: kafka-broker-config-logging
       restartPolicy: Always
 ---
 apiVersion: v1

@@ -20,6 +20,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.Broker;
 import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
@@ -85,9 +86,13 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
 
     if (!brokers.get().contains(request.path())) {
 
-      logger.warn("broker not found {} - brokers {}", request.path(), brokers.get());
-
       request.response().setStatusCode(BROKER_NOT_FOUND).end();
+
+      logger.warn("broker not found {} {}",
+          keyValue("brokers", brokers.get()),
+          keyValue("path", request.path())
+      );
+
       return;
     }
 
@@ -96,16 +101,29 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
         .onSuccess(record -> send(record)
             .onSuccess(ignore -> {
               request.response().setStatusCode(RECORD_PRODUCED).end();
-              logger.debug("record produced - topic: {}", record.topic());
+
+              logger.debug("Record produced {} {}",
+                  keyValue("topic", record.topic()),
+                  keyValue("path", request.path())
+              );
             })
             .onFailure(cause -> {
               request.response().setStatusCode(FAILED_TO_PRODUCE).end();
-              logger.error("failed to produce - topic: {} - cause :{}", record.topic(), cause);
+
+              logger.error("Failed to send record {} {}",
+                  keyValue("topic", record.topic()),
+                  keyValue("path", request.path()),
+                  cause
+              );
             })
         )
         .onFailure(cause -> {
           request.response().setStatusCode(MAPPER_FAILED).end();
-          logger.warn("failed to create cloud event - path: {} - cause: {}", request.path(), cause);
+
+          logger.warn("Failed to send record {}",
+              keyValue("path", request.path()),
+              cause
+          );
         });
   }
 
@@ -124,7 +142,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
 
     this.brokers.set(brokers);
 
-    logger.debug("brokers: {}", brokers);
+    logger.debug("Added brokers to handler {}", keyValue("brokers", brokers));
 
     return Future.succeededFuture();
   }

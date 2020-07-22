@@ -16,6 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.Broker;
 import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
 import dev.knative.eventing.kafka.broker.core.Trigger;
@@ -166,12 +168,14 @@ public final class BrokersManager<T> implements ObjectsReconciler<T> {
         .compose(verticle -> startVerticle(verticle, broker, triggers, trigger, promise))
         .onSuccess(ignored -> promise.tryComplete())
         .onFailure(cause -> {
+
           // probably configuration are wrong, so do not retry.
-          logger.error(
-              "potential control-plane bug: failed to get verticle: {} - cause: {}",
-              trigger,
+          logger.error("potential control-plane bug: failed to get verticle {} {}",
+              keyValue("trigger", trigger),
+              keyValue("broker", broker),
               cause
           );
+
           promise.tryFail(cause);
         });
 
@@ -187,23 +191,23 @@ public final class BrokersManager<T> implements ObjectsReconciler<T> {
 
     addTrigger(triggers, trigger, verticle)
         .onSuccess(msg -> {
-          logger.info(
-              "verticle for trigger {} associated with broker {} deployed - message: {}",
-              trigger,
-              broker,
-              msg
-          );
           promise.tryComplete();
+
+          logger.info("Verticle deployed {} {} {}",
+              keyValue("trigger", trigger),
+              keyValue("broker", broker),
+              keyValue("message", msg)
+          );
         })
         .onFailure(cause -> {
+          promise.tryFail(cause);
+
           // this is a bad state we cannot start the verticle for consuming messages.
-          logger.error(
-              "failed to start verticle for trigger {} associated with broker {} - cause {}",
-              trigger,
-              broker,
+          logger.error("failed to start verticle {} {}",
+              keyValue("trigger", trigger),
+              keyValue("broker", broker),
               cause
           );
-          promise.tryFail(cause);
         });
 
     return promise.future();
@@ -225,18 +229,23 @@ public final class BrokersManager<T> implements ObjectsReconciler<T> {
 
     vertx.undeploy(verticle.deploymentID(), result -> {
       if (result.succeeded()) {
-        logger.info("removed trigger {} associated with broker {}", trigger, broker);
+
         promise.tryComplete();
+
+        logger.info("Removed trigger {} {}",
+            keyValue("trigger", trigger),
+            keyValue("broker", broker)
+        );
         return;
       }
 
-      logger.error(
-          "failed to un-deploy verticle for trigger {} associated with broker {} - cause",
-          trigger,
-          broker,
+      promise.tryFail(result.cause());
+
+      logger.error("failed to un-deploy verticle {} {}",
+          keyValue("trigger", trigger),
+          keyValue("broker", broker),
           result.cause()
       );
-      promise.tryFail(result.cause());
     });
 
     return promise.future();
