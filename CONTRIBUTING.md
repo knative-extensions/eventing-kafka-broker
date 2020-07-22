@@ -1,6 +1,7 @@
 # Contribution guidelines
 
-So you want to hack on Knative Eventing Kafka Broker? Yay! Please refer to Knative's overall
+So you want to hack on Knative Eventing Kafka Broker? Yay! Please refer to
+Knative's overall
 [contribution guidelines](https://www.knative.dev/contributing/) to find out how
 you can help.
 
@@ -8,4 +9,3 @@ you can help.
 
 - [Internals](INTERNALS.md)
 - [Development](DEVELOPMENT.md)
-
