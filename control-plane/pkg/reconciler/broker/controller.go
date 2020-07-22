@@ -65,7 +65,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			NumPartitions:     DefaultNumPartitions,
 			ReplicationFactor: DefaultReplicationFactor,
 		},
-		Configs:  configs,
+		Configs: configs,
 	}
 
 	if configs.BootstrapServers != "" {
