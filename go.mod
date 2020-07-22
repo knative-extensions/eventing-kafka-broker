@@ -16,11 +16,11 @@ require (
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.17.6
 	k8s.io/apiextensions-apiserver v0.17.6
-	k8s.io/apimachinery v0.18.5
+	k8s.io/apimachinery v0.18.6
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/eventing v0.16.1-0.20200720084134-f6fa9031138d
-	knative.dev/pkg v0.0.0-20200718042534-e193c4be24bb
-	knative.dev/test-infra v0.0.0-20200719034534-5adf654f5ed5
+	knative.dev/eventing v0.16.1-0.20200722085754-46fc727c96f9
+	knative.dev/pkg v0.0.0-20200719221534-601c9ff3832e
+	knative.dev/test-infra v0.0.0-20200721175154-c98db9bd4d5d
 )
 
 replace (
