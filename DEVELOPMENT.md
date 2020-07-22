@@ -1,7 +1,7 @@
 # Development
 
-This doc explains how to set up a development environment, so you can get started contributing.
-Also, take a look at:
+This doc explains how to set up a development environment, so you can get
+started contributing. Also, take a look at:
 
 - [The pull request workflow](https://www.knative.dev/contributing/contributing/#pull-requests)
 
@@ -18,18 +18,25 @@ You need to install:
 - [`ko`](https://github.com/google/ko) - (_required_)
 - [`docker`](https://www.docker.com/) - (_required_)
 - [`Go`](https://golang.org/) - (_required_)
-  - check [go \<version\>](https://github.com/knative-sandbox/eventing-kafka-broker/blob/master/go.mod) for the required Go version used in this project
-- [`Java`](https://www.java.com/en/) (we recommend an `openjdk` build) - (_required_)
-  - check [java.version](https://github.com/knative-sandbox/eventing-kafka-broker/blob/master/data-plane/pom.xml) maven property for the required Java version used in this project
+  - check
+    [go \<version\>](https://github.com/knative-sandbox/eventing-kafka-broker/blob/master/go.mod)
+    for the required Go version used in this project
+- [`Java`](https://www.java.com/en/) (we recommend an `openjdk` build) -
+  (_required_)
+  - check
+    [java.version](https://github.com/knative-sandbox/eventing-kafka-broker/blob/master/data-plane/pom.xml)
+    maven property for the required Java version used in this project
 
-Requirements signaled as "optional" are not required, but it's highly recommended having them installed. If a specific version of a requirement is not explcitly defined above, any version will work during development.
+Requirements signaled as "optional" are not required, but it's highly
+recommended having them installed. If a specific version of a requirement is not
+explcitly defined above, any version will work during development.
 
 ### Set up a Linux Container Registry
 
 - Set up a Linux Container registry for pushing images. You can use any
   container image registry by adjusting the authentication methods and
   repository paths mentioned in the sections below.
-   
+
 > :information_source: You'll need to be authenticated with your
 > `KO_DOCKER_REPO` before pushing images.
 
@@ -38,7 +45,8 @@ Requirements signaled as "optional" are not required, but it's highly recommende
 To start your environment you'll need to set these environment variables (we
 recommend adding them to your `.bashrc`):
 
-1. `KO_DOCKER_REPO`: The docker repository to which developer images should be pushed.
+1. `KO_DOCKER_REPO`: The docker repository to which developer images should be
+   pushed.
 
 `.bashrc` example:
 
@@ -53,7 +61,8 @@ export KO_DOCKER_REPO=docker.io/<your_docker_id>
 
 To check out this repository:
 
-1. Create your own [fork of this repository](https://help.github.com/articles/fork-a-repo/):
+1. Create your own
+   [fork of this repository](https://help.github.com/articles/fork-a-repo/):
 1. Clone it to your machine:
 
 ```shell
@@ -74,12 +83,14 @@ follows.
 
 ### Set up a Kubernetes cluster
 
-- This guide assumes you have a Kubernetes cluster up and running. - https://kubernetes.io/docs/setup/
+- This guide assumes you have a Kubernetes cluster up and running. -
+  https://kubernetes.io/docs/setup/
 
 1. Execute `source test/e2e-common.sh`
 1. Execute `knative_setup`
-    - This command deploys Knative Eventing.
-1. Execute `kubectl wait -n knative-eventing pods --all=true --for=condition=Ready`
+   - This command deploys Knative Eventing.
+1. Execute
+   `kubectl wait -n knative-eventing pods --all=true --for=condition=Ready`
 1. Execute `test_setup`
 
 If something goes wrong, re-execute these steps.
@@ -87,7 +98,7 @@ If something goes wrong, re-execute these steps.
 # Changing the data-plane
 
 - Run data plane verification: `./mvnw clean verify`
-    
+
 If you are using [KinD](https://kind.sigs.k8s.io/) we recommend executing:
 
 ```bash
@@ -95,11 +106,12 @@ export WITH_KIND=true
 export SKIP_PUSH=true
 ```
 
-This loads images in KinD and skips the push to the remote registry pointed by `KO_DOCKER_REPO`, allowing speeding up
-the development cycle.
-    
+This loads images in KinD and skips the push to the remote registry pointed by
+`KO_DOCKER_REPO`, allowing speeding up the development cycle.
+
 - Execute `source test/data-plane/library.sh`.
-- Execute `data_plane_build_push` to build and push data-plane images (`SKIP_PUSH=true` will skip the push).
+- Execute `data_plane_build_push` to build and push data-plane images
+  (`SKIP_PUSH=true` will skip the push).
 - Execute `k8s apply --force`
 
 # Changing the control-plane
@@ -111,12 +123,12 @@ the development cycle.
 ```shell script
 ./test/presubmit-tests.sh --unit-tests
 ./test/presubmit-tests.sh --build-tests
-``` 
+```
 
 # E2E Tests
 
-Running E2E tests as you make changes to the code-base is pretty simple. 
-See [the test docs](./test/README.md).
+Running E2E tests as you make changes to the code-base is pretty simple. See
+[the test docs](./test/README.md).
 
 # Contributing
 
