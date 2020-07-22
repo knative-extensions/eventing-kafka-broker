@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 
@@ -56,5 +56,5 @@ func TestCreateTopicTopicAlreadyExists(t *testing.T) {
 	topicRet, err := r.CreateTopic(b)
 
 	assert.Equal(t, topicRet, topic, "expected topic %s go %s", topic, topicRet)
-	assert.NilError(t, err, "expected nil error on topic already exists")
+	assert.Nil(t, err, "expected nil error on topic already exists")
 }
