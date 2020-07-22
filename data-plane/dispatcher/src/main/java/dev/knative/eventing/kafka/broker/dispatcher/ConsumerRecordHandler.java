@@ -16,6 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.Filter;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -161,12 +163,10 @@ public final class ConsumerRecordHandler<K, V, R> implements
       final KafkaConsumerRecord<K, V> record,
       final Throwable cause) {
 
-    logger.error(
-        "{} sender failed to send record - topic: {} - partition: {} - offset: {} - cause: {}",
-        component,
-        record.topic(),
-        record.partition(),
-        record.offset(),
+    logger.error(component + " sender failed to send record {} {} {}",
+        keyValue("topic", record.topic()),
+        keyValue("partition", record.partition()),
+        keyValue("offset", record.offset()),
         cause
     );
   }
@@ -175,14 +175,10 @@ public final class ConsumerRecordHandler<K, V, R> implements
       final String component,
       final KafkaConsumerRecord<K, V> record) {
 
-    if (logger.isDebugEnabled()) {
-      logger.debug(
-          "record successfully handled by {} - topic: {} - partition: {} - offset: {}",
-          component,
-          record.topic(),
-          record.partition(),
-          record.offset()
-      );
-    }
+    logger.debug("record successfully handled by " + component + " {} {} {}",
+        keyValue("topic", record.topic()),
+        keyValue("partition", record.partition()),
+        keyValue("offset", record.offset())
+    );
   }
 }

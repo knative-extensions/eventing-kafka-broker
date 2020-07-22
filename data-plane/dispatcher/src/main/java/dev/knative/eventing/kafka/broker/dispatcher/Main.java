@@ -16,6 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
@@ -32,6 +34,7 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
+import net.logstash.logback.encoder.LogstashEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +54,13 @@ public class Main {
    * @param args command line arguments.
    */
   public static void main(final String[] args) {
+
+    // HACK HACK HACK
+    // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
+    // dependency with scope `provided` nor `runtime`, and adding include rules to
+    // maven-shade-plugin.
+    // Instantiating an Encoder here we force it to include the class.
+    new LogstashEncoder().getFieldNames();
 
     final var vertx = Vertx.vertx();
     Runtime.getRuntime().addShutdownHook(new Thread(vertx::close));
@@ -109,7 +119,7 @@ public class Main {
     try (final var configReader = new FileReader(path)) {
       consumerConfigs.load(configReader);
     } catch (IOException e) {
-      logger.error("failed to load configurations from file {} - cause {}", path, e);
+      logger.error("failed to load configurations from file {}", keyValue("path", path), e);
     }
 
     return consumerConfigs;

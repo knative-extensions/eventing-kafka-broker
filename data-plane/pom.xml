@@ -43,6 +43,8 @@
     <assertj.version>3.16.1</assertj.version>
     <protobuf.version>3.12.2</protobuf.version>
     <build.helper.maven.plugin.version>3.1.0</build.helper.maven.plugin.version>
+    <ch.qos.logback.version>1.2.3</ch.qos.logback.version>
+    <net.logstash.logback.encoder.version>6.4</net.logstash.logback.encoder.version>
   </properties>
 
   <dependencyManagement>
@@ -163,6 +165,26 @@
   </repositories>
 
   <dependencies>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>${ch.qos.logback.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${ch.qos.logback.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-access</artifactId>
+      <version>${ch.qos.logback.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.logstash.logback</groupId>
+      <artifactId>logstash-logback-encoder</artifactId>
+      <version>${net.logstash.logback.encoder.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>io.cloudevents</groupId>
@@ -211,13 +233,6 @@
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java-util</artifactId>
       <version>${protobuf.version}</version>
-    </dependency>
-
-    <!-- TODO(pierDipi) structured logging  -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <version>1.7.30</version>
     </dependency>
 
     <dependency>

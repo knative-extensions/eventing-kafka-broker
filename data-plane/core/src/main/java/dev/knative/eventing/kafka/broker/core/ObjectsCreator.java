@@ -16,6 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.core;
 
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers;
 import io.cloudevents.CloudEvent;
 import java.util.HashMap;
@@ -77,10 +79,11 @@ public class ObjectsCreator implements Consumer<Brokers> {
       final var latch = new CountDownLatch(1);
       objectsReconciler.reconcile(objects).onComplete(result -> {
         if (result.succeeded()) {
-          logger.info("reconciled objects {}", brokers);
+          logger.info("reconciled objects {}", keyValue("brokers", brokers));
         } else {
-          logger.error("failed to reconcile {}", brokers);
+          logger.error("failed to reconcile {}", keyValue("brokers", brokers), result.cause());
         }
+
         latch.countDown();
       });
 
@@ -88,7 +91,7 @@ public class ObjectsCreator implements Consumer<Brokers> {
       latch.await(WAIT_TIMEOUT, TimeUnit.MINUTES);
 
     } catch (final Exception ex) {
-      logger.error("failed to reconcile objects - cause {} - objects {}", ex, objects);
+      logger.error("{}", keyValue("oobjects", objects), ex);
     }
   }
 }
