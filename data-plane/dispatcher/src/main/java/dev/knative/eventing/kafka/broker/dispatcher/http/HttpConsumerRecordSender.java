@@ -16,6 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
@@ -26,9 +28,13 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import java.net.URI;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class HttpConsumerRecordSender implements
     ConsumerRecordSender<String, CloudEvent, HttpClientResponse> {
+
+  private static final Logger logger = LoggerFactory.getLogger(HttpConsumerRecordSender.class);
 
   private final HttpClient client;
   private final String subscriberURI;
@@ -60,12 +66,26 @@ public final class HttpConsumerRecordSender implements
   public Future<HttpClientResponse> send(final KafkaConsumerRecord<String, CloudEvent> record) {
     final Promise<HttpClientResponse> promise = Promise.promise();
     final var request = client.postAbs(subscriberURI)
+        .setTimeout(10000)
         .exceptionHandler(promise::tryFail)
         .handler(response -> {
           if (response.statusCode() >= 300) {
             // TODO determine which status codes are retryable
             //  (channels -> https://github.com/knative/eventing/issues/2411).
             promise.tryFail("response status code is not 2xx - got: " + response.statusCode());
+
+            if (logger.isDebugEnabled()) {
+              logger.error("failed to send event to subscriber {} {} {}",
+                  keyValue("subscriberURI", subscriberURI),
+                  keyValue("statusCode", response.statusCode()),
+                  keyValue("event", record.value())
+              );
+            } else {
+              logger.error("failed to send event to subscriber {} {}",
+                  keyValue("subscriberURI", subscriberURI),
+                  keyValue("statusCode", response.statusCode())
+              );
+            }
 
             return;
           }

@@ -36,7 +36,7 @@ import (
 const (
 	// The interval and timeout used for checking events
 	minEvRetryInterval = 4 * time.Second
-	timeoutEvRetry     = 4 * time.Minute
+	timeoutEvRetry     = 8 * time.Minute
 )
 
 // Stateful store of events received by the recordevents pod it is pointed at.

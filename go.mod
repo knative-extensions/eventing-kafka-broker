@@ -11,7 +11,6 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/stretchr/testify v1.5.1
-	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.14.1
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.17.6

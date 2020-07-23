@@ -107,11 +107,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
-				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
@@ -164,11 +159,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
-				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
@@ -285,11 +275,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
-				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
@@ -355,11 +340,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
-				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
@@ -447,11 +427,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
-				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
@@ -539,11 +514,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
-				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
@@ -621,11 +591,6 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
-				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
@@ -771,13 +736,6 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				}, &configs),
 			},
 			Key: testKey,
-			WantEvents: []string{
-				Eventf(
-					corev1.EventTypeNormal,
-					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
-				),
-			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					Broker:           []*coreconfig.Broker{},
@@ -805,13 +763,6 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				}, &configs),
 			},
 			Key: testKey,
-			WantEvents: []string{
-				Eventf(
-					corev1.EventTypeNormal,
-					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
-				),
-			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					VolumeGeneration: 1,
@@ -912,13 +863,6 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				}, &configs),
 			},
 			Key: testKey,
-			WantEvents: []string{
-				Eventf(
-					corev1.EventTypeNormal,
-					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
-				),
-			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					Broker: []*coreconfig.Broker{
@@ -953,13 +897,6 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				}, &configs),
 			},
 			Key: testKey,
-			WantEvents: []string{
-				Eventf(
-					corev1.EventTypeNormal,
-					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
-				),
-			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					Broker: []*coreconfig.Broker{
@@ -992,13 +929,6 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				}, &configs),
 			},
 			Key: testKey,
-			WantEvents: []string{
-				Eventf(
-					corev1.EventTypeNormal,
-					Reconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, BrokerNamespace, BrokerName),
-				),
-			},
 		},
 	}
 

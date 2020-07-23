@@ -6,15 +6,13 @@ metadata:
 data:
   config-kafka-broker-producer.properties: |
     bootstrap.servers=my-cluster-kafka-bootstrap.kafka:9092
-    # key.serializer=org.apache.kafka.common.serialization.StringSerializer
-    # value.serializer=org.apache.kafka.common.serialization.StringSerializer
     acks=1
     buffer.memory=33554432
     # compression.type=snappy
     retries=2147483647
     batch.size=16384
     client.dns.lookup=use_all_dns_ips
-    client.id=KKBD # Knative Kafka Broker Dispatcher
+    client.id=KKBD
     connections.max.idle.ms=600000
     delivery.timeout.ms=120000
     linger.ms=0
@@ -38,10 +36,7 @@ data:
     # transactional.id=null
   config-kafka-broker-consumer.properties: |
     bootstrap.servers=my-cluster-kafka-bootstrap.kafka:9092
-    # key.serializer=org.apache.kafka.common.serialization.StringSerializer
-    # value.serializer=org.apache.kafka.common.serialization.StringSerializer
     fetch.min.bytes=1
-    # group.id= dynamically set
     heartbeat.interval.ms=3000
     max.partition.fetch.bytes=1048576
     session.timeout.ms=10000
@@ -51,18 +46,17 @@ data:
     # ssl.truststore.location=
     # ssl.truststore.password=
     allow.auto.create.topics=true
-    auto.offsets.reset=latest
+    auto.offset.reset=latest
     client.dns.lookup=use_all_dns_ips
     connections.max.idle.ms=540000
     default.api.timeout.ms=60000
     enable.auto.commit=false
-    exclude.internals.topics=false
+    exclude.internal.topics=true
     fetch.max.bytes=52428800
-    # group.instance.id=
     isolation.level=read_uncommitted
     max.poll.interval.ms=300000
     max.poll.records=500
-    partition.assignement.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor # Kafka 2.3 required
+    # partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
     receive.buffer.bytes=65536
     request.timeout.ms=30000
     # sasl.client.callback.handler.class=
@@ -79,7 +73,7 @@ data:
     # ssl.provider=
     auto.commit.interval.ms=5000
     check.crcs=true
-    client.id=KKBD # Knative Kafka Broker Dispatcher
+    client.id=KKBD
     # client.rack=
     fetch.max.wait.ms=500
     # interceptor.classes=
@@ -103,5 +97,3 @@ data:
     # ssl.keymanager.algorithm
     # ssl.secure.random.implementation
     # ssl.trustmanager.algorithm
-
-

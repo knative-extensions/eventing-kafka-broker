@@ -94,7 +94,7 @@ func (m *statusConditionManager) reconciled() reconciler.Event {
 		Status: corev1.ConditionTrue,
 	})
 
-	return reconciledNormal(m.Trigger.Namespace, m.Trigger.Name)
+	return nil
 }
 
 func (m *statusConditionManager) failedToResolveTriggerConfig(err error) reconciler.Event {
@@ -124,12 +124,4 @@ func (m *statusConditionManager) failedToUpdateDispatcherPodsAnnotation(err erro
 
 func (m *statusConditionManager) subscriberResolved() {
 	m.Trigger.Status.MarkSubscriberResolvedSucceeded()
-}
-
-func reconciledNormal(namespace, name string) reconciler.Event {
-	return reconciler.NewEvent(
-		corev1.EventTypeNormal,
-		triggerReconciled,
-		fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, namespace, name),
-	)
 }

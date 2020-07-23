@@ -6,15 +6,13 @@ metadata:
 data:
   config-kafka-broker-producer.properties: |
     bootstrap.servers=my-cluster-kafka-bootstrap.kafka:9092
-    # key.serializer=org.apache.kafka.common.serialization.StringSerializer
-    # value.serializer=org.apache.kafka.common.serialization.StringSerializer
     acks=1
     buffer.memory=33554432
     # compression.type=snappy
     retries=2147483647
     batch.size=16384
     client.dns.lookup=use_all_dns_ips
-    client.id=KKBR # Knative Kafka Broker Receiver
+    client.id=KKBR
     connections.max.idle.ms=600000
     delivery.timeout.ms=120000
     linger.ms=0

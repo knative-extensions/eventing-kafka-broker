@@ -27,6 +27,7 @@ import (
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/pkg/configmap"
@@ -61,6 +62,12 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		return r.reconcileKind(ctx, broker)
+	})
+}
+
+func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 
 	logger := log.Logger(ctx, "broker", broker)
 
@@ -123,7 +130,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	// Update the configuration map with the new brokersTriggers data.
 	if err := r.UpdateDataPlaneConfigMap(brokersTriggers, brokersTriggersConfigMap); err != nil {
-		return statusConditionManager.failedToUpdateBrokersTriggersConfigMap(err)
+		return err
 	}
 	statusConditionManager.brokersTriggersConfigMapUpdated()
 
@@ -137,7 +144,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	// Update volume generation annotation of receiver pods
 	if err := r.UpdateReceiverPodsAnnotation(logger, brokersTriggers.VolumeGeneration); err != nil {
-		return statusConditionManager.failedToUpdateReceiverPodsAnnotation(err)
+		return err
 	}
 
 	logger.Debug("Updated receiver pod annotation")
@@ -161,6 +168,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		return r.finalizeKind(ctx, broker)
+	})
+}
+
+func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
+
 	logger := log.Logger(ctx, "broker", broker)
 
 	logger.Debug("Finalizing broker")
@@ -192,7 +206,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 		// Update the configuration map with the new brokersTriggers data.
 		if err := r.UpdateDataPlaneConfigMap(brokersTriggers, brokersTriggersConfigMap); err != nil {
-			return fmt.Errorf("failed to update configuration map: %w", err)
+			return err
 		}
 
 		logger.Debug("Brokers and triggers config map updated")
@@ -208,7 +222,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 	logger.Debug("Topic deleted", zap.String("topic", topic))
 
-	return reconciledNormal(broker.Namespace, broker.Name)
+	return nil
 }
 
 func incrementVolumeGeneration(generation uint64) uint64 {
@@ -289,6 +303,7 @@ func (r *Reconciler) SetBootstrapServers(servers string) error {
 	config := sarama.NewConfig()
 	config.Version = sarama.MaxVersion
 	config.Net.KeepAlive = time.Second * 60
+	config.Metadata.RefreshFrequency = time.Minute
 
 	kafkaClusterAdmin, err := NewClusterAdmin(addrs, config)
 	if err != nil {

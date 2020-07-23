@@ -17,6 +17,7 @@
 package dev.knative.eventing.kafka.broker.receiver;
 
 import static java.lang.String.join;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import io.cloudevents.CloudEvent;
@@ -27,8 +28,13 @@ import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import java.util.StringTokenizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CloudEventRequestToRecordMapper implements RequestToRecordMapper<String, CloudEvent> {
+
+  private static final Logger logger = LoggerFactory
+      .getLogger(CloudEventRequestToRecordMapper.class);
 
   static final int PATH_TOKEN_NUMBER = 2;
   static final String PATH_DELIMITER = "/";
@@ -47,6 +53,8 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper<St
           if (event == null) {
             return Future.failedFuture(new IllegalArgumentException("event cannot be null"));
           }
+
+          logger.debug("received event {}", keyValue("event", event));
 
           final var topic = topic(request.path());
           if (topic == null) {

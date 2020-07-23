@@ -5,13 +5,13 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
+	"k8s.io/client-go/util/retry"
 
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 )
@@ -115,7 +115,8 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(brokersTriggers *coreconfig.Broker
 
 	_, err = r.KubeClient.CoreV1().ConfigMaps(configMap.Namespace).Update(configMap)
 	if err != nil {
-		return fmt.Errorf("failed to update config map %s/%s: %w", configMap.Namespace, configMap.Name, err)
+		// Return the same error, so that we can handle conflicting updates.
+		return err
 	}
 
 	return nil
@@ -123,24 +124,30 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(brokersTriggers *coreconfig.Broker
 
 func (r *Reconciler) UpdateDispatcherPodsAnnotation(logger *zap.Logger, volumeGeneration uint64) error {
 
-	labelSelector := labels.SelectorFromSet(map[string]string{"app": DispatcherLabel})
-	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)
-	if errors != nil {
-		return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
-	}
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
-	return r.updatePodsAnnotation(logger, volumeGeneration, pods)
+		labelSelector := labels.SelectorFromSet(map[string]string{"app": DispatcherLabel})
+		pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)
+		if errors != nil {
+			return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
+		}
+
+		return r.updatePodsAnnotation(logger, volumeGeneration, pods)
+	})
 }
 
 func (r *Reconciler) UpdateReceiverPodsAnnotation(logger *zap.Logger, volumeGeneration uint64) error {
 
-	labelSelector := labels.SelectorFromSet(map[string]string{"app": ReceiverLabel})
-	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)
-	if errors != nil {
-		return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
-	}
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
-	return r.updatePodsAnnotation(logger, volumeGeneration, pods)
+		labelSelector := labels.SelectorFromSet(map[string]string{"app": ReceiverLabel})
+		pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)
+		if errors != nil {
+			return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
+		}
+
+		return r.updatePodsAnnotation(logger, volumeGeneration, pods)
+	})
 }
 
 func (r *Reconciler) updatePodsAnnotation(logger *zap.Logger, volumeGeneration uint64, pods []*corev1.Pod) error {
@@ -167,14 +174,13 @@ func (r *Reconciler) updatePodsAnnotation(logger *zap.Logger, volumeGeneration u
 		pod.SetAnnotations(annotations)
 
 		if _, err := r.KubeClient.CoreV1().Pods(pod.Namespace).Update(pod); err != nil {
-
-			errors = multierr.Append(errors, fmt.Errorf(
-				"failed to update pod %s/%s: %w",
-				pod.Namespace,
-				pod.Name,
-				err,
-			))
+			// Return the same error, so that we can handle conflicting updates.
+			return err
 		}
 	}
 	return errors
+}
+
+func (r *Reconciler) HandleConflicts(f func() error) error {
+	return retry.RetryOnConflict(retry.DefaultRetry, f)
 }

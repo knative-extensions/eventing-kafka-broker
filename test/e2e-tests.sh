@@ -24,6 +24,6 @@ wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not 
 
 header "Running tests"
 
-go_test_e2e -timeout=10m ./test/... || fail_test "Integration test failed"
+go_test_e2e -timeout=30m ./test/... || fail_test "Integration test failed"
 
 success

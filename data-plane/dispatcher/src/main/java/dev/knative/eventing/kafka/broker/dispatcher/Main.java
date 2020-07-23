@@ -47,6 +47,7 @@ public class Main {
   private static final String CONSUMER_CONFIG_FILE_PATH = "CONSUMER_CONFIG_FILE_PATH";
   private static final String BROKERS_INITIAL_CAPACITY = "BROKERS_INITIAL_CAPACITY";
   private static final String TRIGGERS_INITIAL_CAPACITY = "TRIGGERS_INITIAL_CAPACITY";
+  public static final String INSTANCE_ID = "INSTANCE_ID";
 
   /**
    * Dispatcher entry point.
@@ -75,6 +76,7 @@ public class Main {
 
     final var producerConfigs = config(json.getString(PRODUCER_CONFIG_FILE_PATH));
     final var consumerConfigs = config(json.getString(CONSUMER_CONFIG_FILE_PATH));
+    final var instanceID = json.getString(INSTANCE_ID);
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
         consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.create();

@@ -167,6 +167,7 @@ public final class ConsumerRecordHandler<K, V, R> implements
         keyValue("topic", record.topic()),
         keyValue("partition", record.partition()),
         keyValue("offset", record.offset()),
+        keyValue("event", record.value()),
         cause
     );
   }
@@ -178,7 +179,8 @@ public final class ConsumerRecordHandler<K, V, R> implements
     logger.debug("record successfully handled by " + component + " {} {} {}",
         keyValue("topic", record.topic()),
         keyValue("partition", record.partition()),
-        keyValue("offset", record.offset())
+        keyValue("offset", record.offset()),
+        keyValue("event", record.value())
     );
   }
 }

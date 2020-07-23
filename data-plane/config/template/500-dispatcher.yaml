@@ -48,6 +48,10 @@ spec:
               value: "100"
             - name: TRIGGERS_INITIAL_CAPACITY
               value: "20"
+            - name: INSTANCE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
           command:
             - "java"
           # TODO add JVM arguments
