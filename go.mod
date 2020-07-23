@@ -7,7 +7,7 @@ require (
 	github.com/cloudevents/sdk-go/v2 v2.0.1-0.20200630063327-b91da81265fe
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.2
-	github.com/google/go-cmp v0.5.0
+	github.com/google/go-cmp v0.5.1
 	github.com/google/uuid v1.1.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/stretchr/testify v1.5.1
@@ -18,9 +18,9 @@ require (
 	k8s.io/apiextensions-apiserver v0.17.6
 	k8s.io/apimachinery v0.18.6
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/eventing v0.16.1-0.20200722085754-46fc727c96f9
-	knative.dev/pkg v0.0.0-20200719221534-601c9ff3832e
-	knative.dev/test-infra v0.0.0-20200721175154-c98db9bd4d5d
+	knative.dev/eventing v0.16.1-0.20200723113257-ce4fa36eed3a
+	knative.dev/pkg v0.0.0-20200722085354-ba0f3cb7cf84
+	knative.dev/test-infra v0.0.0-20200722142057-3ca910b5a25e
 )
 
 replace (
