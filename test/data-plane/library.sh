@@ -22,7 +22,7 @@
 
 readonly WITH_KIND=${WITH_KIND:-false}
 readonly SKIP_PUSH=${SKIP_PUSH:-false}
-readonly UUID=${UUID:-latest}
+readonly UUID=${UUID:-${TAG:-latest}}
 
 readonly DATA_PLANE_DIR=data-plane
 readonly DATA_PLANE_CONFIG_DIR=${DATA_PLANE_DIR}/config
@@ -40,6 +40,15 @@ readonly RECEIVER_DIRECTORY=receiver
 
 readonly DISPATCHER_JAR="dispatcher-1.0-SNAPSHOT.jar"
 readonly DISPATCHER_DIRECTORY=dispatcher
+
+# Update release labels if this is a tagged release
+if [[ -n "${TAG}" ]]; then
+  echo "Tagged release, updating release labels to eventing.knative.dev/release: \"${TAG}\""
+  LABEL_YAML_CMD=(sed -e "s|eventing.knative.dev/release: devel|eventing.knative.dev/release: \"${TAG}\"|")
+else
+  echo "Untagged release, will NOT update release labels"
+  LABEL_YAML_CMD=(cat)
+fi
 
 # Checks whether the given function exists.
 function function_exists() {
@@ -113,13 +122,13 @@ function k8s() {
   echo "dispatcher image ---> ${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}"
   echo "receiver image   ---> ${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}"
 
-  kubectl "$@" -f ${DATA_PLANE_CONFIG_DIR}
+  ko resolve ${KO_FLAGS} --strict -f ${DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}"
 
   sed "s|\${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|g" ${DISPATCHER_TEMPLATE_FILE} |
-    kubectl "$@" -f - || fail_test "Failed to $@ to ${DISPATCHER_TEMPLATE_FILE}"
+    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to append ${DISPATCHER_TEMPLATE_FILE}"
 
   sed "s|\${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}|${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}|g" ${RECEIVER_TEMPLATE_FILE} |
-    kubectl "$@" -f - || fail_test "Failed to $@ to ${RECEIVER_TEMPLATE_FILE}"
+    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to append ${RECEIVER_TEMPLATE_FILE}"
 }
 
 function data_plane_unit_tests() {
@@ -134,12 +143,8 @@ function data_plane_build_tests() {
   return 0
 }
 
+# Note: do not change this function name, it's used during releases.
 function data_plane_setup() {
-  data_plane_build_push && k8s apply
-  return $?
-}
-
-function data_plane_teardown() {
-  k8s delete --ignore-not-found
+  data_plane_build_push && k8s
   return $?
 }

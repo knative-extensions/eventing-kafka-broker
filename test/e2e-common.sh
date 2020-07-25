@@ -28,6 +28,8 @@ readonly EVENTING_CONFIG="./config"
 # Vendored eventing test iamges.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
 
+export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
+
 function knative_setup() {
   knative_eventing "apply --strict"
   return $?
@@ -50,9 +52,7 @@ function knative_eventing() {
   else
     fail_test "Not ready for a release"
   fi
-}
 
-function test_setup() {
   # Publish test images.
   echo ">> Publishing test images from eventing"
   # We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
@@ -65,18 +65,20 @@ function test_setup() {
   # ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 
   ./test/kafka/kafka_setup.sh || fail_test "Failed to set up Kafka cluster"
+}
+
+function test_setup() {
+  [ -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" ] && rm "${EVENTING_KAFKA_BROKER_ARTIFACT}"
 
   header "Data plane setup"
   data_plane_setup || fail_test "Failed to set up data plane components"
 
   header "Control plane setup"
   control_plane_setup || fail_test "Failed to set up control plane components"
+
+  kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_BROKER_ARTIFACT}"
 }
 
 function test_teardown() {
-  header "Data plane teardown"
-  data_plane_teardown || fail_test "Failed to tear down data plane components"
-
-  header "Control plane teardown"
-  control_plane_teardown || fail_test "Failed to tear down control plane components"
+  kubectl delete -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to tear down"
 }

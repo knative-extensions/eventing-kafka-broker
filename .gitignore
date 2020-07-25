@@ -28,3 +28,6 @@
 
 ### VS Code ###
 **/.vscode/
+
+## Ignore released file
+eventing-kafka-broker.yaml
