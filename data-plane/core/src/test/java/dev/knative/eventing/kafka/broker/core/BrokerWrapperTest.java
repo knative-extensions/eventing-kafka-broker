@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import dev.knative.eventing.kafka.broker.core.config.BrokersConfig;
 import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -62,7 +63,7 @@ public class BrokerWrapperTest {
   public void testTriggerEquality(
       final dev.knative.eventing.kafka.broker.core.Broker b1,
       final dev.knative.eventing.kafka.broker.core.Broker b2) {
-   
+
     assertThat(b1).isEqualTo(b2);
     assertThat(b1.hashCode()).isEqualTo(b2.hashCode());
   }
@@ -121,6 +122,54 @@ public class BrokerWrapperTest {
             ),
             new BrokerWrapper(
                 Broker.newBuilder().build()
+            )
+        ),
+        Arguments.of(
+            new BrokerWrapper(
+                Broker.newBuilder()
+                    .setName("broker")
+                    .setNamespace("test-event-transformation-for-trigger-v1-broker-v1-6wlx9")
+                    .setId("93ab71bd-9e3c-42ee-a0a2-aeec6dca48c9")
+                    .setTopic(
+                        "knative-broker-test-event-transformation-for-trigger-v1-broker-v1-6wlx9-broker")
+                    .addTriggers(BrokersConfig.Trigger.newBuilder()
+                        .setDestination(
+                            "http://trans-pod.test-event-transformation-for-trigger-v1-broker-v1-6wlx9.svc.cluster.local/")
+                        .setId("9bfd1eb6-5f09-49cf-b3fa-b70377aff64f")
+                        .putAttributes("source", "source1")
+                        .putAttributes("type", "type1")
+                        .build())
+                    .addTriggers(BrokersConfig.Trigger.newBuilder()
+                        .setDestination(
+                            "http://recordevents-pod.test-event-transformation-for-trigger-v1-broker-v1-6wlx9.svc.cluster.local/")
+                        .setId("2417e90f-fc9a-430b-a9f7-68ee3b5929cd")
+                        .putAttributes("source", "source2")
+                        .putAttributes("type", "type2")
+                        .build())
+                    .build()
+            ),
+            new BrokerWrapper(
+                Broker.newBuilder()
+                    .setName("broker")
+                    .setNamespace("test-event-transformation-for-trigger-v1-broker-v1-6wlx9")
+                    .setId("93ab71bd-9e3c-42ee-a0a2-aeec6dca48c9")
+                    .setTopic(
+                        "knative-broker-test-event-transformation-for-trigger-v1-broker-v1-6wlx9-broker")
+                    .addTriggers(BrokersConfig.Trigger.newBuilder()
+                        .setDestination(
+                            "http://trans-pod.test-event-transformation-for-trigger-v1-broker-v1-6wlx9.svc.cluster.local/")
+                        .setId("9bfd1eb6-5f09-49cf-b3fa-b70377aff64f")
+                        .putAttributes("source", "source1")
+                        .putAttributes("type", "type1")
+                        .build())
+                    .addTriggers(BrokersConfig.Trigger.newBuilder()
+                        .setDestination(
+                            "http://recordevents-pod.test-event-transformation-for-trigger-v1-broker-v1-6wlx9.svc.cluster.local/")
+                        .setId("2417e90f-fc9a-430b-a9f7-68ee3b5929cd")
+                        .putAttributes("source", "source2")
+                        .putAttributes("type", "type2")
+                        .build())
+                    .build()
             )
         ),
         Arguments.of(

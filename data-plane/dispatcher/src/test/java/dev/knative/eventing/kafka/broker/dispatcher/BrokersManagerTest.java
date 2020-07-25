@@ -64,12 +64,12 @@ public class BrokersManagerTest {
         100
     );
 
-    final var reconciled = brokersManager.reconcile(brokers);
-
-    reconciled.onSuccess(ignored -> context.verify(() -> {
-      assertThat(vertx.deploymentIDs()).hasSize(numTriggers);
-      checkpoints.flag();
-    }));
+    brokersManager.reconcile(brokers)
+        .onSuccess(ignored -> context.verify(() -> {
+          assertThat(vertx.deploymentIDs()).hasSize(numTriggers);
+          checkpoints.flag();
+        }))
+        .onFailure(context::failNow);
   }
 
   @Test
@@ -91,10 +91,12 @@ public class BrokersManagerTest {
         100
     );
 
-    brokersManager.reconcile(brokers).onFailure(ignored -> context.verify(() -> {
-      assertThat(vertx.deploymentIDs()).hasSize(0);
-      checkpoint.flag();
-    }));
+    brokersManager.reconcile(brokers)
+        .onFailure(ignored -> context.verify(() -> {
+          assertThat(vertx.deploymentIDs()).hasSize(0);
+          checkpoint.flag();
+        }))
+        .onFailure(context::failNow);
   }
 
   @Test
@@ -123,18 +125,22 @@ public class BrokersManagerTest {
         100
     );
 
-    brokersManager.reconcile(brokersOld).onSuccess(ignored -> {
+    brokersManager.reconcile(brokersOld)
+        .onSuccess(ignored -> {
 
-      context.verify(() -> {
-        assertThat(vertx.deploymentIDs()).hasSize(numTriggersOld);
-        checkpoints.flag();
-      });
+          context.verify(() -> {
+            assertThat(vertx.deploymentIDs()).hasSize(numTriggersOld);
+            checkpoints.flag();
+          });
 
-      brokersManager.reconcile(brokersNew).onSuccess(ok -> context.verify(() -> {
-        assertThat(vertx.deploymentIDs()).hasSize(numTriggersNew);
-        checkpoints.flag();
-      }));
-    });
+          brokersManager.reconcile(brokersNew)
+              .onSuccess(ok -> context.verify(() -> {
+                assertThat(vertx.deploymentIDs()).hasSize(numTriggersNew);
+                checkpoints.flag();
+              }))
+              .onFailure(context::failNow);
+        })
+        .onFailure(context::failNow);
   }
 
   @Test
@@ -164,25 +170,28 @@ public class BrokersManagerTest {
         100
     );
 
-    brokersManager.reconcile(brokersOld).onSuccess(ignored -> {
-      context.verify(() -> {
-        assertThat(vertx.deploymentIDs()).hasSize(numTriggersOld);
-        checkpoints.flag();
-      });
+    brokersManager.reconcile(brokersOld)
+        .onSuccess(ignored -> {
+          context.verify(() -> {
+            assertThat(vertx.deploymentIDs()).hasSize(numTriggersOld);
+            checkpoints.flag();
+          });
 
-      brokersManager.reconcile(brokersNew).onSuccess(ok -> context.verify(() -> {
-        assertThat(vertx.deploymentIDs()).hasSize(numTriggersNew);
-        checkpoints.flag();
-      }));
-    });
+          brokersManager.reconcile(brokersNew)
+              .onSuccess(ok -> context.verify(() -> {
+                assertThat(vertx.deploymentIDs()).hasSize(numTriggersNew);
+                checkpoints.flag();
+              }))
+              .onFailure(context::failNow);
+        })
+        .onFailure(context::failNow);
   }
 
   @Test
   @Timeout(value = 2)
   public void shouldStopAndStartVerticlesWhenTriggerDeletedAndReAdded(
       final Vertx vertx,
-      final VertxTestContext context)
-      throws Exception {
+      final VertxTestContext context) {
 
     final var brokersOld = Map.of(
         broker1(), Set.of(trigger1(), trigger2(), trigger4()),
@@ -207,33 +216,37 @@ public class BrokersManagerTest {
     );
 
     final var oldDeployments = vertx.deploymentIDs();
-    brokersManager.reconcile(brokersOld).onSuccess(ignored -> {
+    brokersManager.reconcile(brokersOld)
+        .onSuccess(ignored -> {
 
-      context.verify(() -> {
-        assertThat(oldDeployments).hasSize(numTriggersOld);
-        checkpoints.flag();
-      });
+          context.verify(() -> {
+            assertThat(oldDeployments).hasSize(numTriggersOld);
+            checkpoints.flag();
+          });
 
-      brokersManager.reconcile(brokersNew).onSuccess(ok -> {
-        context.verify(() -> {
-          assertThat(vertx.deploymentIDs()).hasSize(numTriggersNew);
-          assertThat(vertx.deploymentIDs()).contains(oldDeployments.toArray(new String[0]));
-          checkpoints.flag();
-        });
+          brokersManager.reconcile(brokersNew)
+              .onSuccess(ok -> {
+                context.verify(() -> {
+                  assertThat(vertx.deploymentIDs()).hasSize(numTriggersNew);
+                  assertThat(vertx.deploymentIDs()).contains(oldDeployments.toArray(new String[0]));
+                  checkpoints.flag();
+                });
 
-        brokersManager.reconcile(brokersOld).onSuccess(ok2 -> context.verify(() -> {
-          assertThat(oldDeployments).hasSize(numTriggersOld);
-          checkpoints.flag();
-        }));
-      });
-    });
+                brokersManager.reconcile(brokersOld).onSuccess(ok2 -> context.verify(() -> {
+                  assertThat(oldDeployments).hasSize(numTriggersOld);
+                  checkpoints.flag();
+                }));
+              })
+              .onFailure(context::failNow);
+        })
+        .onFailure(context::failNow);
   }
 
   @Test
   @Timeout(value = 2)
   public void shouldDoNothingWhenTheStateIsTheSame(
       final Vertx vertx,
-      final VertxTestContext context) throws InterruptedException {
+      final VertxTestContext context) {
 
     final var brokers = Map.of(
         broker1(), Set.of(trigger1(), trigger2(), trigger4()),
@@ -255,20 +268,22 @@ public class BrokersManagerTest {
         100,
         100
     );
-    brokersManager.reconcile(brokers).onSuccess(ignored -> {
+    brokersManager.reconcile(brokers)
+        .onSuccess(ignored -> {
 
-      final var deployments = vertx.deploymentIDs();
+          final var deployments = vertx.deploymentIDs();
 
-      context.verify(() -> {
-        assertThat(deployments).hasSize(numTriggers);
-        checkpoints.flag();
-      });
+          context.verify(() -> {
+            assertThat(deployments).hasSize(numTriggers);
+            checkpoints.flag();
+          });
 
-      brokersManager.reconcile(brokers2).onSuccess(ok -> context.verify(() -> {
-        assertThat(vertx.deploymentIDs()).containsExactly(deployments.toArray(new String[0]));
-        checkpoints.flag();
-      }));
-    });
+          brokersManager.reconcile(brokers2).onSuccess(ok -> context.verify(() -> {
+            assertThat(vertx.deploymentIDs()).containsExactly(deployments.toArray(new String[0]));
+            checkpoints.flag();
+          }));
+        })
+        .onFailure(context::failNow);
   }
 
   @Test

@@ -136,7 +136,7 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
 
     assertThat(committed).hasSize(1);
     assertThat(committed.keySet()).containsExactlyInAnyOrder(topicPartition);
-    assertThat(committed.values()).containsExactlyInAnyOrder(new OffsetAndMetadata(offset, ""));
+    assertThat(committed.values()).containsExactlyInAnyOrder(new OffsetAndMetadata(offset + 1, ""));
   }
 
   @SuppressWarnings("unchecked")

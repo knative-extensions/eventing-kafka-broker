@@ -106,11 +106,13 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
   private Future<Map<TopicPartition, OffsetAndMetadata>> commit(
       final KafkaConsumerRecord<K, V> record) {
 
+    logger.debug("committing record {}", record);
+
     final Promise<Map<TopicPartition, OffsetAndMetadata>> promise = Promise.promise();
 
     final var topicPartitionsToCommit = Map.of(
         topicPartition(record),
-        new OffsetAndMetadata(record.offset(), "")
+        new OffsetAndMetadata(record.offset() + 1, "")
     );
 
     consumer.commit(topicPartitionsToCommit, promise);

@@ -116,14 +116,20 @@ public final class ConsumerRecordHandler<K, V, R> implements
   @Override
   public void handle(final KafkaConsumerRecord<K, V> record) {
 
+    logger.debug("handling record {}", record);
+
     receiver.recordReceived(record);
 
     if (filter.match(record.value())) {
+      logger.debug("record match filtering {}", record);
+
       subscriberSender.send(record)
           .compose(sinkResponseHandler::handle)
           .onSuccess(response -> onSuccessfullySentToSubscriber(record))
           .onFailure(cause -> onFailedToSendToSubscriber(record, cause));
     } else {
+      logger.debug("record doesn't match filtering {}", record);
+
       receiver.recordDiscarded(record);
     }
   }
