@@ -21,6 +21,7 @@ package conformance
 import (
 	"testing"
 
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	conformance "knative.dev/eventing/test/conformance/helpers"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
@@ -28,16 +29,32 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
-func TestDataPlaneConformanceTest(t *testing.T) {
+func TestBrokerIngressV1Beta1(t *testing.T) {
 
 	client := testlib.Setup(t, true)
 	defer testlib.TearDown(client)
+
+	broker := createBroker(client)
+
+	conformance.BrokerV1Beta1IngressDataPlaneTestHelper(t, client, broker)
+}
+
+func TestBrokerConsumerV1Beta1(t *testing.T) {
+
+	client := testlib.Setup(t, true)
+	defer testlib.TearDown(client)
+
+	broker := createBroker(client)
+
+	conformance.BrokerV1Beta1ConsumerDataPlaneTestHelper(t, client, broker)
+}
+
+func createBroker(client *testlib.Client) *eventing.Broker {
 
 	broker := client.CreateBrokerV1Beta1OrFail("broker",
 		resources.WithBrokerClassForBrokerV1Beta1(kafka.BrokerClass),
 	)
 
 	client.WaitForResourceReadyOrFail(broker.Name, testlib.BrokerTypeMeta)
-
-	conformance.BrokerV1Beta1IngressDataPlaneTestHelper(t, client, broker)
+	return broker
 }

@@ -116,14 +116,20 @@ public final class ConsumerRecordHandler<K, V, R> implements
   @Override
   public void handle(final KafkaConsumerRecord<K, V> record) {
 
+    logger.debug("handling record {}", record);
+
     receiver.recordReceived(record);
 
     if (filter.match(record.value())) {
+      logger.debug("record match filtering {}", record);
+
       subscriberSender.send(record)
           .compose(sinkResponseHandler::handle)
           .onSuccess(response -> onSuccessfullySentToSubscriber(record))
           .onFailure(cause -> onFailedToSendToSubscriber(record, cause));
     } else {
+      logger.debug("record doesn't match filtering {}", record);
+
       receiver.recordDiscarded(record);
     }
   }
@@ -167,6 +173,7 @@ public final class ConsumerRecordHandler<K, V, R> implements
         keyValue("topic", record.topic()),
         keyValue("partition", record.partition()),
         keyValue("offset", record.offset()),
+        keyValue("event", record.value()),
         cause
     );
   }
@@ -178,7 +185,8 @@ public final class ConsumerRecordHandler<K, V, R> implements
     logger.debug("record successfully handled by " + component + " {} {} {}",
         keyValue("topic", record.topic()),
         keyValue("partition", record.partition()),
-        keyValue("offset", record.offset())
+        keyValue("offset", record.offset()),
+        keyValue("event", record.value())
     );
   }
 }

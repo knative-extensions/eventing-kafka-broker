@@ -55,7 +55,6 @@ public class TriggerWrapperTest {
     );
 
     assertThat(triggerWrapper.id()).isEqualTo(id);
-
   }
 
   @Test

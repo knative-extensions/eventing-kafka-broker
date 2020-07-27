@@ -135,7 +135,7 @@ func (manager *statusConditionManager) reconciled() reconciler.Event {
 	}
 	broker.GetConditionSet().Manage(&broker.Status).MarkTrue(ConditionAddressable)
 
-	return reconciledNormal(broker.Namespace, broker.Name)
+	return nil
 }
 
 func (manager *statusConditionManager) failedToUpdateDispatcherPodsAnnotation(err error) {
@@ -160,12 +160,4 @@ func (manager *statusConditionManager) failedToUpdateReceiverPodsAnnotation(err 
 func (manager *statusConditionManager) failedToGetBrokerConfig(err error) reconciler.Event {
 
 	return fmt.Errorf("failed to get broker configuration: %w", err)
-}
-
-func reconciledNormal(namespace, name string) reconciler.Event {
-	return reconciler.NewEvent(
-		corev1.EventTypeNormal,
-		Reconciled,
-		fmt.Sprintf(`%s reconciled: "%s/%s"`, Broker, namespace, name),
-	)
 }

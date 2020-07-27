@@ -17,7 +17,6 @@
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
 import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
-import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_INSTANCE_ID_CONFIG;
 
 import dev.knative.eventing.kafka.broker.core.Broker;
 import dev.knative.eventing.kafka.broker.core.Trigger;
@@ -56,10 +55,11 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
   /**
    * All args constructor.
    *
-   * @param consumerConfigs base consumer configurations.
-   * @param client          http client.
-   * @param vertx           vertx instance.
-   * @param producerConfigs base producer configurations.
+   * @param consumerRecordOffsetStrategyFactory consumer offset handling strategy
+   * @param consumerConfigs                     base consumer configurations.
+   * @param client                              http client.
+   * @param vertx                               vertx instance.
+   * @param producerConfigs                     base producer configurations.
    */
   public HttpConsumerVerticleFactory(
       final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
@@ -163,7 +163,6 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
     // consumerConfigs is a shared object and it acts as a prototype for each consumer instance.
     final var consumerConfigs = (Properties) this.consumerConfigs.clone();
     consumerConfigs.setProperty(GROUP_ID_CONFIG, trigger.id());
-    consumerConfigs.setProperty(GROUP_INSTANCE_ID_CONFIG, trigger.id()); // TODO this isn't unique
 
     // Note: KafkaConsumer instances are not thread-safe.
     // There are methods thread-safe, but in general they're not.

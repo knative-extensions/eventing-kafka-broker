@@ -76,7 +76,7 @@ public class BrokerWrapper implements dev.knative.eventing.kafka.broker.core.Bro
         && broker.getDeadLetterSink().equals(that.deadLetterSink())
         && broker.getTopic().equals(that.topic())
         && broker.getName().equals(that.name())
-        && broker.getNamespace().equals(that.name());
+        && broker.getNamespace().equals(that.namespace());
   }
 
   @Override
@@ -88,5 +88,12 @@ public class BrokerWrapper implements dev.knative.eventing.kafka.broker.core.Bro
         broker.getNamespace(),
         broker.getName()
     );
+  }
+
+  @Override
+  public String toString() {
+    return "BrokerWrapper{"
+        + "broker=" + broker
+        + '}';
   }
 }

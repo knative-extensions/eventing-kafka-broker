@@ -96,11 +96,6 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					triggerReconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
-				),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -191,11 +186,6 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					triggerReconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
-				),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -338,11 +328,6 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					triggerReconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
-				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -367,11 +352,6 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					triggerReconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
-				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -402,11 +382,6 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					triggerReconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
-				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -448,11 +423,6 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					triggerReconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
-				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
@@ -540,11 +510,6 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					triggerReconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
-				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
@@ -595,11 +560,6 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					triggerReconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
-				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -624,11 +584,6 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeNormal,
-					triggerReconciled,
-					fmt.Sprintf(`%s reconciled: "%s/%s"`, trigger, triggerNamespace, triggerName),
-				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
