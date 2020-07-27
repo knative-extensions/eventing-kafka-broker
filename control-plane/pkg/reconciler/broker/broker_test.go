@@ -960,14 +960,6 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 			onDeleteTopicError = want.(error)
 		}
 
-		clusterAdmin := &MockKafkaClusterAdmin{
-			ExpectedTopicName:   fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName),
-			ExpectedTopicDetail: defaultTopicDetail,
-			ErrorOnCreateTopic:  onCreateTopicError,
-			ErrorOnDeleteTopic:  onDeleteTopicError,
-			T:                   t,
-		}
-
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
@@ -977,7 +969,15 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
 				SystemNamespace:             configs.SystemNamespace,
 			},
-			KafkaClusterAdmin:            clusterAdmin,
+			NewClusterAdmin: func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
+				return &MockKafkaClusterAdmin{
+					ExpectedTopicName:   fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName),
+					ExpectedTopicDetail: defaultTopicDetail,
+					ErrorOnCreateTopic:  onCreateTopicError,
+					ErrorOnDeleteTopic:  onDeleteTopicError,
+					T:                   t,
+				}, nil
+			},
 			KafkaDefaultTopicDetails:     defaultTopicDetail,
 			KafkaDefaultTopicDetailsLock: sync.RWMutex{},
 			Configs:                      configs,
@@ -1018,10 +1018,6 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 
 func TestConfigMapUpdate(t *testing.T) {
 
-	NewClusterAdmin = func(addrs []string, conf *sarama.Config) (sarama.ClusterAdmin, error) {
-		return MockKafkaClusterAdmin{}, nil
-	}
-
 	cm := corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cmname",
@@ -1044,7 +1040,6 @@ func TestConfigMapUpdate(t *testing.T) {
 		NumPartitions:     42,
 		ReplicationFactor: 3,
 	})
-	assert.NotNil(t, reconciler.KafkaClusterAdmin)
 }
 
 func patchFinalizers() clientgotesting.PatchActionImpl {
