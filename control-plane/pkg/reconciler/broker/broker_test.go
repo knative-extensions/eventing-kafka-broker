@@ -72,7 +72,7 @@ var (
 	deleteTopicError = fmt.Errorf("failed to delete topic")
 )
 
-func TestBrokeReconciler(t *testing.T) {
+func TestBrokerReconciler(t *testing.T) {
 	eventing.RegisterAlternateBrokerConditionSet(ConditionSet)
 
 	t.Parallel()
@@ -227,26 +227,48 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 		},
 		{
-			Name: "Failed to get config map",
+			Name: "Config map not found - create config map",
 			Objects: []runtime.Object{
-				NewBroker(),
+				NewBroker(
+					WithDelivery(),
+				),
+				NewService(),
+				NewReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				NewDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
 				&corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: configs.DataPlaneConfigMapNamespace,
-						Name:      configs.DataPlaneConfigMapName + "a",
+						Name:      configs.DataPlaneConfigMapName + "a", // Use a different name
 					},
 				},
 			},
-			Key:     testKey,
-			WantErr: true,
+			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeWarning,
-					"InternalError",
-					"failed to get brokers and triggers config map %s: %v",
-					configs.DataPlaneConfigMapAsString(), `configmaps "knative-eventing" not found`,
-				),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMap(&configs, nil),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &coreconfig.Brokers{
+					Broker: []*coreconfig.Broker{
+						{
+							Id:             BrokerUUID,
+							Topic:          GetTopic(),
+							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
+							Namespace:      BrokerNamespace,
+							Name:           BrokerName,
+						},
+					},
+					VolumeGeneration: 1,
+				}),
+				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -254,9 +276,11 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewBroker(
+						WithDelivery(),
 						reconcilertesting.WithInitBrokerConditions,
+						ConfigMapUpdatedReady(&configs),
 						TopicReady,
-						FailedToGetConfigMap(&configs),
+						Addressable(&configs),
 					),
 				},
 			},
@@ -804,26 +828,20 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			},
 		},
 		{
-			Name: "Failed to get config map",
+			Name: "Config map not found - create config map",
 			Objects: []runtime.Object{
-				NewDeletedBroker(),
-				&corev1.ConfigMap{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: configs.DataPlaneConfigMapNamespace,
-						Name:      configs.DataPlaneConfigMapName + "a",
-					},
-				},
-			},
-			Key:     testKey,
-			WantErr: true,
-			WantEvents: []string{
-				Eventf(
-					corev1.EventTypeWarning,
-					"InternalError",
-					"failed to get brokers and triggers config map %s: %v",
-					configs.DataPlaneConfigMapAsString(), `configmaps "knative-eventing" not found`,
+				NewDeletedBroker(
+					WithDelivery(),
 				),
+				NewService(),
+				NewReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				NewDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
 			},
+			Key: testKey,
+			WantCreates: []runtime.Object{
+				NewConfigMap(&configs, nil),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 		},
 		{
 			Name: "Config map not readable",

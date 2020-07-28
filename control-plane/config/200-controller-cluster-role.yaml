@@ -30,6 +30,7 @@ rules:
       - list
       - watch
       - update
+      - create
   - apiGroups:
       - "*"
     resources:
