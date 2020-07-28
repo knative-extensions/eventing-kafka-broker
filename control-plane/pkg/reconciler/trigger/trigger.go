@@ -75,7 +75,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger
 	}
 
 	// Get data plane config map.
-	dataPlaneConfigMap, err := r.GetDataPlaneConfigMap()
+	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap()
 	if err != nil {
 		return fmt.Errorf("failed to get data plane config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
 	}
@@ -205,7 +205,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	statusConditionManager.propagateBrokerCondition(broker)
 
 	// Get data plane config map.
-	dataPlaneConfigMap, err := r.GetDataPlaneConfigMap()
+	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap()
 	if err != nil {
 		return statusConditionManager.failedToGetDataPlaneConfigMap(err)
 	}

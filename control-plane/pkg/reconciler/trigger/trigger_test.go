@@ -244,7 +244,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			},
 		},
 		{
-			Name: "Data plane config map not found",
+			Name: "Config map not found - broker not found in config map",
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
@@ -257,13 +257,17 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			},
 			Key:     testKey,
 			WantErr: true,
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMap(&configs, nil),
+			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
 					fmt.Sprintf(
-						`Failed to get data plane config map %s: configmaps "knative-eventing" not found`,
+						"broker not found in data plane config map %s",
 						configs.DataPlaneConfigMapAsString(),
 					),
 				),
@@ -272,10 +276,9 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
-						reconcilertesting.WithTriggerBrokerReady(),
-						reconcilertesting.WithTriggerDependencyFailed(
-							fmt.Sprintf("Failed to get data plane config map %s", configs.DataPlaneConfigMapAsString()),
-							`configmaps "knative-eventing" not found`,
+						reconcilertesting.WithTriggerBrokerFailed(
+							"Broker not found in data plane map",
+							fmt.Sprintf("config map: %s", configs.DataPlaneConfigMapAsString()),
 						),
 					),
 				},

@@ -88,7 +88,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	logger.Debug("Topic created", zap.Any("topic", topic))
 
 	// Get brokers and triggers config map.
-	brokersTriggersConfigMap, err := r.GetDataPlaneConfigMap()
+	brokersTriggersConfigMap, err := r.GetOrCreateDataPlaneConfigMap()
 	if err != nil {
 		return statusConditionManager.failedToGetBrokersTriggersConfigMap(err)
 	}
@@ -180,7 +180,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	logger.Debug("Finalizing broker")
 
 	// Get brokers and triggers config map.
-	brokersTriggersConfigMap, err := r.GetDataPlaneConfigMap()
+	brokersTriggersConfigMap, err := r.GetOrCreateDataPlaneConfigMap()
 	if err != nil {
 		return fmt.Errorf("failed to get brokers and triggers config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
@@ -47,10 +48,30 @@ type Reconciler struct {
 	SystemNamespace             string
 }
 
-func (r *Reconciler) GetDataPlaneConfigMap() (*corev1.ConfigMap, error) {
-	return r.KubeClient.CoreV1().
+func (r *Reconciler) GetOrCreateDataPlaneConfigMap() (*corev1.ConfigMap, error) {
+
+	cm, err := r.KubeClient.CoreV1().
 		ConfigMaps(r.DataPlaneConfigMapNamespace).
 		Get(r.DataPlaneConfigMapName, metav1.GetOptions{})
+
+	if apierrors.IsNotFound(err) {
+		cm, err = r.createDataPlaneConfigMap()
+	}
+
+	return cm, err
+}
+
+func (r *Reconciler) createDataPlaneConfigMap() (*corev1.ConfigMap, error) {
+	return r.KubeClient.CoreV1().ConfigMaps(r.DataPlaneConfigMapNamespace).Create(&corev1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      r.DataPlaneConfigMapName,
+			Namespace: r.DataPlaneConfigMapNamespace,
+		},
+		BinaryData: map[string][]byte{
+			ConfigMapDataKey: []byte(""),
+		},
+	})
 }
 
 // GetDataPlaneConfigMapData extracts brokers and triggers data from the given config map.

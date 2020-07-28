@@ -21,9 +21,11 @@ import (
 	"fmt"
 
 	"github.com/Shopify/sarama"
+	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	"knative.dev/eventing/pkg/logging"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -68,6 +70,16 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 		Configs: configs,
 	}
 
+	logger := logging.FromContext(ctx)
+
+	_, err := reconciler.GetOrCreateDataPlaneConfigMap()
+	if err != nil {
+		logger.Fatal("Failed to get or create data plane config map",
+			zap.String("configmap", configs.DataPlaneConfigMapAsString()),
+			zap.Error(err),
+		)
+	}
+
 	if configs.BootstrapServers != "" {
 		_ = reconciler.SetBootstrapServers(configs.BootstrapServers)
 	}
@@ -77,6 +89,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 	reconciler.Resolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
 	brokerInformer := brokerinformer.Get(ctx)
+
+	logger.Info("Register event handlers")
 
 	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: kafka.BrokerClassFilter(),
