@@ -252,7 +252,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             BrokerUUID,
 							Topic:          GetTopic(),
