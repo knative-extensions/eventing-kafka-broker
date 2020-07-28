@@ -24,13 +24,18 @@ import (
 )
 
 func (r *Reconciler) CreateTopic(broker *eventing.Broker) (string, error) {
+	r.bootstrapServersLock.RLock()
+	defer r.bootstrapServersLock.RUnlock()
+
 	topic := Topic(broker)
 	topicDetail := r.topicDetailFromBrokerConfig(broker)
 
-	r.KafkaClusterAdminLock.Lock()
-	defer r.KafkaClusterAdminLock.Unlock()
+	kafkaClusterAdmin, err := r.getKafkaClusterAdmin(r.bootstrapServers)
+	if err != nil {
+		return "", err
+	}
 
-	createTopicError := r.KafkaClusterAdmin.CreateTopic(topic, topicDetail, true)
+	createTopicError := kafkaClusterAdmin.CreateTopic(topic, topicDetail, true)
 	if err, ok := createTopicError.(*sarama.TopicError); ok && err.Err == sarama.ErrTopicAlreadyExists {
 		return topic, nil
 	}
@@ -39,13 +44,17 @@ func (r *Reconciler) CreateTopic(broker *eventing.Broker) (string, error) {
 }
 
 func (r *Reconciler) deleteTopic(broker *eventing.Broker) (string, error) {
-
-	r.KafkaClusterAdminLock.RLock()
-	defer r.KafkaClusterAdminLock.RUnlock()
+	r.bootstrapServersLock.RLock()
+	defer r.bootstrapServersLock.RUnlock()
 
 	topic := Topic(broker)
 
-	err := r.KafkaClusterAdmin.DeleteTopic(topic)
+	kafkaClusterAdmin, err := r.getKafkaClusterAdmin(r.bootstrapServers)
+	if err != nil {
+		return "", err
+	}
+
+	err = kafkaClusterAdmin.DeleteTopic(topic)
 	if sarama.ErrUnknownTopicOrPartition == err {
 		return topic, nil
 	}

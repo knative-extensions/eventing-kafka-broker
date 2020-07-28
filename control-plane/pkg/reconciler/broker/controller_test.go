@@ -19,7 +19,6 @@ package broker
 import (
 	"testing"
 
-	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -36,10 +35,6 @@ import (
 
 func TestNewController(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
-
-	NewClusterAdmin = func(addrs []string, conf *sarama.Config) (sarama.ClusterAdmin, error) {
-		return nil, nil
-	}
 
 	configs := &Configs{
 		EnvConfigs: EnvConfigs{

@@ -22,7 +22,6 @@ import (
 	"math"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -53,10 +52,16 @@ type Reconciler struct {
 
 	Resolver *resolver.URIResolver
 
-	KafkaClusterAdmin            sarama.ClusterAdmin
-	KafkaClusterAdminLock        sync.RWMutex
+	// TODO these configurations should live in each Broker configuration, so that we don't assume each
+	// 	Broker object use the same Kafka cluster
 	KafkaDefaultTopicDetails     sarama.TopicDetail
 	KafkaDefaultTopicDetailsLock sync.RWMutex
+	bootstrapServers             []string
+	bootstrapServersLock         sync.RWMutex
+
+	// NewClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// mock the function used during the reconciliation loop.
+	NewClusterAdmin func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error)
 
 	Configs *Configs
 }
@@ -288,38 +293,30 @@ func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev
 		topicDetail.ReplicationFactor = int16(replicationFactor)
 
 		r.SetDefaultTopicDetails(topicDetail)
-
-		if err := r.SetBootstrapServers(bootstrapServers); err != nil {
-			logger.Error("Failed to set bootstrap servers", zap.Error(err))
-		}
+		r.SetBootstrapServers(bootstrapServers)
 	}
 }
 
 // SetBootstrapServers change kafka bootstrap brokers addresses.
 // servers: a comma separated list of brokers to connect to.
-func (r *Reconciler) SetBootstrapServers(servers string) error {
+func (r *Reconciler) SetBootstrapServers(servers string) {
 	addrs := strings.Split(servers, ",")
 
+	r.bootstrapServersLock.Lock()
+	r.bootstrapServers = addrs
+	r.bootstrapServersLock.Unlock()
+}
+
+func (r *Reconciler) getKafkaClusterAdmin(bootstrapServers []string) (sarama.ClusterAdmin, error) {
 	config := sarama.NewConfig()
 	config.Version = sarama.MaxVersion
-	config.Net.KeepAlive = time.Second * 60
-	config.Metadata.RefreshFrequency = time.Minute
 
-	kafkaClusterAdmin, err := NewClusterAdmin(addrs, config)
+	kafkaClusterAdmin, err := r.NewClusterAdmin(bootstrapServers, config)
 	if err != nil {
-		return fmt.Errorf("failed to create kafka cluster admin: %w", err)
+		return nil, fmt.Errorf("failed to create cluster admin: %w", err)
 	}
 
-	r.KafkaClusterAdminLock.Lock()
-	oldKafkaClusterAdmin := r.KafkaClusterAdmin
-	r.KafkaClusterAdmin = kafkaClusterAdmin
-	r.KafkaClusterAdminLock.Unlock()
-
-	if oldKafkaClusterAdmin != nil {
-		_ = oldKafkaClusterAdmin.Close()
-	}
-
-	return nil
+	return kafkaClusterAdmin, nil
 }
 
 func (r *Reconciler) SetDefaultTopicDetails(topicDetail sarama.TopicDetail) {

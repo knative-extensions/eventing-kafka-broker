@@ -46,8 +46,6 @@ const (
 	DefaultReplicationFactor = 1
 )
 
-var NewClusterAdmin = sarama.NewClusterAdmin
-
 func NewController(ctx context.Context, watcher configmap.Watcher, configs *Configs) *controller.Impl {
 
 	eventing.RegisterAlternateBrokerConditionSet(ConditionSet)
@@ -61,6 +59,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
 			SystemNamespace:             configs.SystemNamespace,
 		},
+		NewClusterAdmin: sarama.NewClusterAdmin,
 		KafkaDefaultTopicDetails: sarama.TopicDetail{
 			NumPartitions:     DefaultNumPartitions,
 			ReplicationFactor: DefaultReplicationFactor,
@@ -69,7 +68,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 	}
 
 	if configs.BootstrapServers != "" {
-		_ = reconciler.SetBootstrapServers(configs.BootstrapServers)
+		reconciler.SetBootstrapServers(configs.BootstrapServers)
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass)

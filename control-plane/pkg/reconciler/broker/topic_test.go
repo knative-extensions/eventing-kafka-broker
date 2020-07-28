@@ -40,14 +40,16 @@ func TestCreateTopicTopicAlreadyExists(t *testing.T) {
 	errMsg := "topic already exists"
 
 	r := broker.Reconciler{
-		KafkaClusterAdmin: reconcilertesting.MockKafkaClusterAdmin{
-			ExpectedTopicName:   topic,
-			ExpectedTopicDetail: sarama.TopicDetail{},
-			ErrorOnCreateTopic: &sarama.TopicError{
-				Err:    sarama.ErrTopicAlreadyExists,
-				ErrMsg: &errMsg,
-			},
-			T: t,
+		NewClusterAdmin: func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
+			return reconcilertesting.MockKafkaClusterAdmin{
+				ExpectedTopicName:   topic,
+				ExpectedTopicDetail: sarama.TopicDetail{},
+				ErrorOnCreateTopic: &sarama.TopicError{
+					Err:    sarama.ErrTopicAlreadyExists,
+					ErrMsg: &errMsg,
+				},
+				T: t,
+			}, nil
 		},
 	}
 
