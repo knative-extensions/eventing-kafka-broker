@@ -2950,27 +2950,27 @@ public final class BrokersConfig {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>repeated .Broker broker = 1;</code>
+     * <code>repeated .Broker brokers = 1;</code>
      */
     java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker> 
-        getBrokerList();
+        getBrokersList();
     /**
-     * <code>repeated .Broker broker = 1;</code>
+     * <code>repeated .Broker brokers = 1;</code>
      */
-    dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker getBroker(int index);
+    dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker getBrokers(int index);
     /**
-     * <code>repeated .Broker broker = 1;</code>
+     * <code>repeated .Broker brokers = 1;</code>
      */
-    int getBrokerCount();
+    int getBrokersCount();
     /**
-     * <code>repeated .Broker broker = 1;</code>
+     * <code>repeated .Broker brokers = 1;</code>
      */
     java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder> 
-        getBrokerOrBuilderList();
+        getBrokersOrBuilderList();
     /**
-     * <code>repeated .Broker broker = 1;</code>
+     * <code>repeated .Broker brokers = 1;</code>
      */
-    dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder getBrokerOrBuilder(
+    dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder getBrokersOrBuilder(
         int index);
 
     /**
@@ -2996,7 +2996,7 @@ public final class BrokersConfig {
       super(builder);
     }
     private Brokers() {
-      broker_ = java.util.Collections.emptyList();
+      brokers_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -3032,10 +3032,10 @@ public final class BrokersConfig {
               break;
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                broker_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker>();
+                brokers_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker>();
                 mutable_bitField0_ |= 0x00000001;
               }
-              broker_.add(
+              brokers_.add(
                   input.readMessage(dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.parser(), extensionRegistry));
               break;
             }
@@ -3060,7 +3060,7 @@ public final class BrokersConfig {
             e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
-          broker_ = java.util.Collections.unmodifiableList(broker_);
+          brokers_ = java.util.Collections.unmodifiableList(brokers_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -3079,39 +3079,39 @@ public final class BrokersConfig {
               dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers.class, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers.Builder.class);
     }
 
-    public static final int BROKER_FIELD_NUMBER = 1;
-    private java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker> broker_;
+    public static final int BROKERS_FIELD_NUMBER = 1;
+    private java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker> brokers_;
     /**
-     * <code>repeated .Broker broker = 1;</code>
+     * <code>repeated .Broker brokers = 1;</code>
      */
-    public java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker> getBrokerList() {
-      return broker_;
+    public java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker> getBrokersList() {
+      return brokers_;
     }
     /**
-     * <code>repeated .Broker broker = 1;</code>
+     * <code>repeated .Broker brokers = 1;</code>
      */
     public java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder> 
-        getBrokerOrBuilderList() {
-      return broker_;
+        getBrokersOrBuilderList() {
+      return brokers_;
     }
     /**
-     * <code>repeated .Broker broker = 1;</code>
+     * <code>repeated .Broker brokers = 1;</code>
      */
-    public int getBrokerCount() {
-      return broker_.size();
+    public int getBrokersCount() {
+      return brokers_.size();
     }
     /**
-     * <code>repeated .Broker broker = 1;</code>
+     * <code>repeated .Broker brokers = 1;</code>
      */
-    public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker getBroker(int index) {
-      return broker_.get(index);
+    public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker getBrokers(int index) {
+      return brokers_.get(index);
     }
     /**
-     * <code>repeated .Broker broker = 1;</code>
+     * <code>repeated .Broker brokers = 1;</code>
      */
-    public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder getBrokerOrBuilder(
+    public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder getBrokersOrBuilder(
         int index) {
-      return broker_.get(index);
+      return brokers_.get(index);
     }
 
     public static final int VOLUMEGENERATION_FIELD_NUMBER = 2;
@@ -3142,8 +3142,8 @@ public final class BrokersConfig {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      for (int i = 0; i < broker_.size(); i++) {
-        output.writeMessage(1, broker_.get(i));
+      for (int i = 0; i < brokers_.size(); i++) {
+        output.writeMessage(1, brokers_.get(i));
       }
       if (volumeGeneration_ != 0L) {
         output.writeUInt64(2, volumeGeneration_);
@@ -3157,9 +3157,9 @@ public final class BrokersConfig {
       if (size != -1) return size;
 
       size = 0;
-      for (int i = 0; i < broker_.size(); i++) {
+      for (int i = 0; i < brokers_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, broker_.get(i));
+          .computeMessageSize(1, brokers_.get(i));
       }
       if (volumeGeneration_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
@@ -3180,8 +3180,8 @@ public final class BrokersConfig {
       }
       dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers other = (dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers) obj;
 
-      if (!getBrokerList()
-          .equals(other.getBrokerList())) return false;
+      if (!getBrokersList()
+          .equals(other.getBrokersList())) return false;
       if (getVolumeGeneration()
           != other.getVolumeGeneration()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
@@ -3195,9 +3195,9 @@ public final class BrokersConfig {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (getBrokerCount() > 0) {
-        hash = (37 * hash) + BROKER_FIELD_NUMBER;
-        hash = (53 * hash) + getBrokerList().hashCode();
+      if (getBrokersCount() > 0) {
+        hash = (37 * hash) + BROKERS_FIELD_NUMBER;
+        hash = (53 * hash) + getBrokersList().hashCode();
       }
       hash = (37 * hash) + VOLUMEGENERATION_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
@@ -3330,17 +3330,17 @@ public final class BrokersConfig {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
-          getBrokerFieldBuilder();
+          getBrokersFieldBuilder();
         }
       }
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        if (brokerBuilder_ == null) {
-          broker_ = java.util.Collections.emptyList();
+        if (brokersBuilder_ == null) {
+          brokers_ = java.util.Collections.emptyList();
           bitField0_ = (bitField0_ & ~0x00000001);
         } else {
-          brokerBuilder_.clear();
+          brokersBuilder_.clear();
         }
         volumeGeneration_ = 0L;
 
@@ -3371,14 +3371,14 @@ public final class BrokersConfig {
       public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers buildPartial() {
         dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers result = new dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers(this);
         int from_bitField0_ = bitField0_;
-        if (brokerBuilder_ == null) {
+        if (brokersBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
-            broker_ = java.util.Collections.unmodifiableList(broker_);
+            brokers_ = java.util.Collections.unmodifiableList(brokers_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
-          result.broker_ = broker_;
+          result.brokers_ = brokers_;
         } else {
-          result.broker_ = brokerBuilder_.build();
+          result.brokers_ = brokersBuilder_.build();
         }
         result.volumeGeneration_ = volumeGeneration_;
         onBuilt();
@@ -3429,29 +3429,29 @@ public final class BrokersConfig {
 
       public Builder mergeFrom(dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers other) {
         if (other == dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers.getDefaultInstance()) return this;
-        if (brokerBuilder_ == null) {
-          if (!other.broker_.isEmpty()) {
-            if (broker_.isEmpty()) {
-              broker_ = other.broker_;
+        if (brokersBuilder_ == null) {
+          if (!other.brokers_.isEmpty()) {
+            if (brokers_.isEmpty()) {
+              brokers_ = other.brokers_;
               bitField0_ = (bitField0_ & ~0x00000001);
             } else {
-              ensureBrokerIsMutable();
-              broker_.addAll(other.broker_);
+              ensureBrokersIsMutable();
+              brokers_.addAll(other.brokers_);
             }
             onChanged();
           }
         } else {
-          if (!other.broker_.isEmpty()) {
-            if (brokerBuilder_.isEmpty()) {
-              brokerBuilder_.dispose();
-              brokerBuilder_ = null;
-              broker_ = other.broker_;
+          if (!other.brokers_.isEmpty()) {
+            if (brokersBuilder_.isEmpty()) {
+              brokersBuilder_.dispose();
+              brokersBuilder_ = null;
+              brokers_ = other.brokers_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              brokerBuilder_ = 
+              brokersBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getBrokerFieldBuilder() : null;
+                   getBrokersFieldBuilder() : null;
             } else {
-              brokerBuilder_.addAllMessages(other.broker_);
+              brokersBuilder_.addAllMessages(other.brokers_);
             }
           }
         }
@@ -3488,244 +3488,244 @@ public final class BrokersConfig {
       }
       private int bitField0_;
 
-      private java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker> broker_ =
+      private java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker> brokers_ =
         java.util.Collections.emptyList();
-      private void ensureBrokerIsMutable() {
+      private void ensureBrokersIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
-          broker_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker>(broker_);
+          brokers_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker>(brokers_);
           bitField0_ |= 0x00000001;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder> brokerBuilder_;
+          dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder> brokersBuilder_;
 
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker> getBrokerList() {
-        if (brokerBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(broker_);
+      public java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker> getBrokersList() {
+        if (brokersBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(brokers_);
         } else {
-          return brokerBuilder_.getMessageList();
+          return brokersBuilder_.getMessageList();
         }
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public int getBrokerCount() {
-        if (brokerBuilder_ == null) {
-          return broker_.size();
+      public int getBrokersCount() {
+        if (brokersBuilder_ == null) {
+          return brokers_.size();
         } else {
-          return brokerBuilder_.getCount();
+          return brokersBuilder_.getCount();
         }
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker getBroker(int index) {
-        if (brokerBuilder_ == null) {
-          return broker_.get(index);
+      public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker getBrokers(int index) {
+        if (brokersBuilder_ == null) {
+          return brokers_.get(index);
         } else {
-          return brokerBuilder_.getMessage(index);
+          return brokersBuilder_.getMessage(index);
         }
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public Builder setBroker(
+      public Builder setBrokers(
           int index, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker value) {
-        if (brokerBuilder_ == null) {
+        if (brokersBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          ensureBrokerIsMutable();
-          broker_.set(index, value);
+          ensureBrokersIsMutable();
+          brokers_.set(index, value);
           onChanged();
         } else {
-          brokerBuilder_.setMessage(index, value);
+          brokersBuilder_.setMessage(index, value);
         }
         return this;
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public Builder setBroker(
+      public Builder setBrokers(
           int index, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder builderForValue) {
-        if (brokerBuilder_ == null) {
-          ensureBrokerIsMutable();
-          broker_.set(index, builderForValue.build());
+        if (brokersBuilder_ == null) {
+          ensureBrokersIsMutable();
+          brokers_.set(index, builderForValue.build());
           onChanged();
         } else {
-          brokerBuilder_.setMessage(index, builderForValue.build());
+          brokersBuilder_.setMessage(index, builderForValue.build());
         }
         return this;
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public Builder addBroker(dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker value) {
-        if (brokerBuilder_ == null) {
+      public Builder addBrokers(dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker value) {
+        if (brokersBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          ensureBrokerIsMutable();
-          broker_.add(value);
+          ensureBrokersIsMutable();
+          brokers_.add(value);
           onChanged();
         } else {
-          brokerBuilder_.addMessage(value);
+          brokersBuilder_.addMessage(value);
         }
         return this;
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public Builder addBroker(
+      public Builder addBrokers(
           int index, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker value) {
-        if (brokerBuilder_ == null) {
+        if (brokersBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          ensureBrokerIsMutable();
-          broker_.add(index, value);
+          ensureBrokersIsMutable();
+          brokers_.add(index, value);
           onChanged();
         } else {
-          brokerBuilder_.addMessage(index, value);
+          brokersBuilder_.addMessage(index, value);
         }
         return this;
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public Builder addBroker(
+      public Builder addBrokers(
           dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder builderForValue) {
-        if (brokerBuilder_ == null) {
-          ensureBrokerIsMutable();
-          broker_.add(builderForValue.build());
+        if (brokersBuilder_ == null) {
+          ensureBrokersIsMutable();
+          brokers_.add(builderForValue.build());
           onChanged();
         } else {
-          brokerBuilder_.addMessage(builderForValue.build());
+          brokersBuilder_.addMessage(builderForValue.build());
         }
         return this;
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public Builder addBroker(
+      public Builder addBrokers(
           int index, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder builderForValue) {
-        if (brokerBuilder_ == null) {
-          ensureBrokerIsMutable();
-          broker_.add(index, builderForValue.build());
+        if (brokersBuilder_ == null) {
+          ensureBrokersIsMutable();
+          brokers_.add(index, builderForValue.build());
           onChanged();
         } else {
-          brokerBuilder_.addMessage(index, builderForValue.build());
+          brokersBuilder_.addMessage(index, builderForValue.build());
         }
         return this;
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public Builder addAllBroker(
+      public Builder addAllBrokers(
           java.lang.Iterable<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker> values) {
-        if (brokerBuilder_ == null) {
-          ensureBrokerIsMutable();
+        if (brokersBuilder_ == null) {
+          ensureBrokersIsMutable();
           com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, broker_);
+              values, brokers_);
           onChanged();
         } else {
-          brokerBuilder_.addAllMessages(values);
+          brokersBuilder_.addAllMessages(values);
         }
         return this;
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public Builder clearBroker() {
-        if (brokerBuilder_ == null) {
-          broker_ = java.util.Collections.emptyList();
+      public Builder clearBrokers() {
+        if (brokersBuilder_ == null) {
+          brokers_ = java.util.Collections.emptyList();
           bitField0_ = (bitField0_ & ~0x00000001);
           onChanged();
         } else {
-          brokerBuilder_.clear();
+          brokersBuilder_.clear();
         }
         return this;
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public Builder removeBroker(int index) {
-        if (brokerBuilder_ == null) {
-          ensureBrokerIsMutable();
-          broker_.remove(index);
+      public Builder removeBrokers(int index) {
+        if (brokersBuilder_ == null) {
+          ensureBrokersIsMutable();
+          brokers_.remove(index);
           onChanged();
         } else {
-          brokerBuilder_.remove(index);
+          brokersBuilder_.remove(index);
         }
         return this;
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder getBrokerBuilder(
+      public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder getBrokersBuilder(
           int index) {
-        return getBrokerFieldBuilder().getBuilder(index);
+        return getBrokersFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder getBrokerOrBuilder(
+      public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder getBrokersOrBuilder(
           int index) {
-        if (brokerBuilder_ == null) {
-          return broker_.get(index);  } else {
-          return brokerBuilder_.getMessageOrBuilder(index);
+        if (brokersBuilder_ == null) {
+          return brokers_.get(index);  } else {
+          return brokersBuilder_.getMessageOrBuilder(index);
         }
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
       public java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder> 
-           getBrokerOrBuilderList() {
-        if (brokerBuilder_ != null) {
-          return brokerBuilder_.getMessageOrBuilderList();
+           getBrokersOrBuilderList() {
+        if (brokersBuilder_ != null) {
+          return brokersBuilder_.getMessageOrBuilderList();
         } else {
-          return java.util.Collections.unmodifiableList(broker_);
+          return java.util.Collections.unmodifiableList(brokers_);
         }
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder addBrokerBuilder() {
-        return getBrokerFieldBuilder().addBuilder(
+      public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder addBrokersBuilder() {
+        return getBrokersFieldBuilder().addBuilder(
             dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.getDefaultInstance());
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
-      public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder addBrokerBuilder(
+      public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder addBrokersBuilder(
           int index) {
-        return getBrokerFieldBuilder().addBuilder(
+        return getBrokersFieldBuilder().addBuilder(
             index, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.getDefaultInstance());
       }
       /**
-       * <code>repeated .Broker broker = 1;</code>
+       * <code>repeated .Broker brokers = 1;</code>
        */
       public java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder> 
-           getBrokerBuilderList() {
-        return getBrokerFieldBuilder().getBuilderList();
+           getBrokersBuilderList() {
+        return getBrokersFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
           dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder> 
-          getBrokerFieldBuilder() {
-        if (brokerBuilder_ == null) {
-          brokerBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+          getBrokersFieldBuilder() {
+        if (brokersBuilder_ == null) {
+          brokersBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder>(
-                  broker_,
+                  brokers_,
                   ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
-          broker_ = null;
+          brokers_ = null;
         }
-        return brokerBuilder_;
+        return brokersBuilder_;
       }
 
       private long volumeGeneration_ ;
@@ -3857,11 +3857,11 @@ public final class BrokersConfig {
       " \001(\t:\0028\001\"x\n\006Broker\022\n\n\002id\030\001 \001(\t\022\r\n\005topic\030" +
       "\002 \001(\t\022\026\n\016deadLetterSink\030\003 \001(\t\022\032\n\010trigger" +
       "s\030\004 \003(\0132\010.Trigger\022\021\n\tnamespace\030\005 \001(\t\022\014\n\004" +
-      "name\030\006 \001(\t\"<\n\007Brokers\022\027\n\006broker\030\001 \003(\0132\007." +
-      "Broker\022\030\n\020volumeGeneration\030\002 \001(\004B]\n-dev." +
-      "knative.eventing.kafka.broker.core.confi" +
-      "gB\rBrokersConfigZ\035control-plane/pkg/core" +
-      "/configb\006proto3"
+      "name\030\006 \001(\t\"=\n\007Brokers\022\030\n\007brokers\030\001 \003(\0132\007" +
+      ".Broker\022\030\n\020volumeGeneration\030\002 \001(\004B]\n-dev" +
+      ".knative.eventing.kafka.broker.core.conf" +
+      "igB\rBrokersConfigZ\035control-plane/pkg/cor" +
+      "e/configb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -3890,7 +3890,7 @@ public final class BrokersConfig {
     internal_static_Brokers_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Brokers_descriptor,
-        new java.lang.String[] { "Broker", "VolumeGeneration", });
+        new java.lang.String[] { "Brokers", "VolumeGeneration", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -42,11 +42,11 @@ public class FileWatcherTest {
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
     final var broker1 = Brokers.newBuilder()
-        .addBroker(broker1Unwrapped())
+        .addBrokers(broker1Unwrapped())
         .build();
 
     final var broker2 = Brokers.newBuilder()
-        .addBroker(broker2Unwrapped())
+        .addBrokers(broker2Unwrapped())
         .build();
 
     final var isFirst = new AtomicBoolean(true);

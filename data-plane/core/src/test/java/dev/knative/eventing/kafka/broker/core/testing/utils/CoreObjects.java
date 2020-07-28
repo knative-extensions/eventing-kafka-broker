@@ -45,8 +45,8 @@ public final class CoreObjects {
 
   public static Brokers brokers() {
     return Brokers.newBuilder()
-        .addBroker(broker1Unwrapped())
-        .addBroker(broker2Unwrapped())
+        .addBrokers(broker1Unwrapped())
+        .addBrokers(broker2Unwrapped())
         .build();
   }
 

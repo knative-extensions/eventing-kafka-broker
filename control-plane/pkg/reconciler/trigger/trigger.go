@@ -101,7 +101,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger
 
 	logger.Debug("Found Broker", zap.Int("brokerIndex", brokerIndex))
 
-	triggers := brokersTriggers.Broker[brokerIndex].Triggers
+	triggers := brokersTriggers.Brokers[brokerIndex].Triggers
 	triggerIndex := findTrigger(triggers, trigger)
 	if triggerIndex == noTrigger {
 		// The trigger is not there, resources associated with the Trigger are deleted accordingly.
@@ -111,7 +111,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger
 	logger.Debug("Found Trigger", zap.Int("triggerIndex", brokerIndex))
 
 	// Delete the Trigger from the config map data.
-	brokersTriggers.Broker[brokerIndex].Triggers = r.deleteTrigger(triggers, triggerIndex)
+	brokersTriggers.Brokers[brokerIndex].Triggers = r.deleteTrigger(triggers, triggerIndex)
 
 	// Increment volume generation
 	brokersTriggers.VolumeGeneration = incrementVolumeGeneration(brokersTriggers.VolumeGeneration)
@@ -227,7 +227,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	if brokerIndex == brokerreconciler.NoBroker {
 		return statusConditionManager.brokerNotFoundInDataPlaneConfigMap()
 	}
-	triggerIndex := findTrigger(dataPlaneConfig.Broker[brokerIndex].Triggers, trigger)
+	triggerIndex := findTrigger(dataPlaneConfig.Brokers[brokerIndex].Triggers, trigger)
 
 	triggerConfig, err := r.GetTriggerConfig(trigger)
 	if err != nil {
@@ -237,12 +237,12 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	statusConditionManager.subscriberResolved()
 
 	if triggerIndex == noTrigger {
-		dataPlaneConfig.Broker[brokerIndex].Triggers = append(
-			dataPlaneConfig.Broker[brokerIndex].Triggers,
+		dataPlaneConfig.Brokers[brokerIndex].Triggers = append(
+			dataPlaneConfig.Brokers[brokerIndex].Triggers,
 			&triggerConfig,
 		)
 	} else {
-		dataPlaneConfig.Broker[brokerIndex].Triggers[triggerIndex] = &triggerConfig
+		dataPlaneConfig.Brokers[brokerIndex].Triggers[triggerIndex] = &triggerConfig
 	}
 
 	// Increment volumeGeneration

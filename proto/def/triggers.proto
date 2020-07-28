@@ -42,7 +42,7 @@ message Broker {
 }
 
 message Brokers {
-  repeated Broker broker = 1;
+  repeated Broker brokers = 1;
 
   // Count each config map update.
   // Make sure each data plane pod has the same volume generation number.

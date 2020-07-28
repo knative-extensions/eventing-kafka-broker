@@ -82,7 +82,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				newTrigger(),
 				NewService(),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:        BrokerUUID,
 							Topic:     GetTopic(),
@@ -102,7 +102,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:        BrokerUUID,
 							Topic:     GetTopic(),
@@ -143,7 +143,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				newTrigger(),
 				NewService(),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:        BrokerUUID + "z",
 							Topic:     GetTopic(),
@@ -192,7 +192,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:        BrokerUUID + "z",
 							Topic:     GetTopic(),
@@ -370,7 +370,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				newTrigger(),
 				NewDeletedBroker(),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
 							Topic: GetTopic(),
@@ -400,7 +400,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				newTrigger(),
 				NewDeletedBroker(),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
 							Topic: GetTopic(),
@@ -429,7 +429,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
 							Topic: GetTopic(),
@@ -487,7 +487,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				newTrigger(),
 				NewDeletedBroker(),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
 							Topic: GetTopic(),
@@ -516,7 +516,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
 							Topic: GetTopic(),
@@ -548,7 +548,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				newTrigger(),
 				NewDeletedBroker(),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
 							Topic: GetTopic(),
