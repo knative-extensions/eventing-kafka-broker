@@ -17,12 +17,17 @@
 CONTROL_PLANE_DIR=control-plane
 CONTROL_PLANE_CONFIG_DIR=${CONTROL_PLANE_DIR}/config
 
-function control_plane_setup() {
-  ko apply --strict -f "${CONTROL_PLANE_CONFIG_DIR}"
-  return $?
-}
+# Update release labels if this is a tagged release
+if [[ -n "${TAG}" ]]; then
+  echo "Tagged release, updating release labels to eventing.knative.dev/release: \"${TAG}\""
+  LABEL_YAML_CMD=(sed -e "s|eventing.knative.dev/release: devel|eventing.knative.dev/release: \"${TAG}\"|")
+else
+  echo "Untagged release, will NOT update release labels"
+  LABEL_YAML_CMD=(cat)
+fi
 
-function control_plane_teardown() {
-  ko apply --strict -f "${CONTROL_PLANE_CONFIG_DIR}"
+# Note: do not change this function name, it's used during releases.
+function control_plane_setup() {
+  ko resolve --strict -f "${CONTROL_PLANE_CONFIG_DIR}" | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}"
   return $?
 }

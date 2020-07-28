@@ -1,4 +1,4 @@
----
+#!/usr/bin/env bash
 
 # Copyright 2020 The Knative Authors
 #
@@ -14,10 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: kafka-broker-controller
-  namespace: knative-eventing
-  labels:
-    contrib.eventing.knative.dev/release: devel
+set -o errexit
+set -o nounset
+set -o pipefail
+
+source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/release.sh
+source $(dirname $0)/../test/data-plane/library.sh
+source $(dirname $0)/../test/control-plane-plane/library.sh
+
+export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
+
+function build_release() {
+  data_plane_setup && control_plane_setup
+  if [ -n $? ]; then
+    export ARTIFACTS_TO_PUBLISH=(${EVENTING_KAFKA_BROKER_ARTIFACT})
+  fi
+}
+
+main $@
