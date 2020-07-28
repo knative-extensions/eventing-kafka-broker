@@ -255,8 +255,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
 			},
-			Key:     testKey,
-			WantErr: true,
+			Key:                     testKey,
+			WantErr:                 true,
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
 				NewConfigMap(&configs, nil),
