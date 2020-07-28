@@ -68,7 +68,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 	}
 
 	if configs.BootstrapServers != "" {
-		_ = reconciler.SetBootstrapServers(configs.BootstrapServers)
+		reconciler.SetBootstrapServers(configs.BootstrapServers)
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass)

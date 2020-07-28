@@ -293,23 +293,18 @@ func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev
 		topicDetail.ReplicationFactor = int16(replicationFactor)
 
 		r.SetDefaultTopicDetails(topicDetail)
-
-		if err := r.SetBootstrapServers(bootstrapServers); err != nil {
-			logger.Error("Failed to set bootstrap servers", zap.Error(err))
-		}
+		r.SetBootstrapServers(bootstrapServers)
 	}
 }
 
 // SetBootstrapServers change kafka bootstrap brokers addresses.
 // servers: a comma separated list of brokers to connect to.
-func (r *Reconciler) SetBootstrapServers(servers string) error {
+func (r *Reconciler) SetBootstrapServers(servers string) {
 	addrs := strings.Split(servers, ",")
 
 	r.bootstrapServersLock.Lock()
 	r.bootstrapServers = addrs
 	r.bootstrapServersLock.Unlock()
-
-	return nil
 }
 
 func (r *Reconciler) getKafkaClusterAdmin(bootstrapServers []string) (sarama.ClusterAdmin, error) {
