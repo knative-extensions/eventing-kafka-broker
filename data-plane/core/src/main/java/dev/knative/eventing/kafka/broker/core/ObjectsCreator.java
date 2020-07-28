@@ -64,7 +64,7 @@ public class ObjectsCreator implements Consumer<Brokers> {
 
     final Map<Broker, Set<Trigger<CloudEvent>>> objects = new HashMap<>();
 
-    for (final var broker : brokers.getBrokerList()) {
+    for (final var broker : brokers.getBrokersList()) {
       final var triggers = new HashSet<Trigger<CloudEvent>>(
           broker.getTriggersCount()
       );

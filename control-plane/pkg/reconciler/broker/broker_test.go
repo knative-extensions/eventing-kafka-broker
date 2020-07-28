@@ -110,7 +110,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:        BrokerUUID,
 							Topic:     GetTopic(),
@@ -162,7 +162,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             BrokerUUID,
 							Topic:          GetTopic(),
@@ -252,7 +252,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             BrokerUUID,
 							Topic:          GetTopic(),
@@ -302,7 +302,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:        BrokerUUID,
 							Topic:     GetTopic(),
@@ -338,7 +338,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Objects: []runtime.Object{
 				NewBroker(),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
@@ -367,7 +367,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
@@ -427,7 +427,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					},
 				),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
@@ -454,7 +454,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
@@ -510,7 +510,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					},
 				),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
@@ -541,7 +541,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
@@ -587,7 +587,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Objects: []runtime.Object{
 				NewBroker(),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
@@ -618,7 +618,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
@@ -667,7 +667,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					},
 				),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
@@ -748,7 +748,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:        BrokerUUID,
 							Topic:     GetTopic(),
@@ -762,7 +762,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker:           []*coreconfig.Broker{},
+					Brokers:          []*coreconfig.Broker{},
 					VolumeGeneration: 1,
 				}),
 			},
@@ -774,7 +774,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					WithDelivery(),
 				),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             BrokerUUID,
 							Topic:          GetTopic(),
@@ -798,7 +798,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             BrokerUUID,
 							Topic:          GetTopic(),
@@ -865,7 +865,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
@@ -883,7 +883,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
@@ -899,7 +899,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
@@ -917,7 +917,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
@@ -936,7 +936,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Broker: []*coreconfig.Broker{
+					Brokers: []*coreconfig.Broker{
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",

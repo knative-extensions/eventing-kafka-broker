@@ -95,7 +95,7 @@ public class UnorderedConsumerTest {
     final var objectsCreator = new ObjectsCreator(brokersManager);
 
     final var brokers = brokers();
-    final var numTriggers = brokers.getBrokerList().stream()
+    final var numTriggers = brokers.getBrokersList().stream()
         .mapToInt(Broker::getTriggersCount)
         .sum();
 

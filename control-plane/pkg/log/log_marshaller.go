@@ -30,7 +30,7 @@ func (m BrokersMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error
 
 	return encoder.AddArray("brokers", zapcore.ArrayMarshalerFunc(func(encoder zapcore.ArrayEncoder) error {
 
-		for _, b := range m.Brokers.Broker {
+		for _, b := range m.Brokers.Brokers {
 			if err := encoder.AppendObject(brokerMarshaller{broker: b}); err != nil {
 				return err
 			}

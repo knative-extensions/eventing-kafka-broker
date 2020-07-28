@@ -120,12 +120,12 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 	// Update brokersTriggers data with the new broker configuration
 	if brokerIndex != NoBroker {
-		brokersTriggers.Broker[brokerIndex] = brokerConfig
+		brokersTriggers.Brokers[brokerIndex] = brokerConfig
 
 		logger.Debug("Broker exists", zap.Int("index", brokerIndex))
 
 	} else {
-		brokersTriggers.Broker = append(brokersTriggers.Broker, brokerConfig)
+		brokersTriggers.Brokers = append(brokersTriggers.Brokers, brokerConfig)
 
 		logger.Debug("Broker doesn't exist")
 	}
@@ -329,7 +329,7 @@ func (r *Reconciler) SetDefaultTopicDetails(topicDetail sarama.TopicDetail) {
 func FindBroker(brokersTriggers *coreconfig.Brokers, broker *eventing.Broker) int {
 	// Find broker in brokersTriggers.
 	brokerIndex := NoBroker
-	for i, b := range brokersTriggers.Broker {
+	for i, b := range brokersTriggers.Brokers {
 		if b.Id == string(broker.UID) {
 			brokerIndex = i
 			break
@@ -339,7 +339,7 @@ func FindBroker(brokersTriggers *coreconfig.Brokers, broker *eventing.Broker) in
 }
 
 func deleteBroker(brokersTriggers *coreconfig.Brokers, index int) {
-	if len(brokersTriggers.Broker) == 1 {
+	if len(brokersTriggers.Brokers) == 1 {
 		*brokersTriggers = coreconfig.Brokers{
 			VolumeGeneration: brokersTriggers.VolumeGeneration,
 		}
@@ -347,7 +347,7 @@ func deleteBroker(brokersTriggers *coreconfig.Brokers, index int) {
 	}
 
 	// replace the broker to be deleted with the last one.
-	brokersTriggers.Broker[index] = brokersTriggers.Broker[len(brokersTriggers.Broker)-1]
+	brokersTriggers.Brokers[index] = brokersTriggers.Brokers[len(brokersTriggers.Brokers)-1]
 	// truncate the array.
-	brokersTriggers.Broker = brokersTriggers.Broker[:len(brokersTriggers.Broker)-1]
+	brokersTriggers.Brokers = brokersTriggers.Brokers[:len(brokersTriggers.Brokers)-1]
 }
