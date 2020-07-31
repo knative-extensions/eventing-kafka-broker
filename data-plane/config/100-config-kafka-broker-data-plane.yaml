@@ -17,7 +17,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: config-kafka-broker-dispatcher
+  name: config-kafka-broker-data-plane
   namespace: knative-eventing
 data:
   config-kafka-broker-producer.properties: |
