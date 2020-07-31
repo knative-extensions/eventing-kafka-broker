@@ -59,6 +59,8 @@ const (
 
 const (
 	finalizerName = "brokers.eventing.knative.dev"
+
+	bootstrapServers = "kafka-1:9092,kafka-2:9093"
 )
 
 var (
@@ -112,10 +114,11 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					Brokers: []*coreconfig.Broker{
 						{
-							Id:        BrokerUUID,
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
-							Name:      BrokerName,
+							Id:               BrokerUUID,
+							Topic:            GetTopic(),
+							Namespace:        BrokerNamespace,
+							Name:             BrokerName,
+							BootstrapServers: bootstrapServers,
 						},
 					},
 					VolumeGeneration: 1,
@@ -142,6 +145,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					),
 				},
 			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
 		},
 		{
 			Name: "Reconciled normal - with DLS",
@@ -164,11 +170,12 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					Brokers: []*coreconfig.Broker{
 						{
-							Id:             BrokerUUID,
-							Topic:          GetTopic(),
-							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
-							Namespace:      BrokerNamespace,
-							Name:           BrokerName,
+							Id:               BrokerUUID,
+							Topic:            GetTopic(),
+							DeadLetterSink:   "http://test-service.test-service-namespace.svc.cluster.local/",
+							Namespace:        BrokerNamespace,
+							Name:             BrokerName,
+							BootstrapServers: bootstrapServers,
 						},
 					},
 					VolumeGeneration: 2,
@@ -193,6 +200,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						Addressable(&configs),
 					),
 				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -254,11 +264,12 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					Brokers: []*coreconfig.Broker{
 						{
-							Id:             BrokerUUID,
-							Topic:          GetTopic(),
-							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
-							Namespace:      BrokerNamespace,
-							Name:           BrokerName,
+							Id:               BrokerUUID,
+							Topic:            GetTopic(),
+							DeadLetterSink:   "http://test-service.test-service-namespace.svc.cluster.local/",
+							Namespace:        BrokerNamespace,
+							Name:             BrokerName,
+							BootstrapServers: bootstrapServers,
 						},
 					},
 					VolumeGeneration: 1,
@@ -284,6 +295,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					),
 				},
 			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
 		},
 		{
 			Name: "Reconciled normal - config map not readable",
@@ -304,10 +318,11 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					Brokers: []*coreconfig.Broker{
 						{
-							Id:        BrokerUUID,
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
-							Name:      BrokerName,
+							Id:               BrokerUUID,
+							Topic:            GetTopic(),
+							Namespace:        BrokerNamespace,
+							Name:             BrokerName,
+							BootstrapServers: bootstrapServers,
 						},
 					},
 					VolumeGeneration: 1,
@@ -331,6 +346,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						Addressable(&configs),
 					),
 				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -381,10 +399,11 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							DeadLetterSink: "http://www.my-sink.com",
 						},
 						{
-							Id:        BrokerUUID,
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
-							Name:      BrokerName,
+							Id:               BrokerUUID,
+							Topic:            GetTopic(),
+							Namespace:        BrokerNamespace,
+							Name:             BrokerName,
+							BootstrapServers: bootstrapServers,
 						},
 					},
 					VolumeGeneration: 1,
@@ -408,6 +427,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						Addressable(&configs),
 					),
 				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -461,11 +483,12 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							DeadLetterSink: "http://www.my-sink.com",
 						},
 						{
-							Id:             BrokerUUID,
-							Topic:          GetTopic(),
-							DeadLetterSink: "http://www.my-sink.com/api",
-							Namespace:      BrokerNamespace,
-							Name:           BrokerName,
+							Id:               BrokerUUID,
+							Topic:            GetTopic(),
+							DeadLetterSink:   "http://www.my-sink.com/api",
+							Namespace:        BrokerNamespace,
+							Name:             BrokerName,
+							BootstrapServers: bootstrapServers,
 						},
 					},
 					VolumeGeneration: 1,
@@ -499,6 +522,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						Addressable(&configs),
 					),
 				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -550,10 +576,11 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Name:           BrokerName,
 						},
 						{
-							Id:        BrokerUUID,
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
-							Name:      BrokerName,
+							Id:               BrokerUUID,
+							Topic:            GetTopic(),
+							Namespace:        BrokerNamespace,
+							Name:             BrokerName,
+							BootstrapServers: bootstrapServers,
 						},
 					},
 					VolumeGeneration: 1,
@@ -580,6 +607,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						Addressable(&configs),
 					),
 				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -627,10 +657,11 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Name:           BrokerName,
 						},
 						{
-							Id:        BrokerUUID,
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
-							Name:      BrokerName,
+							Id:               BrokerUUID,
+							Topic:            GetTopic(),
+							Namespace:        BrokerNamespace,
+							Name:             BrokerName,
+							BootstrapServers: bootstrapServers,
 						},
 					},
 					VolumeGeneration: 2,
@@ -655,6 +686,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					),
 				},
 			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
 		},
 		{
 			Name: "Failed to resolve DLS",
@@ -676,10 +710,11 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Name:           BrokerName,
 						},
 						{
-							Id:        BrokerUUID,
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
-							Name:      BrokerName,
+							Id:               BrokerUUID,
+							Topic:            GetTopic(),
+							Namespace:        BrokerNamespace,
+							Name:             BrokerName,
+							BootstrapServers: bootstrapServers,
 						},
 					},
 					VolumeGeneration: 1,
@@ -713,6 +748,40 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 								DeadLetterSink: &duckv1.Destination{},
 							}
 						},
+						reconcilertesting.WithInitBrokerConditions,
+						TopicReady,
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
+		},
+		{
+			Name: "No bootstrap.servers provided",
+			Objects: []runtime.Object{
+				NewBroker(),
+				NewConfigMapFromBrokers(&coreconfig.Brokers{
+					Brokers:          []*coreconfig.Broker{},
+					VolumeGeneration: 1,
+				}, &configs),
+			},
+			Key:     testKey,
+			WantErr: true,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					"failed to get broker configuration: no bootstrap.servers provided",
+				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
 						TopicReady,
 					),
@@ -978,6 +1047,11 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 			onDeleteTopicError = want.(error)
 		}
 
+		bootstrapServers := ""
+		if bs, ok := row.OtherTestData[BootstrapServersConfigMapKey]; ok {
+			bootstrapServers = bs.(string)
+		}
+
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
@@ -1000,6 +1074,7 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 			KafkaDefaultTopicDetailsLock: sync.RWMutex{},
 			Configs:                      configs,
 		}
+		reconciler.SetBootstrapServers(bootstrapServers)
 
 		r := brokerreconciler.NewReconciler(
 			ctx,

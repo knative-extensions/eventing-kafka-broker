@@ -246,11 +246,17 @@ func (r *Reconciler) topicDetailFromBrokerConfig(broker *eventing.Broker) *saram
 }
 
 func (r *Reconciler) getBrokerConfig(topic string, broker *eventing.Broker) (*coreconfig.Broker, error) {
+	bootstrapServers, err := r.getBootstrapServersOrFail()
+	if err != nil {
+		return nil, err
+	}
+
 	brokerConfig := &coreconfig.Broker{
-		Id:        string(broker.UID),
-		Topic:     topic,
-		Namespace: broker.Namespace,
-		Name:      broker.Name,
+		Id:               string(broker.UID),
+		Topic:            topic,
+		Namespace:        broker.Namespace,
+		Name:             broker.Name,
+		BootstrapServers: bootstrapServers,
 	}
 
 	if broker.Spec.Delivery == nil || broker.Spec.Delivery.DeadLetterSink == nil {
@@ -300,6 +306,10 @@ func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev
 // SetBootstrapServers change kafka bootstrap brokers addresses.
 // servers: a comma separated list of brokers to connect to.
 func (r *Reconciler) SetBootstrapServers(servers string) {
+	if servers == "" {
+		return
+	}
+
 	addrs := strings.Split(servers, ",")
 
 	r.bootstrapServersLock.Lock()
@@ -350,4 +360,15 @@ func deleteBroker(brokersTriggers *coreconfig.Brokers, index int) {
 	brokersTriggers.Brokers[index] = brokersTriggers.Brokers[len(brokersTriggers.Brokers)-1]
 	// truncate the array.
 	brokersTriggers.Brokers = brokersTriggers.Brokers[:len(brokersTriggers.Brokers)-1]
+}
+
+func (r *Reconciler) getBootstrapServersOrFail() (string, error) {
+	r.bootstrapServersLock.RLock()
+	defer r.bootstrapServersLock.RUnlock()
+
+	if len(r.bootstrapServers) == 0 {
+		return "", fmt.Errorf("no %s provided", BootstrapServersConfigMapKey)
+	}
+
+	return strings.Join(r.bootstrapServers, ","), nil
 }

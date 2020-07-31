@@ -17,6 +17,7 @@
 package dev.knative.eventing.kafka.broker.receiver;
 
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.broker1;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -24,20 +25,28 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import dev.knative.eventing.kafka.broker.core.BrokerWrapper;
+import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.RecordMetadata;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+@ExtendWith(VertxExtension.class)
 public class RequestHandlerTest {
 
   private static final int TIMEOUT = 3;
@@ -80,10 +89,14 @@ public class RequestHandlerTest {
     final var broker = broker1();
 
     final var request = mock(HttpServerRequest.class);
-    when(request.path()).thenReturn(String.format("/%s/%s", broker.namespace(), broker.name()));
+    when(request.path()).thenReturn(broker.path());
     final var response = mockResponse(request, statusCode);
 
-    final var handler = new RequestHandler<>(producer, mapper);
+    final var handler = new RequestHandler<>(
+        new Properties(),
+        mapper,
+        properties -> producer
+    );
 
     final var countDown = new CountDownLatch(1);
 
@@ -112,7 +125,11 @@ public class RequestHandlerTest {
     when(request.path()).thenReturn(String.format("/%s/%s", broker.namespace(), broker.name()));
     final var response = mockResponse(request, RequestHandler.MAPPER_FAILED);
 
-    final var handler = new RequestHandler<Object, Object>(producer, mapper);
+    final var handler = new RequestHandler<Object, Object>(
+        new Properties(),
+        mapper,
+        properties -> producer
+    );
 
     final var countDown = new CountDownLatch(1);
     handler.reconcile(Map.of(broker, new HashSet<>()))
@@ -142,5 +159,94 @@ public class RequestHandlerTest {
 
     when(request.response()).thenReturn(response);
     return response;
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void shouldRecreateProducerWhenBootstrapServerChange(final VertxTestContext context) {
+
+    final RequestToRecordMapper<Object, Object> mapper
+        = (request) -> Future.succeededFuture();
+
+    final var first = new AtomicBoolean(true);
+    final var recreated = new AtomicBoolean(false);
+
+    final var handler = new RequestHandler<Object, Object>(
+        new Properties(),
+        mapper,
+        properties -> {
+          if (!first.getAndSet(false)) {
+            recreated.set(true);
+          }
+          return mock(KafkaProducer.class);
+        }
+    );
+
+    final var checkpoint = context.checkpoint();
+
+    final var broker1 = new BrokerWrapper(Broker.newBuilder()
+        .setId("1")
+        .setBootstrapServers("kafka-1:9092,kafka-2:9092")
+        .build());
+
+    final var broker2 = new BrokerWrapper(Broker.newBuilder()
+        .setId("1")
+        .setBootstrapServers("kafka-1:9092,kafka-3:9092")
+        .build());
+
+    handler.reconcile(Map.of(broker1, new HashSet<>()))
+        .onSuccess(ignored -> handler.reconcile(Map.of(broker2, new HashSet<>()))
+            .onSuccess(i -> context.verify(() -> {
+              assertThat(recreated.get()).isTrue();
+              checkpoint.flag();
+            }))
+            .onFailure(context::failNow)
+        )
+        .onFailure(context::failNow);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void shouldNotRecreateProducerWhenBootstrapServerNotChanged(
+      final VertxTestContext context) {
+
+    final RequestToRecordMapper<Object, Object> mapper
+        = (request) -> Future.succeededFuture();
+
+    final var first = new AtomicBoolean(true);
+    final var recreated = new AtomicBoolean(false);
+
+    final var handler = new RequestHandler<Object, Object>(
+        new Properties(),
+        mapper,
+        properties -> {
+          if (!first.getAndSet(false)) {
+            context.failNow(new IllegalStateException("producer should be recreated"));
+          }
+          return mock(KafkaProducer.class);
+        }
+    );
+
+    final var checkpoint = context.checkpoint();
+
+    final var broker1 = new BrokerWrapper(Broker.newBuilder()
+        .setId("1")
+        .setBootstrapServers("kafka-1:9092,kafka-2:9092")
+        .build());
+
+    final var broker2 = new BrokerWrapper(Broker.newBuilder()
+        .setId("1")
+        .setBootstrapServers("kafka-1:9092,kafka-2:9092")
+        .build());
+
+    handler.reconcile(Map.of(broker1, new HashSet<>()))
+        .onSuccess(ignored -> handler.reconcile(Map.of(broker2, new HashSet<>()))
+            .onSuccess(i -> context.verify(() -> {
+              assertThat(recreated.get()).isFalse();
+              checkpoint.flag();
+            }))
+            .onFailure(context::failNow)
+        )
+        .onFailure(context::failNow);
   }
 }

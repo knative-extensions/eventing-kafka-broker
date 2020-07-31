@@ -109,6 +109,18 @@ public class BrokerWrapperTest {
             new BrokerWrapper(
                 Broker.newBuilder().build()
             )
+        ),
+        Arguments.of(
+            new BrokerWrapper(
+                Broker.newBuilder()
+                    .setBootstrapServers("kafka-1:9092,kafka-2:9093")
+                    .build()
+            ),
+            new BrokerWrapper(
+                Broker.newBuilder()
+                    .setBootstrapServers("kafka-1:9092,kafka-2:9092")
+                    .build()
+            )
         )
     );
   }
@@ -185,6 +197,18 @@ public class BrokerWrapperTest {
                     .setId("1234-42")
                     .setTopic("knative-topic")
                     .setDeadLetterSink("http://localhost:9090")
+                    .build()
+            )
+        ),
+        Arguments.of(
+            new BrokerWrapper(
+                Broker.newBuilder()
+                    .setBootstrapServers("kafka-1:9092,kafka-2:9092")
+                    .build()
+            ),
+            new BrokerWrapper(
+                Broker.newBuilder()
+                    .setBootstrapServers("kafka-1:9092,kafka-2:9092")
                     .build()
             )
         )

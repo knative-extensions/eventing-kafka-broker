@@ -16,7 +16,6 @@
 
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static io.vertx.kafka.client.producer.KafkaProducer.createShared;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
@@ -24,6 +23,7 @@ import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.kafka.client.producer.KafkaProducer;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -69,15 +69,12 @@ public class Main {
     final var vertx = Vertx.vertx();
     producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
     producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    final var producer = createShared(
-        vertx,
-        PRODUCER_NAME,
-        producerConfigs,
-        new StringSerializer(),
-        new CloudEventSerializer()
-    );
 
-    final var handler = new RequestHandler<>(producer, new CloudEventRequestToRecordMapper());
+    final var handler = new RequestHandler<>(
+        producerConfigs,
+        new CloudEventRequestToRecordMapper(),
+        properties -> KafkaProducer.create(vertx, properties)
+    );
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(env.getIngressPort());
     final var verticle = new HttpVerticle(httpServerOptions, new SimpleProbeHandlerDecorator(

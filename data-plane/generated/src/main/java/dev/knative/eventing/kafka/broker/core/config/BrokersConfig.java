@@ -1345,6 +1345,24 @@ public final class BrokersConfig {
      */
     com.google.protobuf.ByteString
         getNameBytes();
+
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 7;</code>
+     */
+    java.lang.String getBootstrapServers();
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 7;</code>
+     */
+    com.google.protobuf.ByteString
+        getBootstrapServersBytes();
   }
   /**
    * Protobuf type {@code Broker}
@@ -1365,6 +1383,7 @@ public final class BrokersConfig {
       triggers_ = java.util.Collections.emptyList();
       namespace_ = "";
       name_ = "";
+      bootstrapServers_ = "";
     }
 
     @java.lang.Override
@@ -1435,6 +1454,12 @@ public final class BrokersConfig {
               java.lang.String s = input.readStringRequireUtf8();
 
               name_ = s;
+              break;
+            }
+            case 58: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              bootstrapServers_ = s;
               break;
             }
             default: {
@@ -1729,6 +1754,48 @@ public final class BrokersConfig {
       }
     }
 
+    public static final int BOOTSTRAPSERVERS_FIELD_NUMBER = 7;
+    private volatile java.lang.Object bootstrapServers_;
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 7;</code>
+     */
+    public java.lang.String getBootstrapServers() {
+      java.lang.Object ref = bootstrapServers_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        bootstrapServers_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 7;</code>
+     */
+    public com.google.protobuf.ByteString
+        getBootstrapServersBytes() {
+      java.lang.Object ref = bootstrapServers_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        bootstrapServers_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -1761,6 +1828,9 @@ public final class BrokersConfig {
       if (!getNameBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 6, name_);
       }
+      if (!getBootstrapServersBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, bootstrapServers_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -1789,6 +1859,9 @@ public final class BrokersConfig {
       if (!getNameBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, name_);
       }
+      if (!getBootstrapServersBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, bootstrapServers_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -1816,6 +1889,8 @@ public final class BrokersConfig {
           .equals(other.getNamespace())) return false;
       if (!getName()
           .equals(other.getName())) return false;
+      if (!getBootstrapServers()
+          .equals(other.getBootstrapServers())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -1841,6 +1916,8 @@ public final class BrokersConfig {
       hash = (53 * hash) + getNamespace().hashCode();
       hash = (37 * hash) + NAME_FIELD_NUMBER;
       hash = (53 * hash) + getName().hashCode();
+      hash = (37 * hash) + BOOTSTRAPSERVERS_FIELD_NUMBER;
+      hash = (53 * hash) + getBootstrapServers().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1991,6 +2068,8 @@ public final class BrokersConfig {
 
         name_ = "";
 
+        bootstrapServers_ = "";
+
         return this;
       }
 
@@ -2032,6 +2111,7 @@ public final class BrokersConfig {
         }
         result.namespace_ = namespace_;
         result.name_ = name_;
+        result.bootstrapServers_ = bootstrapServers_;
         onBuilt();
         return result;
       }
@@ -2124,6 +2204,10 @@ public final class BrokersConfig {
         }
         if (!other.getName().isEmpty()) {
           name_ = other.name_;
+          onChanged();
+        }
+        if (!other.getBootstrapServers().isEmpty()) {
+          bootstrapServers_ = other.bootstrapServers_;
           onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
@@ -2889,6 +2973,95 @@ public final class BrokersConfig {
   checkByteStringIsUtf8(value);
         
         name_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object bootstrapServers_ = "";
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 7;</code>
+       */
+      public java.lang.String getBootstrapServers() {
+        java.lang.Object ref = bootstrapServers_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          bootstrapServers_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 7;</code>
+       */
+      public com.google.protobuf.ByteString
+          getBootstrapServersBytes() {
+        java.lang.Object ref = bootstrapServers_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          bootstrapServers_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 7;</code>
+       */
+      public Builder setBootstrapServers(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        bootstrapServers_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 7;</code>
+       */
+      public Builder clearBootstrapServers() {
+        
+        bootstrapServers_ = getDefaultInstance().getBootstrapServers();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 7;</code>
+       */
+      public Builder setBootstrapServersBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        bootstrapServers_ = value;
         onChanged();
         return this;
       }
@@ -3854,14 +4027,15 @@ public final class BrokersConfig {
       "\n\nattributes\030\001 \003(\0132\030.Trigger.AttributesE" +
       "ntry\022\023\n\013destination\030\002 \001(\t\022\n\n\002id\030\003 \001(\t\0321\n" +
       "\017AttributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002" +
-      " \001(\t:\0028\001\"x\n\006Broker\022\n\n\002id\030\001 \001(\t\022\r\n\005topic\030" +
-      "\002 \001(\t\022\026\n\016deadLetterSink\030\003 \001(\t\022\032\n\010trigger" +
-      "s\030\004 \003(\0132\010.Trigger\022\021\n\tnamespace\030\005 \001(\t\022\014\n\004" +
-      "name\030\006 \001(\t\"=\n\007Brokers\022\030\n\007brokers\030\001 \003(\0132\007" +
-      ".Broker\022\030\n\020volumeGeneration\030\002 \001(\004B]\n-dev" +
-      ".knative.eventing.kafka.broker.core.conf" +
-      "igB\rBrokersConfigZ\035control-plane/pkg/cor" +
-      "e/configb\006proto3"
+      " \001(\t:\0028\001\"\222\001\n\006Broker\022\n\n\002id\030\001 \001(\t\022\r\n\005topic" +
+      "\030\002 \001(\t\022\026\n\016deadLetterSink\030\003 \001(\t\022\032\n\010trigge" +
+      "rs\030\004 \003(\0132\010.Trigger\022\021\n\tnamespace\030\005 \001(\t\022\014\n" +
+      "\004name\030\006 \001(\t\022\030\n\020bootstrapServers\030\007 \001(\t\"=\n" +
+      "\007Brokers\022\030\n\007brokers\030\001 \003(\0132\007.Broker\022\030\n\020vo" +
+      "lumeGeneration\030\002 \001(\004B]\n-dev.knative.even" +
+      "ting.kafka.broker.core.configB\rBrokersCo" +
+      "nfigZ\035control-plane/pkg/core/configb\006pro" +
+      "to3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -3884,7 +4058,7 @@ public final class BrokersConfig {
     internal_static_Broker_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Broker_descriptor,
-        new java.lang.String[] { "Id", "Topic", "DeadLetterSink", "Triggers", "Namespace", "Name", });
+        new java.lang.String[] { "Id", "Topic", "DeadLetterSink", "Triggers", "Namespace", "Name", "BootstrapServers", });
     internal_static_Brokers_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_Brokers_fieldAccessorTable = new

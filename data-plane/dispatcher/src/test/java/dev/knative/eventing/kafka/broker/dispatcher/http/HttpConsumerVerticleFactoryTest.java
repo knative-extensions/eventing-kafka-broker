@@ -94,6 +94,16 @@ public class HttpConsumerVerticleFactoryTest {
           public String name() {
             return null;
           }
+
+          @Override
+          public String bootstrapServers() {
+            return "0.0.0.0:9092";
+          }
+
+          @Override
+          public String path() {
+            return null;
+          }
         },
         new Trigger<>() {
           @Override
@@ -116,6 +126,7 @@ public class HttpConsumerVerticleFactoryTest {
     assertThat(consumerFactoryFuture.succeeded()).isTrue();
   }
 
+  @Test
   public void shouldNotThrowIllegalArgumentExceptionIfNotDLQ(final Vertx vertx) {
 
     final var consumerProperties = new Properties();
@@ -164,6 +175,16 @@ public class HttpConsumerVerticleFactoryTest {
 
             @Override
             public String name() {
+              return null;
+            }
+
+            @Override
+            public String bootstrapServers() {
+              return "0.0.0.0:9092";
+            }
+
+            @Override
+            public String path() {
               return null;
             }
           },

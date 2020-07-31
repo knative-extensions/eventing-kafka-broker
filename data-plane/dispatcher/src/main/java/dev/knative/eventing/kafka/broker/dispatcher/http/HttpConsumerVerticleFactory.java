@@ -38,8 +38,10 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import java.util.Objects;
 import java.util.Properties;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
@@ -144,6 +146,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
     // TODO check producer configurations to change per instance
     // producerConfigs is a shared object and it acts as a prototype for each consumer instance.
     final var producerConfigs = (Properties) this.producerConfigs.clone();
+    producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, broker.bootstrapServers());
 
     final var kafkaProducer = new KafkaProducer<>(
         producerConfigs,
@@ -163,6 +166,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
     // consumerConfigs is a shared object and it acts as a prototype for each consumer instance.
     final var consumerConfigs = (Properties) this.consumerConfigs.clone();
     consumerConfigs.setProperty(GROUP_ID_CONFIG, trigger.id());
+    consumerConfigs.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, broker.bootstrapServers());
 
     // Note: KafkaConsumer instances are not thread-safe.
     // There are methods thread-safe, but in general they're not.
