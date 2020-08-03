@@ -88,6 +88,9 @@ public class FileWatcher {
    * @throws InterruptedException see {@link WatchService#take()}
    */
   public void watch() throws IOException, InterruptedException {
+    // If the container restarts, the mounted file never gets reconciled, so update as soon as we
+    // start watching
+    update();
 
     while (true) {
       var shouldUpdate = false;
