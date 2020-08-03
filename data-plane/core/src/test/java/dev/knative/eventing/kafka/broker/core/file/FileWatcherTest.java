@@ -84,6 +84,37 @@ public class FileWatcherTest {
     thread2.interrupt();
   }
 
+  @Test
+  @Timeout(value = 5)
+  public void shouldReadFileWhenStartWatchingWithoutUpdates()
+      throws IOException, InterruptedException {
+
+    final var file = Files.createTempFile("fw-", "-fw").toFile();
+
+    final var broker1 = Brokers.newBuilder()
+        .addBrokers(broker1Unwrapped())
+        .build();
+    write(file, broker1);
+
+    final var waitBroker = new CountDownLatch(1);
+    final Consumer<Brokers> brokersConsumer = broker -> {
+      assertThat(broker).isEqualTo(broker1);
+      waitBroker.countDown();
+    };
+
+    final var fw = new FileWatcher(
+        FileSystems.getDefault().newWatchService(),
+        brokersConsumer,
+        file
+    );
+
+    final var thread = watch(fw);
+
+    waitBroker.await();
+
+    thread.interrupt();
+  }
+
   private Thread watch(FileWatcher fw) {
     final var thread = new Thread(() -> {
       try {
