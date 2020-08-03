@@ -31,3 +31,5 @@
 
 ## Ignore released file
 eventing-kafka-broker.yaml
+
+!vendor/golang.org/
