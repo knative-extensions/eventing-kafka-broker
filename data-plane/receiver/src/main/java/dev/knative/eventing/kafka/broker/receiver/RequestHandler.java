@@ -33,21 +33,22 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import io.vertx.kafka.client.producer.RecordMetadata;
-import java.util.HashSet;
+import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
+import java.util.function.Function;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to
  * Kafka through the Kafka producer and terminating requests with the appropriate status code.
- *
- * @param <K> type of the records' key.
- * @param <V> type of the records' value.
  */
 public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
     ObjectsReconciler<CloudEvent> {
@@ -59,37 +60,43 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
 
   private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
 
-  private final KafkaProducer<K, V> producer;
   private final RequestToRecordMapper<K, V> requestToRecordMapper;
-  private final AtomicReference<Set<String>> brokers;
+  // path -> <bootstrapServers, producer>
+  private final AtomicReference<Map<String, Entry<String, KafkaProducer<K, V>>>> producers;
+  private final Properties producerConfigs;
+  private final Function<Properties, KafkaProducer<K, V>> producerCreator;
 
   /**
    * Create a new Request handler.
    *
-   * @param producer              kafka producer
+   * @param producerConfigs       common producers configurations
    * @param requestToRecordMapper request to record mapper
    */
   public RequestHandler(
-      final KafkaProducer<K, V> producer,
-      final RequestToRecordMapper<K, V> requestToRecordMapper) {
+      final Properties producerConfigs,
+      final RequestToRecordMapper<K, V> requestToRecordMapper,
+      final Function<Properties, KafkaProducer<K, V>> producerCreator) {
 
-    Objects.requireNonNull(producer, "provide a producer");
+    Objects.requireNonNull(producerConfigs, "provide producerConfigs");
     Objects.requireNonNull(requestToRecordMapper, "provide a mapper");
+    Objects.requireNonNull(producerCreator, "provide producerCreator");
 
-    this.producer = producer;
+    this.producerConfigs = producerConfigs;
     this.requestToRecordMapper = requestToRecordMapper;
-    brokers = new AtomicReference<>(new HashSet<>());
+    this.producerCreator = producerCreator;
+    producers = new AtomicReference<>(new HashMap<>());
   }
 
   @Override
   public void handle(final HttpServerRequest request) {
 
-    if (!brokers.get().contains(request.path())) {
+    final var producer = producers.get().get(request.path());
+    if (producer == null) {
 
       request.response().setStatusCode(BROKER_NOT_FOUND).end();
 
       logger.warn("broker not found {} {}",
-          keyValue("brokers", brokers.get()),
+          keyValue("brokers", producers.get().keySet()),
           keyValue("path", request.path())
       );
 
@@ -98,7 +105,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
 
     requestToRecordMapper
         .recordFromRequest(request)
-        .onSuccess(record -> send(record)
+        .onSuccess(record -> send(producer.getValue(), record)
             .onSuccess(ignore -> {
               request.response().setStatusCode(RECORD_PRODUCED).end();
 
@@ -127,7 +134,10 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
         });
   }
 
-  private Future<RecordMetadata> send(final KafkaProducerRecord<K, V> record) {
+  private static <K, V> Future<RecordMetadata> send(
+      final KafkaProducer<K, V> producer,
+      final KafkaProducerRecord<K, V> record) {
+
     final Promise<RecordMetadata> promise = Promise.promise();
     producer.send(record, promise);
     return promise.future();
@@ -136,14 +146,49 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
   @Override
   public Future<Void> reconcile(Map<Broker, Set<Trigger<CloudEvent>>> objects) {
 
-    final var brokers = objects.keySet().stream()
-        .map(b -> "/" + b.namespace() + "/" + b.name())
-        .collect(Collectors.toSet());
+    final Map<String, Entry<String, KafkaProducer<K, V>>> newProducers
+        = new HashMap<>();
 
-    this.brokers.set(brokers);
+    final var producers = this.producers.get();
 
-    logger.debug("Added brokers to handler {}", keyValue("brokers", brokers));
+    for (final var broker : objects.keySet()) {
+      final var pair = producers.get(broker.path());
+
+      if (pair == null) {
+        // There is no producer for this Broker, so create it and add it to newProducers.
+        addBroker(newProducers, broker);
+        continue;
+      }
+
+      if (!pair.getKey().equals(broker.bootstrapServers())) {
+        // Bootstrap servers changed, close the old producer, and re-create a new one.
+        final var producer = pair.getValue();
+        producer.flush(complete -> producer.close());
+
+        addBroker(newProducers, broker);
+        continue;
+      }
+
+      // Nothing changed, so add the previous entry, to newProducers.
+      newProducers.put(broker.path(), pair);
+    }
+
+    this.producers.set(newProducers);
+
+    logger.debug("Added brokers to handler {}", keyValue("brokers", newProducers.keySet()));
 
     return Future.succeededFuture();
+  }
+
+  private void addBroker(
+      final Map<String, Entry<String, KafkaProducer<K, V>>> producers,
+      final Broker broker) {
+
+    final var producerConfigs = (Properties) this.producerConfigs.clone();
+    producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, broker.bootstrapServers());
+
+    final KafkaProducer<K, V> producer = producerCreator.apply(producerConfigs);
+
+    producers.put(broker.path(), new SimpleImmutableEntry<>(broker.bootstrapServers(), producer));
   }
 }

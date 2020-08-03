@@ -47,6 +47,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -80,7 +81,11 @@ public class ReceiverVerticleTest {
         new CloudEventSerializer()
     );
     KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, mockProducer);
-    handler = new RequestHandler<>(producer, new CloudEventRequestToRecordMapper());
+    handler = new RequestHandler<>(
+        new Properties(),
+        new CloudEventRequestToRecordMapper(),
+        properties -> producer
+    );
 
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(PORT);

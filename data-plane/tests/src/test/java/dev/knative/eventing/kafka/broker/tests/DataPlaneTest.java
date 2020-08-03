@@ -61,7 +61,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.AfterAll;
@@ -167,6 +166,7 @@ public class DataPlaneTest {
                 .setTopic(TOPIC)
                 .setNamespace(BROKER_NAMESPACE)
                 .setName(BROKER_NAME)
+                .setBootstrapServers(bootstrapServers())
                 .setId(UUID.randomUUID().toString())
                 .build()),
             Set.of(
@@ -318,10 +318,11 @@ public class DataPlaneTest {
       final Vertx vertx,
       final VertxTestContext context) throws InterruptedException {
 
-    final Properties configs = producerConfigs();
-    final KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, configs);
-
-    final var handler = new RequestHandler<>(producer, new CloudEventRequestToRecordMapper());
+    final var handler = new RequestHandler<>(
+        producerConfigs(),
+        new CloudEventRequestToRecordMapper(),
+        properties -> KafkaProducer.create(vertx, properties)
+    );
 
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(INGRESS_PORT);
@@ -337,9 +338,12 @@ public class DataPlaneTest {
 
   private static Properties producerConfigs() {
     final var configs = new Properties();
-    configs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, format("localhost:%d", KAFKA_PORT));
     configs.put(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     configs.put(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
     return configs;
+  }
+
+  private static String bootstrapServers() {
+    return format("localhost:%d", KAFKA_PORT);
   }
 }

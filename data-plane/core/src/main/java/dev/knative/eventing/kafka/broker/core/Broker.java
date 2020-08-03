@@ -62,4 +62,19 @@ public interface Broker {
    * @return name.
    */
   String name();
+
+  /**
+   * A comma separated list of host/port pairs to use for establishing the initial connection to the
+   * Kafka cluster.
+   *
+   * @return bootstrap servers.
+   */
+  String bootstrapServers();
+
+  /**
+   * Get request path to accept events for this Broker.
+   *
+   * @return request path associated with this Broker.
+   */
+  String path();
 }
