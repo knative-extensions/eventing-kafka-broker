@@ -43,7 +43,7 @@ spec:
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
-              name: config-kafka-broker-dispatcher
+              name: config-kafka-broker-data-plane
               readOnly: true
             - mountPath: /etc/brokers-triggers
               name: kafka-broker-brokers-triggers
@@ -82,9 +82,9 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
       volumes:
-        - name: config-kafka-broker-dispatcher
+        - name: config-kafka-broker-data-plane
           configMap:
-            name: config-kafka-broker-dispatcher
+            name: config-kafka-broker-data-plane
         - name: kafka-broker-brokers-triggers
           configMap:
             name: kafka-broker-brokers-triggers
