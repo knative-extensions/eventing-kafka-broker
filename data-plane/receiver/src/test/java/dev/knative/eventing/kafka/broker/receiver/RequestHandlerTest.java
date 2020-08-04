@@ -122,7 +122,7 @@ public class RequestHandlerTest {
     final var broker = broker1();
 
     final var request = mock(HttpServerRequest.class);
-    when(request.path()).thenReturn(String.format("/%s/%s", broker.namespace(), broker.name()));
+    when(request.path()).thenReturn(broker.path());
     final var response = mockResponse(request, RequestHandler.MAPPER_FAILED);
 
     final var handler = new RequestHandler<Object, Object>(

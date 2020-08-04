@@ -116,8 +116,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						{
 							Id:               BrokerUUID,
 							Topic:            GetTopic(),
-							Namespace:        BrokerNamespace,
-							Name:             BrokerName,
+							Path:             Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
 						},
 					},
@@ -173,8 +172,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:               BrokerUUID,
 							Topic:            GetTopic(),
 							DeadLetterSink:   "http://test-service.test-service-namespace.svc.cluster.local/",
-							Namespace:        BrokerNamespace,
-							Name:             BrokerName,
+							Path:             Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
 						},
 					},
@@ -267,8 +265,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:               BrokerUUID,
 							Topic:            GetTopic(),
 							DeadLetterSink:   "http://test-service.test-service-namespace.svc.cluster.local/",
-							Namespace:        BrokerNamespace,
-							Name:             BrokerName,
+							Path:             Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
 						},
 					},
@@ -320,8 +317,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						{
 							Id:               BrokerUUID,
 							Topic:            GetTopic(),
-							Namespace:        BrokerNamespace,
-							Name:             BrokerName,
+							Path:             Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
 						},
 					},
@@ -361,8 +357,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      BrokerNamespace,
-							Name:           BrokerName,
+							Path:           Path(BrokerNamespace, BrokerName),
 						},
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
@@ -390,8 +385,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      BrokerNamespace,
-							Name:           BrokerName,
+							Path:           Path(BrokerNamespace, BrokerName),
 						},
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
@@ -401,8 +395,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						{
 							Id:               BrokerUUID,
 							Topic:            GetTopic(),
-							Namespace:        BrokerNamespace,
-							Name:             BrokerName,
+							Path:             Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
 						},
 					},
@@ -486,8 +479,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:               BrokerUUID,
 							Topic:            GetTopic(),
 							DeadLetterSink:   "http://www.my-sink.com/api",
-							Namespace:        BrokerNamespace,
-							Name:             BrokerName,
+							Path:             Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
 						},
 					},
@@ -541,15 +533,13 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      BrokerNamespace,
-							Name:           BrokerName,
+							Path:           Path(BrokerNamespace, BrokerName),
 						},
 						{
 							Id:             BrokerUUID,
 							Topic:          GetTopic(),
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      BrokerNamespace,
-							Name:           BrokerName,
+							Path:           Path(BrokerNamespace, BrokerName),
 						},
 					},
 				}, &configs),
@@ -572,14 +562,12 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      BrokerNamespace,
-							Name:           BrokerName,
+							Path:           Path(BrokerNamespace, BrokerName),
 						},
 						{
 							Id:               BrokerUUID,
 							Topic:            GetTopic(),
-							Namespace:        BrokerNamespace,
-							Name:             BrokerName,
+							Path:             Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
 						},
 					},
@@ -622,14 +610,12 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      BrokerNamespace,
-							Name:           BrokerName,
+							Path:           Path(BrokerNamespace, BrokerName),
 						},
 						{
-							Id:        BrokerUUID,
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
-							Name:      BrokerName,
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+							Path:  Path(BrokerNamespace, BrokerName),
 						},
 					},
 					VolumeGeneration: 1,
@@ -653,14 +639,12 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      BrokerNamespace,
-							Name:           BrokerName,
+							Path:           Path(BrokerNamespace, BrokerName),
 						},
 						{
 							Id:               BrokerUUID,
 							Topic:            GetTopic(),
-							Namespace:        BrokerNamespace,
-							Name:             BrokerName,
+							Path:             Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
 						},
 					},
@@ -706,14 +690,12 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Namespace:      BrokerNamespace,
-							Name:           BrokerName,
+							Path:           Path(BrokerNamespace, BrokerName),
 						},
 						{
 							Id:               BrokerUUID,
 							Topic:            GetTopic(),
-							Namespace:        BrokerNamespace,
-							Name:             BrokerName,
+							Path:             Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
 						},
 					},
@@ -819,10 +801,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
 					Brokers: []*coreconfig.Broker{
 						{
-							Id:        BrokerUUID,
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
-							Name:      BrokerName,
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+							Path:  Path(BrokerNamespace, BrokerName),
 						},
 					},
 					VolumeGeneration: 1,
@@ -848,8 +829,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 							Id:             BrokerUUID,
 							Topic:          GetTopic(),
 							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
-							Namespace:      BrokerNamespace,
-							Name:           BrokerName,
+							Path:           Path(BrokerNamespace, BrokerName),
 						},
 					},
 					VolumeGeneration: 1,
@@ -1149,4 +1129,32 @@ func getUnmarshallableError(format string) interface{} {
 		return "unexpected EOF"
 	}
 	return "invalid character '-' after object key"
+}
+
+func TestPath(t *testing.T) {
+	type args struct {
+		namespace string
+		name      string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "namespace/name",
+			args: args{
+				namespace: "broker-namespace",
+				name:      "broker-name",
+			},
+			want: "/broker-namespace/broker-name",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Path(tt.args.namespace, tt.args.name); got != tt.want {
+				t.Errorf("Path() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

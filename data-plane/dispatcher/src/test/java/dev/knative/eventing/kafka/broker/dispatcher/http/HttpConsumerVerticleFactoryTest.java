@@ -86,16 +86,6 @@ public class HttpConsumerVerticleFactoryTest {
           }
 
           @Override
-          public String namespace() {
-            return null;
-          }
-
-          @Override
-          public String name() {
-            return null;
-          }
-
-          @Override
           public String bootstrapServers() {
             return "0.0.0.0:9092";
           }
@@ -166,16 +156,6 @@ public class HttpConsumerVerticleFactoryTest {
             @Override
             public String deadLetterSink() {
               return "";
-            }
-
-            @Override
-            public String namespace() {
-              return null;
-            }
-
-            @Override
-            public String name() {
-              return null;
             }
 
             @Override

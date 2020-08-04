@@ -53,23 +53,13 @@ public class BrokerWrapper implements dev.knative.eventing.kafka.broker.core.Bro
   }
 
   @Override
-  public String namespace() {
-    return broker.getNamespace();
-  }
-
-  @Override
-  public String name() {
-    return broker.getName();
-  }
-
-  @Override
   public String bootstrapServers() {
     return broker.getBootstrapServers();
   }
 
   @Override
   public String path() {
-    return "/" + namespace() + "/" + name();
+    return broker.getPath();
   }
 
   @Override
@@ -85,10 +75,8 @@ public class BrokerWrapper implements dev.knative.eventing.kafka.broker.core.Bro
     return broker.getId().equals(that.id())
         && broker.getDeadLetterSink().equals(that.deadLetterSink())
         && broker.getTopic().equals(that.topic())
-        && broker.getName().equals(that.name())
-        && broker.getNamespace().equals(that.namespace())
         && broker.getBootstrapServers().equals(that.bootstrapServers())
-        && path().equals(that.path());
+        && broker.getPath().equals(that.path());
   }
 
   @Override
@@ -97,8 +85,6 @@ public class BrokerWrapper implements dev.knative.eventing.kafka.broker.core.Bro
         broker.getId(),
         broker.getDeadLetterSink(),
         broker.getTopic(),
-        broker.getNamespace(),
-        broker.getName(),
         broker.getBootstrapServers(),
         path()
     );

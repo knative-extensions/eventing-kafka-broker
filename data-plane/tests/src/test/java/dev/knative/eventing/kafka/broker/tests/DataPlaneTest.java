@@ -164,8 +164,7 @@ public class DataPlaneTest {
         .of(
             new BrokerWrapper(Broker.newBuilder()
                 .setTopic(TOPIC)
-                .setNamespace(BROKER_NAMESPACE)
-                .setName(BROKER_NAME)
+                .setPath(String.format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME))
                 .setBootstrapServers(bootstrapServers())
                 .setId(UUID.randomUUID().toString())
                 .build()),

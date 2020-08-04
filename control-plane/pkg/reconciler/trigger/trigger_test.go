@@ -84,10 +84,9 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
 					Brokers: []*coreconfig.Broker{
 						{
-							Id:        BrokerUUID,
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
-							Name:      BrokerName,
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+							Path:  broker.Path(BrokerNamespace, BrokerName),
 						},
 					},
 				}, &configs),
@@ -104,10 +103,9 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					Brokers: []*coreconfig.Broker{
 						{
-							Id:        BrokerUUID,
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
-							Name:      BrokerName,
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+							Path:  broker.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -145,21 +143,20 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
 					Brokers: []*coreconfig.Broker{
 						{
-							Id:        BrokerUUID + "z",
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
+							Id:    BrokerUUID + "z",
+							Topic: GetTopic(),
+							Path:  broker.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
 									Id:          TriggerUUID,
 								},
 							},
-							Name: BrokerName,
 						},
 						{
-							Id:        BrokerUUID,
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+							Path:  broker.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Attributes: map[string]string{
@@ -176,7 +173,6 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 									Id:          TriggerUUID,
 								},
 							},
-							Name: BrokerName,
 						},
 					},
 					VolumeGeneration: 2,
@@ -194,21 +190,20 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					Brokers: []*coreconfig.Broker{
 						{
-							Id:        BrokerUUID + "z",
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
+							Id:    BrokerUUID + "z",
+							Topic: GetTopic(),
+							Path:  broker.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
 									Id:          TriggerUUID,
 								},
 							},
-							Name: BrokerName,
 						},
 						{
-							Id:        BrokerUUID,
-							Topic:     GetTopic(),
-							Namespace: BrokerNamespace,
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+							Path:  broker.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Attributes: map[string]string{
@@ -222,7 +217,6 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 									Id:          TriggerUUID,
 								},
 							},
-							Name: BrokerName,
 						},
 					},
 					VolumeGeneration: 3,

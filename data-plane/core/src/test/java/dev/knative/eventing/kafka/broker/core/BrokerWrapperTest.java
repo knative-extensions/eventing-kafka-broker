@@ -139,8 +139,7 @@ public class BrokerWrapperTest {
         Arguments.of(
             new BrokerWrapper(
                 Broker.newBuilder()
-                    .setName("broker")
-                    .setNamespace("test-event-transformation-for-trigger-v1-broker-v1-6wlx9")
+                    .setPath("/broker/test-event-transformation-for-trigger-v1-broker-v1-6wlx9")
                     .setId("93ab71bd-9e3c-42ee-a0a2-aeec6dca48c9")
                     .setTopic(
                         "knative-broker-test-event-transformation-for-trigger-v1-broker-v1-6wlx9-broker")
@@ -162,8 +161,7 @@ public class BrokerWrapperTest {
             ),
             new BrokerWrapper(
                 Broker.newBuilder()
-                    .setName("broker")
-                    .setNamespace("test-event-transformation-for-trigger-v1-broker-v1-6wlx9")
+                    .setPath("/broker/test-event-transformation-for-trigger-v1-broker-v1-6wlx9")
                     .setId("93ab71bd-9e3c-42ee-a0a2-aeec6dca48c9")
                     .setTopic(
                         "knative-broker-test-event-transformation-for-trigger-v1-broker-v1-6wlx9-broker")

@@ -171,8 +171,7 @@ public class ReceiverVerticleTest {
             RequestHandler.BROKER_NOT_FOUND,
             new BrokerWrapper(
                 BrokersConfig.Broker.newBuilder()
-                    .setName("broker-name")
-                    .setNamespace("broker-ns")
+                    .setPath("/broker-ns/broker-name")
                     .build()
             )),
         new TestCase(
@@ -187,8 +186,7 @@ public class ReceiverVerticleTest {
             RequestHandler.BROKER_NOT_FOUND,
             new BrokerWrapper(
                 BrokersConfig.Broker.newBuilder()
-                    .setName("hello")
-                    .setNamespace("broker-name")
+                    .setPath("/broker-name/hello")
                     .build()
             )),
         new TestCase(
@@ -203,8 +201,7 @@ public class ReceiverVerticleTest {
             RequestHandler.BROKER_NOT_FOUND,
             new BrokerWrapper(
                 BrokersConfig.Broker.newBuilder()
-                    .setName("hello")
-                    .setNamespace("h")
+                    .setPath("/h/hello")
                     .build()
             )),
         new TestCase(
@@ -228,8 +225,7 @@ public class ReceiverVerticleTest {
             RequestHandler.RECORD_PRODUCED,
             new BrokerWrapper(
                 BrokersConfig.Broker.newBuilder()
-                    .setName("broker-name1")
-                    .setNamespace("broker-ns")
+                    .setPath("/broker-ns/broker-name1")
                     .build()
             )),
         new TestCase(
@@ -239,8 +235,7 @@ public class ReceiverVerticleTest {
             RequestHandler.MAPPER_FAILED,
             new BrokerWrapper(
                 BrokersConfig.Broker.newBuilder()
-                    .setName("broker-name")
-                    .setNamespace("broker-ns")
+                    .setPath("/broker-ns/broker-name")
                     .build()
             )),
         new TestCase(
@@ -250,8 +245,7 @@ public class ReceiverVerticleTest {
             RequestHandler.BROKER_NOT_FOUND,
             new BrokerWrapper(
                 BrokersConfig.Broker.newBuilder()
-                    .setName("broker-name")
-                    .setNamespace("broker-ns")
+                    .setPath("/broker-ns/broker-name")
                     .build()
             )),
         new TestCase(
@@ -268,8 +262,7 @@ public class ReceiverVerticleTest {
             RequestHandler.MAPPER_FAILED,
             new BrokerWrapper(
                 BrokersConfig.Broker.newBuilder()
-                    .setName("broker-name3")
-                    .setNamespace("broker-ns")
+                    .setPath("/broker-ns/broker-name3")
                     .build()
             )),
         new TestCase(
@@ -288,8 +281,7 @@ public class ReceiverVerticleTest {
             RequestHandler.MAPPER_FAILED,
             new BrokerWrapper(
                 BrokersConfig.Broker.newBuilder()
-                    .setName("broker-name4")
-                    .setNamespace("broker-ns")
+                    .setPath("/broker-ns/broker-name4")
                     .build()
             )),
         new TestCase(
@@ -313,8 +305,7 @@ public class ReceiverVerticleTest {
             RequestHandler.RECORD_PRODUCED,
             new BrokerWrapper(
                 BrokersConfig.Broker.newBuilder()
-                    .setName("broker-name5")
-                    .setNamespace("broker-ns")
+                    .setPath("/broker-ns/broker-name5")
                     .build()
             ))
     );
