@@ -254,8 +254,7 @@ func (r *Reconciler) getBrokerConfig(topic string, broker *eventing.Broker) (*co
 	brokerConfig := &coreconfig.Broker{
 		Id:               string(broker.UID),
 		Topic:            topic,
-		Namespace:        broker.Namespace,
-		Name:             broker.Name,
+		Path:             Path(broker.Namespace, broker.Name),
 		BootstrapServers: bootstrapServers,
 	}
 
@@ -371,4 +370,8 @@ func (r *Reconciler) getBootstrapServersOrFail() (string, error) {
 	}
 
 	return strings.Join(r.bootstrapServers, ","), nil
+}
+
+func Path(namespace, name string) string {
+	return fmt.Sprintf("/%s/%s", namespace, name)
 }

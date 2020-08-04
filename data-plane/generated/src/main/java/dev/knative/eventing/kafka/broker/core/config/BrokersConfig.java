@@ -1312,46 +1312,28 @@ public final class BrokersConfig {
 
     /**
      * <pre>
-     * broker namespace
+     * path to listen for incoming events.
      * </pre>
      *
-     * <code>string namespace = 5;</code>
+     * <code>string path = 5;</code>
      */
-    java.lang.String getNamespace();
+    java.lang.String getPath();
     /**
      * <pre>
-     * broker namespace
+     * path to listen for incoming events.
      * </pre>
      *
-     * <code>string namespace = 5;</code>
+     * <code>string path = 5;</code>
      */
     com.google.protobuf.ByteString
-        getNamespaceBytes();
-
-    /**
-     * <pre>
-     * broker name
-     * </pre>
-     *
-     * <code>string name = 6;</code>
-     */
-    java.lang.String getName();
-    /**
-     * <pre>
-     * broker name
-     * </pre>
-     *
-     * <code>string name = 6;</code>
-     */
-    com.google.protobuf.ByteString
-        getNameBytes();
+        getPathBytes();
 
     /**
      * <pre>
      * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
      * </pre>
      *
-     * <code>string bootstrapServers = 7;</code>
+     * <code>string bootstrapServers = 6;</code>
      */
     java.lang.String getBootstrapServers();
     /**
@@ -1359,7 +1341,7 @@ public final class BrokersConfig {
      * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
      * </pre>
      *
-     * <code>string bootstrapServers = 7;</code>
+     * <code>string bootstrapServers = 6;</code>
      */
     com.google.protobuf.ByteString
         getBootstrapServersBytes();
@@ -1381,8 +1363,7 @@ public final class BrokersConfig {
       topic_ = "";
       deadLetterSink_ = "";
       triggers_ = java.util.Collections.emptyList();
-      namespace_ = "";
-      name_ = "";
+      path_ = "";
       bootstrapServers_ = "";
     }
 
@@ -1447,16 +1428,10 @@ public final class BrokersConfig {
             case 42: {
               java.lang.String s = input.readStringRequireUtf8();
 
-              namespace_ = s;
+              path_ = s;
               break;
             }
             case 50: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              name_ = s;
-              break;
-            }
-            case 58: {
               java.lang.String s = input.readStringRequireUtf8();
 
               bootstrapServers_ = s;
@@ -1670,98 +1645,56 @@ public final class BrokersConfig {
       return triggers_.get(index);
     }
 
-    public static final int NAMESPACE_FIELD_NUMBER = 5;
-    private volatile java.lang.Object namespace_;
+    public static final int PATH_FIELD_NUMBER = 5;
+    private volatile java.lang.Object path_;
     /**
      * <pre>
-     * broker namespace
+     * path to listen for incoming events.
      * </pre>
      *
-     * <code>string namespace = 5;</code>
+     * <code>string path = 5;</code>
      */
-    public java.lang.String getNamespace() {
-      java.lang.Object ref = namespace_;
+    public java.lang.String getPath() {
+      java.lang.Object ref = path_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        namespace_ = s;
+        path_ = s;
         return s;
       }
     }
     /**
      * <pre>
-     * broker namespace
+     * path to listen for incoming events.
      * </pre>
      *
-     * <code>string namespace = 5;</code>
+     * <code>string path = 5;</code>
      */
     public com.google.protobuf.ByteString
-        getNamespaceBytes() {
-      java.lang.Object ref = namespace_;
+        getPathBytes() {
+      java.lang.Object ref = path_;
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        namespace_ = b;
+        path_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
     }
 
-    public static final int NAME_FIELD_NUMBER = 6;
-    private volatile java.lang.Object name_;
-    /**
-     * <pre>
-     * broker name
-     * </pre>
-     *
-     * <code>string name = 6;</code>
-     */
-    public java.lang.String getName() {
-      java.lang.Object ref = name_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        name_ = s;
-        return s;
-      }
-    }
-    /**
-     * <pre>
-     * broker name
-     * </pre>
-     *
-     * <code>string name = 6;</code>
-     */
-    public com.google.protobuf.ByteString
-        getNameBytes() {
-      java.lang.Object ref = name_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        name_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int BOOTSTRAPSERVERS_FIELD_NUMBER = 7;
+    public static final int BOOTSTRAPSERVERS_FIELD_NUMBER = 6;
     private volatile java.lang.Object bootstrapServers_;
     /**
      * <pre>
      * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
      * </pre>
      *
-     * <code>string bootstrapServers = 7;</code>
+     * <code>string bootstrapServers = 6;</code>
      */
     public java.lang.String getBootstrapServers() {
       java.lang.Object ref = bootstrapServers_;
@@ -1780,7 +1713,7 @@ public final class BrokersConfig {
      * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
      * </pre>
      *
-     * <code>string bootstrapServers = 7;</code>
+     * <code>string bootstrapServers = 6;</code>
      */
     public com.google.protobuf.ByteString
         getBootstrapServersBytes() {
@@ -1822,14 +1755,11 @@ public final class BrokersConfig {
       for (int i = 0; i < triggers_.size(); i++) {
         output.writeMessage(4, triggers_.get(i));
       }
-      if (!getNamespaceBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, namespace_);
-      }
-      if (!getNameBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, name_);
+      if (!getPathBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, path_);
       }
       if (!getBootstrapServersBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, bootstrapServers_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, bootstrapServers_);
       }
       unknownFields.writeTo(output);
     }
@@ -1853,14 +1783,11 @@ public final class BrokersConfig {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, triggers_.get(i));
       }
-      if (!getNamespaceBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, namespace_);
-      }
-      if (!getNameBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, name_);
+      if (!getPathBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, path_);
       }
       if (!getBootstrapServersBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, bootstrapServers_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, bootstrapServers_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1885,10 +1812,8 @@ public final class BrokersConfig {
           .equals(other.getDeadLetterSink())) return false;
       if (!getTriggersList()
           .equals(other.getTriggersList())) return false;
-      if (!getNamespace()
-          .equals(other.getNamespace())) return false;
-      if (!getName()
-          .equals(other.getName())) return false;
+      if (!getPath()
+          .equals(other.getPath())) return false;
       if (!getBootstrapServers()
           .equals(other.getBootstrapServers())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
@@ -1912,10 +1837,8 @@ public final class BrokersConfig {
         hash = (37 * hash) + TRIGGERS_FIELD_NUMBER;
         hash = (53 * hash) + getTriggersList().hashCode();
       }
-      hash = (37 * hash) + NAMESPACE_FIELD_NUMBER;
-      hash = (53 * hash) + getNamespace().hashCode();
-      hash = (37 * hash) + NAME_FIELD_NUMBER;
-      hash = (53 * hash) + getName().hashCode();
+      hash = (37 * hash) + PATH_FIELD_NUMBER;
+      hash = (53 * hash) + getPath().hashCode();
       hash = (37 * hash) + BOOTSTRAPSERVERS_FIELD_NUMBER;
       hash = (53 * hash) + getBootstrapServers().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
@@ -2064,9 +1987,7 @@ public final class BrokersConfig {
         } else {
           triggersBuilder_.clear();
         }
-        namespace_ = "";
-
-        name_ = "";
+        path_ = "";
 
         bootstrapServers_ = "";
 
@@ -2109,8 +2030,7 @@ public final class BrokersConfig {
         } else {
           result.triggers_ = triggersBuilder_.build();
         }
-        result.namespace_ = namespace_;
-        result.name_ = name_;
+        result.path_ = path_;
         result.bootstrapServers_ = bootstrapServers_;
         onBuilt();
         return result;
@@ -2198,12 +2118,8 @@ public final class BrokersConfig {
             }
           }
         }
-        if (!other.getNamespace().isEmpty()) {
-          namespace_ = other.namespace_;
-          onChanged();
-        }
-        if (!other.getName().isEmpty()) {
-          name_ = other.name_;
+        if (!other.getPath().isEmpty()) {
+          path_ = other.path_;
           onChanged();
         }
         if (!other.getBootstrapServers().isEmpty()) {
@@ -2799,21 +2715,21 @@ public final class BrokersConfig {
         return triggersBuilder_;
       }
 
-      private java.lang.Object namespace_ = "";
+      private java.lang.Object path_ = "";
       /**
        * <pre>
-       * broker namespace
+       * path to listen for incoming events.
        * </pre>
        *
-       * <code>string namespace = 5;</code>
+       * <code>string path = 5;</code>
        */
-      public java.lang.String getNamespace() {
-        java.lang.Object ref = namespace_;
+      public java.lang.String getPath() {
+        java.lang.Object ref = path_;
         if (!(ref instanceof java.lang.String)) {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          namespace_ = s;
+          path_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -2821,19 +2737,19 @@ public final class BrokersConfig {
       }
       /**
        * <pre>
-       * broker namespace
+       * path to listen for incoming events.
        * </pre>
        *
-       * <code>string namespace = 5;</code>
+       * <code>string path = 5;</code>
        */
       public com.google.protobuf.ByteString
-          getNamespaceBytes() {
-        java.lang.Object ref = namespace_;
+          getPathBytes() {
+        java.lang.Object ref = path_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
-          namespace_ = b;
+          path_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
@@ -2841,138 +2757,49 @@ public final class BrokersConfig {
       }
       /**
        * <pre>
-       * broker namespace
+       * path to listen for incoming events.
        * </pre>
        *
-       * <code>string namespace = 5;</code>
+       * <code>string path = 5;</code>
        */
-      public Builder setNamespace(
+      public Builder setPath(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
   
-        namespace_ = value;
+        path_ = value;
         onChanged();
         return this;
       }
       /**
        * <pre>
-       * broker namespace
+       * path to listen for incoming events.
        * </pre>
        *
-       * <code>string namespace = 5;</code>
+       * <code>string path = 5;</code>
        */
-      public Builder clearNamespace() {
+      public Builder clearPath() {
         
-        namespace_ = getDefaultInstance().getNamespace();
+        path_ = getDefaultInstance().getPath();
         onChanged();
         return this;
       }
       /**
        * <pre>
-       * broker namespace
+       * path to listen for incoming events.
        * </pre>
        *
-       * <code>string namespace = 5;</code>
+       * <code>string path = 5;</code>
        */
-      public Builder setNamespaceBytes(
+      public Builder setPathBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
         
-        namespace_ = value;
-        onChanged();
-        return this;
-      }
-
-      private java.lang.Object name_ = "";
-      /**
-       * <pre>
-       * broker name
-       * </pre>
-       *
-       * <code>string name = 6;</code>
-       */
-      public java.lang.String getName() {
-        java.lang.Object ref = name_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          name_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <pre>
-       * broker name
-       * </pre>
-       *
-       * <code>string name = 6;</code>
-       */
-      public com.google.protobuf.ByteString
-          getNameBytes() {
-        java.lang.Object ref = name_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          name_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <pre>
-       * broker name
-       * </pre>
-       *
-       * <code>string name = 6;</code>
-       */
-      public Builder setName(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  
-        name_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * broker name
-       * </pre>
-       *
-       * <code>string name = 6;</code>
-       */
-      public Builder clearName() {
-        
-        name_ = getDefaultInstance().getName();
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * broker name
-       * </pre>
-       *
-       * <code>string name = 6;</code>
-       */
-      public Builder setNameBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
-        name_ = value;
+        path_ = value;
         onChanged();
         return this;
       }
@@ -2983,7 +2810,7 @@ public final class BrokersConfig {
        * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
        * </pre>
        *
-       * <code>string bootstrapServers = 7;</code>
+       * <code>string bootstrapServers = 6;</code>
        */
       public java.lang.String getBootstrapServers() {
         java.lang.Object ref = bootstrapServers_;
@@ -3002,7 +2829,7 @@ public final class BrokersConfig {
        * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
        * </pre>
        *
-       * <code>string bootstrapServers = 7;</code>
+       * <code>string bootstrapServers = 6;</code>
        */
       public com.google.protobuf.ByteString
           getBootstrapServersBytes() {
@@ -3022,7 +2849,7 @@ public final class BrokersConfig {
        * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
        * </pre>
        *
-       * <code>string bootstrapServers = 7;</code>
+       * <code>string bootstrapServers = 6;</code>
        */
       public Builder setBootstrapServers(
           java.lang.String value) {
@@ -3039,7 +2866,7 @@ public final class BrokersConfig {
        * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
        * </pre>
        *
-       * <code>string bootstrapServers = 7;</code>
+       * <code>string bootstrapServers = 6;</code>
        */
       public Builder clearBootstrapServers() {
         
@@ -3052,7 +2879,7 @@ public final class BrokersConfig {
        * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
        * </pre>
        *
-       * <code>string bootstrapServers = 7;</code>
+       * <code>string bootstrapServers = 6;</code>
        */
       public Builder setBootstrapServersBytes(
           com.google.protobuf.ByteString value) {
@@ -4027,15 +3854,14 @@ public final class BrokersConfig {
       "\n\nattributes\030\001 \003(\0132\030.Trigger.AttributesE" +
       "ntry\022\023\n\013destination\030\002 \001(\t\022\n\n\002id\030\003 \001(\t\0321\n" +
       "\017AttributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002" +
-      " \001(\t:\0028\001\"\222\001\n\006Broker\022\n\n\002id\030\001 \001(\t\022\r\n\005topic" +
-      "\030\002 \001(\t\022\026\n\016deadLetterSink\030\003 \001(\t\022\032\n\010trigge" +
-      "rs\030\004 \003(\0132\010.Trigger\022\021\n\tnamespace\030\005 \001(\t\022\014\n" +
-      "\004name\030\006 \001(\t\022\030\n\020bootstrapServers\030\007 \001(\t\"=\n" +
-      "\007Brokers\022\030\n\007brokers\030\001 \003(\0132\007.Broker\022\030\n\020vo" +
-      "lumeGeneration\030\002 \001(\004B]\n-dev.knative.even" +
-      "ting.kafka.broker.core.configB\rBrokersCo" +
-      "nfigZ\035control-plane/pkg/core/configb\006pro" +
-      "to3"
+      " \001(\t:\0028\001\"\177\n\006Broker\022\n\n\002id\030\001 \001(\t\022\r\n\005topic\030" +
+      "\002 \001(\t\022\026\n\016deadLetterSink\030\003 \001(\t\022\032\n\010trigger" +
+      "s\030\004 \003(\0132\010.Trigger\022\014\n\004path\030\005 \001(\t\022\030\n\020boots" +
+      "trapServers\030\006 \001(\t\"=\n\007Brokers\022\030\n\007brokers\030" +
+      "\001 \003(\0132\007.Broker\022\030\n\020volumeGeneration\030\002 \001(\004" +
+      "B]\n-dev.knative.eventing.kafka.broker.co" +
+      "re.configB\rBrokersConfigZ\035control-plane/" +
+      "pkg/core/configb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -4058,7 +3884,7 @@ public final class BrokersConfig {
     internal_static_Broker_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Broker_descriptor,
-        new java.lang.String[] { "Id", "Topic", "DeadLetterSink", "Triggers", "Namespace", "Name", "BootstrapServers", });
+        new java.lang.String[] { "Id", "Topic", "DeadLetterSink", "Triggers", "Path", "BootstrapServers", });
     internal_static_Brokers_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_Brokers_fieldAccessorTable = new
