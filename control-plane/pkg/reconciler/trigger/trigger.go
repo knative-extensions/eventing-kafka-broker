@@ -151,6 +151,7 @@ func (r *Reconciler) GetTriggerConfig(trigger *eventing.Trigger) (coreconfig.Tri
 	if err != nil {
 		return coreconfig.Trigger{}, fmt.Errorf("failed to resolve Trigger.Spec.Subscriber: %w", err)
 	}
+	trigger.Status.SubscriberURI = destination
 
 	return coreconfig.Trigger{
 		Attributes:  attributes,
