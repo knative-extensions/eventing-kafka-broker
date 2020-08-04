@@ -30,6 +30,7 @@ import (
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1beta1/trigger"
 	"knative.dev/eventing/pkg/logging"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1beta1"
+	"knative.dev/pkg/apis"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	. "knative.dev/pkg/reconciler/testing"
@@ -127,6 +128,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
@@ -236,6 +238,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
@@ -651,6 +654,14 @@ func newTrigger(options ...reconcilertesting.TriggerOption) runtime.Object {
 			},
 		)...,
 	)
+}
+
+func withSubscriberURI(trigger *eventing.Trigger) {
+	u, err := apis.ParseURL(ServiceURL)
+	if err != nil {
+		panic(err)
+	}
+	trigger.Status.SubscriberURI = u
 }
 
 func patchFinalizers() clientgotesting.PatchActionImpl {
