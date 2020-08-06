@@ -37,6 +37,18 @@ spec:
       securityContext:
         runAsNonRoot: true
       serviceAccountName: kafka-broker-controller
+
+      # To avoid node becoming SPOF, spread our replicas to different nodes.
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: kafka-broker-controller
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+
       containers:
         - name: controller
           image: ko://knative.dev/eventing-kafka-broker/control-plane/cmd/kafka-broker-controller
