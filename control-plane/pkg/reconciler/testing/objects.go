@@ -41,8 +41,10 @@ import (
 )
 
 const (
-	BrokerNamespace = "test-namespace"
-	BrokerName      = "test-broker"
+	BrokerNamespace    = "test-namespace"
+	BrokerName         = "test-broker"
+	ConfigMapNamespace = "test-namespace-config-map"
+	ConfigMapName      = "test-config-cm"
 
 	serviceNamespace = "test-service-namespace"
 	serviceName      = "test-service"
@@ -215,6 +217,35 @@ func WithDelivery() func(*eventing.Broker) {
 	}
 }
 
+func WithBrokerConfig(reference *duckv1.KReference) func(*eventing.Broker) {
+	return func(broker *eventing.Broker) {
+		broker.Spec.Config = reference
+	}
+}
+
+func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int) *corev1.ConfigMap {
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: ConfigMapNamespace,
+			Name:      ConfigMapName,
+		},
+		Data: map[string]string{
+			BootstrapServersConfigMapKey:              bootstrapServers,
+			DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
+			DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
+		},
+	}
+}
+
+func KReference(configMap *corev1.ConfigMap) *duckv1.KReference {
+	return &duckv1.KReference{
+		Kind:       "ConfigMap",
+		Namespace:  configMap.Namespace,
+		Name:       configMap.Name,
+		APIVersion: configMap.APIVersion,
+	}
+}
+
 func BrokerReady(broker *eventing.Broker) {
 	broker.Status.Conditions = duckv1.Conditions{
 		{
@@ -240,6 +271,16 @@ func TopicReady(broker *eventing.Broker) {
 		fmt.Sprintf("Topic %s created", Topic(broker)),
 		"",
 	)
+}
+
+func ConfigParsed(broker *eventing.Broker) {
+	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(ConditionConfigParsed)
+}
+
+func ConfigNotParsed(reason string) func(broker *eventing.Broker) {
+	return func(broker *eventing.Broker) {
+		broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(ConditionConfigParsed, reason, "")
+	}
 }
 
 func Addressable(configs *Configs) func(broker *eventing.Broker) {

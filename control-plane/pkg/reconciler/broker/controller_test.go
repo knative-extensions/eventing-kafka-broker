@@ -27,6 +27,7 @@ import (
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/trigger/fake"
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	"knative.dev/pkg/configmap"
 	dynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"

@@ -61,8 +61,10 @@ function knative_eventing() {
   ./test/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
   sed -i 's@knative.dev/eventing-kafka-broker/vendor/knative.dev/eventing/test/test_images@knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"*/*.yaml
 
-  # Enable when we have custom test images
-  # ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
+   Enable when we have custom test images
+   ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
+
+   kubectl apply -f ./test/pkg/config/
 
   ./test/kafka/kafka_setup.sh || fail_test "Failed to set up Kafka cluster"
 }

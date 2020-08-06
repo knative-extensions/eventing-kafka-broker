@@ -33,6 +33,7 @@ import (
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/broker"
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1beta1/broker"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -52,6 +53,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 
 	eventing.RegisterAlternateBrokerConditionSet(ConditionSet)
 
+	configmapInformer := configmapinformer.Get(ctx)
+
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
@@ -66,7 +69,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			NumPartitions:     DefaultNumPartitions,
 			ReplicationFactor: DefaultReplicationFactor,
 		},
-		Configs: configs,
+		ConfigMapLister: configmapInformer.Lister(),
+		Configs:         configs,
 	}
 
 	logger := logging.FromContext(ctx)

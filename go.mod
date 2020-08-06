@@ -16,6 +16,8 @@ require (
 	k8s.io/apiextensions-apiserver v0.18.4
 	k8s.io/apimachinery v0.18.7-rc.0
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
+	k8s.io/kubernetes v1.14.7
+	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
 	knative.dev/eventing v0.16.1-0.20200803090001-4cd17b80636f
 	knative.dev/pkg v0.0.0-20200731005101-694087017879
 	knative.dev/test-infra v0.0.0-20200803141702-70f2369d0beb
