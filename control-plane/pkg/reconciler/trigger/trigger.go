@@ -59,6 +59,12 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		return r.finalizeKind(ctx, trigger)
+	})
+}
+
+func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 
 	logger := log.Logger(ctx, "trigger", trigger)
 
