@@ -61,10 +61,7 @@ function knative_eventing() {
   ./test/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
   sed -i 's@knative.dev/eventing-kafka-broker/vendor/knative.dev/eventing/test/test_images@knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"*/*.yaml
 
-   Enable when we have custom test images
-   ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
-
-   kubectl apply -f ./test/pkg/config/
+  ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 
   ./test/kafka/kafka_setup.sh || fail_test "Failed to set up Kafka cluster"
 }
@@ -79,6 +76,12 @@ function test_setup() {
   control_plane_setup || fail_test "Failed to set up control plane components"
 
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_BROKER_ARTIFACT}"
+
+  # Apply test configurations, and restart data plane components (we don't have hot reload)
+  kubectl apply -f ./test/pkg/config/ || fail_test "Failed to apply test configurations"
+
+  kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
+  kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
 }
 
 function test_teardown() {
