@@ -109,8 +109,11 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
             .onSuccess(ignore -> {
               request.response().setStatusCode(RECORD_PRODUCED).end();
 
-              logger.debug("Record produced {} {}",
+              logger.debug("Record produced {} {} {} {} {}",
                   keyValue("topic", record.topic()),
+                  keyValue("partition", record.partition()),
+                  keyValue("value", record.value()),
+                  keyValue("headers", record.headers()),
                   keyValue("path", request.path())
               );
             })
