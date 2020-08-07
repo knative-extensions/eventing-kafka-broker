@@ -27,7 +27,11 @@ public interface RequestToRecordMapper<K, V> {
    * Map the given HTTP request to a Kafka record.
    *
    * @param request http request.
+   * @param topic   topic to send the event
    * @return kafka record (record can be null).
    */
-  Future<KafkaProducerRecord<K, V>> recordFromRequest(final HttpServerRequest request);
+  Future<KafkaProducerRecord<K, V>> recordFromRequest(
+      final HttpServerRequest request,
+      final String topic
+  );
 }

@@ -16,7 +16,6 @@
 
 package dev.knative.eventing.kafka.broker.tests;
 
-import static dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper.TOPIC_PREFIX;
 import static java.lang.String.format;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
@@ -73,8 +72,7 @@ public class DataPlaneTest {
 
   private static final String BROKER_NAMESPACE = "knative-eventing-42";
   private static final String BROKER_NAME = "kafka-broker-42";
-  private static final String TOPIC =
-      format("%s%s-%s", TOPIC_PREFIX, BROKER_NAMESPACE, BROKER_NAME);
+  private static final String TOPIC = format("%s-%s", BROKER_NAMESPACE, BROKER_NAME);
   private static final int NUM_BROKERS = 1;
   private static final int ZK_PORT = 2181;
   private static final int KAFKA_PORT = 9092;

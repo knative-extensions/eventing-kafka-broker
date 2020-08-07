@@ -16,7 +16,6 @@
 
 package dev.knative.eventing.kafka.broker.receiver.integration;
 
-import static dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper.TOPIC_PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -206,7 +205,7 @@ public class ReceiverVerticleTest {
             )),
         new TestCase(
             new ProducerRecord<>(
-                TOPIC_PREFIX + "broker-ns-broker-name1",
+                "topic-name-1",
                 null,
                 new io.cloudevents.core.v03.CloudEventBuilder()
                     .withSubject("subject")
@@ -225,6 +224,7 @@ public class ReceiverVerticleTest {
             RequestHandler.RECORD_PRODUCED,
             new BrokerWrapper(
                 BrokersConfig.Broker.newBuilder()
+                    .setTopic("topic-name-1")
                     .setPath("/broker-ns/broker-name1")
                     .build()
             )),
@@ -286,7 +286,7 @@ public class ReceiverVerticleTest {
             )),
         new TestCase(
             new ProducerRecord<>(
-                TOPIC_PREFIX + "broker-ns-broker-name5",
+                "topic-name-42",
                 null,
                 new io.cloudevents.core.v1.CloudEventBuilder()
                     .withSubject("subject")
@@ -305,6 +305,7 @@ public class ReceiverVerticleTest {
             RequestHandler.RECORD_PRODUCED,
             new BrokerWrapper(
                 BrokersConfig.Broker.newBuilder()
+                    .setTopic("topic-name-42")
                     .setPath("/broker-ns/broker-name5")
                     .build()
             ))

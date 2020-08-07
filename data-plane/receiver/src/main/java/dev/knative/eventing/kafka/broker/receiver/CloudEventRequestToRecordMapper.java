@@ -16,18 +16,15 @@
 
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static java.lang.String.join;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
-import io.cloudevents.lang.Nullable;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import java.util.StringTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,14 +33,10 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper<St
   private static final Logger logger = LoggerFactory
       .getLogger(CloudEventRequestToRecordMapper.class);
 
-  static final int PATH_TOKEN_NUMBER = 2;
-  static final String PATH_DELIMITER = "/";
-  static final String TOPIC_DELIMITER = "-";
-  public static final String TOPIC_PREFIX = "knative-broker-";
-
   @Override
   public Future<KafkaProducerRecord<String, CloudEvent>> recordFromRequest(
-      final HttpServerRequest request) {
+      final HttpServerRequest request,
+      final String topic) {
 
     return VertxMessageFactory.createReader(request)
         // TODO is this conversion really necessary?
@@ -56,30 +49,8 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper<St
 
           logger.debug("received event {}", keyValue("event", event));
 
-          final var topic = topic(request.path());
-          if (topic == null) {
-            return Future.failedFuture(new IllegalArgumentException("unable to determine topic"));
-          }
-
           final var recordKey = PartitionKey.extract(event);
           return Future.succeededFuture(KafkaProducerRecord.create(topic, recordKey, event));
         });
   }
-
-  @Nullable
-  static String topic(final String path) {
-    // The expected request path is of the form `/<broker-namespace>/<broker-name>`, that maps to
-    // topic `TOPIC_PREFIX<broker-namespace>-<broker-name>`, so validate path and return topic name.
-    // In case such topic doesn't exists the following reasons apply:
-    //  - The Broker doesn't exist
-    //  - The Broker is not Ready
-
-    final var tokenizer = new StringTokenizer(path, PATH_DELIMITER, false);
-    if (tokenizer.countTokens() != PATH_TOKEN_NUMBER) {
-      return null;
-    }
-
-    return TOPIC_PREFIX + join(TOPIC_DELIMITER, tokenizer.nextToken(), tokenizer.nextToken());
-  }
-
 }
