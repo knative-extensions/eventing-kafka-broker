@@ -69,7 +69,7 @@ public class RequestHandlerTest {
     );
 
     final RequestToRecordMapper<String, String> mapper
-        = request -> Future.succeededFuture(record);
+        = (request, topic) -> Future.succeededFuture(record);
 
     final KafkaProducer<String, String> producer = mock(KafkaProducer.class);
 
@@ -117,7 +117,7 @@ public class RequestHandlerTest {
     final var producer = mock(KafkaProducer.class);
 
     final RequestToRecordMapper<Object, Object> mapper
-        = (request) -> Future.failedFuture("");
+        = (request, topic) -> Future.failedFuture("");
 
     final var broker = broker1();
 
@@ -166,7 +166,7 @@ public class RequestHandlerTest {
   public void shouldRecreateProducerWhenBootstrapServerChange(final VertxTestContext context) {
 
     final RequestToRecordMapper<Object, Object> mapper
-        = (request) -> Future.succeededFuture();
+        = (request, topic) -> Future.succeededFuture();
 
     final var first = new AtomicBoolean(true);
     final var recreated = new AtomicBoolean(false);
@@ -211,7 +211,7 @@ public class RequestHandlerTest {
       final VertxTestContext context) {
 
     final RequestToRecordMapper<Object, Object> mapper
-        = (request) -> Future.succeededFuture();
+        = (request, topic) -> Future.succeededFuture();
 
     final var first = new AtomicBoolean(true);
     final var recreated = new AtomicBoolean(false);

@@ -62,7 +62,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
 
   private final RequestToRecordMapper<K, V> requestToRecordMapper;
   // path -> <bootstrapServers, producer>
-  private final AtomicReference<Map<String, Entry<String, KafkaProducer<K, V>>>> producers;
+  private final AtomicReference<Map<String, Entry<String, Producer<K, V>>>> producers;
   private final Properties producerConfigs;
   private final Function<Properties, KafkaProducer<K, V>> producerCreator;
 
@@ -104,8 +104,8 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
     }
 
     requestToRecordMapper
-        .recordFromRequest(request)
-        .onSuccess(record -> send(producer.getValue(), record)
+        .recordFromRequest(request, producer.getValue().topic)
+        .onSuccess(record -> send(producer.getValue().producer, record)
             .onSuccess(ignore -> {
               request.response().setStatusCode(RECORD_PRODUCED).end();
 
@@ -146,7 +146,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
   @Override
   public Future<Void> reconcile(Map<Broker, Set<Trigger<CloudEvent>>> objects) {
 
-    final Map<String, Entry<String, KafkaProducer<K, V>>> newProducers
+    final Map<String, Entry<String, Producer<K, V>>> newProducers
         = new HashMap<>();
 
     final var producers = this.producers.get();
@@ -162,7 +162,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
 
       if (!pair.getKey().equals(broker.bootstrapServers())) {
         // Bootstrap servers changed, close the old producer, and re-create a new one.
-        final var producer = pair.getValue();
+        final var producer = pair.getValue().producer;
         producer.flush(complete -> producer.close());
 
         addBroker(newProducers, broker);
@@ -181,7 +181,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
   }
 
   private void addBroker(
-      final Map<String, Entry<String, KafkaProducer<K, V>>> producers,
+      final Map<String, Entry<String, Producer<K, V>>> producers,
       final Broker broker) {
 
     final var producerConfigs = (Properties) this.producerConfigs.clone();
@@ -189,6 +189,23 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
 
     final KafkaProducer<K, V> producer = producerCreator.apply(producerConfigs);
 
-    producers.put(broker.path(), new SimpleImmutableEntry<>(broker.bootstrapServers(), producer));
+    producers.put(
+        broker.path(),
+        new SimpleImmutableEntry<>(
+            broker.bootstrapServers(),
+            new Producer<>(producer, broker.topic())
+        )
+    );
+  }
+
+  private static class Producer<K, V> {
+
+    final KafkaProducer<K, V> producer;
+    final String topic;
+
+    private Producer(final KafkaProducer<K, V> producer, final String topic) {
+      this.producer = producer;
+      this.topic = topic;
+    }
   }
 }
