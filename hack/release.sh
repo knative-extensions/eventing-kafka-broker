@@ -30,10 +30,18 @@ function fail() {
 }
 
 function build_release() {
-  (data_plane_setup && control_plane_setup) || fail "failed to setup data plane and control plane"
-  if [ -n $? ]; then
-    export ARTIFACTS_TO_PUBLISH=(${EVENTING_KAFKA_BROKER_ARTIFACT})
+
+  control_plane_setup
+  if [[ $? -ne 0 ]]; then
+    fail "failed to setup control plane artifact"
   fi
+
+  data_plane_setup
+  if [[ $? -ne 0 ]]; then
+    fail "failed to create data plane artifact"
+  fi
+
+  export ARTIFACTS_TO_PUBLISH=("${EVENTING_KAFKA_BROKER_ARTIFACT}")
 }
 
 main $@
