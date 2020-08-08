@@ -20,12 +20,17 @@ set -o pipefail
 
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/release.sh
 source $(dirname $0)/../test/data-plane/library.sh
-source $(dirname $0)/../test/control-plane-plane/library.sh
+source $(dirname $0)/../test/control-plane/library.sh
 
 export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
 
+function fail() {
+  echo "$1"
+  exit 1
+}
+
 function build_release() {
-  data_plane_setup && control_plane_setup
+  (data_plane_setup && control_plane_setup) || fail "failed to setup data plane and control plane"
   if [ -n $? ]; then
     export ARTIFACTS_TO_PUBLISH=(${EVENTING_KAFKA_BROKER_ARTIFACT})
   fi
