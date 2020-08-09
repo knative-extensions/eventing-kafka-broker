@@ -30,3 +30,42 @@ data:
       </root>
     </configuration>
 
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-logging
+  namespace: knative-eventing
+  labels:
+    eventing.knative.dev/release: devel
+    knative.dev/config-propagation: original
+    knative.dev/config-category: eventing
+data:
+  # Common configuration for all Knative codebase
+  zap-logger-config: |
+    {
+      "level": "debug",
+      "development": true,
+      "outputPaths": ["stdout"],
+      "errorOutputPaths": ["stderr"],
+      "encoding": "json",
+      "encoderConfig": {
+        "timeKey": "ts",
+        "levelKey": "level",
+        "nameKey": "logger",
+        "callerKey": "caller",
+        "messageKey": "msg",
+        "stacktraceKey": "stacktrace",
+        "lineEnding": "",
+        "levelEncoder": "",
+        "timeEncoder": "iso8601",
+        "durationEncoder": "",
+        "callerEncoder": ""
+      }
+    }
+
+  # Log level overrides
+  # For all components changes are be picked up immediately.
+  loglevel.controller: "debug"
+  loglevel.webhook: "debug"

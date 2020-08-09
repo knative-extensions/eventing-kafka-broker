@@ -942,6 +942,112 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
+		{
+			Name: "Reconciled normal - keep all existing triggers",
+			Objects: []runtime.Object{
+				NewBroker(),
+				NewConfigMapFromBrokers(&coreconfig.Brokers{
+					Brokers: []*coreconfig.Broker{
+						{
+							Id:             BrokerUUID,
+							Topic:          GetTopic(),
+							DeadLetterSink: "http://example.com",
+							Triggers: []*coreconfig.Trigger{
+								{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+									Destination: "http://example.com",
+									Id:          TriggerUUID,
+								},
+								{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+									Destination: "http://example.com",
+									Id:          TriggerUUID + "a",
+								},
+								{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+									Destination: "http://example.com",
+									Id:          TriggerUUID + "b",
+								},
+							},
+							Path: Path(BrokerNamespace, BrokerName),
+						},
+					},
+					VolumeGeneration: 1,
+				}, &configs),
+				NewService(),
+				NewReceiverPod(configs.SystemNamespace, nil),
+				NewDispatcherPod(configs.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &coreconfig.Brokers{
+					Brokers: []*coreconfig.Broker{
+						{
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+							Triggers: []*coreconfig.Trigger{
+								{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+									Destination: "http://example.com",
+									Id:          TriggerUUID,
+								},
+								{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+									Destination: "http://example.com",
+									Id:          TriggerUUID + "a",
+								},
+								{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+									Destination: "http://example.com",
+									Id:          TriggerUUID + "b",
+								},
+							},
+							BootstrapServers: bootstrapServers,
+							Path:             Path(BrokerNamespace, BrokerName),
+						},
+					},
+					VolumeGeneration: 2,
+				}),
+				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						reconcilertesting.WithInitBrokerConditions,
+						ConfigMapUpdatedReady(&configs),
+						ConfigParsed,
+						TopicReady,
+						Addressable(&configs),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
+		},
 	}
 
 	for i := range table {

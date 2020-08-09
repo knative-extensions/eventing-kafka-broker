@@ -73,9 +73,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 
 func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 
-	logger := log.Logger(ctx, "broker", broker)
-
-	logger.Debug("Reconciling broker")
+	logger := log.Logger(ctx, "reconcile", broker)
 
 	statusConditionManager := statusConditionManager{
 		Broker:   broker,
@@ -127,6 +125,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 	// Update brokersTriggers data with the new broker configuration
 	if brokerIndex != NoBroker {
+		brokerConfig.Triggers = brokersTriggers.Brokers[brokerIndex].Triggers
 		brokersTriggers.Brokers[brokerIndex] = brokerConfig
 
 		logger.Debug("Broker exists", zap.Int("index", brokerIndex))
@@ -187,9 +186,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 
-	logger := log.Logger(ctx, "broker", broker)
-
-	logger.Debug("Finalizing broker")
+	logger := log.Logger(ctx, "finalize", broker)
 
 	// Get brokers and triggers config map.
 	brokersTriggersConfigMap, err := r.GetOrCreateDataPlaneConfigMap()

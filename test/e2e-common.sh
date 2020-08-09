@@ -78,7 +78,7 @@ function test_setup() {
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_BROKER_ARTIFACT}"
 
   # Apply test configurations, and restart data plane components (we don't have hot reload)
-  kubectl apply -f ./test/pkg/config/ || fail_test "Failed to apply test configurations"
+  ko apply -f ./test/pkg/config/ || fail_test "Failed to apply test configurations"
 
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
