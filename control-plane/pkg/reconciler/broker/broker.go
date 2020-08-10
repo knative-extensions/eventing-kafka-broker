@@ -24,7 +24,6 @@ import (
 	"sync"
 
 	"github.com/Shopify/sarama"
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
@@ -90,7 +89,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger.Debug("config resolved", zap.Any("config", config))
 
-	topic, err := r.CreateTopic(logger, Topic(broker), config)
+	topic, err := r.CreateTopic(logger, Topic(broker), &config)
 	if err != nil {
 		return statusConditionManager.failedToCreateTopic(topic, err)
 	}
@@ -226,12 +225,11 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	}
 
 	config, err := r.resolveBrokerConfig(logger, broker)
-	if config == nil {
-		return fmt.Errorf("failed to resolve broker configuration: %w", err)
+	if err != nil {
+		return fmt.Errorf("failed to resolve broker config: %w", err)
 	}
 
 	bootstrapServers := config.BootstrapServers
-
 	topic, err := r.deleteTopic(Topic(broker), bootstrapServers)
 	if err != nil {
 		return fmt.Errorf("failed to delete topic %s: %w", topic, err)
@@ -246,18 +244,16 @@ func incrementVolumeGeneration(generation uint64) uint64 {
 	return (generation + 1) % (math.MaxUint64 - 1)
 }
 
-func (r *Reconciler) resolveBrokerConfig(logger *zap.Logger, broker *eventing.Broker) (*Config, error) {
+func (r *Reconciler) resolveBrokerConfig(logger *zap.Logger, broker *eventing.Broker) (Config, error) {
 
 	logger.Debug("broker config", zap.Any("broker.spec.config", broker.Spec.Config))
-
-	// On errors we returns the default config, so that we let the caller decides if it can or want recover.
 
 	if broker.Spec.Config == nil {
 		return r.defaultConfig()
 	}
 
-	if strings.ToLower(broker.Spec.Config.Kind) != "configmap" {
-		return getDefaultConfig(r, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind))
+	if strings.ToLower(broker.Spec.Config.Kind) != "configmap" { // TODO: is there any constant?
+		return Config{}, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind)
 	}
 
 	namespace := broker.Spec.Config.Namespace
@@ -265,29 +261,17 @@ func (r *Reconciler) resolveBrokerConfig(logger *zap.Logger, broker *eventing.Br
 		// Namespace not specified, use broker namespace.
 		namespace = broker.Namespace
 	}
-
 	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(broker.Spec.Config.Name)
 	if err != nil {
-		return getDefaultConfig(r, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, err))
+		return Config{}, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, err)
 	}
 
 	brokerConfig, err := configFromConfigMap(logger, cm)
 	if err != nil {
-		return getDefaultConfig(r, err)
+		return Config{}, err
 	}
 
 	return brokerConfig, nil
-}
-
-func getDefaultConfig(r *Reconciler, parent error) (*Config, error) {
-
-	defaultConfig, err := r.defaultConfig()
-	if err != nil {
-		err = multierr.Append(fmt.Errorf("failed to get default config"), err)
-		return nil, multierr.Append(err, parent)
-	}
-
-	return defaultConfig, parent
 }
 
 func (r *Reconciler) defaultTopicDetail() sarama.TopicDetail {
@@ -299,19 +283,19 @@ func (r *Reconciler) defaultTopicDetail() sarama.TopicDetail {
 	return topicDetail
 }
 
-func (r *Reconciler) defaultConfig() (*Config, error) {
+func (r *Reconciler) defaultConfig() (Config, error) {
 	bootstrapServers, err := r.getDefaultBootstrapServersOrFail()
 	if err != nil {
-		return &Config{}, err
+		return Config{}, err
 	}
 
-	return &Config{
+	return Config{
 		TopicDetail:      r.defaultTopicDetail(),
 		BootstrapServers: bootstrapServers,
 	}, nil
 }
 
-func (r *Reconciler) getBrokerConfig(topic string, broker *eventing.Broker, config *Config) (*coreconfig.Broker, error) {
+func (r *Reconciler) getBrokerConfig(topic string, broker *eventing.Broker, config Config) (*coreconfig.Broker, error) {
 
 	brokerConfig := &coreconfig.Broker{
 		Id:               string(broker.UID),

@@ -1094,6 +1094,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					VolumeGeneration: 1,
 				}),
 			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
 		},
 		{
 			Name: "Reconciled normal - with DLS",
@@ -1118,6 +1121,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					VolumeGeneration: 1,
 				}),
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1151,7 +1157,8 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic: deleteTopicError,
+				wantErrorOnDeleteTopic:       deleteTopicError,
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1169,6 +1176,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewConfigMap(&configs, nil),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
 		},
 		{
 			Name: "Config map not readable",
@@ -1185,6 +1195,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					`failed to get brokers and triggers: failed to unmarshal brokers and triggers: '{"hello"-- "world"}' - %v`,
 					getUnmarshallableError(format),
 				),
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1219,6 +1232,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					},
 					VolumeGeneration: 5,
 				}),
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1255,7 +1271,8 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic: sarama.ErrUnknownTopicOrPartition,
+				wantErrorOnDeleteTopic:       sarama.ErrUnknownTopicOrPartition,
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1274,6 +1291,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				}, &configs),
 			},
 			Key: testKey,
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
 		},
 	}
 

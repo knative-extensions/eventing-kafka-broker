@@ -31,7 +31,7 @@ type Config struct {
 	BootstrapServers []string
 }
 
-func configFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*Config, error) {
+func configFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (Config, error) {
 
 	topicDetail := sarama.TopicDetail{}
 
@@ -44,11 +44,11 @@ func configFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*Config, err
 		configmap.AsString(BootstrapServersConfigMapKey, &bootstrapServers),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse config map %s/%s: %w", cm.Namespace, cm.Name, err)
+		return Config{}, fmt.Errorf("failed to parse config map %s/%s: %w", cm.Namespace, cm.Name, err)
 	}
 
 	if topicDetail.NumPartitions <= 0 || replicationFactor <= 0 || bootstrapServers == "" {
-		return nil, fmt.Errorf(
+		return Config{}, fmt.Errorf(
 			"invalid configuration - numPartitions: %d - replicationFactor: %d - bootstrapServers: %s",
 			topicDetail.NumPartitions,
 			replicationFactor,
@@ -57,7 +57,7 @@ func configFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*Config, err
 
 	topicDetail.ReplicationFactor = int16(replicationFactor)
 
-	config := &Config{
+	config := Config{
 		TopicDetail:      topicDetail,
 		BootstrapServers: bootstrapServersArray(bootstrapServers),
 	}
