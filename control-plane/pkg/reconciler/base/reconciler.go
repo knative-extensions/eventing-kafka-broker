@@ -182,7 +182,7 @@ func (r *Reconciler) updatePodsAnnotation(logger *zap.Logger, component string, 
 	for _, pod := range pods {
 
 		logger.Debug(
-			"Update " + component + " pod annotation",
+			"Update "+component+" pod annotation",
 			zap.String("pod", fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)),
 			zap.Uint64("volumeGeneration", volumeGeneration),
 		)

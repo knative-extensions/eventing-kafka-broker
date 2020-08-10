@@ -462,7 +462,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				),
 				newTrigger(
 					withAttributes(map[string]string{
-						"type":   "type1",
+						"type": "type1",
 					}),
 				),
 				NewService(),
@@ -477,7 +477,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 									Destination: ServiceURL,
 									Id:          TriggerUUID,
 									Attributes: map[string]string{
-										"type":   "type1",
+										"type": "type1",
 									},
 								},
 							},
@@ -505,7 +505,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 									Destination: ServiceURL,
 									Id:          TriggerUUID,
 									Attributes: map[string]string{
-										"type":   "type1",
+										"type": "type1",
 									},
 								},
 							},
@@ -521,7 +521,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				{
 					Object: newTrigger(
 						withAttributes(map[string]string{
-							"type":   "type1",
+							"type": "type1",
 						}),
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerSubscribed(),
