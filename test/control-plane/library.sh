@@ -28,6 +28,6 @@ fi
 
 # Note: do not change this function name, it's used during releases.
 function control_plane_setup() {
-  ko resolve --strict -f "${CONTROL_PLANE_CONFIG_DIR}" | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}"
+  ko resolve ${KO_FLAGS} --strict -f "${CONTROL_PLANE_CONFIG_DIR}" | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}"
   return $?
 }
