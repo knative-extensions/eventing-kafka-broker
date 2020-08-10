@@ -50,7 +50,8 @@ function knative_eventing() {
     ko $1 -f "${EVENTING_CONFIG}"
     popd || fail_test "Failed to set up Eventing"
   else
-    fail_test "Not ready for a release"
+    echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
+    kubectl apply -f ${KNATIVE_EVENTING_RELEASE}
   fi
 
   # Publish test images.
