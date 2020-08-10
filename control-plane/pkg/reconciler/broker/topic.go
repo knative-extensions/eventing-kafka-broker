@@ -20,22 +20,30 @@ import (
 	"fmt"
 
 	"github.com/Shopify/sarama"
+	"go.uber.org/zap"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 )
 
-func (r *Reconciler) CreateTopic(broker *eventing.Broker) (string, error) {
-	r.bootstrapServersLock.RLock()
-	defer r.bootstrapServersLock.RUnlock()
+func (r *Reconciler) CreateTopic(logger *zap.Logger, topic string, config *Config) (string, error) {
 
-	topic := Topic(broker)
-	topicDetail := r.topicDetailFromBrokerConfig(broker)
-
-	kafkaClusterAdmin, err := r.getKafkaClusterAdmin(r.bootstrapServers)
+	kafkaClusterAdmin, err := r.getKafkaClusterAdmin(config.BootstrapServers)
 	if err != nil {
 		return "", err
 	}
+	defer kafkaClusterAdmin.Close()
 
-	createTopicError := kafkaClusterAdmin.CreateTopic(topic, topicDetail, true)
+	topicDetail := &sarama.TopicDetail{
+		NumPartitions:     config.TopicDetail.NumPartitions,
+		ReplicationFactor: config.TopicDetail.ReplicationFactor,
+	}
+
+	logger.Debug("create topic",
+		zap.String("topic", topic),
+		zap.Int16("replicationFactor", topicDetail.ReplicationFactor),
+		zap.Int32("numPartitions", topicDetail.NumPartitions),
+	)
+
+	createTopicError := kafkaClusterAdmin.CreateTopic(topic, topicDetail, false)
 	if err, ok := createTopicError.(*sarama.TopicError); ok && err.Err == sarama.ErrTopicAlreadyExists {
 		return topic, nil
 	}
@@ -43,16 +51,12 @@ func (r *Reconciler) CreateTopic(broker *eventing.Broker) (string, error) {
 	return topic, createTopicError
 }
 
-func (r *Reconciler) deleteTopic(broker *eventing.Broker) (string, error) {
-	r.bootstrapServersLock.RLock()
-	defer r.bootstrapServersLock.RUnlock()
-
-	topic := Topic(broker)
-
-	kafkaClusterAdmin, err := r.getKafkaClusterAdmin(r.bootstrapServers)
+func (r *Reconciler) deleteTopic(topic string, bootstrapServers []string) (string, error) {
+	kafkaClusterAdmin, err := r.getKafkaClusterAdmin(bootstrapServers)
 	if err != nil {
 		return "", err
 	}
+	defer kafkaClusterAdmin.Close()
 
 	err = kafkaClusterAdmin.DeleteTopic(topic)
 	if sarama.ErrUnknownTopicOrPartition == err {

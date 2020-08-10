@@ -28,6 +28,8 @@ type BrokersMarshaller struct {
 
 func (m BrokersMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 
+	encoder.AddUint64("volumeGeneration", m.Brokers.VolumeGeneration)
+
 	return encoder.AddArray("brokers", zapcore.ArrayMarshalerFunc(func(encoder zapcore.ArrayEncoder) error {
 
 		for _, b := range m.Brokers.Brokers {

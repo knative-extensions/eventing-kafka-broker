@@ -55,6 +55,7 @@ import (
 const (
 	wantErrorOnCreateTopic = "wantErrorOnCreateTopic"
 	wantErrorOnDeleteTopic = "wantErrorOnDeleteTopic"
+	ExpectedTopicDetail    = "expectedTopicDetail"
 )
 
 const (
@@ -139,6 +140,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
+						ConfigParsed,
 						TopicReady,
 						Addressable(&configs),
 					),
@@ -195,6 +197,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
 						TopicReady,
+						ConfigParsed,
 						Addressable(&configs),
 					),
 				},
@@ -226,12 +229,14 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
+						ConfigParsed,
 						FailedToCreateTopic,
 					),
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnCreateTopic: createTopicError,
+				wantErrorOnCreateTopic:       createTopicError,
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -285,6 +290,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						WithDelivery(),
+						ConfigParsed,
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
 						TopicReady,
@@ -338,6 +344,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
+						ConfigParsed,
 						TopicReady,
 						Addressable(&configs),
 					),
@@ -416,6 +423,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
+						ConfigParsed,
 						TopicReady,
 						Addressable(&configs),
 					),
@@ -510,6 +518,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						},
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
+						ConfigParsed,
 						TopicReady,
 						Addressable(&configs),
 					),
@@ -591,6 +600,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						},
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
+						ConfigParsed,
 						TopicReady,
 						Addressable(&configs),
 					),
@@ -665,6 +675,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
 						ConfigMapUpdatedReady(&configs),
+						ConfigParsed,
 						TopicReady,
 						Addressable(&configs),
 					),
@@ -731,6 +742,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							}
 						},
 						reconcilertesting.WithInitBrokerConditions,
+						ConfigParsed,
 						TopicReady,
 					),
 				},
@@ -765,9 +777,275 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
-						TopicReady,
+						ConfigNotParsed("no bootstrap.servers provided"),
 					),
 				},
+			},
+		},
+		{
+			Name: "Reconciled normal - with broker config",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithBrokerConfig(
+						KReference(BrokerConfig(bootstrapServers, 20, 5)),
+					),
+				),
+				BrokerConfig(bootstrapServers, 20, 5),
+				NewConfigMap(&configs, nil),
+				NewService(),
+				NewReceiverPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				NewDispatcherPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &coreconfig.Brokers{
+					Brokers: []*coreconfig.Broker{
+						{
+							Id:               BrokerUUID,
+							Topic:            GetTopic(),
+							Path:             Path(BrokerNamespace, BrokerName),
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					VolumeGeneration: 1,
+				}),
+				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithBrokerConfig(
+							KReference(BrokerConfig(bootstrapServers, 20, 5)),
+						),
+						reconcilertesting.WithInitBrokerConditions,
+						ConfigMapUpdatedReady(&configs),
+						ConfigParsed,
+						TopicReady,
+						Addressable(&configs),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+				ExpectedTopicDetail: sarama.TopicDetail{
+					NumPartitions:     20,
+					ReplicationFactor: 5,
+				},
+			},
+		},
+		{
+			Name: "Failed to parse broker config - not found",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithBrokerConfig(
+						KReference(BrokerConfig(bootstrapServers, 20, 5)),
+					),
+				),
+			},
+			Key:     testKey,
+			WantErr: true,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					fmt.Sprintf(`failed to get broker configuration: failed to get configmap %s/%s: configmap %q not found`, ConfigMapNamespace, ConfigMapName, ConfigMapName),
+				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithBrokerConfig(
+							KReference(BrokerConfig(bootstrapServers, 20, 5)),
+						),
+						reconcilertesting.WithInitBrokerConditions,
+						ConfigNotParsed(fmt.Sprintf(`failed to get configmap %s/%s: configmap %q not found`, ConfigMapNamespace, ConfigMapName, ConfigMapName)),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
+		},
+		{
+			Name: "Unsupported Kind as config",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithBrokerConfig(&duckv1.KReference{
+						Kind:       "Pod",
+						Namespace:  BrokerNamespace,
+						Name:       BrokerName,
+						APIVersion: "v1",
+					}),
+				),
+				&corev1.Pod{
+					TypeMeta: metav1.TypeMeta{
+						Kind:       "Pod",
+						APIVersion: "v1",
+					},
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: BrokerNamespace,
+						Name:      BrokerName,
+					},
+				},
+			},
+			Key:     testKey,
+			WantErr: true,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					fmt.Sprintf(`failed to get broker configuration: supported config Kind: ConfigMap - got Pod`),
+				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithBrokerConfig(&duckv1.KReference{
+							Kind:       "Pod",
+							Namespace:  BrokerNamespace,
+							Name:       BrokerName,
+							APIVersion: "v1",
+						}),
+						reconcilertesting.WithInitBrokerConditions,
+						ConfigNotParsed(`supported config Kind: ConfigMap - got Pod`),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
+		},
+		{
+			Name: "Reconciled normal - keep all existing triggers",
+			Objects: []runtime.Object{
+				NewBroker(),
+				NewConfigMapFromBrokers(&coreconfig.Brokers{
+					Brokers: []*coreconfig.Broker{
+						{
+							Id:             BrokerUUID,
+							Topic:          GetTopic(),
+							DeadLetterSink: "http://example.com",
+							Triggers: []*coreconfig.Trigger{
+								{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+									Destination: "http://example.com",
+									Id:          TriggerUUID,
+								},
+								{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+									Destination: "http://example.com",
+									Id:          TriggerUUID + "a",
+								},
+								{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+									Destination: "http://example.com",
+									Id:          TriggerUUID + "b",
+								},
+							},
+							Path: Path(BrokerNamespace, BrokerName),
+						},
+					},
+					VolumeGeneration: 1,
+				}, &configs),
+				NewService(),
+				NewReceiverPod(configs.SystemNamespace, nil),
+				NewDispatcherPod(configs.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &coreconfig.Brokers{
+					Brokers: []*coreconfig.Broker{
+						{
+							Id:    BrokerUUID,
+							Topic: GetTopic(),
+							Triggers: []*coreconfig.Trigger{
+								{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+									Destination: "http://example.com",
+									Id:          TriggerUUID,
+								},
+								{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+									Destination: "http://example.com",
+									Id:          TriggerUUID + "a",
+								},
+								{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+									Destination: "http://example.com",
+									Id:          TriggerUUID + "b",
+								},
+							},
+							BootstrapServers: bootstrapServers,
+							Path:             Path(BrokerNamespace, BrokerName),
+						},
+					},
+					VolumeGeneration: 2,
+				}),
+				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						reconcilertesting.WithInitBrokerConditions,
+						ConfigMapUpdatedReady(&configs),
+						ConfigParsed,
+						TopicReady,
+						Addressable(&configs),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 	}
@@ -816,6 +1094,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					VolumeGeneration: 1,
 				}),
 			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
 		},
 		{
 			Name: "Reconciled normal - with DLS",
@@ -840,6 +1121,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &coreconfig.Brokers{
 					VolumeGeneration: 1,
 				}),
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -873,7 +1157,8 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic: deleteTopicError,
+				wantErrorOnDeleteTopic:       deleteTopicError,
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -891,6 +1176,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewConfigMap(&configs, nil),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
 		},
 		{
 			Name: "Config map not readable",
@@ -907,6 +1195,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					`failed to get brokers and triggers: failed to unmarshal brokers and triggers: '{"hello"-- "world"}' - %v`,
 					getUnmarshallableError(format),
 				),
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -941,6 +1232,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					},
 					VolumeGeneration: 5,
 				}),
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -977,7 +1271,8 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic: sarama.ErrUnknownTopicOrPartition,
+				wantErrorOnDeleteTopic:       sarama.ErrUnknownTopicOrPartition,
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -996,6 +1291,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				}, &configs),
 			},
 			Key: testKey,
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
 		},
 	}
 
@@ -1032,6 +1330,11 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 			bootstrapServers = bs.(string)
 		}
 
+		expectedTopicDetail := defaultTopicDetail
+		if td, ok := row.OtherTestData[ExpectedTopicDetail]; ok {
+			expectedTopicDetail = td.(sarama.TopicDetail)
+		}
+
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
@@ -1041,18 +1344,19 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
 				SystemNamespace:             configs.SystemNamespace,
 			},
+			KafkaDefaultTopicDetails:     defaultTopicDetail,
+			KafkaDefaultTopicDetailsLock: sync.RWMutex{},
+			ConfigMapLister:              listers.GetConfigMapLister(),
 			NewClusterAdmin: func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &MockKafkaClusterAdmin{
 					ExpectedTopicName:   fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName),
-					ExpectedTopicDetail: defaultTopicDetail,
+					ExpectedTopicDetail: expectedTopicDetail,
 					ErrorOnCreateTopic:  onCreateTopicError,
 					ErrorOnDeleteTopic:  onDeleteTopicError,
 					T:                   t,
 				}, nil
 			},
-			KafkaDefaultTopicDetails:     defaultTopicDetail,
-			KafkaDefaultTopicDetailsLock: sync.RWMutex{},
-			Configs:                      configs,
+			Configs: configs,
 		}
 		reconciler.SetBootstrapServers(bootstrapServers)
 

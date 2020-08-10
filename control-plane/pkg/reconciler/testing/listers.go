@@ -85,3 +85,7 @@ func (l *Listers) GetTriggerLister() eventinglisters.TriggerLister {
 func (l *Listers) indexerFor(obj runtime.Object) cache.Indexer {
 	return l.sorter.IndexerForObjectType(obj)
 }
+
+func (l *Listers) GetConfigMapLister() corelisters.ConfigMapLister {
+	return corelisters.NewConfigMapLister(l.indexerFor(&corev1.ConfigMap{}))
+}

@@ -63,6 +63,8 @@ public class Main {
     // Instantiating an Encoder here we force it to include the class.
     new LogstashEncoder().getFieldNames();
 
+    logger.info("Starting Dispatcher");
+
     final var vertx = Vertx.vertx();
     Runtime.getRuntime().addShutdownHook(new Thread(vertx::close));
 

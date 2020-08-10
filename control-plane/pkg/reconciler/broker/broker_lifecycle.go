@@ -31,12 +31,14 @@ const (
 	ConditionAddressable      apis.ConditionType = "Addressable"
 	ConditionTopicReady       apis.ConditionType = "TopicReady"
 	ConditionConfigMapUpdated apis.ConditionType = "ConfigMapUpdated"
+	ConditionConfigParsed     apis.ConditionType = "ConfigParsed"
 )
 
 var ConditionSet = apis.NewLivingConditionSet(
 	ConditionAddressable,
 	ConditionTopicReady,
 	ConditionConfigMapUpdated,
+	ConditionConfigParsed,
 )
 
 const (
@@ -160,4 +162,19 @@ func (manager *statusConditionManager) failedToUpdateReceiverPodsAnnotation(err 
 func (manager *statusConditionManager) failedToGetBrokerConfig(err error) reconciler.Event {
 
 	return fmt.Errorf("failed to get broker configuration: %w", err)
+}
+
+func (manager *statusConditionManager) failedToResolveBrokerConfig(err error) reconciler.Event {
+
+	manager.Broker.GetConditionSet().Manage(&manager.Broker.Status).MarkFalse(
+		ConditionConfigParsed,
+		fmt.Sprintf("%v", err),
+		"",
+	)
+
+	return fmt.Errorf("failed to get broker configuration: %w", err)
+}
+
+func (manager *statusConditionManager) brokerConfigResolved() {
+	manager.Broker.GetConditionSet().Manage(&manager.Broker.Status).MarkTrue(ConditionConfigParsed)
 }

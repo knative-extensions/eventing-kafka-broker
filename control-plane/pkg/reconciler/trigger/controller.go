@@ -31,6 +31,7 @@ import (
 
 	apiseventing "knative.dev/eventing/pkg/apis/eventing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/broker"
 	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/trigger"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1beta1/trigger"
@@ -64,8 +65,9 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *broker.Env
 			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
 			SystemNamespace:             configs.SystemNamespace,
 		},
-		BrokerLister: brokerInformer.Lister(),
-		Configs:      configs,
+		BrokerLister:   brokerInformer.Lister(),
+		EventingClient: eventingclient.Get(ctx),
+		Configs:        configs,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {

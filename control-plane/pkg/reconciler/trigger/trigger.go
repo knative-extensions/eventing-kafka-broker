@@ -23,8 +23,10 @@ import (
 
 	"go.uber.org/zap"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1beta1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
@@ -37,8 +39,7 @@ import (
 )
 
 const (
-	trigger           = "Trigger"
-	triggerReconciled = trigger + "Reconciled"
+	trigger = "Trigger"
 
 	noTrigger = brokerreconciler.NoBroker
 )
@@ -46,8 +47,9 @@ const (
 type Reconciler struct {
 	*base.Reconciler
 
-	BrokerLister eventinglisters.BrokerLister
-	Resolver     *resolver.URIResolver
+	BrokerLister   eventinglisters.BrokerLister
+	EventingClient eventingclientset.Interface
+	Resolver       *resolver.URIResolver
 
 	Configs *brokerreconciler.EnvConfigs
 }
@@ -66,9 +68,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger
 
 func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 
-	logger := log.Logger(ctx, "trigger", trigger)
-
-	logger.Debug("Finalizing Trigger", zap.Any("trigger", trigger))
+	logger := log.Logger(ctx, "finalize", trigger)
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -111,13 +111,15 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	triggerIndex := findTrigger(triggers, trigger)
 	if triggerIndex == noTrigger {
 		// The trigger is not there, resources associated with the Trigger are deleted accordingly.
+		logger.Debug("trigger not found in config map")
+
 		return nil
 	}
 
 	logger.Debug("Found Trigger", zap.Int("triggerIndex", brokerIndex))
 
 	// Delete the Trigger from the config map data.
-	brokersTriggers.Brokers[brokerIndex].Triggers = r.deleteTrigger(triggers, triggerIndex)
+	brokersTriggers.Brokers[brokerIndex].Triggers = deleteTrigger(triggers, triggerIndex)
 
 	// Increment volume generation
 	brokersTriggers.VolumeGeneration = incrementVolumeGeneration(brokersTriggers.VolumeGeneration)
@@ -176,7 +178,7 @@ func findTrigger(triggers []*coreconfig.Trigger, trigger *eventing.Trigger) int 
 	return noTrigger
 }
 
-func (r *Reconciler) deleteTrigger(triggers []*coreconfig.Trigger, index int) []*coreconfig.Trigger {
+func deleteTrigger(triggers []*coreconfig.Trigger, index int) []*coreconfig.Trigger {
 	if len(triggers) == 1 {
 		return nil
 	}
@@ -189,9 +191,7 @@ func (r *Reconciler) deleteTrigger(triggers []*coreconfig.Trigger, index int) []
 
 func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 
-	logger := log.Logger(ctx, "trigger", trigger)
-
-	logger.Debug("Reconciling Trigger", zap.Any("trigger", trigger))
+	logger := log.Logger(ctx, "reconcile", trigger)
 
 	statusConditionManager := statusConditionManager{
 		Trigger:  trigger,
@@ -204,7 +204,25 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		return statusConditionManager.failedToGetBroker(err)
 	}
 
-	if apierrors.IsNotFound(err) || !broker.GetDeletionTimestamp().IsZero() {
+	if apierrors.IsNotFound(err) {
+
+		// Actually check if the broker doesn't exist.
+		broker, err = r.EventingClient.EventingV1beta1(). // Note: do not introduce another `broker` variable with `:`
+			Brokers(trigger.Namespace).
+			Get(trigger.Spec.Broker, metav1.GetOptions{})
+
+		if apierrors.IsNotFound(err) {
+
+			logger.Debug("broker not found", zap.String("finalizeDuringReconcile", "notFound"))
+			// The associated broker doesn't exist anymore, so clean up Trigger resources.
+			return r.FinalizeKind(ctx, trigger)
+		}
+	}
+
+	if !broker.GetDeletionTimestamp().IsZero() {
+
+		logger.Debug("broker deleted", zap.String("finalizeDuringReconcile", "deleted"))
+
 		// The associated broker doesn't exist anymore, so clean up Trigger resources.
 		return r.FinalizeKind(ctx, trigger)
 	}

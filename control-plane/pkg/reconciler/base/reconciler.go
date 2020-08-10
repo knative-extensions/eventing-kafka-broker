@@ -76,6 +76,10 @@ func (r *Reconciler) createDataPlaneConfigMap() (*corev1.ConfigMap, error) {
 
 // GetDataPlaneConfigMapData extracts brokers and triggers data from the given config map.
 func (r *Reconciler) GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.ConfigMap) (*coreconfig.Brokers, error) {
+	return GetDataPlaneConfigMapData(logger, dataPlaneConfigMap, r.DataPlaneConfigFormat)
+}
+
+func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.ConfigMap, format string) (*coreconfig.Brokers, error) {
 
 	dataPlaneDataRaw, hasData := dataPlaneConfigMap.BinaryData[ConfigMapDataKey]
 	if !hasData || dataPlaneDataRaw == nil {
@@ -96,11 +100,11 @@ func (r *Reconciler) GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConf
 
 	logger.Debug(
 		"Unmarshalling configmap",
-		zap.String("format", r.DataPlaneConfigFormat),
+		zap.String("format", format),
 	)
 
 	// determine unmarshalling strategy
-	switch r.DataPlaneConfigFormat {
+	switch format {
 	case Protobuf:
 		err = proto.Unmarshal(dataPlaneDataRaw, brokersTriggers)
 	case Json:
@@ -153,7 +157,7 @@ func (r *Reconciler) UpdateDispatcherPodsAnnotation(logger *zap.Logger, volumeGe
 			return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
 		}
 
-		return r.updatePodsAnnotation(logger, volumeGeneration, pods)
+		return r.updatePodsAnnotation(logger, "dispatcher", volumeGeneration, pods)
 	})
 }
 
@@ -167,18 +171,18 @@ func (r *Reconciler) UpdateReceiverPodsAnnotation(logger *zap.Logger, volumeGene
 			return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
 		}
 
-		return r.updatePodsAnnotation(logger, volumeGeneration, pods)
+		return r.updatePodsAnnotation(logger, "receiver", volumeGeneration, pods)
 	})
 }
 
-func (r *Reconciler) updatePodsAnnotation(logger *zap.Logger, volumeGeneration uint64, pods []*corev1.Pod) error {
+func (r *Reconciler) updatePodsAnnotation(logger *zap.Logger, component string, volumeGeneration uint64, pods []*corev1.Pod) error {
 
 	var errors error
 
 	for _, pod := range pods {
 
 		logger.Debug(
-			"Update dispatcher pod annotation",
+			"Update " + component + " pod annotation",
 			zap.String("pod", fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)),
 			zap.Uint64("volumeGeneration", volumeGeneration),
 		)

@@ -14,26 +14,32 @@
  * limitations under the License.
  */
 
-package log
+package main
 
 import (
-	"context"
+	"log"
 
-	"go.uber.org/zap"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/eventing/pkg/logging"
+	"github.com/kelseyhightower/envconfig"
+	"k8s.io/apimachinery/pkg/types"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	testobservability "knative.dev/eventing-kafka-broker/test/pkg/observability"
 )
 
-func Logger(ctx context.Context, action string, object metav1.Object) *zap.Logger {
+func main() {
 
-	return logging.FromContext(ctx).With(
-		zap.String(
-			"action",
-			action,
-		),
-		zap.String(
-			"uuid",
-			string(object.GetUID()),
-		),
+	envConfig := &broker.EnvConfigs{}
+
+	if err := envconfig.Process("", envConfig); err != nil {
+		log.Fatal("failed to process env config", err)
+	}
+
+	testobservability.WatchDataPlaneConfigMap(
+		types.NamespacedName{
+			Namespace: envConfig.DataPlaneConfigMapNamespace,
+			Name:      envConfig.DataPlaneConfigMapName,
+		},
+		envConfig.DataPlaneConfigFormat,
 	)
+
 }
