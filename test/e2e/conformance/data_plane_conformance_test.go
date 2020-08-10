@@ -27,28 +27,34 @@ import (
 	"knative.dev/eventing/test/lib/resources"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func TestBrokerIngressV1Beta1(t *testing.T) {
+	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
-	client := testlib.Setup(t, true)
-	defer testlib.TearDown(client)
+		client := testlib.Setup(t, true)
+		defer testlib.TearDown(client)
 
-	broker := createBroker(client)
+		broker := createBroker(client)
 
-	conformance.BrokerV1Beta1IngressDataPlaneTestHelper(t, client, broker)
+		conformance.BrokerV1Beta1IngressDataPlaneTestHelper(t, client, broker)
+	})
 }
 
 func TestBrokerConsumerV1Beta1(t *testing.T) {
 	// TODO re-enable this test
 	t.Skip("This scenario is already covered by TestEventTransformationForTrigger*")
 
-	client := testlib.Setup(t, true)
-	defer testlib.TearDown(client)
+	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
-	broker := createBroker(client)
+		client := testlib.Setup(t, true)
+		defer testlib.TearDown(client)
 
-	conformance.BrokerV1Beta1ConsumerDataPlaneTestHelper(t, client, broker)
+		broker := createBroker(client)
+
+		conformance.BrokerV1Beta1ConsumerDataPlaneTestHelper(t, client, broker)
+	})
 }
 
 func createBroker(client *testlib.Client) *eventing.Broker {

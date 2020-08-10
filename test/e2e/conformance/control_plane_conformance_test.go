@@ -21,11 +21,12 @@ package conformance
 import (
 	"testing"
 
-	"knative.dev/eventing/test/conformance/helpers"
+	conformance "knative.dev/eventing/test/conformance/helpers"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func brokerCreator(client *testlib.Client, name string) {
@@ -38,5 +39,7 @@ func brokerCreator(client *testlib.Client, name string) {
 }
 
 func TestBrokerV1Beta1ControlPlane(t *testing.T) {
-	helpers.BrokerV1Beta1ControlPlaneTest(t, brokerCreator)
+	pkgtesting.RunMultiple(t, func(t *testing.T) {
+		conformance.BrokerV1Beta1ControlPlaneTest(t, brokerCreator)
+	})
 }

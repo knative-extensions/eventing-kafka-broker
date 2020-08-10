@@ -24,6 +24,7 @@ import (
 	"knative.dev/eventing/test/e2e/helpers"
 
 	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
+	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func TestEventTransformationForTriggerV1BrokerV1(t *testing.T) {
@@ -41,11 +42,13 @@ func TestEventTransformationForTriggerV1BrokerV1Beta1(t *testing.T) {
 }
 
 func runTest(t *testing.T, brokerVersion string, triggerVersion string) {
+	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
-	helpers.EventTransformationForTriggerTestHelper(
-		t,
-		brokerVersion,
-		triggerVersion,
-		testbroker.Creator,
-	)
+		helpers.EventTransformationForTriggerTestHelper(
+			t,
+			brokerVersion,
+			triggerVersion,
+			testbroker.Creator,
+		)
+	})
 }
