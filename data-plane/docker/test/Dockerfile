@@ -21,4 +21,4 @@ WORKDIR /app
 
 COPY . .
 
-RUN ./mvnw clean verify -B
+RUN ./mvnw clean verify --no-transfer-progress

@@ -30,11 +30,11 @@ COPY checkstyle/suppression.xml checkstyle/suppression.xml
 COPY ./mvnw .
 COPY ./.mvn/wrapper .mvn/wrapper
 
-RUN ./mvnw install -DskipTests -Dcheckstyle.skip
+RUN ./mvnw install -DskipTests -Dcheckstyle.skip --no-transfer-progress
 
 COPY . .
 
-RUN ./mvnw package -DskipTests -Dcheckstyle.skip
+RUN ./mvnw package -DskipTests -Dcheckstyle.skip --no-transfer-progress
 
 FROM ${JAVA_IMAGE} as running
 
