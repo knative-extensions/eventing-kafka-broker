@@ -24,7 +24,7 @@ import (
 
 const (
 	// Kafka broker class annotation value
-	BrokerClass = "kafka"
+	BrokerClass = "Kafka"
 )
 
 func BrokerClassFilter() func(interface{}) bool {
