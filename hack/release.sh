@@ -31,6 +31,8 @@ function fail() {
 
 function build_release() {
 
+  [ -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" ] && rm "${EVENTING_KAFKA_BROKER_ARTIFACT}"
+
   control_plane_setup
   if [[ $? -ne 0 ]]; then
     fail "failed to setup control plane artifact"
