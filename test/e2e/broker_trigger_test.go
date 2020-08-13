@@ -34,6 +34,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
+	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 const (
@@ -41,234 +42,227 @@ const (
 )
 
 func TestBrokerTrigger(t *testing.T) {
-	t.Parallel()
+	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
-	// 5  -> Ok
-	// 10 -> Ok
-	// 15 -> Ok
-	// 20 -> No -> Some (1-4) connection refused by the HTTP Client (probably need retries)
-	for i := 0; i < 1; i++ {
+		client := testlib.Setup(t, true)
+		defer testlib.TearDown(client)
 
-		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+		const (
+			senderName  = "sender"
+			brokerName  = "broker"
+			triggerName = "trigger"
+			subscriber  = "subscriber"
 
-			client := testlib.Setup(t, true)
-			defer testlib.TearDown(client)
+			defaultNumPartitions     = 10
+			defaultReplicationFactor = 1
+			verifierName             = "num-partitions-replication-factor-verifier"
 
-			const (
-				senderName  = "sender"
-				brokerName  = "broker"
-				triggerName = "trigger"
-				subscriber  = "subscriber"
+			eventType       = "type1"
+			eventSource     = "source1"
+			eventBody       = `{"msg":"e2e-eventtransformation-body"}`
+			extension1      = "ext1"
+			valueExtension1 = "value1"
+		)
 
-				defaultNumPartitions     = 10
-				defaultReplicationFactor = 1
-				verifierName             = "num-partitions-replication-factor-verifier"
+		nonMatchingEventId := uuid.New().String()
+		eventId := uuid.New().String()
 
-				eventType       = "type1"
-				eventSource     = "source1"
-				eventBody       = `{"msg":"e2e-eventtransformation-body"}`
-				extension1      = "ext1"
-				valueExtension1 = "value1"
-			)
+		br := client.CreateBrokerV1Beta1OrFail(
+			brokerName,
+			resources.WithBrokerClassForBrokerV1Beta1(kafka.BrokerClass),
+		)
 
-			nonMatchingEventId := uuid.New().String()
-			eventId := uuid.New().String()
+		eventTracker, _ := recordevents.StartEventRecordOrFail(client, subscriber)
+		defer eventTracker.Cleanup()
 
-			br := client.CreateBrokerV1Beta1OrFail(
-				brokerName,
-				resources.WithBrokerClassForBrokerV1Beta1(kafka.BrokerClass),
-			)
+		client.CreateTriggerOrFailV1Beta1(
+			triggerName,
+			resources.WithBrokerV1Beta1(brokerName),
+			resources.WithSubscriberServiceRefForTriggerV1Beta1(subscriber),
+			func(trigger *eventing.Trigger) {
+				trigger.Spec.Filter = &eventing.TriggerFilter{
+					Attributes: map[string]string{
+						"source":   eventSource,
+						extension1: valueExtension1,
+						"type":     "",
+					},
+				}
+			},
+		)
 
-			eventTracker, _ := recordevents.StartEventRecordOrFail(client, subscriber)
-			defer eventTracker.Cleanup()
+		client.WaitForAllTestResourcesReadyOrFail()
 
-			client.CreateTriggerOrFailV1Beta1(
-				triggerName,
-				resources.WithBrokerV1Beta1(brokerName),
-				resources.WithSubscriberServiceRefForTriggerV1Beta1(subscriber),
-				func(trigger *eventing.Trigger) {
-					trigger.Spec.Filter = &eventing.TriggerFilter{
-						Attributes: map[string]string{
-							"source":   eventSource,
-							extension1: valueExtension1,
-							"type":     "",
-						},
-					}
-				},
-			)
+		t.Logf("Sending events to %s/%s", client.Namespace, brokerName)
 
-			client.WaitForAllTestResourcesReadyOrFail()
+		nonMatchingEvent := cloudevents.NewEvent()
+		nonMatchingEvent.SetID(eventId)
+		nonMatchingEvent.SetType(eventType)
+		nonMatchingEvent.SetSource(eventSource)
+		nonMatchingEvent.SetExtension(extension1, valueExtension1+"a")
+		if err := nonMatchingEvent.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
+			t.Fatalf("Cannot set the payload of the event: %s", err.Error())
+		}
 
-			t.Logf("Sending events to %s/%s", client.Namespace, brokerName)
+		client.SendEventToAddressable(
+			senderName+"non-matching",
+			brokerName,
+			testlib.BrokerTypeMeta,
+			nonMatchingEvent,
+		)
 
-			nonMatchingEvent := cloudevents.NewEvent()
-			nonMatchingEvent.SetID(eventId)
-			nonMatchingEvent.SetType(eventType)
-			nonMatchingEvent.SetSource(eventSource)
-			nonMatchingEvent.SetExtension(extension1, valueExtension1+"a")
-			if err := nonMatchingEvent.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
-				t.Fatalf("Cannot set the payload of the event: %s", err.Error())
-			}
+		eventToSend := cloudevents.NewEvent()
+		eventToSend.SetID(eventId)
+		eventToSend.SetType(eventType)
+		eventToSend.SetSource(eventSource)
+		eventToSend.SetExtension(extension1, valueExtension1)
+		if err := eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
+			t.Fatalf("Cannot set the payload of the event: %s", err.Error())
+		}
 
-			client.SendEventToAddressable(
-				senderName+"non-matching",
-				brokerName,
-				testlib.BrokerTypeMeta,
-				nonMatchingEvent,
-			)
+		client.SendEventToAddressable(
+			senderName+"matching",
+			brokerName,
+			testlib.BrokerTypeMeta,
+			eventToSend,
+		)
 
-			eventToSend := cloudevents.NewEvent()
-			eventToSend.SetID(eventId)
-			eventToSend.SetType(eventType)
-			eventToSend.SetSource(eventSource)
-			eventToSend.SetExtension(extension1, valueExtension1)
-			if err := eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
-				t.Fatalf("Cannot set the payload of the event: %s", err.Error())
-			}
+		eventTracker.AssertAtLeast(1, recordevents.MatchEvent(
+			HasId(eventId),
+			HasSource(eventSource),
+			HasType(eventType),
+			HasData([]byte(eventBody)),
+		))
 
-			client.SendEventToAddressable(
-				senderName+"matching",
-				brokerName,
-				testlib.BrokerTypeMeta,
-				eventToSend,
-			)
+		eventTracker.AssertNot(recordevents.MatchEvent(
+			HasId(nonMatchingEventId),
+		))
 
-			eventTracker.AssertAtLeast(1, recordevents.MatchEvent(
-				HasId(eventId),
-				HasSource(eventSource),
-				HasType(eventType),
-				HasData([]byte(eventBody)),
-			))
+		config := &kafkatest.Config{
+			BootstrapServers:  bootstrapServers,
+			ReplicationFactor: defaultReplicationFactor,
+			NumPartitions:     defaultNumPartitions,
+			Topic:             broker.Topic(br),
+		}
 
-			eventTracker.AssertNot(recordevents.MatchEvent(
-				HasId(nonMatchingEventId),
-			))
-
-			config := &kafkatest.Config{
-				BootstrapServers:  bootstrapServers,
-				ReplicationFactor: defaultReplicationFactor,
-				NumPartitions:     defaultNumPartitions,
-				Topic:             broker.Topic(br),
-			}
-
-			err := kafkatest.VerifyNumPartitionAndReplicationFactor(
-				client.Kube.Kube,
-				client.Tracker,
-				client.Namespace,
-				verifierName,
-				config,
-			)
-			if err != nil {
-				t.Errorf("failed to verify num partitions and replication factors: %v", err)
-			}
-		})
-	}
+		err := kafkatest.VerifyNumPartitionAndReplicationFactor(
+			client.Kube.Kube,
+			client.Tracker,
+			client.Namespace,
+			verifierName,
+			config,
+		)
+		if err != nil {
+			t.Errorf("failed to verify num partitions and replication factors: %v", err)
+		}
+	})
 }
 
 func TestBrokerWithConfig(t *testing.T) {
+	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
-	client := testlib.Setup(t, true)
-	defer testlib.TearDown(client)
+		client := testlib.Setup(t, true)
+		defer testlib.TearDown(client)
 
-	const (
-		configMapName = "br-config"
-		senderName    = "sender"
-		brokerName    = "broker"
-		triggerName   = "trigger"
-		subscriber    = "subscriber"
+		const (
+			configMapName = "br-config"
+			senderName    = "sender"
+			brokerName    = "broker"
+			triggerName   = "trigger"
+			subscriber    = "subscriber"
 
-		numPartitions     = 20
-		replicationFactor = 1
-		verifierName      = "num-partitions-replication-factor-verifier"
+			numPartitions     = 20
+			replicationFactor = 1
+			verifierName      = "num-partitions-replication-factor-verifier"
 
-		eventType       = "type1"
-		eventSource     = "source1"
-		eventBody       = `{"msg":"e2e-body"}`
-		extension1      = "ext1"
-		valueExtension1 = "value1"
-	)
+			eventType       = "type1"
+			eventSource     = "source1"
+			eventBody       = `{"msg":"e2e-body"}`
+			extension1      = "ext1"
+			valueExtension1 = "value1"
+		)
 
-	eventId := uuid.New().String()
+		eventId := uuid.New().String()
 
-	cm := client.CreateConfigMapOrFail(configMapName, client.Namespace, map[string]string{
-		broker.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
-		broker.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
-		broker.BootstrapServersConfigMapKey:              bootstrapServers,
+		cm := client.CreateConfigMapOrFail(configMapName, client.Namespace, map[string]string{
+			broker.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
+			broker.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
+			broker.BootstrapServersConfigMapKey:              bootstrapServers,
+		})
+
+		br := client.CreateBrokerV1Beta1OrFail(
+			brokerName,
+			resources.WithBrokerClassForBrokerV1Beta1(kafka.BrokerClass),
+			resources.WithConfigForBrokerV1Beta1(&duckv1.KReference{
+				Kind:       "ConfigMap",
+				Namespace:  cm.Namespace,
+				Name:       cm.Name,
+				APIVersion: "v1",
+			}),
+		)
+
+		eventTracker, _ := recordevents.StartEventRecordOrFail(client, subscriber)
+		defer eventTracker.Cleanup()
+
+		client.CreateTriggerOrFailV1Beta1(
+			triggerName,
+			resources.WithBrokerV1Beta1(brokerName),
+			resources.WithSubscriberServiceRefForTriggerV1Beta1(subscriber),
+			func(trigger *eventing.Trigger) {
+				trigger.Spec.Filter = &eventing.TriggerFilter{
+					Attributes: map[string]string{
+						"source":   eventSource,
+						extension1: valueExtension1,
+						"type":     "",
+					},
+				}
+			},
+		)
+
+		client.WaitForAllTestResourcesReadyOrFail()
+
+		t.Logf("Sending events to %s/%s", client.Namespace, brokerName)
+
+		eventToSend := cloudevents.NewEvent()
+		eventToSend.SetID(eventId)
+		eventToSend.SetType(eventType)
+		eventToSend.SetSource(eventSource)
+		eventToSend.SetExtension(extension1, valueExtension1)
+		if err := eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
+			t.Fatalf("Cannot set the payload of the event: %s", err.Error())
+		}
+
+		client.SendEventToAddressable(
+			senderName+"matching",
+			brokerName,
+			testlib.BrokerTypeMeta,
+			eventToSend,
+		)
+
+		eventTracker.AssertAtLeast(1, recordevents.MatchEvent(
+			HasId(eventId),
+			HasSource(eventSource),
+			HasType(eventType),
+			HasData([]byte(eventBody)),
+		))
+
+		t.Logf("Verify num partitions and replication factor")
+
+		config := &kafkatest.Config{
+			BootstrapServers:  bootstrapServers,
+			ReplicationFactor: replicationFactor,
+			NumPartitions:     numPartitions,
+			Topic:             broker.Topic(br),
+		}
+
+		err := kafkatest.VerifyNumPartitionAndReplicationFactor(
+			client.Kube.Kube,
+			client.Tracker,
+			client.Namespace,
+			verifierName,
+			config,
+		)
+		if err != nil {
+			t.Errorf("failed to verify num partitions and replication factors: %v", err)
+		}
 	})
-
-	br := client.CreateBrokerV1Beta1OrFail(
-		brokerName,
-		resources.WithBrokerClassForBrokerV1Beta1(kafka.BrokerClass),
-		resources.WithConfigForBrokerV1Beta1(&duckv1.KReference{
-			Kind:       "ConfigMap",
-			Namespace:  cm.Namespace,
-			Name:       cm.Name,
-			APIVersion: "v1",
-		}),
-	)
-
-	eventTracker, _ := recordevents.StartEventRecordOrFail(client, subscriber)
-	defer eventTracker.Cleanup()
-
-	client.CreateTriggerOrFailV1Beta1(
-		triggerName,
-		resources.WithBrokerV1Beta1(brokerName),
-		resources.WithSubscriberServiceRefForTriggerV1Beta1(subscriber),
-		func(trigger *eventing.Trigger) {
-			trigger.Spec.Filter = &eventing.TriggerFilter{
-				Attributes: map[string]string{
-					"source":   eventSource,
-					extension1: valueExtension1,
-					"type":     "",
-				},
-			}
-		},
-	)
-
-	client.WaitForAllTestResourcesReadyOrFail()
-
-	t.Logf("Sending events to %s/%s", client.Namespace, brokerName)
-
-	eventToSend := cloudevents.NewEvent()
-	eventToSend.SetID(eventId)
-	eventToSend.SetType(eventType)
-	eventToSend.SetSource(eventSource)
-	eventToSend.SetExtension(extension1, valueExtension1)
-	if err := eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
-		t.Fatalf("Cannot set the payload of the event: %s", err.Error())
-	}
-
-	client.SendEventToAddressable(
-		senderName+"matching",
-		brokerName,
-		testlib.BrokerTypeMeta,
-		eventToSend,
-	)
-
-	eventTracker.AssertAtLeast(1, recordevents.MatchEvent(
-		HasId(eventId),
-		HasSource(eventSource),
-		HasType(eventType),
-		HasData([]byte(eventBody)),
-	))
-
-	t.Logf("Verify num partitions and replication factor")
-
-	config := &kafkatest.Config{
-		BootstrapServers:  bootstrapServers,
-		ReplicationFactor: replicationFactor,
-		NumPartitions:     numPartitions,
-		Topic:             broker.Topic(br),
-	}
-
-	err := kafkatest.VerifyNumPartitionAndReplicationFactor(
-		client.Kube.Kube,
-		client.Tracker,
-		client.Namespace,
-		verifierName,
-		config,
-	)
-	if err != nil {
-		t.Errorf("failed to verify num partitions and replication factors: %v", err)
-	}
 }
