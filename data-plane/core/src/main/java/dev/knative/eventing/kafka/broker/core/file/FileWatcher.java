@@ -169,12 +169,11 @@ public class FileWatcher {
     try (final var in = new FileInputStream(toWatch);
         final var bufferedInputStream = new BufferedInputStream(in)) {
 
-      final var bytes = bufferedInputStream.readAllBytes();
-      if (bytes.length == 0) {
+      if (bufferedInputStream.available() <= 0) {
         return;
       }
 
-      brokersConsumer.accept(Brokers.parseFrom(bytes));
+      brokersConsumer.accept(Brokers.parseFrom(bufferedInputStream));
 
     } catch (final Exception ex) {
       logger.warn("failed to parse in Protocol Buffer format", ex);

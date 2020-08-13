@@ -33,7 +33,6 @@ import java.nio.file.Files;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -41,21 +40,14 @@ import org.slf4j.LoggerFactory;
 
 public class FileWatcherTest {
 
-  @Test
+  @ParameterizedTest
+  @ValueSource(strings = {"protobuf", "json"})
   @Timeout(value = 5)
-  public void shouldReceiveUpdatesOnUpdateJSON() throws IOException, InterruptedException {
-    shouldReceiveUpdatesOnUpdate(FileFormat.JSON);
-  }
-
-  @Test
-  @Timeout(value = 5)
-  public void shouldReceiveUpdatesOnUpdateProtobuf() throws IOException, InterruptedException {
-    shouldReceiveUpdatesOnUpdate(FileFormat.PROTOBUF);
-  }
-
-  private void shouldReceiveUpdatesOnUpdate(
-      FileFormat format) throws IOException, InterruptedException {
+  public void shouldReceiveUpdatesOnUpdate(
+      String f) throws IOException, InterruptedException {
     final var file = Files.createTempFile("fw-", "-fw").toFile();
+
+    final var format = FileFormat.from(f);
 
     final var broker1 = Brokers.newBuilder()
         .addBrokers(broker1Unwrapped())
