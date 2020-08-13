@@ -28,7 +28,14 @@ readonly EVENTING_CONFIG="./config"
 # Vendored eventing test iamges.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
 
+readonly CHAOS_CONFIG="test/pkg/config/chaos/chaosduck.yaml"
+# Vendored pkg test iamges.
+readonly VENDOR_PKG_TEST_IMAGES="vendor/knative.dev/pkg/leaderelection/chaosduck"
+
 export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
+
+# The number of control plane replicas to run.
+readonly REPLICAS=${REPLICAS:-3}
 
 function knative_setup() {
   knative_eventing "apply --strict"
@@ -62,6 +69,14 @@ function knative_eventing() {
   ./test/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
   sed -i 's@knative.dev/eventing-kafka-broker/vendor/knative.dev/eventing/test/test_images@knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"*/*.yaml
 
+  # Publish test images from pkg.
+  echo ">> Publishing test images from pkg"
+  # We vendor test image code from pkg, in order to use ko to resolve them into Docker images, the
+  # path has to be a GOPATH.
+  sed -i 's@knative.dev/pkg/leaderelection/chaosduck@knative.dev/eventing-kafka-broker/vendor/knative.dev/pkg/leaderelection/chaosduck@g' "${CHAOS_CONFIG}"
+  ./test/upload-test-images.sh ${VENDOR_PKG_TEST_IMAGES} e2e || fail_test "Error uploading test images"
+  sed -i 's@knative.dev/eventing-kafka-broker/vendor/knative.dev/pkg/leaderelection/chaosduck@knative.dev/pkg/leaderelection/chaosduck@g' "${CHAOS_CONFIG}"
+
   ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 
   ./test/kafka/kafka_setup.sh || fail_test "Failed to set up Kafka cluster"
@@ -83,8 +98,25 @@ function test_setup() {
 
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
+
+  scale_controlplane kafka-broker-controller eventing-webhook eventing-controller
 }
 
 function test_teardown() {
   kubectl delete -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to tear down"
+}
+
+function scale_controlplane() {
+  for deployment in "$@"; do
+    # Make sure all pods run in leader-elected mode.
+    kubectl -n knative-eventing scale deployment "$deployment" --replicas=0 || fail_test "Failed to scale down to 0 ${deployment}"
+    # Give it time to kill the pods.
+    sleep 5
+    # Scale up components for HA tests
+    kubectl -n knative-eventing scale deployment "$deployment" --replicas="${REPLICAS}" || fail_test "Failed to scale up to ${REPLICAS} ${deployment}"
+  done
+}
+
+function apply_chaos() {
+  ko apply -f ./test/pkg/config/chaos || return $?
 }

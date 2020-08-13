@@ -18,6 +18,8 @@ if ! ${SKIP_INITIALIZE}; then
   initialize $@ --skip-istio-addon
 fi
 
+apply_chaos || fail_test "Failed to apply chaos"
+
 header "Waiting Knative eventing to come up"
 
 wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
