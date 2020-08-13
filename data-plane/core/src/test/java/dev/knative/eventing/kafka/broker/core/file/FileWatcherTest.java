@@ -19,10 +19,13 @@ package dev.knative.eventing.kafka.broker.core.file;
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.broker1Unwrapped;
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.broker2Unwrapped;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.protobuf.util.JsonFormat;
 import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers;
+import dev.knative.eventing.kafka.broker.core.file.FileWatcher.FileFormat;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -32,13 +35,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 
 public class FileWatcherTest {
 
   @Test
   @Timeout(value = 5)
-  public void shouldReceiveUpdatesOnUpdate() throws IOException, InterruptedException {
+  public void shouldReceiveUpdatesOnUpdateJSON() throws IOException, InterruptedException {
+    shouldReceiveUpdatesOnUpdate(FileFormat.JSON);
+  }
+
+  @Test
+  @Timeout(value = 5)
+  public void shouldReceiveUpdatesOnUpdateProtobuf() throws IOException, InterruptedException {
+    shouldReceiveUpdatesOnUpdate(FileFormat.PROTOBUF);
+  }
+
+  private void shouldReceiveUpdatesOnUpdate(
+      FileFormat format) throws IOException, InterruptedException {
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
     final var broker1 = Brokers.newBuilder()
@@ -66,7 +82,8 @@ public class FileWatcherTest {
     final var fw = new FileWatcher(
         FileSystems.getDefault().newWatchService(),
         brokersConsumer,
-        file
+        file,
+        format
     );
 
     final var thread1 = watch(fw);
@@ -74,27 +91,31 @@ public class FileWatcherTest {
 
     Thread.sleep(1000);
 
-    write(file, broker1);
+    write(file, broker1, format);
     waitFirst.await();
 
-    write(file, broker2);
+    write(file, broker2, format);
     waitSecond.await();
 
     thread1.interrupt();
     thread2.interrupt();
   }
 
-  @Test
+  @ParameterizedTest
+  @ValueSource(strings = {"json", "protobuf"})
   @Timeout(value = 5)
-  public void shouldReadFileWhenStartWatchingWithoutUpdates()
+  public void shouldReadFileWhenStartWatchingWithoutUpdates(
+      String f)
       throws IOException, InterruptedException {
+
+    final var format = FileFormat.from(f);
 
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
     final var broker1 = Brokers.newBuilder()
         .addBrokers(broker1Unwrapped())
         .build();
-    write(file, broker1);
+    write(file, broker1, format);
 
     final var waitBroker = new CountDownLatch(1);
     final Consumer<Brokers> brokersConsumer = broker -> {
@@ -105,7 +126,8 @@ public class FileWatcherTest {
     final var fw = new FileWatcher(
         FileSystems.getDefault().newWatchService(),
         brokersConsumer,
-        file
+        file,
+        format
     );
 
     final var thread = watch(fw);
@@ -119,19 +141,38 @@ public class FileWatcherTest {
     final var thread = new Thread(() -> {
       try {
         fw.watch();
-      } catch (IOException | InterruptedException ignored) {
+      } catch (InterruptedException ignored) {
       }
     });
     thread.start();
     return thread;
   }
 
-  public static void write(File file, Brokers brokers) throws IOException {
-    final var f = new File(file.toString());
-    try (final var out = new FileWriter(f)) {
+  public static void write(final File file, final Brokers brokers, final FileFormat format) {
+
+    switch (format) {
+      case JSON -> writeJson(file, brokers);
+      case PROTOBUF -> writeProtobuf(file, brokers);
+    }
+
+    LoggerFactory.getLogger(FileWatcherTest.class).info("file written");
+  }
+
+  private static void writeProtobuf(final File file, final Brokers brokers) {
+    try (final var out = new FileOutputStream(file)) {
+      brokers.writeTo(out);
+      out.flush();
+    } catch (final Exception ex) {
+      fail(ex);
+    }
+  }
+
+  private static void writeJson(final File file, final Brokers brokers) {
+    try (final var out = new FileWriter(file)) {
       JsonFormat.printer().appendTo(brokers, out);
-    } finally {
-      LoggerFactory.getLogger(FileWatcherTest.class).info("file written");
+      out.flush();
+    } catch (IOException ex) {
+      fail(ex);
     }
   }
 }

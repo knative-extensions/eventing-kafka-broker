@@ -60,6 +60,8 @@ spec:
               value: /etc/config/config-kafka-broker-consumer.properties
             - name: BROKERS_TRIGGERS_PATH
               value: /etc/brokers-triggers/data
+            - name: DATA_PLANE_CONFIG_FORMAT
+              value: protobuf
             - name: BROKERS_INITIAL_CAPACITY
               value: "100"
             - name: TRIGGERS_INITIAL_CAPACITY

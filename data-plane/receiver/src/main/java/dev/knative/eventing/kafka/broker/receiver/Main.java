@@ -94,7 +94,8 @@ public class Main {
       final var fw = new FileWatcher(
           FileSystems.getDefault().newWatchService(),
           new ObjectsCreator(handler),
-          new File(env.getDataPlaneConfigFilePath())
+          new File(env.getDataPlaneConfigFilePath()),
+          env.getDataPlaneConfigFileFormat()
       );
 
       fw.watch(); // block forever

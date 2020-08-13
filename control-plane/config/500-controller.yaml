@@ -69,7 +69,7 @@ spec:
             - name: METRICS_DOMAIN
               value: knative.dev/eventing
             - name: DATA_PLANE_CONFIG_FORMAT
-              value: json
+              value: protobuf
             - name: BROKER_INGRESS_NAME
               value: kafka-broker-ingress
             - name: GENERAL_CONFIG_MAP_NAME

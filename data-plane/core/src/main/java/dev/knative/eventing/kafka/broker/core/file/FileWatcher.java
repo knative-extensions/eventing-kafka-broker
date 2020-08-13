@@ -21,15 +21,14 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
 import java.util.Objects;
@@ -42,12 +41,35 @@ import org.slf4j.LoggerFactory;
  */
 public class FileWatcher {
 
+  public enum FileFormat {
+    PROTOBUF,
+    JSON;
+
+    /**
+     * Parse the given string and return a format.
+     *
+     * @param s file format
+     * @return file format.
+     */
+    public static FileFormat from(final String s) {
+      switch (s) {
+        case "protobuf":
+          return PROTOBUF;
+        case "json":
+          return JSON;
+        default:
+          throw new IllegalArgumentException("Unsupported file format: " + s);
+      }
+    }
+  }
+
   private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
 
   private final Consumer<Brokers> brokersConsumer;
 
   private final WatchService watcher;
   private final File toWatch;
+  private final FileFormat fileFormat;
 
   /**
    * All args constructor.
@@ -60,17 +82,20 @@ public class FileWatcher {
   public FileWatcher(
       final WatchService watcher,
       final Consumer<Brokers> brokersConsumer,
-      final File file)
+      final File file,
+      final FileFormat fileFormat)
       throws IOException {
 
     Objects.requireNonNull(brokersConsumer, "provide consumer");
     Objects.requireNonNull(file, "provide file");
+    Objects.requireNonNull(fileFormat, "provide fileFormat");
 
     // register the given watch service.
     // Note: this watch a directory and not the single file we're interested in, so that's the
     // reason in #watch() we filter watch service events based on the updated file.
 
     this.brokersConsumer = brokersConsumer;
+    this.fileFormat = fileFormat;
     toWatch = file.getAbsoluteFile();
     logger.info("start watching {}", toWatch);
 
@@ -84,10 +109,9 @@ public class FileWatcher {
   /**
    * Start watching.
    *
-   * @throws IOException          see {@link BufferedInputStream#readAllBytes()}.
    * @throws InterruptedException see {@link WatchService#take()}
    */
-  public void watch() throws IOException, InterruptedException {
+  public void watch() throws InterruptedException {
     // If the container restarts, the mounted file never gets reconciled, so update as soon as we
     // start watching
     update();
@@ -128,24 +152,47 @@ public class FileWatcher {
     }
   }
 
-  private void update() throws IOException {
-    try (
-        final var fileReader = new FileReader(toWatch);
-        final var bufferedReader = new BufferedReader(fileReader)) {
-      parseFromJson(bufferedReader);
+  private void update() {
+    switch (fileFormat) {
+      case JSON:
+        parseInJson();
+        break;
+      case PROTOBUF:
+        parseInProtobuf();
+        break;
+      default:
+        throw new IllegalArgumentException("Unsupported config format: " + fileFormat);
     }
   }
 
-  private void parseFromJson(final Reader content) throws IOException {
-    try {
+  private void parseInProtobuf() {
+    try (final var in = new FileInputStream(toWatch);
+        final var bufferedInputStream = new BufferedInputStream(in)) {
+
+      final var bytes = bufferedInputStream.readAllBytes();
+      if (bytes.length == 0) {
+        return;
+      }
+
+      brokersConsumer.accept(Brokers.parseFrom(bytes));
+
+    } catch (final Exception ex) {
+      logger.warn("failed to parse in Protocol Buffer format", ex);
+    }
+  }
+
+  private void parseInJson() {
+    try (
+        final var fileReader = new FileReader(toWatch);
+        final var bufferedReader = new BufferedReader(fileReader)) {
 
       final var brokers = Brokers.newBuilder();
-      JsonFormat.parser().merge(content, brokers);
+      JsonFormat.parser().merge(bufferedReader, brokers);
 
       brokersConsumer.accept(brokers.build());
 
-    } catch (final InvalidProtocolBufferException ex) {
-      logger.warn("failed to parse from JSON", ex);
+    } catch (final Exception ex) {
+      logger.warn("failed to parse in JSON format", ex);
     }
   }
 }

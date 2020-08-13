@@ -24,6 +24,7 @@ import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.file.FileWatcher.FileFormat;
 import dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.BrokersManager;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
@@ -56,7 +57,21 @@ public class UnorderedConsumerTest {
   private static final Logger logger = LoggerFactory.getLogger(UnorderedConsumerTest.class);
 
   @Test
-  public void testUnorderedConsumer(final Vertx vertx, final VertxTestContext context)
+  public void testUnorderedConsumerJSON(final Vertx vertx, final VertxTestContext context)
+      throws IOException, InterruptedException {
+    testUnorderedConsumer(vertx, context, FileFormat.JSON);
+  }
+
+  @Test
+  public void testUnorderedConsumerProtobuf(final Vertx vertx, final VertxTestContext context)
+      throws IOException, InterruptedException {
+    testUnorderedConsumer(vertx, context, FileFormat.PROTOBUF);
+  }
+
+  public void testUnorderedConsumer(
+      final Vertx vertx,
+      final VertxTestContext context,
+      final FileFormat format)
       throws IOException, InterruptedException {
 
     final var producerConfigs = new Properties();
@@ -106,19 +121,20 @@ public class UnorderedConsumerTest {
     final var fileWatcher = new FileWatcher(
         FileSystems.getDefault().newWatchService(),
         objectsCreator,
-        file
+        file,
+        format
     );
 
     final var executorService = Executors.newFixedThreadPool(1);
     executorService.submit(() -> {
       try {
         fileWatcher.watch();
-      } catch (IOException | InterruptedException e) {
+      } catch (InterruptedException e) {
         e.printStackTrace();
       }
     });
 
-    write(file, brokers);
+    write(file, brokers, format);
 
     Thread.sleep(6000); // reduce flakiness
 

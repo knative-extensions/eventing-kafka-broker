@@ -20,6 +20,7 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.file.FileWatcher.FileFormat;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
 import io.vertx.config.ConfigRetriever;
@@ -47,6 +48,7 @@ public class Main {
   private static final String CONSUMER_CONFIG_FILE_PATH = "CONSUMER_CONFIG_FILE_PATH";
   private static final String BROKERS_INITIAL_CAPACITY = "BROKERS_INITIAL_CAPACITY";
   private static final String TRIGGERS_INITIAL_CAPACITY = "TRIGGERS_INITIAL_CAPACITY";
+  private static final String DATA_PLANE_CONFIG_FORMAT = "DATA_PLANE_CONFIG_FORMAT";
   public static final String INSTANCE_ID = "INSTANCE_ID";
 
   /**
@@ -104,7 +106,8 @@ public class Main {
       final var fw = new FileWatcher(
           FileSystems.getDefault().newWatchService(),
           objectCreator,
-          new File(json.getString(BROKERS_TRIGGERS_PATH))
+          new File(json.getString(BROKERS_TRIGGERS_PATH)),
+          FileFormat.from(json.getString(DATA_PLANE_CONFIG_FORMAT))
       );
 
       fw.watch(); // block forever

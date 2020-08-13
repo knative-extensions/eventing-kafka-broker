@@ -1,0 +1,41 @@
+name              time/op
+JsonMarshal-2     2.89ms ± 2%
+JsonMarshal-4     3.01ms ± 4%
+JsonMarshal-8     2.96ms ± 8%
+ProtoMarshal-2    4.92ms ± 3%
+ProtoMarshal-4    4.91ms ± 7%
+ProtoMarshal-8    4.84ms ± 3%
+JsonUnmarshal-2   12.4ms ±27%
+JsonUnmarshal-4   10.7ms ± 5%
+JsonUnmarshal-8   9.84ms ± 8%
+ProtoUnmarshal-2  3.09ms ±14%
+ProtoUnmarshal-4  3.29ms ±22%
+ProtoUnmarshal-8  3.30ms ± 6%
+
+name              alloc/op
+JsonMarshal-2     1.43MB ± 0%
+JsonMarshal-4     1.45MB ± 1%
+JsonMarshal-8     1.53MB ± 2%
+ProtoMarshal-2    1.81MB ± 0%
+ProtoMarshal-4    1.81MB ± 0%
+ProtoMarshal-8    1.81MB ± 0%
+JsonUnmarshal-2   1.56MB ± 0%
+JsonUnmarshal-4   1.56MB ± 0%
+JsonUnmarshal-8   1.56MB ± 0%
+ProtoUnmarshal-2  1.61MB ± 0%
+ProtoUnmarshal-4  1.61MB ± 0%
+ProtoUnmarshal-8  1.61MB ± 0%
+
+name              allocs/op
+JsonMarshal-2      7.50k ± 0%
+JsonMarshal-4      7.50k ± 0%
+JsonMarshal-8      7.50k ± 0%
+ProtoMarshal-2     27.6k ± 0%
+ProtoMarshal-4     27.6k ± 0%
+ProtoMarshal-8     27.6k ± 0%
+JsonUnmarshal-2    13.1k ± 0%
+JsonUnmarshal-4    13.1k ± 0%
+JsonUnmarshal-8    13.1k ± 0%
+ProtoUnmarshal-2   16.6k ± 0%
+ProtoUnmarshal-4   16.6k ± 0%
+ProtoUnmarshal-8   16.6k ± 0%

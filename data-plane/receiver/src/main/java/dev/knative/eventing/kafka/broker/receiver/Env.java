@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.receiver;
 
 import static java.util.Objects.requireNonNull;
 
+import dev.knative.eventing.kafka.broker.core.file.FileWatcher.FileFormat;
 import java.util.function.Function;
 
 class Env {
@@ -36,6 +37,8 @@ class Env {
 
   static final String DATA_PLANE_CONFIG_FILE_PATH = "DATA_PLANE_CONFIG_FILE_PATH";
   private final String dataPlaneConfigFilePath;
+  static final String DATA_PLANE_CONFIG_FORMAT = "DATA_PLANE_CONFIG_FORMAT";
+  private final FileFormat dataPlaneConfigFileFormat;
 
   Env(final Function<String, String> envProvider) {
     this.ingressPort = Integer.parseInt(envProvider.apply(INGRESS_PORT));
@@ -43,6 +46,8 @@ class Env {
     this.livenessProbePath = requireNonNull(envProvider.apply(LIVENESS_PROBE_PATH));
     this.readinessProbePath = requireNonNull(envProvider.apply(READINESS_PROBE_PATH));
     this.dataPlaneConfigFilePath = requireNonNull(envProvider.apply(DATA_PLANE_CONFIG_FILE_PATH));
+    final var format = requireNonNull(envProvider.apply(DATA_PLANE_CONFIG_FORMAT));
+    this.dataPlaneConfigFileFormat = FileFormat.from(format);
   }
 
   public int getIngressPort() {
@@ -63,6 +68,10 @@ class Env {
 
   public String getDataPlaneConfigFilePath() {
     return dataPlaneConfigFilePath;
+  }
+
+  public FileFormat getDataPlaneConfigFileFormat() {
+    return dataPlaneConfigFileFormat;
   }
 
   @Override

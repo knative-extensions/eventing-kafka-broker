@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.receiver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import dev.knative.eventing.kafka.broker.core.file.FileWatcher.FileFormat;
 import org.junit.jupiter.api.Test;
 
 class EnvTest {
@@ -27,9 +28,20 @@ class EnvTest {
   private static final String READINESS_PATH = "/readyz";
   private static final String PRODUCER_CONFIG_PATH = "/etc/producer";
   private static final String DATA_PLANE_CONFIG_FILE_PATH = "/etc/brokers";
+  private static final String DATA_PLANE_CONFIG_FILE_FORMAT_PROTOBUF = "protobuf";
+  private static final String DATA_PLANE_CONFIG_FILE_FORMAT_JSON = "json";
 
   @Test
-  public void create() {
+  public void createProtobuf() {
+    create(DATA_PLANE_CONFIG_FILE_FORMAT_PROTOBUF, FileFormat.PROTOBUF);
+  }
+
+  @Test
+  public void createJson() {
+    create(DATA_PLANE_CONFIG_FILE_FORMAT_JSON, FileFormat.JSON);
+  }
+
+  private static void create(final String format, final FileFormat fileFormat) {
     final var env = new Env(
         key -> switch (key) {
           case Env.INGRESS_PORT -> PORT;
@@ -37,6 +49,7 @@ class EnvTest {
           case Env.READINESS_PROBE_PATH -> READINESS_PATH;
           case Env.PRODUCER_CONFIG_FILE_PATH -> PRODUCER_CONFIG_PATH;
           case Env.DATA_PLANE_CONFIG_FILE_PATH -> DATA_PLANE_CONFIG_FILE_PATH;
+          case Env.DATA_PLANE_CONFIG_FORMAT -> format;
           default -> throw new IllegalArgumentException();
         }
     );
@@ -46,6 +59,7 @@ class EnvTest {
     assertThat(env.getReadinessProbePath()).isEqualTo(READINESS_PATH);
     assertThat(env.getProducerConfigFilePath()).isEqualTo(PRODUCER_CONFIG_PATH);
     assertThat(env.getDataPlaneConfigFilePath()).isEqualTo(DATA_PLANE_CONFIG_FILE_PATH);
+    assertThat(env.getDataPlaneConfigFileFormat()).isEqualTo(fileFormat);
     assertThat(env.toString()).doesNotContain("@");
   }
 }
