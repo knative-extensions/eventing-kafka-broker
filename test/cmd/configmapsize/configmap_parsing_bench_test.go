@@ -66,3 +66,7 @@ func BenchmarkProtoUnmarshal(b *testing.B) {
 		_ = proto.Unmarshal(data, b)
 	}
 }
+
+func Test_main(t *testing.T) {
+	main() // make go-coverage happy
+}
