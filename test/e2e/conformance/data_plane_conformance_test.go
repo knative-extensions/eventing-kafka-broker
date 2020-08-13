@@ -40,6 +40,8 @@ func TestBrokerIngressV1Beta1(t *testing.T) {
 }
 
 func TestBrokerConsumerV1Beta1(t *testing.T) {
+	// TODO re-enable this test
+	t.Skip("This scenario is already covered by TestEventTransformationForTrigger*")
 
 	client := testlib.Setup(t, true)
 	defer testlib.TearDown(client)
