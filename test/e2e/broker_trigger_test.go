@@ -67,9 +67,9 @@ func TestBrokerTrigger(t *testing.T) {
 		nonMatchingEventId := uuid.New().String()
 		eventId := uuid.New().String()
 
-		br := client.CreateBrokerV1Beta1OrFail(
+		br := client.CreateBrokerV1OrFail(
 			brokerName,
-			resources.WithBrokerClassForBrokerV1Beta1(kafka.BrokerClass),
+			resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
 		)
 
 		eventTracker, _ := recordevents.StartEventRecordOrFail(client, subscriber)
@@ -189,10 +189,10 @@ func TestBrokerWithConfig(t *testing.T) {
 			broker.BootstrapServersConfigMapKey:              bootstrapServers,
 		})
 
-		br := client.CreateBrokerV1Beta1OrFail(
+		br := client.CreateBrokerV1OrFail(
 			brokerName,
-			resources.WithBrokerClassForBrokerV1Beta1(kafka.BrokerClass),
-			resources.WithConfigForBrokerV1Beta1(&duckv1.KReference{
+			resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
+			resources.WithConfigForBrokerV1(&duckv1.KReference{
 				Kind:       "ConfigMap",
 				Namespace:  cm.Namespace,
 				Name:       cm.Name,

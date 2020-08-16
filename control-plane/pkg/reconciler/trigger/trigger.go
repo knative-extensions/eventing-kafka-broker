@@ -25,9 +25,9 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1beta1"
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -39,8 +39,6 @@ import (
 )
 
 const (
-	trigger = "Trigger"
-
 	noTrigger = brokerreconciler.NoBroker
 )
 
@@ -207,7 +205,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	if apierrors.IsNotFound(err) {
 
 		// Actually check if the broker doesn't exist.
-		broker, err = r.EventingClient.EventingV1beta1(). // Note: do not introduce another `broker` variable with `:`
+		broker, err = r.EventingClient.EventingV1(). // Note: do not introduce another `broker` variable with `:`
 									Brokers(trigger.Namespace).
 									Get(trigger.Spec.Broker, metav1.GetOptions{})
 

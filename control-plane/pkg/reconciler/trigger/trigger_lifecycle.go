@@ -21,7 +21,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/record"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/reconciler"
 

@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	reconcilertesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"

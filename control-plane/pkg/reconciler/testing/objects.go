@@ -27,10 +27,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/reconciler/names"
-	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1beta1"
+	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
@@ -121,14 +121,16 @@ func ReceiverPodUpdate(namespace string, annotations map[string]string) clientgo
 }
 
 func NewService() *corev1.Service {
-	return reconcilertesting.NewService(
-		serviceName,
-		serviceNamespace,
-		func(service *corev1.Service) {
-			service.APIVersion = "v1"
-			service.Kind = "Service"
+	return &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
 		},
-	)
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      serviceName,
+			Namespace: serviceNamespace,
+		},
+	}
 }
 
 func NewConfigMap(configs *Configs, data []byte) runtime.Object {
