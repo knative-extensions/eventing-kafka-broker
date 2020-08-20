@@ -25,7 +25,7 @@ export GO111MODULE=on
 export GOFLAGS=-mod=
 
 # This controls the release branch we track.
-VERSION="release-0.17"
+VERSION="master"
 
 cd "${ROOT_DIR}"
 
