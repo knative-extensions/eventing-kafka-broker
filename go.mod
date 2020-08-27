@@ -3,14 +3,14 @@ module knative.dev/eventing-kafka-broker
 go 1.14
 
 require (
-	github.com/Shopify/sarama v1.26.4
+	github.com/Shopify/sarama v1.27.0
 	github.com/cloudevents/sdk-go/v2 v2.2.0
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.2
 	github.com/google/go-cmp v0.5.1
 	github.com/google/uuid v1.1.1
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.0
 	go.uber.org/zap v1.15.0
 	k8s.io/api v0.18.7-rc.0
 	k8s.io/apiextensions-apiserver v0.18.4
