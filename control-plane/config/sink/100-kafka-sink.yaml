@@ -66,9 +66,9 @@ spec:
 
                                 - default: structured.
 
-                                - https://github.com/cloudevents/spec/blob/master/spec.md#message
-                                  - https://github.com/cloudevents/spec/blob/master/kafka-protocol-binding.md#33-structured-content-mode
-                                  - https://github.com/cloudevents/spec/blob/master/kafka-protocol-binding.md#32-binary-content-mode'
+                                - https://github.com/cloudevents/spec/blob/v1.0/spec.md#message
+                                  - https://github.com/cloudevents/spec/blob/v1.0/kafka-protocol-binding.md#33-structured-content-mode
+                                  - https://github.com/cloudevents/spec/blob/v1.0/kafka-protocol-binding.md#32-binary-content-mode'
                   type: string
                   enum:
                     - structured
