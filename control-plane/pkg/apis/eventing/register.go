@@ -13,3 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package eventing
+
+import "k8s.io/apimachinery/pkg/runtime/schema"
+
+const (
+	GroupName = "eventing.knative.dev"
+)
+
+var (
+	// KafkaSinkResource represents a Knative Kafka Sink.
+	KafkaSinksResource = schema.GroupResource{
+		Group:    GroupName,
+		Resource: "kafkasinks",
+	}
+)

@@ -40,6 +40,7 @@ DIRS=(
   "/go.sum"
   "/data-plane/generated/src/main/java"
   "/control-plane/pkg/core/config"
+  "/control-plane/pkg/apis"
 )
 
 for d in "${DIRS[@]}"; do

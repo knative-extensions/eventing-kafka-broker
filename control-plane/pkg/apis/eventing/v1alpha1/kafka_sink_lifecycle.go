@@ -13,3 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package v1alpha1
+
+import "knative.dev/pkg/apis"
+
+const (
+	ConditionAddressable      apis.ConditionType = "Addressable"
+	ConditionTopicReady       apis.ConditionType = "TopicReady"
+	ConditionConfigMapUpdated apis.ConditionType = "ConfigMapUpdated"
+)
+
+var conditionSet = apis.NewLivingConditionSet(
+	ConditionAddressable,
+	ConditionTopicReady,
+	ConditionConfigMapUpdated,
+)
+
+func (ks *KafkaSink) GetConditionSet() apis.ConditionSet {
+	return conditionSet
+}

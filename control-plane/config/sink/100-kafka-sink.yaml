@@ -51,14 +51,16 @@ spec:
                   type: string
                 numPartitions:
                   description: 'Number of topic partitions'
-                  type: int32
+                  type: integer
+                  format: int32
                 replicationFactor:
                   description: 'Topic replication factor'
-                  type: int32
+                  type: integer
+                  format: int32
                 bootstrapServers:
                   description: 'A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.'
                   type: string
-                encoding:
+                contentMode:
                   description: 'CloudEvent content mode of Kafka messages sent to the topic.
                                 Possible values:
                                   - structured

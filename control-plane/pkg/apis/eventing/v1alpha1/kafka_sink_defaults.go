@@ -13,3 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package v1alpha1
+
+import "context"
+
+func (ks *KafkaSink) SetDefaults(ctx context.Context) {
+	ks.Spec.SetDefaults(ctx)
+}
+
+func (kss *KafkaSinkSpec) SetDefaults(ctx context.Context) {
+	defaultMode := ModeStructured
+
+	if kss.ContentMode == nil {
+		kss.ContentMode = &defaultMode
+	}
+}
