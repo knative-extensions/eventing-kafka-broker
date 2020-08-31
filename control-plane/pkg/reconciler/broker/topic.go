@@ -21,7 +21,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 )
 
 func (r *Reconciler) CreateTopic(logger *zap.Logger, topic string, config *Config) (string, error) {

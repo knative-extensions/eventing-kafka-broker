@@ -19,7 +19,7 @@ package kafka
 import (
 	pkgreconciler "knative.dev/pkg/reconciler"
 
-	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1beta1/broker"
+	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
 )
 
 const (

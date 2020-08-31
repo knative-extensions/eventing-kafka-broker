@@ -20,14 +20,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
-	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/broker"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	"knative.dev/pkg/configmap"
 
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
-	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/broker/fake"
-	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/trigger/fake"
+	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker/fake"
+	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger/fake"
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 
