@@ -58,6 +58,21 @@ spec:
                 bootstrapServers:
                   description: 'A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.'
                   type: string
+                encoding:
+                  description: 'CloudEvent content mode of Kafka messages sent to the topic.
+                                Possible values:
+                                  - structured
+                                  - binary
+
+                                - default: structured.
+
+                                - https://github.com/cloudevents/spec/blob/master/spec.md#message
+                                  - https://github.com/cloudevents/spec/blob/master/kafka-protocol-binding.md#33-structured-content-mode
+                                  - https://github.com/cloudevents/spec/blob/master/kafka-protocol-binding.md#32-binary-content-mode'
+                  type: string
+                  enum:
+                    - structured
+                    - binary
             status:
               description: 'Status represents the current state of the Broker. This data may be out of date.'
               type: object
