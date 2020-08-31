@@ -33,6 +33,7 @@ readonly CHAOS_CONFIG="test/pkg/config/chaos/chaosduck.yaml"
 readonly VENDOR_PKG_TEST_IMAGES="vendor/knative.dev/pkg/leaderelection/chaosduck"
 
 export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
+export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
 
 # The number of control plane replicas to run.
 readonly REPLICAS=${REPLICAS:-3}
@@ -84,6 +85,7 @@ function knative_eventing() {
 
 function test_setup() {
   [ -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" ] && rm "${EVENTING_KAFKA_BROKER_ARTIFACT}"
+  [ -f "${EVENTING_KAFKA_SINK_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SINK_ARTIFACT}"
 
   header "Data plane setup"
   data_plane_setup || fail_test "Failed to set up data plane components"
@@ -98,6 +100,7 @@ function test_setup() {
 
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
+  kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
 
   scale_controlplane kafka-broker-controller eventing-webhook eventing-controller
 }

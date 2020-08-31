@@ -26,12 +26,19 @@ readonly UUID=${UUID:-${TAG:-latest}}
 
 readonly DATA_PLANE_DIR=data-plane
 readonly DATA_PLANE_CONFIG_DIR=${DATA_PLANE_DIR}/config
-readonly DATA_PLANE_CONFIG_TEMPLATE_DIR=${DATA_PLANE_CONFIG_DIR}/template # no trailing slash
-readonly DISPATCHER_TEMPLATE_FILE=${DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-dispatcher.yaml
-readonly RECEIVER_TEMPLATE_FILE=${DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-receiver.yaml
+
+# Broker config
+readonly KAFKA_BROKER_DATA_PLANE_CONFIG_TEMPLATE_DIR=${DATA_PLANE_CONFIG_DIR}/template # no trailing slash
+readonly KAFKA_BROKER_DISPATCHER_TEMPLATE_FILE=${KAFKA_BROKER_DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-dispatcher.yaml
+readonly KAFKA_BROKER_RECEIVER_TEMPLATE_FILE=${KAFKA_BROKER_DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-receiver.yaml
+
+# Sink config
+readonly KAFKA_SINK_DATA_PLANE_CONFIG_TEMPLATE_DIR=${DATA_PLANE_CONFIG_DIR}/sink/template
+readonly KAFKA_SINK_RECEIVER_TEMPLATE_FILE=${KAFKA_SINK_DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-receiver.yaml
 
 readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-knative-kafka-broker-receiver}"
 readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-knative-kafka-broker-dispatcher}"
+readonly sink="${KNATIVE_KAFKA_SINK_RECEIVER:-knative-kafka-sink-receiver}"
 
 readonly JAVA_IMAGE=adoptopenjdk:14-jre-hotspot
 
@@ -103,6 +110,21 @@ function dispatcher_build_push() {
   return $?
 }
 
+function sink_build_push() {
+  header "Building sink ..."
+
+  docker build \
+    -f ${DATA_PLANE_DIR}/docker/Dockerfile \
+    --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
+    --build-arg APP_JAR=${RECEIVER_JAR} \
+    --build-arg APP_DIR=${RECEIVER_DIRECTORY} \
+    -t "${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}" ${DATA_PLANE_DIR} &&
+    docker_push "${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}" &&
+    with_kind "${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}"
+
+  return $?
+}
+
 function data_plane_build_push() {
 
   local uuid=${UUID}
@@ -114,21 +136,28 @@ function data_plane_build_push() {
 
   export KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE="${KO_DOCKER_REPO}"/"${dispatcher}":"${uuid}"
 
+  export KNATIVE_KAFKA_SINK_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${sink}":"${uuid}"
+
   receiver_build_push || fail_test "failed to build receiver"
   dispatcher_build_push || fail_test "failed to build dispatcher"
+  sink_build_push || fail_test "failed to build sink"
 }
 
 function k8s() {
   echo "dispatcher image ---> ${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}"
   echo "receiver image   ---> ${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}"
+  echo "receiver image   ---> ${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}"
 
   ko resolve ${KO_FLAGS} --strict -f ${DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}"
 
-  sed "s|\${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|g" ${DISPATCHER_TEMPLATE_FILE} |
-    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to append ${DISPATCHER_TEMPLATE_FILE}"
+  sed "s|\${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|g" ${KAFKA_BROKER_DISPATCHER_TEMPLATE_FILE} |
+    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to append ${KAFKA_BROKER_DISPATCHER_TEMPLATE_FILE}"
 
-  sed "s|\${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}|${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}|g" ${RECEIVER_TEMPLATE_FILE} |
-    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to append ${RECEIVER_TEMPLATE_FILE}"
+  sed "s|\${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}|${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}|g" ${KAFKA_BROKER_RECEIVER_TEMPLATE_FILE} |
+    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to append ${KAFKA_BROKER_RECEIVER_TEMPLATE_FILE}"
+
+  sed "s|\${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}|${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}|g" ${KAFKA_SINK_RECEIVER_TEMPLATE_FILE} |
+    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to append ${KAFKA_SINK_RECEIVER_TEMPLATE_FILE}"
 }
 
 function data_plane_unit_tests() {
