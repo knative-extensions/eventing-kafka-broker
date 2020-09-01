@@ -24,13 +24,10 @@ import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.rw.CloudEventRWException;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import io.vertx.kafka.client.producer.RecordMetadata;
 import java.util.Objects;
 
 public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpResponse<Buffer>> {
@@ -45,8 +42,8 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
    * @param producer Kafka producer.
    */
   public HttpSinkResponseHandler(
-      final String topic,
-      final KafkaProducer<String, CloudEvent> producer) {
+    final String topic,
+    final KafkaProducer<String, CloudEvent> producer) {
 
     Objects.requireNonNull(topic, "provide topic");
     Objects.requireNonNull(producer, "provide producer");
@@ -82,7 +79,7 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
     }
 
     return producer
-        .send(KafkaProducerRecord.create(topic, PartitionKey.extract(event), event))
-        .mapEmpty();
+      .send(KafkaProducerRecord.create(topic, PartitionKey.extract(event), event))
+      .mapEmpty();
   }
 }

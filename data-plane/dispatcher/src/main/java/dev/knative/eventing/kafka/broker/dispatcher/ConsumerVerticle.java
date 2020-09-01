@@ -43,9 +43,9 @@ public final class ConsumerVerticle<K, V> extends AbstractVerticle {
    * @param recordHandler handler of consumed Kafka records.
    */
   public ConsumerVerticle(
-      final KafkaConsumer<K, V> consumer,
-      final String topic,
-      final Handler<KafkaConsumerRecord<K, V>> recordHandler) {
+    final KafkaConsumer<K, V> consumer,
+    final String topic,
+    final Handler<KafkaConsumerRecord<K, V>> recordHandler) {
 
     Objects.requireNonNull(consumer, "provide consumer");
     Objects.requireNonNull(topic, "provide topic");

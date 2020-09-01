@@ -47,11 +47,11 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
   private List<ConsumerRecord<String, CloudEvent>> records;
 
   public ConsumerVerticleFactoryMock(
-      final Properties consumerConfigs,
-      final WebClient client,
-      final Vertx vertx,
-      final Properties producerConfigs,
-      final ConsumerRecordOffsetStrategyFactory<String, CloudEvent> consumerRecordOffsetStrategyFactory) {
+    final Properties consumerConfigs,
+    final WebClient client,
+    final Vertx vertx,
+    final Properties producerConfigs,
+    final ConsumerRecordOffsetStrategyFactory<String, CloudEvent> consumerRecordOffsetStrategyFactory) {
 
     super(consumerRecordOffsetStrategyFactory, consumerConfigs, client, vertx, producerConfigs);
     mockProducer = new ConcurrentHashMap<>();
@@ -60,14 +60,14 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
 
   @Override
   protected KafkaProducer<String, CloudEvent> createProducer(
-      final Vertx vertx,
-      final Broker broker,
-      final Trigger<CloudEvent> trigger) {
+    final Vertx vertx,
+    final Broker broker,
+    final Trigger<CloudEvent> trigger) {
 
     final var producer = new MockProducer<>(
-        true,
-        new StringSerializer(),
-        new CloudEventSerializer()
+      true,
+      new StringSerializer(),
+      new CloudEventSerializer()
     );
 
     mockProducer.put(trigger.id(), producer);
@@ -77,9 +77,9 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
 
   @Override
   protected KafkaConsumer<String, CloudEvent> createConsumer(
-      final Vertx vertx,
-      final Broker broker,
-      final Trigger<CloudEvent> trigger) {
+    final Vertx vertx,
+    final Broker broker,
+    final Trigger<CloudEvent> trigger) {
 
     final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
 
@@ -89,19 +89,19 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
       consumer.unsubscribe();
 
       consumer.assign(records.stream()
-          .map(r -> new TopicPartition(broker.topic(), r.partition()))
-          .collect(Collectors.toList()));
+        .map(r -> new TopicPartition(broker.topic(), r.partition()))
+        .collect(Collectors.toList()));
 
       for (final var record : records) {
         consumer.addRecord(new ConsumerRecord<>(
-            broker.topic(),
-            record.partition(),
-            record.offset(),
-            record.key(),
-            record.value()
+          broker.topic(),
+          record.partition(),
+          record.offset(),
+          record.key(),
+          record.value()
         ));
         consumer.addEndOffsets(Map.of(
-            new TopicPartition(broker.topic(), record.partition()), 0L
+          new TopicPartition(broker.topic(), record.partition()), 0L
         ));
       }
     });

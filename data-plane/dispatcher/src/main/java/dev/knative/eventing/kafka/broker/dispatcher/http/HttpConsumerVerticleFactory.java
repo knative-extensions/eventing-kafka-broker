@@ -47,14 +47,14 @@ import org.apache.kafka.common.serialization.StringSerializer;
 public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<CloudEvent> {
 
   private static ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> NO_DLQ_SENDER =
-      record -> Future.failedFuture("no DLQ set");
+    record -> Future.failedFuture("no DLQ set");
 
   private final Properties consumerConfigs;
   private final WebClient client;
   private final Vertx vertx;
   private final Properties producerConfigs;
   private final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-      consumerRecordOffsetStrategyFactory;
+    consumerRecordOffsetStrategyFactory;
 
   /**
    * All args constructor.
@@ -66,15 +66,15 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
    * @param producerConfigs                     base producer configurations.
    */
   public HttpConsumerVerticleFactory(
-      final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-          consumerRecordOffsetStrategyFactory,
-      final Properties consumerConfigs,
-      final WebClient client,
-      final Vertx vertx,
-      final Properties producerConfigs) {
+    final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
+      consumerRecordOffsetStrategyFactory,
+    final Properties consumerConfigs,
+    final WebClient client,
+    final Vertx vertx,
+    final Properties producerConfigs) {
 
     Objects.requireNonNull(consumerRecordOffsetStrategyFactory,
-        "provide consumerRecordOffsetStrategyFactory");
+      "provide consumerRecordOffsetStrategyFactory");
     Objects.requireNonNull(consumerConfigs, "provide consumerConfigs");
     Objects.requireNonNull(client, "provide message");
     Objects.requireNonNull(vertx, "provide vertx");
@@ -96,52 +96,52 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
     Objects.requireNonNull(trigger, "provide trigger");
 
     final io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> consumer
-        = createConsumer(vertx, broker, trigger);
+      = createConsumer(vertx, broker, trigger);
 
     final io.vertx.kafka.client.producer.KafkaProducer<String, CloudEvent> producer
-        = createProducer(vertx, broker, trigger);
+      = createProducer(vertx, broker, trigger);
 
     final CircuitBreakerOptions circuitBreakerOptions
-        = createCircuitBreakerOptions(vertx, broker, trigger);
+      = createCircuitBreakerOptions(vertx, broker, trigger);
 
     final var triggerDestinationSender = createSender(trigger.destination(), circuitBreakerOptions);
 
     final ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> brokerDLQSender =
-        (broker.deadLetterSink() == null || broker.deadLetterSink().isEmpty())
-            ? NO_DLQ_SENDER
-            : createSender(broker.deadLetterSink(), circuitBreakerOptions);
+      (broker.deadLetterSink() == null || broker.deadLetterSink().isEmpty())
+        ? NO_DLQ_SENDER
+        : createSender(broker.deadLetterSink(), circuitBreakerOptions);
 
     final var consumerOffsetManager = consumerRecordOffsetStrategyFactory
-        .get(consumer, broker, trigger);
+      .get(consumer, broker, trigger);
 
     final var sinkResponseHandler = new HttpSinkResponseHandler(broker.topic(), producer);
 
     final var consumerRecordHandler = new ConsumerRecordHandler<>(
-        triggerDestinationSender,
-        trigger.filter(),
-        consumerOffsetManager,
-        sinkResponseHandler,
-        brokerDLQSender
+      triggerDestinationSender,
+      trigger.filter(),
+      consumerOffsetManager,
+      sinkResponseHandler,
+      brokerDLQSender
     );
 
     return Future.succeededFuture(
-        new ConsumerVerticle<>(consumer, broker.topic(), consumerRecordHandler)
+      new ConsumerVerticle<>(consumer, broker.topic(), consumerRecordHandler)
     );
   }
 
   protected CircuitBreakerOptions createCircuitBreakerOptions(
-      final Vertx vertx,
-      final Broker broker,
-      final Trigger<CloudEvent> trigger) {
+    final Vertx vertx,
+    final Broker broker,
+    final Trigger<CloudEvent> trigger) {
 
     // TODO set circuit breaker options based on broker/trigger configurations
     return new CircuitBreakerOptions();
   }
 
   protected io.vertx.kafka.client.producer.KafkaProducer<String, CloudEvent> createProducer(
-      final Vertx vertx,
-      final Broker broker,
-      final Trigger<CloudEvent> trigger) {
+    final Vertx vertx,
+    final Broker broker,
+    final Trigger<CloudEvent> trigger) {
 
     // TODO check producer configurations to change per instance
     // producerConfigs is a shared object and it acts as a prototype for each consumer instance.
@@ -149,18 +149,18 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
     producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, broker.bootstrapServers());
 
     final var kafkaProducer = new KafkaProducer<>(
-        producerConfigs,
-        new StringSerializer(),
-        new CloudEventSerializer()
+      producerConfigs,
+      new StringSerializer(),
+      new CloudEventSerializer()
     );
 
     return io.vertx.kafka.client.producer.KafkaProducer.create(vertx, kafkaProducer);
   }
 
   protected io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> createConsumer(
-      final Vertx vertx,
-      final Broker broker,
-      final Trigger<CloudEvent> trigger) {
+    final Vertx vertx,
+    final Broker broker,
+    final Trigger<CloudEvent> trigger) {
 
     // TODO check consumer configurations to change per instance
     // consumerConfigs is a shared object and it acts as a prototype for each consumer instance.
@@ -171,21 +171,21 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
     // Note: KafkaConsumer instances are not thread-safe.
     // There are methods thread-safe, but in general they're not.
     final var kafkaConsumer = new KafkaConsumer<>(
-        consumerConfigs,
-        new StringDeserializer(),
-        new CloudEventDeserializer()
+      consumerConfigs,
+      new StringDeserializer(),
+      new CloudEventDeserializer()
     );
 
     return io.vertx.kafka.client.consumer.KafkaConsumer.create(vertx, kafkaConsumer);
   }
 
   private HttpConsumerRecordSender createSender(
-      final String target,
-      final CircuitBreakerOptions circuitBreakerOptions) {
+    final String target,
+    final CircuitBreakerOptions circuitBreakerOptions) {
 
     return new HttpConsumerRecordSender(
-        client,
-        target
+      client,
+      target
     );
   }
 }

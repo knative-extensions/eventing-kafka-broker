@@ -68,11 +68,11 @@ class Env {
   @Override
   public String toString() {
     return "Env{"
-        + "ingressPort=" + ingressPort
-        + ", producerConfigFilePath='" + producerConfigFilePath + '\''
-        + ", livenessProbePath='" + livenessProbePath + '\''
-        + ", readinessProbePath='" + readinessProbePath + '\''
-        + ", dataPlaneConfigFilePath='" + dataPlaneConfigFilePath + '\''
-        + '}';
+      + "ingressPort=" + ingressPort
+      + ", producerConfigFilePath='" + producerConfigFilePath + '\''
+      + ", livenessProbePath='" + livenessProbePath + '\''
+      + ", readinessProbePath='" + readinessProbePath + '\''
+      + ", dataPlaneConfigFilePath='" + dataPlaneConfigFilePath + '\''
+      + '}';
   }
 }

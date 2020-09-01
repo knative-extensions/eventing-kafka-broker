@@ -30,10 +30,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
-    ConsumerRecordOffsetStrategy<K, V> {
+  ConsumerRecordOffsetStrategy<K, V> {
 
   private static final Logger logger = LoggerFactory
-      .getLogger(UnorderedConsumerRecordOffsetStrategy.class);
+    .getLogger(UnorderedConsumerRecordOffsetStrategy.class);
 
   private final KafkaConsumer<K, V> consumer;
 
@@ -64,19 +64,19 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
     // TODO evaluate if it's worth committing offsets at specified intervals per partition.
     // commit each record
     commit(record)
-        .onSuccess(ignored -> logger.debug(
-            "committed {} {} {}",
-            keyValue("topic", record.topic()),
-            keyValue("partition", record.partition()),
-            keyValue("offset", record.offset())
-        ))
-        .onFailure(cause -> logger.error(
-            "failed to commit {} {} {}",
-            keyValue("topic", record.topic()),
-            keyValue("partition", record.partition()),
-            keyValue("offset", record.offset()),
-            cause
-        ));
+      .onSuccess(ignored -> logger.debug(
+        "committed {} {} {}",
+        keyValue("topic", record.topic()),
+        keyValue("partition", record.partition()),
+        keyValue("offset", record.offset())
+      ))
+      .onFailure(cause -> logger.error(
+        "failed to commit {} {} {}",
+        keyValue("topic", record.topic()),
+        keyValue("partition", record.partition()),
+        keyValue("offset", record.offset()),
+        cause
+      ));
   }
 
   /**
@@ -104,11 +104,11 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
   }
 
   private Future<Map<TopicPartition, OffsetAndMetadata>> commit(
-      final KafkaConsumerRecord<K, V> record) {
+    final KafkaConsumerRecord<K, V> record) {
     logger.debug("committing record {}", record);
     return consumer.commit(Map.of(
-        new TopicPartition(record.topic(), record.partition()),
-        new OffsetAndMetadata(record.offset() + 1, ""))
+      new TopicPartition(record.topic(), record.partition()),
+      new OffsetAndMetadata(record.offset() + 1, ""))
     );
   }
 }

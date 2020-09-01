@@ -35,15 +35,15 @@ public class EventMatcher implements Filter<CloudEvent> {
   private static final String DEFAULT_STRING = "";
 
   static final Map<String, Function<CloudEvent, String>> attributesMapper = Map.of(
-      Constants.SPEC_VERSION, event -> event.getSpecVersion().toString(),
-      Constants.ID, CloudEvent::getId,
-      Constants.TYPE, CloudEvent::getType,
-      Constants.SOURCE, event -> event.getSource().toString(),
-      Constants.DATA_CONTENT_TYPE, CloudEvent::getDataContentType,
-      Constants.DATA_SCHEMA, event -> getOrDefault(event.getDataSchema(), URI::toString),
-      Constants.SCHEMA_URL, event -> getOrDefault(event.getDataSchema(), URI::toString),
-      Constants.SUBJECT, CloudEvent::getSubject,
-      Constants.TIME, event -> getOrDefault(event.getTime(), time -> time.format(ISO_INSTANT))
+    Constants.SPEC_VERSION, event -> event.getSpecVersion().toString(),
+    Constants.ID, CloudEvent::getId,
+    Constants.TYPE, CloudEvent::getType,
+    Constants.SOURCE, event -> event.getSource().toString(),
+    Constants.DATA_CONTENT_TYPE, CloudEvent::getDataContentType,
+    Constants.DATA_SCHEMA, event -> getOrDefault(event.getDataSchema(), URI::toString),
+    Constants.SCHEMA_URL, event -> getOrDefault(event.getDataSchema(), URI::toString),
+    Constants.SUBJECT, CloudEvent::getSubject,
+    Constants.TIME, event -> getOrDefault(event.getTime(), time -> time.format(ISO_INSTANT))
   );
 
   // the key represents the function to turn an event into a string value.
@@ -59,21 +59,21 @@ public class EventMatcher implements Filter<CloudEvent> {
    */
   public EventMatcher(final Map<String, String> attributes) {
     this.attributes = attributes.entrySet().stream()
-        .filter(entry -> isNotEmpty(entry.getValue()))
-        .map(entry -> new SimpleImmutableEntry<>(
-            attributesMapper.getOrDefault(
-                entry.getKey(),
-                event -> {
-                  try {
-                    return getOrDefault(event.getAttribute(entry.getKey()), Object::toString);
-                  } catch (Exception ex) {
-                    return getOrDefault(event.getExtension(entry.getKey()), Object::toString);
-                  }
-                }
-            ),
-            entry.getValue()
-        ))
-        .collect(Collectors.toUnmodifiableList());
+      .filter(entry -> isNotEmpty(entry.getValue()))
+      .map(entry -> new SimpleImmutableEntry<>(
+        attributesMapper.getOrDefault(
+          entry.getKey(),
+          event -> {
+            try {
+              return getOrDefault(event.getAttribute(entry.getKey()), Object::toString);
+            } catch (Exception ex) {
+              return getOrDefault(event.getExtension(entry.getKey()), Object::toString);
+            }
+          }
+        ),
+        entry.getValue()
+      ))
+      .collect(Collectors.toUnmodifiableList());
   }
 
   /**
@@ -98,8 +98,8 @@ public class EventMatcher implements Filter<CloudEvent> {
   }
 
   private static <T> String getOrDefault(
-      @Nullable final T s,
-      final Function<T, String> stringProvider) {
+    @Nullable final T s,
+    final Function<T, String> stringProvider) {
 
     if (s == null) {
       return DEFAULT_STRING;
@@ -114,39 +114,39 @@ public class EventMatcher implements Filter<CloudEvent> {
   static class Constants {
 
     static final String TYPE = ContextAttributes.TYPE
-        .name()
-        .toLowerCase();
+      .name()
+      .toLowerCase();
 
     static final String SPEC_VERSION = ContextAttributes.SPECVERSION
-        .name()
-        .toLowerCase();
+      .name()
+      .toLowerCase();
 
     static final String ID = ContextAttributes.ID
-        .name()
-        .toLowerCase();
+      .name()
+      .toLowerCase();
 
     static final String SOURCE = ContextAttributes.SOURCE
-        .name()
-        .toLowerCase();
+      .name()
+      .toLowerCase();
 
     static final String DATA_CONTENT_TYPE = ContextAttributes.DATACONTENTTYPE
-        .name()
-        .toLowerCase();
+      .name()
+      .toLowerCase();
 
     static final String DATA_SCHEMA = ContextAttributes.DATASCHEMA
-        .name()
-        .toLowerCase();
+      .name()
+      .toLowerCase();
 
     static final String SCHEMA_URL = io.cloudevents.core.v03.ContextAttributes.SCHEMAURL
-        .name()
-        .toLowerCase();
+      .name()
+      .toLowerCase();
 
     static final String SUBJECT = ContextAttributes.SUBJECT
-        .name()
-        .toLowerCase();
+      .name()
+      .toLowerCase();
 
     static final String TIME = ContextAttributes.TIME
-        .name()
-        .toLowerCase();
+      .name()
+      .toLowerCase();
   }
 }

@@ -13,10 +13,10 @@ public class PartitionKeyTest {
   public void returnDefaultPartitionKey() {
 
     final var event = CloudEventBuilder.v1()
-        .withId(UUID.randomUUID().toString())
-        .withType("Type1")
-        .withSource(URI.create("source"))
-        .build();
+      .withId(UUID.randomUUID().toString())
+      .withType("Type1")
+      .withSource(URI.create("source"))
+      .build();
 
     final var partitionKey = PartitionKey.extract(event);
 
@@ -29,11 +29,11 @@ public class PartitionKeyTest {
     final var expectedPartitionKeyValue = "Rossi";
 
     final var event = CloudEventBuilder.v1()
-        .withId(UUID.randomUUID().toString())
-        .withType("Type1")
-        .withSource(URI.create("source"))
-        .withExtension(PartitionKey.PARTITION_KEY_KEY, expectedPartitionKeyValue)
-        .build();
+      .withId(UUID.randomUUID().toString())
+      .withType("Type1")
+      .withSource(URI.create("source"))
+      .withExtension(PartitionKey.PARTITION_KEY_KEY, expectedPartitionKeyValue)
+      .build();
 
     final var partitionKey = PartitionKey.extract(event);
 

@@ -31,7 +31,7 @@ public interface RequestToRecordMapper<K, V> {
    * @return kafka record (record can be null).
    */
   Future<KafkaProducerRecord<K, V>> recordFromRequest(
-      final HttpServerRequest request,
-      final String topic
+    final HttpServerRequest request,
+    final String topic
   );
 }

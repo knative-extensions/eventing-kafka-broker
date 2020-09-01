@@ -23,7 +23,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -65,13 +64,13 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
   @Test
   public void shouldCommitSuccessfullyOnSuccessfullySentToSubscriber(final Vertx vertx) {
     shouldCommit(vertx, (kafkaConsumerRecord, unorderedConsumerOffsetManager)
-        -> unorderedConsumerOffsetManager.successfullySentToSubscriber(kafkaConsumerRecord));
+      -> unorderedConsumerOffsetManager.successfullySentToSubscriber(kafkaConsumerRecord));
   }
 
   @Test
   public void shouldCommitSuccessfullyOnSuccessfullySentToDLQ(final Vertx vertx) {
     shouldCommit(vertx, (kafkaConsumerRecord, unorderedConsumerOffsetManager)
-        -> unorderedConsumerOffsetManager.successfullySentToDLQ(kafkaConsumerRecord));
+      -> unorderedConsumerOffsetManager.successfullySentToDLQ(kafkaConsumerRecord));
   }
 
   @Test
@@ -87,13 +86,13 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
   @Test
   public void ShouldCommitSuccessfullyOnRecordDiscarded(final Vertx vertx) {
     shouldCommit(vertx, (kafkaConsumerRecord, unorderedConsumerOffsetManager)
-        -> unorderedConsumerOffsetManager.recordDiscarded(kafkaConsumerRecord));
+      -> unorderedConsumerOffsetManager.recordDiscarded(kafkaConsumerRecord));
   }
 
   @SuppressWarnings("unchecked")
   private static <K, V> void shouldCommit(
-      final Vertx vertx,
-      final BiConsumer<KafkaConsumerRecord<K, V>, UnorderedConsumerRecordOffsetStrategy<K, V>> rConsumer) {
+    final Vertx vertx,
+    final BiConsumer<KafkaConsumerRecord<K, V>, UnorderedConsumerRecordOffsetStrategy<K, V>> rConsumer) {
 
     final var topic = "topic-42";
     final var partition = 42;
@@ -109,29 +108,29 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
     doAnswer(invocation -> {
 
       final Map<io.vertx.kafka.client.common.TopicPartition, io.vertx.kafka.client.consumer.OffsetAndMetadata>
-          topicsPartitions = invocation
-          .getArgument(0);
+        topicsPartitions = invocation
+        .getArgument(0);
 
       final var tp = topicsPartitions.entrySet().iterator().next();
 
       mockConsumer.commitSync(Map.of(
-          new TopicPartition(tp.getKey().getTopic(), tp.getKey().getPartition()),
-          new OffsetAndMetadata(tp.getValue().getOffset(), tp.getValue().getMetadata())
+        new TopicPartition(tp.getKey().getTopic(), tp.getKey().getPartition()),
+        new OffsetAndMetadata(tp.getValue().getOffset(), tp.getValue().getMetadata())
       ));
 
       return Future.succeededFuture();
     }).when(consumer).commit(
-        (Map<io.vertx.kafka.client.common.TopicPartition, io.vertx.kafka.client.consumer.OffsetAndMetadata>) any());
+      (Map<io.vertx.kafka.client.common.TopicPartition, io.vertx.kafka.client.consumer.OffsetAndMetadata>) any());
 
     final var offsetManager = new UnorderedConsumerRecordOffsetStrategy<>(consumer);
     final var record = new KafkaConsumerRecordImpl<>(
-        new ConsumerRecord<K, V>(
-            topic,
-            partition,
-            offset,
-            null,
-            null
-        )
+      new ConsumerRecord<K, V>(
+        topic,
+        partition,
+        offset,
+        null,
+        null
+      )
     );
 
     rConsumer.accept(record, offsetManager);

@@ -31,24 +31,24 @@ import org.slf4j.LoggerFactory;
 public class CloudEventRequestToRecordMapper implements RequestToRecordMapper<String, CloudEvent> {
 
   private static final Logger logger = LoggerFactory
-      .getLogger(CloudEventRequestToRecordMapper.class);
+    .getLogger(CloudEventRequestToRecordMapper.class);
 
   @Override
   public Future<KafkaProducerRecord<String, CloudEvent>> recordFromRequest(
-      final HttpServerRequest request,
-      final String topic) {
+    final HttpServerRequest request,
+    final String topic) {
 
     return VertxMessageFactory.createReader(request)
-        // TODO is this conversion really necessary?
-        //      can be used Message?
-        .map(MessageReader::toEvent)
-        .map(event -> {
-          if (event == null) {
-            throw new IllegalArgumentException("event cannot be null");
-          }
-          logger.debug("received event {}", keyValue("event", event));
+      // TODO is this conversion really necessary?
+      //      can be used Message?
+      .map(MessageReader::toEvent)
+      .map(event -> {
+        if (event == null) {
+          throw new IllegalArgumentException("event cannot be null");
+        }
+        logger.debug("received event {}", keyValue("event", event));
 
-          return KafkaProducerRecord.create(topic, PartitionKey.extract(event), event);
-        });
+        return KafkaProducerRecord.create(topic, PartitionKey.extract(event), event);
+      });
   }
 }

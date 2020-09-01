@@ -73,27 +73,27 @@ public class BrokerWrapper implements dev.knative.eventing.kafka.broker.core.Bro
     BrokerWrapper that = (BrokerWrapper) o;
 
     return broker.getId().equals(that.id())
-        && broker.getDeadLetterSink().equals(that.deadLetterSink())
-        && broker.getTopic().equals(that.topic())
-        && broker.getBootstrapServers().equals(that.bootstrapServers())
-        && broker.getPath().equals(that.path());
+      && broker.getDeadLetterSink().equals(that.deadLetterSink())
+      && broker.getTopic().equals(that.topic())
+      && broker.getBootstrapServers().equals(that.bootstrapServers())
+      && broker.getPath().equals(that.path());
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(
-        broker.getId(),
-        broker.getDeadLetterSink(),
-        broker.getTopic(),
-        broker.getBootstrapServers(),
-        path()
+      broker.getId(),
+      broker.getDeadLetterSink(),
+      broker.getTopic(),
+      broker.getBootstrapServers(),
+      path()
     );
   }
 
   @Override
   public String toString() {
     return "BrokerWrapper{"
-        + "broker=" + broker
-        + '}';
+      + "broker=" + broker
+      + '}';
   }
 }
