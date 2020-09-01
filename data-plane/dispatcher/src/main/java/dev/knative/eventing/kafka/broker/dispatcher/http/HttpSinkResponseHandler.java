@@ -19,17 +19,21 @@ package dev.knative.eventing.kafka.broker.dispatcher.http;
 import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import dev.knative.eventing.kafka.broker.dispatcher.SinkResponseHandler;
 import io.cloudevents.CloudEvent;
+import io.cloudevents.core.message.Encoding;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
+import io.cloudevents.rw.CloudEventRWException;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import io.vertx.kafka.client.producer.RecordMetadata;
 import java.util.Objects;
 
-public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpClientResponse> {
+public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpResponse<Buffer>> {
 
   private final String topic;
   private final KafkaProducer<String, CloudEvent> producer;
@@ -58,28 +62,27 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpCl
    * @return a succeeded or failed future.
    */
   @Override
-  public Future<Object> handle(final HttpClientResponse response) {
-    return VertxMessageFactory.createReader(response)
-        // TODO is this conversion really necessary?
-        //      can be used Message?
-        .map(MessageReader::toEvent)
-        .compose(this::record)
-        .compose(this::send, Future::succeededFuture); // always succeeded -> no event in response
-  }
+  public Future<Void> handle(final HttpResponse<Buffer> response) {
+    MessageReader messageReader = VertxMessageFactory.createReader(response);
+    if (messageReader.getEncoding() == Encoding.UNKNOWN) {
+      // Response is non-event, discard it
+      return Future.succeededFuture();
+    }
 
-  private Future<KafkaProducerRecord<String, CloudEvent>> record(final CloudEvent event) {
+    CloudEvent event;
+    try {
+      // TODO is this conversion really necessary?
+      //      can we use Message?
+      event = messageReader.toEvent();
+    } catch (CloudEventRWException e) {
+      return Future.failedFuture(e);
+    }
     if (event == null) {
       return Future.failedFuture(new IllegalArgumentException("event cannot be null"));
     }
 
-    final var recordKey = PartitionKey.extract(event);
-    return Future.succeededFuture(KafkaProducerRecord.create(topic, recordKey, event));
-  }
-
-  private Future<Object> send(final KafkaProducerRecord<String, CloudEvent> record) {
-    final Promise<RecordMetadata> promise = Promise.promise();
-    producer.send(record, promise);
-    return promise.future()
-        .compose(Future::succeededFuture, Future::succeededFuture);
+    return producer
+        .send(KafkaProducerRecord.create(topic, PartitionKey.extract(event), event))
+        .mapEmpty();
   }
 }

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.dispatcher;
+package dev.knative.eventing.kafka.broker.dispatcher.strategy;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
+import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategy;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
-    ConsumerRecordOffsetStrategy<K, V> {
+        ConsumerRecordOffsetStrategy<K, V> {
 
   private static final Logger logger = LoggerFactory
       .getLogger(UnorderedConsumerRecordOffsetStrategy.class);
@@ -103,24 +103,11 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
     successfullySentToSubscriber(record);
   }
 
-  private Future<Map<TopicPartition, OffsetAndMetadata>> commit(
-      final KafkaConsumerRecord<K, V> record) {
-
+  private Future<Map<TopicPartition, OffsetAndMetadata>> commit(final KafkaConsumerRecord<K, V> record) {
     logger.debug("committing record {}", record);
-
-    final Promise<Map<TopicPartition, OffsetAndMetadata>> promise = Promise.promise();
-
-    final var topicPartitionsToCommit = Map.of(
-        topicPartition(record),
-        new OffsetAndMetadata(record.offset() + 1, "")
+    return consumer.commit(Map.of(
+            new TopicPartition(record.topic(), record.partition()),
+            new OffsetAndMetadata(record.offset() + 1, ""))
     );
-
-    consumer.commit(topicPartitionsToCommit, promise);
-
-    return promise.future();
-  }
-
-  private static <K, V> TopicPartition topicPartition(final KafkaConsumerRecord<K, V> record) {
-    return new TopicPartition(record.topic(), record.partition());
   }
 }

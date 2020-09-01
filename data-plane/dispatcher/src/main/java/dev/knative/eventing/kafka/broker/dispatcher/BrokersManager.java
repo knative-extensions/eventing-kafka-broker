@@ -18,13 +18,13 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
+
 import dev.knative.eventing.kafka.broker.core.Broker;
 import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
 import dev.knative.eventing.kafka.broker.core.Trigger;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -106,7 +106,7 @@ public final class BrokersManager<T> implements ObjectsReconciler<T> {
 
         // undeploy all verticles associated with triggers of the deleted broker.
         for (final var e : brokerTriggers.getValue().entrySet()) {
-          futures.add(undeploy(broker, e.getKey(), e.getValue()));
+          futures.add(undeployVerticle(broker, e.getKey(), e.getValue()));
         }
 
         continue;
@@ -125,7 +125,7 @@ public final class BrokersManager<T> implements ObjectsReconciler<T> {
           triggersIt.remove();
 
           // undeploy verticle associated with the deleted trigger.
-          futures.add(undeploy(
+          futures.add(undeployVerticle(
               broker,
               triggerVerticle.getKey(),
               triggerVerticle.getValue()
@@ -138,9 +138,7 @@ public final class BrokersManager<T> implements ObjectsReconciler<T> {
     for (final var entry : newObjects.entrySet()) {
       final var broker = entry.getKey();
       for (final var trigger : entry.getValue()) {
-
         futures.add(addBroker(broker, trigger));
-
       }
     }
 
@@ -162,11 +160,7 @@ public final class BrokersManager<T> implements ObjectsReconciler<T> {
       return Future.succeededFuture();
     }
 
-    final Promise<Void> promise = Promise.promise();
-
-    consumerFactory.get(broker, trigger)
-        .compose(verticle -> startVerticle(verticle, broker, triggers, trigger, promise))
-        .onSuccess(ignored -> promise.tryComplete())
+    return consumerFactory.get(broker, trigger)
         .onFailure(cause -> {
 
           // probably configuration are wrong, so do not retry.
@@ -176,23 +170,18 @@ public final class BrokersManager<T> implements ObjectsReconciler<T> {
               cause
           );
 
-          promise.tryFail(cause);
-        });
-
-    return promise.future();
+        })
+        .compose(verticle -> deployVerticle(verticle, broker, triggers, trigger));
   }
 
-  private Future<Void> startVerticle(
+  private Future<Void> deployVerticle(
       final AbstractVerticle verticle,
       final Broker broker,
       final Map<Trigger<T>, AbstractVerticle> triggers,
-      final Trigger<T> trigger,
-      Promise<Void> promise) {
-
-    addTrigger(triggers, trigger, verticle)
+      final Trigger<T> trigger) {
+    triggers.put(trigger, verticle);
+    return vertx.deployVerticle(verticle)
         .onSuccess(msg -> {
-          promise.tryComplete();
-
           logger.info("Verticle deployed {} {} {}",
               keyValue("trigger", trigger),
               keyValue("broker", broker),
@@ -200,54 +189,31 @@ public final class BrokersManager<T> implements ObjectsReconciler<T> {
           );
         })
         .onFailure(cause -> {
-          promise.tryFail(cause);
-
           // this is a bad state we cannot start the verticle for consuming messages.
           logger.error("failed to start verticle {} {}",
               keyValue("trigger", trigger),
               keyValue("broker", broker),
               cause
           );
-        });
-
-    return promise.future();
+        })
+        .mapEmpty();
   }
 
-  private Future<String> addTrigger(
-      final Map<Trigger<T>, AbstractVerticle> triggers,
-      final Trigger<T> trigger,
-      final AbstractVerticle verticle) {
-
-    triggers.put(trigger, verticle);
-    final Promise<String> promise = Promise.promise();
-    vertx.deployVerticle(verticle, promise);
-    return promise.future();
-  }
-
-  private Future<Void> undeploy(Broker broker, Trigger<T> trigger, AbstractVerticle verticle) {
-    final Promise<Void> promise = Promise.promise();
-
-    vertx.undeploy(verticle.deploymentID(), result -> {
-      if (result.succeeded()) {
-
-        promise.tryComplete();
-
-        logger.info("Removed trigger {} {}",
+  private Future<Void> undeployVerticle(
+      Broker broker,
+      Trigger<T> trigger,
+      AbstractVerticle verticle) {
+    return vertx.undeploy(verticle.deploymentID())
+        .onSuccess(v -> logger.info(
+            "Removed trigger {} {}",
             keyValue("trigger", trigger),
             keyValue("broker", broker)
-        );
-        return;
-      }
-
-      promise.tryFail(result.cause());
-
-      logger.error("failed to un-deploy verticle {} {}",
-          keyValue("trigger", trigger),
-          keyValue("broker", broker),
-          result.cause()
-      );
-    });
-
-    return promise.future();
+        ))
+        .onFailure(cause -> logger.error(
+            "failed to un-deploy verticle {} {}",
+            keyValue("trigger", trigger),
+            keyValue("broker", broker),
+            cause
+        ));
   }
 }

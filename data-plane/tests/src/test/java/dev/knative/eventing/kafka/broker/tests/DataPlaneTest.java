@@ -286,7 +286,7 @@ public class DataPlaneTest {
   private static BrokersManager<CloudEvent> setUpDispatcher(final Vertx vertx) {
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-        consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.create();
+        consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered();
 
     final var consumerConfigs = new Properties();
     consumerConfigs.put(BOOTSTRAP_SERVERS_CONFIG, format("localhost:%d", KAFKA_PORT));

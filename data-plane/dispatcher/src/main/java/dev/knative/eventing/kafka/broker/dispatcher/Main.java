@@ -25,9 +25,10 @@ import io.cloudevents.CloudEvent;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -81,12 +82,12 @@ public class Main {
     final var instanceID = json.getString(INSTANCE_ID);
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-        consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.create();
+        consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered();
 
     final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
         consumerRecordOffsetStrategyFactory,
         consumerConfigs,
-        vertx.createHttpClient(),
+        WebClient.create(vertx, new WebClientOptions().setIdleTimeout(10000)),
         vertx,
         producerConfigs
     );
@@ -141,8 +142,9 @@ public class Main {
 
     final var configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions);
 
+
     final var waitConfigs = new ArrayBlockingQueue<JsonObject>(1);
-    Future.future(configRetriever::getConfig)
+    configRetriever.getConfig()
         .onSuccess(waitConfigs::add)
         .onFailure(cause -> {
           logger.error("failed to retrieve configurations", cause);

@@ -124,9 +124,10 @@ public final class ConsumerRecordHandler<K, V, R> implements
       logger.debug("record match filtering {}", record);
 
       subscriberSender.send(record)
-          .compose(sinkResponseHandler::handle)
           .onSuccess(response -> onSuccessfullySentToSubscriber(record))
-          .onFailure(cause -> onFailedToSendToSubscriber(record, cause));
+          .onFailure(cause -> onFailedToSendToSubscriber(record, cause))
+          .compose(sinkResponseHandler::handle)
+          .onFailure(t -> logger.error("Failed to send the subscriber response to the broker topic", t));
     } else {
       logger.debug("record doesn't match filtering {}", record);
 
@@ -147,9 +148,10 @@ public final class ConsumerRecordHandler<K, V, R> implements
     logFailedSendTo(SUBSCRIBER, record, cause);
 
     deadLetterQueueSender.send(record)
-        .compose(sinkResponseHandler::handle)
         .onSuccess(ignored -> onSuccessfullySentToDLQ(record))
-        .onFailure(ex -> onFailedToSendToDLQ(record, ex));
+        .onFailure(ex -> onFailedToSendToDLQ(record, ex))
+        .compose(sinkResponseHandler::handle)
+        .onFailure(t -> logger.error("Failed to send the subscriber response to the broker topic", t));
   }
 
   private void onSuccessfullySentToDLQ(final KafkaConsumerRecord<K, V> record) {

@@ -61,9 +61,7 @@ public final class ConsumerVerticle<K, V> extends AbstractVerticle {
    */
   @Override
   public void start(Promise<Void> startPromise) {
-
     consumer.handler(recordHandler);
-
     consumer.subscribe(topic, startPromise);
   }
 

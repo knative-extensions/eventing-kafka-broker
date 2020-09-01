@@ -61,7 +61,7 @@ public class HttpConsumerVerticleFactoryTest {
         .setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
 
     final var verticleFactory = new HttpConsumerVerticleFactory(
-        ConsumerRecordOffsetStrategyFactory.create(),
+        ConsumerRecordOffsetStrategyFactory.unordered(),
         consumerProperties,
         vertx.createHttpClient(),
         vertx,
@@ -133,7 +133,7 @@ public class HttpConsumerVerticleFactoryTest {
         .setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
 
     final var verticleFactory = new HttpConsumerVerticleFactory(
-        ConsumerRecordOffsetStrategyFactory.create(),
+        ConsumerRecordOffsetStrategyFactory.unordered(),
         consumerProperties,
         vertx.createHttpClient(),
         vertx,

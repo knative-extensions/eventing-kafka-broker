@@ -21,5 +21,5 @@ import io.vertx.core.Future;
 @FunctionalInterface
 public interface SinkResponseHandler<R> {
 
-  Future<Object> handle(final R response);
+  Future<Void> handle(final R response);
 }

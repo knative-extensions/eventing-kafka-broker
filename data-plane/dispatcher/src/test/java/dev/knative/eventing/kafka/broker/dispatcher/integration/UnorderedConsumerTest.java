@@ -68,7 +68,7 @@ public class UnorderedConsumerTest {
         client,
         vertx,
         producerConfigs,
-        ConsumerRecordOffsetStrategyFactory.create()
+        ConsumerRecordOffsetStrategyFactory.unordered()
     );
 
     final var event = new CloudEventBuilder()
