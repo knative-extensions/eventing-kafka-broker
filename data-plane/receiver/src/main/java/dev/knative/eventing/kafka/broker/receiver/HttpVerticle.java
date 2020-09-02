@@ -49,17 +49,11 @@ public class HttpVerticle extends AbstractVerticle {
 
   @Override
   public void start(final Promise<Void> startPromise) {
-    server = vertx.createHttpServer(httpServerOptions).requestHandler(requestHandler).listen(
-        httpServerOptions.getPort(),
-        httpServerOptions.getHost(),
-        s -> {
-          if (s.failed()) {
-            startPromise.tryFail(s.cause());
-          } else {
-            startPromise.tryComplete();
-          }
-        }
-    );
+    server = vertx.createHttpServer(httpServerOptions);
+    server.requestHandler(requestHandler)
+        .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
+        .<Void>mapEmpty()
+        .onComplete(startPromise);
   }
 
   @Override

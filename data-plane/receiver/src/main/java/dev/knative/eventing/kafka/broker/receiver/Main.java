@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.receiver;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
+
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import io.cloudevents.kafka.CloudEventSerializer;
@@ -38,8 +39,6 @@ import org.slf4j.LoggerFactory;
 public class Main {
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
-
-  static final String PRODUCER_NAME = "KRP"; // Kafka Receiver Producer
 
   /**
    * Start receiver.
@@ -81,14 +80,9 @@ public class Main {
         env.getLivenessProbePath(), env.getReadinessProbePath(), handler
     ));
 
-    vertx.deployVerticle(verticle, deployResult -> {
-      if (deployResult.failed()) {
-        logger.error("receiver not started", deployResult.cause());
-        return;
-      }
-
-      logger.info("receiver started");
-    });
+    vertx.deployVerticle(verticle)
+        .onSuccess(v -> logger.info("receiver started"))
+        .onFailure(t -> logger.error("receiver not started", t));
 
     try {
       final var fw = new FileWatcher(
