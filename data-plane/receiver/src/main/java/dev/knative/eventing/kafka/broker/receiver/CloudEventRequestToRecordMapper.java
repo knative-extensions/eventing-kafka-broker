@@ -42,15 +42,13 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper<St
         // TODO is this conversion really necessary?
         //      can be used Message?
         .map(MessageReader::toEvent)
-        .compose(event -> {
+        .map(event -> {
           if (event == null) {
-            return Future.failedFuture(new IllegalArgumentException("event cannot be null"));
+            throw new IllegalArgumentException("event cannot be null");
           }
-
           logger.debug("received event {}", keyValue("event", event));
 
-          final var recordKey = PartitionKey.extract(event);
-          return Future.succeededFuture(KafkaProducerRecord.create(topic, recordKey, event));
+          return KafkaProducerRecord.create(topic, PartitionKey.extract(event), event);
         });
   }
 }

@@ -24,6 +24,7 @@ import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+
 import dev.knative.eventing.kafka.broker.core.Broker;
 import dev.knative.eventing.kafka.broker.core.EventMatcher;
 import dev.knative.eventing.kafka.broker.core.Filter;
@@ -33,6 +34,7 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Vertx;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import java.util.HashMap;
 import java.util.Properties;
@@ -61,9 +63,9 @@ public class HttpConsumerVerticleFactoryTest {
         .setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
 
     final var verticleFactory = new HttpConsumerVerticleFactory(
-        ConsumerRecordOffsetStrategyFactory.create(),
+        ConsumerRecordOffsetStrategyFactory.unordered(),
         consumerProperties,
-        vertx.createHttpClient(),
+        WebClient.create(vertx),
         vertx,
         producerConfigs
     );
@@ -133,9 +135,9 @@ public class HttpConsumerVerticleFactoryTest {
         .setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
 
     final var verticleFactory = new HttpConsumerVerticleFactory(
-        ConsumerRecordOffsetStrategyFactory.create(),
+        ConsumerRecordOffsetStrategyFactory.unordered(),
         consumerProperties,
-        vertx.createHttpClient(),
+        WebClient.create(vertx),
         vertx,
         producerConfigs
     );

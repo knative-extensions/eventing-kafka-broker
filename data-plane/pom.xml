@@ -38,8 +38,8 @@
     <maven.checkstyle.plugin.version>3.1.1</maven.checkstyle.plugin.version>
     <jacoco.plugin.version>0.8.5</jacoco.plugin.version>
     <!-- vertx version should be aligned with cloud events SDK -->
-    <vertx.version>3.9.2</vertx.version>
-    <cloudevents.sdk.version>2.0.0-milestone1</cloudevents.sdk.version>
+    <vertx.version>4.0.0.Beta2</vertx.version>
+    <cloudevents.sdk.version>2.0.0-milestone2</cloudevents.sdk.version>
     <assertj.version>3.17.1</assertj.version>
     <protobuf.version>3.13.0</protobuf.version>
     <build.helper.maven.plugin.version>3.1.0</build.helper.maven.plugin.version>

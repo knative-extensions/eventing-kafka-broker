@@ -31,11 +31,10 @@ import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientResponse;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
 import java.util.Objects;
 import java.util.Properties;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -47,8 +46,11 @@ import org.apache.kafka.common.serialization.StringSerializer;
 
 public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<CloudEvent> {
 
+  private static ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> NO_DLQ_SENDER =
+      record -> Future.failedFuture("no DLQ set");
+
   private final Properties consumerConfigs;
-  private final HttpClient client;
+  private final WebClient client;
   private final Vertx vertx;
   private final Properties producerConfigs;
   private final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
@@ -67,7 +69,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
       final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
           consumerRecordOffsetStrategyFactory,
       final Properties consumerConfigs,
-      final HttpClient client,
+      final WebClient client,
       final Vertx vertx,
       final Properties producerConfigs) {
 
@@ -104,12 +106,10 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
 
     final var triggerDestinationSender = createSender(trigger.destination(), circuitBreakerOptions);
 
-    final ConsumerRecordSender<String, CloudEvent, HttpClientResponse> brokerDLQSender;
-    if (broker.deadLetterSink() == null || broker.deadLetterSink().isEmpty()) {
-      brokerDLQSender = new NoDLQSender();
-    } else {
-      brokerDLQSender = createSender(broker.deadLetterSink(), circuitBreakerOptions);
-    }
+    final ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> brokerDLQSender =
+        (broker.deadLetterSink() == null || broker.deadLetterSink().isEmpty())
+            ? NO_DLQ_SENDER
+            : createSender(broker.deadLetterSink(), circuitBreakerOptions);
 
     final var consumerOffsetManager = consumerRecordOffsetStrategyFactory
         .get(consumer, broker, trigger);
@@ -187,16 +187,5 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
         client,
         target
     );
-  }
-
-  private static final class NoDLQSender implements
-      ConsumerRecordSender<String, CloudEvent, HttpClientResponse> {
-
-    @Override
-    public Future<HttpClientResponse> send(KafkaConsumerRecord<String, CloudEvent> record) {
-      final Promise<HttpClientResponse> promise = Promise.promise();
-      promise.tryFail("no DLQ set");
-      return promise.future();
-    }
   }
 }

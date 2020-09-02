@@ -24,6 +24,7 @@ import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CL
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
 
+
 import dev.knative.eventing.kafka.broker.core.BrokerWrapper;
 import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
 import dev.knative.eventing.kafka.broker.core.TriggerWrapper;
@@ -43,10 +44,9 @@ import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.debezium.kafka.KafkaCluster;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -205,10 +205,10 @@ public class DataPlaneTest {
     waitReconciler.await(TIMEOUT, TimeUnit.SECONDS);
 
     // start service
-    final Promise<HttpServer> serviceStarted = Promise.promise();
     vertx.createHttpServer()
         .exceptionHandler(context::failNow)
-        .requestHandler(request -> VertxMessageFactory.createReader(request)
+        .requestHandler(request -> VertxMessageFactory
+            .createReader(request)
             .map(MessageReader::toEvent)
             .onFailure(context::failNow)
             .onSuccess(event -> {
@@ -239,22 +239,20 @@ public class DataPlaneTest {
                 ));
               }
             }))
-        .listen(SERVICE_PORT, "localhost", serviceStarted);
-
-    serviceStarted.future()
+        .listen(SERVICE_PORT, "localhost")
         .onFailure(context::failNow)
         .onSuccess(ignored -> {
-
           // send event to the Broker receiver
-          final var request = vertx.createHttpClient()
-              .post(INGRESS_PORT, "localhost", format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME))
-              .exceptionHandler(context::failNow)
-              .handler(response -> context.verify(() -> {
-                assertThat(response.statusCode()).isEqualTo(202);
+          VertxMessageFactory.createWriter(
+              WebClient.create(vertx)
+                  .post(INGRESS_PORT, "localhost", format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME))
+          ).writeBinary(expectedRequestEvent)
+              .onFailure(context::failNow)
+              .onSuccess(response -> context.verify(() -> {
+                assertThat(response.statusCode())
+                    .isEqualTo(202);
                 checkpoints.flag(); // 1
               }));
-
-          VertxMessageFactory.createWriter(request).writeBinary(expectedRequestEvent);
         });
   }
 
@@ -286,7 +284,7 @@ public class DataPlaneTest {
   private static BrokersManager<CloudEvent> setUpDispatcher(final Vertx vertx) {
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-        consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.create();
+        consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered();
 
     final var consumerConfigs = new Properties();
     consumerConfigs.put(BOOTSTRAP_SERVERS_CONFIG, format("localhost:%d", KAFKA_PORT));
@@ -298,7 +296,7 @@ public class DataPlaneTest {
     final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
         consumerRecordOffsetStrategyFactory,
         consumerConfigs,
-        vertx.createHttpClient(),
+        WebClient.create(vertx),
         vertx,
         producerConfigs
     );

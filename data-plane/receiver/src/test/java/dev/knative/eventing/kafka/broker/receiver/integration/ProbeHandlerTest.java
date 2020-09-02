@@ -18,14 +18,13 @@ package dev.knative.eventing.kafka.broker.receiver.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+
 import dev.knative.eventing.kafka.broker.receiver.HttpVerticle;
 import dev.knative.eventing.kafka.broker.receiver.SimpleProbeHandlerDecorator;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.AfterAll;
@@ -43,7 +42,7 @@ public class ProbeHandlerTest {
   private static final int OK = HttpResponseStatus.OK.code();
   private static final int NEXT_HANDLER_STATUS_CODE = HttpResponseStatus.SERVICE_UNAVAILABLE.code();
 
-  private static HttpClient httpClient;
+  private static WebClient webClient;
 
   @BeforeEach
   public void setUp(final Vertx vertx, final VertxTestContext context) {
@@ -55,13 +54,13 @@ public class ProbeHandlerTest {
         READINESS_PATH,
         r -> r.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end()
     ));
-    httpClient = vertx.createHttpClient();
+    webClient = WebClient.create(vertx);
     vertx.deployVerticle(verticle, context.succeeding(ar -> context.completeNow()));
   }
 
   @AfterAll
   public static void tearDown() {
-    httpClient.close();
+    webClient.close();
   }
 
   @Test
@@ -83,22 +82,13 @@ public class ProbeHandlerTest {
       final VertxTestContext context,
       final int expectedStatusCode,
       final String path) {
-    doRequest(path)
-        .onSuccess(statusCode -> context.verify(() -> {
-          assertThat(statusCode).isEqualTo(expectedStatusCode);
+    webClient.get(PORT, "localhost", path)
+        .send()
+        .onSuccess(response -> context.verify(() -> {
+          assertThat(response.statusCode())
+              .isEqualTo(expectedStatusCode);
           context.completeNow();
         }))
         .onFailure(context::failNow);
-  }
-
-  private static Future<Integer> doRequest(final String path) {
-    final Promise<Integer> promise = Promise.promise();
-
-    httpClient.get(PORT, "localhost", path)
-        .exceptionHandler(promise::tryFail)
-        .handler(response -> promise.tryComplete(response.statusCode()))
-        .end();
-
-    return promise.future();
   }
 }

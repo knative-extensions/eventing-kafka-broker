@@ -20,6 +20,7 @@ import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.brokers;
 import static org.assertj.core.api.Assertions.assertThat;
 
+
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker;
@@ -32,6 +33,7 @@ import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.vertx.core.Vertx;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
@@ -61,14 +63,14 @@ public class UnorderedConsumerTest {
 
     final var producerConfigs = new Properties();
     final var consumerConfigs = new Properties();
-    final var client = vertx.createHttpClient();
+    final var client = WebClient.create(vertx);
 
     final var consumerVerticleFactoryMock = new ConsumerVerticleFactoryMock(
         consumerConfigs,
         client,
         vertx,
         producerConfigs,
-        ConsumerRecordOffsetStrategyFactory.create()
+        ConsumerRecordOffsetStrategyFactory.unordered()
     );
 
     final var event = new CloudEventBuilder()
@@ -122,7 +124,8 @@ public class UnorderedConsumerTest {
 
     Thread.sleep(6000); // reduce flakiness
 
-    assertThat(vertx.deploymentIDs()).hasSize(numTriggers);
+    assertThat(vertx.deploymentIDs())
+        .hasSize(numTriggers);
 
     waitEvents.await();
 
@@ -134,17 +137,18 @@ public class UnorderedConsumerTest {
     final var events = consumerRecords.stream()
         .map(ConsumerRecord::value)
         .toArray(CloudEvent[]::new);
+    final var partitionKeys = Arrays.stream(events)
+        .map(PartitionKey::extract)
+        .collect(Collectors.toList());
 
     for (final var producerEntry : producers.entrySet()) {
       final var history = producerEntry.getValue().history();
       assertThat(history).hasSameSizeAs(consumerRecords);
-      assertThat(history.stream().map(ProducerRecord::value)).containsExactlyInAnyOrder(events);
 
-      final var partitionKeys = Arrays.stream(events)
-          .map(PartitionKey::extract)
-          .collect(Collectors.toList());
-
-      assertThat(history.stream().map(ProducerRecord::key)).containsAnyElementsOf(partitionKeys);
+      assertThat(history.stream().map(ProducerRecord::value))
+          .containsExactlyInAnyOrder(events);
+      assertThat(history.stream().map(ProducerRecord::key))
+          .containsAnyElementsOf(partitionKeys);
     }
 
     executorService.shutdown();
@@ -162,11 +166,11 @@ public class UnorderedConsumerTest {
     vertx.createHttpServer()
         .exceptionHandler(context::failNow)
         // request -> message -> event -> check event -> put event in response
-        .requestHandler(request -> VertxMessageFactory.createReader(request)
+        .requestHandler(request -> VertxMessageFactory
+            .createReader(request)
             .onFailure(context::failNow)
             .map(MessageReader::toEvent)
             .onSuccess(receivedEvent -> {
-
               logger.info("received event {}", event);
 
               context.verify(() -> {
@@ -174,7 +178,9 @@ public class UnorderedConsumerTest {
                 waitEvents.countDown();
               });
 
-              VertxMessageFactory.createWriter(request.response()).writeBinary(event);
+              VertxMessageFactory
+                  .createWriter(request.response())
+                  .writeBinary(event);
             })
         )
         .listen(

@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.receiver.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.FloatNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -32,12 +33,12 @@ import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
@@ -49,7 +50,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -66,14 +67,14 @@ public class ReceiverVerticleTest {
   private static final int TIMEOUT = 10;
   private static final int PORT = 8082;
 
-  private static HttpClient httpClient;
+  private static WebClient webClient;
 
   private static MockProducer<String, CloudEvent> mockProducer;
   private static RequestHandler<String, CloudEvent> handler;
 
   @BeforeAll
   public static void setUp(final Vertx vertx, final VertxTestContext testContext) {
-    httpClient = vertx.createHttpClient();
+    webClient = WebClient.create(vertx);
     ReceiverVerticleTest.mockProducer = new MockProducer<>(
         true,
         new StringSerializer(),
@@ -100,7 +101,7 @@ public class ReceiverVerticleTest {
 
   @AfterAll
   public static void tearDown() {
-    httpClient.close();
+    webClient.close();
   }
 
   @ParameterizedTest
@@ -120,18 +121,16 @@ public class ReceiverVerticleTest {
 
     wait.await(TIMEOUT, TimeUnit.SECONDS);
 
-    doRequest(tc.requestFinalizer, tc.path)
-        .onSuccess(response -> context.verify(() -> {
+    tc.requestSender.apply(webClient.post(PORT, "localhost", tc.path))
+        .onFailure(context::failNow)
+        .onSuccess(response -> {
+          assertThat(response.statusCode())
+              .as("verify path: " + tc.path)
+              .isEqualTo(tc.responseStatusCode);
 
-              assertThat(response.statusCode())
-                  .as("verify path: " + tc.path)
-                  .isEqualTo(tc.responseStatusCode);
-
-              checkpoints.flag();
-              countDown.countDown();
-            }
-        ))
-        .onFailure(context::failNow);
+          checkpoints.flag();
+          countDown.countDown();
+        });
 
     countDown.await(TIMEOUT, TimeUnit.SECONDS);
 
@@ -140,28 +139,12 @@ public class ReceiverVerticleTest {
     }
   }
 
-  private static Future<HttpClientResponse> doRequest(
-      final Consumer<HttpClientRequest> requestConsumer,
-      final String path) {
-
-    final Promise<HttpClientResponse> promise = Promise.promise();
-
-    requestConsumer.accept(
-        httpClient.post(PORT, "localhost", path)
-            .exceptionHandler(promise::tryFail)
-            .handler(promise::tryComplete)
-    );
-
-    return promise.future();
-
-  }
-
   private static List<TestCase> getValidNonValidEvents() {
     return Arrays.asList(
         new TestCase(
             null,
             "/broker-ns/broker-name1",
-            ceRequestFinalizer(new CloudEventBuilder()
+            ceRequestSender(new CloudEventBuilder()
                 .withSubject("subject")
                 .withSource(URI.create("/hello"))
                 .withType("type")
@@ -176,7 +159,7 @@ public class ReceiverVerticleTest {
         new TestCase(
             null,
             "/broker-ns/broker-name/hello",
-            ceRequestFinalizer(new CloudEventBuilder()
+            ceRequestSender(new CloudEventBuilder()
                 .withSubject("subject")
                 .withSource(URI.create("/hello"))
                 .withType("type")
@@ -191,7 +174,7 @@ public class ReceiverVerticleTest {
         new TestCase(
             null,
             "/broker-ns/h/hello",
-            ceRequestFinalizer(new CloudEventBuilder()
+            ceRequestSender(new CloudEventBuilder()
                 .withSubject("subject")
                 .withSource(URI.create("/hello"))
                 .withType("type")
@@ -215,7 +198,7 @@ public class ReceiverVerticleTest {
                     .build()
             ),
             "/broker-ns/broker-name1",
-            ceRequestFinalizer(new io.cloudevents.core.v03.CloudEventBuilder()
+            ceRequestSender(new io.cloudevents.core.v03.CloudEventBuilder()
                 .withSubject("subject")
                 .withSource(URI.create("/hello"))
                 .withType("type")
@@ -231,7 +214,7 @@ public class ReceiverVerticleTest {
         new TestCase(
             null,
             "/broker-ns/broker-name",
-            request -> request.end("this is not a cloud event"),
+            request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
             RequestHandler.MAPPER_FAILED,
             new BrokerWrapper(
                 BrokersConfig.Broker.newBuilder()
@@ -241,7 +224,7 @@ public class ReceiverVerticleTest {
         new TestCase(
             null,
             "/broker-ns/broker-name/hello",
-            request -> request.end("this is not a cloud event"),
+            request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
             RequestHandler.BROKER_NOT_FOUND,
             new BrokerWrapper(
                 BrokersConfig.Broker.newBuilder()
@@ -255,9 +238,9 @@ public class ReceiverVerticleTest {
               final var objectMapper = new ObjectMapper();
               final var objectNode = objectMapper.createObjectNode();
               objectNode.set("hello", new FloatNode(1.24f));
-              objectNode.set("data", objectNode);
+              objectNode.set("data", objectMapper.createObjectNode());
               request.headers().set("Content-Type", "application/json");
-              request.end(objectNode.asText());
+              return request.sendBuffer(Buffer.buffer(objectNode.toString()));
             },
             RequestHandler.MAPPER_FAILED,
             new BrokerWrapper(
@@ -274,9 +257,9 @@ public class ReceiverVerticleTest {
               objectNode.set("specversion", new TextNode("1.0"));
               objectNode.set("type", new TextNode("my-type"));
               objectNode.set("source", new TextNode("my-source"));
-              objectNode.set("data", objectNode);
+              objectNode.set("data", objectMapper.createObjectNode());
               request.headers().set("Content-Type", "application/json");
-              request.end(objectNode.asText());
+              return request.sendBuffer(Buffer.buffer(objectNode.toString()));
             },
             RequestHandler.MAPPER_FAILED,
             new BrokerWrapper(
@@ -296,7 +279,7 @@ public class ReceiverVerticleTest {
                     .build()
             ),
             "/broker-ns/broker-name5",
-            ceRequestFinalizer(new io.cloudevents.core.v1.CloudEventBuilder()
+            ceRequestSender(new io.cloudevents.core.v1.CloudEventBuilder()
                 .withSubject("subject")
                 .withSource(URI.create("/hello"))
                 .withType("type")
@@ -312,26 +295,27 @@ public class ReceiverVerticleTest {
     );
   }
 
-  private static Consumer<HttpClientRequest> ceRequestFinalizer(final CloudEvent event) {
+  private static Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> ceRequestSender(
+      final CloudEvent event) {
     return request -> VertxMessageFactory.createWriter(request).writeBinary(event);
   }
 
-  public static final class TestCase {
+  static final class TestCase {
 
     final ProducerRecord<String, CloudEvent> record;
     final String path;
-    final Consumer<HttpClientRequest> requestFinalizer;
+    final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender;
     final int responseStatusCode;
     final Broker broker;
 
-    public TestCase(
+    TestCase(
         final ProducerRecord<String, CloudEvent> record,
         final String path,
-        final Consumer<HttpClientRequest> requestFinalizer,
+        final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender,
         final int responseStatusCode, Broker broker) {
 
       this.path = path;
-      this.requestFinalizer = requestFinalizer;
+      this.requestSender = requestSender;
       this.responseStatusCode = responseStatusCode;
       this.record = record;
       this.broker = broker;
