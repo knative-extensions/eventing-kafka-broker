@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.receiver;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
-
 import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;

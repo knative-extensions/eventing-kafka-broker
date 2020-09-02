@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
-        ConsumerRecordOffsetStrategy<K, V> {
+    ConsumerRecordOffsetStrategy<K, V> {
 
   private static final Logger logger = LoggerFactory
       .getLogger(UnorderedConsumerRecordOffsetStrategy.class);
@@ -103,11 +103,12 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
     successfullySentToSubscriber(record);
   }
 
-  private Future<Map<TopicPartition, OffsetAndMetadata>> commit(final KafkaConsumerRecord<K, V> record) {
+  private Future<Map<TopicPartition, OffsetAndMetadata>> commit(
+      final KafkaConsumerRecord<K, V> record) {
     logger.debug("committing record {}", record);
     return consumer.commit(Map.of(
-            new TopicPartition(record.topic(), record.partition()),
-            new OffsetAndMetadata(record.offset() + 1, ""))
+        new TopicPartition(record.topic(), record.partition()),
+        new OffsetAndMetadata(record.offset() + 1, ""))
     );
   }
 }

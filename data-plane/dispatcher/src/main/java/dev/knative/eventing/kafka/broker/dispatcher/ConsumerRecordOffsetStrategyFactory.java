@@ -24,7 +24,8 @@ import io.vertx.kafka.client.consumer.KafkaConsumer;
 @FunctionalInterface
 public interface ConsumerRecordOffsetStrategyFactory<K, V> {
 
-  ConsumerRecordOffsetStrategy<K, V> get(final KafkaConsumer<K, V> consumer, final Broker broker, final Trigger<V> trigger);
+  ConsumerRecordOffsetStrategy<K, V> get(final KafkaConsumer<K, V> consumer, final Broker broker,
+                                         final Trigger<V> trigger);
 
   static <K, V> ConsumerRecordOffsetStrategyFactory<K, V> unordered() {
     return (consumer, broker, trigger) -> new UnorderedConsumerRecordOffsetStrategy<>(consumer);

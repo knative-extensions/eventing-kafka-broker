@@ -23,10 +23,7 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.rw.CloudEventRWException;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
@@ -89,7 +86,8 @@ public final class HttpConsumerRecordSender implements
 
               // TODO determine which status codes are retryable
               //  (channels -> https://github.com/knative/eventing/issues/2411)
-              return Future.failedFuture("response status code is not 2xx - got: " + response.statusCode());
+              return Future
+                  .failedFuture("response status code is not 2xx - got: " + response.statusCode());
             }
 
             return Future.succeededFuture(response);

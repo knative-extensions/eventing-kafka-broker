@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
-
 import dev.knative.eventing.kafka.broker.core.Broker;
 import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
 import dev.knative.eventing.kafka.broker.core.Trigger;
