@@ -19,12 +19,13 @@ package dev.knative.eventing.kafka.broker.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+
 import dev.knative.eventing.kafka.broker.core.EventMatcher.Constants;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import java.net.URI;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -272,10 +273,10 @@ public class EventMatcherTest {
                 .withSource(URI.create("/api/some-source"))
                 .withSubject("a-subject-42")
                 .withType("type")
-                .withTime(ZonedDateTime.of(
+                .withTime(OffsetDateTime.of(
                     1985, 4, 12,
                     23, 20, 50, 0,
-                    ZoneId.of("Z")
+                    ZoneOffset.UTC
                 ))
                 .build(),
             false
@@ -297,10 +298,10 @@ public class EventMatcherTest {
                 .withSource(URI.create("/api/some-source"))
                 .withSubject("a-subject-42")
                 .withType("type")
-                .withTime(ZonedDateTime.of(
+                .withTime(OffsetDateTime.of(
                     1985, 4, 12,
                     23, 20, 50, 0,
-                    ZoneId.of("Z")
+                    ZoneOffset.UTC
                 ))
                 .build(),
             true
@@ -323,10 +324,10 @@ public class EventMatcherTest {
                 .withSource(URI.create("/api/some-source"))
                 .withSubject("a-subject-42")
                 .withType("dev.knative.eventing.create")
-                .withTime(ZonedDateTime.of(
+                .withTime(OffsetDateTime.of(
                     1985, 4, 12,
                     23, 20, 50, 0,
-                    ZoneId.of("Z")
+                    ZoneOffset.UTC
                 ))
                 .build(),
             true
@@ -349,10 +350,10 @@ public class EventMatcherTest {
                 .withSource(URI.create("/api/some-source"))
                 .withSubject("a-subject-42")
                 .withType("dev.knative.eventing.create")
-                .withTime(ZonedDateTime.of(
+                .withTime(OffsetDateTime.of(
                     1985, 4, 12,
                     23, 20, 50, 0,
-                    ZoneId.of("Z")
+                    ZoneOffset.UTC
                 ))
                 .build(),
             true

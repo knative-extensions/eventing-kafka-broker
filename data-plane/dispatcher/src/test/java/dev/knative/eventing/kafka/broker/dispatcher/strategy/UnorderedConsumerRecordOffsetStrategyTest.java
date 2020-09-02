@@ -23,7 +23,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import dev.knative.eventing.kafka.broker.dispatcher.strategy.UnorderedConsumerRecordOffsetStrategy;
+
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -107,7 +108,8 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
     final KafkaConsumer<K, V> consumer = (KafkaConsumer<K, V>) Mockito.mock(KafkaConsumer.class);
     doAnswer(invocation -> {
 
-      final Map<io.vertx.kafka.client.common.TopicPartition, io.vertx.kafka.client.consumer.OffsetAndMetadata> topicsPartitions = invocation
+      final Map<io.vertx.kafka.client.common.TopicPartition, io.vertx.kafka.client.consumer.OffsetAndMetadata>
+          topicsPartitions = invocation
           .getArgument(0);
 
       final var tp = topicsPartitions.entrySet().iterator().next();
@@ -117,8 +119,9 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
           new OffsetAndMetadata(tp.getValue().getOffset(), tp.getValue().getMetadata())
       ));
 
-      return null;
-    }).when(consumer).commit(any(), any());
+      return Future.succeededFuture();
+    }).when(consumer).commit(
+        (Map<io.vertx.kafka.client.common.TopicPartition, io.vertx.kafka.client.consumer.OffsetAndMetadata>) any());
 
     final var offsetManager = new UnorderedConsumerRecordOffsetStrategy<>(consumer);
     final var record = new KafkaConsumerRecordImpl<>(

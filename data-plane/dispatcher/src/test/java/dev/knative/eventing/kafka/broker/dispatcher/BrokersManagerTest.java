@@ -24,6 +24,7 @@ import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.t
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.trigger4;
 import static org.assertj.core.api.Assertions.assertThat;
 
+
 import dev.knative.eventing.kafka.broker.core.Broker;
 import dev.knative.eventing.kafka.broker.core.Trigger;
 import io.cloudevents.CloudEvent;

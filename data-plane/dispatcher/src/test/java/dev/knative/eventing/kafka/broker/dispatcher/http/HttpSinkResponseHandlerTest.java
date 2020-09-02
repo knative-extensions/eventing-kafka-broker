@@ -16,20 +16,18 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 
 import io.cloudevents.core.provider.EventFormatProvider;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.kafka.CloudEventSerializer;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.http.impl.HeadersAdaptor;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
@@ -62,19 +60,15 @@ public class HttpSinkResponseHandlerTest {
         KafkaProducer.create(vertx, producer)
     );
 
-    final var response = mock(HttpClientResponse.class);
-    when(response.bodyHandler(any())).thenAnswer(invocation -> {
-      final Handler<Buffer> handlerBuf = invocation.getArgument(0);
-      handlerBuf.handle(Buffer.buffer());
-      return response;
-    });
-    when(response.headers()).thenReturn(new HeadersAdaptor(new DefaultHttpHeaders(false)));
+    // Empty response
+    final HttpResponse<Buffer> response = mock(HttpResponse.class);
+    when(response.statusCode()).thenReturn(202);
+    when(response.body()).thenReturn(Buffer.buffer());
+    when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap());
 
-    final var future = handler.handle(response);
-
-    future
-        .onSuccess(ignored -> context.completeNow())
-        .onFailure(context::failNow);
+    context
+        .assertComplete(handler.handle(response))
+        .onComplete(v -> context.completeNow());
   }
 
   @Test
@@ -97,25 +91,18 @@ public class HttpSinkResponseHandlerTest {
         .withType("type")
         .build();
 
-    final var response = mock(HttpClientResponse.class);
-    when(response.bodyHandler(any())).thenAnswer(invocation -> {
-      final Handler<Buffer> handlerBuf = invocation.getArgument(0);
-
-      final var payload = EventFormatProvider.getInstance()
-          .resolveFormat("application/cloudevents+json")
-          .serialize(event);
-
-      handlerBuf.handle(Buffer.buffer(payload));
-      return response;
-    });
-    final var headers = new DefaultHttpHeaders(false);
-    headers.add(HttpHeaders.CONTENT_TYPE, "application/cloudevents+json");
-    when(response.headers()).thenReturn(new HeadersAdaptor(headers));
-
-    final var future = handler.handle(response);
+    final HttpResponse<Buffer> response = mock(HttpResponse.class);
+    when(response.body()).thenReturn(Buffer.buffer(
+        EventFormatProvider.getInstance()
+            .resolveFormat("application/cloudevents+json")
+            .serialize(event)
+    ));
+    when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap()
+        .set(HttpHeaders.CONTENT_TYPE, "application/cloudevents+json")
+    );
 
     final var wait = new CountDownLatch(1);
-    future
+    handler.handle(response)
         .onSuccess(ignored -> wait.countDown())
         .onFailure(context::failNow);
 
@@ -123,7 +110,6 @@ public class HttpSinkResponseHandlerTest {
 
     Assertions.assertThat(producer.history())
         .containsExactlyInAnyOrder(new ProducerRecord<>(TOPIC, null, event));
-
     context.completeNow();
   }
 }

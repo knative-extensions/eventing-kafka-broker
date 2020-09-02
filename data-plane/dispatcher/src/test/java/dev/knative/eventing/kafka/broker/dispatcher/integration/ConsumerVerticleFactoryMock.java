@@ -23,7 +23,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFac
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.List;
@@ -48,7 +48,7 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
 
   public ConsumerVerticleFactoryMock(
       final Properties consumerConfigs,
-      final HttpClient client,
+      final WebClient client,
       final Vertx vertx,
       final Properties producerConfigs,
       final ConsumerRecordOffsetStrategyFactory<String, CloudEvent> consumerRecordOffsetStrategyFactory) {
