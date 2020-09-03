@@ -14,26 +14,30 @@
  * limitations under the License.
  */
 
-package log
+package testing
 
 import (
-	"context"
-
-	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/pkg/logging"
+	testlib "knative.dev/eventing/test/lib"
 )
 
-func Logger(ctx context.Context, action string, object metav1.Object) *zap.Logger {
+var (
+	Features = []testlib.Feature{
+		testlib.FeatureBasic,
+		testlib.FeatureRedelivery,
+		testlib.FeaturePersistence,
+		testlib.FeatureBatch,
+		testlib.FeatureLongLiving,
+	}
 
-	return logging.FromContext(ctx).Desugar().With(
-		zap.String(
-			"action",
-			action,
-		),
-		zap.String(
-			"uuid",
-			string(object.GetUID()),
-		),
-	)
-}
+	Components = []metav1.TypeMeta{
+		{
+			Kind:       "Broker",
+			APIVersion: "eventing.knative.dev/v1",
+		},
+		{
+			Kind:       "Broker",
+			APIVersion: "eventing.knative.dev/v1beta1",
+		},
+	}
+)

@@ -29,8 +29,8 @@ import (
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	"knative.dev/eventing/pkg/logging"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -328,9 +328,9 @@ func (r *Reconciler) getBrokerConfig(topic string, broker *eventing.Broker, conf
 
 func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev1.ConfigMap) {
 
-	return func(configMap *corev1.ConfigMap) {
+	logger := logging.FromContext(ctx).Desugar()
 
-		logger := logging.FromContext(ctx)
+	return func(configMap *corev1.ConfigMap) {
 
 		topicConfig, err := configFromConfigMap(logger, configMap)
 		if err != nil {

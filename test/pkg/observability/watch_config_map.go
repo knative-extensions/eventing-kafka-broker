@@ -26,10 +26,10 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"knative.dev/eventing/pkg/logging"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/sharedmain"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/signals"
 
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
@@ -51,7 +51,7 @@ func WatchDataPlaneConfigMap(cm types.NamespacedName, format string) {
 
 	sharedmain.MainWithConfig(ctx, component, cfg, func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 
-		logger := logging.FromContext(ctx)
+		logger := logging.FromContext(ctx).Desugar()
 
 		diffLogger := diffLogger{
 			logger: logger,
