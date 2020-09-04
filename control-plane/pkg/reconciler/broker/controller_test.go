@@ -32,13 +32,15 @@ import (
 	"knative.dev/pkg/configmap"
 	dynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 )
 
 func TestNewController(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
 	configs := &Configs{
-		EnvConfigs: EnvConfigs{
+		Env: config.Env{
 			SystemNamespace:      "cm",
 			GeneralConfigMapName: "cm",
 		},
@@ -48,8 +50,8 @@ func TestNewController(t *testing.T) {
 		ctx,
 		&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      configs.EnvConfigs.GeneralConfigMapName,
-				Namespace: configs.EnvConfigs.SystemNamespace,
+				Name:      configs.Env.GeneralConfigMapName,
+				Namespace: configs.Env.SystemNamespace,
 			},
 		},
 	)

@@ -714,7 +714,6 @@ k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextension
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1/fake
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1/fake
-k8s.io/apiextensions-apiserver/pkg/client/listers/apiextensions/v1
 k8s.io/apiextensions-apiserver/pkg/client/listers/apiextensions/v1beta1
 # k8s.io/apimachinery v0.18.7-rc.0 => k8s.io/apimachinery v0.17.6
 ## explicit
@@ -1139,7 +1138,6 @@ knative.dev/eventing/pkg/kncloudevents
 knative.dev/eventing/pkg/logging
 knative.dev/eventing/pkg/reconciler/names
 knative.dev/eventing/pkg/reconciler/sugar
-knative.dev/eventing/pkg/reconciler/testing
 knative.dev/eventing/pkg/reconciler/testing/v1
 knative.dev/eventing/pkg/reconciler/testing/v1beta1
 knative.dev/eventing/pkg/tracing
@@ -1181,8 +1179,6 @@ knative.dev/pkg/apis/duck/v1alpha1
 knative.dev/pkg/apis/duck/v1beta1
 knative.dev/pkg/apis/testing/fuzzer
 knative.dev/pkg/changeset
-knative.dev/pkg/client/injection/apiextensions/client
-knative.dev/pkg/client/injection/apiextensions/client/fake
 knative.dev/pkg/client/injection/ducks/duck/v1/addressable
 knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake
 knative.dev/pkg/client/injection/kube/client
@@ -1215,7 +1211,6 @@ knative.dev/pkg/logging/logkey
 knative.dev/pkg/logging/testing
 knative.dev/pkg/metrics
 knative.dev/pkg/metrics/metricskey
-knative.dev/pkg/metrics/testing
 knative.dev/pkg/network
 knative.dev/pkg/network/handlers
 knative.dev/pkg/profiling

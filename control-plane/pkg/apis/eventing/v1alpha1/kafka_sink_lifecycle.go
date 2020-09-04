@@ -33,3 +33,23 @@ var conditionSet = apis.NewLivingConditionSet(
 func (ks *KafkaSink) GetConditionSet() apis.ConditionSet {
 	return conditionSet
 }
+
+func (ks *KafkaSinkStatus) GetConditionSet() apis.ConditionSet {
+	return conditionSet
+}
+
+// SetAddress makes this Kafka Sink addressable by setting the URI. It also
+// sets the ConditionAddressable to true.
+func (ks *KafkaSinkStatus) SetAddress(url *apis.URL) {
+	ks.Address.URL = url
+	if url != nil {
+		ks.GetConditionSet().Manage(ks).MarkTrue(ConditionAddressable)
+	} else {
+		ks.GetConditionSet().Manage(ks).MarkFalse(ConditionAddressable, "nil URL", "URL is nil")
+	}
+}
+
+// InitializeConditions sets relevant unset conditions to Unknown state.
+func (kss *KafkaSinkStatus) InitializeConditions() {
+	kss.GetConditionSet().Manage(kss).InitializeConditions()
+}

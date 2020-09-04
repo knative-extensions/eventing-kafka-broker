@@ -19,11 +19,12 @@ package eventing
 import "k8s.io/apimachinery/pkg/runtime/schema"
 
 const (
+	// GroupName defines the group of KafkaSink objects.
 	GroupName = "eventing.knative.dev"
 )
 
 var (
-	// KafkaSinkResource represents a Knative Kafka Sink.
+	// KafkaSinksResource represents a Knative Kafka Sink.
 	KafkaSinksResource = schema.GroupResource{
 		Group:    GroupName,
 		Resource: "kafkasinks",

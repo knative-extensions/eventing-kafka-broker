@@ -22,6 +22,14 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 )
 
+type SinksMarshaller = BrokersMarshaller
+
+func NewSinksMarshaller(sinks *config.Sinks) SinksMarshaller {
+	return SinksMarshaller{
+		Brokers: sinks,
+	}
+}
+
 type BrokersMarshaller struct {
 	Brokers *config.Brokers
 }

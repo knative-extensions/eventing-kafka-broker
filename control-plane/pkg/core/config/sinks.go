@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package v1alpha1
+package config
 
-import "context"
+var (
 
-// SetDefaults sets KafkaSink defaults.
-func (ks *KafkaSink) SetDefaults(ctx context.Context) {
-	ks.Spec.SetDefaults(ctx)
-}
+	// FindSink finds the sink with the given UID in the given sink list.
+	FindSink = FindBroker
 
-// SetDefaults sets KafkaSinkSpec defaults.
-func (kss *KafkaSinkSpec) SetDefaults(ctx context.Context) {
-	defaultMode := ModeStructured
+	// AddOrUpdateSinksConfig adds or updates the given sinkConfig to the given sinks at the specified index.
+	AddOrUpdateSinksConfig = AddOrUpdateBrokersConfig
+)
 
-	if kss.ContentMode == nil {
-		kss.ContentMode = &defaultMode
-	}
-}
+type (
+	Sinks = Brokers
+
+	Sink = Broker
+)

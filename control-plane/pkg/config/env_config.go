@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package broker
+package config
 
 import (
 	"fmt"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
-type Configs struct {
-	EnvConfigs
-
-	BootstrapServers string
-}
-
-type EnvConfigs struct {
+type Env struct {
 	DataPlaneConfigMapNamespace string `required:"true" split_words:"true"`
 	DataPlaneConfigMapName      string `required:"true" split_words:"true"`
 	GeneralConfigMapName        string `required:"true" split_words:"true"`
@@ -35,6 +31,16 @@ type EnvConfigs struct {
 	DataPlaneConfigFormat       string `required:"true" split_words:"true"`
 }
 
-func (c *EnvConfigs) DataPlaneConfigMapAsString() string {
+func GetEnvConfig(prefix string) (*Env, error) {
+	env := &Env{}
+
+	if err := envconfig.Process(prefix, env); err != nil {
+		return nil, fmt.Errorf("failed to process env config: %w", err)
+	}
+
+	return env, nil
+}
+
+func (c *Env) DataPlaneConfigMapAsString() string {
 	return fmt.Sprintf("%s/%s", c.DataPlaneConfigMapNamespace, c.DataPlaneConfigMapName)
 }

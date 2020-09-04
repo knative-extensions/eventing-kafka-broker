@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package v1alpha1
+package config
 
-import "context"
+import "k8s.io/apimachinery/pkg/types"
 
-// SetDefaults sets KafkaSink defaults.
-func (ks *KafkaSink) SetDefaults(ctx context.Context) {
-	ks.Spec.SetDefaults(ctx)
-}
+const (
+	NoTrigger = NoBroker
+)
 
-// SetDefaults sets KafkaSinkSpec defaults.
-func (kss *KafkaSinkSpec) SetDefaults(ctx context.Context) {
-	defaultMode := ModeStructured
+// FindTrigger finds the trigger with the given UID in the given triggers list.
+func FindTrigger(triggers []*Trigger, trigger types.UID) int {
 
-	if kss.ContentMode == nil {
-		kss.ContentMode = &defaultMode
+	for i, t := range triggers {
+		if t.Id == string(trigger) {
+			return i
+		}
 	}
+
+	return NoTrigger
 }

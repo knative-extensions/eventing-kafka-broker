@@ -17,11 +17,9 @@
 package testing
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -34,146 +32,20 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 const (
-	BrokerNamespace    = "test-namespace"
-	BrokerName         = "test-broker"
-	ConfigMapNamespace = "test-namespace-config-map"
-	ConfigMapName      = "test-config-cm"
-
-	serviceNamespace = "test-service-namespace"
-	serviceName      = "test-service"
-	ServiceURL       = "http://test-service.test-service-namespace.svc.cluster.local/"
-
-	BrokerUUID  = "e7185016-5d98-4b54-84e8-3b1cd4acc6b4"
-	TriggerUUID = "e7185016-5d98-4b54-84e8-3b1cd4acc6b5"
+	BrokerUUID      = "e7185016-5d98-4b54-84e8-3b1cd4acc6b4"
+	BrokerNamespace = "test-namespace"
+	BrokerName      = "test-broker"
 )
 
-var (
-	Formats = []string{base.Protobuf, base.Json}
-)
-
-func GetTopic() string {
-	return fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName)
-}
-
-func NewDispatcherPod(namespace string, annotations map[string]string) runtime.Object {
-	return &corev1.Pod{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        "kafka-broker-dispatcher",
-			Namespace:   namespace,
-			Annotations: annotations,
-			Labels: map[string]string{
-				"app": base.DispatcherLabel,
-			},
-		},
-	}
-}
-
-func NewReceiverPod(namespace string, annotations map[string]string) runtime.Object {
-	return &corev1.Pod{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        "kafka-broker-receiver",
-			Namespace:   namespace,
-			Annotations: annotations,
-			Labels: map[string]string{
-				"app": base.ReceiverLabel,
-			},
-		},
-	}
-}
-
-func DispatcherPodUpdate(namespace string, annotations map[string]string) clientgotesting.UpdateActionImpl {
-	return clientgotesting.NewUpdateAction(
-		schema.GroupVersionResource{
-			Group:    "*",
-			Version:  "v1",
-			Resource: "Pod",
-		},
-		namespace,
-		NewDispatcherPod(namespace, annotations),
-	)
-}
-
-func ReceiverPodUpdate(namespace string, annotations map[string]string) clientgotesting.UpdateActionImpl {
-	return clientgotesting.NewUpdateAction(
-		schema.GroupVersionResource{
-			Group:    "*",
-			Version:  "v1",
-			Resource: "Pod",
-		},
-		namespace,
-		NewReceiverPod(namespace, annotations),
-	)
-}
-
-func NewService() *corev1.Service {
-	return &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      serviceName,
-			Namespace: serviceNamespace,
-		},
-	}
-}
-
-func NewConfigMap(configs *Configs, data []byte) runtime.Object {
-	return reconcilertesting.NewConfigMap(
-		configs.DataPlaneConfigMapName,
-		configs.DataPlaneConfigMapNamespace,
-		func(configMap *corev1.ConfigMap) {
-			if configMap.BinaryData == nil {
-				configMap.BinaryData = make(map[string][]byte, 1)
-			}
-			if data == nil {
-				data = []byte("")
-			}
-			configMap.BinaryData[base.ConfigMapDataKey] = data
-		},
-	)
-}
-
-func NewConfigMapFromBrokers(brokers *coreconfig.Brokers, configs *Configs) runtime.Object {
-	var data []byte
-	var err error
-	if configs.DataPlaneConfigFormat == base.Protobuf {
-		data, err = proto.Marshal(brokers)
-	} else {
-		data, err = json.Marshal(brokers)
-	}
-	if err != nil {
-		panic(err)
-	}
-
-	return NewConfigMap(configs, data)
-}
-
-func ConfigMapUpdate(configs *Configs, brokers *coreconfig.Brokers) clientgotesting.UpdateActionImpl {
-	return clientgotesting.NewUpdateAction(
-		schema.GroupVersionResource{
-			Group:    "*",
-			Version:  "v1",
-			Resource: "ConfigMap",
-		},
-		configs.DataPlaneConfigMapNamespace,
-		NewConfigMapFromBrokers(brokers, configs),
-	)
+func BrokerTopic() string {
+	broker := NewBroker().(metav1.Object)
+	return kafka.Topic(TopicPrefix, broker)
 }
 
 // NewBroker creates a new Broker with broker class equals to kafka.BrokerClass
@@ -257,35 +129,35 @@ func BrokerReady(broker *eventing.Broker) {
 	}
 }
 
-func ConfigMapUpdatedReady(configs *Configs) func(broker *eventing.Broker) {
+func BrokerConfigMapUpdatedReady(configs *Configs) func(broker *eventing.Broker) {
 	return func(broker *eventing.Broker) {
 		broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrueWithReason(
-			ConditionConfigMapUpdated,
+			base.ConditionConfigMapUpdated,
 			fmt.Sprintf("Config map %s updated", configs.DataPlaneConfigMapAsString()),
 			"",
 		)
 	}
 }
 
-func TopicReady(broker *eventing.Broker) {
+func BrokerTopicReady(broker *eventing.Broker) {
 	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrueWithReason(
-		ConditionTopicReady,
-		fmt.Sprintf("Topic %s created", Topic(broker)),
+		base.ConditionTopicReady,
+		fmt.Sprintf("Topic %s created", kafka.Topic(TopicPrefix, broker)),
 		"",
 	)
 }
 
-func ConfigParsed(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(ConditionConfigParsed)
+func BrokerConfigParsed(broker *eventing.Broker) {
+	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionConfigParsed)
 }
 
-func ConfigNotParsed(reason string) func(broker *eventing.Broker) {
+func BrokerConfigNotParsed(reason string) func(broker *eventing.Broker) {
 	return func(broker *eventing.Broker) {
-		broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(ConditionConfigParsed, reason, "")
+		broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(base.ConditionConfigParsed, reason, "")
 	}
 }
 
-func Addressable(configs *Configs) func(broker *eventing.Broker) {
+func BrokerAddressable(configs *Configs) func(broker *eventing.Broker) {
 
 	return func(broker *eventing.Broker) {
 
@@ -295,27 +167,27 @@ func Addressable(configs *Configs) func(broker *eventing.Broker) {
 			Path:   fmt.Sprintf("/%s/%s", broker.Namespace, broker.Name),
 		}
 
-		broker.GetConditionSet().Manage(&broker.Status).MarkTrue(ConditionAddressable)
+		broker.GetConditionSet().Manage(&broker.Status).MarkTrue(base.ConditionAddressable)
 	}
 }
 
-func FailedToCreateTopic(broker *eventing.Broker) {
+func BrokerFailedToCreateTopic(broker *eventing.Broker) {
 
 	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
-		ConditionTopicReady,
-		fmt.Sprintf("Failed to create topic: %s", GetTopic()),
+		base.ConditionTopicReady,
+		fmt.Sprintf("Failed to create topic: %s", BrokerTopic()),
 		"%v",
 		fmt.Errorf("failed to create topic"),
 	)
 
 }
 
-func FailedToGetConfigMap(configs *Configs) func(broker *eventing.Broker) {
+func BrokerFailedToGetConfigMap(configs *Configs) func(broker *eventing.Broker) {
 
 	return func(broker *eventing.Broker) {
 
 		broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
-			ConditionConfigMapUpdated,
+			base.ConditionConfigMapUpdated,
 			fmt.Sprintf(
 				"Failed to get ConfigMap: %s",
 				configs.DataPlaneConfigMapAsString(),
@@ -324,4 +196,62 @@ func FailedToGetConfigMap(configs *Configs) func(broker *eventing.Broker) {
 		)
 	}
 
+}
+
+func BrokerDispatcherPod(namespace string, annotations map[string]string) runtime.Object {
+	return &corev1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "kafka-broker-dispatcher",
+			Namespace:   namespace,
+			Annotations: annotations,
+			Labels: map[string]string{
+				"app": base.BrokerDispatcherLabel,
+			},
+		},
+	}
+}
+
+func BrokerReceiverPod(namespace string, annotations map[string]string) runtime.Object {
+	return &corev1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "kafka-broker-receiver",
+			Namespace:   namespace,
+			Annotations: annotations,
+			Labels: map[string]string{
+				"app": base.BrokerReceiverLabel,
+			},
+		},
+	}
+}
+
+func BrokerDispatcherPodUpdate(namespace string, annotations map[string]string) clientgotesting.UpdateActionImpl {
+	return clientgotesting.NewUpdateAction(
+		schema.GroupVersionResource{
+			Group:    "*",
+			Version:  "v1",
+			Resource: "Pod",
+		},
+		namespace,
+		BrokerDispatcherPod(namespace, annotations),
+	)
+}
+
+func BrokerReceiverPodUpdate(namespace string, annotations map[string]string) clientgotesting.UpdateActionImpl {
+	return clientgotesting.NewUpdateAction(
+		schema.GroupVersionResource{
+			Group:    "*",
+			Version:  "v1",
+			Resource: "Pod",
+		},
+		namespace,
+		BrokerReceiverPod(namespace, annotations),
+	)
 }

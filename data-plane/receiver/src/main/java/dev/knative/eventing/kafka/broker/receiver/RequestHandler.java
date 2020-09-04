@@ -25,7 +25,9 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 import dev.knative.eventing.kafka.broker.core.Broker;
 import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
 import dev.knative.eventing.kafka.broker.core.Trigger;
+import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode;
 import io.cloudevents.CloudEvent;
+import io.cloudevents.core.message.Encoding;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -57,6 +59,8 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
   public static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
   public static final int RECORD_PRODUCED = ACCEPTED.code();
   public static final int BROKER_NOT_FOUND = NOT_FOUND.code();
+
+  public static final String SERIALIZER_ENCODING_CONFIG = "cloudevents.serializer.encoding";
 
   private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
 
@@ -189,6 +193,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
 
     final var producerConfigs = (Properties) this.producerConfigs.clone();
     producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, broker.bootstrapServers());
+    producerConfigs.setProperty(SERIALIZER_ENCODING_CONFIG, encoding(broker.contentMode()));
 
     final KafkaProducer<K, V> producer = producerCreator.apply(producerConfigs);
 
@@ -199,6 +204,17 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
         new Producer<>(producer, broker.topic())
       )
     );
+  }
+
+  private static String encoding(final ContentMode contentMode) {
+    switch (contentMode) {
+      case BINARY:
+        return Encoding.BINARY.toString();
+      case STRUCTURED:
+        return Encoding.STRUCTURED.toString();
+      default:
+        throw new IllegalArgumentException("unknown content mode: " + contentMode);
+    }
   }
 
   private static class Producer<K, V> {

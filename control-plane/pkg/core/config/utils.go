@@ -14,20 +14,26 @@
  * limitations under the License.
  */
 
-package v1alpha1
+package config
 
-import "context"
+import (
+	"fmt"
 
-// SetDefaults sets KafkaSink defaults.
-func (ks *KafkaSink) SetDefaults(ctx context.Context) {
-	ks.Spec.SetDefaults(ctx)
-}
+	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+)
 
-// SetDefaults sets KafkaSinkSpec defaults.
-func (kss *KafkaSinkSpec) SetDefaults(ctx context.Context) {
-	defaultMode := ModeStructured
-
-	if kss.ContentMode == nil {
-		kss.ContentMode = &defaultMode
+// ContentModeFromString returns the ContentMode from the given string
+func ContentModeFromString(mode string) ContentMode {
+	switch mode {
+	case eventing.ModeBinary:
+		return ContentMode_BINARY
+	case eventing.ModeStructured:
+		return ContentMode_STRUCTURED
+	default:
+		panic(fmt.Errorf(
+			"unknown content mode: %s - allowed: %v",
+			mode,
+			[]string{eventing.ModeStructured, eventing.ModeBinary},
+		))
 	}
 }

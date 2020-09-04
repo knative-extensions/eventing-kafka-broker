@@ -26,7 +26,9 @@ import (
 )
 
 const (
-	ModeBinary     = "binary"
+	// CloudEvents binary content mode.
+	ModeBinary = "binary"
+	// CloudEvents structured content mode.
 	ModeStructured = "structured"
 )
 
@@ -58,6 +60,7 @@ var _ apis.Defaultable = (*KafkaSink)(nil)
 var _ runtime.Object = (*KafkaSink)(nil)
 var _ duckv1.KRShaped = (*KafkaSink)(nil)
 
+// KafkaSinkSpec defines the desired state of the Kafka Sink.
 type KafkaSinkSpec struct {
 	Topic string `json:"topic"`
 
@@ -71,6 +74,7 @@ type KafkaSinkSpec struct {
 	ContentMode *string `json:"contentMode,omitempty"`
 }
 
+// KafkaSinkStatus represents the current state of the KafkaSink.
 type KafkaSinkStatus struct {
 	// inherits duck/v1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Kafka Sink that was last processed by the controller.
@@ -82,6 +86,7 @@ type KafkaSinkStatus struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// KafkaSinkList defines a list of Kafka Sink.
 type KafkaSinkList struct {
 	metav1.TypeMeta `json:",inline"`
 	// +optional

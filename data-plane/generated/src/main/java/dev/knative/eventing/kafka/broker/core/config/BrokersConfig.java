@@ -14,6 +14,104 @@ public final class BrokersConfig {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
+  /**
+   * Protobuf enum {@code ContentMode}
+   */
+  public enum ContentMode
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>BINARY = 0;</code>
+     */
+    BINARY(0),
+    /**
+     * <code>STRUCTURED = 1;</code>
+     */
+    STRUCTURED(1),
+    UNRECOGNIZED(-1),
+    ;
+
+    /**
+     * <code>BINARY = 0;</code>
+     */
+    public static final int BINARY_VALUE = 0;
+    /**
+     * <code>STRUCTURED = 1;</code>
+     */
+    public static final int STRUCTURED_VALUE = 1;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static ContentMode valueOf(int value) {
+      return forNumber(value);
+    }
+
+    public static ContentMode forNumber(int value) {
+      switch (value) {
+        case 0: return BINARY;
+        case 1: return STRUCTURED;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<ContentMode>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        ContentMode> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<ContentMode>() {
+            public ContentMode findValueByNumber(int number) {
+              return ContentMode.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.core.config.BrokersConfig.getDescriptor().getEnumTypes().get(0);
+    }
+
+    private static final ContentMode[] VALUES = values();
+
+    public static ContentMode valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private ContentMode(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:ContentMode)
+  }
+
   public interface TriggerOrBuilder extends
       // @@protoc_insertion_point(interface_extends:Trigger)
       com.google.protobuf.MessageOrBuilder {
@@ -1345,6 +1443,15 @@ public final class BrokersConfig {
      */
     com.google.protobuf.ByteString
         getBootstrapServersBytes();
+
+    /**
+     * <code>.ContentMode contentMode = 7;</code>
+     */
+    int getContentModeValue();
+    /**
+     * <code>.ContentMode contentMode = 7;</code>
+     */
+    dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode getContentMode();
   }
   /**
    * Protobuf type {@code Broker}
@@ -1365,6 +1472,7 @@ public final class BrokersConfig {
       triggers_ = java.util.Collections.emptyList();
       path_ = "";
       bootstrapServers_ = "";
+      contentMode_ = 0;
     }
 
     @java.lang.Override
@@ -1435,6 +1543,12 @@ public final class BrokersConfig {
               java.lang.String s = input.readStringRequireUtf8();
 
               bootstrapServers_ = s;
+              break;
+            }
+            case 56: {
+              int rawValue = input.readEnum();
+
+              contentMode_ = rawValue;
               break;
             }
             default: {
@@ -1729,6 +1843,23 @@ public final class BrokersConfig {
       }
     }
 
+    public static final int CONTENTMODE_FIELD_NUMBER = 7;
+    private int contentMode_;
+    /**
+     * <code>.ContentMode contentMode = 7;</code>
+     */
+    public int getContentModeValue() {
+      return contentMode_;
+    }
+    /**
+     * <code>.ContentMode contentMode = 7;</code>
+     */
+    public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode getContentMode() {
+      @SuppressWarnings("deprecation")
+      dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode result = dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode.valueOf(contentMode_);
+      return result == null ? dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode.UNRECOGNIZED : result;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -1761,6 +1892,9 @@ public final class BrokersConfig {
       if (!getBootstrapServersBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 6, bootstrapServers_);
       }
+      if (contentMode_ != dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode.BINARY.getNumber()) {
+        output.writeEnum(7, contentMode_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -1789,6 +1923,10 @@ public final class BrokersConfig {
       if (!getBootstrapServersBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, bootstrapServers_);
       }
+      if (contentMode_ != dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode.BINARY.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(7, contentMode_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -1816,6 +1954,7 @@ public final class BrokersConfig {
           .equals(other.getPath())) return false;
       if (!getBootstrapServers()
           .equals(other.getBootstrapServers())) return false;
+      if (contentMode_ != other.contentMode_) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -1841,6 +1980,8 @@ public final class BrokersConfig {
       hash = (53 * hash) + getPath().hashCode();
       hash = (37 * hash) + BOOTSTRAPSERVERS_FIELD_NUMBER;
       hash = (53 * hash) + getBootstrapServers().hashCode();
+      hash = (37 * hash) + CONTENTMODE_FIELD_NUMBER;
+      hash = (53 * hash) + contentMode_;
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1991,6 +2132,8 @@ public final class BrokersConfig {
 
         bootstrapServers_ = "";
 
+        contentMode_ = 0;
+
         return this;
       }
 
@@ -2032,6 +2175,7 @@ public final class BrokersConfig {
         }
         result.path_ = path_;
         result.bootstrapServers_ = bootstrapServers_;
+        result.contentMode_ = contentMode_;
         onBuilt();
         return result;
       }
@@ -2125,6 +2269,9 @@ public final class BrokersConfig {
         if (!other.getBootstrapServers().isEmpty()) {
           bootstrapServers_ = other.bootstrapServers_;
           onChanged();
+        }
+        if (other.contentMode_ != 0) {
+          setContentModeValue(other.getContentModeValue());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2889,6 +3036,51 @@ public final class BrokersConfig {
   checkByteStringIsUtf8(value);
         
         bootstrapServers_ = value;
+        onChanged();
+        return this;
+      }
+
+      private int contentMode_ = 0;
+      /**
+       * <code>.ContentMode contentMode = 7;</code>
+       */
+      public int getContentModeValue() {
+        return contentMode_;
+      }
+      /**
+       * <code>.ContentMode contentMode = 7;</code>
+       */
+      public Builder setContentModeValue(int value) {
+        contentMode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.ContentMode contentMode = 7;</code>
+       */
+      public dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode getContentMode() {
+        @SuppressWarnings("deprecation")
+        dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode result = dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode.valueOf(contentMode_);
+        return result == null ? dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode.UNRECOGNIZED : result;
+      }
+      /**
+       * <code>.ContentMode contentMode = 7;</code>
+       */
+      public Builder setContentMode(dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        
+        contentMode_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.ContentMode contentMode = 7;</code>
+       */
+      public Builder clearContentMode() {
+        
+        contentMode_ = 0;
         onChanged();
         return this;
       }
@@ -3854,14 +4046,16 @@ public final class BrokersConfig {
       "\n\nattributes\030\001 \003(\0132\030.Trigger.AttributesE" +
       "ntry\022\023\n\013destination\030\002 \001(\t\022\n\n\002id\030\003 \001(\t\0321\n" +
       "\017AttributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002" +
-      " \001(\t:\0028\001\"\177\n\006Broker\022\n\n\002id\030\001 \001(\t\022\r\n\005topic\030" +
-      "\002 \001(\t\022\026\n\016deadLetterSink\030\003 \001(\t\022\032\n\010trigger" +
-      "s\030\004 \003(\0132\010.Trigger\022\014\n\004path\030\005 \001(\t\022\030\n\020boots" +
-      "trapServers\030\006 \001(\t\"=\n\007Brokers\022\030\n\007brokers\030" +
-      "\001 \003(\0132\007.Broker\022\030\n\020volumeGeneration\030\002 \001(\004" +
-      "B]\n-dev.knative.eventing.kafka.broker.co" +
-      "re.configB\rBrokersConfigZ\035control-plane/" +
-      "pkg/core/configb\006proto3"
+      " \001(\t:\0028\001\"\242\001\n\006Broker\022\n\n\002id\030\001 \001(\t\022\r\n\005topic" +
+      "\030\002 \001(\t\022\026\n\016deadLetterSink\030\003 \001(\t\022\032\n\010trigge" +
+      "rs\030\004 \003(\0132\010.Trigger\022\014\n\004path\030\005 \001(\t\022\030\n\020boot" +
+      "strapServers\030\006 \001(\t\022!\n\013contentMode\030\007 \001(\0162" +
+      "\014.ContentMode\"=\n\007Brokers\022\030\n\007brokers\030\001 \003(" +
+      "\0132\007.Broker\022\030\n\020volumeGeneration\030\002 \001(\004*)\n\013" +
+      "ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001B" +
+      "]\n-dev.knative.eventing.kafka.broker.cor" +
+      "e.configB\rBrokersConfigZ\035control-plane/p" +
+      "kg/core/configb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -3884,7 +4078,7 @@ public final class BrokersConfig {
     internal_static_Broker_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Broker_descriptor,
-        new java.lang.String[] { "Id", "Topic", "DeadLetterSink", "Triggers", "Path", "BootstrapServers", });
+        new java.lang.String[] { "Id", "Topic", "DeadLetterSink", "Triggers", "Path", "BootstrapServers", "ContentMode", });
     internal_static_Brokers_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_Brokers_fieldAccessorTable = new

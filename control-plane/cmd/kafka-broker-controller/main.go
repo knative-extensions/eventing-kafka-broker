@@ -25,6 +25,7 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/sharedmain"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 )
@@ -34,16 +35,16 @@ const (
 )
 
 func main() {
-	brokerEnvConfigs := broker.EnvConfigs{}
+	envConfigs := config.Env{}
 
-	if err := envconfig.Process("", &brokerEnvConfigs); err != nil {
+	if err := envconfig.Process("", &envConfigs); err != nil {
 		log.Fatal("cannot process environment variables", err)
 	}
 
-	log.Printf("configs %+v\n", brokerEnvConfigs)
+	log.Printf("configs %+v\n", envConfigs)
 
 	brokerConfigs := &broker.Configs{
-		EnvConfigs:       brokerEnvConfigs,
+		Env:              envConfigs,
 		BootstrapServers: "",
 	}
 
@@ -55,7 +56,7 @@ func main() {
 		},
 
 		func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-			return trigger.NewController(ctx, watcher, &brokerConfigs.EnvConfigs)
+			return trigger.NewController(ctx, watcher, &envConfigs)
 		},
 	)
 }

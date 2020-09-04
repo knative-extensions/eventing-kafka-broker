@@ -18,14 +18,16 @@ package testing
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ktesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
-	eventingtesting "knative.dev/eventing/pkg/reconciler/testing"
 	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	pkgcontroller "knative.dev/pkg/controller"
@@ -33,6 +35,8 @@ import (
 	"knative.dev/pkg/reconciler"
 	. "knative.dev/pkg/reconciler/testing"
 
+	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
@@ -45,7 +49,7 @@ const (
 
 var DefaultConfigs = &broker.Configs{
 
-	EnvConfigs: broker.EnvConfigs{
+	Env: config.Env{
 		DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
 		DataPlaneConfigMapNamespace: "knative-eventing",
 		BrokerIngressName:           "kafka-broker-receiver",
@@ -66,12 +70,13 @@ func NewFactory(configs *broker.Configs, ctor Ctor) Factory {
 		ctx := context.Background()
 
 		ctx, eventingClient := fakeeventingclient.With(ctx, listers.GetEventingObjects()...)
-		ctx, kubeClient := fakekubeclient.With(
-			ctx,
-			listers.GetKubeObjects()...,
-		)
+		ctx, eventingKafkaClient := fakeeventingkafkaclient.With(ctx, listers.GetEventingKafkaObjects()...)
+		ctx, kubeClient := fakekubeclient.With(ctx, listers.GetKubeObjects()...)
+
 		ctx, dynamicClient := fakedynamicclient.With(ctx,
-			eventingtesting.NewScheme(), eventingtesting.ToUnstructured(t, row.Objects)...)
+			newScheme(),
+			ToUnstructured(t, row.Objects)...,
+		)
 
 		dynamicScheme := runtime.NewScheme()
 		for _, addTo := range clientSetSchemes {
@@ -81,10 +86,9 @@ func NewFactory(configs *broker.Configs, ctor Ctor) Factory {
 		// The dynamic client's support for patching is BS.  Implement it
 		// here via PrependReactor (this can be overridden below by the
 		// provided reactors).
-		dynamicClient.PrependReactor("patch", "*",
-			func(action ktesting.Action) (bool, runtime.Object, error) {
-				return true, nil, nil
-			})
+		dynamicClient.PrependReactor("patch", "*", func(action ktesting.Action) (bool, runtime.Object, error) {
+			return true, nil, nil
+		})
 
 		eventRecorder := record.NewFakeRecorder(recorderBufferSize)
 		ctx = pkgcontroller.WithEventRecorder(ctx, eventRecorder)
@@ -101,12 +105,14 @@ func NewFactory(configs *broker.Configs, ctor Ctor) Factory {
 			kubeClient.PrependReactor("*", "*", reactor)
 			dynamicClient.PrependReactor("*", "*", reactor)
 			eventingClient.PrependReactor("*", "*", reactor)
+			eventingKafkaClient.PrependReactor("*", "*", reactor)
 		}
 
 		actionRecorderList := ActionRecorderList{
 			dynamicClient,
 			kubeClient,
 			eventingClient,
+			eventingKafkaClient,
 		}
 
 		eventList := EventList{
@@ -115,4 +121,38 @@ func NewFactory(configs *broker.Configs, ctor Ctor) Factory {
 
 		return controller, actionRecorderList, eventList
 	}
+}
+
+// ToUnstructured takes a list of k8s resources and converts them to
+// Unstructured objects.
+// We must pass objects as Unstructured to the dynamic client fake, or it
+// won't handle them properly.
+func ToUnstructured(t *testing.T, objs []runtime.Object) (us []runtime.Object) {
+	sch := newScheme()
+	for _, obj := range objs {
+		obj = obj.DeepCopyObject() // Don't mess with the primary copy
+		// Determine and set the TypeMeta for this object based on our test scheme.
+		gvks, _, err := sch.ObjectKinds(obj)
+		if err != nil {
+			t.Fatalf("Unable to determine kind for type: %v", err)
+		}
+		apiv, k := gvks[0].ToAPIVersionAndKind()
+		ta, err := meta.TypeAccessor(obj)
+		if err != nil {
+			t.Fatalf("Unable to create type accessor: %v", err)
+		}
+		ta.SetAPIVersion(apiv)
+		ta.SetKind(k)
+
+		b, err := json.Marshal(obj)
+		if err != nil {
+			t.Fatalf("Unable to marshal: %v", err)
+		}
+		u := &unstructured.Unstructured{}
+		if err := json.Unmarshal(b, u); err != nil {
+			t.Fatalf("Unable to unmarshal: %v", err)
+		}
+		us = append(us, u)
+	}
+	return
 }

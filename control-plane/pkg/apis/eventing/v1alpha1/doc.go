@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 // +k8s:deepcopy-gen=package
 // +groupName=eventing.knative.dev
 package v1alpha1

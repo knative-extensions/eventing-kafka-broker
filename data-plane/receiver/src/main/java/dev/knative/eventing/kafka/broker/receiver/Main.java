@@ -71,6 +71,7 @@ public class Main {
       Configurations.getPropertiesAsJson(env.getHttpServerConfigFilePath())
     );
     httpServerOptions.setPort(env.getIngressPort());
+
     final var verticle = new HttpVerticle(httpServerOptions, new SimpleProbeHandlerDecorator(
       env.getLivenessProbePath(), env.getReadinessProbePath(), handler
     ));
@@ -80,9 +81,15 @@ public class Main {
       .onFailure(t -> logger.error("receiver not started", t));
 
     try {
+      // TODO add a shutdown hook that calls objectsCreator.reconcile(Brokers.newBuilder().build()),
+      //  so that producers flush their buffers.
+      //  Note: reconcile(Brokers) isn't thread safe so we need to make sure to not stop the watcher
+      //  from calling reconcile first
+
+      final var objectsCreator = new ObjectsCreator(handler);
       final var fw = new FileWatcher(
         FileSystems.getDefault().newWatchService(),
-        new ObjectsCreator(handler),
+        objectsCreator,
         new File(env.getDataPlaneConfigFilePath())
       );
 
