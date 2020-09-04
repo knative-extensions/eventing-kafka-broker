@@ -1,0 +1,90 @@
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: eventing.knative.dev/v1
+kind: Broker
+metadata:
+  name: broker
+  namespace: default
+  annotations:
+    eventing.knative.dev/broker.class: Kafka
+spec: {}
+
+---
+
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: broker
+  namespace: default
+spec:
+  broker: broker
+  subscriber:
+    ref:
+      apiVersion: v1
+      kind: Service
+      name: broker-receiver
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: perf-broker
+  namespace: default
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: perf-broker
+subjects:
+  - kind: ServiceAccount
+    name: perf-broker
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: broker-receiver
+spec:
+  selector:
+    role: broker-receiver
+  ports:
+    - name: http
+      port: 80
+      targetPort: cloudevents
+      protocol: TCP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: broker-aggregator
+spec:
+  selector:
+    role: broker-aggregator
+  ports:
+    - name: grpc
+      port: 10000
+      targetPort: grpc
+      protocol: TCP

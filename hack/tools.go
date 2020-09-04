@@ -35,4 +35,5 @@ import (
 
 	// For chaos testing the leader election.
 	_ "knative.dev/pkg/leaderelection/chaosduck"
+	_ "knative.dev/pkg/test/mako/stub-sidecar"
 )

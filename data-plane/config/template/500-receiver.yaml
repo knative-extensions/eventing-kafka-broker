@@ -71,7 +71,12 @@ spec:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "500Mi"
+            limits:
+              memory: "1Gi"
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -106,7 +111,7 @@ spec:
           configMap:
             name: config-kafka-broker-data-plane
         - name: cache
-          emptyDir: {}
+          emptyDir: { }
         - name: kafka-broker-config-logging
           configMap:
             name: kafka-broker-config-logging
