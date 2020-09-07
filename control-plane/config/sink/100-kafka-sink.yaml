@@ -150,11 +150,11 @@ spec:
         - name: Reason
           type: string
           jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
-#  conversion:
-#    strategy: Webhook
-#    webhook:
-#      conversionReviewVersions: ["v1alpha1"]
-#      clientConfig:
-#        service:
-#          name: eventing-webhook
-#          namespace: knative-eventing
+  conversion:
+    strategy: Webhook
+    webhook:
+      conversionReviewVersions: [ "v1alpha1" ]
+      clientConfig:
+        service:
+          name: eventing-kafka-webhook
+          namespace: knative-eventing
