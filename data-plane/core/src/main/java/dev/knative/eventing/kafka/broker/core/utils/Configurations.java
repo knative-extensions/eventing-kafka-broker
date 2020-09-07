@@ -1,4 +1,4 @@
-package dev.knative.eventing.kafka.broker.dispatcher;
+package dev.knative.eventing.kafka.broker.core.utils;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
@@ -18,7 +18,7 @@ public class Configurations {
 
   private static final Logger logger = LoggerFactory.getLogger(Configurations.class);
 
-  static Properties getKafkaProperties(final String path) {
+  public static Properties getKafkaProperties(final String path) {
     if (path == null) {
       return new Properties();
     }
@@ -33,26 +33,13 @@ public class Configurations {
     return props;
   }
 
-  static JsonObject getFileConfigurations(final Vertx vertx, String file) throws ExecutionException, InterruptedException {
+  public static JsonObject getFileConfigurations(final Vertx vertx, String file) throws ExecutionException, InterruptedException {
     final var fileConfigs = new ConfigStoreOptions()
       .setType("file")
       .setFormat("properties")
       .setConfig(new JsonObject().put("path", file));
 
     return ConfigRetriever.create(vertx, new ConfigRetrieverOptions().addStore(fileConfigs))
-      .getConfig()
-      .toCompletionStage()
-      .toCompletableFuture()
-      .get();
-  }
-
-  static JsonObject getEnvConfigurations(final Vertx vertx) throws InterruptedException, ExecutionException {
-    final var envConfigs = new ConfigStoreOptions()
-      .setType("env")
-      .setOptional(false)
-      .setConfig(new JsonObject().put("raw-data", true));
-
-    return ConfigRetriever.create(vertx, new ConfigRetrieverOptions().addStore(envConfigs))
       .getConfig()
       .toCompletionStage()
       .toCompletableFuture()

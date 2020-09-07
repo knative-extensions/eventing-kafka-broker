@@ -20,15 +20,14 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.FileSystems;
-import java.util.Properties;
 import net.logstash.logback.encoder.LogstashEncoder;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -45,7 +44,7 @@ public class Main {
    * @param args command line arguments.
    */
   public static void main(final String[] args) {
-    final var env = new Env(System::getenv);
+    final var env = new ReceiverEnv(System::getenv);
 
     // HACK HACK HACK
     // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
@@ -56,13 +55,7 @@ public class Main {
 
     logger.info("Starting Receiver {}", keyValue("env", env));
 
-    final var producerConfigs = new Properties();
-    try (final var configReader = new FileReader(env.getProducerConfigFilePath())) {
-      producerConfigs.load(configReader);
-    } catch (IOException e) {
-      e.printStackTrace();
-      System.exit(1);
-    }
+    final var producerConfigs = Configurations.getKafkaProperties(env.getProducerConfigFilePath());
 
     final var vertx = Vertx.vertx();
     producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
