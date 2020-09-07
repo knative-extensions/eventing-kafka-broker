@@ -21,20 +21,20 @@ FROM ${JAVA_IMAGE} as builder
 WORKDIR /app
 
 COPY pom.xml .
+COPY .editorconfig .
 COPY core/pom.xml core/pom.xml
 COPY receiver/pom.xml receiver/pom.xml
 COPY dispatcher/pom.xml dispatcher/pom.xml
 COPY generated/pom.xml generated/pom.xml
 COPY tests/pom.xml tests/pom.xml
-COPY checkstyle/suppression.xml checkstyle/suppression.xml
 COPY ./mvnw .
 COPY ./.mvn/wrapper .mvn/wrapper
 
-RUN ./mvnw install -DskipTests -Dcheckstyle.skip --no-transfer-progress
+RUN ./mvnw install -DskipTests -Deditorconfig.skip --no-transfer-progress
 
 COPY . .
 
-RUN ./mvnw package -DskipTests -Dcheckstyle.skip --no-transfer-progress
+RUN ./mvnw package -DskipTests -Deditorconfig.skip --no-transfer-progress
 
 FROM ${JAVA_IMAGE} as running
 

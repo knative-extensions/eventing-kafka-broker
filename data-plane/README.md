@@ -34,7 +34,6 @@ This allows to not block or use locks.
 
 ```bash
 .
-├── checkstyle
 ├── config
 ├── core
 ├── dispatcher
@@ -43,8 +42,6 @@ This allows to not block or use locks.
 ├── receiver
 ```
 
-- `checkstyle` directory contains configurations for the
-  [`checkstyle-maven-plugin`](https://maven.apache.org/plugins/maven-checkstyle-plugin/).
 - `config` directory contains Kubernetes artifacts (yaml).
 - `core` directory contains the core module, in particular, it contains classes
   for representing Eventing objects
