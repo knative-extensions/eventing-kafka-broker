@@ -64,10 +64,10 @@ public final class BrokersManager<T> implements ObjectsReconciler<T> {
    * @param triggersInitialCapacity triggers container initial capacity.
    */
   public BrokersManager(
-      final Vertx vertx,
-      final ConsumerVerticleFactory<T> consumerFactory,
-      final int brokersInitialCapacity,
-      final int triggersInitialCapacity) {
+    final Vertx vertx,
+    final ConsumerVerticleFactory<T> consumerFactory,
+    final int brokersInitialCapacity,
+    final int triggersInitialCapacity) {
 
     Objects.requireNonNull(vertx, "provide vertx instance");
     Objects.requireNonNull(consumerFactory, "provide consumer factory");
@@ -125,9 +125,9 @@ public final class BrokersManager<T> implements ObjectsReconciler<T> {
 
           // undeploy verticle associated with the deleted trigger.
           futures.add(undeployVerticle(
-              broker,
-              triggerVerticle.getKey(),
-              triggerVerticle.getValue()
+            broker,
+            triggerVerticle.getKey(),
+            triggerVerticle.getValue()
           ));
         }
       }
@@ -160,59 +160,59 @@ public final class BrokersManager<T> implements ObjectsReconciler<T> {
     }
 
     return consumerFactory.get(broker, trigger)
-        .onFailure(cause -> {
+      .onFailure(cause -> {
 
-          // probably configuration are wrong, so do not retry.
-          logger.error("potential control-plane bug: failed to get verticle {} {}",
-              keyValue("trigger", trigger),
-              keyValue("broker", broker),
-              cause
-          );
+        // probably configuration are wrong, so do not retry.
+        logger.error("potential control-plane bug: failed to get verticle {} {}",
+          keyValue("trigger", trigger),
+          keyValue("broker", broker),
+          cause
+        );
 
-        })
-        .compose(verticle -> deployVerticle(verticle, broker, triggers, trigger));
+      })
+      .compose(verticle -> deployVerticle(verticle, broker, triggers, trigger));
   }
 
   private Future<Void> deployVerticle(
-      final AbstractVerticle verticle,
-      final Broker broker,
-      final Map<Trigger<T>, AbstractVerticle> triggers,
-      final Trigger<T> trigger) {
+    final AbstractVerticle verticle,
+    final Broker broker,
+    final Map<Trigger<T>, AbstractVerticle> triggers,
+    final Trigger<T> trigger) {
     triggers.put(trigger, verticle);
     return vertx.deployVerticle(verticle)
-        .onSuccess(msg -> {
-          logger.info("Verticle deployed {} {} {}",
-              keyValue("trigger", trigger),
-              keyValue("broker", broker),
-              keyValue("message", msg)
-          );
-        })
-        .onFailure(cause -> {
-          // this is a bad state we cannot start the verticle for consuming messages.
-          logger.error("failed to start verticle {} {}",
-              keyValue("trigger", trigger),
-              keyValue("broker", broker),
-              cause
-          );
-        })
-        .mapEmpty();
+      .onSuccess(msg -> {
+        logger.info("Verticle deployed {} {} {}",
+          keyValue("trigger", trigger),
+          keyValue("broker", broker),
+          keyValue("message", msg)
+        );
+      })
+      .onFailure(cause -> {
+        // this is a bad state we cannot start the verticle for consuming messages.
+        logger.error("failed to start verticle {} {}",
+          keyValue("trigger", trigger),
+          keyValue("broker", broker),
+          cause
+        );
+      })
+      .mapEmpty();
   }
 
   private Future<Void> undeployVerticle(
-      Broker broker,
-      Trigger<T> trigger,
-      AbstractVerticle verticle) {
+    Broker broker,
+    Trigger<T> trigger,
+    AbstractVerticle verticle) {
     return vertx.undeploy(verticle.deploymentID())
-        .onSuccess(v -> logger.info(
-            "Removed trigger {} {}",
-            keyValue("trigger", trigger),
-            keyValue("broker", broker)
-        ))
-        .onFailure(cause -> logger.error(
-            "failed to un-deploy verticle {} {}",
-            keyValue("trigger", trigger),
-            keyValue("broker", broker),
-            cause
-        ));
+      .onSuccess(v -> logger.info(
+        "Removed trigger {} {}",
+        keyValue("trigger", trigger),
+        keyValue("broker", broker)
+      ))
+      .onFailure(cause -> logger.error(
+        "failed to un-deploy verticle {} {}",
+        keyValue("trigger", trigger),
+        keyValue("broker", broker),
+        cause
+      ));
   }
 }

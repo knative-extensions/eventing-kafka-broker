@@ -51,7 +51,7 @@ public class TriggerWrapperTest {
   public void idCallShouldBeDelegatedToWrappedTrigger() {
     final var id = "123-42";
     final var triggerWrapper = new TriggerWrapper(
-        Trigger.newBuilder().setId(id).build()
+      Trigger.newBuilder().setId(id).build()
     );
 
     assertThat(triggerWrapper.id()).isEqualTo(id);
@@ -61,7 +61,7 @@ public class TriggerWrapperTest {
   public void destinationCallShouldBeDelegatedToWrappedTrigger() {
     final var destination = "destination-42";
     final var triggerWrapper = new TriggerWrapper(
-        Trigger.newBuilder().setDestination(destination).build()
+      Trigger.newBuilder().setDestination(destination).build()
     );
 
     assertThat(triggerWrapper.destination()).isEqualTo(destination);
@@ -71,13 +71,13 @@ public class TriggerWrapperTest {
   @ParameterizedTest
   @MethodSource(value = "dev.knative.eventing.kafka.broker.core.EventMatcherTest#testCases")
   public void testFilter(
-      final Map<String, String> attributes,
-      final CloudEvent event,
-      final boolean shouldMatch) {
+    final Map<String, String> attributes,
+    final CloudEvent event,
+    final boolean shouldMatch) {
     final var triggerWrapper = new TriggerWrapper(
-        Trigger.newBuilder()
-            .putAllAttributes(attributes)
-            .build()
+      Trigger.newBuilder()
+        .putAllAttributes(attributes)
+        .build()
     );
 
     final var filter = triggerWrapper.filter();
@@ -89,200 +89,200 @@ public class TriggerWrapperTest {
 
   public static Stream<Arguments> differentTriggersProvider() {
     return Stream.of(
-        // trigger's destination is different
-        Arguments.of(
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .putAllAttributes(Collections.emptyMap())
-                .setDestination("this-is-my-destination1")
-                .setId("1234-hello")
-                .build()
-            ),
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .putAllAttributes(Collections.emptyMap())
-                .setDestination("this-is-my-destination")
-                .setId("1234-hello")
-                .build()
-            )
+      // trigger's destination is different
+      Arguments.of(
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .putAllAttributes(Collections.emptyMap())
+          .setDestination("this-is-my-destination1")
+          .setId("1234-hello")
+          .build()
         ),
-        // trigger's attributes are different
-        Arguments.of(
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .putAllAttributes(Map.of(
-                    "specversion1",
-                    "1.0",
-                    "type",
-                    "type_value"
-                ))
-                .setDestination("this-is-my-destination")
-                .setId("1234-hello")
-                .build()
-            ),
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .putAllAttributes(Map.of(
-                    "specversion",
-                    "1.0",
-                    "type",
-                    "type_value"
-                ))
-                .setDestination("this-is-my-destination")
-                .setId("1234-hello")
-                .build()
-            )
-        ),
-        Arguments.of(
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .putAllAttributes(Map.of(
-                    "specversion",
-                    "1.0",
-                    "type",
-                    "type_value1"
-                ))
-                .setDestination("this-is-my-destination")
-                .setId("1234-hello")
-                .build()
-            ),
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .putAllAttributes(Map.of(
-                    "specversion",
-                    "1.0",
-                    "type",
-                    "type_value"
-                ))
-                .setDestination("this-is-my-destination")
-                .setId("1234-hello")
-                .build()
-            )
-        ),
-        // trigger's id is different
-        Arguments.of(
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .putAllAttributes(Map.of(
-                    "specversion",
-                    "1.0",
-                    "type",
-                    "type_value"
-                ))
-                .setDestination("this-is-my-destination")
-                .setId("1234-hello1")
-                .build()
-            ),
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .putAllAttributes(Map.of(
-                    "specversion",
-                    "1.0",
-                    "type",
-                    "type_value"
-                ))
-                .setDestination("this-is-my-destination")
-                .setId("1234-hello")
-                .build()
-            )
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .putAllAttributes(Collections.emptyMap())
+          .setDestination("this-is-my-destination")
+          .setId("1234-hello")
+          .build()
         )
+      ),
+      // trigger's attributes are different
+      Arguments.of(
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .putAllAttributes(Map.of(
+            "specversion1",
+            "1.0",
+            "type",
+            "type_value"
+          ))
+          .setDestination("this-is-my-destination")
+          .setId("1234-hello")
+          .build()
+        ),
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .putAllAttributes(Map.of(
+            "specversion",
+            "1.0",
+            "type",
+            "type_value"
+          ))
+          .setDestination("this-is-my-destination")
+          .setId("1234-hello")
+          .build()
+        )
+      ),
+      Arguments.of(
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .putAllAttributes(Map.of(
+            "specversion",
+            "1.0",
+            "type",
+            "type_value1"
+          ))
+          .setDestination("this-is-my-destination")
+          .setId("1234-hello")
+          .build()
+        ),
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .putAllAttributes(Map.of(
+            "specversion",
+            "1.0",
+            "type",
+            "type_value"
+          ))
+          .setDestination("this-is-my-destination")
+          .setId("1234-hello")
+          .build()
+        )
+      ),
+      // trigger's id is different
+      Arguments.of(
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .putAllAttributes(Map.of(
+            "specversion",
+            "1.0",
+            "type",
+            "type_value"
+          ))
+          .setDestination("this-is-my-destination")
+          .setId("1234-hello1")
+          .build()
+        ),
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .putAllAttributes(Map.of(
+            "specversion",
+            "1.0",
+            "type",
+            "type_value"
+          ))
+          .setDestination("this-is-my-destination")
+          .setId("1234-hello")
+          .build()
+        )
+      )
     );
   }
 
   public static Stream<Arguments> equalTriggersProvider() {
     return Stream.of(
-        Arguments.of(
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .putAllAttributes(Map.of(
-                    "specversion",
-                    "1.0",
-                    "type",
-                    "type_value"
-                ))
-                .setDestination("this-is-my-destination")
-                .setId("1234-hello")
-                .build()
-            ),
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .putAllAttributes(Map.of(
-                    "specversion",
-                    "1.0",
-                    "type",
-                    "type_value"
-                ))
-                .setDestination("this-is-my-destination")
-                .setId("1234-hello")
-                .build()
-            )
+      Arguments.of(
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .putAllAttributes(Map.of(
+            "specversion",
+            "1.0",
+            "type",
+            "type_value"
+          ))
+          .setDestination("this-is-my-destination")
+          .setId("1234-hello")
+          .build()
         ),
-        Arguments.of(
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .build()
-            ),
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .build()
-            )
-        ),
-        Arguments.of(
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .setId("1234")
-                .build()
-            ),
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .setId("1234")
-                .build()
-            )
-        ),
-        Arguments.of(
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .build()
-            ),
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .build()
-            )
-        ),
-        Arguments.of(
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .setDestination("dest")
-                .build()
-            ),
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .setDestination("dest")
-                .build()
-            )
-        ),
-        Arguments.of(
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .putAllAttributes(Map.of(
-                    "specversion",
-                    "1.0",
-                    "type",
-                    "type1"
-                ))
-                .build()
-            ),
-            new TriggerWrapper(Trigger
-                .newBuilder()
-                .putAllAttributes(Map.of(
-                    "specversion",
-                    "1.0",
-                    "type",
-                    "type1"
-                ))
-                .build()
-            )
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .putAllAttributes(Map.of(
+            "specversion",
+            "1.0",
+            "type",
+            "type_value"
+          ))
+          .setDestination("this-is-my-destination")
+          .setId("1234-hello")
+          .build()
         )
+      ),
+      Arguments.of(
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .build()
+        ),
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .build()
+        )
+      ),
+      Arguments.of(
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .setId("1234")
+          .build()
+        ),
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .setId("1234")
+          .build()
+        )
+      ),
+      Arguments.of(
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .build()
+        ),
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .build()
+        )
+      ),
+      Arguments.of(
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .setDestination("dest")
+          .build()
+        ),
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .setDestination("dest")
+          .build()
+        )
+      ),
+      Arguments.of(
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .putAllAttributes(Map.of(
+            "specversion",
+            "1.0",
+            "type",
+            "type1"
+          ))
+          .build()
+        ),
+        new TriggerWrapper(Trigger
+          .newBuilder()
+          .putAllAttributes(Map.of(
+            "specversion",
+            "1.0",
+            "type",
+            "type1"
+          ))
+          .build()
+        )
+      )
     );
   }
 }

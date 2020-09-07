@@ -41,9 +41,9 @@ public class SimpleProbeHandlerDecorator implements Handler<HttpServerRequest> {
    * @param handler       next handler
    */
   public SimpleProbeHandlerDecorator(
-      final String livenessPath,
-      final String readinessPath,
-      final Handler<HttpServerRequest> handler) {
+    final String livenessPath,
+    final String readinessPath,
+    final Handler<HttpServerRequest> handler) {
     this.livenessPath = livenessPath;
     this.readinessPath = readinessPath;
     this.handler = handler;
@@ -61,6 +61,6 @@ public class SimpleProbeHandlerDecorator implements Handler<HttpServerRequest> {
 
   private boolean isProbeRequest(final HttpServerRequest request) {
     return request.method().equals(HttpMethod.GET)
-        && (request.path().equals(livenessPath) || request.path().equals(readinessPath));
+      && (request.path().equals(livenessPath) || request.path().equals(readinessPath));
   }
 }

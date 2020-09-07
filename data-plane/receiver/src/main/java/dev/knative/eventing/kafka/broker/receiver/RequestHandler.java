@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * Kafka through the Kafka producer and terminating requests with the appropriate status code.
  */
 public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
-    ObjectsReconciler<CloudEvent> {
+  ObjectsReconciler<CloudEvent> {
 
   public static final int MAPPER_FAILED = BAD_REQUEST.code();
   public static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
@@ -73,9 +73,9 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
    * @param requestToRecordMapper request to record mapper
    */
   public RequestHandler(
-      final Properties producerConfigs,
-      final RequestToRecordMapper<K, V> requestToRecordMapper,
-      final Function<Properties, KafkaProducer<K, V>> producerCreator) {
+    final Properties producerConfigs,
+    final RequestToRecordMapper<K, V> requestToRecordMapper,
+    final Function<Properties, KafkaProducer<K, V>> producerCreator) {
 
     Objects.requireNonNull(producerConfigs, "provide producerConfigs");
     Objects.requireNonNull(requestToRecordMapper, "provide a mapper");
@@ -96,50 +96,50 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
       request.response().setStatusCode(BROKER_NOT_FOUND).end();
 
       logger.warn("broker not found {} {}",
-          keyValue("brokers", producers.get().keySet()),
-          keyValue("path", request.path())
+        keyValue("brokers", producers.get().keySet()),
+        keyValue("path", request.path())
       );
 
       return;
     }
 
     requestToRecordMapper
-        .recordFromRequest(request, producer.getValue().topic)
-        .onSuccess(record -> send(producer.getValue().producer, record)
-            .onSuccess(ignore -> {
-              request.response().setStatusCode(RECORD_PRODUCED).end();
+      .recordFromRequest(request, producer.getValue().topic)
+      .onSuccess(record -> send(producer.getValue().producer, record)
+        .onSuccess(ignore -> {
+          request.response().setStatusCode(RECORD_PRODUCED).end();
 
-              logger.debug("Record produced {} {} {} {} {}",
-                  keyValue("topic", record.topic()),
-                  keyValue("partition", record.partition()),
-                  keyValue("value", record.value()),
-                  keyValue("headers", record.headers()),
-                  keyValue("path", request.path())
-              );
-            })
-            .onFailure(cause -> {
-              request.response().setStatusCode(FAILED_TO_PRODUCE).end();
-
-              logger.error("Failed to send record {} {}",
-                  keyValue("topic", record.topic()),
-                  keyValue("path", request.path()),
-                  cause
-              );
-            })
-        )
-        .onFailure(cause -> {
-          request.response().setStatusCode(MAPPER_FAILED).end();
-
-          logger.warn("Failed to send record {}",
-              keyValue("path", request.path()),
-              cause
+          logger.debug("Record produced {} {} {} {} {}",
+            keyValue("topic", record.topic()),
+            keyValue("partition", record.partition()),
+            keyValue("value", record.value()),
+            keyValue("headers", record.headers()),
+            keyValue("path", request.path())
           );
-        });
+        })
+        .onFailure(cause -> {
+          request.response().setStatusCode(FAILED_TO_PRODUCE).end();
+
+          logger.error("Failed to send record {} {}",
+            keyValue("topic", record.topic()),
+            keyValue("path", request.path()),
+            cause
+          );
+        })
+      )
+      .onFailure(cause -> {
+        request.response().setStatusCode(MAPPER_FAILED).end();
+
+        logger.warn("Failed to send record {}",
+          keyValue("path", request.path()),
+          cause
+        );
+      });
   }
 
   private static <K, V> Future<RecordMetadata> send(
-      final KafkaProducer<K, V> producer,
-      final KafkaProducerRecord<K, V> record) {
+    final KafkaProducer<K, V> producer,
+    final KafkaProducerRecord<K, V> record) {
 
     final Promise<RecordMetadata> promise = Promise.promise();
     producer.send(record, promise);
@@ -150,7 +150,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
   public Future<Void> reconcile(Map<Broker, Set<Trigger<CloudEvent>>> objects) {
 
     final Map<String, Entry<String, Producer<K, V>>> newProducers
-        = new HashMap<>();
+      = new HashMap<>();
 
     final var producers = this.producers.get();
 
@@ -184,8 +184,8 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
   }
 
   private void addBroker(
-      final Map<String, Entry<String, Producer<K, V>>> producers,
-      final Broker broker) {
+    final Map<String, Entry<String, Producer<K, V>>> producers,
+    final Broker broker) {
 
     final var producerConfigs = (Properties) this.producerConfigs.clone();
     producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, broker.bootstrapServers());
@@ -193,11 +193,11 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
     final KafkaProducer<K, V> producer = producerCreator.apply(producerConfigs);
 
     producers.put(
-        broker.path(),
-        new SimpleImmutableEntry<>(
-            broker.bootstrapServers(),
-            new Producer<>(producer, broker.topic())
-        )
+      broker.path(),
+      new SimpleImmutableEntry<>(
+        broker.bootstrapServers(),
+        new Producer<>(producer, broker.topic())
+      )
     );
   }
 

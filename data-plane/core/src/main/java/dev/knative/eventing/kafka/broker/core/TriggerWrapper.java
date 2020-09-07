@@ -61,37 +61,37 @@ public class TriggerWrapper implements dev.knative.eventing.kafka.broker.core.Tr
     }
     final var t = (TriggerWrapper) object;
     return t.trigger.getId().equals(trigger.getId())
-        && t.trigger.getDestination().equals(trigger.getDestination())
-        && mapEquals(t.trigger.getAttributesMap(), trigger.getAttributesMap());
+      && t.trigger.getDestination().equals(trigger.getDestination())
+      && mapEquals(t.trigger.getAttributesMap(), trigger.getAttributesMap());
   }
 
   @Override
   public int hashCode() {
     final var hashAttributes = trigger.getAttributesMap().entrySet().stream()
-        .mapToInt(entry -> Objects.hash(entry.getKey(), entry.getValue()))
-        .sum();
+      .mapToInt(entry -> Objects.hash(entry.getKey(), entry.getValue()))
+      .sum();
 
     return Objects.hash(
-        trigger.getId(),
-        trigger.getDestination(),
-        hashAttributes
+      trigger.getId(),
+      trigger.getDestination(),
+      hashAttributes
     );
   }
 
   // TODO re-evaluate hashcode and equals
   private static boolean mapEquals(final Map<String, String> m1, final Map<String, String> m2) {
     final var count = m1.entrySet().stream()
-        .map(entry -> m2.containsKey(entry.getKey())
-            && m2.get(entry.getKey()).equals(entry.getValue()))
-        .filter(Boolean::booleanValue)
-        .count();
+      .map(entry -> m2.containsKey(entry.getKey())
+        && m2.get(entry.getKey()).equals(entry.getValue()))
+      .filter(Boolean::booleanValue)
+      .count();
     return count == m1.size() && count == m2.size();
   }
 
   @Override
   public String toString() {
     return "TriggerWrapper{"
-        + "trigger=" + trigger
-        + '}';
+      + "trigger=" + trigger
+      + '}';
   }
 }

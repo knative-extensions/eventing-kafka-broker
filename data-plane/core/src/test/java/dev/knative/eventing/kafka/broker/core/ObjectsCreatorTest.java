@@ -41,8 +41,8 @@ public class ObjectsCreatorTest {
     final var called = new AtomicBoolean(false);
 
     final var brokers = Map.of(
-        broker1(), Set.of(trigger1(), trigger2()),
-        broker2(), Set.of(trigger3(), trigger4())
+      broker1(), Set.of(trigger1(), trigger2()),
+      broker2(), Set.of(trigger3(), trigger4())
     );
 
     final var creator = new ObjectsCreator(objects -> {

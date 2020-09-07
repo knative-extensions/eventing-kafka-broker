@@ -42,12 +42,12 @@ public class FileWatcherTest {
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
     final var broker1 = Brokers.newBuilder()
-        .addBrokers(broker1Unwrapped())
-        .build();
+      .addBrokers(broker1Unwrapped())
+      .build();
 
     final var broker2 = Brokers.newBuilder()
-        .addBrokers(broker2Unwrapped())
-        .build();
+      .addBrokers(broker2Unwrapped())
+      .build();
 
     final var isFirst = new AtomicBoolean(true);
     final var waitFirst = new CountDownLatch(1);
@@ -64,9 +64,9 @@ public class FileWatcherTest {
     };
 
     final var fw = new FileWatcher(
-        FileSystems.getDefault().newWatchService(),
-        brokersConsumer,
-        file
+      FileSystems.getDefault().newWatchService(),
+      brokersConsumer,
+      file
     );
 
     final var thread1 = watch(fw);
@@ -87,13 +87,13 @@ public class FileWatcherTest {
   @Test
   @Timeout(value = 5)
   public void shouldReadFileWhenStartWatchingWithoutUpdates()
-      throws IOException, InterruptedException {
+    throws IOException, InterruptedException {
 
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
     final var broker1 = Brokers.newBuilder()
-        .addBrokers(broker1Unwrapped())
-        .build();
+      .addBrokers(broker1Unwrapped())
+      .build();
     write(file, broker1);
 
     final var waitBroker = new CountDownLatch(1);
@@ -103,9 +103,9 @@ public class FileWatcherTest {
     };
 
     final var fw = new FileWatcher(
-        FileSystems.getDefault().newWatchService(),
-        brokersConsumer,
-        file
+      FileSystems.getDefault().newWatchService(),
+      brokersConsumer,
+      file
     );
 
     final var thread = watch(fw);

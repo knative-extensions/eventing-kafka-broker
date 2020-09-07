@@ -34,7 +34,7 @@ public final class CoreObjects {
   static {
     try {
       DESTINATION_URL = new URL(
-          "http", "localhost", 44331, ""
+        "http", "localhost", 44331, ""
       );
     } catch (final MalformedURLException e) {
       e.printStackTrace();
@@ -45,45 +45,45 @@ public final class CoreObjects {
 
   public static Brokers brokers() {
     return Brokers.newBuilder()
-        .addBrokers(broker1Unwrapped())
-        .addBrokers(broker2Unwrapped())
-        .build();
+      .addBrokers(broker1Unwrapped())
+      .addBrokers(broker2Unwrapped())
+      .build();
   }
 
   public static dev.knative.eventing.kafka.broker.core.Broker broker1() {
     return new BrokerWrapper(
-        broker1Unwrapped()
+      broker1Unwrapped()
     );
   }
 
   public static Broker broker1Unwrapped() {
     return Broker.newBuilder()
-        .setDeadLetterSink(DESTINATION)
-        .setId("1-1234")
-        .setTopic("1-12345")
-        .addAllTriggers(Arrays.asList(
-            trigger11(),
-            trigger12()
-        ))
-        .build();
+      .setDeadLetterSink(DESTINATION)
+      .setId("1-1234")
+      .setTopic("1-12345")
+      .addAllTriggers(Arrays.asList(
+        trigger11(),
+        trigger12()
+      ))
+      .build();
   }
 
   public static dev.knative.eventing.kafka.broker.core.Broker broker2() {
     return new BrokerWrapper(
-        broker2Unwrapped()
+      broker2Unwrapped()
     );
   }
 
   public static Broker broker2Unwrapped() {
     return Broker.newBuilder()
-        .setDeadLetterSink(DESTINATION)
-        .setId("2-1234")
-        .setTopic("2-12345")
-        .addAllTriggers(Arrays.asList(
-            trigger13(),
-            trigger14()
-        ))
-        .build();
+      .setDeadLetterSink(DESTINATION)
+      .setId("2-1234")
+      .setTopic("2-12345")
+      .addAllTriggers(Arrays.asList(
+        trigger13(),
+        trigger14()
+      ))
+      .build();
   }
 
 
@@ -105,41 +105,41 @@ public final class CoreObjects {
 
   public static Trigger trigger11() {
     return Trigger.newBuilder()
-        .setId("1-1234567")
-        .setDestination(DESTINATION)
-        .putAllAttributes(Map.of(
-            "type", "dev.knative"
-        ))
-        .build();
+      .setId("1-1234567")
+      .setDestination(DESTINATION)
+      .putAllAttributes(Map.of(
+        "type", "dev.knative"
+      ))
+      .build();
   }
 
   public static Trigger trigger12() {
     return Trigger.newBuilder()
-        .setId("2-1234567")
-        .setDestination(DESTINATION)
-        .putAllAttributes(Map.of(
-            "type", "dev.knative"
-        ))
-        .build();
+      .setId("2-1234567")
+      .setDestination(DESTINATION)
+      .putAllAttributes(Map.of(
+        "type", "dev.knative"
+      ))
+      .build();
   }
 
   public static Trigger trigger13() {
     return Trigger.newBuilder()
-        .setId("3-1234567")
-        .setDestination(DESTINATION)
-        .putAllAttributes(Map.of(
-            "type", "dev.knative"
-        ))
-        .build();
+      .setId("3-1234567")
+      .setDestination(DESTINATION)
+      .putAllAttributes(Map.of(
+        "type", "dev.knative"
+      ))
+      .build();
   }
 
   public static Trigger trigger14() {
     return Trigger.newBuilder()
-        .setId("4-1234567")
-        .setDestination(DESTINATION)
-        .putAllAttributes(Map.of(
-            "type", "dev.knative"
-        ))
-        .build();
+      .setId("4-1234567")
+      .setDestination(DESTINATION)
+      .putAllAttributes(Map.of(
+        "type", "dev.knative"
+      ))
+      .build();
   }
 }

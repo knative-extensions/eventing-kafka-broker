@@ -69,25 +69,25 @@ public class Main {
     producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 
     final var handler = new RequestHandler<>(
-        producerConfigs,
-        new CloudEventRequestToRecordMapper(),
-        properties -> KafkaProducer.create(vertx, properties)
+      producerConfigs,
+      new CloudEventRequestToRecordMapper(),
+      properties -> KafkaProducer.create(vertx, properties)
     );
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(env.getIngressPort());
     final var verticle = new HttpVerticle(httpServerOptions, new SimpleProbeHandlerDecorator(
-        env.getLivenessProbePath(), env.getReadinessProbePath(), handler
+      env.getLivenessProbePath(), env.getReadinessProbePath(), handler
     ));
 
     vertx.deployVerticle(verticle)
-        .onSuccess(v -> logger.info("receiver started"))
-        .onFailure(t -> logger.error("receiver not started", t));
+      .onSuccess(v -> logger.info("receiver started"))
+      .onFailure(t -> logger.error("receiver not started", t));
 
     try {
       final var fw = new FileWatcher(
-          FileSystems.getDefault().newWatchService(),
-          new ObjectsCreator(handler),
-          new File(env.getDataPlaneConfigFilePath())
+        FileSystems.getDefault().newWatchService(),
+        new ObjectsCreator(handler),
+        new File(env.getDataPlaneConfigFilePath())
       );
 
       fw.watch(); // block forever

@@ -82,30 +82,30 @@ public class Main {
     final var instanceID = json.getString(INSTANCE_ID);
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-        consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered();
+      consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered();
 
     final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
-        consumerRecordOffsetStrategyFactory,
-        consumerConfigs,
-        WebClient.create(vertx, new WebClientOptions().setIdleTimeout(10000)),
-        vertx,
-        producerConfigs
+      consumerRecordOffsetStrategyFactory,
+      consumerConfigs,
+      WebClient.create(vertx, new WebClientOptions().setIdleTimeout(10000)),
+      vertx,
+      producerConfigs
     );
 
     final var brokersManager = new BrokersManager<>(
-        vertx,
-        consumerVerticleFactory,
-        Integer.parseInt(json.getString(BROKERS_INITIAL_CAPACITY)),
-        Integer.parseInt(json.getString(TRIGGERS_INITIAL_CAPACITY))
+      vertx,
+      consumerVerticleFactory,
+      Integer.parseInt(json.getString(BROKERS_INITIAL_CAPACITY)),
+      Integer.parseInt(json.getString(TRIGGERS_INITIAL_CAPACITY))
     );
 
     final var objectCreator = new ObjectsCreator(brokersManager);
 
     try {
       final var fw = new FileWatcher(
-          FileSystems.getDefault().newWatchService(),
-          objectCreator,
-          new File(json.getString(BROKERS_TRIGGERS_PATH))
+        FileSystems.getDefault().newWatchService(),
+        objectCreator,
+        new File(json.getString(BROKERS_TRIGGERS_PATH))
       );
 
       fw.watch(); // block forever
@@ -133,23 +133,23 @@ public class Main {
   private static JsonObject getConfigurations(final Vertx vertx) throws InterruptedException {
 
     final var envConfigs = new ConfigStoreOptions()
-        .setType("env")
-        .setOptional(false)
-        .setConfig(new JsonObject().put("raw-data", true));
+      .setType("env")
+      .setOptional(false)
+      .setConfig(new JsonObject().put("raw-data", true));
 
     final var configRetrieverOptions = new ConfigRetrieverOptions()
-        .addStore(envConfigs);
+      .addStore(envConfigs);
 
     final var configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions);
 
 
     final var waitConfigs = new ArrayBlockingQueue<JsonObject>(1);
     configRetriever.getConfig()
-        .onSuccess(waitConfigs::add)
-        .onFailure(cause -> {
-          logger.error("failed to retrieve configurations", cause);
-          vertx.close(ignored -> System.exit(1));
-        });
+      .onSuccess(waitConfigs::add)
+      .onFailure(cause -> {
+        logger.error("failed to retrieve configurations", cause);
+        vertx.close(ignored -> System.exit(1));
+      });
 
     return waitConfigs.take();
   }

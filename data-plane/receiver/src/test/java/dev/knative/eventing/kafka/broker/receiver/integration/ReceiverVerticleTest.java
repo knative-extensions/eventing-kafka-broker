@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.receiver.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.FloatNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -76,15 +75,15 @@ public class ReceiverVerticleTest {
   public static void setUp(final Vertx vertx, final VertxTestContext testContext) {
     webClient = WebClient.create(vertx);
     ReceiverVerticleTest.mockProducer = new MockProducer<>(
-        true,
-        new StringSerializer(),
-        new CloudEventSerializer()
+      true,
+      new StringSerializer(),
+      new CloudEventSerializer()
     );
     KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, mockProducer);
     handler = new RequestHandler<>(
-        new Properties(),
-        new CloudEventRequestToRecordMapper(),
-        properties -> producer
+      new Properties(),
+      new CloudEventRequestToRecordMapper(),
+      properties -> producer
     );
 
     final var httpServerOptions = new HttpServerOptions();
@@ -107,8 +106,8 @@ public class ReceiverVerticleTest {
   @ParameterizedTest
   @MethodSource({"getValidNonValidEvents"})
   public void shouldProduceMessagesReceivedConcurrently(
-      final TestCase tc,
-      final VertxTestContext context) throws InterruptedException {
+    final TestCase tc,
+    final VertxTestContext context) throws InterruptedException {
 
     final var checkpoints = context.checkpoint(1);
     final var countDown = new CountDownLatch(1);
@@ -116,21 +115,21 @@ public class ReceiverVerticleTest {
     final var wait = new CountDownLatch(1);
 
     handler.reconcile(Map.of(tc.broker, new HashSet<>()))
-        .onFailure(context::failNow)
-        .onSuccess(v -> wait.countDown());
+      .onFailure(context::failNow)
+      .onSuccess(v -> wait.countDown());
 
     wait.await(TIMEOUT, TimeUnit.SECONDS);
 
     tc.requestSender.apply(webClient.post(PORT, "localhost", tc.path))
-        .onFailure(context::failNow)
-        .onSuccess(response -> {
-          assertThat(response.statusCode())
-              .as("verify path: " + tc.path)
-              .isEqualTo(tc.responseStatusCode);
+      .onFailure(context::failNow)
+      .onSuccess(response -> {
+        assertThat(response.statusCode())
+          .as("verify path: " + tc.path)
+          .isEqualTo(tc.responseStatusCode);
 
-          checkpoints.flag();
-          countDown.countDown();
-        });
+        checkpoints.flag();
+        countDown.countDown();
+      });
 
     countDown.await(TIMEOUT, TimeUnit.SECONDS);
 
@@ -141,162 +140,162 @@ public class ReceiverVerticleTest {
 
   private static List<TestCase> getValidNonValidEvents() {
     return Arrays.asList(
-        new TestCase(
-            null,
-            "/broker-ns/broker-name1",
-            ceRequestSender(new CloudEventBuilder()
-                .withSubject("subject")
-                .withSource(URI.create("/hello"))
-                .withType("type")
-                .withId("1234")
-                .build()),
-            RequestHandler.BROKER_NOT_FOUND,
-            new BrokerWrapper(
-                BrokersConfig.Broker.newBuilder()
-                    .setPath("/broker-ns/broker-name")
-                    .build()
-            )),
-        new TestCase(
-            null,
-            "/broker-ns/broker-name/hello",
-            ceRequestSender(new CloudEventBuilder()
-                .withSubject("subject")
-                .withSource(URI.create("/hello"))
-                .withType("type")
-                .withId("1234")
-                .build()),
-            RequestHandler.BROKER_NOT_FOUND,
-            new BrokerWrapper(
-                BrokersConfig.Broker.newBuilder()
-                    .setPath("/broker-name/hello")
-                    .build()
-            )),
-        new TestCase(
-            null,
-            "/broker-ns/h/hello",
-            ceRequestSender(new CloudEventBuilder()
-                .withSubject("subject")
-                .withSource(URI.create("/hello"))
-                .withType("type")
-                .withId("1234")
-                .build()),
-            RequestHandler.BROKER_NOT_FOUND,
-            new BrokerWrapper(
-                BrokersConfig.Broker.newBuilder()
-                    .setPath("/h/hello")
-                    .build()
-            )),
-        new TestCase(
-            new ProducerRecord<>(
-                "topic-name-1",
-                null,
-                new io.cloudevents.core.v03.CloudEventBuilder()
-                    .withSubject("subject")
-                    .withSource(URI.create("/hello"))
-                    .withType("type")
-                    .withId("1234")
-                    .build()
-            ),
-            "/broker-ns/broker-name1",
-            ceRequestSender(new io.cloudevents.core.v03.CloudEventBuilder()
-                .withSubject("subject")
-                .withSource(URI.create("/hello"))
-                .withType("type")
-                .withId("1234")
-                .build()),
-            RequestHandler.RECORD_PRODUCED,
-            new BrokerWrapper(
-                BrokersConfig.Broker.newBuilder()
-                    .setTopic("topic-name-1")
-                    .setPath("/broker-ns/broker-name1")
-                    .build()
-            )),
-        new TestCase(
-            null,
-            "/broker-ns/broker-name",
-            request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
-            RequestHandler.MAPPER_FAILED,
-            new BrokerWrapper(
-                BrokersConfig.Broker.newBuilder()
-                    .setPath("/broker-ns/broker-name")
-                    .build()
-            )),
-        new TestCase(
-            null,
-            "/broker-ns/broker-name/hello",
-            request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
-            RequestHandler.BROKER_NOT_FOUND,
-            new BrokerWrapper(
-                BrokersConfig.Broker.newBuilder()
-                    .setPath("/broker-ns/broker-name")
-                    .build()
-            )),
-        new TestCase(
-            null,
-            "/broker-ns/broker-name3",
-            request -> {
-              final var objectMapper = new ObjectMapper();
-              final var objectNode = objectMapper.createObjectNode();
-              objectNode.set("hello", new FloatNode(1.24f));
-              objectNode.set("data", objectMapper.createObjectNode());
-              request.headers().set("Content-Type", "application/json");
-              return request.sendBuffer(Buffer.buffer(objectNode.toString()));
-            },
-            RequestHandler.MAPPER_FAILED,
-            new BrokerWrapper(
-                BrokersConfig.Broker.newBuilder()
-                    .setPath("/broker-ns/broker-name3")
-                    .build()
-            )),
-        new TestCase(
-            null,
-            "/broker-ns/broker-name4",
-            request -> {
-              final var objectMapper = new ObjectMapper();
-              final var objectNode = objectMapper.createObjectNode();
-              objectNode.set("specversion", new TextNode("1.0"));
-              objectNode.set("type", new TextNode("my-type"));
-              objectNode.set("source", new TextNode("my-source"));
-              objectNode.set("data", objectMapper.createObjectNode());
-              request.headers().set("Content-Type", "application/json");
-              return request.sendBuffer(Buffer.buffer(objectNode.toString()));
-            },
-            RequestHandler.MAPPER_FAILED,
-            new BrokerWrapper(
-                BrokersConfig.Broker.newBuilder()
-                    .setPath("/broker-ns/broker-name4")
-                    .build()
-            )),
-        new TestCase(
-            new ProducerRecord<>(
-                "topic-name-42",
-                null,
-                new io.cloudevents.core.v1.CloudEventBuilder()
-                    .withSubject("subject")
-                    .withSource(URI.create("/hello"))
-                    .withType("type")
-                    .withId("1234")
-                    .build()
-            ),
-            "/broker-ns/broker-name5",
-            ceRequestSender(new io.cloudevents.core.v1.CloudEventBuilder()
-                .withSubject("subject")
-                .withSource(URI.create("/hello"))
-                .withType("type")
-                .withId("1234")
-                .build()),
-            RequestHandler.RECORD_PRODUCED,
-            new BrokerWrapper(
-                BrokersConfig.Broker.newBuilder()
-                    .setTopic("topic-name-42")
-                    .setPath("/broker-ns/broker-name5")
-                    .build()
-            ))
+      new TestCase(
+        null,
+        "/broker-ns/broker-name1",
+        ceRequestSender(new CloudEventBuilder()
+          .withSubject("subject")
+          .withSource(URI.create("/hello"))
+          .withType("type")
+          .withId("1234")
+          .build()),
+        RequestHandler.BROKER_NOT_FOUND,
+        new BrokerWrapper(
+          BrokersConfig.Broker.newBuilder()
+            .setPath("/broker-ns/broker-name")
+            .build()
+        )),
+      new TestCase(
+        null,
+        "/broker-ns/broker-name/hello",
+        ceRequestSender(new CloudEventBuilder()
+          .withSubject("subject")
+          .withSource(URI.create("/hello"))
+          .withType("type")
+          .withId("1234")
+          .build()),
+        RequestHandler.BROKER_NOT_FOUND,
+        new BrokerWrapper(
+          BrokersConfig.Broker.newBuilder()
+            .setPath("/broker-name/hello")
+            .build()
+        )),
+      new TestCase(
+        null,
+        "/broker-ns/h/hello",
+        ceRequestSender(new CloudEventBuilder()
+          .withSubject("subject")
+          .withSource(URI.create("/hello"))
+          .withType("type")
+          .withId("1234")
+          .build()),
+        RequestHandler.BROKER_NOT_FOUND,
+        new BrokerWrapper(
+          BrokersConfig.Broker.newBuilder()
+            .setPath("/h/hello")
+            .build()
+        )),
+      new TestCase(
+        new ProducerRecord<>(
+          "topic-name-1",
+          null,
+          new io.cloudevents.core.v03.CloudEventBuilder()
+            .withSubject("subject")
+            .withSource(URI.create("/hello"))
+            .withType("type")
+            .withId("1234")
+            .build()
+        ),
+        "/broker-ns/broker-name1",
+        ceRequestSender(new io.cloudevents.core.v03.CloudEventBuilder()
+          .withSubject("subject")
+          .withSource(URI.create("/hello"))
+          .withType("type")
+          .withId("1234")
+          .build()),
+        RequestHandler.RECORD_PRODUCED,
+        new BrokerWrapper(
+          BrokersConfig.Broker.newBuilder()
+            .setTopic("topic-name-1")
+            .setPath("/broker-ns/broker-name1")
+            .build()
+        )),
+      new TestCase(
+        null,
+        "/broker-ns/broker-name",
+        request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
+        RequestHandler.MAPPER_FAILED,
+        new BrokerWrapper(
+          BrokersConfig.Broker.newBuilder()
+            .setPath("/broker-ns/broker-name")
+            .build()
+        )),
+      new TestCase(
+        null,
+        "/broker-ns/broker-name/hello",
+        request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
+        RequestHandler.BROKER_NOT_FOUND,
+        new BrokerWrapper(
+          BrokersConfig.Broker.newBuilder()
+            .setPath("/broker-ns/broker-name")
+            .build()
+        )),
+      new TestCase(
+        null,
+        "/broker-ns/broker-name3",
+        request -> {
+          final var objectMapper = new ObjectMapper();
+          final var objectNode = objectMapper.createObjectNode();
+          objectNode.set("hello", new FloatNode(1.24f));
+          objectNode.set("data", objectMapper.createObjectNode());
+          request.headers().set("Content-Type", "application/json");
+          return request.sendBuffer(Buffer.buffer(objectNode.toString()));
+        },
+        RequestHandler.MAPPER_FAILED,
+        new BrokerWrapper(
+          BrokersConfig.Broker.newBuilder()
+            .setPath("/broker-ns/broker-name3")
+            .build()
+        )),
+      new TestCase(
+        null,
+        "/broker-ns/broker-name4",
+        request -> {
+          final var objectMapper = new ObjectMapper();
+          final var objectNode = objectMapper.createObjectNode();
+          objectNode.set("specversion", new TextNode("1.0"));
+          objectNode.set("type", new TextNode("my-type"));
+          objectNode.set("source", new TextNode("my-source"));
+          objectNode.set("data", objectMapper.createObjectNode());
+          request.headers().set("Content-Type", "application/json");
+          return request.sendBuffer(Buffer.buffer(objectNode.toString()));
+        },
+        RequestHandler.MAPPER_FAILED,
+        new BrokerWrapper(
+          BrokersConfig.Broker.newBuilder()
+            .setPath("/broker-ns/broker-name4")
+            .build()
+        )),
+      new TestCase(
+        new ProducerRecord<>(
+          "topic-name-42",
+          null,
+          new io.cloudevents.core.v1.CloudEventBuilder()
+            .withSubject("subject")
+            .withSource(URI.create("/hello"))
+            .withType("type")
+            .withId("1234")
+            .build()
+        ),
+        "/broker-ns/broker-name5",
+        ceRequestSender(new io.cloudevents.core.v1.CloudEventBuilder()
+          .withSubject("subject")
+          .withSource(URI.create("/hello"))
+          .withType("type")
+          .withId("1234")
+          .build()),
+        RequestHandler.RECORD_PRODUCED,
+        new BrokerWrapper(
+          BrokersConfig.Broker.newBuilder()
+            .setTopic("topic-name-42")
+            .setPath("/broker-ns/broker-name5")
+            .build()
+        ))
     );
   }
 
   private static Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> ceRequestSender(
-      final CloudEvent event) {
+    final CloudEvent event) {
     return request -> VertxMessageFactory.createWriter(request).writeBinary(event);
   }
 
@@ -309,10 +308,10 @@ public class ReceiverVerticleTest {
     final Broker broker;
 
     TestCase(
-        final ProducerRecord<String, CloudEvent> record,
-        final String path,
-        final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender,
-        final int responseStatusCode, Broker broker) {
+      final ProducerRecord<String, CloudEvent> record,
+      final String path,
+      final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender,
+      final int responseStatusCode, Broker broker) {
 
       this.path = path;
       this.requestSender = requestSender;

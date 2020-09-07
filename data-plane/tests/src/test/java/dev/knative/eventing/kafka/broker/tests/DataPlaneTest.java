@@ -24,7 +24,6 @@ import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CL
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 import dev.knative.eventing.kafka.broker.core.BrokerWrapper;
 import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
 import dev.knative.eventing.kafka.broker.core.TriggerWrapper;
@@ -99,7 +98,7 @@ public class DataPlaneTest {
 
   @BeforeAll
   public static void setUp(final Vertx vertx, final VertxTestContext context)
-      throws IOException, InterruptedException {
+    throws IOException, InterruptedException {
     setUpKafkaCluster();
     brokersManager = setUpDispatcher(vertx);
     handler = setUpReceiver(vertx, context);
@@ -140,120 +139,121 @@ public class DataPlaneTest {
 
     // event sent by the source to the Broker (see 1 in diagram)
     final var expectedRequestEvent = CloudEventBuilder.v1()
-        .withId(UUID.randomUUID().toString())
-        .withDataSchema(URI.create("/api/data-schema-ce-1"))
-        .withSource(URI.create("/api/rossi"))
-        .withSubject("subject-ce-1")
-        .withData("data-ce-1".getBytes())
-        .withType(TYPE_CE_1)
-        .build();
+      .withId(UUID.randomUUID().toString())
+      .withDataSchema(URI.create("/api/data-schema-ce-1"))
+      .withSource(URI.create("/api/rossi"))
+      .withSubject("subject-ce-1")
+      .withData("data-ce-1".getBytes())
+      .withType(TYPE_CE_1)
+      .build();
 
     // event sent in the response by the Callable service (see 2 in diagram)
     final var expectedResponseEvent = CloudEventBuilder.v03()
-        .withId(UUID.randomUUID().toString())
-        .withDataSchema(URI.create("/api/data-schema-ce-2"))
-        .withSubject("subject-ce-2")
-        .withSource(URI.create("/api/rossi"))
-        .withData("data-ce-2".getBytes())
-        .withType(TYPE_CE_2)
-        .build();
+      .withId(UUID.randomUUID().toString())
+      .withDataSchema(URI.create("/api/data-schema-ce-2"))
+      .withSubject("subject-ce-2")
+      .withSource(URI.create("/api/rossi"))
+      .withData("data-ce-2".getBytes())
+      .withType(TYPE_CE_2)
+      .build();
 
-    final Map<dev.knative.eventing.kafka.broker.core.Broker, Set<dev.knative.eventing.kafka.broker.core.Trigger<CloudEvent>>> objectsToReconciler = Map
-        .of(
-            new BrokerWrapper(Broker.newBuilder()
-                .setTopic(TOPIC)
-                .setPath(String.format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME))
-                .setBootstrapServers(bootstrapServers())
-                .setId(UUID.randomUUID().toString())
-                .build()),
-            Set.of(
-                new TriggerWrapper(Trigger.newBuilder()
-                    .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_1))
-                    .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_1)
-                    .setId(UUID.randomUUID().toString())
-                    .build()),
-                new TriggerWrapper(Trigger.newBuilder()
-                    .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
-                    .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_2)
-                    .setId(UUID.randomUUID().toString())
-                    .build()),
-                // the destination of the following trigger should never be reached because events
-                // don't pass filters.
-                new TriggerWrapper(Trigger.newBuilder()
-                    .setId(UUID.randomUUID().toString())
-                    .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_3))
-                    .putAttributes(
-                        ContextAttributes.SOURCE.name().toLowerCase(),
-                        UUID.randomUUID().toString()
-                    ).build())
-            )
-        );
+    final Map<dev.knative.eventing.kafka.broker.core.Broker, Set<dev.knative.eventing.kafka.broker.core.Trigger<CloudEvent>>>
+      objectsToReconciler = Map
+      .of(
+        new BrokerWrapper(Broker.newBuilder()
+          .setTopic(TOPIC)
+          .setPath(String.format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME))
+          .setBootstrapServers(bootstrapServers())
+          .setId(UUID.randomUUID().toString())
+          .build()),
+        Set.of(
+          new TriggerWrapper(Trigger.newBuilder()
+            .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_1))
+            .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_1)
+            .setId(UUID.randomUUID().toString())
+            .build()),
+          new TriggerWrapper(Trigger.newBuilder()
+            .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
+            .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_2)
+            .setId(UUID.randomUUID().toString())
+            .build()),
+          // the destination of the following trigger should never be reached because events
+          // don't pass filters.
+          new TriggerWrapper(Trigger.newBuilder()
+            .setId(UUID.randomUUID().toString())
+            .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_3))
+            .putAttributes(
+              ContextAttributes.SOURCE.name().toLowerCase(),
+              UUID.randomUUID().toString()
+            ).build())
+        )
+      );
 
     // reconcile brokers/triggers
     brokersManager.reconcile(objectsToReconciler)
-        // we don't handle or wait onSuccess, because it's fine to create the consumer at any point
-        // in time. (eg before or after starting the destination service, or before or after sending
-        // the event to the receiver)
-        .onFailure(context::failNow);
+      // we don't handle or wait onSuccess, because it's fine to create the consumer at any point
+      // in time. (eg before or after starting the destination service, or before or after sending
+      // the event to the receiver)
+      .onFailure(context::failNow);
 
     final var waitReconciler = new CountDownLatch(1);
 
     handler.reconcile(objectsToReconciler)
-        .onFailure(context::failNow)
-        .onSuccess(v -> waitReconciler.countDown());
+      .onFailure(context::failNow)
+      .onSuccess(v -> waitReconciler.countDown());
 
     waitReconciler.await(TIMEOUT, TimeUnit.SECONDS);
 
     // start service
     vertx.createHttpServer()
-        .exceptionHandler(context::failNow)
-        .requestHandler(request -> VertxMessageFactory
-            .createReader(request)
-            .map(MessageReader::toEvent)
-            .onFailure(context::failNow)
-            .onSuccess(event -> {
-
-              // service 1 receives event sent by the HTTPClient
-              if (request.path().equals(PATH_SERVICE_1)) {
-                context.verify(() -> {
-                  assertThat(event).isEqualTo(expectedRequestEvent);
-                  checkpoints.flag(); // 2
-                });
-
-                // write event to the response, the event will be handled by service 2
-                VertxMessageFactory.createWriter(request.response())
-                    .writeBinary(expectedResponseEvent);
-              }
-
-              // service 2 receives event in the response
-              if (request.path().equals(PATH_SERVICE_2)) {
-                context.verify(() -> {
-                  assertThat(event).isEqualTo(expectedResponseEvent);
-                  checkpoints.flag(); // 3
-                });
-              }
-
-              if (request.path().equals(PATH_SERVICE_3)) {
-                context.failNow(new IllegalStateException(
-                    PATH_SERVICE_3 + " should never be reached"
-                ));
-              }
-            }))
-        .listen(SERVICE_PORT, "localhost")
+      .exceptionHandler(context::failNow)
+      .requestHandler(request -> VertxMessageFactory
+        .createReader(request)
+        .map(MessageReader::toEvent)
         .onFailure(context::failNow)
-        .onSuccess(ignored -> {
-          // send event to the Broker receiver
-          VertxMessageFactory.createWriter(
-              WebClient.create(vertx)
-                  .post(INGRESS_PORT, "localhost", format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME))
-          ).writeBinary(expectedRequestEvent)
-              .onFailure(context::failNow)
-              .onSuccess(response -> context.verify(() -> {
-                assertThat(response.statusCode())
-                    .isEqualTo(202);
-                checkpoints.flag(); // 1
-              }));
-        });
+        .onSuccess(event -> {
+
+          // service 1 receives event sent by the HTTPClient
+          if (request.path().equals(PATH_SERVICE_1)) {
+            context.verify(() -> {
+              assertThat(event).isEqualTo(expectedRequestEvent);
+              checkpoints.flag(); // 2
+            });
+
+            // write event to the response, the event will be handled by service 2
+            VertxMessageFactory.createWriter(request.response())
+              .writeBinary(expectedResponseEvent);
+          }
+
+          // service 2 receives event in the response
+          if (request.path().equals(PATH_SERVICE_2)) {
+            context.verify(() -> {
+              assertThat(event).isEqualTo(expectedResponseEvent);
+              checkpoints.flag(); // 3
+            });
+          }
+
+          if (request.path().equals(PATH_SERVICE_3)) {
+            context.failNow(new IllegalStateException(
+              PATH_SERVICE_3 + " should never be reached"
+            ));
+          }
+        }))
+      .listen(SERVICE_PORT, "localhost")
+      .onFailure(context::failNow)
+      .onSuccess(ignored -> {
+        // send event to the Broker receiver
+        VertxMessageFactory.createWriter(
+          WebClient.create(vertx)
+            .post(INGRESS_PORT, "localhost", format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME))
+        ).writeBinary(expectedRequestEvent)
+          .onFailure(context::failNow)
+          .onSuccess(response -> context.verify(() -> {
+            assertThat(response.statusCode())
+              .isEqualTo(202);
+            checkpoints.flag(); // 1
+          }));
+      });
   }
 
   @AfterAll
@@ -272,11 +272,11 @@ public class DataPlaneTest {
     dataDir = File.createTempFile("kafka", "kafka");
 
     kafkaCluster = new KafkaCluster()
-        .withPorts(ZK_PORT, KAFKA_PORT)
-        .deleteDataPriorToStartup(true)
-        .addBrokers(NUM_BROKERS)
-        .usingDirectory(dataDir)
-        .startup();
+      .withPorts(ZK_PORT, KAFKA_PORT)
+      .deleteDataPriorToStartup(true)
+      .addBrokers(NUM_BROKERS)
+      .usingDirectory(dataDir)
+      .startup();
 
     kafkaCluster.createTopic(TOPIC, NUM_PARTITIONS, REPLICATION_FACTOR);
   }
@@ -284,7 +284,7 @@ public class DataPlaneTest {
   private static BrokersManager<CloudEvent> setUpDispatcher(final Vertx vertx) {
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-        consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered();
+      consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered();
 
     final var consumerConfigs = new Properties();
     consumerConfigs.put(BOOTSTRAP_SERVERS_CONFIG, format("localhost:%d", KAFKA_PORT));
@@ -294,29 +294,29 @@ public class DataPlaneTest {
     final var producerConfigs = producerConfigs();
 
     final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
-        consumerRecordOffsetStrategyFactory,
-        consumerConfigs,
-        WebClient.create(vertx),
-        vertx,
-        producerConfigs
+      consumerRecordOffsetStrategyFactory,
+      consumerConfigs,
+      WebClient.create(vertx),
+      vertx,
+      producerConfigs
     );
 
     return new BrokersManager<>(
-        vertx,
-        consumerVerticleFactory,
-        10,
-        10
+      vertx,
+      consumerVerticleFactory,
+      10,
+      10
     );
   }
 
   private static ObjectsReconciler<CloudEvent> setUpReceiver(
-      final Vertx vertx,
-      final VertxTestContext context) throws InterruptedException {
+    final Vertx vertx,
+    final VertxTestContext context) throws InterruptedException {
 
     final var handler = new RequestHandler<>(
-        producerConfigs(),
-        new CloudEventRequestToRecordMapper(),
-        properties -> KafkaProducer.create(vertx, properties)
+      producerConfigs(),
+      new CloudEventRequestToRecordMapper(),
+      properties -> KafkaProducer.create(vertx, properties)
     );
 
     final var httpServerOptions = new HttpServerOptions();

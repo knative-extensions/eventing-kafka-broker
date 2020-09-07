@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.receiver.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 import dev.knative.eventing.kafka.broker.receiver.HttpVerticle;
 import dev.knative.eventing.kafka.broker.receiver.SimpleProbeHandlerDecorator;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -50,9 +49,9 @@ public class ProbeHandlerTest {
     httpServerOptions.setPort(PORT);
     httpServerOptions.setHost("localhost");
     final var verticle = new HttpVerticle(httpServerOptions, new SimpleProbeHandlerDecorator(
-        LIVENESS_PATH,
-        READINESS_PATH,
-        r -> r.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end()
+      LIVENESS_PATH,
+      READINESS_PATH,
+      r -> r.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end()
     ));
     webClient = WebClient.create(vertx);
     vertx.deployVerticle(verticle, context.succeeding(ar -> context.completeNow()));
@@ -79,16 +78,16 @@ public class ProbeHandlerTest {
   }
 
   private static void mustReceiveStatusCodeOnPath(
-      final VertxTestContext context,
-      final int expectedStatusCode,
-      final String path) {
+    final VertxTestContext context,
+    final int expectedStatusCode,
+    final String path) {
     webClient.get(PORT, "localhost", path)
-        .send()
-        .onSuccess(response -> context.verify(() -> {
-          assertThat(response.statusCode())
-              .isEqualTo(expectedStatusCode);
-          context.completeNow();
-        }))
-        .onFailure(context::failNow);
+      .send()
+      .onSuccess(response -> context.verify(() -> {
+        assertThat(response.statusCode())
+          .isEqualTo(expectedStatusCode);
+        context.completeNow();
+      }))
+      .onFailure(context::failNow);
   }
 }

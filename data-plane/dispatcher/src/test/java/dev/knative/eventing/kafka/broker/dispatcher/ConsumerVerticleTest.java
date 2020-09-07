@@ -19,7 +19,6 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
-
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -46,12 +45,12 @@ public class ConsumerVerticleTest {
     verticle.start(promise);
 
     promise.future()
-        .onSuccess(ignored -> {
-          assertThat(consumer.subscription()).containsExactlyInAnyOrder(topic);
-          assertThat(consumer.closed()).isFalse();
-          context.completeNow();
-        })
-        .onFailure(Assertions::fail);
+      .onSuccess(ignored -> {
+        assertThat(consumer.subscription()).containsExactlyInAnyOrder(topic);
+        assertThat(consumer.closed()).isFalse();
+        context.completeNow();
+      })
+      .onFailure(Assertions::fail);
   }
 
   @Test
@@ -67,11 +66,11 @@ public class ConsumerVerticleTest {
     verticle.stop(promise);
 
     promise.future()
-        .onSuccess(ignored -> {
-          assertThat(consumer.closed()).isTrue();
-          context.completeNow();
-        })
-        .onFailure(Assertions::fail);
+      .onSuccess(ignored -> {
+        assertThat(consumer.closed()).isTrue();
+        context.completeNow();
+      })
+      .onFailure(Assertions::fail);
 
   }
 }

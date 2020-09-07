@@ -58,10 +58,10 @@ public class FileWatcher {
    * @throws IOException watch service cannot be registered.
    */
   public FileWatcher(
-      final WatchService watcher,
-      final Consumer<Brokers> brokersConsumer,
-      final File file)
-      throws IOException {
+    final WatchService watcher,
+    final Consumer<Brokers> brokersConsumer,
+    final File file)
+    throws IOException {
 
     Objects.requireNonNull(brokersConsumer, "provide consumer");
     Objects.requireNonNull(file, "provide file");
@@ -130,8 +130,8 @@ public class FileWatcher {
 
   private void update() throws IOException {
     try (
-        final var fileReader = new FileReader(toWatch);
-        final var bufferedReader = new BufferedReader(fileReader)) {
+      final var fileReader = new FileReader(toWatch);
+      final var bufferedReader = new BufferedReader(fileReader)) {
       parseFromJson(bufferedReader);
     }
   }

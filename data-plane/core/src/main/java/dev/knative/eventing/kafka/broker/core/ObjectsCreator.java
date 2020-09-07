@@ -66,7 +66,7 @@ public class ObjectsCreator implements Consumer<Brokers> {
 
     for (final var broker : brokers.getBrokersList()) {
       final var triggers = new HashSet<Trigger<CloudEvent>>(
-          broker.getTriggersCount()
+        broker.getTriggersCount()
       );
       for (final var trigger : broker.getTriggersList()) {
         triggers.add(new TriggerWrapper(trigger));

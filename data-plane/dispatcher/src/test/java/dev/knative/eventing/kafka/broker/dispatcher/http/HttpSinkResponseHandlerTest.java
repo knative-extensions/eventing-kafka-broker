@@ -19,7 +19,6 @@ package dev.knative.eventing.kafka.broker.dispatcher.http;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-
 import io.cloudevents.core.provider.EventFormatProvider;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.kafka.CloudEventSerializer;
@@ -51,13 +50,13 @@ public class HttpSinkResponseHandlerTest {
   @Test
   public void shouldAlwaysSucceed(final Vertx vertx, final VertxTestContext context) {
     final var producer = new MockProducer<>(
-        true,
-        new StringSerializer(),
-        new CloudEventSerializer()
+      true,
+      new StringSerializer(),
+      new CloudEventSerializer()
     );
     final var handler = new HttpSinkResponseHandler(
-        TOPIC,
-        KafkaProducer.create(vertx, producer)
+      TOPIC,
+      KafkaProducer.create(vertx, producer)
     );
 
     // Empty response
@@ -67,49 +66,49 @@ public class HttpSinkResponseHandlerTest {
     when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap());
 
     context
-        .assertComplete(handler.handle(response))
-        .onComplete(v -> context.completeNow());
+      .assertComplete(handler.handle(response))
+      .onComplete(v -> context.completeNow());
   }
 
   @Test
   public void shouldSendRecord(final Vertx vertx, final VertxTestContext context)
-      throws InterruptedException {
+    throws InterruptedException {
     final var producer = new MockProducer<>(
-        true,
-        new StringSerializer(),
-        new CloudEventSerializer()
+      true,
+      new StringSerializer(),
+      new CloudEventSerializer()
     );
     final var handler = new HttpSinkResponseHandler(
-        TOPIC,
-        KafkaProducer.create(vertx, producer)
+      TOPIC,
+      KafkaProducer.create(vertx, producer)
     );
 
     final var event = new CloudEventBuilder()
-        .withId("1234")
-        .withSource(URI.create("/api"))
-        .withSubject("subject")
-        .withType("type")
-        .build();
+      .withId("1234")
+      .withSource(URI.create("/api"))
+      .withSubject("subject")
+      .withType("type")
+      .build();
 
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
     when(response.body()).thenReturn(Buffer.buffer(
-        EventFormatProvider.getInstance()
-            .resolveFormat("application/cloudevents+json")
-            .serialize(event)
+      EventFormatProvider.getInstance()
+        .resolveFormat("application/cloudevents+json")
+        .serialize(event)
     ));
     when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap()
-        .set(HttpHeaders.CONTENT_TYPE, "application/cloudevents+json")
+      .set(HttpHeaders.CONTENT_TYPE, "application/cloudevents+json")
     );
 
     final var wait = new CountDownLatch(1);
     handler.handle(response)
-        .onSuccess(ignored -> wait.countDown())
-        .onFailure(context::failNow);
+      .onSuccess(ignored -> wait.countDown())
+      .onFailure(context::failNow);
 
     wait.await();
 
     Assertions.assertThat(producer.history())
-        .containsExactlyInAnyOrder(new ProducerRecord<>(TOPIC, null, event));
+      .containsExactlyInAnyOrder(new ProducerRecord<>(TOPIC, null, event));
     context.completeNow();
   }
 }

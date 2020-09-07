@@ -31,14 +31,14 @@ class EnvTest {
   @Test
   public void create() {
     final var env = new Env(
-        key -> switch (key) {
-          case Env.INGRESS_PORT -> PORT;
-          case Env.LIVENESS_PROBE_PATH -> LIVENESS_PATH;
-          case Env.READINESS_PROBE_PATH -> READINESS_PATH;
-          case Env.PRODUCER_CONFIG_FILE_PATH -> PRODUCER_CONFIG_PATH;
-          case Env.DATA_PLANE_CONFIG_FILE_PATH -> DATA_PLANE_CONFIG_FILE_PATH;
-          default -> throw new IllegalArgumentException();
-        }
+      key -> switch (key) {
+        case Env.INGRESS_PORT -> PORT;
+        case Env.LIVENESS_PROBE_PATH -> LIVENESS_PATH;
+        case Env.READINESS_PROBE_PATH -> READINESS_PATH;
+        case Env.PRODUCER_CONFIG_FILE_PATH -> PRODUCER_CONFIG_PATH;
+        case Env.DATA_PLANE_CONFIG_FILE_PATH -> DATA_PLANE_CONFIG_FILE_PATH;
+        default -> throw new IllegalArgumentException();
+      }
     );
 
     assertThat(env.getIngressPort()).isEqualTo(Integer.parseInt(PORT));

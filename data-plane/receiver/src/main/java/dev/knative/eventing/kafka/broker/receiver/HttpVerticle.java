@@ -37,8 +37,8 @@ public class HttpVerticle extends AbstractVerticle {
    * @param requestHandler    request handler.
    */
   public HttpVerticle(
-      final HttpServerOptions httpServerOptions,
-      final Handler<HttpServerRequest> requestHandler) {
+    final HttpServerOptions httpServerOptions,
+    final Handler<HttpServerRequest> requestHandler) {
 
     Objects.requireNonNull(httpServerOptions, "provide http server options");
     Objects.requireNonNull(requestHandler, "provide request handler");
@@ -51,9 +51,9 @@ public class HttpVerticle extends AbstractVerticle {
   public void start(final Promise<Void> startPromise) {
     server = vertx.createHttpServer(httpServerOptions);
     server.requestHandler(requestHandler)
-        .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
-        .<Void>mapEmpty()
-        .onComplete(startPromise);
+      .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
+      .<Void>mapEmpty()
+      .onComplete(startPromise);
   }
 
   @Override

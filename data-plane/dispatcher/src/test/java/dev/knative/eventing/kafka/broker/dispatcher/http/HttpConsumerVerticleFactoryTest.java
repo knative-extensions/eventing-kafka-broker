@@ -24,7 +24,6 @@ import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-
 import dev.knative.eventing.kafka.broker.core.Broker;
 import dev.knative.eventing.kafka.broker.core.EventMatcher;
 import dev.knative.eventing.kafka.broker.core.Filter;
@@ -52,25 +51,98 @@ public class HttpConsumerVerticleFactoryTest {
     final var consumerProperties = new Properties();
     consumerProperties.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
     consumerProperties
-        .setProperty(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+      .setProperty(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
     consumerProperties
-        .setProperty(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
+      .setProperty(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
 
     final var producerConfigs = new Properties();
     producerConfigs.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
     producerConfigs.setProperty(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
     producerConfigs
-        .setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
+      .setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
 
     final var verticleFactory = new HttpConsumerVerticleFactory(
-        ConsumerRecordOffsetStrategyFactory.unordered(),
-        consumerProperties,
-        WebClient.create(vertx),
-        vertx,
-        producerConfigs
+      ConsumerRecordOffsetStrategyFactory.unordered(),
+      consumerProperties,
+      WebClient.create(vertx),
+      vertx,
+      producerConfigs
     );
 
     final var consumerFactoryFuture = verticleFactory.get(
+      new Broker() {
+        @Override
+        public String id() {
+          return "123456";
+        }
+
+        @Override
+        public String topic() {
+          return "t1";
+        }
+
+        @Override
+        public String deadLetterSink() {
+          return "http://localhost:43257";
+        }
+
+        @Override
+        public String bootstrapServers() {
+          return "0.0.0.0:9092";
+        }
+
+        @Override
+        public String path() {
+          return null;
+        }
+      },
+      new Trigger<>() {
+        @Override
+        public String id() {
+          return "1234";
+        }
+
+        @Override
+        public Filter<CloudEvent> filter() {
+          return new EventMatcher(new HashMap<>());
+        }
+
+        @Override
+        public String destination() {
+          return "http://localhost:43256";
+        }
+      }
+    );
+
+    assertThat(consumerFactoryFuture.succeeded()).isTrue();
+  }
+
+  @Test
+  public void shouldNotThrowIllegalArgumentExceptionIfNotDLQ(final Vertx vertx) {
+
+    final var consumerProperties = new Properties();
+    consumerProperties.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
+    consumerProperties
+      .setProperty(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    consumerProperties
+      .setProperty(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
+
+    final var producerConfigs = new Properties();
+    producerConfigs.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
+    producerConfigs.setProperty(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+    producerConfigs
+      .setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
+
+    final var verticleFactory = new HttpConsumerVerticleFactory(
+      ConsumerRecordOffsetStrategyFactory.unordered(),
+      consumerProperties,
+      WebClient.create(vertx),
+      vertx,
+      producerConfigs
+    );
+
+    assertDoesNotThrow(() -> {
+      verticleFactory.get(
         new Broker() {
           @Override
           public String id() {
@@ -84,7 +156,7 @@ public class HttpConsumerVerticleFactoryTest {
 
           @Override
           public String deadLetterSink() {
-            return "http://localhost:43257";
+            return "";
           }
 
           @Override
@@ -112,80 +184,7 @@ public class HttpConsumerVerticleFactoryTest {
           public String destination() {
             return "http://localhost:43256";
           }
-        }
-    );
-
-    assertThat(consumerFactoryFuture.succeeded()).isTrue();
-  }
-
-  @Test
-  public void shouldNotThrowIllegalArgumentExceptionIfNotDLQ(final Vertx vertx) {
-
-    final var consumerProperties = new Properties();
-    consumerProperties.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
-    consumerProperties
-        .setProperty(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-    consumerProperties
-        .setProperty(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
-
-    final var producerConfigs = new Properties();
-    producerConfigs.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
-    producerConfigs.setProperty(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-    producerConfigs
-        .setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
-
-    final var verticleFactory = new HttpConsumerVerticleFactory(
-        ConsumerRecordOffsetStrategyFactory.unordered(),
-        consumerProperties,
-        WebClient.create(vertx),
-        vertx,
-        producerConfigs
-    );
-
-    assertDoesNotThrow(() -> {
-      verticleFactory.get(
-          new Broker() {
-            @Override
-            public String id() {
-              return "123456";
-            }
-
-            @Override
-            public String topic() {
-              return "t1";
-            }
-
-            @Override
-            public String deadLetterSink() {
-              return "";
-            }
-
-            @Override
-            public String bootstrapServers() {
-              return "0.0.0.0:9092";
-            }
-
-            @Override
-            public String path() {
-              return null;
-            }
-          },
-          new Trigger<>() {
-            @Override
-            public String id() {
-              return "1234";
-            }
-
-            @Override
-            public Filter<CloudEvent> filter() {
-              return new EventMatcher(new HashMap<>());
-            }
-
-            @Override
-            public String destination() {
-              return "http://localhost:43256";
-            }
-          });
+        });
     });
   }
 }
