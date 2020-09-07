@@ -68,6 +68,32 @@
   </modules>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.ec4j.maven</groupId>
+          <artifactId>editorconfig-maven-plugin</artifactId>
+          <version>${maven.editorconfig.plugin.version}</version>
+          <executions>
+            <execution>
+              <id>check</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <excludes>
+              <exclude>.dockerignore</exclude>
+              <exclude>config/***</exclude>
+              <exclude>.mvn/***</exclude>
+            </excludes>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -82,29 +108,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven.surefire.plugin.version}</version>
-      </plugin>
-      <plugin>
-        <groupId>org.ec4j.maven</groupId>
-        <artifactId>editorconfig-maven-plugin</artifactId>
-        <version>${maven.editorconfig.plugin.version}</version>
-        <executions>
-          <execution>
-            <id>check</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <excludeSubmodules>false</excludeSubmodules>
-          <excludes>
-            <exclude>generated/***</exclude>
-            <exclude>.dockerignore</exclude>
-            <exclude>config/***</exclude>
-            <exclude>.mvn/***</exclude>
-          </excludes>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.jacoco</groupId>
