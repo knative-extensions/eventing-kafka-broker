@@ -16,25 +16,17 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
-import io.vertx.config.ConfigRetriever;
-import io.vertx.config.ConfigRetrieverOptions;
-import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.FileSystems;
-import java.util.Properties;
-import java.util.concurrent.ArrayBlockingQueue;
 import net.logstash.logback.encoder.LogstashEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +38,7 @@ public class Main {
   private static final String BROKERS_TRIGGERS_PATH = "BROKERS_TRIGGERS_PATH";
   private static final String PRODUCER_CONFIG_FILE_PATH = "PRODUCER_CONFIG_FILE_PATH";
   private static final String CONSUMER_CONFIG_FILE_PATH = "CONSUMER_CONFIG_FILE_PATH";
+  private static final String WEBCLIENT_CONFIG_FILE_PATH = "WEBCLIENT_CONFIG_FILE_PATH";
   private static final String BROKERS_INITIAL_CAPACITY = "BROKERS_INITIAL_CAPACITY";
   private static final String TRIGGERS_INITIAL_CAPACITY = "TRIGGERS_INITIAL_CAPACITY";
   public static final String INSTANCE_ID = "INSTANCE_ID";
@@ -55,7 +48,7 @@ public class Main {
    *
    * @param args command line arguments.
    */
-  public static void main(final String[] args) {
+  public static void main(final String[] args) throws Exception {
 
     // HACK HACK HACK
     // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
@@ -69,34 +62,27 @@ public class Main {
     final var vertx = Vertx.vertx();
     Runtime.getRuntime().addShutdownHook(new Thread(vertx::close));
 
-    final JsonObject json;
-    try {
-      json = getConfigurations(vertx);
-    } catch (InterruptedException e) {
-      System.exit(1);
-      return;
-    }
-
-    final var producerConfigs = config(json.getString(PRODUCER_CONFIG_FILE_PATH));
-    final var consumerConfigs = config(json.getString(CONSUMER_CONFIG_FILE_PATH));
-    final var instanceID = json.getString(INSTANCE_ID);
+    final JsonObject envConfig = Configurations.getEnvConfigurations(vertx);
+    final var producerConfig = Configurations.getKafkaProperties(envConfig.getString(PRODUCER_CONFIG_FILE_PATH));
+    final var consumerConfig = Configurations.getKafkaProperties(envConfig.getString(CONSUMER_CONFIG_FILE_PATH));
+    final var webClientConfig = Configurations.getFileConfigurations(vertx, envConfig.getString(WEBCLIENT_CONFIG_FILE_PATH));
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
       consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered();
 
     final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
       consumerRecordOffsetStrategyFactory,
-      consumerConfigs,
-      WebClient.create(vertx, new WebClientOptions().setIdleTimeout(10000)),
+      consumerConfig,
+      WebClient.create(vertx, new WebClientOptions(webClientConfig)),
       vertx,
-      producerConfigs
+      producerConfig
     );
 
     final var brokersManager = new BrokersManager<>(
       vertx,
       consumerVerticleFactory,
-      Integer.parseInt(json.getString(BROKERS_INITIAL_CAPACITY)),
-      Integer.parseInt(json.getString(TRIGGERS_INITIAL_CAPACITY))
+      Integer.parseInt(envConfig.getString(BROKERS_INITIAL_CAPACITY)),
+      Integer.parseInt(envConfig.getString(TRIGGERS_INITIAL_CAPACITY))
     );
 
     final var objectCreator = new ObjectsCreator(brokersManager);
@@ -105,7 +91,7 @@ public class Main {
       final var fw = new FileWatcher(
         FileSystems.getDefault().newWatchService(),
         objectCreator,
-        new File(json.getString(BROKERS_TRIGGERS_PATH))
+        new File(envConfig.getString(BROKERS_TRIGGERS_PATH))
       );
 
       fw.watch(); // block forever
@@ -115,42 +101,4 @@ public class Main {
     }
   }
 
-  private static Properties config(final String path) {
-    if (path == null) {
-      return new Properties();
-    }
-
-    final var consumerConfigs = new Properties();
-    try (final var configReader = new FileReader(path)) {
-      consumerConfigs.load(configReader);
-    } catch (IOException e) {
-      logger.error("failed to load configurations from file {}", keyValue("path", path), e);
-    }
-
-    return consumerConfigs;
-  }
-
-  private static JsonObject getConfigurations(final Vertx vertx) throws InterruptedException {
-
-    final var envConfigs = new ConfigStoreOptions()
-      .setType("env")
-      .setOptional(false)
-      .setConfig(new JsonObject().put("raw-data", true));
-
-    final var configRetrieverOptions = new ConfigRetrieverOptions()
-      .addStore(envConfigs);
-
-    final var configRetriever = ConfigRetriever.create(vertx, configRetrieverOptions);
-
-
-    final var waitConfigs = new ArrayBlockingQueue<JsonObject>(1);
-    configRetriever.getConfig()
-      .onSuccess(waitConfigs::add)
-      .onFailure(cause -> {
-        logger.error("failed to retrieve configurations", cause);
-        vertx.close(ignored -> System.exit(1));
-      });
-
-    return waitConfigs.take();
-  }
 }
