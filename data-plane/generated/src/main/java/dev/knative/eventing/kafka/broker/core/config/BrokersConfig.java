@@ -251,7 +251,7 @@ public final class BrokersConfig {
           java.lang.String, java.lang.String> defaultEntry =
               com.google.protobuf.MapEntry
               .<java.lang.String, java.lang.String>newDefaultInstance(
-                  dev.knative.eventing.kafka.broker.core.config.BrokersConfig.internal_static_Trigger_AttributesEntry_descriptor,
+                  dev.knative.eventing.kafka.broker.core.config.BrokersConfig.internal_static_Trigger_AttributesEntry_descriptor, 
                   com.google.protobuf.WireFormat.FieldType.STRING,
                   "",
                   com.google.protobuf.WireFormat.FieldType.STRING,
@@ -367,7 +367,7 @@ public final class BrokersConfig {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         destination_ = s;
@@ -385,7 +385,7 @@ public final class BrokersConfig {
         getDestinationBytes() {
       java.lang.Object ref = destination_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         destination_ = b;
@@ -409,7 +409,7 @@ public final class BrokersConfig {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         id_ = s;
@@ -427,7 +427,7 @@ public final class BrokersConfig {
         getIdBytes() {
       java.lang.Object ref = id_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         id_ = b;
@@ -1017,7 +1017,7 @@ public final class BrokersConfig {
           getDestinationBytes() {
         java.lang.Object ref = destination_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           destination_ = b;
@@ -1038,7 +1038,7 @@ public final class BrokersConfig {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         destination_ = value;
         onChanged();
         return this;
@@ -1051,7 +1051,7 @@ public final class BrokersConfig {
        * <code>string destination = 2;</code>
        */
       public Builder clearDestination() {
-
+        
         destination_ = getDefaultInstance().getDestination();
         onChanged();
         return this;
@@ -1069,7 +1069,7 @@ public final class BrokersConfig {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-
+        
         destination_ = value;
         onChanged();
         return this;
@@ -1106,7 +1106,7 @@ public final class BrokersConfig {
           getIdBytes() {
         java.lang.Object ref = id_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           id_ = b;
@@ -1127,7 +1127,7 @@ public final class BrokersConfig {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         id_ = value;
         onChanged();
         return this;
@@ -1140,7 +1140,7 @@ public final class BrokersConfig {
        * <code>string id = 3;</code>
        */
       public Builder clearId() {
-
+        
         id_ = getDefaultInstance().getId();
         onChanged();
         return this;
@@ -1158,7 +1158,7 @@ public final class BrokersConfig {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-
+        
         id_ = value;
         onChanged();
         return this;
@@ -1273,7 +1273,7 @@ public final class BrokersConfig {
      *
      * <code>repeated .Trigger triggers = 4;</code>
      */
-    java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Trigger>
+    java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Trigger> 
         getTriggersList();
     /**
      * <pre>
@@ -1298,7 +1298,7 @@ public final class BrokersConfig {
      *
      * <code>repeated .Trigger triggers = 4;</code>
      */
-    java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.TriggerOrBuilder>
+    java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.TriggerOrBuilder> 
         getTriggersOrBuilderList();
     /**
      * <pre>
@@ -1482,7 +1482,7 @@ public final class BrokersConfig {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         id_ = s;
@@ -1496,7 +1496,7 @@ public final class BrokersConfig {
         getIdBytes() {
       java.lang.Object ref = id_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         id_ = b;
@@ -1520,7 +1520,7 @@ public final class BrokersConfig {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         topic_ = s;
@@ -1538,7 +1538,7 @@ public final class BrokersConfig {
         getTopicBytes() {
       java.lang.Object ref = topic_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         topic_ = b;
@@ -1562,7 +1562,7 @@ public final class BrokersConfig {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         deadLetterSink_ = s;
@@ -1580,7 +1580,7 @@ public final class BrokersConfig {
         getDeadLetterSinkBytes() {
       java.lang.Object ref = deadLetterSink_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         deadLetterSink_ = b;
@@ -1609,7 +1609,7 @@ public final class BrokersConfig {
      *
      * <code>repeated .Trigger triggers = 4;</code>
      */
-    public java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.TriggerOrBuilder>
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.TriggerOrBuilder> 
         getTriggersOrBuilderList() {
       return triggers_;
     }
@@ -1659,7 +1659,7 @@ public final class BrokersConfig {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         path_ = s;
@@ -1677,7 +1677,7 @@ public final class BrokersConfig {
         getPathBytes() {
       java.lang.Object ref = path_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         path_ = b;
@@ -1701,7 +1701,7 @@ public final class BrokersConfig {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         bootstrapServers_ = s;
@@ -1719,7 +1719,7 @@ public final class BrokersConfig {
         getBootstrapServersBytes() {
       java.lang.Object ref = bootstrapServers_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         bootstrapServers_ = b;
@@ -2110,7 +2110,7 @@ public final class BrokersConfig {
               triggersBuilder_ = null;
               triggers_ = other.triggers_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              triggersBuilder_ =
+              triggersBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getTriggersFieldBuilder() : null;
             } else {
@@ -2179,7 +2179,7 @@ public final class BrokersConfig {
           getIdBytes() {
         java.lang.Object ref = id_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           id_ = b;
@@ -2196,7 +2196,7 @@ public final class BrokersConfig {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         id_ = value;
         onChanged();
         return this;
@@ -2205,7 +2205,7 @@ public final class BrokersConfig {
        * <code>string id = 1;</code>
        */
       public Builder clearId() {
-
+        
         id_ = getDefaultInstance().getId();
         onChanged();
         return this;
@@ -2219,7 +2219,7 @@ public final class BrokersConfig {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-
+        
         id_ = value;
         onChanged();
         return this;
@@ -2256,7 +2256,7 @@ public final class BrokersConfig {
           getTopicBytes() {
         java.lang.Object ref = topic_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           topic_ = b;
@@ -2277,7 +2277,7 @@ public final class BrokersConfig {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         topic_ = value;
         onChanged();
         return this;
@@ -2290,7 +2290,7 @@ public final class BrokersConfig {
        * <code>string topic = 2;</code>
        */
       public Builder clearTopic() {
-
+        
         topic_ = getDefaultInstance().getTopic();
         onChanged();
         return this;
@@ -2308,7 +2308,7 @@ public final class BrokersConfig {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-
+        
         topic_ = value;
         onChanged();
         return this;
@@ -2345,7 +2345,7 @@ public final class BrokersConfig {
           getDeadLetterSinkBytes() {
         java.lang.Object ref = deadLetterSink_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           deadLetterSink_ = b;
@@ -2366,7 +2366,7 @@ public final class BrokersConfig {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         deadLetterSink_ = value;
         onChanged();
         return this;
@@ -2379,7 +2379,7 @@ public final class BrokersConfig {
        * <code>string deadLetterSink = 3;</code>
        */
       public Builder clearDeadLetterSink() {
-
+        
         deadLetterSink_ = getDefaultInstance().getDeadLetterSink();
         onChanged();
         return this;
@@ -2397,7 +2397,7 @@ public final class BrokersConfig {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-
+        
         deadLetterSink_ = value;
         onChanged();
         return this;
@@ -2658,7 +2658,7 @@ public final class BrokersConfig {
        *
        * <code>repeated .Trigger triggers = 4;</code>
        */
-      public java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.TriggerOrBuilder>
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.TriggerOrBuilder> 
            getTriggersOrBuilderList() {
         if (triggersBuilder_ != null) {
           return triggersBuilder_.getMessageOrBuilderList();
@@ -2696,12 +2696,12 @@ public final class BrokersConfig {
        *
        * <code>repeated .Trigger triggers = 4;</code>
        */
-      public java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Trigger.Builder>
+      public java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Trigger.Builder> 
            getTriggersBuilderList() {
         return getTriggersFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Trigger, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Trigger.Builder, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.TriggerOrBuilder>
+          dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Trigger, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Trigger.Builder, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.TriggerOrBuilder> 
           getTriggersFieldBuilder() {
         if (triggersBuilder_ == null) {
           triggersBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -2746,7 +2746,7 @@ public final class BrokersConfig {
           getPathBytes() {
         java.lang.Object ref = path_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           path_ = b;
@@ -2767,7 +2767,7 @@ public final class BrokersConfig {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         path_ = value;
         onChanged();
         return this;
@@ -2780,7 +2780,7 @@ public final class BrokersConfig {
        * <code>string path = 5;</code>
        */
       public Builder clearPath() {
-
+        
         path_ = getDefaultInstance().getPath();
         onChanged();
         return this;
@@ -2798,7 +2798,7 @@ public final class BrokersConfig {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-
+        
         path_ = value;
         onChanged();
         return this;
@@ -2835,7 +2835,7 @@ public final class BrokersConfig {
           getBootstrapServersBytes() {
         java.lang.Object ref = bootstrapServers_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           bootstrapServers_ = b;
@@ -2856,7 +2856,7 @@ public final class BrokersConfig {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         bootstrapServers_ = value;
         onChanged();
         return this;
@@ -2869,7 +2869,7 @@ public final class BrokersConfig {
        * <code>string bootstrapServers = 6;</code>
        */
       public Builder clearBootstrapServers() {
-
+        
         bootstrapServers_ = getDefaultInstance().getBootstrapServers();
         onChanged();
         return this;
@@ -2887,7 +2887,7 @@ public final class BrokersConfig {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-
+        
         bootstrapServers_ = value;
         onChanged();
         return this;
@@ -2952,7 +2952,7 @@ public final class BrokersConfig {
     /**
      * <code>repeated .Broker brokers = 1;</code>
      */
-    java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker>
+    java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker> 
         getBrokersList();
     /**
      * <code>repeated .Broker brokers = 1;</code>
@@ -2965,7 +2965,7 @@ public final class BrokersConfig {
     /**
      * <code>repeated .Broker brokers = 1;</code>
      */
-    java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder>
+    java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder> 
         getBrokersOrBuilderList();
     /**
      * <code>repeated .Broker brokers = 1;</code>
@@ -3090,7 +3090,7 @@ public final class BrokersConfig {
     /**
      * <code>repeated .Broker brokers = 1;</code>
      */
-    public java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder>
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder> 
         getBrokersOrBuilderList() {
       return brokers_;
     }
@@ -3447,7 +3447,7 @@ public final class BrokersConfig {
               brokersBuilder_ = null;
               brokers_ = other.brokers_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              brokersBuilder_ =
+              brokersBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getBrokersFieldBuilder() : null;
             } else {
@@ -3683,7 +3683,7 @@ public final class BrokersConfig {
       /**
        * <code>repeated .Broker brokers = 1;</code>
        */
-      public java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder>
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder> 
            getBrokersOrBuilderList() {
         if (brokersBuilder_ != null) {
           return brokersBuilder_.getMessageOrBuilderList();
@@ -3709,12 +3709,12 @@ public final class BrokersConfig {
       /**
        * <code>repeated .Broker brokers = 1;</code>
        */
-      public java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder>
+      public java.util.List<dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder> 
            getBrokersBuilderList() {
         return getBrokersFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder>
+          dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker.Builder, dev.knative.eventing.kafka.broker.core.config.BrokersConfig.BrokerOrBuilder> 
           getBrokersFieldBuilder() {
         if (brokersBuilder_ == null) {
           brokersBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -3749,7 +3749,7 @@ public final class BrokersConfig {
        * <code>uint64 volumeGeneration = 2;</code>
        */
       public Builder setVolumeGeneration(long value) {
-
+        
         volumeGeneration_ = value;
         onChanged();
         return this;
@@ -3763,7 +3763,7 @@ public final class BrokersConfig {
        * <code>uint64 volumeGeneration = 2;</code>
        */
       public Builder clearVolumeGeneration() {
-
+        
         volumeGeneration_ = 0L;
         onChanged();
         return this;
@@ -3823,22 +3823,22 @@ public final class BrokersConfig {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Trigger_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Trigger_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Trigger_AttributesEntry_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Trigger_AttributesEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Broker_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Broker_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Brokers_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Brokers_fieldAccessorTable;
 
