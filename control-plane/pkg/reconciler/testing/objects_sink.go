@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
+	"k8s.io/utils/pointer"
 	"knative.dev/eventing/pkg/reconciler/names"
 	"knative.dev/pkg/apis"
 
@@ -58,8 +59,8 @@ func NewSink(options ...SinkOption) runtime.Object {
 		},
 		Spec: eventing.KafkaSinkSpec{
 			Topic:             SinkTopic(),
-			NumPartitions:     SinkNumPartitions,
-			ReplicationFactor: SinkReplicationFactor,
+			NumPartitions:     pointer.Int32Ptr(SinkNumPartitions),
+			ReplicationFactor: func(rf int16) *int16 { return &rf }(SinkReplicationFactor),
 			BootstrapServers:  bootstrapServers,
 		},
 	}

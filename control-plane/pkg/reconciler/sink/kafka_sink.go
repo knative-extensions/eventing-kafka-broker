@@ -58,14 +58,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	logger := log.Logger(ctx, "reconcile", ks)
 
-	topicConfig := &kafka.TopicConfig{
-		TopicDetail: sarama.TopicDetail{
-			NumPartitions:     ks.Spec.NumPartitions,
-			ReplicationFactor: ks.Spec.ReplicationFactor,
-		},
-		BootstrapServers: kafka.BootstrapServersArray(ks.Spec.BootstrapServers),
-	}
-
 	statusConditionManager := base.StatusConditionManager{
 		Object:     ks,
 		SetAddress: ks.Status.SetAddress,
@@ -73,13 +65,23 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
-	topic, err := r.ClusterAdmin.CreateTopic(logger, ks.Spec.Topic, topicConfig)
-	if err != nil {
-		return statusConditionManager.FailedToCreateTopic(topic, err)
-	}
-	statusConditionManager.TopicCreated(topic)
+	if ks.Spec.NumPartitions != nil && ks.Spec.ReplicationFactor != nil {
+		topicConfig := &kafka.TopicConfig{
+			TopicDetail: sarama.TopicDetail{
+				NumPartitions:     *ks.Spec.NumPartitions,
+				ReplicationFactor: *ks.Spec.ReplicationFactor,
+			},
+			BootstrapServers: kafka.BootstrapServersArray(ks.Spec.BootstrapServers),
+		}
 
-	logger.Debug("Topic created", zap.Any("topic", topic))
+		topic, err := r.ClusterAdmin.CreateTopic(logger, ks.Spec.Topic, topicConfig)
+		if err != nil {
+			return statusConditionManager.FailedToCreateTopic(topic, err)
+		}
+	}
+	statusConditionManager.TopicCreated(ks.Spec.Topic)
+
+	logger.Debug("Topic created", zap.Any("topic", ks.Spec.Topic))
 
 	// Get sinks config map.
 	sinksConfigMap, err := r.GetOrCreateDataPlaneConfigMap()
@@ -107,7 +109,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	// TODO(pierDipi) support content modes
 	sinkConfig := &coreconfig.Sink{
 		Id:               string(ks.UID),
-		Topic:            topic,
+		Topic:            ks.Spec.Topic,
 		Path:             receiver.PathFromObject(ks),
 		BootstrapServers: ks.Spec.BootstrapServers,
 		ContentMode:      coreconfig.ContentModeFromString(*ks.Spec.ContentMode),

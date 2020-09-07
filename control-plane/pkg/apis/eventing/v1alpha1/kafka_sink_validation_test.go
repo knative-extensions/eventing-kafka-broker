@@ -77,14 +77,14 @@ func TestKafkaSink_Validate(t *testing.T) {
 				Spec: KafkaSinkSpec{
 					Topic:             "topic-name-1",
 					BootstrapServers:  "broker-1:9092",
-					ReplicationFactor: 10,
+					ReplicationFactor: pointerInt16(10),
 				},
 			},
 			ctx: apis.WithinUpdate(context.Background(), &KafkaSink{
 				Spec: KafkaSinkSpec{
 					Topic:             "topic-name-1",
 					BootstrapServers:  "broker-2:9092",
-					ReplicationFactor: 11,
+					ReplicationFactor: pointerInt16(11),
 				},
 			}),
 			want: ErrImmutableField("spec.replicationFactor"),
@@ -95,14 +95,14 @@ func TestKafkaSink_Validate(t *testing.T) {
 				Spec: KafkaSinkSpec{
 					Topic:            "topic-name-1",
 					BootstrapServers: "broker-1:9092",
-					NumPartitions:    10,
+					NumPartitions:    pointer.Int32Ptr(10),
 				},
 			},
 			ctx: apis.WithinUpdate(context.Background(), &KafkaSink{
 				Spec: KafkaSinkSpec{
 					Topic:            "topic-name-1",
 					BootstrapServers: "broker-2:9092",
-					NumPartitions:    11,
+					NumPartitions:    pointer.Int32Ptr(11),
 				},
 			}),
 			want: ErrImmutableField("spec.numPartitions"),
@@ -134,4 +134,8 @@ func TestKafkaSink_Validate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func pointerInt16(rf int16) *int16 {
+	return &rf
 }

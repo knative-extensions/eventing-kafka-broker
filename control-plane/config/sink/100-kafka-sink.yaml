@@ -63,16 +63,12 @@ spec:
                   description: 'A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.'
                   type: string
                 contentMode:
-                  description: 'CloudEvent content mode of Kafka messages sent to the topic.
-                                Possible values:
-                                  - structured
-                                  - binary
-
-                                - default: structured.
-
-                                - https://github.com/cloudevents/spec/blob/v1.0/spec.md#message
-                                  - https://github.com/cloudevents/spec/blob/v1.0/kafka-protocol-binding.md#33-structured-content-mode
-                                  - https://github.com/cloudevents/spec/blob/v1.0/kafka-protocol-binding.md#32-binary-content-mode'
+                  description: |
+                    CloudEvent content mode of Kafka messages sent to the topic.
+                    Possible values: [structured, binary] (default: structured)
+                    - https://github.com/cloudevents/spec/blob/v1.0/spec.md#message
+                      - https://github.com/cloudevents/spec/blob/v1.0/kafka-protocol-binding.md#33-structured-content-mode
+                      - https://github.com/cloudevents/spec/blob/v1.0/kafka-protocol-binding.md#32-binary-content-mode
                   type: string
                   enum:
                     - structured
@@ -150,11 +146,11 @@ spec:
         - name: Reason
           type: string
           jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
-  conversion:
-    strategy: Webhook
-    webhook:
-      conversionReviewVersions: [ "v1alpha1" ]
-      clientConfig:
-        service:
-          name: eventing-kafka-webhook
-          namespace: knative-eventing
+#  conversion:
+#    strategy: Webhook
+#    webhook:
+#      conversionReviewVersions: [ "v1alpha1" ]
+#      clientConfig:
+#        service:
+#          name: eventing-kafka-webhook
+#          namespace: knative-eventing

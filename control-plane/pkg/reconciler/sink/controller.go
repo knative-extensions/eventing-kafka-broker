@@ -20,11 +20,13 @@ import (
 	"context"
 
 	"github.com/Shopify/sarama"
+	"go.uber.org/zap"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
 
 	sinkinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/eventing/v1alpha1/kafkasink"
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
@@ -33,6 +35,8 @@ import (
 )
 
 func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env) *controller.Impl {
+
+	logger := logging.FromContext(ctx)
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
@@ -47,6 +51,14 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 		ConfigMapLister: configmapinformer.Get(ctx).Lister(),
 		ClusterAdmin:    sarama.NewClusterAdmin,
 		Configs:         configs,
+	}
+
+	_, err := reconciler.GetOrCreateDataPlaneConfigMap()
+	if err != nil {
+		logger.Fatal("Failed to get or create data plane config map",
+			zap.String("configmap", configs.DataPlaneConfigMapAsString()),
+			zap.Error(err),
+		)
 	}
 
 	impl := sinkreconciler.NewImpl(ctx, reconciler)

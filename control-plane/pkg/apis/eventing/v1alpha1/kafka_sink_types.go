@@ -69,11 +69,11 @@ type KafkaSinkSpec struct {
 
 	// Number of topic partitions.
 	// +optional
-	NumPartitions int32 `json:"numPartitions"`
+	NumPartitions *int32 `json:"numPartitions,omitempty"`
 
 	// Topic replication factor
 	// +optional
-	ReplicationFactor int16 `json:"replicationFactor"`
+	ReplicationFactor *int16 `json:"replicationFactor,omitempty"`
 
 	// Kafka Broker bootstrap servers.
 	BootstrapServers string `json:"bootstrapServers"`

@@ -31,8 +31,8 @@ func TestGetGroupVersionKind(t *testing.T) {
 func TestGetUntypedSpec(t *testing.T) {
 	spec := KafkaSinkSpec{
 		Topic:             "topic-name-1",
-		NumPartitions:     10,
-		ReplicationFactor: 1,
+		NumPartitions:     pointer.Int32Ptr(10),
+		ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
 		BootstrapServers:  "broker:9092",
 		ContentMode:       pointer.StringPtr(ModeBinary),
 	}
