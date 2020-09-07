@@ -55,7 +55,7 @@ public class Main {
 
     logger.info("Starting Receiver {}", keyValue("env", env));
 
-    final var producerConfigs = Configurations.getKafkaProperties(env.getProducerConfigFilePath());
+    final var producerConfigs = Configurations.getProperties(env.getProducerConfigFilePath());
 
     final var vertx = Vertx.vertx();
 
@@ -68,7 +68,7 @@ public class Main {
     );
 
     final var httpServerOptions = new HttpServerOptions(
-      Configurations.getFileConfigurations(vertx, env.getHttpServerConfigFilePath())
+      Configurations.getPropertiesAsJson(env.getHttpServerConfigFilePath())
     );
     httpServerOptions.setPort(env.getIngressPort());
     final var verticle = new HttpVerticle(httpServerOptions, new SimpleProbeHandlerDecorator(

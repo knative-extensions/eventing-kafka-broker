@@ -2,15 +2,11 @@ package dev.knative.eventing.kafka.broker.core.utils;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
-import io.vertx.config.ConfigRetriever;
-import io.vertx.config.ConfigRetrieverOptions;
-import io.vertx.config.ConfigStoreOptions;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +14,10 @@ public class Configurations {
 
   private static final Logger logger = LoggerFactory.getLogger(Configurations.class);
 
-  public static Properties getKafkaProperties(final String path) {
+  /**
+   * Retrieve a properties file. Note: this method is blocking
+   */
+  public static Properties getProperties(final String path) {
     if (path == null) {
       return new Properties();
     }
@@ -33,16 +32,49 @@ public class Configurations {
     return props;
   }
 
-  public static JsonObject getFileConfigurations(final Vertx vertx, String file) throws ExecutionException, InterruptedException {
-    final var fileConfigs = new ConfigStoreOptions()
-      .setType("file")
-      .setFormat("properties")
-      .setConfig(new JsonObject().put("path", file));
+  /**
+   * Retrieve a properties file and translates it to json. Note: this method is blocking
+   */
+  public static JsonObject getPropertiesAsJson(final String path) {
+    final var props = getProperties(path);
 
-    return ConfigRetriever.create(vertx, new ConfigRetrieverOptions().addStore(fileConfigs))
-      .getConfig()
-      .toCompletionStage()
-      .toCompletableFuture()
-      .get();
+    final JsonObject json = new JsonObject();
+    props.stringPropertyNames()
+      .forEach(name -> json.put(name, convert(props.getProperty(name))));
+    return json;
+  }
+
+  private static Object convert(String value) {
+    Objects.requireNonNull(value);
+
+    Boolean bool = asBoolean(value);
+    if (bool != null) {
+      return bool;
+    }
+
+    Double integer = asNumber(value);
+    if (integer != null) {
+      return integer;
+    }
+
+    return value;
+  }
+
+  private static Double asNumber(String s) {
+    try {
+      return Double.parseDouble(s);
+    } catch (NumberFormatException nfe) {
+      return null;
+    }
+  }
+
+  private static Boolean asBoolean(String s) {
+    if (s.equalsIgnoreCase("true")) {
+      return Boolean.TRUE;
+    } else if (s.equalsIgnoreCase("false")) {
+      return Boolean.FALSE;
+    } else {
+      return null;
+    }
   }
 }

@@ -55,9 +55,9 @@ public class Main {
     final var vertx = Vertx.vertx();
     Runtime.getRuntime().addShutdownHook(new Thread(vertx::close));
 
-    final var producerConfig = Configurations.getKafkaProperties(env.getProducerConfigFilePath());
-    final var consumerConfig = Configurations.getKafkaProperties(env.getConsumerConfigFilePath());
-    final var webClientConfig = Configurations.getFileConfigurations(vertx, env.getWebClientConfigFilePath());
+    final var producerConfig = Configurations.getProperties(env.getProducerConfigFilePath());
+    final var consumerConfig = Configurations.getProperties(env.getConsumerConfigFilePath());
+    final var webClientConfig = Configurations.getPropertiesAsJson(env.getWebClientConfigFilePath());
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
       consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered();
