@@ -111,3 +111,5 @@ data:
     # ssl.keymanager.algorithm
     # ssl.secure.random.implementation
     # ssl.trustmanager.algorithm
+  config-kafka-broker-webclient.properties: |
+    idleTimeout=10000
