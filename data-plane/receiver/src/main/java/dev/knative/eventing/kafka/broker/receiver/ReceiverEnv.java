@@ -32,12 +32,16 @@ class ReceiverEnv extends BaseEnv {
   public static final String READINESS_PROBE_PATH = "READINESS_PROBE_PATH";
   private final String readinessProbePath;
 
+  public static final String HTTPSERVER_CONFIG_FILE_PATH = "HTTPSERVER_CONFIG_FILE_PATH";
+  private final String httpServerConfigFilePath;
+
   ReceiverEnv(final Function<String, String> envProvider) {
     super(envProvider);
 
     this.ingressPort = Integer.parseInt(envProvider.apply(INGRESS_PORT));
     this.livenessProbePath = requireNonNull(envProvider.apply(LIVENESS_PROBE_PATH));
     this.readinessProbePath = requireNonNull(envProvider.apply(READINESS_PROBE_PATH));
+    this.httpServerConfigFilePath = requireNonNull(envProvider.apply(HTTPSERVER_CONFIG_FILE_PATH));
   }
 
   public int getIngressPort() {
@@ -52,12 +56,17 @@ class ReceiverEnv extends BaseEnv {
     return readinessProbePath;
   }
 
+  public String getHttpServerConfigFilePath() {
+    return httpServerConfigFilePath;
+  }
+
   @Override
   public String toString() {
     return "ReceiverEnv{" +
       "ingressPort=" + ingressPort +
       ", livenessProbePath='" + livenessProbePath + '\'' +
       ", readinessProbePath='" + readinessProbePath + '\'' +
+      ", httpServerConfigFilePath='" + httpServerConfigFilePath + '\'' +
       "} " + super.toString();
   }
 }

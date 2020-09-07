@@ -43,7 +43,7 @@ public class Main {
    *
    * @param args command line arguments.
    */
-  public static void main(final String[] args) {
+  public static void main(final String[] args) throws Exception {
     final var env = new ReceiverEnv(System::getenv);
 
     // HACK HACK HACK
@@ -58,15 +58,18 @@ public class Main {
     final var producerConfigs = Configurations.getKafkaProperties(env.getProducerConfigFilePath());
 
     final var vertx = Vertx.vertx();
+
     producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
     producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-
     final var handler = new RequestHandler<>(
       producerConfigs,
       new CloudEventRequestToRecordMapper(),
       properties -> KafkaProducer.create(vertx, properties)
     );
-    final var httpServerOptions = new HttpServerOptions();
+
+    final var httpServerOptions = new HttpServerOptions(
+      Configurations.getFileConfigurations(vertx, env.getHttpServerConfigFilePath())
+    );
     httpServerOptions.setPort(env.getIngressPort());
     final var verticle = new HttpVerticle(httpServerOptions, new SimpleProbeHandlerDecorator(
       env.getLivenessProbePath(), env.getReadinessProbePath(), handler

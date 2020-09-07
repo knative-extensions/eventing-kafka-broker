@@ -28,6 +28,7 @@ class ReceiverEnvTest {
   private static final String READINESS_PATH = "/readyz";
   private static final String PRODUCER_CONFIG_PATH = "/etc/producer";
   private static final String DATA_PLANE_CONFIG_FILE_PATH = "/etc/brokers";
+  private static final String HTTPSERVER_CONFIG_FILE_PATH = "/etc/http-server-config";
 
   @Test
   public void create() {
@@ -36,6 +37,7 @@ class ReceiverEnvTest {
         case ReceiverEnv.INGRESS_PORT -> PORT;
         case ReceiverEnv.LIVENESS_PROBE_PATH -> LIVENESS_PATH;
         case ReceiverEnv.READINESS_PROBE_PATH -> READINESS_PATH;
+        case ReceiverEnv.HTTPSERVER_CONFIG_FILE_PATH -> HTTPSERVER_CONFIG_FILE_PATH;
         case BaseEnv.PRODUCER_CONFIG_FILE_PATH -> PRODUCER_CONFIG_PATH;
         case BaseEnv.DATA_PLANE_CONFIG_FILE_PATH -> DATA_PLANE_CONFIG_FILE_PATH;
         default -> throw new IllegalArgumentException();
@@ -47,6 +49,7 @@ class ReceiverEnvTest {
     assertThat(env.getReadinessProbePath()).isEqualTo(READINESS_PATH);
     assertThat(env.getProducerConfigFilePath()).isEqualTo(PRODUCER_CONFIG_PATH);
     assertThat(env.getDataPlaneConfigFilePath()).isEqualTo(DATA_PLANE_CONFIG_FILE_PATH);
+    assertThat(env.getHttpServerConfigFilePath()).isEqualTo(HTTPSERVER_CONFIG_FILE_PATH);
 
     // Check toString is overridden
     assertThat(env.toString()).doesNotContain("@");
