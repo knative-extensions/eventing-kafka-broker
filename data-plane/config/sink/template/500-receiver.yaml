@@ -98,7 +98,7 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
       volumes:
-        - name: kafka-broker-brokers-triggers
+        - name: kafka-sink-sinks
           configMap:
             name: kafka-sink-sinks
         - name: config-kafka-sink-data-plane
