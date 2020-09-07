@@ -59,6 +59,7 @@ var _ apis.Validatable = (*KafkaSink)(nil)
 var _ apis.Defaultable = (*KafkaSink)(nil)
 var _ runtime.Object = (*KafkaSink)(nil)
 var _ duckv1.KRShaped = (*KafkaSink)(nil)
+var _ apis.Convertible = (*KafkaSink)(nil)
 
 // KafkaSinkSpec defines the desired state of the Kafka Sink.
 type KafkaSinkSpec struct {
