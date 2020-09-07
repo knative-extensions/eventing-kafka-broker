@@ -19,7 +19,9 @@ package sink
 import (
 	"context"
 
+	"github.com/Shopify/sarama"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -42,6 +44,9 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 			SystemNamespace:             configs.SystemNamespace,
 			ReceiverLabel:               base.SinkReceiverLabel,
 		},
+		ConfigMapLister: configmapinformer.Get(ctx).Lister(),
+		ClusterAdmin:    sarama.NewClusterAdmin,
+		Configs:         configs,
 	}
 
 	impl := sinkreconciler.NewImpl(ctx, reconciler)

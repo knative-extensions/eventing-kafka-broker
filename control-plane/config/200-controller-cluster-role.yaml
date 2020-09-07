@@ -68,6 +68,8 @@ rules:
       - "brokers/status"
       - "triggers"
       - "triggers/status"
+      - "kafkasinks"
+      - "kafkasinks/status"
     verbs:
       - list
       - get
@@ -81,5 +83,6 @@ rules:
     resources:
       - "brokers/finalizers"
       - "triggers/finalizers"
+      - "kafkasinks/finalizers"
     verbs:
       - update

@@ -163,7 +163,7 @@ func BrokerAddressable(configs *Configs) func(broker *eventing.Broker) {
 
 		broker.Status.Address.URL = &apis.URL{
 			Scheme: "http",
-			Host:   names.ServiceHostName(configs.BrokerIngressName, configs.SystemNamespace),
+			Host:   names.ServiceHostName(configs.IngressName, configs.SystemNamespace),
 			Path:   fmt.Sprintf("/%s/%s", broker.Namespace, broker.Name),
 		}
 

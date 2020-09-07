@@ -27,7 +27,7 @@ func TestGetEnvConfig(t *testing.T) {
 				DataPlaneConfigMapNamespace: "knative-eventing",
 				DataPlaneConfigMapName:      "kafka-brokers-triggers",
 				GeneralConfigMapName:        "kafka-config",
-				BrokerIngressName:           "kafka-broker-ingress",
+				IngressName:                 "kafka-broker-ingress",
 				SystemNamespace:             "knative-eventing",
 				DataPlaneConfigFormat:       "json",
 			},
@@ -35,7 +35,7 @@ func TestGetEnvConfig(t *testing.T) {
 				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE", "knative-eventing")
 				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAME", "kafka-brokers-triggers")
 				_ = os.Setenv("BROKER_GENERAL_CONFIG_MAP_NAME", "kafka-config")
-				_ = os.Setenv("BROKER_BROKER_INGRESS_NAME", "kafka-broker-ingress")
+				_ = os.Setenv("BROKER_INGRESS_NAME", "kafka-broker-ingress")
 				_ = os.Setenv("BROKER_SYSTEM_NAMESPACE", "knative-eventing")
 				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_FORMAT", "json")
 			},
@@ -50,7 +50,7 @@ func TestGetEnvConfig(t *testing.T) {
 				DataPlaneConfigMapNamespace: "knative-eventing",
 				DataPlaneConfigMapName:      "kafka-sinks",
 				GeneralConfigMapName:        "kafka-config",
-				BrokerIngressName:           "kafka-sink-ingress",
+				IngressName:                 "kafka-sink-ingress",
 				SystemNamespace:             "knative-eventing",
 				DataPlaneConfigFormat:       "json",
 			},
@@ -58,7 +58,7 @@ func TestGetEnvConfig(t *testing.T) {
 				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_MAP_NAMESPACE", "knative-eventing")
 				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_MAP_NAME", "kafka-sinks")
 				_ = os.Setenv("SINK_GENERAL_CONFIG_MAP_NAME", "kafka-config")
-				_ = os.Setenv("SINK_BROKER_INGRESS_NAME", "kafka-sink-ingress")
+				_ = os.Setenv("SINK_INGRESS_NAME", "kafka-sink-ingress")
 				_ = os.Setenv("SINK_SYSTEM_NAMESPACE", "knative-eventing")
 				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_FORMAT", "json")
 			},
@@ -72,7 +72,7 @@ func TestGetEnvConfig(t *testing.T) {
 			setEnv: func() {
 				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_MAP_NAME", "kafka-sinks")
 				_ = os.Setenv("SINK_GENERAL_CONFIG_MAP_NAME", "kafka-config")
-				_ = os.Setenv("SINK_BROKER_INGRESS_NAME", "kafka-sink-ingress")
+				_ = os.Setenv("SINK_INGRESS_NAME", "kafka-sink-ingress")
 				_ = os.Setenv("SINK_SYSTEM_NAMESPACE", "knative-eventing")
 				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_FORMAT", "json")
 			},

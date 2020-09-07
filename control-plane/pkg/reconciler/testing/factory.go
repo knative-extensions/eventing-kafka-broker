@@ -52,7 +52,7 @@ var DefaultConfigs = &broker.Configs{
 	Env: config.Env{
 		DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
 		DataPlaneConfigMapNamespace: "knative-eventing",
-		BrokerIngressName:           "kafka-broker-receiver",
+		IngressName:                 "kafka-broker-receiver",
 		SystemNamespace:             "knative-eventing",
 		DataPlaneConfigFormat:       base.Json,
 	},

@@ -120,7 +120,7 @@ func SinkAddressable(configs *config.Env) func(sink *eventing.KafkaSink) {
 
 		sink.Status.Address.URL = &apis.URL{
 			Scheme: "http",
-			Host:   names.ServiceHostName(configs.BrokerIngressName, configs.SystemNamespace),
+			Host:   names.ServiceHostName(configs.IngressName, configs.SystemNamespace),
 			Path:   fmt.Sprintf("/%s/%s", sink.Namespace, sink.Name),
 		}
 

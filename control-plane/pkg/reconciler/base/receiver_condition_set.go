@@ -138,7 +138,7 @@ func (manager *StatusConditionManager) Reconciled() reconciler.Event {
 
 	manager.SetAddress(&apis.URL{
 		Scheme: "http",
-		Host:   names.ServiceHostName(manager.Configs.BrokerIngressName, manager.Configs.SystemNamespace),
+		Host:   names.ServiceHostName(manager.Configs.IngressName, manager.Configs.SystemNamespace),
 		Path:   fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName()),
 	})
 	object.GetConditionSet().Manage(object.GetStatus()).MarkTrue(ConditionAddressable)
