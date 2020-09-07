@@ -62,14 +62,32 @@ var _ duckv1.KRShaped = (*KafkaSink)(nil)
 
 // KafkaSinkSpec defines the desired state of the Kafka Sink.
 type KafkaSinkSpec struct {
+
+	// Topic name to send events.
 	Topic string `json:"topic"`
 
+	// Number of topic partitions.
+	// +optional
 	NumPartitions int32 `json:"numPartitions"`
 
+	// Topic replication factor
+	// +optional
 	ReplicationFactor int16 `json:"replicationFactor"`
 
+	// Kafka Broker bootstrap servers.
 	BootstrapServers string `json:"bootstrapServers"`
 
+	// CloudEvent content mode of Kafka messages sent to the topic.
+	// Possible values:
+	// - structured
+	// - binary
+	//
+	// - default: structured.
+	//
+	// - https://github.com/cloudevents/spec/blob/v1.0/spec.md#message
+	//	 - https://github.com/cloudevents/spec/blob/v1.0/kafka-protocol-binding.md#33-structured-content-mode
+	//	 - https://github.com/cloudevents/spec/blob/v1.0/kafka-protocol-binding.md#32-binary-content-mode'
+	//
 	// +optional
 	ContentMode *string `json:"contentMode,omitempty"`
 }
@@ -81,6 +99,7 @@ type KafkaSinkStatus struct {
 	// * Conditions - the latest available observations of a resource's current state.
 	duckv1.Status `json:",inline"`
 
+	// Kafka Sink is Addressable.
 	Address duckv1.Addressable `json:"address,omitempty"`
 }
 

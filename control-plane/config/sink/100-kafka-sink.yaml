@@ -42,19 +42,21 @@ spec:
               type: object
               required:
                 - topic
-                - numPartitions
-                - replicationFactor
                 - bootstrapServers
               properties:
                 topic:
                   description: 'Topic name to send events.'
                   type: string
                 numPartitions:
-                  description: 'Number of topic partitions'
+                  description: 'Number of topic partitions.
+                                If not specified the topic isn''t automatically created, and the system supposes that
+                                the topic is already present.'
                   type: integer
                   format: int32
                 replicationFactor:
-                  description: 'Topic replication factor'
+                  description: 'Topic replication factor.
+                                If not specified the topic isn''t automatically created, and the system supposes that
+                                the topic is already present.'
                   type: integer
                   format: int32
                 bootstrapServers:
@@ -75,6 +77,7 @@ spec:
                   enum:
                     - structured
                     - binary
+                  default: structured
             status:
               description: 'Status represents the current state of the Broker. This data may be out of date.'
               type: object
