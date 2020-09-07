@@ -117,29 +117,22 @@ public class BrokerWrapperTest {
             .setBootstrapServers("kafka-1:9092,kafka-2:9093")
             .build()
         ),
-        Arguments.of(
-          new BrokerWrapper(
-            Broker.newBuilder()
-              .setBootstrapServers("kafka-1:9092,kafka-2:9093")
-              .build()
-          ),
-          new BrokerWrapper(
-            Broker.newBuilder()
-              .setBootstrapServers("kafka-1:9092,kafka-2:9092")
-              .build()
-          )
+        new BrokerWrapper(
+          Broker.newBuilder()
+            .setBootstrapServers("kafka-1:9092,kafka-2:9092")
+            .build()
+        )
+      ),
+      Arguments.of(
+        new BrokerWrapper(
+          Broker.newBuilder()
+            .setContentMode(ContentMode.BINARY)
+            .build()
         ),
-        Arguments.of(
-          new BrokerWrapper(
-            Broker.newBuilder()
-              .setContentMode(ContentMode.BINARY)
-              .build()
-          ),
-          new BrokerWrapper(
-            Broker.newBuilder()
-              .setContentMode(ContentMode.STRUCTURED)
-              .build()
-          )
+        new BrokerWrapper(
+          Broker.newBuilder()
+            .setContentMode(ContentMode.STRUCTURED)
+            .build()
         )
       )
     );

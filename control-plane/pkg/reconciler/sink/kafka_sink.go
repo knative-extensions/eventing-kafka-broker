@@ -154,7 +154,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	// logger := log.Logger(ctx, "finalize", ks)
 
 	// TODO implement finalizer
-	panic("implement me")
+	return nil
 }
 
 func incrementVolumeGeneration(generation uint64) uint64 {
