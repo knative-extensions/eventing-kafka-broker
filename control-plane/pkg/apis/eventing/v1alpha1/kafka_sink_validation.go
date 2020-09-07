@@ -42,8 +42,16 @@ func (kss *KafkaSinkSpec) Validate(ctx context.Context) *apis.FieldError {
 	var errs *apis.FieldError
 
 	// check content mode value
-	if kss.ContentMode != nil && !allowedContentModes.Has(*kss.ContentMode) {
+	if !allowedContentModes.Has(*kss.ContentMode) {
 		errs = errs.Also(apis.ErrInvalidValue(*kss.ContentMode, "contentMode"))
+	}
+
+	if kss.BootstrapServers == "" {
+		errs = errs.Also(apis.ErrInvalidValue(kss.BootstrapServers, "bootstrapServers"))
+	}
+
+	if kss.Topic == "" {
+		errs = errs.Also(apis.ErrInvalidValue(kss.Topic, "topic"))
 	}
 
 	return errs
@@ -53,7 +61,7 @@ func (ks *KafkaSink) CheckImmutableFields(ctx context.Context, original *KafkaSi
 
 	var errs *apis.FieldError
 
-	errs = errs.Also(ks.Spec.CheckImmutableFields(ctx, &original.Spec))
+	errs = errs.Also(ks.Spec.CheckImmutableFields(ctx, &original.Spec).ViaField("spec"))
 
 	return errs
 }
@@ -62,12 +70,12 @@ func (kss *KafkaSinkSpec) CheckImmutableFields(ctx context.Context, original *Ka
 
 	var errs *apis.FieldError
 
-	if kss.ReplicationFactor != original.ReplicationFactor {
-		errs = errs.Also(ErrImmutableField("replicationFactor"))
+	if kss.Topic != original.Topic {
+		errs = errs.Also(ErrImmutableField("topic"))
 	}
 
-	if kss.BootstrapServers != original.BootstrapServers {
-		errs = errs.Also(ErrImmutableField("bootstrapServers"))
+	if kss.ReplicationFactor != original.ReplicationFactor {
+		errs = errs.Also(ErrImmutableField("replicationFactor"))
 	}
 
 	if kss.NumPartitions != original.NumPartitions {
@@ -79,7 +87,7 @@ func (kss *KafkaSinkSpec) CheckImmutableFields(ctx context.Context, original *Ka
 
 func ErrImmutableField(field string) *apis.FieldError {
 	return &apis.FieldError{
-		Message: fmt.Sprintf("Immutable field %s updated", field),
+		Message: fmt.Sprintf("Immutable field updated"),
 		Paths:   []string{field},
 	}
 }
