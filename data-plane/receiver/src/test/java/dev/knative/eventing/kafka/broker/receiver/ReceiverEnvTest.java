@@ -18,25 +18,28 @@ package dev.knative.eventing.kafka.broker.receiver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import org.junit.jupiter.api.Test;
 
-class EnvTest {
+class ReceiverEnvTest {
 
   private static final String PORT = "8080";
   private static final String LIVENESS_PATH = "/healthz";
   private static final String READINESS_PATH = "/readyz";
   private static final String PRODUCER_CONFIG_PATH = "/etc/producer";
   private static final String DATA_PLANE_CONFIG_FILE_PATH = "/etc/brokers";
+  private static final String HTTPSERVER_CONFIG_FILE_PATH = "/etc/http-server-config";
 
   @Test
   public void create() {
-    final var env = new Env(
+    final var env = new ReceiverEnv(
       key -> switch (key) {
-        case Env.INGRESS_PORT -> PORT;
-        case Env.LIVENESS_PROBE_PATH -> LIVENESS_PATH;
-        case Env.READINESS_PROBE_PATH -> READINESS_PATH;
-        case Env.PRODUCER_CONFIG_FILE_PATH -> PRODUCER_CONFIG_PATH;
-        case Env.DATA_PLANE_CONFIG_FILE_PATH -> DATA_PLANE_CONFIG_FILE_PATH;
+        case ReceiverEnv.INGRESS_PORT -> PORT;
+        case ReceiverEnv.LIVENESS_PROBE_PATH -> LIVENESS_PATH;
+        case ReceiverEnv.READINESS_PROBE_PATH -> READINESS_PATH;
+        case ReceiverEnv.HTTPSERVER_CONFIG_FILE_PATH -> HTTPSERVER_CONFIG_FILE_PATH;
+        case BaseEnv.PRODUCER_CONFIG_FILE_PATH -> PRODUCER_CONFIG_PATH;
+        case BaseEnv.DATA_PLANE_CONFIG_FILE_PATH -> DATA_PLANE_CONFIG_FILE_PATH;
         default -> throw new IllegalArgumentException();
       }
     );
@@ -46,6 +49,9 @@ class EnvTest {
     assertThat(env.getReadinessProbePath()).isEqualTo(READINESS_PATH);
     assertThat(env.getProducerConfigFilePath()).isEqualTo(PRODUCER_CONFIG_PATH);
     assertThat(env.getDataPlaneConfigFilePath()).isEqualTo(DATA_PLANE_CONFIG_FILE_PATH);
+    assertThat(env.getHttpServerConfigFilePath()).isEqualTo(HTTPSERVER_CONFIG_FILE_PATH);
+
+    // Check toString is overridden
     assertThat(env.toString()).doesNotContain("@");
   }
 }

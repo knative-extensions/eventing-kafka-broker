@@ -58,6 +58,8 @@ spec:
               value: "8080"
             - name: PRODUCER_CONFIG_FILE_PATH
               value: /etc/config/config-kafka-broker-producer.properties
+            - name: HTTPSERVER_CONFIG_FILE_PATH
+              value: /etc/config/config-kafka-broker-httpserver.properties
             - name: DATA_PLANE_CONFIG_FILE_PATH
               value: /etc/brokers-triggers/data
             - name: LIVENESS_PROBE_PATH

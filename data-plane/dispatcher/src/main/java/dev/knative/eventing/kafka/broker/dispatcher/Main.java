@@ -18,10 +18,10 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import java.io.File;
@@ -35,21 +35,12 @@ public class Main {
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-  private static final String BROKERS_TRIGGERS_PATH = "BROKERS_TRIGGERS_PATH";
-  private static final String PRODUCER_CONFIG_FILE_PATH = "PRODUCER_CONFIG_FILE_PATH";
-  private static final String CONSUMER_CONFIG_FILE_PATH = "CONSUMER_CONFIG_FILE_PATH";
-  private static final String WEBCLIENT_CONFIG_FILE_PATH = "WEBCLIENT_CONFIG_FILE_PATH";
-  private static final String BROKERS_INITIAL_CAPACITY = "BROKERS_INITIAL_CAPACITY";
-  private static final String TRIGGERS_INITIAL_CAPACITY = "TRIGGERS_INITIAL_CAPACITY";
-  public static final String INSTANCE_ID = "INSTANCE_ID";
-
   /**
    * Dispatcher entry point.
    *
    * @param args command line arguments.
    */
   public static void main(final String[] args) throws Exception {
-
     // HACK HACK HACK
     // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
     // dependency with scope `provided` nor `runtime`, and adding include rules to
@@ -57,15 +48,16 @@ public class Main {
     // Instantiating an Encoder here we force it to include the class.
     new LogstashEncoder().getFieldNames();
 
+    DispatcherEnv env = new DispatcherEnv(System::getenv);
+
     logger.info("Starting Dispatcher");
 
     final var vertx = Vertx.vertx();
     Runtime.getRuntime().addShutdownHook(new Thread(vertx::close));
 
-    final JsonObject envConfig = Configurations.getEnvConfigurations(vertx);
-    final var producerConfig = Configurations.getKafkaProperties(envConfig.getString(PRODUCER_CONFIG_FILE_PATH));
-    final var consumerConfig = Configurations.getKafkaProperties(envConfig.getString(CONSUMER_CONFIG_FILE_PATH));
-    final var webClientConfig = Configurations.getFileConfigurations(vertx, envConfig.getString(WEBCLIENT_CONFIG_FILE_PATH));
+    final var producerConfig = Configurations.getProperties(env.getProducerConfigFilePath());
+    final var consumerConfig = Configurations.getProperties(env.getConsumerConfigFilePath());
+    final var webClientConfig = Configurations.getPropertiesAsJson(env.getWebClientConfigFilePath());
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
       consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered();
@@ -81,8 +73,8 @@ public class Main {
     final var brokersManager = new BrokersManager<>(
       vertx,
       consumerVerticleFactory,
-      Integer.parseInt(envConfig.getString(BROKERS_INITIAL_CAPACITY)),
-      Integer.parseInt(envConfig.getString(TRIGGERS_INITIAL_CAPACITY))
+      env.getBrokersInitialCapacity(),
+      env.getTriggersInitialCapacity()
     );
 
     final var objectCreator = new ObjectsCreator(brokersManager);
@@ -91,7 +83,7 @@ public class Main {
       final var fw = new FileWatcher(
         FileSystems.getDefault().newWatchService(),
         objectCreator,
-        new File(envConfig.getString(BROKERS_TRIGGERS_PATH))
+        new File(env.getDataPlaneConfigFilePath())
       );
 
       fw.watch(); // block forever

@@ -113,3 +113,5 @@ data:
     # ssl.trustmanager.algorithm
   config-kafka-broker-webclient.properties: |
     idleTimeout=10000
+  config-kafka-broker-httpserver.properties: |
+    idleTimeout=0
