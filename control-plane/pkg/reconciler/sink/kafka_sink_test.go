@@ -64,6 +64,8 @@ var (
 		fmt.Sprintf(`Updated %q finalizers`, SinkName),
 	)
 
+	bootstrapServersArr = []string{"kafka-1:9092", "kafka-2:9093"}
+
 	createTopicError = fmt.Errorf("failed to create topic")
 	deleteTopicError = fmt.Errorf("failed to delete topic")
 )
@@ -123,7 +125,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				{
 					Object: NewSink(
 						InitSinkConditions,
-						BootstrapServers(bootstrapServers),
+						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
 						SinkAddressable(&configs.Env),
@@ -137,7 +139,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				NewSink(
 					func(sink *v1alpha1.KafkaSink) {
 						sink.Spec.Topic = "my-topic-1"
-						sink.Spec.BootstrapServers = "kafka-broker:10000"
+						sink.Spec.BootstrapServers = []string{"kafka-broker:10000"}
 					},
 				),
 				NewConfigMap(&configs, nil),
@@ -176,10 +178,10 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 					Object: NewSink(
 						func(sink *v1alpha1.KafkaSink) {
 							sink.Spec.Topic = "my-topic-1"
-							sink.Spec.BootstrapServers = "kafka-broker:10000"
+							sink.Spec.BootstrapServers = []string{"kafka-broker:10000"}
 						},
 						InitSinkConditions,
-						BootstrapServers("kafka-broker:10000"),
+						BootstrapServers([]string{"kafka-broker:10000"}),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReadyWithName("my-topic-1"),
 						SinkAddressable(&configs.Env),
@@ -194,7 +196,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			Name: "Failed to create topic",
 			Objects: []runtime.Object{
 				NewSink(
-					BootstrapServers(bootstrapServers),
+					BootstrapServers(bootstrapServersArr),
 				),
 			},
 			Key:     testKey,
@@ -215,7 +217,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				{
 					Object: NewSink(
 						InitSinkConditions,
-						BootstrapServers(bootstrapServers),
+						BootstrapServers(bootstrapServersArr),
 						SinkFailedToCreateTopic,
 					),
 				},
@@ -228,7 +230,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			Name: "Config map not found - create config map",
 			Objects: []runtime.Object{
 				NewSink(
-					BootstrapServers(bootstrapServers),
+					BootstrapServers(bootstrapServersArr),
 				),
 				NewService(),
 				SinkReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
@@ -271,7 +273,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				{
 					Object: NewSink(
 						InitSinkConditions,
-						BootstrapServers(bootstrapServers),
+						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
 						SinkAddressable(&configs.Env),
@@ -283,7 +285,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			Name: "Reconciled normal - config map not readable",
 			Objects: []runtime.Object{
 				NewSink(
-					BootstrapServers(bootstrapServers),
+					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMap(&configs, []byte(`{"hello": "world"}`)),
 				SinkReceiverPod(configs.SystemNamespace, nil),
@@ -316,7 +318,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				{
 					Object: NewSink(
 						InitSinkConditions,
-						BootstrapServers(bootstrapServers),
+						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
 						SinkAddressable(&configs.Env),
@@ -328,7 +330,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			Name: "Reconciled normal - preserve config map previous state",
 			Objects: []runtime.Object{
 				NewSink(
-					BootstrapServers(bootstrapServers),
+					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
 					Brokers: []*coreconfig.Broker{
@@ -384,7 +386,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				{
 					Object: NewSink(
 						InitSinkConditions,
-						BootstrapServers(bootstrapServers),
+						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
 						SinkAddressable(&configs.Env),
@@ -396,7 +398,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			Name: "Reconciled normal - update existing broker while preserving others",
 			Objects: []runtime.Object{
 				NewSink(
-					BootstrapServers(bootstrapServers),
+					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMapFromBrokers(&coreconfig.Brokers{
 					Brokers: []*coreconfig.Broker{
@@ -450,7 +452,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				{
 					Object: NewSink(
 						InitSinkConditions,
-						BootstrapServers(bootstrapServers),
+						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
 						SinkAddressable(&configs.Env),

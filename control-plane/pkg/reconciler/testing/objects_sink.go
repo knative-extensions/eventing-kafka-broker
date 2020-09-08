@@ -44,8 +44,10 @@ const (
 	SinkReplicationFactor = 3
 
 	topicPrefix = "knative-sink-"
+)
 
-	bootstrapServers = "kafka-1:9092,kafka-2:9093"
+var (
+	bootstrapServers = []string{"kafka-1:9092", "kafka-2:9093"}
 )
 
 type SinkOption func(sink *eventing.KafkaSink)
@@ -81,7 +83,7 @@ func SinkTopic() string {
 	})
 }
 
-func BootstrapServers(bootstrapServers string) func(sink *eventing.KafkaSink) {
+func BootstrapServers(bootstrapServers []string) func(sink *eventing.KafkaSink) {
 	return func(sink *eventing.KafkaSink) {
 		sink.Spec.BootstrapServers = bootstrapServers
 	}

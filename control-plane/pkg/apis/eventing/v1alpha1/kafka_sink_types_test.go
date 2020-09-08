@@ -33,7 +33,7 @@ func TestGetUntypedSpec(t *testing.T) {
 		Topic:             "topic-name-1",
 		NumPartitions:     pointer.Int32Ptr(10),
 		ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
-		BootstrapServers:  "broker:9092",
+		BootstrapServers:  []string{"broker:9092"},
 		ContentMode:       pointer.StringPtr(ModeBinary),
 	}
 	ks := &KafkaSink{Spec: spec}

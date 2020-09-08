@@ -65,8 +65,11 @@ spec:
                   type: integer
                   format: int32
                 bootstrapServers:
-                  description: 'A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.'
-                  type: string
+                  description: 'A list of host/port pairs to use for establishing the initial connection to the Kafka cluster.'
+                  type: array
+                  minLength: 1
+                  items:
+                    type: string
                 contentMode:
                   description: |
                     CloudEvent content mode of Kafka messages sent to the topic.

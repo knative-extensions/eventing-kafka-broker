@@ -33,7 +33,11 @@ type TopicConfig struct {
 
 // GetBootstrapServers returns TopicConfig.BootstrapServers as a comma separated list of bootstrap servers.
 func (c TopicConfig) GetBootstrapServers() string {
-	return strings.Join(c.BootstrapServers, ",")
+	return BootstrapServersCommaSeparated(c.BootstrapServers)
+}
+
+func BootstrapServersCommaSeparated(bootstrapServers []string) string {
+	return strings.Join(bootstrapServers, ",")
 }
 
 func BootstrapServersArray(bootstrapServers string) []string {

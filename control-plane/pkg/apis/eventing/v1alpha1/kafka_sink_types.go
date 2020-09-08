@@ -76,7 +76,7 @@ type KafkaSinkSpec struct {
 	ReplicationFactor *int16 `json:"replicationFactor,omitempty"`
 
 	// Kafka Broker bootstrap servers.
-	BootstrapServers string `json:"bootstrapServers"`
+	BootstrapServers []string `json:"bootstrapServers"`
 
 	// CloudEvent content mode of Kafka messages sent to the topic.
 	// Possible values:

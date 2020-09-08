@@ -98,6 +98,11 @@ func (in *KafkaSinkSpec) DeepCopyInto(out *KafkaSinkSpec) {
 		*out = new(int16)
 		**out = **in
 	}
+	if in.BootstrapServers != nil {
+		in, out := &in.BootstrapServers, &out.BootstrapServers
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.ContentMode != nil {
 		in, out := &in.ContentMode, &out.ContentMode
 		*out = new(string)

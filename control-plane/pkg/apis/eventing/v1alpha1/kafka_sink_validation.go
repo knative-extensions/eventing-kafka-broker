@@ -46,7 +46,7 @@ func (kss *KafkaSinkSpec) Validate(ctx context.Context) *apis.FieldError {
 		errs = errs.Also(apis.ErrInvalidValue(*kss.ContentMode, "contentMode"))
 	}
 
-	if kss.BootstrapServers == "" {
+	if len(kss.BootstrapServers) == 0 {
 		errs = errs.Also(apis.ErrInvalidValue(kss.BootstrapServers, "bootstrapServers"))
 	}
 

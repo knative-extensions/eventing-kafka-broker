@@ -21,17 +21,17 @@ func TestKafkaSink_Validate(t *testing.T) {
 			ks: &KafkaSink{
 				Spec: KafkaSinkSpec{
 					Topic:            "topic-name-1",
-					BootstrapServers: "",
+					BootstrapServers: []string{},
 				},
 			},
 			ctx:  context.Background(),
-			want: apis.ErrInvalidValue("", "spec.bootstrapServers"),
+			want: apis.ErrInvalidValue([]string{}, "spec.bootstrapServers"),
 		},
 		{
-			name: "no bootstrap servers",
+			name: "no topic",
 			ks: &KafkaSink{
 				Spec: KafkaSinkSpec{
-					BootstrapServers: "broker-1:9092",
+					BootstrapServers: []string{"broker-1:9092"},
 				},
 			},
 			ctx:  context.Background(),
@@ -42,7 +42,7 @@ func TestKafkaSink_Validate(t *testing.T) {
 			ks: &KafkaSink{
 				Spec: KafkaSinkSpec{
 					Topic:            "topic-name-1",
-					BootstrapServers: "broker-1:9092",
+					BootstrapServers: []string{"broker-1:9092"},
 					ContentMode:      pointer.StringPtr(ModeStructured),
 				},
 			},
@@ -53,7 +53,7 @@ func TestKafkaSink_Validate(t *testing.T) {
 			ks: &KafkaSink{
 				Spec: KafkaSinkSpec{
 					Topic:            "topic-name-1",
-					BootstrapServers: "broker-1:9092",
+					BootstrapServers: []string{"broker-1:9092"},
 					ContentMode:      pointer.StringPtr(ModeBinary),
 				},
 			},
@@ -64,7 +64,7 @@ func TestKafkaSink_Validate(t *testing.T) {
 			ks: &KafkaSink{
 				Spec: KafkaSinkSpec{
 					Topic:            "topic-name-1",
-					BootstrapServers: "broker-1:9092",
+					BootstrapServers: []string{"broker-1:9092"},
 					ContentMode:      pointer.StringPtr("str"),
 				},
 			},
@@ -76,14 +76,14 @@ func TestKafkaSink_Validate(t *testing.T) {
 			ks: &KafkaSink{
 				Spec: KafkaSinkSpec{
 					Topic:             "topic-name-1",
-					BootstrapServers:  "broker-1:9092",
+					BootstrapServers:  []string{"broker-1:9092"},
 					ReplicationFactor: pointerInt16(10),
 				},
 			},
 			ctx: apis.WithinUpdate(context.Background(), &KafkaSink{
 				Spec: KafkaSinkSpec{
 					Topic:             "topic-name-1",
-					BootstrapServers:  "broker-2:9092",
+					BootstrapServers:  []string{"broker-2:9092"},
 					ReplicationFactor: pointerInt16(11),
 				},
 			}),
@@ -94,14 +94,14 @@ func TestKafkaSink_Validate(t *testing.T) {
 			ks: &KafkaSink{
 				Spec: KafkaSinkSpec{
 					Topic:            "topic-name-1",
-					BootstrapServers: "broker-1:9092",
+					BootstrapServers: []string{"broker-1:9092"},
 					NumPartitions:    pointer.Int32Ptr(10),
 				},
 			},
 			ctx: apis.WithinUpdate(context.Background(), &KafkaSink{
 				Spec: KafkaSinkSpec{
 					Topic:            "topic-name-1",
-					BootstrapServers: "broker-2:9092",
+					BootstrapServers: []string{"broker-2:9092"},
 					NumPartitions:    pointer.Int32Ptr(11),
 				},
 			}),
@@ -112,13 +112,13 @@ func TestKafkaSink_Validate(t *testing.T) {
 			ks: &KafkaSink{
 				Spec: KafkaSinkSpec{
 					Topic:            "topic-name-1",
-					BootstrapServers: "broker-1:9092",
+					BootstrapServers: []string{"broker-1:9092"},
 				},
 			},
 			ctx: apis.WithinUpdate(context.Background(), &KafkaSink{
 				Spec: KafkaSinkSpec{
 					Topic:            "topic-name-2",
-					BootstrapServers: "broker-2:9092",
+					BootstrapServers: []string{"broker-2:9092"},
 				},
 			}),
 			want: ErrImmutableField("spec.topic"),

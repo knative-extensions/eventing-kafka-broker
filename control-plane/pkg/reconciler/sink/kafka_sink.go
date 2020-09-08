@@ -71,7 +71,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 				NumPartitions:     *ks.Spec.NumPartitions,
 				ReplicationFactor: *ks.Spec.ReplicationFactor,
 			},
-			BootstrapServers: kafka.BootstrapServersArray(ks.Spec.BootstrapServers),
+			BootstrapServers: ks.Spec.BootstrapServers,
 		}
 
 		topic, err := r.ClusterAdmin.CreateTopic(logger, ks.Spec.Topic, topicConfig)
@@ -110,7 +110,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		Id:               string(ks.UID),
 		Topic:            ks.Spec.Topic,
 		Path:             receiver.PathFromObject(ks),
-		BootstrapServers: ks.Spec.BootstrapServers,
+		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
 		ContentMode:      coreconfig.ContentModeFromString(*ks.Spec.ContentMode),
 	}
 
