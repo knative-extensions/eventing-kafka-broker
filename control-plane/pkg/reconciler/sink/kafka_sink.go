@@ -106,7 +106,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	)
 
 	// Get sink configuration.
-	// TODO(pierDipi) support content modes
 	sinkConfig := &coreconfig.Sink{
 		Id:               string(ks.UID),
 		Topic:            ks.Spec.Topic,
