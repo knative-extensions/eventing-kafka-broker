@@ -102,4 +102,3 @@ func ConfigMapUpdate(configs *Configs, brokers *coreconfig.Brokers) clientgotest
 		NewConfigMapFromBrokers(brokers, configs),
 	)
 }
-

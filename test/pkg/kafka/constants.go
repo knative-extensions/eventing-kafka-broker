@@ -17,10 +17,9 @@
 package kafka
 
 const (
-	BootstrapServers    = "my-cluster-kafka-bootstrap.kafka:9092"
+	BootstrapServers = "my-cluster-kafka-bootstrap.kafka:9092"
 )
 
 var (
 	BootstrapServersArr = []string{"my-cluster-kafka-bootstrap.kafka:9092"}
 )
-
