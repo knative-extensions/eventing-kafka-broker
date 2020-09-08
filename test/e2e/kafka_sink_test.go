@@ -38,7 +38,7 @@ import (
 func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
 	pkgtesting.RunMultipleN(t, 20, func(t *testing.T) {
 
-		client := testlib.Setup(t, true)
+		client := testlib.Setup(t, false)
 		defer testlib.TearDown(client)
 
 		clientSet, err := eventingv1alpha1clientset.NewForConfig(client.Config)
@@ -64,7 +64,7 @@ func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
 		client.WaitForResourceReadyOrFail(kafkaSink.Name, &kafkaSink.TypeMeta)
 
 		// Send events to the KafkaSink.
-		ids := addressable.SendN(t, 10, kafkaSink)
+		ids := addressable.Send(t, kafkaSink)
 
 		// Read events from the topic.
 		verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, ids)
@@ -74,7 +74,7 @@ func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
 func TestKafkaSinkV1Alpha1StructuredContentMode(t *testing.T) {
 	pkgtesting.RunMultipleN(t, 20, func(t *testing.T) {
 
-		client := testlib.Setup(t, true)
+		client := testlib.Setup(t, false)
 		defer testlib.TearDown(client)
 
 		clientSet, err := eventingv1alpha1clientset.NewForConfig(client.Config)
@@ -101,7 +101,7 @@ func TestKafkaSinkV1Alpha1StructuredContentMode(t *testing.T) {
 		client.WaitForResourceReadyOrFail(kafkaSink.Name, &kafkaSink.TypeMeta)
 
 		// Send events to the KafkaSink.
-		ids := addressable.SendN(t, 10, kafkaSink)
+		ids := addressable.Send(t, kafkaSink)
 
 		// Read events from the topic.
 		verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, ids)
@@ -111,7 +111,7 @@ func TestKafkaSinkV1Alpha1StructuredContentMode(t *testing.T) {
 func TestKafkaSinkV1Alpha1BinaryContentMode(t *testing.T) {
 	pkgtesting.RunMultipleN(t, 20, func(t *testing.T) {
 
-		client := testlib.Setup(t, true)
+		client := testlib.Setup(t, false)
 		defer testlib.TearDown(client)
 
 		clientSet, err := eventingv1alpha1clientset.NewForConfig(client.Config)
@@ -138,7 +138,7 @@ func TestKafkaSinkV1Alpha1BinaryContentMode(t *testing.T) {
 		client.WaitForResourceReadyOrFail(kafkaSink.Name, &kafkaSink.TypeMeta)
 
 		// Send events to the KafkaSink.
-		ids := addressable.SendN(t, 10, kafkaSink)
+		ids := addressable.Send(t, kafkaSink)
 
 		// Read events from the topic.
 		verify(t, client, eventingv1alpha1.ModeBinary, kss.Topic, ids)
@@ -161,5 +161,5 @@ func verify(t *testing.T, client *testlib.Client, mode, topic string, ids []stri
 			ContentMode:      mode,
 		},
 	)
-	assert.Nil(t, err, "failed to verify messages in topic: %v - see pod logs", err)
+	assert.Nil(t, err, "failed to verify messages in topic: %v - (see pod logs)", err)
 }

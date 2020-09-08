@@ -23,9 +23,14 @@ import (
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	testlib "knative.dev/eventing/test/lib"
+	pkgtest "knative.dev/pkg/test"
 )
 
+func Send(t *testing.T, addressable Addressable) []string {
+	return SendN(t, 10, addressable)
+}
 
 func SendN(t *testing.T, n int, addressable Addressable) []string {
 
@@ -33,7 +38,6 @@ func SendN(t *testing.T, n int, addressable Addressable) []string {
 
 	// Send n messages to the addressable
 	go func() {
-
 		var wg sync.WaitGroup
 		wg.Add(n)
 
@@ -42,8 +46,13 @@ func SendN(t *testing.T, n int, addressable Addressable) []string {
 			go func(i int) {
 
 				// Client isn't thread safe so we need to create one per Goroutine.
-				client := testlib.Setup(t, true)
-				defer testlib.TearDown(client)
+				client, err := testlib.NewClient(
+					pkgtest.Flags.Kubeconfig,
+					pkgtest.Flags.Cluster,
+					addressable.Namespace,
+					t,
+				)
+				assert.Nil(t, err)
 
 				event := cetest.FullEvent()
 				id := uuid.New().String()
