@@ -141,6 +141,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	// Update the configuration map with the new brokersTriggers data.
 	if err := r.UpdateDataPlaneConfigMap(brokersTriggers, brokersTriggersConfigMap); err != nil {
+		logger.Error("failed to update data plane config map", zap.Error(
+			statusConditionManager.failedToUpdateBrokersTriggersConfigMap(err),
+		))
 		return err
 	}
 	statusConditionManager.brokersTriggersConfigMapUpdated()
@@ -155,6 +158,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	// Update volume generation annotation of receiver pods
 	if err := r.UpdateReceiverPodsAnnotation(logger, brokersTriggers.VolumeGeneration); err != nil {
+		logger.Error("Failed to update receiver pod annotation", zap.Error(
+			statusConditionManager.failedToUpdateReceiverPodsAnnotation(err),
+		))
 		return err
 	}
 
