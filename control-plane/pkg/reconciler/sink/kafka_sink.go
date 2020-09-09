@@ -123,6 +123,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	// Update the configuration map with the new sinks data.
 	if err := r.UpdateDataPlaneConfigMap(sinks, sinksConfigMap); err != nil {
+		logger.Error("failed to update data plane config map", zap.Error(
+			statusConditionManager.FailedToUpdateConfigMap(err),
+		))
 		return err
 	}
 	statusConditionManager.ConfigMapUpdated()

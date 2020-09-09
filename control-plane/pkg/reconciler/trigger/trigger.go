@@ -192,8 +192,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 		// Actually check if the broker doesn't exist.
 		broker, err = r.EventingClient.EventingV1(). // Note: do not introduce another `broker` variable with `:`
-								Brokers(trigger.Namespace).
-								Get(trigger.Spec.Broker, metav1.GetOptions{})
+			Brokers(trigger.Namespace).
+			Get(trigger.Spec.Broker, metav1.GetOptions{})
 
 		if apierrors.IsNotFound(err) {
 
@@ -259,7 +259,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 	// Update the configuration map with the new dataPlaneConfig data.
 	if err := r.UpdateDataPlaneConfigMap(dataPlaneConfig, dataPlaneConfigMap); err != nil {
-		trigger.Status.MarkDependencyFailed(string(brokerreconciler.ConditionConfigMapUpdated), err.Error())
+		trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
 		return err
 	}
 
