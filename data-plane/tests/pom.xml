@@ -28,7 +28,7 @@
   <artifactId>tests</artifactId>
 
   <properties>
-    <debezium.version>1.2.2.Final</debezium.version>
+    <debezium.version>1.2.3.Final</debezium.version>
     <kafka.version>2.6.0</kafka.version>
   </properties>
 
