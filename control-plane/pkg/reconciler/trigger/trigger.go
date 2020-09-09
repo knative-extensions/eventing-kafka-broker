@@ -273,6 +273,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 	// Update the configuration map with the new dataPlaneConfig data.
 	if err := r.UpdateDataPlaneConfigMap(dataPlaneConfig, dataPlaneConfigMap); err != nil {
+		trigger.Status.MarkDependencyFailed(string(brokerreconciler.ConditionConfigMapUpdated), err.Error())
 		return err
 	}
 
