@@ -918,7 +918,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					fmt.Sprintf(`failed to get broker configuration: supported config Kind: ConfigMap - got Pod`),
+					"failed to get broker configuration: supported config Kind: ConfigMap - got Pod",
 				),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
