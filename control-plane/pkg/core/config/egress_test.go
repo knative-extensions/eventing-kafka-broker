@@ -17,8 +17,9 @@
 package config
 
 import (
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"testing"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"k8s.io/apimachinery/pkg/types"
 )

@@ -218,7 +218,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 	brokerIndex := coreconfig.FindResource(contract, broker.UID)
 	if brokerIndex != coreconfig.NoResource {
-		deleteBroker(contract, brokerIndex)
+		coreconfig.DeleteBroker(contract, brokerIndex)
 
 		logger.Debug("Broker deleted", zap.Int("index", brokerIndex))
 
@@ -367,20 +367,6 @@ func (r *Reconciler) SetDefaultTopicDetails(topicDetail sarama.TopicDetail) {
 	defer r.KafkaDefaultTopicDetailsLock.Unlock()
 
 	r.KafkaDefaultTopicDetails = topicDetail
-}
-
-func deleteBroker(c *contract.Contract, index int) {
-	if len(c.Resources) == 1 {
-		*c = contract.Contract{
-			Generation: c.Generation,
-		}
-		return
-	}
-
-	// replace the resource to be deleted with the last one.
-	c.Resources[index] = c.Resources[len(c.Resources)-1]
-	// truncate the array.
-	c.Resources = c.Resources[:len(c.Resources)-1]
 }
 
 func (r *Reconciler) getDefaultBootstrapServersOrFail() ([]string, error) {

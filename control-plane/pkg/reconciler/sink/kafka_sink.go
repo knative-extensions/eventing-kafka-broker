@@ -19,6 +19,7 @@ package sink
 import (
 	"context"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"fmt"
 	"math"
 
 	"github.com/Shopify/sarama"
@@ -35,6 +36,13 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+)
+
+const (
+	TopicOwnerAnnotation = "eventing.knative.dev/topic.owner"
+
+	ExternalTopicOwner   = "external"
+	ControllerTopicOwner = "kafkasink-controller"
 )
 
 type Reconciler struct {
@@ -84,6 +92,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		if err != nil {
 			return statusConditionManager.FailedToCreateTopic(topic, err)
 		}
+
+		ks.GetStatus().Annotations[TopicOwnerAnnotation] = ControllerTopicOwner
+	} else {
+		ks.GetStatus().Annotations[TopicOwnerAnnotation] = ExternalTopicOwner
 	}
 	statusConditionManager.TopicCreated(ks.Spec.Topic)
 
@@ -161,9 +173,49 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, ks *eventing.KafkaSink) r
 
 func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) error {
 
-	// logger := log.Logger(ctx, "finalize", ks)
+	logger := log.Logger(ctx, "finalize", ks)
 
-	// TODO implement finalizer
+	// Get sinks config map.
+	sinksConfigMap, err := r.GetOrCreateDataPlaneConfigMap()
+	if err != nil {
+		return fmt.Errorf("failed to get sinks config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
+	}
+
+	logger.Debug("Got sinks config map")
+
+	// Get sinks data.
+	sinks, err := r.GetDataPlaneConfigMapData(logger, sinksConfigMap)
+	if err != nil {
+		return fmt.Errorf("failed to get sinks: %w", err)
+	}
+
+	logger.Debug(
+		"Got sinks data from config map",
+		zap.Any("sinks", (*log.ContractMarshaller)(sinks)),
+	)
+
+	sinkIndex := coreconfig.FindResource(sinks, ks.UID)
+	if sinkIndex != coreconfig.NoResource {
+		coreconfig.DeleteResource(sinks, sinkIndex)
+
+		logger.Debug("Sink deleted", zap.Int("index", sinkIndex))
+
+		// Update the configuration map with the new sinks data.
+		if err := r.UpdateDataPlaneConfigMap(ctx, sinks, sinksConfigMap); err != nil {
+			return err
+		}
+
+		logger.Debug("Sinks config map updated")
+	}
+
+	if ks.GetStatus().Annotations[TopicOwnerAnnotation] == ControllerTopicOwner {
+		topic, err := r.ClusterAdmin.DeleteTopic(ks.Spec.Topic, ks.Spec.BootstrapServers)
+		if err != nil {
+			return err
+		}
+		logger.Debug("Topic deleted", zap.String("topic", topic))
+	}
+
 	return nil
 }
 

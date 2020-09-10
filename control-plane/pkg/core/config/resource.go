@@ -54,3 +54,19 @@ func AddOrUpdateResourceConfig(contract *contract.Contract, resource *contract.R
 		logger.Debug("Resource doesn't exist")
 	}
 }
+
+// DeleteResource deletes the resource at the given index from Resources.
+func DeleteResource(ct *contract.Contract, index int) {
+
+	if len(ct.Resources) == 1 {
+		*ct = contract.Contract{
+			Generation: ct.Generation,
+		}
+		return
+	}
+
+	// replace the resource to be deleted with the last one.
+	ct.Resources[index] = ct.Resources[len(ct.Resources)-1]
+	// truncate the array.
+	ct.Resources = ct.Resources[:len(ct.Resources)-1]
+}
