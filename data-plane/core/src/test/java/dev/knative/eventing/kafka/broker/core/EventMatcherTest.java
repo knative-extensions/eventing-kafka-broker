@@ -17,7 +17,6 @@
 package dev.knative.eventing.kafka.broker.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.knative.eventing.kafka.broker.core.EventMatcher.Constants;
 import io.cloudevents.CloudEvent;
@@ -46,7 +45,7 @@ public class EventMatcherTest {
 
     final var match = matcher.match(event);
 
-    assertEquals(shouldMatch, match);
+    assertThat(match).isEqualTo(shouldMatch);
   }
 
   @Test
@@ -370,6 +369,6 @@ public class EventMatcherTest {
       .size();
 
     // DATACONTENTENCODING isn't usable, so +1
-    assertEquals(size, EventMatcher.attributesMapper.size() + 1);
+    assertThat(EventMatcher.attributesMapper.size() + 1).isEqualTo(size);
   }
 }

@@ -28,24 +28,48 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>14</java.version>
-    <!-- dependencies version -->
+
+    <!-- Maven plugins -->
     <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
     <maven.surefire.plugin.version>3.0.0-M5</maven.surefire.plugin.version>
-    <junit.jupiter.version>5.6.2</junit.jupiter.version>
-    <junit.platform.version>1.6.2</junit.platform.version>
-    <mokito.junit.jupiter.version>3.5.10</mokito.junit.jupiter.version>
     <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
     <maven.editorconfig.plugin.version>0.1.0</maven.editorconfig.plugin.version>
-    <jacoco.plugin.version>0.8.5</jacoco.plugin.version>
-    <!-- vertx version should be aligned with cloud events SDK -->
+    <maven.jacoco.plugin.version>0.8.5</maven.jacoco.plugin.version>
+    <maven.enforcer.plugin.version>3.0.0-M3</maven.enforcer.plugin.version>
+
+    <!-- dependencies version -->
     <vertx.version>4.0.0.Beta2</vertx.version>
     <cloudevents.sdk.version>2.0.0-milestone2</cloudevents.sdk.version>
-    <assertj.version>3.17.2</assertj.version>
+    <jackson.version>2.11.2</jackson.version>
     <protobuf.version>3.13.0</protobuf.version>
-    <build.helper.maven.plugin.version>3.1.0</build.helper.maven.plugin.version>
+    <slf4j.version>1.7.30</slf4j.version>
     <ch.qos.logback.version>1.2.3</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>6.4</net.logstash.logback.encoder.version>
+    <assertj.version>3.17.2</assertj.version>
+    <junit.jupiter.version>5.6.2</junit.jupiter.version>
+    <mokito.junit.jupiter.version>3.5.10</mokito.junit.jupiter.version>
   </properties>
+
+  <modules>
+    <module>contract</module>
+    <module>core</module>
+    <module>receiver</module>
+    <module>dispatcher</module>
+    <module>tests</module>
+  </modules>
+
+  <repositories>
+    <repository>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+      <id>sonatype</id>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
 
   <dependencyManagement>
     <dependencies>
@@ -56,16 +80,127 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- Logback -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-core</artifactId>
+        <version>${ch.qos.logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${ch.qos.logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.logstash.logback</groupId>
+        <artifactId>logstash-logback-encoder</artifactId>
+        <version>${net.logstash.logback.encoder.version}</version>
+      </dependency>
+
+      <!-- CloudEvents SDK -->
+      <dependency>
+        <groupId>io.cloudevents</groupId>
+        <artifactId>cloudevents-http-vertx</artifactId>
+        <version>${cloudevents.sdk.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web-client</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.cloudevents</groupId>
+        <artifactId>cloudevents-kafka</artifactId>
+        <version>${cloudevents.sdk.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.cloudevents</groupId>
+        <artifactId>cloudevents-json-jackson</artifactId>
+        <version>${cloudevents.sdk.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <!-- Protobuf -->
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${protobuf.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java-util</artifactId>
+        <version>${protobuf.version}</version>
+      </dependency>
+
+      <!-- Testing -->
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-junit5</artifactId>
+        <version>${vertx.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>${junit.jupiter.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-junit-jupiter</artifactId>
+        <version>${mokito.junit.jupiter.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>${assertj.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
-
-  <modules>
-    <module>core</module>
-    <module>receiver</module>
-    <module>dispatcher</module>
-    <module>generated</module>
-    <module>tests</module>
-  </modules>
 
   <build>
     <pluginManagement>
@@ -91,6 +226,11 @@
             </excludes>
           </configuration>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${maven.surefire.plugin.version}</version>
+        </plugin>
       </plugins>
     </pluginManagement>
 
@@ -105,14 +245,9 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>${maven.surefire.plugin.version}</version>
-      </plugin>
-      <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>${jacoco.plugin.version}</version>
+        <version>${maven.jacoco.plugin.version}</version>
         <configuration>
           <excludes>**/proto/**</excludes>
         </configuration>
@@ -131,6 +266,28 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${maven.enforcer.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>enforce-maven</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <dependencyConvergence/>
+                <requireReleaseDeps>
+                  <excludes>dev.knative.eventing.kafka.broker:*</excludes>
+                  <failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
+                </requireReleaseDeps>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -139,6 +296,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${maven.jacoco.plugin.version}</version>
         <reportSets>
           <reportSet>
             <reports>
@@ -149,112 +307,4 @@
       </plugin>
     </plugins>
   </reporting>
-
-  <repositories>
-    <repository>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-      <id>sonatype</id>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-
-  <dependencies>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <version>${ch.qos.logback.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>${ch.qos.logback.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-access</artifactId>
-      <version>${ch.qos.logback.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>net.logstash.logback</groupId>
-      <artifactId>logstash-logback-encoder</artifactId>
-      <version>${net.logstash.logback.encoder.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.cloudevents</groupId>
-      <artifactId>cloudevents-http-vertx</artifactId>
-      <version>${cloudevents.sdk.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.cloudevents</groupId>
-      <artifactId>cloudevents-kafka</artifactId>
-      <version>${cloudevents.sdk.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.cloudevents</groupId>
-      <artifactId>cloudevents-json-jackson</artifactId>
-      <version>${cloudevents.sdk.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-kafka-client</artifactId>
-      <version>${vertx.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-circuit-breaker</artifactId>
-      <version>${vertx.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-junit5</artifactId>
-      <version>${vertx.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-      <version>${protobuf.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java-util</artifactId>
-      <version>${protobuf.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <version>${junit.jupiter.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
-      <version>${junit.jupiter.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-junit-jupiter</artifactId>
-      <version>${mokito.junit.jupiter.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <version>${assertj.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-  </dependencies>
 </project>

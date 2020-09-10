@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-DATA_PLANE_OUTPUT_DIR=./data-plane/generated/src/main/java
+DATA_PLANE_OUTPUT_DIR=./data-plane/contract/src/main/java
 CONTROL_PLANE_OUTPUT_DIR=./
 
 mkdir -p $DATA_PLANE_OUTPUT_DIR
