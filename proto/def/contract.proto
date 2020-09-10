@@ -1,5 +1,7 @@
 syntax = 'proto3';
 
+import "google/protobuf/empty.proto";
+
 option go_package = "control-plane/pkg/contract";
 option java_package = "dev.knative.eventing.kafka.broker.contract";
 option java_outer_classname = "DataPlaneContract";
@@ -14,18 +16,11 @@ message Filter {
   map<string, string> attributes = 1;
 }
 
-message EgressTransformation {
-  oneof transformationType {
-    // Convert the Kafka record to CloudEvent
-    bool convertToCloudEvent = 1;
-  }
-}
-
 message Egress {
-  // trigger identifier
-  string consumerId = 1;
+  // consumer group name
+  string consumerGroup = 1;
 
-  // destination is the address that receives events from the Broker that pass the Filter.
+  // destination is the sink where events are sent.
   string destination = 2;
 
   oneof replyStrategy {
@@ -33,7 +28,7 @@ message Egress {
     string replyUrl = 3;
 
     // Send the response to a Kafka topic
-    string replyTopic = 4;
+    google.protobuf.Empty replyToOriginalTopic = 4;
   }
 
   // Dead letter is where the event is sent when something goes wrong
@@ -68,19 +63,16 @@ message Resource {
   string id = 1;
 
   // Topics name
-  repeated string topic = 2;
+  repeated string topics = 2;
 
   // Optional ingress for this topic
   Ingress ingress = 4;
 
   // Optional egresses for this topic
-  repeated Egress egress = 5;
+  repeated Egress egresses = 5;
 
   // A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
   string bootstrapServers = 6;
-
-  // Optional transformations to the messages before going to the egress
-  repeated EgressTransformation egressTransformations = 7;
 }
 
 message Contract {
@@ -88,5 +80,5 @@ message Contract {
   // Make sure each data plane pod has the same contract generation number.
   uint64 generation = 1;
 
-  repeated Resource topics = 2;
+  repeated Resource resources = 2;
 }
