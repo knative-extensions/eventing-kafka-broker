@@ -142,6 +142,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
 						BrokerConfigMapUpdatedReady(&configs),
+						BrokerDataPlaneAvailable,
 						BrokerConfigParsed,
 						BrokerTopicReady,
 						BrokerAddressable(&configs),
@@ -199,6 +200,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						WithDelivery(),
 						reconcilertesting.WithInitBrokerConditions,
 						BrokerConfigMapUpdatedReady(&configs),
+						BrokerDataPlaneAvailable,
 						BrokerTopicReady,
 						BrokerConfigParsed,
 						BrokerAddressable(&configs),
@@ -213,6 +215,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Name: "Failed to create topic",
 			Objects: []runtime.Object{
 				NewBroker(),
+				BrokerReceiverPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key:     testKey,
 			WantErr: true,
@@ -232,6 +236,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
+						BrokerDataPlaneAvailable,
 						BrokerConfigParsed,
 						BrokerFailedToCreateTopic,
 					),
@@ -294,8 +299,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						WithDelivery(),
-						BrokerConfigParsed,
 						reconcilertesting.WithInitBrokerConditions,
+						BrokerConfigParsed,
+						BrokerDataPlaneAvailable,
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerTopicReady,
 						BrokerAddressable(&configs),
@@ -348,6 +354,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
+						BrokerDataPlaneAvailable,
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerConfigParsed,
 						BrokerTopicReady,
@@ -428,6 +435,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
+						BrokerDataPlaneAvailable,
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerConfigParsed,
 						BrokerTopicReady,
@@ -524,6 +532,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							}
 						},
 						reconcilertesting.WithInitBrokerConditions,
+						BrokerDataPlaneAvailable,
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerConfigParsed,
 						BrokerTopicReady,
@@ -607,6 +616,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							broker.Spec.Delivery = &eventingduck.DeliverySpec{}
 						},
 						reconcilertesting.WithInitBrokerConditions,
+						BrokerDataPlaneAvailable,
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerConfigParsed,
 						BrokerTopicReady,
@@ -683,6 +693,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
+						BrokerDataPlaneAvailable,
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerConfigParsed,
 						BrokerTopicReady,
@@ -752,6 +763,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							}
 						},
 						reconcilertesting.WithInitBrokerConditions,
+						BrokerDataPlaneAvailable,
 						BrokerConfigParsed,
 						BrokerTopicReady,
 					),
@@ -769,6 +781,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Brokers:          []*coreconfig.Broker{},
 					VolumeGeneration: 1,
 				}, &configs),
+				BrokerReceiverPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key:     testKey,
 			WantErr: true,
@@ -787,6 +801,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
+						BrokerDataPlaneAvailable,
 						BrokerConfigNotParsed("no bootstrap.servers provided"),
 					),
 				},
@@ -849,6 +864,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						),
 						reconcilertesting.WithInitBrokerConditions,
 						BrokerConfigMapUpdatedReady(&configs),
+						BrokerDataPlaneAvailable,
 						BrokerConfigParsed,
 						BrokerTopicReady,
 						BrokerAddressable(&configs),
@@ -871,6 +887,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						KReference(BrokerConfig(bootstrapServers, 20, 5)),
 					),
 				),
+				BrokerReceiverPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key:     testKey,
 			WantErr: true,
@@ -892,6 +910,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							KReference(BrokerConfig(bootstrapServers, 20, 5)),
 						),
 						reconcilertesting.WithInitBrokerConditions,
+						BrokerDataPlaneAvailable,
 						BrokerConfigNotParsed(fmt.Sprintf(`failed to get configmap %s/%s: configmap %q not found`, ConfigMapNamespace, ConfigMapName, ConfigMapName)),
 					),
 				},
@@ -921,6 +940,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						Name:      BrokerName,
 					},
 				},
+				BrokerReceiverPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key:     testKey,
 			WantErr: true,
@@ -945,6 +966,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							APIVersion: "v1",
 						}),
 						reconcilertesting.WithInitBrokerConditions,
+						BrokerDataPlaneAvailable,
 						BrokerConfigNotParsed(`supported config Kind: ConfigMap - got Pod`),
 					),
 				},
@@ -1049,6 +1071,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
+						BrokerDataPlaneAvailable,
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerConfigParsed,
 						BrokerTopicReady,
@@ -1058,6 +1081,33 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 			OtherTestData: map[string]interface{}{
 				BootstrapServersConfigMapKey: bootstrapServers,
+			},
+		},
+		{
+			Name: "no data plane pods running",
+			Objects: []runtime.Object{
+				NewBroker(),
+			},
+			Key:     testKey,
+			WantErr: true,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					fmt.Sprintf("%s: %s", base.ReasonDataPlaneNotAvailable, base.MessageDataPlaneNotAvailable),
+				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						reconcilertesting.WithInitBrokerConditions,
+						BrokerDataPlaneNotAvailable,
+					),
+				},
 			},
 		},
 	}

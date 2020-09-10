@@ -88,6 +88,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
+	if !r.IsReceiverRunning() || !r.IsDispatcherRunning() {
+		return statusConditionManager.DataPlaneNotAvailable()
+	}
+	statusConditionManager.DataPlaneAvailable()
+
 	topicConfig, err := r.topicConfig(logger, broker)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)

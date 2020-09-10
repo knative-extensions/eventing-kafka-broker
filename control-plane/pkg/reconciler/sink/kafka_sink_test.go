@@ -125,6 +125,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				{
 					Object: NewSink(
 						InitSinkConditions,
+						SinkDataPlaneAvailable,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
@@ -181,6 +182,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 							sink.Spec.BootstrapServers = []string{"kafka-broker:10000"}
 						},
 						InitSinkConditions,
+						SinkDataPlaneAvailable,
 						BootstrapServers([]string{"kafka-broker:10000"}),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReadyWithName("my-topic-1"),
@@ -198,6 +200,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				NewSink(
 					BootstrapServers(bootstrapServersArr),
 				),
+				SinkReceiverPod(configs.SystemNamespace, nil),
 			},
 			Key:     testKey,
 			WantErr: true,
@@ -217,6 +220,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				{
 					Object: NewSink(
 						InitSinkConditions,
+						SinkDataPlaneAvailable,
 						BootstrapServers(bootstrapServersArr),
 						SinkFailedToCreateTopic,
 					),
@@ -273,6 +277,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				{
 					Object: NewSink(
 						InitSinkConditions,
+						SinkDataPlaneAvailable,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
@@ -318,6 +323,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				{
 					Object: NewSink(
 						InitSinkConditions,
+						SinkDataPlaneAvailable,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
@@ -386,6 +392,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				{
 					Object: NewSink(
 						InitSinkConditions,
+						SinkDataPlaneAvailable,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
@@ -452,10 +459,38 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				{
 					Object: NewSink(
 						InitSinkConditions,
+						SinkDataPlaneAvailable,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
 						SinkAddressable(&configs.Env),
+					),
+				},
+			},
+		},
+		{
+			Name: "no data plane pods running",
+			Objects: []runtime.Object{
+				NewSink(),
+			},
+			Key:     testKey,
+			WantErr: true,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					fmt.Sprintf("%s: %s", base.ReasonDataPlaneNotAvailable, base.MessageDataPlaneNotAvailable),
+				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						InitSinkConditions,
+						SinkDataPlaneNotAvailable,
 					),
 				},
 			},

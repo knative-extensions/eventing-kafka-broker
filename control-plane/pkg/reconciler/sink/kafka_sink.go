@@ -65,6 +65,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
+	if !r.IsReceiverRunning() {
+		return statusConditionManager.DataPlaneNotAvailable()
+	}
+	statusConditionManager.DataPlaneAvailable()
+
 	if ks.Spec.NumPartitions != nil && ks.Spec.ReplicationFactor != nil {
 		topicConfig := &kafka.TopicConfig{
 			TopicDetail: sarama.TopicDetail{

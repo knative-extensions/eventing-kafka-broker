@@ -117,6 +117,18 @@ func SinkTopicReady(sink *eventing.KafkaSink) {
 	SinkTopicReadyWithName(SinkTopic())(sink)
 }
 
+func SinkDataPlaneAvailable(sink *eventing.KafkaSink) {
+	sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrue(base.ConditionDataPlaneAvailable)
+}
+
+func SinkDataPlaneNotAvailable(sink *eventing.KafkaSink) {
+	sink.GetConditionSet().Manage(sink.GetStatus()).MarkFalse(
+		base.ConditionDataPlaneAvailable,
+		base.ReasonDataPlaneNotAvailable,
+		base.MessageDataPlaneNotAvailable,
+	)
+}
+
 func SinkAddressable(configs *config.Env) func(sink *eventing.KafkaSink) {
 
 	return func(sink *eventing.KafkaSink) {
@@ -171,6 +183,9 @@ func SinkReceiverPod(namespace string, annotations map[string]string) runtime.Ob
 			Labels: map[string]string{
 				"app": base.SinkReceiverLabel,
 			},
+		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodRunning,
 		},
 	}
 }

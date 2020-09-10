@@ -32,17 +32,24 @@ import (
 )
 
 const (
-	ConditionAddressable      apis.ConditionType = "Addressable"
-	ConditionTopicReady       apis.ConditionType = "TopicReady"
-	ConditionConfigMapUpdated apis.ConditionType = "ConfigMapUpdated"
-	ConditionConfigParsed     apis.ConditionType = "ConfigParsed"
+	ConditionAddressable        apis.ConditionType = "Addressable"
+	ConditionDataPlaneAvailable apis.ConditionType = "DataPlaneAvailable"
+	ConditionTopicReady         apis.ConditionType = "TopicReady"
+	ConditionConfigMapUpdated   apis.ConditionType = "ConfigMapUpdated"
+	ConditionConfigParsed       apis.ConditionType = "ConfigParsed"
 )
 
 var ConditionSet = apis.NewLivingConditionSet(
 	ConditionAddressable,
+	ConditionDataPlaneAvailable,
 	ConditionTopicReady,
 	ConditionConfigMapUpdated,
 	ConditionConfigParsed,
+)
+
+const (
+	ReasonDataPlaneNotAvailable  = "Data plane not available"
+	MessageDataPlaneNotAvailable = "Did you install the data plane for this component?"
 )
 
 type Object interface {
@@ -58,6 +65,21 @@ type StatusConditionManager struct {
 	Configs *config.Env
 
 	Recorder record.EventRecorder
+}
+
+func (manager *StatusConditionManager) DataPlaneAvailable() {
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrue(ConditionDataPlaneAvailable)
+}
+
+func (manager *StatusConditionManager) DataPlaneNotAvailable() reconciler.Event {
+
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
+		ConditionDataPlaneAvailable,
+		ReasonDataPlaneNotAvailable,
+		MessageDataPlaneNotAvailable,
+	)
+
+	return fmt.Errorf("%s: %s", ReasonDataPlaneNotAvailable, MessageDataPlaneNotAvailable)
 }
 
 func (manager *StatusConditionManager) FailedToGetConfigMap(err error) reconciler.Event {
