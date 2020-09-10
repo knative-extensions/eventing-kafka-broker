@@ -147,6 +147,18 @@ func BrokerTopicReady(broker *eventing.Broker) {
 	)
 }
 
+func BrokerDataPlaneAvailable(broker *eventing.Broker) {
+	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionDataPlaneAvailable)
+}
+
+func BrokerDataPlaneNotAvailable(broker *eventing.Broker) {
+	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
+		base.ConditionDataPlaneAvailable,
+		base.ReasonDataPlaneNotAvailable,
+		base.MessageDataPlaneNotAvailable,
+	)
+}
+
 func BrokerConfigParsed(broker *eventing.Broker) {
 	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionConfigParsed)
 }
@@ -212,6 +224,9 @@ func BrokerDispatcherPod(namespace string, annotations map[string]string) runtim
 				"app": base.BrokerDispatcherLabel,
 			},
 		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodRunning,
+		},
 	}
 }
 
@@ -228,6 +243,9 @@ func BrokerReceiverPod(namespace string, annotations map[string]string) runtime.
 			Labels: map[string]string{
 				"app": base.BrokerReceiverLabel,
 			},
+		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodRunning,
 		},
 	}
 }

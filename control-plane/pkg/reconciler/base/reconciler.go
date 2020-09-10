@@ -69,6 +69,25 @@ type Reconciler struct {
 	ReceiverLabel   string
 }
 
+func (r *Reconciler) IsReceiverRunning() bool {
+	pods, err := r.PodLister.List(r.receiverSelector())
+	return err == nil && len(pods) > 0 && isAtLeastOneRunning(pods)
+}
+
+func (r *Reconciler) IsDispatcherRunning() bool {
+	pods, err := r.PodLister.List(r.dispatcherSelector())
+	return err == nil && len(pods) > 0 && isAtLeastOneRunning(pods)
+}
+
+func isAtLeastOneRunning(pods []*corev1.Pod) bool {
+	for _, pod := range pods {
+		if pod.Status.Phase == corev1.PodRunning {
+			return true
+		}
+	}
+	return false
+}
+
 func (r *Reconciler) GetOrCreateDataPlaneConfigMap() (*corev1.ConfigMap, error) {
 
 	cm, err := r.KubeClient.CoreV1().
@@ -172,7 +191,7 @@ func (r *Reconciler) UpdateDispatcherPodsAnnotation(logger *zap.Logger, volumeGe
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
-		labelSelector := labels.SelectorFromSet(map[string]string{"app": r.DispatcherLabel})
+		labelSelector := r.dispatcherSelector()
 		pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)
 		if errors != nil {
 			return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
@@ -186,7 +205,7 @@ func (r *Reconciler) UpdateReceiverPodsAnnotation(logger *zap.Logger, volumeGene
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
-		labelSelector := labels.SelectorFromSet(map[string]string{"app": r.ReceiverLabel})
+		labelSelector := r.receiverSelector()
 		pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)
 		if errors != nil {
 			return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
@@ -225,4 +244,12 @@ func (r *Reconciler) updatePodsAnnotation(logger *zap.Logger, component string, 
 		}
 	}
 	return errors
+}
+
+func (r *Reconciler) receiverSelector() labels.Selector {
+	return labels.SelectorFromSet(map[string]string{"app": r.ReceiverLabel})
+}
+
+func (r *Reconciler) dispatcherSelector() labels.Selector {
+	return labels.SelectorFromSet(map[string]string{"app": r.DispatcherLabel})
 }
