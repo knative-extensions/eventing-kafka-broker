@@ -38,7 +38,7 @@ mkdir -p "${TMP_DIFFROOT}"
 DIRS=(
   "/go.mod"
   "/go.sum"
-  "/data-plane/generated/src/main/java"
+  "/data-plane/contract/src/main/java"
   "/control-plane/pkg/core/config"
   "/control-plane/pkg/apis"
   "/control-plane/pkg/client"

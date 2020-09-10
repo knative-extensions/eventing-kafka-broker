@@ -100,7 +100,7 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
           record.key(),
           record.value()
         ));
-        consumer.addEndOffsets(Map.of(
+        consumer.updateEndOffsets(Map.of(
           new TopicPartition(broker.topic(), record.partition()), 0L
         ));
       }

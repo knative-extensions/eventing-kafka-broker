@@ -9,8 +9,18 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>dev.knative.eventing.kafka.broker.core.config</groupId>
-  <artifactId>generated</artifactId>
+  <artifactId>contract</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java-util</artifactId>
+    </dependency>
+  </dependencies>
 
   <build>
     <plugins>
