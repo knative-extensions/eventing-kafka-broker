@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 The Knative Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package base
 
 import (
@@ -25,9 +41,11 @@ const (
 	ConfigMapDataKey = "data"
 
 	// label for selecting dispatcher pods.
-	DispatcherLabel = "kafka-broker-dispatcher"
+	BrokerDispatcherLabel = "kafka-broker-dispatcher"
 	// label for selecting receiver pods.
-	ReceiverLabel = "kafka-broker-receiver"
+	BrokerReceiverLabel = "kafka-broker-receiver"
+	// label for selecting receiver pods.
+	SinkReceiverLabel = "kafka-sink-receiver"
 
 	// volume generation annotation data plane pods.
 	VolumeGenerationAnnotationKey = "volumeGeneration"
@@ -46,6 +64,9 @@ type Reconciler struct {
 	DataPlaneConfigMapName      string
 	DataPlaneConfigFormat       string
 	SystemNamespace             string
+
+	DispatcherLabel string
+	ReceiverLabel   string
 }
 
 func (r *Reconciler) GetOrCreateDataPlaneConfigMap() (*corev1.ConfigMap, error) {
@@ -151,7 +172,7 @@ func (r *Reconciler) UpdateDispatcherPodsAnnotation(logger *zap.Logger, volumeGe
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
-		labelSelector := labels.SelectorFromSet(map[string]string{"app": DispatcherLabel})
+		labelSelector := labels.SelectorFromSet(map[string]string{"app": r.DispatcherLabel})
 		pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)
 		if errors != nil {
 			return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
@@ -165,7 +186,7 @@ func (r *Reconciler) UpdateReceiverPodsAnnotation(logger *zap.Logger, volumeGene
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
-		labelSelector := labels.SelectorFromSet(map[string]string{"app": ReceiverLabel})
+		labelSelector := labels.SelectorFromSet(map[string]string{"app": r.ReceiverLabel})
 		pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)
 		if errors != nil {
 			return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
@@ -204,8 +225,4 @@ func (r *Reconciler) updatePodsAnnotation(logger *zap.Logger, component string, 
 		}
 	}
 	return errors
-}
-
-func (r *Reconciler) HandleConflicts(f func() error) error {
-	return retry.RetryOnConflict(retry.DefaultRetry, f)
 }

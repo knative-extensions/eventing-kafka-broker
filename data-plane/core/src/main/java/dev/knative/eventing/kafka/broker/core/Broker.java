@@ -16,6 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.core;
 
+import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode;
+
 /**
  * Broker interface represents the Broker object.
  *
@@ -63,4 +65,11 @@ public interface Broker {
    * @return request path associated with this Broker.
    */
   String path();
+
+  /**
+   * Get content mode.
+   *
+   * @return content mode.
+   */
+  ContentMode contentMode();
 }

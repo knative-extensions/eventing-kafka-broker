@@ -27,25 +27,35 @@ import (
 	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 	"knative.dev/pkg/reconciler/testing"
+
+	eventingkafka "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	fakeeventingkafkaclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/fake"
+	eventingkafkalisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/eventing/v1alpha1"
 )
 
 var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakeeventingclientset.AddToScheme,
 	fakekubeclientset.AddToScheme,
 	fakeapiextensionsclientset.AddToScheme,
+	fakeeventingkafkaclientset.AddToScheme,
 }
 
 type Listers struct {
 	sorter testing.ObjectSorter
 }
 
-func newListers(objs []runtime.Object) *Listers {
-
+func newScheme() *runtime.Scheme {
 	scheme := runtime.NewScheme()
 
 	for _, addTo := range clientSetSchemes {
 		_ = addTo(scheme)
 	}
+	return scheme
+}
+
+func newListers(objs []runtime.Object) *Listers {
+
+	scheme := newScheme()
 
 	ls := Listers{
 		sorter: testing.NewObjectSorter(scheme),
@@ -70,6 +80,10 @@ func (l *Listers) GetEventingObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(fakeeventingclientset.AddToScheme)
 }
 
+func (l *Listers) GetEventingKafkaObjects() []runtime.Object {
+	return l.sorter.ObjectsForSchemeFunc(fakeeventingkafkaclientset.AddToScheme)
+}
+
 func (l *Listers) GetBrokerLister() eventinglisters.BrokerLister {
 	return eventinglisters.NewBrokerLister(l.indexerFor(&eventing.Broker{}))
 }
@@ -82,10 +96,14 @@ func (l *Listers) GetTriggerLister() eventinglisters.TriggerLister {
 	return eventinglisters.NewTriggerLister(l.indexerFor(&eventing.Trigger{}))
 }
 
-func (l *Listers) indexerFor(obj runtime.Object) cache.Indexer {
-	return l.sorter.IndexerForObjectType(obj)
-}
-
 func (l *Listers) GetConfigMapLister() corelisters.ConfigMapLister {
 	return corelisters.NewConfigMapLister(l.indexerFor(&corev1.ConfigMap{}))
+}
+
+func (l *Listers) GetKafkaSinkLister() eventingkafkalisters.KafkaSinkLister {
+	return eventingkafkalisters.NewKafkaSinkLister(l.indexerFor(&eventingkafka.KafkaSink{}))
+}
+
+func (l *Listers) indexerFor(obj runtime.Object) cache.Indexer {
+	return l.sorter.IndexerForObjectType(obj)
 }

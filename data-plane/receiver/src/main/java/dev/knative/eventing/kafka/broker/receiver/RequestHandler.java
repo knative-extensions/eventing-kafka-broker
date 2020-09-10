@@ -25,7 +25,11 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 import dev.knative.eventing.kafka.broker.core.Broker;
 import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
 import dev.knative.eventing.kafka.broker.core.Trigger;
+import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode;
 import io.cloudevents.CloudEvent;
+import io.cloudevents.core.message.Encoding;
+import io.cloudevents.jackson.JsonFormat;
+import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -47,8 +51,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to
- * Kafka through the Kafka producer and terminating requests with the appropriate status code.
+ * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to Kafka through the Kafka
+ * producer and terminating requests with the appropriate status code.
  */
 public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
   ObjectsReconciler<CloudEvent> {
@@ -189,6 +193,8 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
 
     final var producerConfigs = (Properties) this.producerConfigs.clone();
     producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, broker.bootstrapServers());
+    producerConfigs.setProperty(CloudEventSerializer.ENCODING_CONFIG, encoding(broker.contentMode()));
+    producerConfigs.setProperty(CloudEventSerializer.EVENT_FORMAT_CONFIG, JsonFormat.CONTENT_TYPE);
 
     final KafkaProducer<K, V> producer = producerCreator.apply(producerConfigs);
 
@@ -199,6 +205,17 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
         new Producer<>(producer, broker.topic())
       )
     );
+  }
+
+  private static String encoding(final ContentMode contentMode) {
+    switch (contentMode) {
+      case BINARY:
+        return Encoding.BINARY.toString();
+      case STRUCTURED:
+        return Encoding.STRUCTURED.toString();
+      default:
+        throw new IllegalArgumentException("unknown content mode: " + contentMode);
+    }
   }
 
   private static class Producer<K, V> {

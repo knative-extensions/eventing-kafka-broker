@@ -21,6 +21,11 @@ message Trigger {
   string id = 3;
 }
 
+enum ContentMode {
+  BINARY = 0;
+  STRUCTURED = 1;
+}
+
 message Broker {
 
   string id = 1;
@@ -39,6 +44,8 @@ message Broker {
 
   // A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
   string bootstrapServers = 6;
+
+  ContentMode contentMode = 7;
 }
 
 message Brokers {

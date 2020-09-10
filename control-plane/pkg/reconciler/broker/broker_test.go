@@ -46,9 +46,11 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 )
 
@@ -76,7 +78,7 @@ var (
 )
 
 func TestBrokerReconciler(t *testing.T) {
-	eventing.RegisterAlternateBrokerConditionSet(ConditionSet)
+	eventing.RegisterAlternateBrokerConditionSet(base.ConditionSet)
 
 	t.Parallel()
 
@@ -98,11 +100,11 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewBroker(),
 				NewConfigMap(&configs, nil),
 				NewService(),
-				NewReceiverPod(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewDispatcherPod(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
@@ -116,18 +118,18 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:               BrokerUUID,
-							Topic:            GetTopic(),
-							Path:             Path(BrokerNamespace, BrokerName),
+							Topic:            BrokerTopic(),
+							Path:             receiver.Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
 						},
 					},
 					VolumeGeneration: 1,
 				}),
-				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
@@ -139,10 +141,10 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigMapUpdatedReady(&configs),
-						ConfigParsed,
-						TopicReady,
-						Addressable(&configs),
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerConfigParsed,
+						BrokerTopicReady,
+						BrokerAddressable(&configs),
 					),
 				},
 			},
@@ -160,8 +162,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					VolumeGeneration: 1,
 				}, &configs),
 				NewService(),
-				NewReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
-				NewDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -172,18 +174,19 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:               BrokerUUID,
-							Topic:            GetTopic(),
+							Topic:            BrokerTopic(),
 							DeadLetterSink:   "http://test-service.test-service-namespace.svc.cluster.local/",
-							Path:             Path(BrokerNamespace, BrokerName),
+							Path:             receiver.Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
+							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
 					VolumeGeneration: 2,
 				}),
-				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
 			},
@@ -195,10 +198,10 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Object: NewBroker(
 						WithDelivery(),
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigMapUpdatedReady(&configs),
-						TopicReady,
-						ConfigParsed,
-						Addressable(&configs),
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerTopicReady,
+						BrokerConfigParsed,
+						BrokerAddressable(&configs),
 					),
 				},
 			},
@@ -219,7 +222,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					corev1.EventTypeWarning,
 					"InternalError",
 					"failed to create topic: %s: %v",
-					GetTopic(), createTopicError,
+					BrokerTopic(), createTopicError,
 				),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -229,8 +232,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigParsed,
-						FailedToCreateTopic,
+						BrokerConfigParsed,
+						BrokerFailedToCreateTopic,
 					),
 				},
 			},
@@ -246,8 +249,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					WithDelivery(),
 				),
 				NewService(),
-				NewReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
-				NewDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
 				&corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: configs.DataPlaneConfigMapNamespace,
@@ -268,18 +271,19 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:               BrokerUUID,
-							Topic:            GetTopic(),
+							Topic:            BrokerTopic(),
 							DeadLetterSink:   "http://test-service.test-service-namespace.svc.cluster.local/",
-							Path:             Path(BrokerNamespace, BrokerName),
+							Path:             receiver.Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
+							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
 					VolumeGeneration: 1,
 				}),
-				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -290,11 +294,11 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						WithDelivery(),
-						ConfigParsed,
+						BrokerConfigParsed,
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigMapUpdatedReady(&configs),
-						TopicReady,
-						Addressable(&configs),
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerTopicReady,
+						BrokerAddressable(&configs),
 					),
 				},
 			},
@@ -308,8 +312,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewBroker(),
 				NewConfigMap(&configs, []byte(`{"hello": "world"}`)),
 				NewService(),
-				NewReceiverPod(configs.SystemNamespace, nil),
-				NewDispatcherPod(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
 			},
@@ -322,17 +326,18 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:               BrokerUUID,
-							Topic:            GetTopic(),
-							Path:             Path(BrokerNamespace, BrokerName),
+							Topic:            BrokerTopic(),
+							Path:             receiver.Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
+							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
 					VolumeGeneration: 1,
 				}),
-				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -343,10 +348,10 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigMapUpdatedReady(&configs),
-						ConfigParsed,
-						TopicReady,
-						Addressable(&configs),
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerConfigParsed,
+						BrokerTopicReady,
+						BrokerAddressable(&configs),
 					),
 				},
 			},
@@ -364,7 +369,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Path:           Path(BrokerNamespace, BrokerName),
+							Path:           receiver.Path(BrokerNamespace, BrokerName),
 						},
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
@@ -374,10 +379,10 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					},
 				}, &configs),
 				NewService(),
-				NewReceiverPod(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
-				NewDispatcherPod(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
 			},
@@ -392,7 +397,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Path:           Path(BrokerNamespace, BrokerName),
+							Path:           receiver.Path(BrokerNamespace, BrokerName),
 						},
 						{
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
@@ -401,17 +406,18 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						},
 						{
 							Id:               BrokerUUID,
-							Topic:            GetTopic(),
-							Path:             Path(BrokerNamespace, BrokerName),
+							Topic:            BrokerTopic(),
+							Path:             receiver.Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
+							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
 					VolumeGeneration: 1,
 				}),
-				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -422,10 +428,10 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigMapUpdatedReady(&configs),
-						ConfigParsed,
-						TopicReady,
-						Addressable(&configs),
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerConfigParsed,
+						BrokerTopicReady,
+						BrokerAddressable(&configs),
 					),
 				},
 			},
@@ -458,16 +464,16 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						},
 						{
 							Id:             BrokerUUID,
-							Topic:          GetTopic(),
+							Topic:          BrokerTopic(),
 							DeadLetterSink: "http://www.my-sink.com",
 						},
 					},
 				}, &configs),
 				NewService(),
-				NewReceiverPod(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
-				NewDispatcherPod(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
 			},
@@ -485,18 +491,19 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						},
 						{
 							Id:               BrokerUUID,
-							Topic:            GetTopic(),
+							Topic:            BrokerTopic(),
 							DeadLetterSink:   "http://www.my-sink.com/api",
-							Path:             Path(BrokerNamespace, BrokerName),
+							Path:             receiver.Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
+							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
 					VolumeGeneration: 1,
 				}),
-				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -517,10 +524,10 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							}
 						},
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigMapUpdatedReady(&configs),
-						ConfigParsed,
-						TopicReady,
-						Addressable(&configs),
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerConfigParsed,
+						BrokerTopicReady,
+						BrokerAddressable(&configs),
 					),
 				},
 			},
@@ -542,21 +549,21 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Path:           Path(BrokerNamespace, BrokerName),
+							Path:           receiver.Path(BrokerNamespace, BrokerName),
 						},
 						{
 							Id:             BrokerUUID,
-							Topic:          GetTopic(),
+							Topic:          BrokerTopic(),
 							DeadLetterSink: "http://www.my-sink.com",
-							Path:           Path(BrokerNamespace, BrokerName),
+							Path:           receiver.Path(BrokerNamespace, BrokerName),
 						},
 					},
 				}, &configs),
 				NewService(),
-				NewReceiverPod(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
-				NewDispatcherPod(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
 			},
@@ -571,21 +578,22 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Path:           Path(BrokerNamespace, BrokerName),
+							Path:           receiver.Path(BrokerNamespace, BrokerName),
 						},
 						{
 							Id:               BrokerUUID,
-							Topic:            GetTopic(),
-							Path:             Path(BrokerNamespace, BrokerName),
+							Topic:            BrokerTopic(),
+							Path:             receiver.Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
+							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
 					VolumeGeneration: 1,
 				}),
-				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -599,10 +607,10 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							broker.Spec.Delivery = &eventingduck.DeliverySpec{}
 						},
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigMapUpdatedReady(&configs),
-						ConfigParsed,
-						TopicReady,
-						Addressable(&configs),
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerConfigParsed,
+						BrokerTopicReady,
+						BrokerAddressable(&configs),
 					),
 				},
 			},
@@ -620,21 +628,21 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Path:           Path(BrokerNamespace, BrokerName),
+							Path:           receiver.Path(BrokerNamespace, BrokerName),
 						},
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 						},
 					},
 					VolumeGeneration: 1,
 				}, &configs),
 				NewService(),
-				NewReceiverPod(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
-				NewDispatcherPod(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
 			},
@@ -649,21 +657,22 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Path:           Path(BrokerNamespace, BrokerName),
+							Path:           receiver.Path(BrokerNamespace, BrokerName),
 						},
 						{
 							Id:               BrokerUUID,
-							Topic:            GetTopic(),
-							Path:             Path(BrokerNamespace, BrokerName),
+							Topic:            BrokerTopic(),
+							Path:             receiver.Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
+							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
 					VolumeGeneration: 2,
 				}),
-				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
 			},
@@ -674,10 +683,10 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigMapUpdatedReady(&configs),
-						ConfigParsed,
-						TopicReady,
-						Addressable(&configs),
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerConfigParsed,
+						BrokerTopicReady,
+						BrokerAddressable(&configs),
 					),
 				},
 			},
@@ -701,21 +710,22 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topic:          "my-existing-topic-a",
 							DeadLetterSink: "http://www.my-sink.com",
-							Path:           Path(BrokerNamespace, BrokerName),
+							Path:           receiver.Path(BrokerNamespace, BrokerName),
 						},
 						{
 							Id:               BrokerUUID,
-							Topic:            GetTopic(),
-							Path:             Path(BrokerNamespace, BrokerName),
+							Topic:            BrokerTopic(),
+							Path:             receiver.Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
+							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
 					VolumeGeneration: 1,
 				}, &configs),
-				NewReceiverPod(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
-				NewDispatcherPod(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
 			},
@@ -742,8 +752,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							}
 						},
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigParsed,
-						TopicReady,
+						BrokerConfigParsed,
+						BrokerTopicReady,
 					),
 				},
 			},
@@ -777,7 +787,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigNotParsed("no bootstrap.servers provided"),
+						BrokerConfigNotParsed("no bootstrap.servers provided"),
 					),
 				},
 			},
@@ -793,11 +803,11 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMap(&configs, nil),
 				NewService(),
-				NewReceiverPod(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewDispatcherPod(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
@@ -811,18 +821,19 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:               BrokerUUID,
-							Topic:            GetTopic(),
-							Path:             Path(BrokerNamespace, BrokerName),
+							Topic:            BrokerTopic(),
+							Path:             receiver.Path(BrokerNamespace, BrokerName),
 							BootstrapServers: bootstrapServers,
+							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
 					VolumeGeneration: 1,
 				}),
-				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
@@ -837,10 +848,10 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							KReference(BrokerConfig(bootstrapServers, 20, 5)),
 						),
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigMapUpdatedReady(&configs),
-						ConfigParsed,
-						TopicReady,
-						Addressable(&configs),
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerConfigParsed,
+						BrokerTopicReady,
+						BrokerAddressable(&configs),
 					),
 				},
 			},
@@ -881,7 +892,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							KReference(BrokerConfig(bootstrapServers, 20, 5)),
 						),
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigNotParsed(fmt.Sprintf(`failed to get configmap %s/%s: configmap %q not found`, ConfigMapNamespace, ConfigMapName, ConfigMapName)),
+						BrokerConfigNotParsed(fmt.Sprintf(`failed to get configmap %s/%s: configmap %q not found`, ConfigMapNamespace, ConfigMapName, ConfigMapName)),
 					),
 				},
 			},
@@ -934,7 +945,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							APIVersion: "v1",
 						}),
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigNotParsed(`supported config Kind: ConfigMap - got Pod`),
+						BrokerConfigNotParsed(`supported config Kind: ConfigMap - got Pod`),
 					),
 				},
 			},
@@ -950,7 +961,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:             BrokerUUID,
-							Topic:          GetTopic(),
+							Topic:          BrokerTopic(),
 							DeadLetterSink: "http://example.com",
 							Triggers: []*coreconfig.Trigger{
 								{
@@ -975,14 +986,14 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 									Id:          TriggerUUID + "b",
 								},
 							},
-							Path: Path(BrokerNamespace, BrokerName),
+							Path: receiver.Path(BrokerNamespace, BrokerName),
 						},
 					},
 					VolumeGeneration: 1,
 				}, &configs),
 				NewService(),
-				NewReceiverPod(configs.SystemNamespace, nil),
-				NewDispatcherPod(configs.SystemNamespace, nil),
+				BrokerReceiverPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -993,7 +1004,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
+							Topic: BrokerTopic(),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Attributes: map[string]string{
@@ -1018,15 +1029,16 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 								},
 							},
 							BootstrapServers: bootstrapServers,
-							Path:             Path(BrokerNamespace, BrokerName),
+							ContentMode:      coreconfig.ContentMode_BINARY,
+							Path:             receiver.Path(BrokerNamespace, BrokerName),
 						},
 					},
 					VolumeGeneration: 2,
 				}),
-				ReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
 			},
@@ -1037,10 +1049,10 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				{
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
-						ConfigMapUpdatedReady(&configs),
-						ConfigParsed,
-						TopicReady,
-						Addressable(&configs),
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerConfigParsed,
+						BrokerTopicReady,
+						BrokerAddressable(&configs),
 					),
 				},
 			},
@@ -1080,8 +1092,8 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 						},
 					},
 					VolumeGeneration: 1,
@@ -1108,9 +1120,9 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:             BrokerUUID,
-							Topic:          GetTopic(),
+							Topic:          BrokerTopic(),
 							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
-							Path:           Path(BrokerNamespace, BrokerName),
+							Path:           receiver.Path(BrokerNamespace, BrokerName),
 						},
 					},
 					VolumeGeneration: 1,
@@ -1134,7 +1146,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:             BrokerUUID,
-							Topic:          GetTopic(),
+							Topic:          BrokerTopic(),
 							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
 						},
 					},
@@ -1148,7 +1160,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					corev1.EventTypeWarning,
 					"InternalError",
 					"failed to delete topic %s: %v",
-					GetTopic(), deleteTopicError,
+					BrokerTopic(), deleteTopicError,
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -1168,8 +1180,8 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 					WithDelivery(),
 				),
 				NewService(),
-				NewReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
-				NewDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
 			},
 			Key: testKey,
 			WantCreates: []runtime.Object{
@@ -1343,12 +1355,14 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 				DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
 				SystemNamespace:             configs.SystemNamespace,
+				DispatcherLabel:             base.BrokerDispatcherLabel,
+				ReceiverLabel:               base.BrokerReceiverLabel,
 			},
 			KafkaDefaultTopicDetails:     defaultTopicDetail,
 			KafkaDefaultTopicDetailsLock: sync.RWMutex{},
 			ConfigMapLister:              listers.GetConfigMapLister(),
-			NewClusterAdmin: func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
-				return &MockKafkaClusterAdmin{
+			ClusterAdmin: func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
+				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName:   fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName),
 					ExpectedTopicDetail: expectedTopicDetail,
 					ErrorOnCreateTopic:  onCreateTopicError,
@@ -1433,32 +1447,4 @@ func getUnmarshallableError(format string) interface{} {
 		return "unexpected EOF"
 	}
 	return "invalid character '-' after object key"
-}
-
-func TestPath(t *testing.T) {
-	type args struct {
-		namespace string
-		name      string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "namespace/name",
-			args: args{
-				namespace: "broker-namespace",
-				name:      "broker-name",
-			},
-			want: "/broker-namespace/broker-name",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Path(tt.args.namespace, tt.args.name); got != tt.want {
-				t.Errorf("Path() = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }

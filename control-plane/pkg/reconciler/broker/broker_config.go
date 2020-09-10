@@ -18,20 +18,16 @@ package broker
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/configmap"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
-type Config struct {
-	TopicDetail      sarama.TopicDetail
-	BootstrapServers []string
-}
-
-func configFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*Config, error) {
+func configFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*kafka.TopicConfig, error) {
 
 	topicDetail := sarama.TopicDetail{}
 
@@ -57,16 +53,12 @@ func configFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*Config, err
 
 	topicDetail.ReplicationFactor = int16(replicationFactor)
 
-	config := &Config{
+	config := &kafka.TopicConfig{
 		TopicDetail:      topicDetail,
-		BootstrapServers: bootstrapServersArray(bootstrapServers),
+		BootstrapServers: kafka.BootstrapServersArray(bootstrapServers),
 	}
 
 	logger.Debug("got broker config from config map", zap.Any("config", config))
 
 	return config, nil
-}
-
-func (c Config) getBootstrapServers() string {
-	return strings.Join(c.BootstrapServers, ",")
 }

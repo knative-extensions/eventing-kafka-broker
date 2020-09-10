@@ -34,18 +34,24 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/log"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 const (
-	// topic prefix - (topic name: knative-broker-<broker-namespace>-<broker-name>)
+	// TopicPrefix is the Kafka Broker topic prefix - (topic name: knative-broker-<broker-namespace>-<broker-name>)
 	TopicPrefix = "knative-broker-"
-
-	// signal that the broker hasn't been added to the config map yet.
-	NoBroker = -1
 )
+
+type Configs struct {
+	config.Env
+
+	BootstrapServers string
+}
 
 type Reconciler struct {
 	*base.Reconciler
@@ -58,9 +64,9 @@ type Reconciler struct {
 	bootstrapServersLock         sync.RWMutex
 	ConfigMapLister              corelisters.ConfigMapLister
 
-	// NewClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// ClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewClusterAdmin func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error)
+	ClusterAdmin kafka.NewClusterAdminFunc
 
 	Configs *Configs
 }
@@ -75,32 +81,33 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger := log.Logger(ctx, "reconcile", broker)
 
-	statusConditionManager := statusConditionManager{
-		Broker:   broker,
-		configs:  r.Configs,
-		recorder: controller.GetEventRecorder(ctx),
+	statusConditionManager := base.StatusConditionManager{
+		Object:     broker,
+		SetAddress: broker.Status.SetAddress,
+		Configs:    &r.Configs.Env,
+		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
-	config, err := r.resolveBrokerConfig(logger, broker)
+	topicConfig, err := r.topicConfig(logger, broker)
 	if err != nil {
-		return statusConditionManager.failedToResolveBrokerConfig(err)
+		return statusConditionManager.FailedToResolveConfig(err)
 	}
-	statusConditionManager.brokerConfigResolved()
+	statusConditionManager.ConfigResolved()
 
-	logger.Debug("config resolved", zap.Any("config", config))
+	logger.Debug("config resolved", zap.Any("config", topicConfig))
 
-	topic, err := r.CreateTopic(logger, Topic(broker), config)
+	topic, err := r.ClusterAdmin.CreateTopic(logger, kafka.Topic(TopicPrefix, broker), topicConfig)
 	if err != nil {
-		return statusConditionManager.failedToCreateTopic(topic, err)
+		return statusConditionManager.FailedToCreateTopic(topic, err)
 	}
-	statusConditionManager.topicCreated(topic)
+	statusConditionManager.TopicCreated(topic)
 
 	logger.Debug("Topic created", zap.Any("topic", topic))
 
 	// Get brokers and triggers config map.
 	brokersTriggersConfigMap, err := r.GetOrCreateDataPlaneConfigMap()
 	if err != nil {
-		return statusConditionManager.failedToGetBrokersTriggersConfigMap(err)
+		return statusConditionManager.FailedToGetConfigMap(err)
 	}
 
 	logger.Debug("Got brokers and triggers config map")
@@ -108,7 +115,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	// Get brokersTriggers data.
 	brokersTriggers, err := r.GetDataPlaneConfigMapData(logger, brokersTriggersConfigMap)
 	if err != nil && brokersTriggers == nil {
-		return statusConditionManager.failedToGetBrokersTriggersDataFromConfigMap(err)
+		return statusConditionManager.FailedToGetDataFromConfigMap(err)
 	}
 
 	logger.Debug(
@@ -116,25 +123,15 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: brokersTriggers}),
 	)
 
-	brokerIndex := FindBroker(brokersTriggers, broker)
-
 	// Get broker configuration.
-	brokerConfig, err := r.getBrokerConfig(topic, broker, config)
+	brokerConfig, err := r.getBrokerConfig(topic, broker, topicConfig)
 	if err != nil {
-		return statusConditionManager.failedToGetBrokerConfig(err)
+		return statusConditionManager.FailedToGetConfig(err)
 	}
+
+	brokerIndex := coreconfig.FindBroker(brokersTriggers, broker.UID)
 	// Update brokersTriggers data with the new broker configuration
-	if brokerIndex != NoBroker {
-		brokerConfig.Triggers = brokersTriggers.Brokers[brokerIndex].Triggers
-		brokersTriggers.Brokers[brokerIndex] = brokerConfig
-
-		logger.Debug("Broker exists", zap.Int("index", brokerIndex))
-
-	} else {
-		brokersTriggers.Brokers = append(brokersTriggers.Brokers, brokerConfig)
-
-		logger.Debug("Broker doesn't exist")
-	}
+	coreconfig.AddOrUpdateBrokersConfig(brokersTriggers, brokerConfig, brokerIndex, logger)
 
 	// Increment volumeGeneration
 	brokersTriggers.VolumeGeneration = incrementVolumeGeneration(brokersTriggers.VolumeGeneration)
@@ -142,11 +139,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	// Update the configuration map with the new brokersTriggers data.
 	if err := r.UpdateDataPlaneConfigMap(brokersTriggers, brokersTriggersConfigMap); err != nil {
 		logger.Error("failed to update data plane config map", zap.Error(
-			statusConditionManager.failedToUpdateBrokersTriggersConfigMap(err),
+			statusConditionManager.FailedToUpdateConfigMap(err),
 		))
 		return err
 	}
-	statusConditionManager.brokersTriggersConfigMapUpdated()
+	statusConditionManager.ConfigMapUpdated()
 
 	logger.Debug("Brokers and triggers config map updated")
 
@@ -159,7 +156,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	// Update volume generation annotation of receiver pods
 	if err := r.UpdateReceiverPodsAnnotation(logger, brokersTriggers.VolumeGeneration); err != nil {
 		logger.Error("Failed to update receiver pod annotation", zap.Error(
-			statusConditionManager.failedToUpdateReceiverPodsAnnotation(err),
+			statusConditionManager.FailedToUpdateReceiverPodsAnnotation(err),
 		))
 		return err
 	}
@@ -176,12 +173,12 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 			zap.Error(err),
 		)
 
-		statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
+		statusConditionManager.FailedToUpdateDispatcherPodsAnnotation(err)
 	} else {
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
-	return statusConditionManager.reconciled()
+	return statusConditionManager.Reconciled()
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -213,8 +210,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: brokersTriggers}),
 	)
 
-	brokerIndex := FindBroker(brokersTriggers, broker)
-	if brokerIndex != NoBroker {
+	brokerIndex := coreconfig.FindBroker(brokersTriggers, broker.UID)
+	if brokerIndex != coreconfig.NoBroker {
 		deleteBroker(brokersTriggers, brokerIndex)
 
 		logger.Debug("Broker deleted", zap.Int("index", brokerIndex))
@@ -230,15 +227,15 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		// eventually be seen by the dispatcher pod and resources will be deleted accordingly.
 	}
 
-	config, err := r.resolveBrokerConfig(logger, broker)
+	topicConfig, err := r.topicConfig(logger, broker)
 	if err != nil {
 		return fmt.Errorf("failed to resolve broker config: %w", err)
 	}
 
-	bootstrapServers := config.BootstrapServers
-	topic, err := r.deleteTopic(Topic(broker), bootstrapServers)
+	bootstrapServers := topicConfig.BootstrapServers
+	topic, err := r.ClusterAdmin.DeleteTopic(kafka.Topic(TopicPrefix, broker), bootstrapServers)
 	if err != nil {
-		return fmt.Errorf("failed to delete topic %s: %w", topic, err)
+		return err
 	}
 
 	logger.Debug("Topic deleted", zap.String("topic", topic))
@@ -250,7 +247,7 @@ func incrementVolumeGeneration(generation uint64) uint64 {
 	return (generation + 1) % (math.MaxUint64 - 1)
 }
 
-func (r *Reconciler) resolveBrokerConfig(logger *zap.Logger, broker *eventing.Broker) (*Config, error) {
+func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, error) {
 
 	logger.Debug("broker config", zap.Any("broker.spec.config", broker.Spec.Config))
 
@@ -289,25 +286,25 @@ func (r *Reconciler) defaultTopicDetail() sarama.TopicDetail {
 	return topicDetail
 }
 
-func (r *Reconciler) defaultConfig() (*Config, error) {
+func (r *Reconciler) defaultConfig() (*kafka.TopicConfig, error) {
 	bootstrapServers, err := r.getDefaultBootstrapServersOrFail()
 	if err != nil {
 		return nil, err
 	}
 
-	return &Config{
+	return &kafka.TopicConfig{
 		TopicDetail:      r.defaultTopicDetail(),
 		BootstrapServers: bootstrapServers,
 	}, nil
 }
 
-func (r *Reconciler) getBrokerConfig(topic string, broker *eventing.Broker, config *Config) (*coreconfig.Broker, error) {
+func (r *Reconciler) getBrokerConfig(topic string, broker *eventing.Broker, config *kafka.TopicConfig) (*coreconfig.Broker, error) {
 
 	brokerConfig := &coreconfig.Broker{
 		Id:               string(broker.UID),
 		Topic:            topic,
-		Path:             Path(broker.Namespace, broker.Name),
-		BootstrapServers: config.getBootstrapServers(),
+		Path:             receiver.PathFromObject(broker),
+		BootstrapServers: config.GetBootstrapServers(),
 	}
 
 	if broker.Spec.Delivery == nil || broker.Spec.Delivery.DeadLetterSink == nil {
@@ -330,18 +327,18 @@ func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev
 
 		logger := logging.FromContext(ctx)
 
-		config, err := configFromConfigMap(logger, configMap)
+		topicConfig, err := configFromConfigMap(logger, configMap)
 		if err != nil {
 			return
 		}
 
 		logger.Debug("new defaults",
-			zap.Any("topicDetail", config.TopicDetail),
-			zap.String("BootstrapServers", config.getBootstrapServers()),
+			zap.Any("topicDetail", topicConfig.TopicDetail),
+			zap.String("BootstrapServers", topicConfig.GetBootstrapServers()),
 		)
 
-		r.SetDefaultTopicDetails(config.TopicDetail)
-		r.SetBootstrapServers(config.getBootstrapServers())
+		r.SetDefaultTopicDetails(topicConfig.TopicDetail)
+		r.SetBootstrapServers(topicConfig.GetBootstrapServers())
 	}
 }
 
@@ -352,23 +349,11 @@ func (r *Reconciler) SetBootstrapServers(servers string) {
 		return
 	}
 
-	addrs := bootstrapServersArray(servers)
+	addrs := kafka.BootstrapServersArray(servers)
 
 	r.bootstrapServersLock.Lock()
 	r.bootstrapServers = addrs
 	r.bootstrapServersLock.Unlock()
-}
-
-func (r *Reconciler) getKafkaClusterAdmin(bootstrapServers []string) (sarama.ClusterAdmin, error) {
-	config := sarama.NewConfig()
-	config.Version = sarama.MaxVersion
-
-	kafkaClusterAdmin, err := r.NewClusterAdmin(bootstrapServers, config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create cluster admin: %w", err)
-	}
-
-	return kafkaClusterAdmin, nil
 }
 
 func (r *Reconciler) SetDefaultTopicDetails(topicDetail sarama.TopicDetail) {
@@ -376,18 +361,6 @@ func (r *Reconciler) SetDefaultTopicDetails(topicDetail sarama.TopicDetail) {
 	defer r.KafkaDefaultTopicDetailsLock.Unlock()
 
 	r.KafkaDefaultTopicDetails = topicDetail
-}
-
-func FindBroker(brokersTriggers *coreconfig.Brokers, broker *eventing.Broker) int {
-	// Find broker in brokersTriggers.
-	brokerIndex := NoBroker
-	for i, b := range brokersTriggers.Brokers {
-		if b.Id == string(broker.UID) {
-			brokerIndex = i
-			break
-		}
-	}
-	return brokerIndex
 }
 
 func deleteBroker(brokersTriggers *coreconfig.Brokers, index int) {
@@ -413,12 +386,4 @@ func (r *Reconciler) getDefaultBootstrapServersOrFail() ([]string, error) {
 	}
 
 	return r.bootstrapServers, nil
-}
-
-func bootstrapServersArray(bootstrapServers string) []string {
-	return strings.Split(bootstrapServers, ",")
-}
-
-func Path(namespace, name string) string {
-	return fmt.Sprintf("/%s/%s", namespace, name)
 }

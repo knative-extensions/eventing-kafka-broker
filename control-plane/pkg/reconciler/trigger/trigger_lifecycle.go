@@ -25,13 +25,13 @@ import (
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/reconciler"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 )
 
 type statusConditionManager struct {
 	Trigger *eventing.Trigger
 
-	Configs *broker.EnvConfigs
+	Configs *config.Env
 
 	Recorder record.EventRecorder
 }

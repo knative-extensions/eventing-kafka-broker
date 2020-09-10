@@ -58,26 +58,44 @@ spec:
               mountPath: /etc/config-logging
               readOnly: true
           env:
-            - name: DATA_PLANE_CONFIG_MAP_NAMESPACE
+            - name: BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE
               value: knative-eventing
-            - name: DATA_PLANE_CONFIG_MAP_NAME
+            - name: SINK_DATA_PLANE_CONFIG_MAP_NAMESPACE
+              value: knative-eventing
+            - name: BROKER_DATA_PLANE_CONFIG_MAP_NAME
               value: kafka-broker-brokers-triggers
+            - name: SINK_DATA_PLANE_CONFIG_MAP_NAME
+              value: kafka-sink-sinks
+            - name: BROKER_DATA_PLANE_CONFIG_FORMAT
+              value: json
+            - name: SINK_DATA_PLANE_CONFIG_FORMAT
+              value: json
+            - name: BROKER_INGRESS_NAME
+              value: kafka-broker-ingress
+            - name: SINK_INGRESS_NAME
+              value: kafka-sink-ingress
+            - name: BROKER_GENERAL_CONFIG_MAP_NAME
+              value: kafka-broker-config
+            - name: SINK_GENERAL_CONFIG_MAP_NAME
+              value: kafka-broker-config
+            - name: BROKER_SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: SINK_SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: CONFIG_LOGGING_NAME
               value: config-logging
             - name: CONFIG_OBSERVABILITY_NAME
               value: config-observability
             - name: METRICS_DOMAIN
               value: knative.dev/eventing
-            - name: DATA_PLANE_CONFIG_FORMAT
-              value: json
-            - name: BROKER_INGRESS_NAME
-              value: kafka-broker-ingress
-            - name: GENERAL_CONFIG_MAP_NAME
-              value: kafka-broker-config
-            - name: SYSTEM_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
           ports:
             - containerPort: 9090
               name: metrics

@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.knative.eventing.kafka.broker.core.config.BrokersConfig;
 import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker;
+import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -121,6 +122,18 @@ public class BrokerWrapperTest {
             .setBootstrapServers("kafka-1:9092,kafka-2:9092")
             .build()
         )
+      ),
+      Arguments.of(
+        new BrokerWrapper(
+          Broker.newBuilder()
+            .setContentMode(ContentMode.BINARY)
+            .build()
+        ),
+        new BrokerWrapper(
+          Broker.newBuilder()
+            .setContentMode(ContentMode.STRUCTURED)
+            .build()
+        )
       )
     );
   }
@@ -207,6 +220,30 @@ public class BrokerWrapperTest {
         new BrokerWrapper(
           Broker.newBuilder()
             .setBootstrapServers("kafka-1:9092,kafka-2:9092")
+            .build()
+        )
+      ),
+      Arguments.of(
+        new BrokerWrapper(
+          Broker.newBuilder()
+            .setContentMode(ContentMode.BINARY)
+            .build()
+        ),
+        new BrokerWrapper(
+          Broker.newBuilder()
+            .setContentMode(ContentMode.BINARY)
+            .build()
+        )
+      ),
+      Arguments.of(
+        new BrokerWrapper(
+          Broker.newBuilder()
+            .setContentMode(ContentMode.STRUCTURED)
+            .build()
+        ),
+        new BrokerWrapper(
+          Broker.newBuilder()
+            .setContentMode(ContentMode.STRUCTURED)
             .build()
         )
       )

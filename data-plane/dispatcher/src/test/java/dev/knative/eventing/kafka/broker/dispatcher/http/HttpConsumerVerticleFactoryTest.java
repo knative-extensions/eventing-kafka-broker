@@ -28,6 +28,7 @@ import dev.knative.eventing.kafka.broker.core.Broker;
 import dev.knative.eventing.kafka.broker.core.EventMatcher;
 import dev.knative.eventing.kafka.broker.core.Filter;
 import dev.knative.eventing.kafka.broker.core.Trigger;
+import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventDeserializer;
@@ -93,6 +94,11 @@ public class HttpConsumerVerticleFactoryTest {
 
         @Override
         public String path() {
+          return null;
+        }
+
+        @Override
+        public ContentMode contentMode() {
           return null;
         }
       },
@@ -166,6 +172,11 @@ public class HttpConsumerVerticleFactoryTest {
 
           @Override
           public String path() {
+            return null;
+          }
+
+          @Override
+          public ContentMode contentMode() {
             return null;
           }
         },

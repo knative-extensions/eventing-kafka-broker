@@ -37,8 +37,8 @@ import (
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
@@ -48,7 +48,7 @@ const (
 	FinalizerName = "kafka.triggers.eventing.knative.dev"
 )
 
-func NewController(ctx context.Context, _ configmap.Watcher, configs *broker.EnvConfigs) *controller.Impl {
+func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env) *controller.Impl {
 
 	logger := logging.FromContext(ctx)
 
@@ -64,6 +64,8 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *broker.Env
 			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
 			SystemNamespace:             configs.SystemNamespace,
+			DispatcherLabel:             base.BrokerDispatcherLabel,
+			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
 		BrokerLister:   brokerInformer.Lister(),
 		EventingClient: eventingclient.Get(ctx),

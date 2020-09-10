@@ -22,13 +22,13 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"k8s.io/apimachinery/pkg/types"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	testobservability "knative.dev/eventing-kafka-broker/test/pkg/observability"
 )
 
 func main() {
 
-	envConfig := &broker.EnvConfigs{}
+	envConfig := &config.Env{}
 
 	if err := envconfig.Process("", envConfig); err != nil {
 		log.Fatal("failed to process env config", err)

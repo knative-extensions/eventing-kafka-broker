@@ -39,6 +39,7 @@ import (
 	"knative.dev/pkg/resolver"
 
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
@@ -60,7 +61,7 @@ var (
 )
 
 func TestTriggerReconciler(t *testing.T) {
-	eventing.RegisterAlternateBrokerConditionSet(broker.ConditionSet)
+	eventing.RegisterAlternateBrokerConditionSet(base.ConditionSet)
 
 	t.Parallel()
 
@@ -88,12 +89,12 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 						},
 					},
 				}, &configs),
-				NewDispatcherPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -107,8 +108,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -119,7 +120,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					VolumeGeneration: 1,
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -148,8 +149,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID + "z",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -159,8 +160,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Attributes: map[string]string{
@@ -181,7 +182,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					VolumeGeneration: 2,
 				}, &configs),
-				NewDispatcherPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -195,8 +196,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID + "z",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -206,8 +207,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Attributes: map[string]string{
@@ -225,7 +226,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					VolumeGeneration: 3,
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "3",
 				}),
 			},
@@ -372,7 +373,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
+							Topic: BrokerTopic(),
 						},
 					},
 					VolumeGeneration: 8,
@@ -402,7 +403,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
+							Topic: BrokerTopic(),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -417,7 +418,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					VolumeGeneration: 8,
 				}, &configs),
-				NewDispatcherPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -431,7 +432,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
+							Topic: BrokerTopic(),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -442,7 +443,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					VolumeGeneration: 9,
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "9",
 				}),
 			},
@@ -470,8 +471,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -484,7 +485,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 					},
 				}, &configs),
-				NewDispatcherPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -498,8 +499,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -513,7 +514,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					VolumeGeneration: 1,
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -549,8 +550,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -578,8 +579,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -607,7 +608,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 					},
 				}, &configs),
-				NewDispatcherPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -621,8 +622,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -653,8 +654,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -683,7 +684,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					VolumeGeneration: 1,
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -719,8 +720,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -748,8 +749,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: "http://example.com/1",
@@ -773,7 +774,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 					},
 				}, &configs),
-				NewDispatcherPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -787,8 +788,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -816,8 +817,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: "http://example.com/1",
@@ -849,7 +850,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					VolumeGeneration: 1,
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -881,8 +882,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -910,8 +911,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: "http://example.com/1",
@@ -939,8 +940,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -968,7 +969,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 					},
 				}, &configs),
-				NewDispatcherPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -982,8 +983,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -1011,8 +1012,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: "http://example.com/1",
@@ -1040,8 +1041,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -1070,7 +1071,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					VolumeGeneration: 1,
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -1122,7 +1123,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
+							Topic: BrokerTopic(),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -1137,7 +1138,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					},
 					VolumeGeneration: 8,
 				}, &configs),
-				NewDispatcherPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -1151,7 +1152,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
+							Topic: BrokerTopic(),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -1162,7 +1163,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					},
 					VolumeGeneration: 9,
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "9",
 				}),
 			},
@@ -1183,7 +1184,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
+							Topic: BrokerTopic(),
 						},
 					},
 					VolumeGeneration: 8,
@@ -1240,8 +1241,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -1269,8 +1270,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 						},
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -1298,7 +1299,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 						},
 					},
 				}, &configs),
-				NewDispatcherPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -1312,8 +1313,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: "http://example.com/3",
@@ -1337,8 +1338,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 						},
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -1367,7 +1368,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					},
 					VolumeGeneration: 1,
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -1391,8 +1392,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -1420,8 +1421,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 						},
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: "http://example.com/1",
@@ -1449,7 +1450,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 						},
 					},
 				}, &configs),
-				NewDispatcherPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -1463,8 +1464,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -1492,8 +1493,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 						},
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: "http://example.com/1",
@@ -1518,7 +1519,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					},
 					VolumeGeneration: 1,
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -1542,8 +1543,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -1571,8 +1572,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 						},
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: "http://example.com/1",
@@ -1600,8 +1601,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 						},
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -1629,7 +1630,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 						},
 					},
 				}, &configs),
-				NewDispatcherPod(configs.SystemNamespace, nil),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -1643,8 +1644,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					Brokers: []*coreconfig.Broker{
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -1672,8 +1673,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 						},
 						{
 							Id:    BrokerUUID,
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: "http://example.com/1",
@@ -1697,8 +1698,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 						},
 						{
 							Id:    BrokerUUID + "a",
-							Topic: GetTopic(),
-							Path:  broker.Path(BrokerNamespace, BrokerName),
+							Topic: BrokerTopic(),
+							Path:  receiver.Path(BrokerNamespace, BrokerName),
 							Triggers: []*coreconfig.Trigger{
 								{
 									Destination: ServiceURL,
@@ -1727,7 +1728,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					},
 					VolumeGeneration: 1,
 				}),
-				DispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -1758,11 +1759,13 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 				DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
 				SystemNamespace:             configs.SystemNamespace,
+				DispatcherLabel:             base.BrokerDispatcherLabel,
+				ReceiverLabel:               base.BrokerReceiverLabel,
 			},
 			BrokerLister:   listers.GetBrokerLister(),
 			EventingClient: eventingclient.Get(ctx),
 			Resolver:       nil,
-			Configs:        &configs.EnvConfigs,
+			Configs:        &configs.Env,
 		}
 
 		reconciler.Resolver = resolver.NewURIResolver(ctx, func(name types.NamespacedName) {})

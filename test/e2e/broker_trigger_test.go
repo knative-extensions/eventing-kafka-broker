@@ -37,10 +37,6 @@ import (
 	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
-const (
-	bootstrapServers = "my-cluster-kafka-bootstrap.kafka:9092"
-)
-
 func TestBrokerTrigger(t *testing.T) {
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
@@ -138,10 +134,10 @@ func TestBrokerTrigger(t *testing.T) {
 		))
 
 		config := &kafkatest.Config{
-			BootstrapServers:  bootstrapServers,
+			BootstrapServers:  kafkatest.BootstrapServers,
 			ReplicationFactor: defaultReplicationFactor,
 			NumPartitions:     defaultNumPartitions,
-			Topic:             broker.Topic(br),
+			Topic:             kafka.Topic(broker.TopicPrefix, br),
 		}
 
 		err := kafkatest.VerifyNumPartitionAndReplicationFactor(
@@ -186,7 +182,7 @@ func TestBrokerWithConfig(t *testing.T) {
 		cm := client.CreateConfigMapOrFail(configMapName, client.Namespace, map[string]string{
 			broker.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
 			broker.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
-			broker.BootstrapServersConfigMapKey:              bootstrapServers,
+			broker.BootstrapServersConfigMapKey:              kafkatest.BootstrapServers,
 		})
 
 		br := client.CreateBrokerV1OrFail(
@@ -248,10 +244,10 @@ func TestBrokerWithConfig(t *testing.T) {
 		t.Logf("Verify num partitions and replication factor")
 
 		config := &kafkatest.Config{
-			BootstrapServers:  bootstrapServers,
+			BootstrapServers:  kafkatest.BootstrapServers,
 			ReplicationFactor: replicationFactor,
 			NumPartitions:     numPartitions,
-			Topic:             broker.Topic(br),
+			Topic:             kafka.Topic(broker.TopicPrefix, br),
 		}
 
 		err := kafkatest.VerifyNumPartitionAndReplicationFactor(

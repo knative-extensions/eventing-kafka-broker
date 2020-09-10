@@ -33,6 +33,7 @@ readonly CHAOS_CONFIG="test/pkg/config/chaos/chaosduck.yaml"
 readonly VENDOR_PKG_TEST_IMAGES="vendor/knative.dev/pkg/leaderelection/chaosduck"
 
 export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
+export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
 
 # The number of control plane replicas to run.
 readonly REPLICAS=${REPLICAS:-3}
@@ -43,8 +44,16 @@ function knative_setup() {
 }
 
 function knative_teardown() {
-  knative_eventing "delete --ignore-not-found"
-  return $?
+  if ! is_release_branch; then
+    echo ">> Install Knative Eventing from HEAD"
+    pushd .
+    cd eventing || fail_test "Failed to set up Eventing"
+    ko delete --ignore-not-found -f "${EVENTING_CONFIG}"
+    popd || fail_test "Failed to set up Eventing"
+  else
+    echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
+    kubectl delete --ignore-not-found -f ${KNATIVE_EVENTING_RELEASE}
+  fi
 }
 
 function knative_eventing() {
@@ -54,11 +63,11 @@ function knative_eventing() {
     cd "${GOPATH}" && mkdir -p src/knative.dev && cd src/knative.dev || fail_test "Failed to set up Eventing"
     git clone https://github.com/knative/eventing
     cd eventing || fail_test "Failed to set up Eventing"
-    ko $1 -f "${EVENTING_CONFIG}"
+    ko apply --strict -f "${EVENTING_CONFIG}"
     popd || fail_test "Failed to set up Eventing"
   else
     echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
-    kubectl apply -f ${KNATIVE_EVENTING_RELEASE}
+    kubectl apply --strict -f ${KNATIVE_EVENTING_RELEASE}
   fi
 
   # Publish test images.
@@ -84,6 +93,7 @@ function knative_eventing() {
 
 function test_setup() {
   [ -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" ] && rm "${EVENTING_KAFKA_BROKER_ARTIFACT}"
+  [ -f "${EVENTING_KAFKA_SINK_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SINK_ARTIFACT}"
 
   header "Data plane setup"
   data_plane_setup || fail_test "Failed to set up data plane components"
@@ -92,18 +102,21 @@ function test_setup() {
   control_plane_setup || fail_test "Failed to set up control plane components"
 
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_BROKER_ARTIFACT}"
+  kubectl apply -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_SINK_ARTIFACT}"
 
   # Apply test configurations, and restart data plane components (we don't have hot reload)
   ko apply -f ./test/pkg/config/ || fail_test "Failed to apply test configurations"
 
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
+  kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
 
   scale_controlplane kafka-broker-controller eventing-webhook eventing-controller
 }
 
 function test_teardown() {
-  kubectl delete -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to tear down"
+  kubectl delete -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to tear down kafka broker"
+  kubectl delete -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to tear down kafka sink"
 }
 
 function scale_controlplane() {

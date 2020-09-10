@@ -32,14 +32,10 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/log"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
-)
-
-const (
-	noTrigger = brokerreconciler.NoBroker
 )
 
 type Reconciler struct {
@@ -49,7 +45,7 @@ type Reconciler struct {
 	EventingClient eventingclientset.Interface
 	Resolver       *resolver.URIResolver
 
-	Configs *brokerreconciler.EnvConfigs
+	Configs *config.Env
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -97,8 +93,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: brokersTriggers}),
 	)
 
-	brokerIndex := brokerreconciler.FindBroker(brokersTriggers, broker)
-	if brokerIndex == brokerreconciler.NoBroker {
+	brokerIndex := coreconfig.FindBroker(brokersTriggers, broker.UID)
+	if brokerIndex == coreconfig.NoBroker {
 		// If the broker is not there, resources associated with the Trigger are deleted accordingly.
 		return nil
 	}
@@ -106,8 +102,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	logger.Debug("Found Broker", zap.Int("brokerIndex", brokerIndex))
 
 	triggers := brokersTriggers.Brokers[brokerIndex].Triggers
-	triggerIndex := findTrigger(triggers, trigger)
-	if triggerIndex == noTrigger {
+	triggerIndex := coreconfig.FindTrigger(triggers, trigger.UID)
+	if triggerIndex == coreconfig.NoTrigger {
 		// The trigger is not there, resources associated with the Trigger are deleted accordingly.
 		logger.Debug("trigger not found in config map")
 
@@ -164,16 +160,6 @@ func (r *Reconciler) GetTriggerConfig(trigger *eventing.Trigger) (coreconfig.Tri
 		Destination: destination.String(),
 		Id:          string(trigger.UID),
 	}, nil
-}
-
-func findTrigger(triggers []*coreconfig.Trigger, trigger *eventing.Trigger) int {
-
-	for i, t := range triggers {
-		if t.Id == string(trigger.UID) {
-			return i
-		}
-	}
-	return noTrigger
 }
 
 func deleteTrigger(triggers []*coreconfig.Trigger, index int) []*coreconfig.Trigger {
@@ -246,11 +232,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: dataPlaneConfig}),
 	)
 
-	brokerIndex := brokerreconciler.FindBroker(dataPlaneConfig, broker)
-	if brokerIndex == brokerreconciler.NoBroker {
+	brokerIndex := coreconfig.FindBroker(dataPlaneConfig, broker.UID)
+	if brokerIndex == coreconfig.NoBroker {
 		return statusConditionManager.brokerNotFoundInDataPlaneConfigMap()
 	}
-	triggerIndex := findTrigger(dataPlaneConfig.Brokers[brokerIndex].Triggers, trigger)
+	triggerIndex := coreconfig.FindTrigger(dataPlaneConfig.Brokers[brokerIndex].Triggers, trigger.UID)
 
 	triggerConfig, err := r.GetTriggerConfig(trigger)
 	if err != nil {
@@ -259,7 +245,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 	statusConditionManager.subscriberResolved()
 
-	if triggerIndex == noTrigger {
+	if triggerIndex == coreconfig.NoTrigger {
 		dataPlaneConfig.Brokers[brokerIndex].Triggers = append(
 			dataPlaneConfig.Brokers[brokerIndex].Triggers,
 			&triggerConfig,
@@ -273,7 +259,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 	// Update the configuration map with the new dataPlaneConfig data.
 	if err := r.UpdateDataPlaneConfigMap(dataPlaneConfig, dataPlaneConfigMap); err != nil {
-		trigger.Status.MarkDependencyFailed(string(brokerreconciler.ConditionConfigMapUpdated), err.Error())
+		trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
 		return err
 	}
 

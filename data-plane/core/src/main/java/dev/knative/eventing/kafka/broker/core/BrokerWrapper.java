@@ -17,6 +17,7 @@
 package dev.knative.eventing.kafka.broker.core;
 
 import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker;
+import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode;
 import java.util.Objects;
 
 /**
@@ -63,6 +64,11 @@ public class BrokerWrapper implements dev.knative.eventing.kafka.broker.core.Bro
   }
 
   @Override
+  public ContentMode contentMode() {
+    return broker.getContentMode();
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -76,7 +82,8 @@ public class BrokerWrapper implements dev.knative.eventing.kafka.broker.core.Bro
       && broker.getDeadLetterSink().equals(that.deadLetterSink())
       && broker.getTopic().equals(that.topic())
       && broker.getBootstrapServers().equals(that.bootstrapServers())
-      && broker.getPath().equals(that.path());
+      && broker.getPath().equals(that.path())
+      && broker.getContentMode().equals(that.contentMode());
   }
 
   @Override
@@ -86,7 +93,8 @@ public class BrokerWrapper implements dev.knative.eventing.kafka.broker.core.Bro
       broker.getDeadLetterSink(),
       broker.getTopic(),
       broker.getBootstrapServers(),
-      path()
+      path(),
+      broker.getContentMode()
     );
   }
 

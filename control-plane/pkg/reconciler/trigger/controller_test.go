@@ -31,13 +31,13 @@ import (
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 
-	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 )
 
 func TestNewController(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
-	controller := NewController(ctx, configmap.NewStaticWatcher(), &brokerreconciler.EnvConfigs{})
+	controller := NewController(ctx, configmap.NewStaticWatcher(), &config.Env{})
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
 	}
