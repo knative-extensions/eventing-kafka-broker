@@ -1,11 +1,10 @@
 syntax = 'proto3';
 
-option go_package = "control-plane/pkg/core/config";
-option java_package = "dev.knative.eventing.kafka.broker.core.config";
-option java_outer_classname = "BrokersConfig";
+option go_package = "control-plane/pkg/contract";
+option java_package = "dev.knative.eventing.kafka.broker.contract";
+option java_outer_classname = "DataPlaneContract";
 
-message Trigger {
-
+message Filter {
   // attributes filters events by exact match on event context attributes.
   // Each key in the map is compared with the equivalent key in the event
   // context. An event passes the filter if all values are equal to the
@@ -13,45 +12,81 @@ message Trigger {
   //
   // Nested context attributes are not supported as keys. Only string values are supported.
   map<string, string> attributes = 1;
+}
+
+message EgressTransformation {
+  oneof transformationType {
+    // Convert the Kafka record to CloudEvent
+    bool convertToCloudEvent = 1;
+  }
+}
+
+message Egress {
+  // trigger identifier
+  string consumerId = 1;
 
   // destination is the address that receives events from the Broker that pass the Filter.
   string destination = 2;
 
-  // trigger identifier
-  string id = 3;
+  oneof replyStrategy {
+    // Send the response to an url
+    string replyUrl = 3;
+
+    // Send the response to a Kafka topic
+    string replyTopic = 4;
+  }
+
+  // Dead letter is where the event is sent when something goes wrong
+  string deadLetter = 5;
+
+  Filter filter = 6;
 }
 
+// CloudEvent content mode
 enum ContentMode {
   BINARY = 0;
   STRUCTURED = 1;
 }
 
-message Broker {
+message Ingress {
+  // Optional content mode to use when pushing messages to Kafka
+  ContentMode contentMode = 1;
 
+  // Ingress can both listen on a specific HTTP path
+  // or listen to the / path but match the Host header
+  oneof ingressType {
+    // path to listen for incoming events.
+    string path = 2;
+
+    // host header to match
+    string host = 3;
+  }
+}
+
+message Resource {
+  // Id of the resource
   string id = 1;
 
-  // the Kafka topic to consume.
-  string topic = 2;
+  // Topics name
+  repeated string topic = 2;
 
-  // dead letter sink URI
-  string deadLetterSink = 3;
+  // Optional ingress for this topic
+  Ingress ingress = 4;
 
-  // triggers associated with the broker
-  repeated Trigger triggers = 4;
-
-  // path to listen for incoming events.
-  string path = 5;
+  // Optional egresses for this topic
+  repeated Egress egress = 5;
 
   // A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
   string bootstrapServers = 6;
 
-  ContentMode contentMode = 7;
+  // Optional transformations to the messages before going to the egress
+  repeated EgressTransformation egressTransformations = 7;
 }
 
-message Brokers {
-  repeated Broker brokers = 1;
+message Contract {
+  // Count each contract update.
+  // Make sure each data plane pod has the same contract generation number.
+  uint64 generation = 1;
 
-  // Count each config map update.
-  // Make sure each data plane pod has the same volume generation number.
-  uint64 volumeGeneration = 2;
+  repeated Resource topics = 2;
 }
