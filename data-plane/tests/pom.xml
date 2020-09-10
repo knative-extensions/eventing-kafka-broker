@@ -34,18 +34,23 @@
 
   <dependencies>
 
+    <!-- These are added as runtime deps, so jacoco can see these -->
+    <dependency>
+      <groupId>dev.knative.eventing.kafka.broker</groupId>
+      <artifactId>core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
       <artifactId>receiver</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
       <artifactId>dispatcher</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-junit5</artifactId>
@@ -117,6 +122,26 @@
               <!-- Kafka dep is funky and brings in way too much version clashes.
                    We don't release this package, so there's no point in working on aligning deps -->
               <skip>true</skip>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- This Jacoco configuration merge the results from all the tests in various modules and saves the html report under
+           data-plane/target/jacoco
+       -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${maven.jacoco.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>report-aggregate</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report-aggregate</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/../target/jacoco</outputDirectory>
             </configuration>
           </execution>
         </executions>
