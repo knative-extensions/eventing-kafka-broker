@@ -22,11 +22,11 @@ import (
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
-	"knative.dev/eventing/pkg/logging"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
 	apiseventing "knative.dev/eventing/pkg/apis/eventing"
@@ -50,7 +50,7 @@ const (
 
 func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env) *controller.Impl {
 
-	logger := logging.FromContext(ctx)
+	logger := logging.FromContext(ctx).Desugar()
 
 	brokerInformer := brokerinformer.Get(ctx)
 	triggerInformer := triggerinformer.Get(ctx)

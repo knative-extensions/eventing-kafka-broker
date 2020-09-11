@@ -30,11 +30,11 @@ import (
 	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
-	"knative.dev/eventing/pkg/logging"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	"knative.dev/pkg/apis"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/resolver"
 
@@ -1772,7 +1772,7 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 
 		return triggerreconciler.NewReconciler(
 			ctx,
-			logger.Sugar(),
+			logger,
 			fakeeventingclient.Get(ctx),
 			listers.GetTriggerLister(),
 			controller.GetEventRecorder(ctx),
