@@ -79,23 +79,34 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	}
 	statusConditionManager.DataPlaneAvailable()
 
+	if ks.GetStatus().Annotations == nil {
+		ks.GetStatus().Annotations = make(map[string]string, 1)
+	}
+
 	if ks.Spec.NumPartitions != nil && ks.Spec.ReplicationFactor != nil {
-		topicConfig := &kafka.TopicConfig{
-			TopicDetail: sarama.TopicDetail{
-				NumPartitions:     *ks.Spec.NumPartitions,
-				ReplicationFactor: *ks.Spec.ReplicationFactor,
-			},
-			BootstrapServers: ks.Spec.BootstrapServers,
-		}
+
+		ks.GetStatus().Annotations[TopicOwnerAnnotation] = ControllerTopicOwner
+
+		topicConfig := topicConfigFromSinkSpec(&ks.Spec)
 
 		topic, err := r.ClusterAdmin.CreateTopic(logger, ks.Spec.Topic, topicConfig)
 		if err != nil {
 			return statusConditionManager.FailedToCreateTopic(topic, err)
 		}
-
-		ks.GetStatus().Annotations[TopicOwnerAnnotation] = ControllerTopicOwner
 	} else {
+
+		// If the topic is externally managed, we need to make sure that the topic exists and it's valid.
+
 		ks.GetStatus().Annotations[TopicOwnerAnnotation] = ExternalTopicOwner
+
+		isPresentAndValid, err := r.ClusterAdmin.IsTopicPresentAndValid(ks.Spec.Topic, ks.Spec.BootstrapServers)
+		if err != nil {
+			return statusConditionManager.TopicNotPresentOrInvalidErr(err)
+		}
+		if !isPresentAndValid {
+			// The topic might be invalid.
+			return statusConditionManager.TopicNotPresentOrInvalid()
+		}
 	}
 	statusConditionManager.TopicCreated(ks.Spec.Topic)
 
@@ -176,7 +187,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	logger := log.Logger(ctx, "finalize", ks)
 
 	// Get sinks config map.
-	sinksConfigMap, err := r.GetOrCreateDataPlaneConfigMap()
+	sinksConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get sinks config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
 	}
@@ -221,4 +232,14 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 
 func incrementGeneration(generation uint64) uint64 {
 	return (generation + 1) % (math.MaxUint64 - 1)
+}
+
+func topicConfigFromSinkSpec(kss *eventing.KafkaSinkSpec) *kafka.TopicConfig {
+	return &kafka.TopicConfig{
+		TopicDetail: sarama.TopicDetail{
+			NumPartitions:     *kss.NumPartitions,
+			ReplicationFactor: *kss.ReplicationFactor,
+		},
+		BootstrapServers: kss.BootstrapServers,
+	}
 }

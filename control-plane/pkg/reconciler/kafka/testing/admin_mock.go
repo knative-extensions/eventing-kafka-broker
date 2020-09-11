@@ -23,6 +23,11 @@ type MockKafkaClusterAdmin struct {
 	ExpectedClose      bool
 	ExpectedCloseError error
 
+	// DescribeTopics
+	ExpectedTopics                         []string
+	ExpectedErrorOnDescribeTopics          error
+	ExpectedTopicsMetadataOnDescribeTopics []*sarama.TopicMetadata
+
 	T *testing.T
 }
 
@@ -43,7 +48,12 @@ func (m *MockKafkaClusterAdmin) ListTopics() (map[string]sarama.TopicDetail, err
 }
 
 func (m *MockKafkaClusterAdmin) DescribeTopics(topics []string) (metadata []*sarama.TopicMetadata, err error) {
-	panic("implement me")
+
+	if diff := cmp.Diff(topics, m.ExpectedTopics); diff != "" {
+		m.T.Errorf("unexpected topics (-want, +got) %s", diff)
+	}
+
+	return m.ExpectedTopicsMetadataOnDescribeTopics, m.ExpectedErrorOnDescribeTopics
 }
 
 func (m *MockKafkaClusterAdmin) DeleteTopic(topic string) error {

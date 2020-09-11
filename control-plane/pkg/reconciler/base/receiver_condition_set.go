@@ -50,6 +50,8 @@ var ConditionSet = apis.NewLivingConditionSet(
 const (
 	ReasonDataPlaneNotAvailable  = "Data plane not available"
 	MessageDataPlaneNotAvailable = "Did you install the data plane for this component?"
+
+	ReasonTopicNotPresent = "Topic is not present"
 )
 
 type Object interface {
@@ -205,4 +207,26 @@ func (manager *StatusConditionManager) FailedToResolveConfig(err error) reconcil
 
 func (manager *StatusConditionManager) ConfigResolved() {
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrue(ConditionConfigParsed)
+}
+
+func (manager *StatusConditionManager) TopicNotPresentOrInvalidErr(err error) error {
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
+		ConditionTopicReady,
+		ReasonTopicNotPresent,
+		err.Error(),
+	)
+
+	return fmt.Errorf("topic is not present: %w", err)
+}
+
+func (manager *StatusConditionManager) TopicNotPresentOrInvalid() error {
+
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
+		ConditionTopicReady,
+		ReasonTopicNotPresent,
+		"Check topic configuration",
+	)
+
+	return fmt.Errorf("topic is not present: check topic configuration")
+
 }
