@@ -26,7 +26,6 @@ import (
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
-	conformance "knative.dev/eventing/test/conformance/helpers"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
@@ -192,26 +191,174 @@ func TestBrokerIngressV1Beta1(t *testing.T) {
 }
 
 func TestBrokerConsumerV1Beta1(t *testing.T) {
-	// TODO re-enable this test
-	t.Skip("This scenario is already covered by TestEventTransformationForTrigger*")
 
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
-		client := testlib.Setup(t, true)
+		// TODO re-use Eventing conformance test once it's runnable with non channel based brokers.
+
+		client := testlib.Setup(t, false)
 		defer testlib.TearDown(client)
 
 		broker := createBroker(client)
 
-		runner := testlib.ComponentsTestRunner{
-			ComponentFeatureMap: map[metav1.TypeMeta][]testlib.Feature{
-				*testlib.BrokerTypeMeta: pkgtesting.Features,
-			},
-			ComponentsToTest:   pkgtesting.Components,
-			ComponentName:      broker.Name,
-			ComponentNamespace: broker.Namespace,
+		triggerName := "trigger"
+		secondTriggerName := "second-trigger"
+		loggerName := "logger-pod"
+		secondLoggerName := "second-logger-pod"
+		transformerName := "transformer-pod"
+		replySource := "origin-for-reply"
+		eventID := "consumer-broker-tests"
+		baseSource := "consumer-test-sender"
+		eventTracker, _ := recordevents.StartEventRecordOrFail(client, loggerName)
+		secondTracker, _ := recordevents.StartEventRecordOrFail(client, secondLoggerName)
+
+		baseEvent := cloudevents.NewEvent()
+		baseEvent.SetID(eventID)
+		baseEvent.SetType(testlib.DefaultEventType)
+		baseEvent.SetSource(baseSource)
+		baseEvent.SetSpecVersion("1.0")
+		body := fmt.Sprintf(`{"msg":%q}`, eventID)
+		if err := baseEvent.SetData(cloudevents.ApplicationJSON, []byte(body)); err != nil {
+			t.Fatalf("Cannot set the payload of the baseEvent: %s", err.Error())
 		}
 
-		conformance.BrokerV1Beta1ConsumerDataPlaneTestHelper(t, kafka.BrokerClass, runner)
+		transformMsg := []byte(`{"msg":"Transformed!"}`)
+		transformPod := resources.EventTransformationPod(
+			transformerName,
+			"reply-check-type",
+			"reply-check-source",
+			transformMsg,
+		)
+		client.CreatePodOrFail(transformPod, testlib.WithService(transformerName))
+		client.WaitForAllTestResourcesReadyOrFail()
+
+		trigger := client.CreateTriggerOrFailV1Beta1(
+			triggerName,
+			resources.WithBrokerV1Beta1(broker.Name),
+			resources.WithAttributesTriggerFilterV1Beta1("", "", nil),
+			resources.WithSubscriberServiceRefForTriggerV1Beta1(loggerName),
+		)
+
+		client.WaitForResourceReadyOrFail(trigger.Name, testlib.TriggerTypeMeta)
+		secondTrigger := client.CreateTriggerOrFailV1Beta1(
+			secondTriggerName,
+			resources.WithBrokerV1Beta1(broker.Name),
+			resources.WithAttributesTriggerFilterV1Beta1("filtered-event", "", nil),
+			resources.WithSubscriberServiceRefForTriggerV1Beta1(secondLoggerName),
+		)
+		client.WaitForResourceReadyOrFail(secondTrigger.Name, testlib.TriggerTypeMeta)
+
+		transformTrigger := client.CreateTriggerOrFailV1Beta1(
+			"transform-trigger",
+			resources.WithBrokerV1Beta1(broker.Name),
+			resources.WithAttributesTriggerFilterV1Beta1(replySource, baseEvent.Type(), nil),
+			resources.WithSubscriberServiceRefForTriggerV1Beta1(transformerName),
+		)
+		client.WaitForResourceReadyOrFail(transformTrigger.Name, testlib.TriggerTypeMeta)
+		replyTrigger := client.CreateTriggerOrFailV1Beta1(
+			"reply-trigger",
+			resources.WithBrokerV1Beta1(broker.Name),
+			resources.WithAttributesTriggerFilterV1Beta1("reply-check-source", "reply-check-type", nil),
+			resources.WithSubscriberServiceRefForTriggerV1Beta1(loggerName),
+		)
+		client.WaitForResourceReadyOrFail(replyTrigger.Name, testlib.TriggerTypeMeta)
+
+		t.Run("No upgrade of version", func(t *testing.T) {
+			event := baseEvent
+			source := "no-upgrade"
+			event.SetID(source)
+			event.Context = event.Context.AsV03()
+			senderName := source + "-sender"
+			client.SendEventToAddressable(senderName, broker.Name, testlib.BrokerTypeMeta, event, sender.WithEncoding(cloudevents.EncodingStructured))
+			originalEventMatcher := recordevents.MatchEvent(cetest.AllOf(
+				cetest.HasSpecVersion("0.3"),
+				cetest.HasId("no-upgrade"),
+			))
+			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			eventTracker.AssertExact(1, originalEventMatcher)
+
+		})
+
+		t.Run("Attributes received should be the same as produced (attributes may be added)", func(t *testing.T) {
+			event := baseEvent
+			id := "identical-attributes"
+			event.SetID(id)
+			senderName := id + "-sender"
+			client.SendEventToAddressable(senderName, broker.Name, testlib.BrokerTypeMeta, event, sender.WithEncoding(cloudevents.EncodingStructured))
+			originalEventMatcher := recordevents.MatchEvent(
+				cetest.HasId(id),
+				cetest.HasType(testlib.DefaultEventType),
+				cetest.HasSource(baseSource),
+				cetest.HasSpecVersion("1.0"),
+			)
+			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			eventTracker.AssertExact(1, originalEventMatcher)
+		})
+
+		t.Run("Events are filtered", func(t *testing.T) {
+			event := baseEvent
+			source := "filtered-event"
+			event.SetSource(source)
+			secondEvent := baseEvent
+			firstSenderName := "first-" + source + "-sender"
+			secondSenderName := "second-" + source + "-sender"
+			client.SendEventToAddressable(firstSenderName, broker.Name, testlib.BrokerTypeMeta, event, sender.WithEncoding(cloudevents.EncodingStructured))
+			client.SendEventToAddressable(secondSenderName, broker.Name, testlib.BrokerTypeMeta, secondEvent, sender.WithEncoding(cloudevents.EncodingStructured))
+			filteredEventMatcher := recordevents.MatchEvent(
+				cetest.HasSource(source),
+			)
+			nonEventMatcher := recordevents.MatchEvent(
+				cetest.HasSource(baseSource),
+			)
+			client.WaitForResourceReadyOrFail(firstSenderName, &podMeta)
+			client.WaitForResourceReadyOrFail(secondSenderName, &podMeta)
+			secondTracker.AssertAtLeast(1, filteredEventMatcher)
+			secondTracker.AssertNot(nonEventMatcher)
+		})
+
+		t.Run("Events are delivered to multiple subscribers", func(t *testing.T) {
+			event := baseEvent
+			source := "filtered-event"
+			event.SetSource(source)
+			senderName := source + "-sender"
+			client.SendEventToAddressable(senderName, broker.Name, testlib.BrokerTypeMeta, event, sender.WithEncoding(cloudevents.EncodingStructured))
+			filteredEventMatcher := recordevents.MatchEvent(
+				cetest.HasSource(source),
+			)
+			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			eventTracker.AssertAtLeast(1, filteredEventMatcher)
+			secondTracker.AssertAtLeast(1, filteredEventMatcher)
+		})
+
+		t.Run("Deliveries succeed at least once", func(t *testing.T) {
+			event := baseEvent
+			source := "delivery-check"
+			event.SetSource(source)
+			senderName := source + "-sender"
+			client.SendEventToAddressable(senderName, broker.Name, testlib.BrokerTypeMeta, event, sender.WithEncoding(cloudevents.EncodingStructured))
+			originalEventMatcher := recordevents.MatchEvent(
+				cetest.HasSource(source),
+			)
+			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			eventTracker.AssertAtLeast(1, originalEventMatcher)
+		})
+
+		t.Run("Replies are accepted and delivered", func(t *testing.T) {
+			event := baseEvent
+			event.SetSource(replySource)
+			senderName := replySource + "-sender"
+			client.WaitForServiceEndpointsOrFail(transformerName, 1)
+			client.WaitForResourceReadyOrFail(transformTrigger.Name, testlib.TriggerTypeMeta)
+			client.WaitForResourceReadyOrFail(replyTrigger.Name, testlib.TriggerTypeMeta)
+			client.SendEventToAddressable(senderName, broker.Name, testlib.BrokerTypeMeta, event, sender.WithEncoding(cloudevents.EncodingStructured))
+			transformedEventMatcher := recordevents.MatchEvent(
+				cetest.HasSource("reply-check-source"),
+				cetest.HasType("reply-check-type"),
+				cetest.HasData(transformMsg),
+			)
+			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			eventTracker.AssertAtLeast(2, transformedEventMatcher)
+		})
 	})
 }
 
