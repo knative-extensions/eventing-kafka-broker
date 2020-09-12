@@ -15,7 +15,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: eventing-kafka-webhook
+  name: kafka-webhook-eventing
   namespace: knative-eventing
   labels:
     eventing.knative.dev/release: devel
@@ -23,8 +23,8 @@ spec:
   replicas: 1
   selector:
     matchLabels: &labels
-      app: eventing-kafka-webhook
-      role: eventing-kafka-webhook
+      app: kafka-webhook-eventing
+      role: kafka-webhook-eventing
   template:
     metadata:
       labels: *labels
@@ -36,16 +36,16 @@ spec:
             - podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: eventing-kafka-webhook
+                    app: kafka-webhook-eventing
                 topologyKey: kubernetes.io/hostname
               weight: 100
 
-      serviceAccountName: eventing-kafka-webhook
+      serviceAccountName: kafka-webhook-eventing
       securityContext:
         runAsNonRoot: true
 
       containers:
-        - name: eventing-kafka-webhook
+        - name: kafka-webhook-eventing
           terminationMessagePolicy: FallbackToLogsOnError
 
           image: ko://knative.dev/eventing-kafka-broker/control-plane/cmd/webhook-kafka
@@ -68,7 +68,7 @@ spec:
             - name: METRICS_DOMAIN
               value: knative.dev/eventing
             - name: WEBHOOK_NAME
-              value: eventing-kafka-webhook
+              value: kafka-webhook-eventing
             - name: WEBHOOK_PORT
               value: "8443"
 
@@ -103,8 +103,8 @@ kind: Service
 metadata:
   labels:
     eventing.knative.dev/release: devel
-    role: eventing-kafka-webhook
-  name: eventing-kafka-webhook
+    role: kafka-webhook-eventing
+  name: kafka-webhook-eventing
   namespace: knative-eventing
 spec:
   ports:
@@ -112,4 +112,4 @@ spec:
       port: 443
       targetPort: 8443
   selector:
-    role: eventing-kafka-webhook
+    role: kafka-webhook-eventing
