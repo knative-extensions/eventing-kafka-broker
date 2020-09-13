@@ -30,6 +30,7 @@
 **/.vscode/
 
 ## Ignore released file
+eventing-kafka-controller.yaml
 eventing-kafka-broker.yaml
 eventing-kafka-sink.yaml
 

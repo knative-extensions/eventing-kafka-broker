@@ -22,6 +22,7 @@ source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/release.sh
 source $(dirname $0)/../test/data-plane/library.sh
 source $(dirname $0)/../test/control-plane/library.sh
 
+export EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT="eventing-kafka-controller.yaml"
 export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
 export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
 
@@ -32,6 +33,7 @@ function fail() {
 
 function build_release() {
 
+  [ -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" ] && rm "${EVENTING_KAFKA_BROKER_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_SINK_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SINK_ARTIFACT}"
 
@@ -45,7 +47,7 @@ function build_release() {
     fail "failed to create data plane artifact"
   fi
 
-  export ARTIFACTS_TO_PUBLISH=("${EVENTING_KAFKA_BROKER_ARTIFACT}" "${EVENTING_KAFKA_SINK_ARTIFACT}")
+  export ARTIFACTS_TO_PUBLISH=("${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT} ${EVENTING_KAFKA_BROKER_ARTIFACT}" "${EVENTING_KAFKA_SINK_ARTIFACT}")
 }
 
 main $@
