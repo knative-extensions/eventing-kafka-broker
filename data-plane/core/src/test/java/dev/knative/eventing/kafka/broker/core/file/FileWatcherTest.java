@@ -16,12 +16,12 @@
 
 package dev.knative.eventing.kafka.broker.core.file;
 
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.broker1Unwrapped;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.broker2Unwrapped;
+import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource1Unwrapped;
+import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource2Unwrapped;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.util.JsonFormat;
-import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -41,18 +41,18 @@ public class FileWatcherTest {
   public void shouldReceiveUpdatesOnUpdate() throws IOException, InterruptedException {
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
-    final var broker1 = Brokers.newBuilder()
-      .addBrokers(broker1Unwrapped())
+    final var broker1 = DataPlaneContract.Contract.newBuilder()
+      .addResources(resource1Unwrapped())
       .build();
 
-    final var broker2 = Brokers.newBuilder()
-      .addBrokers(broker2Unwrapped())
+    final var broker2 = DataPlaneContract.Contract.newBuilder()
+      .addResources(resource2Unwrapped())
       .build();
 
     final var isFirst = new AtomicBoolean(true);
     final var waitFirst = new CountDownLatch(1);
     final var waitSecond = new CountDownLatch(1);
-    final Consumer<Brokers> brokersConsumer = broker -> {
+    final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {
 
       if (isFirst.getAndSet(false)) {
         assertThat(broker).isEqualTo(broker1);
@@ -91,13 +91,13 @@ public class FileWatcherTest {
 
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
-    final var broker1 = Brokers.newBuilder()
-      .addBrokers(broker1Unwrapped())
+    final var broker1 = DataPlaneContract.Contract.newBuilder()
+      .addResources(resource1Unwrapped())
       .build();
     write(file, broker1);
 
     final var waitBroker = new CountDownLatch(1);
-    final Consumer<Brokers> brokersConsumer = broker -> {
+    final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {
       assertThat(broker).isEqualTo(broker1);
       waitBroker.countDown();
     };
@@ -126,10 +126,10 @@ public class FileWatcherTest {
     return thread;
   }
 
-  public static void write(File file, Brokers brokers) throws IOException {
+  public static void write(File file, DataPlaneContract.Contract contract) throws IOException {
     final var f = new File(file.toString());
     try (final var out = new FileWriter(f)) {
-      JsonFormat.printer().appendTo(brokers, out);
+      JsonFormat.printer().appendTo(contract, out);
     } finally {
       LoggerFactory.getLogger(FileWatcherTest.class).info("file written");
     }

@@ -17,11 +17,10 @@
 package dev.knative.eventing.kafka.broker.core;
 
 import io.vertx.core.Future;
-import java.util.Map;
-import java.util.Set;
+import java.util.Collection;
 
 @FunctionalInterface
-public interface ObjectsReconciler<T> {
+public interface ObjectsReconciler {
 
-  Future<Void> reconcile(Map<Broker, Set<Trigger<T>>> objects) throws Exception;
+  Future<Void> reconcile(Collection<Resource> resources) throws Exception;
 }

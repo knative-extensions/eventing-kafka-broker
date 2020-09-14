@@ -23,7 +23,7 @@ import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
-import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -44,7 +44,7 @@ public class FileWatcher {
 
   private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
 
-  private final Consumer<Brokers> brokersConsumer;
+  private final Consumer<DataPlaneContract.Contract> contractConsumer;
 
   private final WatchService watcher;
   private final File toWatch;
@@ -52,25 +52,25 @@ public class FileWatcher {
   /**
    * All args constructor.
    *
-   * @param watcher         watch service
-   * @param brokersConsumer updates receiver.
-   * @param file            file to watch
+   * @param watcher          watch service
+   * @param contractConsumer updates receiver.
+   * @param file             file to watch
    * @throws IOException watch service cannot be registered.
    */
   public FileWatcher(
     final WatchService watcher,
-    final Consumer<Brokers> brokersConsumer,
+    final Consumer<DataPlaneContract.Contract> contractConsumer,
     final File file)
     throws IOException {
 
-    Objects.requireNonNull(brokersConsumer, "provide consumer");
+    Objects.requireNonNull(contractConsumer, "provide consumer");
     Objects.requireNonNull(file, "provide file");
 
     // register the given watch service.
     // Note: this watch a directory and not the single file we're interested in, so that's the
     // reason in #watch() we filter watch service events based on the updated file.
 
-    this.brokersConsumer = brokersConsumer;
+    this.contractConsumer = contractConsumer;
     toWatch = file.getAbsoluteFile();
     logger.info("start watching {}", toWatch);
 
@@ -97,7 +97,7 @@ public class FileWatcher {
 
       // Note: take() blocks
       final var key = watcher.take();
-      logger.info("broker updates");
+      logger.info("contract updates");
 
       // this should be rare but it can actually happen so check watch key validity
       if (!key.isValid()) {
@@ -139,10 +139,10 @@ public class FileWatcher {
   private void parseFromJson(final Reader content) throws IOException {
     try {
 
-      final var brokers = Brokers.newBuilder();
-      JsonFormat.parser().merge(content, brokers);
+      final var contract = DataPlaneContract.Contract.newBuilder();
+      JsonFormat.parser().merge(content, contract);
 
-      brokersConsumer.accept(brokers.build());
+      contractConsumer.accept(contract.build());
 
     } catch (final InvalidProtocolBufferException ex) {
       logger.warn("failed to parse from JSON", ex);

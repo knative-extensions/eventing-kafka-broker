@@ -18,7 +18,7 @@ package dev.knative.eventing.kafka.broker.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Trigger;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.cloudevents.CloudEvent;
 import java.util.Collections;
 import java.util.Map;
@@ -31,40 +31,40 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @Execution(value = ExecutionMode.CONCURRENT)
-public class TriggerWrapperTest {
+public class EgressWrapperTest {
 
   @ParameterizedTest
-  @MethodSource(value = {"equalTriggersProvider"})
-  public void testTriggerEquality(final TriggerWrapper t1, final TriggerWrapper t2) {
+  @MethodSource("equalEgressProvider")
+  public void testEgressEquality(final EgressWrapper t1, final EgressWrapper t2) {
     assertThat(t1).isEqualTo(t2);
     assertThat(t1.hashCode()).isEqualTo(t2.hashCode());
   }
 
   @ParameterizedTest
-  @MethodSource(value = {"differentTriggersProvider"})
-  public void testTriggerDifference(final TriggerWrapper t1, final TriggerWrapper t2) {
+  @MethodSource("differentEgressProvider")
+  public void testEgressDifference(final EgressWrapper t1, final EgressWrapper t2) {
     assertThat(t1).isNotEqualTo(t2);
     assertThat(t1.hashCode()).isNotEqualTo(t2.hashCode());
   }
 
   @Test
-  public void idCallShouldBeDelegatedToWrappedTrigger() {
-    final var id = "123-42";
-    final var triggerWrapper = new TriggerWrapper(
-      Trigger.newBuilder().setId(id).build()
+  public void idCallShouldBeDelegatedToWrappedEgress() {
+    final var consumerGroup = "123-42";
+    final var egressWrapper = new EgressWrapper(
+      DataPlaneContract.Egress.newBuilder().setConsumerGroup(consumerGroup).build()
     );
 
-    assertThat(triggerWrapper.id()).isEqualTo(id);
+    assertThat(egressWrapper.consumerGroup()).isEqualTo(consumerGroup);
   }
 
   @Test
-  public void destinationCallShouldBeDelegatedToWrappedTrigger() {
+  public void destinationCallShouldBeDelegatedToWrappedEgress() {
     final var destination = "destination-42";
-    final var triggerWrapper = new TriggerWrapper(
-      Trigger.newBuilder().setDestination(destination).build()
+    final var egressWrapper = new EgressWrapper(
+      DataPlaneContract.Egress.newBuilder().setDestination(destination).build()
     );
 
-    assertThat(triggerWrapper.destination()).isEqualTo(destination);
+    assertThat(egressWrapper.destination()).isEqualTo(destination);
   }
 
   // test if filter returned by filter() agrees with EventMatcher
@@ -74,212 +74,212 @@ public class TriggerWrapperTest {
     final Map<String, String> attributes,
     final CloudEvent event,
     final boolean shouldMatch) {
-    final var triggerWrapper = new TriggerWrapper(
-      Trigger.newBuilder()
-        .putAllAttributes(attributes)
+    final var egressWrapper = new EgressWrapper(
+      DataPlaneContract.Egress.newBuilder()
+        .setFilter(DataPlaneContract.Filter.newBuilder().putAllAttributes(attributes))
         .build()
     );
 
-    final var filter = triggerWrapper.filter();
+    final var filter = egressWrapper.filter();
 
     final var match = filter.match(event);
 
     assertThat(match).isEqualTo(shouldMatch);
   }
 
-  public static Stream<Arguments> differentTriggersProvider() {
+  public static Stream<Arguments> differentEgressProvider() {
     return Stream.of(
-      // trigger's destination is different
+      // egress' destination is different
       Arguments.of(
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .putAllAttributes(Collections.emptyMap())
+          .setFilter(DataPlaneContract.Filter.newBuilder().putAllAttributes((Collections.emptyMap())))
           .setDestination("this-is-my-destination1")
-          .setId("1234-hello")
+          .setConsumerGroup("1234-hello")
           .build()
         ),
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .putAllAttributes(Collections.emptyMap())
+          .setFilter(DataPlaneContract.Filter.newBuilder().putAllAttributes((Collections.emptyMap())))
           .setDestination("this-is-my-destination")
-          .setId("1234-hello")
+          .setConsumerGroup("1234-hello")
           .build()
         )
       ),
-      // trigger's attributes are different
+      // egress' attributes are different
       Arguments.of(
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .putAllAttributes(Map.of(
+          .setFilter(DataPlaneContract.Filter.newBuilder().putAllAttributes(Map.of(
             "specversion1",
             "1.0",
             "type",
             "type_value"
-          ))
+          )))
           .setDestination("this-is-my-destination")
-          .setId("1234-hello")
+          .setConsumerGroup("1234-hello")
           .build()
         ),
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .putAllAttributes(Map.of(
+          .setFilter(DataPlaneContract.Filter.newBuilder().putAllAttributes(Map.of(
             "specversion",
             "1.0",
             "type",
             "type_value"
-          ))
+          )))
           .setDestination("this-is-my-destination")
-          .setId("1234-hello")
+          .setConsumerGroup("1234-hello")
           .build()
         )
       ),
       Arguments.of(
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .putAllAttributes(Map.of(
+          .setFilter(DataPlaneContract.Filter.newBuilder().putAllAttributes(Map.of(
             "specversion",
             "1.0",
             "type",
             "type_value1"
-          ))
+          )))
           .setDestination("this-is-my-destination")
-          .setId("1234-hello")
+          .setConsumerGroup("1234-hello")
           .build()
         ),
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .putAllAttributes(Map.of(
+          .setFilter(DataPlaneContract.Filter.newBuilder().putAllAttributes(Map.of(
             "specversion",
             "1.0",
             "type",
             "type_value"
-          ))
+          )))
           .setDestination("this-is-my-destination")
-          .setId("1234-hello")
+          .setConsumerGroup("1234-hello")
           .build()
         )
       ),
-      // trigger's id is different
+      // egress' id is different
       Arguments.of(
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .putAllAttributes(Map.of(
+          .setFilter(DataPlaneContract.Filter.newBuilder().putAllAttributes(Map.of(
             "specversion",
             "1.0",
             "type",
             "type_value"
-          ))
+          )))
           .setDestination("this-is-my-destination")
-          .setId("1234-hello1")
+          .setConsumerGroup("1234-hello1")
           .build()
         ),
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .putAllAttributes(Map.of(
+          .setFilter(DataPlaneContract.Filter.newBuilder().putAllAttributes(Map.of(
             "specversion",
             "1.0",
             "type",
             "type_value"
-          ))
+          )))
           .setDestination("this-is-my-destination")
-          .setId("1234-hello")
+          .setConsumerGroup("1234-hello")
           .build()
         )
       )
     );
   }
 
-  public static Stream<Arguments> equalTriggersProvider() {
+  public static Stream<Arguments> equalEgressProvider() {
     return Stream.of(
       Arguments.of(
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .putAllAttributes(Map.of(
+          .setFilter(DataPlaneContract.Filter.newBuilder().putAllAttributes(Map.of(
             "specversion",
             "1.0",
             "type",
             "type_value"
-          ))
+          )))
           .setDestination("this-is-my-destination")
-          .setId("1234-hello")
+          .setConsumerGroup("1234-hello")
           .build()
         ),
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .putAllAttributes(Map.of(
+          .setFilter(DataPlaneContract.Filter.newBuilder().putAllAttributes(Map.of(
             "specversion",
             "1.0",
             "type",
             "type_value"
-          ))
+          )))
           .setDestination("this-is-my-destination")
-          .setId("1234-hello")
+          .setConsumerGroup("1234-hello")
           .build()
         )
       ),
       Arguments.of(
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
           .build()
         ),
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
           .build()
         )
       ),
       Arguments.of(
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .setId("1234")
+          .setConsumerGroup("1234")
           .build()
         ),
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .setId("1234")
+          .setConsumerGroup("1234")
           .build()
         )
       ),
       Arguments.of(
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
           .build()
         ),
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
           .build()
         )
       ),
       Arguments.of(
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
           .setDestination("dest")
           .build()
         ),
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
           .setDestination("dest")
           .build()
         )
       ),
       Arguments.of(
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .putAllAttributes(Map.of(
+          .setFilter(DataPlaneContract.Filter.newBuilder().putAllAttributes(Map.of(
             "specversion",
             "1.0",
             "type",
             "type1"
-          ))
+          )))
           .build()
         ),
-        new TriggerWrapper(Trigger
+        new EgressWrapper(DataPlaneContract.Egress
           .newBuilder()
-          .putAllAttributes(Map.of(
+          .setFilter(DataPlaneContract.Filter.newBuilder().putAllAttributes(Map.of(
             "specversion",
             "1.0",
             "type",
             "type1"
-          ))
+          )))
           .build()
         )
       )
