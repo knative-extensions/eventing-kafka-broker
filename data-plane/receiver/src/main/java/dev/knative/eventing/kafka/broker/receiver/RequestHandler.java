@@ -22,28 +22,23 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
-import dev.knative.eventing.kafka.broker.core.Broker;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
-import dev.knative.eventing.kafka.broker.core.Trigger;
-import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode;
-import io.cloudevents.CloudEvent;
+import dev.knative.eventing.kafka.broker.core.Resource;
 import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import io.vertx.kafka.client.producer.RecordMetadata;
 import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -54,13 +49,12 @@ import org.slf4j.LoggerFactory;
  * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to Kafka through the Kafka
  * producer and terminating requests with the appropriate status code.
  */
-public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
-  ObjectsReconciler<CloudEvent> {
+public class RequestHandler<K, V> implements Handler<HttpServerRequest>, ObjectsReconciler {
 
   public static final int MAPPER_FAILED = BAD_REQUEST.code();
   public static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
   public static final int RECORD_PRODUCED = ACCEPTED.code();
-  public static final int BROKER_NOT_FOUND = NOT_FOUND.code();
+  public static final int RESOURCE_NOT_FOUND = NOT_FOUND.code();
 
   private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
 
@@ -97,10 +91,10 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
     final var producer = producers.get().get(request.path());
     if (producer == null) {
 
-      request.response().setStatusCode(BROKER_NOT_FOUND).end();
+      request.response().setStatusCode(RESOURCE_NOT_FOUND).end();
 
-      logger.warn("broker not found {} {}",
-        keyValue("brokers", producers.get().keySet()),
+      logger.warn("resource not found {} {}",
+        keyValue("resources", producers.get().keySet()),
         keyValue("path", request.path())
       );
 
@@ -109,7 +103,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
 
     requestToRecordMapper
       .recordFromRequest(request, producer.getValue().topic)
-      .onSuccess(record -> send(producer.getValue().producer, record)
+      .onSuccess(record -> producer.getValue().producer.send(record)
         .onSuccess(ignore -> {
           request.response().setStatusCode(RECORD_PRODUCED).end();
 
@@ -141,81 +135,68 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>,
       });
   }
 
-  private static <K, V> Future<RecordMetadata> send(
-    final KafkaProducer<K, V> producer,
-    final KafkaProducerRecord<K, V> record) {
-
-    final Promise<RecordMetadata> promise = Promise.promise();
-    producer.send(record, promise);
-    return promise.future();
-  }
-
   @Override
-  public Future<Void> reconcile(Map<Broker, Set<Trigger<CloudEvent>>> objects) {
-
-    final Map<String, Entry<String, Producer<K, V>>> newProducers
-      = new HashMap<>();
-
+  public Future<Void> reconcile(Collection<Resource> newObjects) {
+    final Map<String, Entry<String, Producer<K, V>>> newProducers = new HashMap<>();
     final var producers = this.producers.get();
 
-    for (final var broker : objects.keySet()) {
-      final var pair = producers.get(broker.path());
+    for (final var resource : newObjects) {
+      //TODO support host ingress too
+      //TODO check if there is an ingress, otherwise fail
+      final var pair = producers.get(resource.ingress().path());
 
       if (pair == null) {
-        // There is no producer for this Broker, so create it and add it to newProducers.
-        addBroker(newProducers, broker);
+        // There is no producer for this Resource, so create it and add it to newProducers.
+        addResource(newProducers, resource);
         continue;
       }
 
-      if (!pair.getKey().equals(broker.bootstrapServers())) {
+      if (!pair.getKey().equals(resource.bootstrapServers())) {
         // Bootstrap servers changed, close the old producer, and re-create a new one.
         final var producer = pair.getValue().producer;
         producer.flush(complete -> producer.close());
 
-        addBroker(newProducers, broker);
+        addResource(newProducers, resource);
         continue;
       }
 
       // Nothing changed, so add the previous entry, to newProducers.
-      newProducers.put(broker.path(), pair);
+      newProducers.put(resource.ingress().path(), pair);
     }
 
     this.producers.set(newProducers);
 
-    logger.debug("Added brokers to handler {}", keyValue("brokers", newProducers.keySet()));
+    logger.debug("Added resources to handler {}", keyValue("resources", newProducers.keySet()));
 
     return Future.succeededFuture();
   }
 
-  private void addBroker(
+  private void addResource(
     final Map<String, Entry<String, Producer<K, V>>> producers,
-    final Broker broker) {
+    final Resource resource) {
 
     final var producerConfigs = (Properties) this.producerConfigs.clone();
-    producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, broker.bootstrapServers());
-    producerConfigs.setProperty(CloudEventSerializer.ENCODING_CONFIG, encoding(broker.contentMode()));
+    producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.bootstrapServers());
+    producerConfigs.setProperty(CloudEventSerializer.ENCODING_CONFIG, encoding(resource.ingress().contentMode()));
     producerConfigs.setProperty(CloudEventSerializer.EVENT_FORMAT_CONFIG, JsonFormat.CONTENT_TYPE);
 
     final KafkaProducer<K, V> producer = producerCreator.apply(producerConfigs);
 
     producers.put(
-      broker.path(),
+      resource.ingress().path(),
       new SimpleImmutableEntry<>(
-        broker.bootstrapServers(),
-        new Producer<>(producer, broker.topic())
+        resource.bootstrapServers(),
+        new Producer<>(producer, resource.topics().iterator().next())
       )
     );
   }
 
-  private static String encoding(final ContentMode contentMode) {
-    switch (contentMode) {
-      case BINARY:
-        return Encoding.BINARY.toString();
-      case STRUCTURED:
-        return Encoding.STRUCTURED.toString();
-      default:
-        throw new IllegalArgumentException("unknown content mode: " + contentMode);
-    }
+  private static String encoding(final DataPlaneContract.ContentMode contentMode) {
+    return switch (contentMode) {
+      case BINARY -> Encoding.BINARY.toString();
+      case STRUCTURED -> Encoding.STRUCTURED.toString();
+      default -> throw new IllegalArgumentException("unknown content mode: " + contentMode);
+    };
   }
 
   private static class Producer<K, V> {
