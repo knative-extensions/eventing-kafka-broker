@@ -19,6 +19,7 @@
 package e2e
 
 import (
+	"context"
 	"testing"
 
 	"knative.dev/eventing/test/e2e/helpers"
@@ -45,6 +46,7 @@ func runTest(t *testing.T, brokerVersion string, triggerVersion string) {
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
 		helpers.EventTransformationForTriggerTestHelper(
+			context.Background(),
 			t,
 			brokerVersion,
 			triggerVersion,

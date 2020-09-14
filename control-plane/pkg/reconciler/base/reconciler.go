@@ -17,6 +17,7 @@
 package base
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -88,21 +89,21 @@ func isAtLeastOneRunning(pods []*corev1.Pod) bool {
 	return false
 }
 
-func (r *Reconciler) GetOrCreateDataPlaneConfigMap() (*corev1.ConfigMap, error) {
+func (r *Reconciler) GetOrCreateDataPlaneConfigMap(ctx context.Context) (*corev1.ConfigMap, error) {
 
 	cm, err := r.KubeClient.CoreV1().
 		ConfigMaps(r.DataPlaneConfigMapNamespace).
-		Get(r.DataPlaneConfigMapName, metav1.GetOptions{})
+		Get(ctx, r.DataPlaneConfigMapName, metav1.GetOptions{})
 
 	if apierrors.IsNotFound(err) {
-		cm, err = r.createDataPlaneConfigMap()
+		cm, err = r.createDataPlaneConfigMap(ctx)
 	}
 
 	return cm, err
 }
 
-func (r *Reconciler) createDataPlaneConfigMap() (*corev1.ConfigMap, error) {
-	return r.KubeClient.CoreV1().ConfigMaps(r.DataPlaneConfigMapNamespace).Create(&corev1.ConfigMap{
+func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context) (*corev1.ConfigMap, error) {
+	cm := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      r.DataPlaneConfigMapName,
@@ -111,7 +112,8 @@ func (r *Reconciler) createDataPlaneConfigMap() (*corev1.ConfigMap, error) {
 		BinaryData: map[string][]byte{
 			ConfigMapDataKey: []byte(""),
 		},
-	})
+	}
+	return r.KubeClient.CoreV1().ConfigMaps(r.DataPlaneConfigMapNamespace).Create(ctx, cm, metav1.CreateOptions{})
 }
 
 // GetDataPlaneConfigMapData extracts brokers and triggers data from the given config map.
@@ -161,7 +163,7 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 	return brokersTriggers, nil
 }
 
-func (r *Reconciler) UpdateDataPlaneConfigMap(brokersTriggers *coreconfig.Brokers, configMap *corev1.ConfigMap) error {
+func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, brokersTriggers *coreconfig.Brokers, configMap *corev1.ConfigMap) error {
 
 	var data []byte
 	var err error
@@ -178,7 +180,7 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(brokersTriggers *coreconfig.Broker
 	// Update config map data. TODO is it safe to update this config map? do we need to copy it?
 	configMap.BinaryData[ConfigMapDataKey] = data
 
-	_, err = r.KubeClient.CoreV1().ConfigMaps(configMap.Namespace).Update(configMap)
+	_, err = r.KubeClient.CoreV1().ConfigMaps(configMap.Namespace).Update(ctx, configMap, metav1.UpdateOptions{})
 	if err != nil {
 		// Return the same error, so that we can handle conflicting updates.
 		return err
@@ -187,7 +189,7 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(brokersTriggers *coreconfig.Broker
 	return nil
 }
 
-func (r *Reconciler) UpdateDispatcherPodsAnnotation(logger *zap.Logger, volumeGeneration uint64) error {
+func (r *Reconciler) UpdateDispatcherPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
@@ -197,11 +199,11 @@ func (r *Reconciler) UpdateDispatcherPodsAnnotation(logger *zap.Logger, volumeGe
 			return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
 		}
 
-		return r.updatePodsAnnotation(logger, "dispatcher", volumeGeneration, pods)
+		return r.updatePodsAnnotation(ctx, logger, "dispatcher", volumeGeneration, pods)
 	})
 }
 
-func (r *Reconciler) UpdateReceiverPodsAnnotation(logger *zap.Logger, volumeGeneration uint64) error {
+func (r *Reconciler) UpdateReceiverPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
@@ -211,11 +213,11 @@ func (r *Reconciler) UpdateReceiverPodsAnnotation(logger *zap.Logger, volumeGene
 			return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
 		}
 
-		return r.updatePodsAnnotation(logger, "receiver", volumeGeneration, pods)
+		return r.updatePodsAnnotation(ctx, logger, "receiver", volumeGeneration, pods)
 	})
 }
 
-func (r *Reconciler) updatePodsAnnotation(logger *zap.Logger, component string, volumeGeneration uint64, pods []*corev1.Pod) error {
+func (r *Reconciler) updatePodsAnnotation(ctx context.Context, logger *zap.Logger, component string, volumeGeneration uint64, pods []*corev1.Pod) error {
 
 	var errors error
 
@@ -238,7 +240,7 @@ func (r *Reconciler) updatePodsAnnotation(logger *zap.Logger, component string, 
 		annotations[VolumeGenerationAnnotationKey] = fmt.Sprint(volumeGeneration)
 		pod.SetAnnotations(annotations)
 
-		if _, err := r.KubeClient.CoreV1().Pods(pod.Namespace).Update(pod); err != nil {
+		if _, err := r.KubeClient.CoreV1().Pods(pod.Namespace).Update(ctx, pod, metav1.UpdateOptions{}); err != nil {
 			// Return the same error, so that we can handle conflicting updates.
 			return err
 		}

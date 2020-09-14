@@ -110,7 +110,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	logger.Debug("Topic created", zap.Any("topic", topic))
 
 	// Get brokers and triggers config map.
-	brokersTriggersConfigMap, err := r.GetOrCreateDataPlaneConfigMap()
+	brokersTriggersConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return statusConditionManager.FailedToGetConfigMap(err)
 	}
@@ -129,7 +129,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	)
 
 	// Get broker configuration.
-	brokerConfig, err := r.getBrokerConfig(topic, broker, topicConfig)
+	brokerConfig, err := r.getBrokerConfig(ctx, topic, broker, topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToGetConfig(err)
 	}
@@ -142,7 +142,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	brokersTriggers.VolumeGeneration = incrementVolumeGeneration(brokersTriggers.VolumeGeneration)
 
 	// Update the configuration map with the new brokersTriggers data.
-	if err := r.UpdateDataPlaneConfigMap(brokersTriggers, brokersTriggersConfigMap); err != nil {
+	if err := r.UpdateDataPlaneConfigMap(ctx, brokersTriggers, brokersTriggersConfigMap); err != nil {
 		logger.Error("failed to update data plane config map", zap.Error(
 			statusConditionManager.FailedToUpdateConfigMap(err),
 		))
@@ -159,7 +159,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	// the update even if here eventually means seconds or minutes after the actual update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(logger, brokersTriggers.VolumeGeneration); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, brokersTriggers.VolumeGeneration); err != nil {
 		logger.Error("Failed to update receiver pod annotation", zap.Error(
 			statusConditionManager.FailedToUpdateReceiverPodsAnnotation(err),
 		))
@@ -169,7 +169,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	logger.Debug("Updated receiver pod annotation")
 
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(logger, brokersTriggers.VolumeGeneration); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, brokersTriggers.VolumeGeneration); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
 		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Broker
 		// ready. So, log out the error and move on to the next step.
@@ -197,7 +197,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	logger := log.Logger(ctx, "finalize", broker)
 
 	// Get brokers and triggers config map.
-	brokersTriggersConfigMap, err := r.GetOrCreateDataPlaneConfigMap()
+	brokersTriggersConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get brokers and triggers config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
 	}
@@ -222,7 +222,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		logger.Debug("Broker deleted", zap.Int("index", brokerIndex))
 
 		// Update the configuration map with the new brokersTriggers data.
-		if err := r.UpdateDataPlaneConfigMap(brokersTriggers, brokersTriggersConfigMap); err != nil {
+		if err := r.UpdateDataPlaneConfigMap(ctx, brokersTriggers, brokersTriggersConfigMap); err != nil {
 			return err
 		}
 
@@ -303,7 +303,7 @@ func (r *Reconciler) defaultConfig() (*kafka.TopicConfig, error) {
 	}, nil
 }
 
-func (r *Reconciler) getBrokerConfig(topic string, broker *eventing.Broker, config *kafka.TopicConfig) (*coreconfig.Broker, error) {
+func (r *Reconciler) getBrokerConfig(ctx context.Context, topic string, broker *eventing.Broker, config *kafka.TopicConfig) (*coreconfig.Broker, error) {
 
 	brokerConfig := &coreconfig.Broker{
 		Id:               string(broker.UID),
@@ -316,7 +316,7 @@ func (r *Reconciler) getBrokerConfig(topic string, broker *eventing.Broker, conf
 		return brokerConfig, nil
 	}
 
-	deadLetterSinkURL, err := r.Resolver.URIFromDestinationV1(*broker.Spec.Delivery.DeadLetterSink, broker)
+	deadLetterSinkURL, err := r.Resolver.URIFromDestinationV1(ctx, *broker.Spec.Delivery.DeadLetterSink, broker)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve broker.Spec.Deliver.DeadLetterSink: %w", err)
 	}

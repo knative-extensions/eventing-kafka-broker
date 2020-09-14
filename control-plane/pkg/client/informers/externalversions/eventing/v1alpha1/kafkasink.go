@@ -19,6 +19,7 @@
 package v1alpha1
 
 import (
+	"context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,13 +62,13 @@ func NewFilteredKafkaSinkInformer(client versioned.Interface, namespace string, 
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.EventingV1alpha1().KafkaSinks(namespace).List(options)
+				return client.EventingV1alpha1().KafkaSinks(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.EventingV1alpha1().KafkaSinks(namespace).Watch(options)
+				return client.EventingV1alpha1().KafkaSinks(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&eventingv1alpha1.KafkaSink{},

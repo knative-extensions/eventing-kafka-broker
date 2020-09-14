@@ -13,21 +13,21 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/stretchr/testify v1.6.0
 	go.uber.org/zap v1.15.0
-	k8s.io/api v0.18.7-rc.0
+	k8s.io/api v0.18.8
 	k8s.io/apiextensions-apiserver v0.18.4
-	k8s.io/apimachinery v0.18.7-rc.0
+	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/kubernetes v1.14.7
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
-	knative.dev/eventing v0.17.1-0.20200911130100-1fec6b5212c0
-	knative.dev/pkg v0.0.0-20200908235250-56fba14ba7df
-	knative.dev/test-infra v0.0.0-20200910231400-cfba2288403d
+	knative.dev/eventing v0.17.1-0.20200911213100-a44dbdbbcec5
+	knative.dev/pkg v0.0.0-20200911145400-2d4efecc6bc1
+	knative.dev/test-infra v0.0.0-20200911201000-3f90e7c8f2fa
 )
 
 replace (
-	k8s.io/api => k8s.io/api v0.17.6
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.6
-	k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
-	k8s.io/client-go => k8s.io/client-go v0.17.6
-	k8s.io/code-generator => k8s.io/code-generator v0.17.6
+	k8s.io/api => k8s.io/api v0.18.8
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.18.8
+	k8s.io/apimachinery => k8s.io/apimachinery v0.18.8
+	k8s.io/client-go => k8s.io/client-go v0.18.8
+	k8s.io/code-generator => k8s.io/code-generator v0.18.8
 )

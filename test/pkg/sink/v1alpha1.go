@@ -17,6 +17,8 @@
 package sink
 
 import (
+	"context"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -29,14 +31,16 @@ func CreatorV1Alpha1(clientset eventingv1alpha1.EventingV1alpha1Interface, spec 
 
 	return func(namespacedName types.NamespacedName) (addressable.Addressable, error) {
 
-		_, err := clientset.KafkaSinks(namespacedName.Namespace).Create(&eventing.KafkaSink{
+		ctx := context.Background()
+		ks := &eventing.KafkaSink{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespacedName.Namespace,
 				Name:      namespacedName.Name,
 			},
 			Spec: spec,
-		})
+		}
 
+		_, err := clientset.KafkaSinks(namespacedName.Namespace).Create(ctx, ks, metav1.CreateOptions{})
 		if err != nil {
 			return addressable.Addressable{}, err
 		}

@@ -19,6 +19,7 @@
 package e2e
 
 import (
+	"context"
 	"testing"
 
 	"knative.dev/eventing/test/e2e/helpers"
@@ -29,5 +30,5 @@ import (
 func TestBrokerWithManyTriggers(t *testing.T) {
 	t.Skip("Pass more events than necessary (related? https://knative.slack.com/archives/C9JP909F0/p1595244377489600)")
 
-	helpers.TestBrokerWithManyTriggers(t, testbroker.Creator, false)
+	helpers.TestBrokerWithManyTriggers(context.Background(), t, testbroker.Creator, false)
 }

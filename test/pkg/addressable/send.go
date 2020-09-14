@@ -17,6 +17,7 @@
 package addressable
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"testing"
@@ -35,6 +36,7 @@ func Send(t *testing.T, addressable Addressable) []string {
 func SendN(t *testing.T, n int, addressable Addressable) []string {
 
 	idsChan := make(chan string, n)
+	ctx := context.Background()
 
 	// Send n messages to the addressable
 	go func() {
@@ -60,7 +62,7 @@ func SendN(t *testing.T, n int, addressable Addressable) []string {
 
 				client.Namespace = addressable.Namespace
 
-				client.SendEventToAddressable(fmt.Sprintf("%s-%d", addressable.Name, i), addressable.Name, &addressable.TypeMeta, event)
+				client.SendEventToAddressable(ctx, fmt.Sprintf("%s-%d", addressable.Name, i), addressable.Name, &addressable.TypeMeta, event)
 
 				idsChan <- id
 				wg.Done()
