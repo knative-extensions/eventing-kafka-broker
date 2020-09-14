@@ -19,6 +19,7 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -39,6 +40,8 @@ import (
 
 func TestBrokerTrigger(t *testing.T) {
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
+
+		ctx := context.Background()
 
 		client := testlib.Setup(t, true)
 		defer testlib.TearDown(client)
@@ -68,7 +71,7 @@ func TestBrokerTrigger(t *testing.T) {
 			resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
 		)
 
-		eventTracker, _ := recordevents.StartEventRecordOrFail(client, subscriber)
+		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber)
 		defer eventTracker.Cleanup()
 
 		client.CreateTriggerOrFailV1Beta1(
@@ -86,7 +89,7 @@ func TestBrokerTrigger(t *testing.T) {
 			},
 		)
 
-		client.WaitForAllTestResourcesReadyOrFail()
+		client.WaitForAllTestResourcesReadyOrFail(ctx)
 
 		t.Logf("Sending events to %s/%s", client.Namespace, brokerName)
 
@@ -100,6 +103,7 @@ func TestBrokerTrigger(t *testing.T) {
 		}
 
 		client.SendEventToAddressable(
+			ctx,
 			senderName+"non-matching",
 			brokerName,
 			testlib.BrokerTypeMeta,
@@ -116,6 +120,7 @@ func TestBrokerTrigger(t *testing.T) {
 		}
 
 		client.SendEventToAddressable(
+			ctx,
 			senderName+"matching",
 			brokerName,
 			testlib.BrokerTypeMeta,
@@ -155,6 +160,8 @@ func TestBrokerTrigger(t *testing.T) {
 
 func TestBrokerWithConfig(t *testing.T) {
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
+
+		ctx := context.Background()
 
 		client := testlib.Setup(t, true)
 		defer testlib.TearDown(client)
@@ -196,7 +203,7 @@ func TestBrokerWithConfig(t *testing.T) {
 			}),
 		)
 
-		eventTracker, _ := recordevents.StartEventRecordOrFail(client, subscriber)
+		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber)
 		defer eventTracker.Cleanup()
 
 		client.CreateTriggerOrFailV1Beta1(
@@ -214,7 +221,7 @@ func TestBrokerWithConfig(t *testing.T) {
 			},
 		)
 
-		client.WaitForAllTestResourcesReadyOrFail()
+		client.WaitForAllTestResourcesReadyOrFail(ctx)
 
 		t.Logf("Sending events to %s/%s", client.Namespace, brokerName)
 
@@ -228,6 +235,7 @@ func TestBrokerWithConfig(t *testing.T) {
 		}
 
 		client.SendEventToAddressable(
+			ctx,
 			senderName+"matching",
 			brokerName,
 			testlib.BrokerTypeMeta,

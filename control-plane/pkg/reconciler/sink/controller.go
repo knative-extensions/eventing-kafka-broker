@@ -53,7 +53,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 		Configs:         configs,
 	}
 
-	_, err := reconciler.GetOrCreateDataPlaneConfigMap()
+	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		logger.Fatal("Failed to get or create data plane config map",
 			zap.String("configmap", configs.DataPlaneConfigMapAsString()),

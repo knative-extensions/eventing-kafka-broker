@@ -17,6 +17,7 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -48,7 +49,9 @@ func VerifyMessagesInTopic(
 	namespacedName types.NamespacedName,
 	config *ConsumerConfig) error {
 
-	job, err := client.BatchV1().Jobs(namespacedName.Namespace).Create(&batchv1.Job{
+	ctx := context.Background()
+
+	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespacedName.Namespace,
 			Name:      namespacedName.Name,
@@ -85,7 +88,8 @@ func VerifyMessagesInTopic(
 				},
 			},
 		},
-	})
+	}
+	job, err := client.BatchV1().Jobs(namespacedName.Namespace).Create(ctx, job, metav1.CreateOptions{})
 
 	if err != nil {
 		return fmt.Errorf("failed to create job: %w", err)
@@ -95,7 +99,7 @@ func VerifyMessagesInTopic(
 	tracker.Add(gvr.Group, gvr.Version, gvr.Resource, namespacedName.Namespace, namespacedName.Name)
 
 	return wait.PollImmediate(interval, timeout, func() (bool, error) {
-		job, err := client.BatchV1().Jobs(namespacedName.Namespace).Get(namespacedName.Name, metav1.GetOptions{})
+		job, err := client.BatchV1().Jobs(namespacedName.Namespace).Get(ctx, namespacedName.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, fmt.Errorf("failed to get job: %w", err)
 		}

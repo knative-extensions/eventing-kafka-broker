@@ -77,7 +77,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 
 	logger := logging.FromContext(ctx)
 
-	_, err := reconciler.GetOrCreateDataPlaneConfigMap()
+	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		logger.Fatal("Failed to get or create data plane config map",
 			zap.String("configmap", configs.DataPlaneConfigMapAsString()),
@@ -102,7 +102,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 
-	cm, err := reconciler.KubeClient.CoreV1().ConfigMaps(configs.SystemNamespace).Get(configs.GeneralConfigMapName, metav1.GetOptions{})
+	cm, err := reconciler.KubeClient.CoreV1().ConfigMaps(configs.SystemNamespace).Get(ctx, configs.GeneralConfigMapName, metav1.GetOptions{})
 	if err != nil {
 		panic(fmt.Errorf("failed to get config map %s/%s: %w", configs.SystemNamespace, configs.GeneralConfigMapName, err))
 	}

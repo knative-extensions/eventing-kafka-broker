@@ -75,7 +75,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	}
 
 	// Get data plane config map.
-	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap()
+	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get data plane config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
 	}
@@ -119,7 +119,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	brokersTriggers.VolumeGeneration = incrementVolumeGeneration(brokersTriggers.VolumeGeneration)
 
 	// Update data plane config map.
-	err = r.UpdateDataPlaneConfigMap(brokersTriggers, dataPlaneConfigMap)
+	err = r.UpdateDataPlaneConfigMap(ctx, brokersTriggers, dataPlaneConfigMap)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	logger.Debug("Updated data plane config map", zap.String("configmap", r.Configs.DataPlaneConfigMapAsString()))
 
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(logger, brokersTriggers.VolumeGeneration); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, brokersTriggers.VolumeGeneration); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
 		// The delete trigger will eventually be seen by the data plane pods, so log out the error and move on to the
 		// next step.
@@ -142,14 +142,14 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	return nil
 }
 
-func (r *Reconciler) GetTriggerConfig(trigger *eventing.Trigger) (coreconfig.Trigger, error) {
+func (r *Reconciler) GetTriggerConfig(ctx context.Context, trigger *eventing.Trigger) (coreconfig.Trigger, error) {
 
 	var attributes map[string]string
 	if trigger.Spec.Filter != nil {
 		attributes = trigger.Spec.Filter.Attributes
 	}
 
-	destination, err := r.Resolver.URIFromDestinationV1(trigger.Spec.Subscriber, trigger)
+	destination, err := r.Resolver.URIFromDestinationV1(ctx, trigger.Spec.Subscriber, trigger)
 	if err != nil {
 		return coreconfig.Trigger{}, fmt.Errorf("failed to resolve Trigger.Spec.Subscriber: %w", err)
 	}
@@ -193,7 +193,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		// Actually check if the broker doesn't exist.
 		broker, err = r.EventingClient.EventingV1(). // Note: do not introduce another `broker` variable with `:`
 								Brokers(trigger.Namespace).
-								Get(trigger.Spec.Broker, metav1.GetOptions{})
+								Get(ctx, trigger.Spec.Broker, metav1.GetOptions{})
 
 		if apierrors.IsNotFound(err) {
 
@@ -214,7 +214,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	statusConditionManager.propagateBrokerCondition(broker)
 
 	// Get data plane config map.
-	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap()
+	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return statusConditionManager.failedToGetDataPlaneConfigMap(err)
 	}
@@ -238,7 +238,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 	triggerIndex := coreconfig.FindTrigger(dataPlaneConfig.Brokers[brokerIndex].Triggers, trigger.UID)
 
-	triggerConfig, err := r.GetTriggerConfig(trigger)
+	triggerConfig, err := r.GetTriggerConfig(ctx, trigger)
 	if err != nil {
 		return statusConditionManager.failedToResolveTriggerConfig(err)
 	}
@@ -258,13 +258,13 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	dataPlaneConfig.VolumeGeneration = incrementVolumeGeneration(dataPlaneConfig.VolumeGeneration)
 
 	// Update the configuration map with the new dataPlaneConfig data.
-	if err := r.UpdateDataPlaneConfigMap(dataPlaneConfig, dataPlaneConfigMap); err != nil {
+	if err := r.UpdateDataPlaneConfigMap(ctx, dataPlaneConfig, dataPlaneConfigMap); err != nil {
 		trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
 		return err
 	}
 
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(logger, dataPlaneConfig.VolumeGeneration); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, dataPlaneConfig.VolumeGeneration); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
 		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
 		// ready. So, log out the error and move on to the next step.

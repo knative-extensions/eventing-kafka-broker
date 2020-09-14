@@ -17,6 +17,7 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -52,7 +53,9 @@ func VerifyNumPartitionAndReplicationFactor(
 	name string,
 	config *Config) error {
 
-	job, err := client.BatchV1().Jobs(namespace).Create(&batchv1.Job{
+	ctx := context.Background()
+
+	job := &batchv1.Job{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -92,7 +95,9 @@ func VerifyNumPartitionAndReplicationFactor(
 			TTLSecondsAfterFinished: nil,
 		},
 		Status: batchv1.JobStatus{},
-	})
+	}
+
+	job, err := client.BatchV1().Jobs(namespace).Create(ctx, job, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to create job: %w", err)
 	}
@@ -101,7 +106,7 @@ func VerifyNumPartitionAndReplicationFactor(
 	tracker.Add(gvr.Group, gvr.Version, gvr.Resource, namespace, name)
 
 	return wait.PollImmediate(interval, timeout, func() (bool, error) {
-		job, err := client.BatchV1().Jobs(namespace).Get(name, metav1.GetOptions{})
+		job, err := client.BatchV1().Jobs(namespace).Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
 			return false, fmt.Errorf("failed to get job: %w", err)
 		}

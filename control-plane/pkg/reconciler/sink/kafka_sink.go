@@ -89,7 +89,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	logger.Debug("Topic created", zap.Any("topic", ks.Spec.Topic))
 
 	// Get sinks config map.
-	sinksConfigMap, err := r.GetOrCreateDataPlaneConfigMap()
+	sinksConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return statusConditionManager.FailedToGetConfigMap(err)
 	}
@@ -127,7 +127,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	sinks.VolumeGeneration = incrementVolumeGeneration(sinks.VolumeGeneration)
 
 	// Update the configuration map with the new sinks data.
-	if err := r.UpdateDataPlaneConfigMap(sinks, sinksConfigMap); err != nil {
+	if err := r.UpdateDataPlaneConfigMap(ctx, sinks, sinksConfigMap); err != nil {
 		logger.Error("failed to update data plane config map", zap.Error(
 			statusConditionManager.FailedToUpdateConfigMap(err),
 		))
@@ -141,7 +141,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	// receivers haven't got the Sink, so update failures to receiver pods is a hard failure.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(logger, sinks.VolumeGeneration); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, sinks.VolumeGeneration); err != nil {
 		return err
 	}
 
