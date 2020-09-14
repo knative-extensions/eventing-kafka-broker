@@ -17,16 +17,16 @@
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
 import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.brokers;
+import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.contract;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
-import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects;
-import dev.knative.eventing.kafka.broker.dispatcher.BrokersManager;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.ResourcesManager;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventBuilder;
@@ -86,21 +86,21 @@ public class UnorderedConsumerTest {
     );
     consumerVerticleFactoryMock.setRecords(consumerRecords);
 
-    final var brokersManager = new BrokersManager<>(
+    final var resourcesManager = new ResourcesManager(
       vertx,
       consumerVerticleFactoryMock,
       100,
       100
     );
 
-    final var objectsCreator = new ObjectsCreator(brokersManager);
+    final var objectsCreator = new ObjectsCreator(resourcesManager);
 
-    final var brokers = brokers();
-    final var numTriggers = brokers.getBrokersList().stream()
-      .mapToInt(Broker::getTriggersCount)
+    final var contract = contract();
+    final var numEgresses = contract.getResourcesList().stream()
+      .mapToInt(DataPlaneContract.Resource::getEgressesCount)
       .sum();
 
-    final var waitEvents = new CountDownLatch(numTriggers * consumerRecords.size());
+    final var waitEvents = new CountDownLatch(numEgresses * consumerRecords.size());
     startServer(vertx, context, event, waitEvents);
 
     final var file = Files.createTempFile("fw-", "-fw").toFile();
@@ -119,12 +119,12 @@ public class UnorderedConsumerTest {
       }
     });
 
-    write(file, brokers);
+    write(file, contract);
 
     Thread.sleep(6000); // reduce flakiness
 
     assertThat(vertx.deploymentIDs())
-      .hasSize(numTriggers);
+      .hasSize(numEgresses);
 
     waitEvents.await();
 

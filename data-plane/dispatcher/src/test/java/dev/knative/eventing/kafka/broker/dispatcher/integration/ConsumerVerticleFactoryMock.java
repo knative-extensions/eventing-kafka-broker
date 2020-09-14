@@ -16,8 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
-import dev.knative.eventing.kafka.broker.core.Broker;
-import dev.knative.eventing.kafka.broker.core.Trigger;
+import dev.knative.eventing.kafka.broker.core.Egress;
+import dev.knative.eventing.kafka.broker.core.Resource;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
@@ -61,8 +61,8 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
   @Override
   protected KafkaProducer<String, CloudEvent> createProducer(
     final Vertx vertx,
-    final Broker broker,
-    final Trigger<CloudEvent> trigger) {
+    final Resource resource,
+    final Egress egress) {
 
     final var producer = new MockProducer<>(
       true,
@@ -70,7 +70,7 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
       new CloudEventSerializer()
     );
 
-    mockProducer.put(trigger.id(), producer);
+    mockProducer.put(egress.consumerGroup(), producer);
 
     return KafkaProducer.create(vertx, producer);
   }
@@ -78,30 +78,30 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
   @Override
   protected KafkaConsumer<String, CloudEvent> createConsumer(
     final Vertx vertx,
-    final Broker broker,
-    final Trigger<CloudEvent> trigger) {
+    final Resource resource,
+    final Egress egress) {
 
     final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
 
-    mockConsumer.put(trigger.id(), consumer);
+    mockConsumer.put(egress.consumerGroup(), consumer);
 
     consumer.schedulePollTask(() -> {
       consumer.unsubscribe();
 
       consumer.assign(records.stream()
-        .map(r -> new TopicPartition(broker.topic(), r.partition()))
+        .map(r -> new TopicPartition(resource.topics().iterator().next(), r.partition()))
         .collect(Collectors.toList()));
 
       for (final var record : records) {
         consumer.addRecord(new ConsumerRecord<>(
-          broker.topic(),
+          resource.topics().iterator().next(),
           record.partition(),
           record.offset(),
           record.key(),
           record.value()
         ));
         consumer.updateEndOffsets(Map.of(
-          new TopicPartition(broker.topic(), record.partition()), 0L
+          new TopicPartition(resource.topics().iterator().next(), record.partition()), 0L
         ));
       }
     });

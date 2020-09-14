@@ -22,6 +22,7 @@ import io.vertx.core.Promise;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * ConsumerVerticle is responsible for manging the consumer lifecycle.
@@ -32,28 +33,28 @@ import java.util.Objects;
 public final class ConsumerVerticle<K, V> extends AbstractVerticle {
 
   private final KafkaConsumer<K, V> consumer;
-  private final String topic;
+  private final Set<String> topics;
   private final Handler<KafkaConsumerRecord<K, V>> recordHandler;
 
   /**
    * All args constructor.
    *
    * @param consumer      Kafka consumer.
-   * @param topic         topic to consume.
+   * @param topics        topic to consume.
    * @param recordHandler handler of consumed Kafka records.
    */
   public ConsumerVerticle(
     final KafkaConsumer<K, V> consumer,
-    final String topic,
+    final Set<String> topics,
     final Handler<KafkaConsumerRecord<K, V>> recordHandler) {
 
     Objects.requireNonNull(consumer, "provide consumer");
-    Objects.requireNonNull(topic, "provide topic");
+    Objects.requireNonNull(topics, "provide topic");
     Objects.requireNonNull(recordHandler, "provide record handler");
 
     this.recordHandler = recordHandler;
     this.consumer = consumer;
-    this.topic = topic;
+    this.topics = topics;
   }
 
   /**
@@ -62,7 +63,7 @@ public final class ConsumerVerticle<K, V> extends AbstractVerticle {
   @Override
   public void start(Promise<Void> startPromise) {
     consumer.handler(recordHandler);
-    consumer.subscribe(topic, startPromise);
+    consumer.subscribe(topics, startPromise);
   }
 
   /**

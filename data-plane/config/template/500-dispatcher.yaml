@@ -62,9 +62,9 @@ spec:
               value: /etc/config/config-kafka-broker-webclient.properties
             - name: DATA_PLANE_CONFIG_FILE_PATH
               value: /etc/brokers-triggers/data
-            - name: BROKERS_INITIAL_CAPACITY
+            - name: RESOURCES_INITIAL_CAPACITY
               value: "100"
-            - name: TRIGGERS_INITIAL_CAPACITY
+            - name: EGRESSES_INITIAL_CAPACITY
               value: "20"
             - name: INSTANCE_ID
               valueFrom:

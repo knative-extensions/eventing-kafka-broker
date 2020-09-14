@@ -24,6 +24,7 @@ import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
+import java.util.Set;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.junit.jupiter.api.Assertions;
@@ -39,7 +40,7 @@ public class ConsumerVerticleTest {
     final var topic = "topic1";
 
     final var kafkaConsumer = KafkaConsumer.create(vertx, consumer);
-    final var verticle = new ConsumerVerticle<>(kafkaConsumer, topic, record -> fail());
+    final var verticle = new ConsumerVerticle<>(kafkaConsumer, Set.of(topic), record -> fail());
 
     final Promise<Void> promise = Promise.promise();
     verticle.start(promise);
@@ -59,10 +60,10 @@ public class ConsumerVerticleTest {
     final var topic = "topic1";
 
     final var kafkaConsumer = KafkaConsumer.create(vertx, consumer);
-    final var verticle = new ConsumerVerticle<>(kafkaConsumer, topic, record -> fail());
+    final var verticle = new ConsumerVerticle<>(kafkaConsumer, Set.of(topic), record -> fail());
 
     final Promise<Void> promise = Promise.promise();
-    verticle.start((Promise<Void>) null);
+    verticle.start(Promise.promise());
     verticle.stop(promise);
 
     promise.future()

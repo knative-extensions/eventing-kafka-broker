@@ -19,11 +19,18 @@ package dev.knative.eventing.kafka.broker.core.testing.utils;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.Egress;
 import dev.knative.eventing.kafka.broker.core.EgressWrapper;
+import dev.knative.eventing.kafka.broker.core.Ingress;
 import dev.knative.eventing.kafka.broker.core.Resource;
 import dev.knative.eventing.kafka.broker.core.ResourceWrapper;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public final class CoreObjects {
 
@@ -133,5 +140,37 @@ public final class CoreObjects {
       .setDeadLetter(DESTINATION)
       .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
       .build();
+  }
+
+  /**
+   * This method generates a collection of resource mocked with new egresses, so you can use it to test the {@link dev.knative.eventing.kafka.broker.core.ObjectsReconciler}
+   */
+  public static Collection<Resource> mockResourcesWithNewEgresses(Map<Resource, Set<Egress>> newResources) {
+    return newResources.entrySet().stream().map(entry -> new Resource() {
+      @Override
+      public String id() {
+        return entry.getKey().id();
+      }
+
+      @Override
+      public Set<String> topics() {
+        return entry.getKey().topics();
+      }
+
+      @Override
+      public String bootstrapServers() {
+        return entry.getKey().bootstrapServers();
+      }
+
+      @Override
+      public Ingress ingress() {
+        return entry.getKey().ingress();
+      }
+
+      @Override
+      public List<Egress> egresses() {
+        return new ArrayList<>(entry.getValue());
+      }
+    }).collect(Collectors.toList());
   }
 }
