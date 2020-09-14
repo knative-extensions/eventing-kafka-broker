@@ -65,14 +65,15 @@ message Resource {
   // Topics name
   repeated string topics = 2;
 
+  // A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+  // Note: we're using a comma separated list simply because that's how java kafka client likes it.
+  string bootstrapServers = 3;
+
   // Optional ingress for this topic
   Ingress ingress = 4;
 
   // Optional egresses for this topic
   repeated Egress egresses = 5;
-
-  // A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-  string bootstrapServers = 6;
 }
 
 message Contract {
