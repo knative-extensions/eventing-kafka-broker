@@ -3689,6 +3689,8 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Topics name
+     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
@@ -3698,6 +3700,8 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Topics name
+     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
@@ -3706,6 +3710,8 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Topics name
+     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
@@ -3714,12 +3720,34 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Topics name
+     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
      */
     com.google.protobuf.ByteString
         getTopicsBytes(int index);
+
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 3;</code>
+     */
+    java.lang.String getBootstrapServers();
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getBootstrapServersBytes();
 
     /**
      * <pre>
@@ -3789,24 +3817,6 @@ public final class DataPlaneContract {
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder getEgressesOrBuilder(
         int index);
-
-    /**
-     * <pre>
-     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-     * </pre>
-     *
-     * <code>string bootstrapServers = 6;</code>
-     */
-    java.lang.String getBootstrapServers();
-    /**
-     * <pre>
-     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-     * </pre>
-     *
-     * <code>string bootstrapServers = 6;</code>
-     */
-    com.google.protobuf.ByteString
-        getBootstrapServersBytes();
   }
   /**
    * Protobuf type {@code Resource}
@@ -3823,8 +3833,8 @@ public final class DataPlaneContract {
     private Resource() {
       id_ = "";
       topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      egresses_ = java.util.Collections.emptyList();
       bootstrapServers_ = "";
+      egresses_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -3873,6 +3883,12 @@ public final class DataPlaneContract {
               topics_.add(s);
               break;
             }
+            case 26: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              bootstrapServers_ = s;
+              break;
+            }
             case 34: {
               dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder subBuilder = null;
               if (ingress_ != null) {
@@ -3893,12 +3909,6 @@ public final class DataPlaneContract {
               }
               egresses_.add(
                   input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.parser(), extensionRegistry));
-              break;
-            }
-            case 50: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              bootstrapServers_ = s;
               break;
             }
             default: {
@@ -3986,6 +3996,8 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Topics name
+     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
@@ -3997,6 +4009,8 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Topics name
+     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
@@ -4007,6 +4021,8 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Topics name
+     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
@@ -4017,6 +4033,8 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Topics name
+     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
@@ -4024,6 +4042,50 @@ public final class DataPlaneContract {
     public com.google.protobuf.ByteString
         getTopicsBytes(int index) {
       return topics_.getByteString(index);
+    }
+
+    public static final int BOOTSTRAPSERVERS_FIELD_NUMBER = 3;
+    private volatile java.lang.Object bootstrapServers_;
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 3;</code>
+     */
+    public java.lang.String getBootstrapServers() {
+      java.lang.Object ref = bootstrapServers_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        bootstrapServers_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getBootstrapServersBytes() {
+      java.lang.Object ref = bootstrapServers_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        bootstrapServers_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
     }
 
     public static final int INGRESS_FIELD_NUMBER = 4;
@@ -4114,48 +4176,6 @@ public final class DataPlaneContract {
       return egresses_.get(index);
     }
 
-    public static final int BOOTSTRAPSERVERS_FIELD_NUMBER = 6;
-    private volatile java.lang.Object bootstrapServers_;
-    /**
-     * <pre>
-     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-     * </pre>
-     *
-     * <code>string bootstrapServers = 6;</code>
-     */
-    public java.lang.String getBootstrapServers() {
-      java.lang.Object ref = bootstrapServers_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        bootstrapServers_ = s;
-        return s;
-      }
-    }
-    /**
-     * <pre>
-     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-     * </pre>
-     *
-     * <code>string bootstrapServers = 6;</code>
-     */
-    public com.google.protobuf.ByteString
-        getBootstrapServersBytes() {
-      java.lang.Object ref = bootstrapServers_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        bootstrapServers_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -4176,14 +4196,14 @@ public final class DataPlaneContract {
       for (int i = 0; i < topics_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, topics_.getRaw(i));
       }
+      if (!getBootstrapServersBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, bootstrapServers_);
+      }
       if (ingress_ != null) {
         output.writeMessage(4, getIngress());
       }
       for (int i = 0; i < egresses_.size(); i++) {
         output.writeMessage(5, egresses_.get(i));
-      }
-      if (!getBootstrapServersBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, bootstrapServers_);
       }
       unknownFields.writeTo(output);
     }
@@ -4205,6 +4225,9 @@ public final class DataPlaneContract {
         size += dataSize;
         size += 1 * getTopicsList().size();
       }
+      if (!getBootstrapServersBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, bootstrapServers_);
+      }
       if (ingress_ != null) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getIngress());
@@ -4212,9 +4235,6 @@ public final class DataPlaneContract {
       for (int i = 0; i < egresses_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, egresses_.get(i));
-      }
-      if (!getBootstrapServersBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, bootstrapServers_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -4235,6 +4255,8 @@ public final class DataPlaneContract {
           .equals(other.getId())) return false;
       if (!getTopicsList()
           .equals(other.getTopicsList())) return false;
+      if (!getBootstrapServers()
+          .equals(other.getBootstrapServers())) return false;
       if (hasIngress() != other.hasIngress()) return false;
       if (hasIngress()) {
         if (!getIngress()
@@ -4242,8 +4264,6 @@ public final class DataPlaneContract {
       }
       if (!getEgressesList()
           .equals(other.getEgressesList())) return false;
-      if (!getBootstrapServers()
-          .equals(other.getBootstrapServers())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -4261,6 +4281,8 @@ public final class DataPlaneContract {
         hash = (37 * hash) + TOPICS_FIELD_NUMBER;
         hash = (53 * hash) + getTopicsList().hashCode();
       }
+      hash = (37 * hash) + BOOTSTRAPSERVERS_FIELD_NUMBER;
+      hash = (53 * hash) + getBootstrapServers().hashCode();
       if (hasIngress()) {
         hash = (37 * hash) + INGRESS_FIELD_NUMBER;
         hash = (53 * hash) + getIngress().hashCode();
@@ -4269,8 +4291,6 @@ public final class DataPlaneContract {
         hash = (37 * hash) + EGRESSES_FIELD_NUMBER;
         hash = (53 * hash) + getEgressesList().hashCode();
       }
-      hash = (37 * hash) + BOOTSTRAPSERVERS_FIELD_NUMBER;
-      hash = (53 * hash) + getBootstrapServers().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -4409,6 +4429,8 @@ public final class DataPlaneContract {
 
         topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
+        bootstrapServers_ = "";
+
         if (ingressBuilder_ == null) {
           ingress_ = null;
         } else {
@@ -4421,8 +4443,6 @@ public final class DataPlaneContract {
         } else {
           egressesBuilder_.clear();
         }
-        bootstrapServers_ = "";
-
         return this;
       }
 
@@ -4456,6 +4476,7 @@ public final class DataPlaneContract {
           bitField0_ = (bitField0_ & ~0x00000001);
         }
         result.topics_ = topics_;
+        result.bootstrapServers_ = bootstrapServers_;
         if (ingressBuilder_ == null) {
           result.ingress_ = ingress_;
         } else {
@@ -4470,7 +4491,6 @@ public final class DataPlaneContract {
         } else {
           result.egresses_ = egressesBuilder_.build();
         }
-        result.bootstrapServers_ = bootstrapServers_;
         onBuilt();
         return result;
       }
@@ -4533,6 +4553,10 @@ public final class DataPlaneContract {
           }
           onChanged();
         }
+        if (!other.getBootstrapServers().isEmpty()) {
+          bootstrapServers_ = other.bootstrapServers_;
+          onChanged();
+        }
         if (other.hasIngress()) {
           mergeIngress(other.getIngress());
         }
@@ -4561,10 +4585,6 @@ public final class DataPlaneContract {
               egressesBuilder_.addAllMessages(other.egresses_);
             }
           }
-        }
-        if (!other.getBootstrapServers().isEmpty()) {
-          bootstrapServers_ = other.bootstrapServers_;
-          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -4695,6 +4715,8 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Topics name
+       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
@@ -4706,6 +4728,8 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Topics name
+       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
@@ -4716,6 +4740,8 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Topics name
+       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
@@ -4726,6 +4752,8 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Topics name
+       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
@@ -4737,6 +4765,8 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Topics name
+       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
@@ -4754,6 +4784,8 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Topics name
+       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
@@ -4771,6 +4803,8 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Topics name
+       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
@@ -4786,6 +4820,8 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Topics name
+       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
@@ -4799,6 +4835,8 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Topics name
+       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
@@ -4811,6 +4849,100 @@ public final class DataPlaneContract {
   checkByteStringIsUtf8(value);
         ensureTopicsIsMutable();
         topics_.add(value);
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object bootstrapServers_ = "";
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 3;</code>
+       */
+      public java.lang.String getBootstrapServers() {
+        java.lang.Object ref = bootstrapServers_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          bootstrapServers_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getBootstrapServersBytes() {
+        java.lang.Object ref = bootstrapServers_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          bootstrapServers_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 3;</code>
+       */
+      public Builder setBootstrapServers(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        bootstrapServers_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 3;</code>
+       */
+      public Builder clearBootstrapServers() {
+        
+        bootstrapServers_ = getDefaultInstance().getBootstrapServers();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 3;</code>
+       */
+      public Builder setBootstrapServersBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        bootstrapServers_ = value;
         onChanged();
         return this;
       }
@@ -5278,95 +5410,6 @@ public final class DataPlaneContract {
           egresses_ = null;
         }
         return egressesBuilder_;
-      }
-
-      private java.lang.Object bootstrapServers_ = "";
-      /**
-       * <pre>
-       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-       * </pre>
-       *
-       * <code>string bootstrapServers = 6;</code>
-       */
-      public java.lang.String getBootstrapServers() {
-        java.lang.Object ref = bootstrapServers_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          bootstrapServers_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <pre>
-       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-       * </pre>
-       *
-       * <code>string bootstrapServers = 6;</code>
-       */
-      public com.google.protobuf.ByteString
-          getBootstrapServersBytes() {
-        java.lang.Object ref = bootstrapServers_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          bootstrapServers_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <pre>
-       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-       * </pre>
-       *
-       * <code>string bootstrapServers = 6;</code>
-       */
-      public Builder setBootstrapServers(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  
-        bootstrapServers_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-       * </pre>
-       *
-       * <code>string bootstrapServers = 6;</code>
-       */
-      public Builder clearBootstrapServers() {
-        
-        bootstrapServers_ = getDefaultInstance().getBootstrapServers();
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-       * </pre>
-       *
-       * <code>string bootstrapServers = 6;</code>
-       */
-      public Builder setBootstrapServersBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
-        bootstrapServers_ = value;
-        onChanged();
-        return this;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -6348,9 +6391,9 @@ public final class DataPlaneContract {
       "gress\022!\n\013contentMode\030\001 \001(\0162\014.ContentMode" +
       "\022\016\n\004path\030\002 \001(\tH\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingr" +
       "essType\"v\n\010Resource\022\n\n\002id\030\001 \001(\t\022\016\n\006topic" +
-      "s\030\002 \003(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress\022\031\n\010eg" +
-      "resses\030\005 \003(\0132\007.Egress\022\030\n\020bootstrapServer" +
-      "s\030\006 \001(\t\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022" +
+      "s\030\002 \003(\t\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ing" +
+      "ress\030\004 \001(\0132\010.Ingress\022\031\n\010egresses\030\005 \003(\0132\007" +
+      ".Egress\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022" +
       "\034\n\tresources\030\002 \003(\0132\t.Resource*)\n\013Content" +
       "Mode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev." +
       "knative.eventing.kafka.broker.contractB\021" +
@@ -6391,7 +6434,7 @@ public final class DataPlaneContract {
     internal_static_Resource_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Resource_descriptor,
-        new java.lang.String[] { "Id", "Topics", "Ingress", "Egresses", "BootstrapServers", });
+        new java.lang.String[] { "Id", "Topics", "BootstrapServers", "Ingress", "Egresses", });
     internal_static_Contract_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_Contract_fieldAccessorTable = new

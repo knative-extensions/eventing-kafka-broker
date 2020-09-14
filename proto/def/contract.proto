@@ -63,6 +63,8 @@ message Resource {
   string id = 1;
 
   // Topics name
+  // Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+  //  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
   repeated string topics = 2;
 
   // A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
