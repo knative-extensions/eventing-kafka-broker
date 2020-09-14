@@ -93,8 +93,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: brokersTriggers}),
 	)
 
-	brokerIndex := coreconfig.FindBroker(brokersTriggers, broker.UID)
-	if brokerIndex == coreconfig.NoBroker {
+	brokerIndex := coreconfig.FindResource(brokersTriggers, broker.UID)
+	if brokerIndex == coreconfig.NoResource {
 		// If the broker is not there, resources associated with the Trigger are deleted accordingly.
 		return nil
 	}
@@ -102,8 +102,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	logger.Debug("Found Broker", zap.Int("brokerIndex", brokerIndex))
 
 	triggers := brokersTriggers.Brokers[brokerIndex].Triggers
-	triggerIndex := coreconfig.FindTrigger(triggers, trigger.UID)
-	if triggerIndex == coreconfig.NoTrigger {
+	triggerIndex := coreconfig.FindEgress(triggers, trigger.UID)
+	if triggerIndex == coreconfig.NoEgress {
 		// The trigger is not there, resources associated with the Trigger are deleted accordingly.
 		logger.Debug("trigger not found in config map")
 
@@ -232,11 +232,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: dataPlaneConfig}),
 	)
 
-	brokerIndex := coreconfig.FindBroker(dataPlaneConfig, broker.UID)
-	if brokerIndex == coreconfig.NoBroker {
+	brokerIndex := coreconfig.FindResource(dataPlaneConfig, broker.UID)
+	if brokerIndex == coreconfig.NoResource {
 		return statusConditionManager.brokerNotFoundInDataPlaneConfigMap()
 	}
-	triggerIndex := coreconfig.FindTrigger(dataPlaneConfig.Brokers[brokerIndex].Triggers, trigger.UID)
+	triggerIndex := coreconfig.FindEgress(dataPlaneConfig.Brokers[brokerIndex].Triggers, trigger.UID)
 
 	triggerConfig, err := r.GetTriggerConfig(ctx, trigger)
 	if err != nil {
@@ -245,7 +245,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 	statusConditionManager.subscriberResolved()
 
-	if triggerIndex == coreconfig.NoTrigger {
+	if triggerIndex == coreconfig.NoEgress {
 		dataPlaneConfig.Brokers[brokerIndex].Triggers = append(
 			dataPlaneConfig.Brokers[brokerIndex].Triggers,
 			&triggerConfig,

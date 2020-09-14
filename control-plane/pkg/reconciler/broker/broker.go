@@ -134,9 +134,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		return statusConditionManager.FailedToGetConfig(err)
 	}
 
-	brokerIndex := coreconfig.FindBroker(brokersTriggers, broker.UID)
+	brokerIndex := coreconfig.FindResource(brokersTriggers, broker.UID)
 	// Update brokersTriggers data with the new broker configuration
-	coreconfig.AddOrUpdateBrokersConfig(brokersTriggers, brokerConfig, brokerIndex, logger)
+	coreconfig.AddOrUpdateResourceConfig(brokersTriggers, brokerConfig, brokerIndex, logger)
 
 	// Increment volumeGeneration
 	brokersTriggers.VolumeGeneration = incrementVolumeGeneration(brokersTriggers.VolumeGeneration)
@@ -215,8 +215,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: brokersTriggers}),
 	)
 
-	brokerIndex := coreconfig.FindBroker(brokersTriggers, broker.UID)
-	if brokerIndex != coreconfig.NoBroker {
+	brokerIndex := coreconfig.FindResource(brokersTriggers, broker.UID)
+	if brokerIndex != coreconfig.NoResource {
 		deleteBroker(brokersTriggers, brokerIndex)
 
 		logger.Debug("Broker deleted", zap.Int("index", brokerIndex))
