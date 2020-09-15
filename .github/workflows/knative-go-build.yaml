@@ -59,5 +59,5 @@ jobs:
                 tr '\n' ' ')"
 
           echo "Building with tags: ${tags}"
-          go test -vet=off -tags "${tags}" -run=^$ ./... | grep -v "no test"
+          go test -vet=off -tags "${tags}" -run=^$ ./... | grep -v "no test" || true
 
