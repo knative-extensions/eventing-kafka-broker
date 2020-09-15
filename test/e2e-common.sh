@@ -120,7 +120,7 @@ function test_setup() {
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
 
-  scale_controlplane kafka-broker-controller eventing-webhook eventing-controller
+  scale_controlplane kafka-controller eventing-webhook eventing-controller
 }
 
 function test_teardown() {
