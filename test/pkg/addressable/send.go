@@ -26,6 +26,7 @@ import (
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/apiserver/pkg/storage/names"
 	testlib "knative.dev/eventing/test/lib"
 	pkgtest "knative.dev/pkg/test"
 )
@@ -69,7 +70,8 @@ func SendN(t *testing.T, n int, addressable Addressable, mutators ...EventMutato
 
 				client.Namespace = addressable.Namespace
 
-				client.SendEventToAddressable(ctx, fmt.Sprintf("%s-%d", addressable.Name, i), addressable.Name, &addressable.TypeMeta, event)
+				name := names.SimpleNameGenerator.GenerateName(fmt.Sprintf("%s-%d", addressable.Name, i))
+				client.SendEventToAddressable(ctx, name, addressable.Name, &addressable.TypeMeta, event)
 
 				idsChan <- event.ID()
 				wg.Done()
