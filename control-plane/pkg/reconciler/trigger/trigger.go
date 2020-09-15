@@ -289,7 +289,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
-	logger.Debug("Brokers and triggers config map updated")
+	logger.Debug("Contract config map updated")
 
 	return statusConditionManager.reconciled()
 }

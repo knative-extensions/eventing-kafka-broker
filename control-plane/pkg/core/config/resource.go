@@ -29,7 +29,6 @@ const (
 
 // FindResource finds the resource with the given UID in the given resources list.
 func FindResource(contract *contract.Contract, resource types.UID) int {
-	// Find resource in brokersTriggers.
 	resourceIndex := NoResource
 	for i, b := range contract.Resources {
 		if b.Id == string(resource) {
