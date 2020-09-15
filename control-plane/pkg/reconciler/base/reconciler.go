@@ -18,10 +18,11 @@ package base
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
-	"github.com/gogo/protobuf/proto"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -30,15 +31,13 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
-
-	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 )
 
 const (
 	// log key of the data of the config map.
-	BrokersTriggersDataLogKey = "brokerstriggers"
+	ContractLogKey = "contract"
 
-	// config map key of the brokers and triggers config map.
+	// config map key of the contract config map.
 	ConfigMapDataKey = "data"
 
 	// label for selecting dispatcher pods.
@@ -116,12 +115,12 @@ func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context) (*corev1.Conf
 	return r.KubeClient.CoreV1().ConfigMaps(r.DataPlaneConfigMapNamespace).Create(ctx, cm, metav1.CreateOptions{})
 }
 
-// GetDataPlaneConfigMapData extracts brokers and triggers data from the given config map.
-func (r *Reconciler) GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.ConfigMap) (*coreconfig.Brokers, error) {
+// GetDataPlaneConfigMapData extracts contract from the given config map.
+func (r *Reconciler) GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.ConfigMap) (*contract.Contract, error) {
 	return GetDataPlaneConfigMapData(logger, dataPlaneConfigMap, r.DataPlaneConfigFormat)
 }
 
-func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.ConfigMap, format string) (*coreconfig.Brokers, error) {
+func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.ConfigMap, format string) (*contract.Contract, error) {
 
 	dataPlaneDataRaw, hasData := dataPlaneConfigMap.BinaryData[ConfigMapDataKey]
 	if !hasData || dataPlaneDataRaw == nil {
@@ -130,14 +129,14 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 			fmt.Sprintf("Config map has no %s key, so start from scratch", ConfigMapDataKey),
 		)
 
-		return &coreconfig.Brokers{}, nil
+		return &contract.Contract{}, nil
 	}
 
 	if string(dataPlaneDataRaw) == "" {
-		return &coreconfig.Brokers{}, nil
+		return &contract.Contract{}, nil
 	}
 
-	brokersTriggers := &coreconfig.Brokers{}
+	contract := &contract.Contract{}
 	var err error
 
 	logger.Debug(
@@ -148,33 +147,33 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 	// determine unmarshalling strategy
 	switch format {
 	case Protobuf:
-		err = proto.Unmarshal(dataPlaneDataRaw, brokersTriggers)
+		err = proto.Unmarshal(dataPlaneDataRaw, contract)
 	case Json:
-		err = json.Unmarshal(dataPlaneDataRaw, brokersTriggers)
+		err = protojson.Unmarshal(dataPlaneDataRaw, contract)
 	}
 	if err != nil {
 
 		logger.Warn("Failed to unmarshal config map", zap.Error(err))
 
 		// let the caller decide if it want to continue or fail on an error.
-		return &coreconfig.Brokers{}, fmt.Errorf("failed to unmarshal brokers and triggers: '%s' - %w", dataPlaneDataRaw, err)
+		return contract, fmt.Errorf("failed to unmarshal contract: '%s' - %w", dataPlaneDataRaw, err)
 	}
 
-	return brokersTriggers, nil
+	return contract, nil
 }
 
-func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, brokersTriggers *coreconfig.Brokers, configMap *corev1.ConfigMap) error {
+func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *contract.Contract, configMap *corev1.ConfigMap) error {
 
 	var data []byte
 	var err error
 	switch r.DataPlaneConfigFormat {
-	case Json:
-		data, err = json.Marshal(brokersTriggers)
 	case Protobuf:
-		data, err = proto.Marshal(brokersTriggers)
+		data, err = proto.Marshal(contract)
+	case Json:
+		data, err = protojson.Marshal(contract)
 	}
 	if err != nil {
-		return fmt.Errorf("failed to marshal brokers and triggers: %w", err)
+		return fmt.Errorf("failed to marshal contract: %w", err)
 	}
 
 	// Update config map data. TODO is it safe to update this config map? do we need to copy it?

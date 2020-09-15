@@ -1,6 +1,7 @@
 package config
 
 import (
+	"google.golang.org/protobuf/testing/protocmp"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"testing"
 
@@ -60,74 +61,68 @@ func TestFindResource(t *testing.T) {
 }
 
 func TestAddOrUpdateResourcesConfig(t *testing.T) {
-	type args struct {
-		brokers      *contract.Contract
-		brokerConfig *contract.Resource
-		index        int
-	}
 	tests := []struct {
-		name    string
-		args    args
-		brokers contract.Contract
-		want    contract.Contract
+		name         string
+		haveContract *contract.Contract
+		newResource  *contract.Resource
+		index        int
+		wantContract *contract.Contract
 	}{
 		{
 			name: "resource not found - add resource",
-			args: args{
-				brokers: &contract.Contract{
-					Resources: []*contract.Resource{
-						{
-							Id:     "2",
-							Topics: []string{"topic-name-1"},
-							Egresses: []*contract.Egress{
-								{
-									Destination:   "http://localhost:8080",
-									ConsumerGroup: "egress-1",
-									DeadLetter:    "http://localhost:8080",
-									Filter: &contract.Filter{
-										Attributes: map[string]string{
-											"source": "source1",
-										},
+			haveContract: &contract.Contract{
+				Resources: []*contract.Resource{
+					{
+						Id:     "2",
+						Topics: []string{"topic-name-1"},
+						Egresses: []*contract.Egress{
+							{
+								Destination:   "http://localhost:8080",
+								ConsumerGroup: "egress-1",
+								DeadLetter:    "http://localhost:8080",
+								Filter: &contract.Filter{
+									Attributes: map[string]string{
+										"source": "source1",
 									},
 								},
 							},
-							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: "/broker-ns/broker-name",
-								},
-								ContentMode: contract.ContentMode_STRUCTURED,
+						},
+						Ingress: &contract.Ingress{
+							IngressType: &contract.Ingress_Path{
+								Path: "/broker-ns/broker-name",
 							},
-							BootstrapServers: "broker:9092",
+							ContentMode: contract.ContentMode_STRUCTURED,
 						},
+						BootstrapServers: "broker:9092",
 					},
-					Generation: 1,
 				},
-				brokerConfig: &contract.Resource{
-					Id:     "1",
-					Topics: []string{"topic-name-1"},
-					Ingress: &contract.Ingress{
-						IngressType: &contract.Ingress_Path{
-							Path: "/broker-ns/broker-name",
-						},
-						ContentMode: contract.ContentMode_STRUCTURED,
-					},
-					Egresses: []*contract.Egress{
-						{
-							Destination:   "http://localhost:8080",
-							ConsumerGroup: "egress-1",
-							DeadLetter:    "http://localhost:8080",
-							Filter: &contract.Filter{
-								Attributes: map[string]string{
-									"source": "source1",
-								},
-							},
-						},
-					},
-					BootstrapServers: "broker:9092",
-				},
-				index: NoResource,
+				Generation: 1,
 			},
-			want: contract.Contract{
+			newResource: &contract.Resource{
+				Id:     "1",
+				Topics: []string{"topic-name-1"},
+				Ingress: &contract.Ingress{
+					IngressType: &contract.Ingress_Path{
+						Path: "/broker-ns/broker-name",
+					},
+					ContentMode: contract.ContentMode_STRUCTURED,
+				},
+				Egresses: []*contract.Egress{
+					{
+						Destination:   "http://localhost:8080",
+						ConsumerGroup: "egress-1",
+						DeadLetter:    "http://localhost:8080",
+						Filter: &contract.Filter{
+							Attributes: map[string]string{
+								"source": "source1",
+							},
+						},
+					},
+				},
+				BootstrapServers: "broker:9092",
+			},
+			index: NoResource,
+			wantContract: &contract.Contract{
 				Resources: []*contract.Resource{
 					{
 						Id:     "2",
@@ -181,63 +176,61 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 		},
 		{
 			name: "resource found - update resource",
-			args: args{
-				brokers: &contract.Contract{
-					Resources: []*contract.Resource{
-						{
-							Id:     "1",
-							Topics: []string{"topic-name-1"},
-							Egresses: []*contract.Egress{
-								{
-									Filter: &contract.Filter{
-										Attributes: map[string]string{
-											"source": "source1",
-										},
+			haveContract: &contract.Contract{
+				Resources: []*contract.Resource{
+					{
+						Id:     "1",
+						Topics: []string{"topic-name-1"},
+						Egresses: []*contract.Egress{
+							{
+								Filter: &contract.Filter{
+									Attributes: map[string]string{
+										"source": "source1",
 									},
-									Destination:   "http://localhost:8080",
-									ConsumerGroup: "egress-1",
-									DeadLetter:    "http://localhost:8080",
 								},
-							},
-							BootstrapServers: "broker:9092",
-							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: "/broker-ns/broker-name",
-								},
-								ContentMode: contract.ContentMode_STRUCTURED,
+								Destination:   "http://localhost:8080",
+								ConsumerGroup: "egress-1",
+								DeadLetter:    "http://localhost:8080",
 							},
 						},
-					},
-					Generation: 1,
-				},
-				brokerConfig: &contract.Resource{
-					Id:     "1",
-					Topics: []string{"topic-name-1"},
-					// Any Trigger will be ignored, since the function will be called when we're reconciling a contract.Resource,
-					// and it should preserve Egresses already added to the ConfigMap.
-					Egresses: []*contract.Egress{
-						{
-							Filter: &contract.Filter{
-								Attributes: map[string]string{
-									"source": "source2",
-								},
+						BootstrapServers: "broker:9092",
+						Ingress: &contract.Ingress{
+							IngressType: &contract.Ingress_Path{
+								Path: "/broker-ns/broker-name",
 							},
-							Destination:   "http://localhost:8080",
-							ConsumerGroup: "egress-1",
-							DeadLetter:    "http://localhost:8080",
+							ContentMode: contract.ContentMode_STRUCTURED,
 						},
-					},
-					BootstrapServers: "broker:9092,broker-2:9092",
-					Ingress: &contract.Ingress{
-						IngressType: &contract.Ingress_Path{
-							Path: "/broker-ns/broker-name",
-						},
-						ContentMode: contract.ContentMode_STRUCTURED,
 					},
 				},
-				index: 0,
+				Generation: 1,
 			},
-			want: contract.Contract{
+			newResource: &contract.Resource{
+				Id:     "1",
+				Topics: []string{"topic-name-1"},
+				// Any Trigger will be ignored, since the function will be called when we're reconciling a contract.Resource,
+				// and it should preserve Egresses already added to the ConfigMap.
+				Egresses: []*contract.Egress{
+					{
+						Filter: &contract.Filter{
+							Attributes: map[string]string{
+								"source": "source2",
+							},
+						},
+						Destination:   "http://localhost:8080",
+						ConsumerGroup: "egress-1",
+						DeadLetter:    "http://localhost:8080",
+					},
+				},
+				BootstrapServers: "broker:9092,broker-2:9092",
+				Ingress: &contract.Ingress{
+					IngressType: &contract.Ingress_Path{
+						Path: "/broker-ns/broker-name",
+					},
+					ContentMode: contract.ContentMode_STRUCTURED,
+				},
+			},
+			index: 0,
+			wantContract: &contract.Contract{
 				Resources: []*contract.Resource{
 					{
 						Id:     "1",
@@ -269,9 +262,9 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AddOrUpdateResourceConfig(tt.args.brokers, tt.args.brokerConfig, tt.args.index, zap.NewNop())
+			AddOrUpdateResourceConfig(tt.haveContract, tt.newResource, tt.index, zap.NewNop())
 
-			if diff := cmp.Diff(tt.want, *tt.args.brokers); diff != "" {
+			if diff := cmp.Diff(tt.wantContract, tt.haveContract, protocmp.Transform()); diff != "" {
 				t.Errorf("(-want, +got) %s", diff)
 			}
 		})

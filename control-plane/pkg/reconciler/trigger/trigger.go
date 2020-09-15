@@ -19,6 +19,7 @@ package trigger
 import (
 	"context"
 	"fmt"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"math"
 
 	"go.uber.org/zap"
@@ -82,18 +83,18 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 
 	logger.Debug("Got data plane config map")
 
-	// Get brokersTriggers data.
-	brokersTriggers, err := r.GetDataPlaneConfigMapData(logger, dataPlaneConfigMap)
+	// Get contract data.
+	ct, err := r.GetDataPlaneConfigMapData(logger, dataPlaneConfigMap)
 	if err != nil {
-		return fmt.Errorf("failed to get brokers and triggers: %w", err)
+		return fmt.Errorf("failed to get contract: %w", err)
 	}
 
 	logger.Debug(
-		"Got brokers and triggers data from data plane config map",
-		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: brokersTriggers}),
+		"Got contract data from data plane config map",
+		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(ct)),
 	)
 
-	brokerIndex := coreconfig.FindResource(brokersTriggers, broker.UID)
+	brokerIndex := coreconfig.FindResource(ct, broker.UID)
 	if brokerIndex == coreconfig.NoResource {
 		// If the broker is not there, resources associated with the Trigger are deleted accordingly.
 		return nil
@@ -101,8 +102,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 
 	logger.Debug("Found Broker", zap.Int("brokerIndex", brokerIndex))
 
-	triggers := brokersTriggers.Brokers[brokerIndex].Triggers
-	triggerIndex := coreconfig.FindEgress(triggers, trigger.UID)
+	egresses := ct.Resources[brokerIndex].Egresses
+	triggerIndex := coreconfig.FindEgress(egresses, trigger.UID)
 	if triggerIndex == coreconfig.NoEgress {
 		// The trigger is not there, resources associated with the Trigger are deleted accordingly.
 		logger.Debug("trigger not found in config map")
@@ -113,13 +114,13 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	logger.Debug("Found Trigger", zap.Int("triggerIndex", brokerIndex))
 
 	// Delete the Trigger from the config map data.
-	brokersTriggers.Brokers[brokerIndex].Triggers = deleteTrigger(triggers, triggerIndex)
+	ct.Resources[brokerIndex].Egresses = deleteTrigger(egresses, triggerIndex)
 
 	// Increment volume generation
-	brokersTriggers.VolumeGeneration = incrementVolumeGeneration(brokersTriggers.VolumeGeneration)
+	ct.Generation = incrementGeneration(ct.Generation)
 
 	// Update data plane config map.
-	err = r.UpdateDataPlaneConfigMap(ctx, brokersTriggers, dataPlaneConfigMap)
+	err = r.UpdateDataPlaneConfigMap(ctx, ct, dataPlaneConfigMap)
 	if err != nil {
 		return err
 	}
@@ -127,7 +128,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	logger.Debug("Updated data plane config map", zap.String("configmap", r.Configs.DataPlaneConfigMapAsString()))
 
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, brokersTriggers.VolumeGeneration); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
 		// The delete trigger will eventually be seen by the data plane pods, so log out the error and move on to the
 		// next step.
@@ -142,35 +143,45 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	return nil
 }
 
-func (r *Reconciler) GetTriggerConfig(ctx context.Context, trigger *eventing.Trigger) (coreconfig.Trigger, error) {
-
-	var attributes map[string]string
-	if trigger.Spec.Filter != nil {
-		attributes = trigger.Spec.Filter.Attributes
-	}
-
+func (r *Reconciler) getTriggerConfig(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*contract.Egress, error) {
 	destination, err := r.Resolver.URIFromDestinationV1(ctx, trigger.Spec.Subscriber, trigger)
 	if err != nil {
-		return coreconfig.Trigger{}, fmt.Errorf("failed to resolve Trigger.Spec.Subscriber: %w", err)
+		return nil, fmt.Errorf("failed to resolve Trigger.Spec.Subscriber: %w", err)
 	}
 	trigger.Status.SubscriberURI = destination
 
-	return coreconfig.Trigger{
-		Attributes:  attributes,
-		Destination: destination.String(),
-		Id:          string(trigger.UID),
-	}, nil
+	egress := &contract.Egress{
+		Destination:   destination.String(),
+		ConsumerGroup: string(trigger.UID),
+	}
+
+	if trigger.Spec.Filter != nil && trigger.Spec.Filter.Attributes != nil {
+		egress.Filter = &contract.Filter{
+			Attributes: trigger.Spec.Filter.Attributes,
+		}
+	}
+
+	if broker.Spec.Delivery != nil && broker.Spec.Delivery.DeadLetterSink != nil {
+		deadLetterSinkURL, err := r.Resolver.URIFromDestinationV1(ctx, *broker.Spec.Delivery.DeadLetterSink, broker)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve broker.Spec.Deliver.DeadLetterSink: %w", err)
+		}
+
+		egress.DeadLetter = deadLetterSinkURL.String()
+	}
+
+	return egress, nil
 }
 
-func deleteTrigger(triggers []*coreconfig.Trigger, index int) []*coreconfig.Trigger {
-	if len(triggers) == 1 {
+func deleteTrigger(egresses []*contract.Egress, index int) []*contract.Egress {
+	if len(egresses) == 1 {
 		return nil
 	}
 
 	// replace the trigger to be deleted with the last one.
-	triggers[index] = triggers[len(triggers)-1]
+	egresses[index] = egresses[len(egresses)-1]
 	// truncate the array.
-	return triggers[:len(triggers)-1]
+	return egresses[:len(egresses)-1]
 }
 
 func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -214,31 +225,31 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	statusConditionManager.propagateBrokerCondition(broker)
 
 	// Get data plane config map.
-	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return statusConditionManager.failedToGetDataPlaneConfigMap(err)
 	}
 
-	logger.Debug("Got brokers and triggers config map")
+	logger.Debug("Got contract config map")
 
 	// Get data plane config data.
-	dataPlaneConfig, err := r.GetDataPlaneConfigMapData(logger, dataPlaneConfigMap)
-	if err != nil || dataPlaneConfig == nil {
+	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
+	if err != nil || ct == nil {
 		return statusConditionManager.failedToGetDataPlaneConfigFromConfigMap(err)
 	}
 
 	logger.Debug(
-		"Got brokers and triggers data from config map",
-		zap.Any(base.BrokersTriggersDataLogKey, log.BrokersMarshaller{Brokers: dataPlaneConfig}),
+		"Got contract data from config map",
+		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(ct)),
 	)
 
-	brokerIndex := coreconfig.FindResource(dataPlaneConfig, broker.UID)
+	brokerIndex := coreconfig.FindResource(ct, broker.UID)
 	if brokerIndex == coreconfig.NoResource {
 		return statusConditionManager.brokerNotFoundInDataPlaneConfigMap()
 	}
-	triggerIndex := coreconfig.FindEgress(dataPlaneConfig.Brokers[brokerIndex].Triggers, trigger.UID)
+	triggerIndex := coreconfig.FindEgress(ct.Resources[brokerIndex].Egresses, trigger.UID)
 
-	triggerConfig, err := r.GetTriggerConfig(ctx, trigger)
+	triggerConfig, err := r.getTriggerConfig(ctx, broker, trigger)
 	if err != nil {
 		return statusConditionManager.failedToResolveTriggerConfig(err)
 	}
@@ -246,25 +257,25 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	statusConditionManager.subscriberResolved()
 
 	if triggerIndex == coreconfig.NoEgress {
-		dataPlaneConfig.Brokers[brokerIndex].Triggers = append(
-			dataPlaneConfig.Brokers[brokerIndex].Triggers,
-			&triggerConfig,
+		ct.Resources[brokerIndex].Egresses = append(
+			ct.Resources[brokerIndex].Egresses,
+			triggerConfig,
 		)
 	} else {
-		dataPlaneConfig.Brokers[brokerIndex].Triggers[triggerIndex] = &triggerConfig
+		ct.Resources[brokerIndex].Egresses[triggerIndex] = triggerConfig
 	}
 
 	// Increment volumeGeneration
-	dataPlaneConfig.VolumeGeneration = incrementVolumeGeneration(dataPlaneConfig.VolumeGeneration)
+	ct.Generation = incrementGeneration(ct.Generation)
 
 	// Update the configuration map with the new dataPlaneConfig data.
-	if err := r.UpdateDataPlaneConfigMap(ctx, dataPlaneConfig, dataPlaneConfigMap); err != nil {
+	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
 		trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
 		return err
 	}
 
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, dataPlaneConfig.VolumeGeneration); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
 		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
 		// ready. So, log out the error and move on to the next step.
@@ -283,6 +294,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	return statusConditionManager.reconciled()
 }
 
-func incrementVolumeGeneration(generation uint64) uint64 {
+func incrementGeneration(generation uint64) uint64 {
 	return (generation + 1) % (math.MaxUint64 - 1)
 }

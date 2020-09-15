@@ -18,7 +18,8 @@ package observability
 
 import (
 	"context"
-	"encoding/json"
+	"google.golang.org/protobuf/encoding/protojson"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"log"
 	"sync"
 
@@ -32,7 +33,6 @@ import (
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/signals"
 
-	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
@@ -74,12 +74,12 @@ type diffLogger struct {
 	m      sync.Mutex
 	logger *zap.Logger
 	format string
-	prev   *coreconfig.Brokers
+	prev   *contract.Contract
 }
 
 func (d *diffLogger) logDiff(cm *corev1.ConfigMap) {
 
-	brokers, err := base.GetDataPlaneConfigMapData(d.logger, cm, d.format)
+	ct, err := base.GetDataPlaneConfigMapData(d.logger, cm, d.format)
 	if err != nil {
 		d.logger.Error(
 			"failed to get data plane config map data",
@@ -92,14 +92,12 @@ func (d *diffLogger) logDiff(cm *corev1.ConfigMap) {
 	d.m.Lock()
 	defer d.m.Unlock()
 
-	jNow, _ := json.MarshalIndent(brokers, "", " ")
-	jPrev, _ := json.MarshalIndent(d.prev, "", " ")
-	sJNow := string(jNow)
-	sJPrev := string(jPrev)
+	sJNow := protojson.Format(ct)
+	sJPrev := protojson.Format(d.prev)
 
 	log.Println(cmp.Diff(sJPrev, sJNow))
 
-	d.prev = brokers
+	d.prev = ct
 }
 
 type reconciler struct {

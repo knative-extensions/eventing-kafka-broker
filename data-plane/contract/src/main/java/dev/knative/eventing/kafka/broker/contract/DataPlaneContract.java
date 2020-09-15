@@ -53,6 +53,8 @@ public final class DataPlaneContract {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -60,6 +62,10 @@ public final class DataPlaneContract {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static ContentMode forNumber(int value) {
       switch (value) {
         case 0: return BINARY;
@@ -82,6 +88,10 @@ public final class DataPlaneContract {
 
     public final com.google.protobuf.Descriptors.EnumValueDescriptor
         getValueDescriptor() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalStateException(
+            "Can't get the descriptor of an unrecognized enum value.");
+      }
       return getDescriptor().getValues().get(ordinal());
     }
     public final com.google.protobuf.Descriptors.EnumDescriptor
@@ -197,7 +207,7 @@ public final class DataPlaneContract {
   /**
    * Protobuf type {@code Filter}
    */
-  public  static final class Filter extends
+  public static final class Filter extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:Filter)
       FilterOrBuilder {
@@ -335,6 +345,7 @@ public final class DataPlaneContract {
      * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
 
+    @java.lang.Override
     public boolean containsAttributes(
         java.lang.String key) {
       if (key == null) { throw new java.lang.NullPointerException(); }
@@ -343,6 +354,7 @@ public final class DataPlaneContract {
     /**
      * Use {@link #getAttributesMap()} instead.
      */
+    @java.lang.Override
     @java.lang.Deprecated
     public java.util.Map<java.lang.String, java.lang.String> getAttributes() {
       return getAttributesMap();
@@ -358,6 +370,7 @@ public final class DataPlaneContract {
      *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
+    @java.lang.Override
 
     public java.util.Map<java.lang.String, java.lang.String> getAttributesMap() {
       return internalGetAttributes().getMap();
@@ -373,6 +386,7 @@ public final class DataPlaneContract {
      *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
+    @java.lang.Override
 
     public java.lang.String getAttributesOrDefault(
         java.lang.String key,
@@ -393,6 +407,7 @@ public final class DataPlaneContract {
      *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
+    @java.lang.Override
 
     public java.lang.String getAttributesOrThrow(
         java.lang.String key) {
@@ -779,6 +794,7 @@ public final class DataPlaneContract {
        * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
 
+      @java.lang.Override
       public boolean containsAttributes(
           java.lang.String key) {
         if (key == null) { throw new java.lang.NullPointerException(); }
@@ -787,6 +803,7 @@ public final class DataPlaneContract {
       /**
        * Use {@link #getAttributesMap()} instead.
        */
+      @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, java.lang.String> getAttributes() {
         return getAttributesMap();
@@ -802,6 +819,7 @@ public final class DataPlaneContract {
        *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
+      @java.lang.Override
 
       public java.util.Map<java.lang.String, java.lang.String> getAttributesMap() {
         return internalGetAttributes().getMap();
@@ -817,6 +835,7 @@ public final class DataPlaneContract {
        *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
+      @java.lang.Override
 
       public java.lang.String getAttributesOrDefault(
           java.lang.String key,
@@ -837,6 +856,7 @@ public final class DataPlaneContract {
        *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
+      @java.lang.Override
 
       public java.lang.String getAttributesOrThrow(
           java.lang.String key) {
@@ -982,6 +1002,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string consumerGroup = 1;</code>
+     * @return The consumerGroup.
      */
     java.lang.String getConsumerGroup();
     /**
@@ -990,6 +1011,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string consumerGroup = 1;</code>
+     * @return The bytes for consumerGroup.
      */
     com.google.protobuf.ByteString
         getConsumerGroupBytes();
@@ -1000,6 +1022,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string destination = 2;</code>
+     * @return The destination.
      */
     java.lang.String getDestination();
     /**
@@ -1008,6 +1031,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string destination = 2;</code>
+     * @return The bytes for destination.
      */
     com.google.protobuf.ByteString
         getDestinationBytes();
@@ -1018,6 +1042,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string replyUrl = 3;</code>
+     * @return The replyUrl.
      */
     java.lang.String getReplyUrl();
     /**
@@ -1026,6 +1051,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string replyUrl = 3;</code>
+     * @return The bytes for replyUrl.
      */
     com.google.protobuf.ByteString
         getReplyUrlBytes();
@@ -1036,6 +1062,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>.google.protobuf.Empty replyToOriginalTopic = 4;</code>
+     * @return Whether the replyToOriginalTopic field is set.
      */
     boolean hasReplyToOriginalTopic();
     /**
@@ -1044,6 +1071,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>.google.protobuf.Empty replyToOriginalTopic = 4;</code>
+     * @return The replyToOriginalTopic.
      */
     com.google.protobuf.Empty getReplyToOriginalTopic();
     /**
@@ -1061,6 +1089,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string deadLetter = 5;</code>
+     * @return The deadLetter.
      */
     java.lang.String getDeadLetter();
     /**
@@ -1069,16 +1098,19 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string deadLetter = 5;</code>
+     * @return The bytes for deadLetter.
      */
     com.google.protobuf.ByteString
         getDeadLetterBytes();
 
     /**
      * <code>.Filter filter = 6;</code>
+     * @return Whether the filter field is set.
      */
     boolean hasFilter();
     /**
      * <code>.Filter filter = 6;</code>
+     * @return The filter.
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter getFilter();
     /**
@@ -1091,7 +1123,7 @@ public final class DataPlaneContract {
   /**
    * Protobuf type {@code Egress}
    */
-  public  static final class Egress extends
+  public static final class Egress extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:Egress)
       EgressOrBuilder {
@@ -1222,7 +1254,8 @@ public final class DataPlaneContract {
     private int replyStrategyCase_ = 0;
     private java.lang.Object replyStrategy_;
     public enum ReplyStrategyCase
-        implements com.google.protobuf.Internal.EnumLite {
+        implements com.google.protobuf.Internal.EnumLite,
+            com.google.protobuf.AbstractMessage.InternalOneOfEnum {
       REPLYURL(3),
       REPLYTOORIGINALTOPIC(4),
       REPLYSTRATEGY_NOT_SET(0);
@@ -1231,6 +1264,8 @@ public final class DataPlaneContract {
         this.value = value;
       }
       /**
+       * @param value The number of the enum to look for.
+       * @return The enum associated with the given number.
        * @deprecated Use {@link #forNumber(int)} instead.
        */
       @java.lang.Deprecated
@@ -1265,7 +1300,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string consumerGroup = 1;</code>
+     * @return The consumerGroup.
      */
+    @java.lang.Override
     public java.lang.String getConsumerGroup() {
       java.lang.Object ref = consumerGroup_;
       if (ref instanceof java.lang.String) {
@@ -1284,7 +1321,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string consumerGroup = 1;</code>
+     * @return The bytes for consumerGroup.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getConsumerGroupBytes() {
       java.lang.Object ref = consumerGroup_;
@@ -1307,7 +1346,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string destination = 2;</code>
+     * @return The destination.
      */
+    @java.lang.Override
     public java.lang.String getDestination() {
       java.lang.Object ref = destination_;
       if (ref instanceof java.lang.String) {
@@ -1326,7 +1367,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string destination = 2;</code>
+     * @return The bytes for destination.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getDestinationBytes() {
       java.lang.Object ref = destination_;
@@ -1348,6 +1391,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string replyUrl = 3;</code>
+     * @return The replyUrl.
      */
     public java.lang.String getReplyUrl() {
       java.lang.Object ref = "";
@@ -1372,6 +1416,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string replyUrl = 3;</code>
+     * @return The bytes for replyUrl.
      */
     public com.google.protobuf.ByteString
         getReplyUrlBytes() {
@@ -1399,7 +1444,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>.google.protobuf.Empty replyToOriginalTopic = 4;</code>
+     * @return Whether the replyToOriginalTopic field is set.
      */
+    @java.lang.Override
     public boolean hasReplyToOriginalTopic() {
       return replyStrategyCase_ == 4;
     }
@@ -1409,7 +1456,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>.google.protobuf.Empty replyToOriginalTopic = 4;</code>
+     * @return The replyToOriginalTopic.
      */
+    @java.lang.Override
     public com.google.protobuf.Empty getReplyToOriginalTopic() {
       if (replyStrategyCase_ == 4) {
          return (com.google.protobuf.Empty) replyStrategy_;
@@ -1423,6 +1472,7 @@ public final class DataPlaneContract {
      *
      * <code>.google.protobuf.Empty replyToOriginalTopic = 4;</code>
      */
+    @java.lang.Override
     public com.google.protobuf.EmptyOrBuilder getReplyToOriginalTopicOrBuilder() {
       if (replyStrategyCase_ == 4) {
          return (com.google.protobuf.Empty) replyStrategy_;
@@ -1438,7 +1488,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string deadLetter = 5;</code>
+     * @return The deadLetter.
      */
+    @java.lang.Override
     public java.lang.String getDeadLetter() {
       java.lang.Object ref = deadLetter_;
       if (ref instanceof java.lang.String) {
@@ -1457,7 +1509,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string deadLetter = 5;</code>
+     * @return The bytes for deadLetter.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getDeadLetterBytes() {
       java.lang.Object ref = deadLetter_;
@@ -1476,19 +1530,24 @@ public final class DataPlaneContract {
     private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter filter_;
     /**
      * <code>.Filter filter = 6;</code>
+     * @return Whether the filter field is set.
      */
+    @java.lang.Override
     public boolean hasFilter() {
       return filter_ != null;
     }
     /**
      * <code>.Filter filter = 6;</code>
+     * @return The filter.
      */
+    @java.lang.Override
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter getFilter() {
       return filter_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.getDefaultInstance() : filter_;
     }
     /**
      * <code>.Filter filter = 6;</code>
      */
+    @java.lang.Override
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder getFilterOrBuilder() {
       return getFilter();
     }
@@ -1947,6 +2006,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string consumerGroup = 1;</code>
+       * @return The consumerGroup.
        */
       public java.lang.String getConsumerGroup() {
         java.lang.Object ref = consumerGroup_;
@@ -1966,6 +2026,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string consumerGroup = 1;</code>
+       * @return The bytes for consumerGroup.
        */
       public com.google.protobuf.ByteString
           getConsumerGroupBytes() {
@@ -1986,6 +2047,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string consumerGroup = 1;</code>
+       * @param value The consumerGroup to set.
+       * @return This builder for chaining.
        */
       public Builder setConsumerGroup(
           java.lang.String value) {
@@ -2003,6 +2066,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string consumerGroup = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearConsumerGroup() {
         
@@ -2016,6 +2080,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string consumerGroup = 1;</code>
+       * @param value The bytes for consumerGroup to set.
+       * @return This builder for chaining.
        */
       public Builder setConsumerGroupBytes(
           com.google.protobuf.ByteString value) {
@@ -2036,6 +2102,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string destination = 2;</code>
+       * @return The destination.
        */
       public java.lang.String getDestination() {
         java.lang.Object ref = destination_;
@@ -2055,6 +2122,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string destination = 2;</code>
+       * @return The bytes for destination.
        */
       public com.google.protobuf.ByteString
           getDestinationBytes() {
@@ -2075,6 +2143,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string destination = 2;</code>
+       * @param value The destination to set.
+       * @return This builder for chaining.
        */
       public Builder setDestination(
           java.lang.String value) {
@@ -2092,6 +2162,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string destination = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDestination() {
         
@@ -2105,6 +2176,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string destination = 2;</code>
+       * @param value The bytes for destination to set.
+       * @return This builder for chaining.
        */
       public Builder setDestinationBytes(
           com.google.protobuf.ByteString value) {
@@ -2124,7 +2197,9 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string replyUrl = 3;</code>
+       * @return The replyUrl.
        */
+      @java.lang.Override
       public java.lang.String getReplyUrl() {
         java.lang.Object ref = "";
         if (replyStrategyCase_ == 3) {
@@ -2148,7 +2223,9 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string replyUrl = 3;</code>
+       * @return The bytes for replyUrl.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString
           getReplyUrlBytes() {
         java.lang.Object ref = "";
@@ -2173,6 +2250,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string replyUrl = 3;</code>
+       * @param value The replyUrl to set.
+       * @return This builder for chaining.
        */
       public Builder setReplyUrl(
           java.lang.String value) {
@@ -2190,6 +2269,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string replyUrl = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearReplyUrl() {
         if (replyStrategyCase_ == 3) {
@@ -2205,6 +2285,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string replyUrl = 3;</code>
+       * @param value The bytes for replyUrl to set.
+       * @return This builder for chaining.
        */
       public Builder setReplyUrlBytes(
           com.google.protobuf.ByteString value) {
@@ -2226,7 +2308,9 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>.google.protobuf.Empty replyToOriginalTopic = 4;</code>
+       * @return Whether the replyToOriginalTopic field is set.
        */
+      @java.lang.Override
       public boolean hasReplyToOriginalTopic() {
         return replyStrategyCase_ == 4;
       }
@@ -2236,7 +2320,9 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>.google.protobuf.Empty replyToOriginalTopic = 4;</code>
+       * @return The replyToOriginalTopic.
        */
+      @java.lang.Override
       public com.google.protobuf.Empty getReplyToOriginalTopic() {
         if (replyToOriginalTopicBuilder_ == null) {
           if (replyStrategyCase_ == 4) {
@@ -2354,6 +2440,7 @@ public final class DataPlaneContract {
        *
        * <code>.google.protobuf.Empty replyToOriginalTopic = 4;</code>
        */
+      @java.lang.Override
       public com.google.protobuf.EmptyOrBuilder getReplyToOriginalTopicOrBuilder() {
         if ((replyStrategyCase_ == 4) && (replyToOriginalTopicBuilder_ != null)) {
           return replyToOriginalTopicBuilder_.getMessageOrBuilder();
@@ -2397,6 +2484,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string deadLetter = 5;</code>
+       * @return The deadLetter.
        */
       public java.lang.String getDeadLetter() {
         java.lang.Object ref = deadLetter_;
@@ -2416,6 +2504,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string deadLetter = 5;</code>
+       * @return The bytes for deadLetter.
        */
       public com.google.protobuf.ByteString
           getDeadLetterBytes() {
@@ -2436,6 +2525,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string deadLetter = 5;</code>
+       * @param value The deadLetter to set.
+       * @return This builder for chaining.
        */
       public Builder setDeadLetter(
           java.lang.String value) {
@@ -2453,6 +2544,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string deadLetter = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDeadLetter() {
         
@@ -2466,6 +2558,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string deadLetter = 5;</code>
+       * @param value The bytes for deadLetter to set.
+       * @return This builder for chaining.
        */
       public Builder setDeadLetterBytes(
           com.google.protobuf.ByteString value) {
@@ -2484,12 +2578,14 @@ public final class DataPlaneContract {
           dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder> filterBuilder_;
       /**
        * <code>.Filter filter = 6;</code>
+       * @return Whether the filter field is set.
        */
       public boolean hasFilter() {
         return filterBuilder_ != null || filter_ != null;
       }
       /**
        * <code>.Filter filter = 6;</code>
+       * @return The filter.
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter getFilter() {
         if (filterBuilder_ == null) {
@@ -2658,6 +2754,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>.ContentMode contentMode = 1;</code>
+     * @return The enum numeric value on the wire for contentMode.
      */
     int getContentModeValue();
     /**
@@ -2666,6 +2763,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>.ContentMode contentMode = 1;</code>
+     * @return The contentMode.
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode getContentMode();
 
@@ -2675,6 +2773,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string path = 2;</code>
+     * @return The path.
      */
     java.lang.String getPath();
     /**
@@ -2683,6 +2782,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string path = 2;</code>
+     * @return The bytes for path.
      */
     com.google.protobuf.ByteString
         getPathBytes();
@@ -2693,6 +2793,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string host = 3;</code>
+     * @return The host.
      */
     java.lang.String getHost();
     /**
@@ -2701,6 +2802,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string host = 3;</code>
+     * @return The bytes for host.
      */
     com.google.protobuf.ByteString
         getHostBytes();
@@ -2710,7 +2812,7 @@ public final class DataPlaneContract {
   /**
    * Protobuf type {@code Ingress}
    */
-  public  static final class Ingress extends
+  public static final class Ingress extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:Ingress)
       IngressOrBuilder {
@@ -2806,7 +2908,8 @@ public final class DataPlaneContract {
     private int ingressTypeCase_ = 0;
     private java.lang.Object ingressType_;
     public enum IngressTypeCase
-        implements com.google.protobuf.Internal.EnumLite {
+        implements com.google.protobuf.Internal.EnumLite,
+            com.google.protobuf.AbstractMessage.InternalOneOfEnum {
       PATH(2),
       HOST(3),
       INGRESSTYPE_NOT_SET(0);
@@ -2815,6 +2918,8 @@ public final class DataPlaneContract {
         this.value = value;
       }
       /**
+       * @param value The number of the enum to look for.
+       * @return The enum associated with the given number.
        * @deprecated Use {@link #forNumber(int)} instead.
        */
       @java.lang.Deprecated
@@ -2849,8 +2954,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>.ContentMode contentMode = 1;</code>
+     * @return The enum numeric value on the wire for contentMode.
      */
-    public int getContentModeValue() {
+    @java.lang.Override public int getContentModeValue() {
       return contentMode_;
     }
     /**
@@ -2859,8 +2965,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>.ContentMode contentMode = 1;</code>
+     * @return The contentMode.
      */
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode getContentMode() {
+    @java.lang.Override public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode getContentMode() {
       @SuppressWarnings("deprecation")
       dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.valueOf(contentMode_);
       return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.UNRECOGNIZED : result;
@@ -2873,6 +2980,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string path = 2;</code>
+     * @return The path.
      */
     public java.lang.String getPath() {
       java.lang.Object ref = "";
@@ -2897,6 +3005,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string path = 2;</code>
+     * @return The bytes for path.
      */
     public com.google.protobuf.ByteString
         getPathBytes() {
@@ -2924,6 +3033,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string host = 3;</code>
+     * @return The host.
      */
     public java.lang.String getHost() {
       java.lang.Object ref = "";
@@ -2948,6 +3058,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string host = 3;</code>
+     * @return The bytes for host.
      */
     public com.google.protobuf.ByteString
         getHostBytes() {
@@ -3354,8 +3465,9 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>.ContentMode contentMode = 1;</code>
+       * @return The enum numeric value on the wire for contentMode.
        */
-      public int getContentModeValue() {
+      @java.lang.Override public int getContentModeValue() {
         return contentMode_;
       }
       /**
@@ -3364,8 +3476,11 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>.ContentMode contentMode = 1;</code>
+       * @param value The enum numeric value on the wire for contentMode to set.
+       * @return This builder for chaining.
        */
       public Builder setContentModeValue(int value) {
+        
         contentMode_ = value;
         onChanged();
         return this;
@@ -3376,7 +3491,9 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>.ContentMode contentMode = 1;</code>
+       * @return The contentMode.
        */
+      @java.lang.Override
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode getContentMode() {
         @SuppressWarnings("deprecation")
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.valueOf(contentMode_);
@@ -3388,6 +3505,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>.ContentMode contentMode = 1;</code>
+       * @param value The contentMode to set.
+       * @return This builder for chaining.
        */
       public Builder setContentMode(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode value) {
         if (value == null) {
@@ -3404,6 +3523,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>.ContentMode contentMode = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearContentMode() {
         
@@ -3418,7 +3538,9 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string path = 2;</code>
+       * @return The path.
        */
+      @java.lang.Override
       public java.lang.String getPath() {
         java.lang.Object ref = "";
         if (ingressTypeCase_ == 2) {
@@ -3442,7 +3564,9 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string path = 2;</code>
+       * @return The bytes for path.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString
           getPathBytes() {
         java.lang.Object ref = "";
@@ -3467,6 +3591,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string path = 2;</code>
+       * @param value The path to set.
+       * @return This builder for chaining.
        */
       public Builder setPath(
           java.lang.String value) {
@@ -3484,6 +3610,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string path = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPath() {
         if (ingressTypeCase_ == 2) {
@@ -3499,6 +3626,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string path = 2;</code>
+       * @param value The bytes for path to set.
+       * @return This builder for chaining.
        */
       public Builder setPathBytes(
           com.google.protobuf.ByteString value) {
@@ -3518,7 +3647,9 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string host = 3;</code>
+       * @return The host.
        */
+      @java.lang.Override
       public java.lang.String getHost() {
         java.lang.Object ref = "";
         if (ingressTypeCase_ == 3) {
@@ -3542,7 +3673,9 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string host = 3;</code>
+       * @return The bytes for host.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString
           getHostBytes() {
         java.lang.Object ref = "";
@@ -3567,6 +3700,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string host = 3;</code>
+       * @param value The host to set.
+       * @return This builder for chaining.
        */
       public Builder setHost(
           java.lang.String value) {
@@ -3584,6 +3719,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string host = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearHost() {
         if (ingressTypeCase_ == 3) {
@@ -3599,6 +3735,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string host = 3;</code>
+       * @param value The bytes for host to set.
+       * @return This builder for chaining.
        */
       public Builder setHostBytes(
           com.google.protobuf.ByteString value) {
@@ -3674,6 +3812,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string id = 1;</code>
+     * @return The id.
      */
     java.lang.String getId();
     /**
@@ -3682,6 +3821,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string id = 1;</code>
+     * @return The bytes for id.
      */
     com.google.protobuf.ByteString
         getIdBytes();
@@ -3694,6 +3834,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
+     * @return A list containing the topics.
      */
     java.util.List<java.lang.String>
         getTopicsList();
@@ -3705,6 +3846,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
+     * @return The count of topics.
      */
     int getTopicsCount();
     /**
@@ -3715,6 +3857,8 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
+     * @param index The index of the element to return.
+     * @return The topics at the given index.
      */
     java.lang.String getTopics(int index);
     /**
@@ -3725,6 +3869,8 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the topics at the given index.
      */
     com.google.protobuf.ByteString
         getTopicsBytes(int index);
@@ -3736,6 +3882,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string bootstrapServers = 3;</code>
+     * @return The bootstrapServers.
      */
     java.lang.String getBootstrapServers();
     /**
@@ -3745,6 +3892,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string bootstrapServers = 3;</code>
+     * @return The bytes for bootstrapServers.
      */
     com.google.protobuf.ByteString
         getBootstrapServersBytes();
@@ -3755,6 +3903,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>.Ingress ingress = 4;</code>
+     * @return Whether the ingress field is set.
      */
     boolean hasIngress();
     /**
@@ -3763,6 +3912,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>.Ingress ingress = 4;</code>
+     * @return The ingress.
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress getIngress();
     /**
@@ -3821,7 +3971,7 @@ public final class DataPlaneContract {
   /**
    * Protobuf type {@code Resource}
    */
-  public  static final class Resource extends
+  public static final class Resource extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:Resource)
       ResourceOrBuilder {
@@ -3957,7 +4107,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string id = 1;</code>
+     * @return The id.
      */
+    @java.lang.Override
     public java.lang.String getId() {
       java.lang.Object ref = id_;
       if (ref instanceof java.lang.String) {
@@ -3976,7 +4128,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string id = 1;</code>
+     * @return The bytes for id.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getIdBytes() {
       java.lang.Object ref = id_;
@@ -4001,6 +4155,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
+     * @return A list containing the topics.
      */
     public com.google.protobuf.ProtocolStringList
         getTopicsList() {
@@ -4014,6 +4169,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
+     * @return The count of topics.
      */
     public int getTopicsCount() {
       return topics_.size();
@@ -4026,6 +4182,8 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
+     * @param index The index of the element to return.
+     * @return The topics at the given index.
      */
     public java.lang.String getTopics(int index) {
       return topics_.get(index);
@@ -4038,6 +4196,8 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>repeated string topics = 2;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the topics at the given index.
      */
     public com.google.protobuf.ByteString
         getTopicsBytes(int index) {
@@ -4053,7 +4213,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string bootstrapServers = 3;</code>
+     * @return The bootstrapServers.
      */
+    @java.lang.Override
     public java.lang.String getBootstrapServers() {
       java.lang.Object ref = bootstrapServers_;
       if (ref instanceof java.lang.String) {
@@ -4073,7 +4235,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string bootstrapServers = 3;</code>
+     * @return The bytes for bootstrapServers.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getBootstrapServersBytes() {
       java.lang.Object ref = bootstrapServers_;
@@ -4096,7 +4260,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>.Ingress ingress = 4;</code>
+     * @return Whether the ingress field is set.
      */
+    @java.lang.Override
     public boolean hasIngress() {
       return ingress_ != null;
     }
@@ -4106,7 +4272,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>.Ingress ingress = 4;</code>
+     * @return The ingress.
      */
+    @java.lang.Override
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress getIngress() {
       return ingress_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.getDefaultInstance() : ingress_;
     }
@@ -4117,6 +4285,7 @@ public final class DataPlaneContract {
      *
      * <code>.Ingress ingress = 4;</code>
      */
+    @java.lang.Override
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder getIngressOrBuilder() {
       return getIngress();
     }
@@ -4130,6 +4299,7 @@ public final class DataPlaneContract {
      *
      * <code>repeated .Egress egresses = 5;</code>
      */
+    @java.lang.Override
     public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress> getEgressesList() {
       return egresses_;
     }
@@ -4140,6 +4310,7 @@ public final class DataPlaneContract {
      *
      * <code>repeated .Egress egresses = 5;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder> 
         getEgressesOrBuilderList() {
       return egresses_;
@@ -4151,6 +4322,7 @@ public final class DataPlaneContract {
      *
      * <code>repeated .Egress egresses = 5;</code>
      */
+    @java.lang.Override
     public int getEgressesCount() {
       return egresses_.size();
     }
@@ -4161,6 +4333,7 @@ public final class DataPlaneContract {
      *
      * <code>repeated .Egress egresses = 5;</code>
      */
+    @java.lang.Override
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress getEgresses(int index) {
       return egresses_.get(index);
     }
@@ -4171,6 +4344,7 @@ public final class DataPlaneContract {
      *
      * <code>repeated .Egress egresses = 5;</code>
      */
+    @java.lang.Override
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder getEgressesOrBuilder(
         int index) {
       return egresses_.get(index);
@@ -4623,6 +4797,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string id = 1;</code>
+       * @return The id.
        */
       public java.lang.String getId() {
         java.lang.Object ref = id_;
@@ -4642,6 +4817,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string id = 1;</code>
+       * @return The bytes for id.
        */
       public com.google.protobuf.ByteString
           getIdBytes() {
@@ -4662,6 +4838,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string id = 1;</code>
+       * @param value The id to set.
+       * @return This builder for chaining.
        */
       public Builder setId(
           java.lang.String value) {
@@ -4679,6 +4857,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string id = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearId() {
         
@@ -4692,6 +4871,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string id = 1;</code>
+       * @param value The bytes for id to set.
+       * @return This builder for chaining.
        */
       public Builder setIdBytes(
           com.google.protobuf.ByteString value) {
@@ -4720,6 +4901,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
+       * @return A list containing the topics.
        */
       public com.google.protobuf.ProtocolStringList
           getTopicsList() {
@@ -4733,6 +4915,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
+       * @return The count of topics.
        */
       public int getTopicsCount() {
         return topics_.size();
@@ -4745,6 +4928,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
+       * @param index The index of the element to return.
+       * @return The topics at the given index.
        */
       public java.lang.String getTopics(int index) {
         return topics_.get(index);
@@ -4757,6 +4942,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the topics at the given index.
        */
       public com.google.protobuf.ByteString
           getTopicsBytes(int index) {
@@ -4770,6 +4957,9 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
+       * @param index The index to set the value at.
+       * @param value The topics to set.
+       * @return This builder for chaining.
        */
       public Builder setTopics(
           int index, java.lang.String value) {
@@ -4789,6 +4979,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
+       * @param value The topics to add.
+       * @return This builder for chaining.
        */
       public Builder addTopics(
           java.lang.String value) {
@@ -4808,6 +5000,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
+       * @param values The topics to add.
+       * @return This builder for chaining.
        */
       public Builder addAllTopics(
           java.lang.Iterable<java.lang.String> values) {
@@ -4825,6 +5019,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTopics() {
         topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -4840,6 +5035,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>repeated string topics = 2;</code>
+       * @param value The bytes of the topics to add.
+       * @return This builder for chaining.
        */
       public Builder addTopicsBytes(
           com.google.protobuf.ByteString value) {
@@ -4861,6 +5058,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string bootstrapServers = 3;</code>
+       * @return The bootstrapServers.
        */
       public java.lang.String getBootstrapServers() {
         java.lang.Object ref = bootstrapServers_;
@@ -4881,6 +5079,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string bootstrapServers = 3;</code>
+       * @return The bytes for bootstrapServers.
        */
       public com.google.protobuf.ByteString
           getBootstrapServersBytes() {
@@ -4902,6 +5101,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string bootstrapServers = 3;</code>
+       * @param value The bootstrapServers to set.
+       * @return This builder for chaining.
        */
       public Builder setBootstrapServers(
           java.lang.String value) {
@@ -4920,6 +5121,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string bootstrapServers = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBootstrapServers() {
         
@@ -4934,6 +5136,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string bootstrapServers = 3;</code>
+       * @param value The bytes for bootstrapServers to set.
+       * @return This builder for chaining.
        */
       public Builder setBootstrapServersBytes(
           com.google.protobuf.ByteString value) {
@@ -4956,6 +5160,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>.Ingress ingress = 4;</code>
+       * @return Whether the ingress field is set.
        */
       public boolean hasIngress() {
         return ingressBuilder_ != null || ingress_ != null;
@@ -4966,6 +5171,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>.Ingress ingress = 4;</code>
+       * @return The ingress.
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress getIngress() {
         if (ingressBuilder_ == null) {
@@ -5475,6 +5681,7 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>uint64 generation = 1;</code>
+     * @return The generation.
      */
     long getGeneration();
 
@@ -5505,7 +5712,7 @@ public final class DataPlaneContract {
   /**
    * Protobuf type {@code Contract}
    */
-  public  static final class Contract extends
+  public static final class Contract extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:Contract)
       ContractOrBuilder {
@@ -5607,7 +5814,9 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>uint64 generation = 1;</code>
+     * @return The generation.
      */
+    @java.lang.Override
     public long getGeneration() {
       return generation_;
     }
@@ -5617,12 +5826,14 @@ public final class DataPlaneContract {
     /**
      * <code>repeated .Resource resources = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource> getResourcesList() {
       return resources_;
     }
     /**
      * <code>repeated .Resource resources = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder> 
         getResourcesOrBuilderList() {
       return resources_;
@@ -5630,18 +5841,21 @@ public final class DataPlaneContract {
     /**
      * <code>repeated .Resource resources = 2;</code>
      */
+    @java.lang.Override
     public int getResourcesCount() {
       return resources_.size();
     }
     /**
      * <code>repeated .Resource resources = 2;</code>
      */
+    @java.lang.Override
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource getResources(int index) {
       return resources_.get(index);
     }
     /**
      * <code>repeated .Resource resources = 2;</code>
      */
+    @java.lang.Override
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder getResourcesOrBuilder(
         int index) {
       return resources_.get(index);
@@ -6015,7 +6229,9 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>uint64 generation = 1;</code>
+       * @return The generation.
        */
+      @java.lang.Override
       public long getGeneration() {
         return generation_;
       }
@@ -6026,6 +6242,8 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>uint64 generation = 1;</code>
+       * @param value The generation to set.
+       * @return This builder for chaining.
        */
       public Builder setGeneration(long value) {
         
@@ -6040,6 +6258,7 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>uint64 generation = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearGeneration() {
         

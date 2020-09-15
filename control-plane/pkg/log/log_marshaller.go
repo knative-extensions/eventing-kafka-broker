@@ -18,30 +18,46 @@ package log
 
 import (
 	"go.uber.org/zap/zapcore"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 )
 
-type SinksMarshaller = BrokersMarshaller
+type ContractMarshaller contract.Contract
 
-func NewSinksMarshaller(sinks *config.Sinks) SinksMarshaller {
-	return SinksMarshaller{
-		Brokers: sinks,
+func (m *ContractMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddUint64("generation", m.Generation)
+	return encoder.AddArray("resources", zapcore.ArrayMarshalerFunc(func(encoder zapcore.ArrayEncoder) error {
+
+		for _, r := range m.Resources {
+			if err := encoder.AppendObject((*resourceMarshaller)(r)); err != nil {
+				return err
+			}
+		}
+		return nil
+	}))
+}
+
+type resourceMarshaller contract.Resource
+
+func (b *resourceMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString("id", b.Id)
+	if err := encoder.AddArray("topics", zapcore.ArrayMarshalerFunc(func(encoder zapcore.ArrayEncoder) error {
+		for _, t := range b.Topics {
+			encoder.AppendString(t)
+		}
+		return nil
+	})); err != nil {
+		return err
 	}
-}
+	encoder.AddString("bootstrapServers", b.BootstrapServers)
+	if b.Ingress != nil {
+		if err := encoder.AddObject("ingress", (*ingressMarshaller)(b.Ingress)); err != nil {
+			return err
+		}
+	}
 
-type BrokersMarshaller struct {
-	Brokers *config.Brokers
-}
-
-func (m BrokersMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
-
-	encoder.AddUint64("volumeGeneration", m.Brokers.VolumeGeneration)
-
-	return encoder.AddArray("brokers", zapcore.ArrayMarshalerFunc(func(encoder zapcore.ArrayEncoder) error {
-
-		for _, b := range m.Brokers.Brokers {
-			if err := encoder.AppendObject(brokerMarshaller{broker: b}); err != nil {
+	return encoder.AddArray("egresses", zapcore.ArrayMarshalerFunc(func(encoder zapcore.ArrayEncoder) error {
+		for _, e := range b.Egresses {
+			if err := encoder.AppendObject((*egressMarshaller)(e)); err != nil {
 				return err
 			}
 		}
@@ -49,34 +65,44 @@ func (m BrokersMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error
 	}))
 }
 
-type brokerMarshaller struct {
-	broker *config.Broker
+type ingressMarshaller contract.Ingress
+
+func (i *ingressMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	it := i.IngressType
+	switch it.(type) {
+	case *contract.Ingress_Path:
+		encoder.AddString("ingress_path", it.(*contract.Ingress_Path).Path)
+	case *contract.Ingress_Host:
+		encoder.AddString("ingress_host", it.(*contract.Ingress_Host).Host)
+	}
+
+	encoder.AddString("contentMode", i.ContentMode.String())
+	return nil
 }
 
-func (b brokerMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+type egressMarshaller contract.Egress
 
-	encoder.AddString("id", b.broker.Id)
-	encoder.AddString("topic", b.broker.Topic)
-	encoder.AddString("deadLetterSink", b.broker.DeadLetterSink)
+func (e *egressMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString("consumerGroup", e.ConsumerGroup)
+	encoder.AddString("destination", e.Destination)
+	encoder.AddString("deadLetter", e.DeadLetter)
 
-	return encoder.AddArray("triggers", zapcore.ArrayMarshalerFunc(func(encoder zapcore.ArrayEncoder) error {
+	rs := e.ReplyStrategy
+	switch rs.(type) {
+	case *contract.Egress_ReplyUrl:
+		encoder.AddString("replyToUrl", rs.(*contract.Egress_ReplyUrl).ReplyUrl)
+	case *contract.Egress_ReplyToOriginalTopic:
+		encoder.AddBool("replyToOriginalTopic", true)
+	}
 
-		for _, t := range b.broker.Triggers {
-			if err := encoder.AppendObject(triggerMarshaller{trigger: t}); err != nil {
-				return err
-			}
-		}
-		return nil
-	}))
+	if e.Filter != nil {
+		return encoder.AddObject("filter", (*filterMarshaller)(e.Filter))
+	}
+	return nil
 }
 
-type triggerMarshaller struct {
-	trigger *config.Trigger
-}
+type filterMarshaller contract.Filter
 
-func (m triggerMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
-
-	encoder.AddString("id", m.trigger.Id)
-	encoder.AddString("destination", m.trigger.Destination)
-	return encoder.AddReflected("attributes", m.trigger.Attributes)
+func (f *filterMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	return encoder.AddReflected("attributes", f.Attributes)
 }

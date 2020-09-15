@@ -19,6 +19,7 @@ package sink
 import (
 	"context"
 	"fmt"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"testing"
 
 	"github.com/Shopify/sarama"
@@ -36,7 +37,6 @@ import (
 	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
-	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -101,17 +101,16 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
 							Id:               SinkUUID,
-							Topic:            SinkTopic(),
-							Path:             receiver.Path(SinkNamespace, SinkName),
+							Topics:           []string{SinkTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_STRUCTURED,
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -154,17 +153,16 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
 							Id:               SinkUUID,
-							Topic:            "my-topic-1",
-							Path:             receiver.Path(SinkNamespace, SinkName),
+							Topics:           []string{"my-topic-1"},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
 							BootstrapServers: "kafka-broker:10000",
-							ContentMode:      coreconfig.ContentMode_STRUCTURED,
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -254,17 +252,16 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				NewConfigMap(&configs, nil),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
 							Id:               SinkUUID,
-							Topic:            SinkTopic(),
-							Path:             receiver.Path(SinkNamespace, SinkName),
+							Topics:           []string{SinkTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_STRUCTURED,
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -300,17 +297,16 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
 							Id:               SinkUUID,
-							Topic:            SinkTopic(),
-							Path:             receiver.Path(SinkNamespace, SinkName),
+							Topics:           []string{SinkTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_STRUCTURED,
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -338,16 +334,16 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				NewSink(
 					BootstrapServers(bootstrapServersArr),
 				),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic: "my-existing-topic-a",
-							Path:  receiver.Path(SinkNamespace, SinkName),
+							Id:      "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:  []string{"my-existing-topic-a"},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
 						},
 						{
-							Id:    "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
-							Topic: "my-existing-topic-b",
+							Id:     "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
+							Topics: []string{"my-existing-topic-b"},
 						},
 					},
 				}, &configs),
@@ -360,26 +356,25 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic: "my-existing-topic-a",
-							Path:  receiver.Path(SinkNamespace, SinkName),
+							Id:      "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:  []string{"my-existing-topic-a"},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
 						},
 						{
-							Id:    "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
-							Topic: "my-existing-topic-b",
+							Id:     "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
+							Topics: []string{"my-existing-topic-b"},
 						},
 						{
 							Id:               SinkUUID,
-							Topic:            SinkTopic(),
-							Path:             receiver.Path(SinkNamespace, SinkName),
+							Topics:           []string{SinkTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_STRUCTURED,
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -407,18 +402,18 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				NewSink(
 					BootstrapServers(bootstrapServersArr),
 				),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:     "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics: []string{"my-existing-topic-a"},
+							//DeadLetterSink: "http://www.my-sink.com",
 						},
 						{
 							Id:               SinkUUID,
-							Topic:            SinkTopic(),
+							Topics:           []string{SinkTopic()},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_STRUCTURED,
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED},
 						},
 					},
 				}, &configs),
@@ -431,22 +426,21 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:     "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics: []string{"my-existing-topic-a"},
+							//DeadLetterSink: "http://www.my-sink.com",
 						},
 						{
 							Id:               SinkUUID,
-							Topic:            SinkTopic(),
-							Path:             receiver.Path(SinkNamespace, SinkName),
+							Topics:           []string{SinkTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_STRUCTURED,
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",

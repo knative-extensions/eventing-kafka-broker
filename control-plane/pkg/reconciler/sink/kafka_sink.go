@@ -18,6 +18,7 @@ package sink
 
 import (
 	"context"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"math"
 
 	"github.com/Shopify/sarama"
@@ -88,46 +89,48 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	logger.Debug("Topic created", zap.Any("topic", ks.Spec.Topic))
 
-	// Get sinks config map.
-	sinksConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	// Get contract config map.
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return statusConditionManager.FailedToGetConfigMap(err)
 	}
 
-	logger.Debug("Got sinks config map")
+	logger.Debug("Got contract config map")
 
-	// Get sinks data.
-	sinks, err := r.GetDataPlaneConfigMapData(logger, sinksConfigMap)
-	if err != nil && sinks == nil {
+	// Get contract data.
+	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
+	if err != nil && ct == nil {
 		return statusConditionManager.FailedToGetDataFromConfigMap(err)
 	}
-	if sinks == nil {
-		sinks = &coreconfig.Sinks{}
+	if ct == nil {
+		ct = &contract.Contract{}
 	}
 
 	logger.Debug(
-		"Got sinks data from config map",
-		zap.Any("sinks", log.NewSinksMarshaller(sinks)),
+		"Got contract data from config map",
+		zap.Any("contract", (*log.ContractMarshaller)(ct)),
 	)
 
 	// Get sink configuration.
-	sinkConfig := &coreconfig.Sink{
-		Id:               string(ks.UID),
-		Topic:            ks.Spec.Topic,
-		Path:             receiver.PathFromObject(ks),
+	sinkConfig := &contract.Resource{
+		Id:     string(ks.UID),
+		Topics: []string{ks.Spec.Topic},
+		Ingress: &contract.Ingress{
+			ContentMode: coreconfig.ContentModeFromString(*ks.Spec.ContentMode),
+			IngressType: &contract.Ingress_Path{Path: receiver.PathFromObject(ks)},
+		},
 		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
-		ContentMode:      coreconfig.ContentModeFromString(*ks.Spec.ContentMode),
 	}
 
-	sinkIndex := coreconfig.FindSink(sinks, ks.UID)
-	// Update sinks data with the new sink configuration.
-	coreconfig.AddOrUpdateSinksConfig(sinks, sinkConfig, sinkIndex, logger)
+	sinkIndex := coreconfig.FindResource(ct, ks.UID)
+	// Update contract data with the new sink configuration.
+	coreconfig.AddOrUpdateResourceConfig(ct, sinkConfig, sinkIndex, logger)
 
 	// Increment volumeGeneration
-	sinks.VolumeGeneration = incrementVolumeGeneration(sinks.VolumeGeneration)
+	ct.Generation = incrementGeneration(ct.Generation)
 
-	// Update the configuration map with the new sinks data.
-	if err := r.UpdateDataPlaneConfigMap(ctx, sinks, sinksConfigMap); err != nil {
+	// Update the configuration map with the new contract data.
+	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
 		logger.Error("failed to update data plane config map", zap.Error(
 			statusConditionManager.FailedToUpdateConfigMap(err),
 		))
@@ -141,7 +144,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	// receivers haven't got the Sink, so update failures to receiver pods is a hard failure.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, sinks.VolumeGeneration); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
 		return err
 	}
 
@@ -164,6 +167,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	return nil
 }
 
-func incrementVolumeGeneration(generation uint64) uint64 {
+func incrementGeneration(generation uint64) uint64 {
 	return (generation + 1) % (math.MaxUint64 - 1)
 }
