@@ -68,12 +68,11 @@ func (b *resourceMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) err
 type ingressMarshaller contract.Ingress
 
 func (i *ingressMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
-	it := i.IngressType
-	switch it.(type) {
+	switch it := i.IngressType.(type) {
 	case *contract.Ingress_Path:
-		encoder.AddString("ingress_path", it.(*contract.Ingress_Path).Path)
+		encoder.AddString("ingress_path", it.Path)
 	case *contract.Ingress_Host:
-		encoder.AddString("ingress_host", it.(*contract.Ingress_Host).Host)
+		encoder.AddString("ingress_host", it.Host)
 	}
 
 	encoder.AddString("contentMode", i.ContentMode.String())
@@ -87,10 +86,9 @@ func (e *egressMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error
 	encoder.AddString("destination", e.Destination)
 	encoder.AddString("deadLetter", e.DeadLetter)
 
-	rs := e.ReplyStrategy
-	switch rs.(type) {
+	switch rs := e.ReplyStrategy.(type) {
 	case *contract.Egress_ReplyUrl:
-		encoder.AddString("replyToUrl", rs.(*contract.Egress_ReplyUrl).ReplyUrl)
+		encoder.AddString("replyToUrl", rs.ReplyUrl)
 	case *contract.Egress_ReplyToOriginalTopic:
 		encoder.AddBool("replyToOriginalTopic", true)
 	}
