@@ -177,7 +177,9 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Objects
 
     final var producerConfigs = (Properties) this.producerConfigs.clone();
     producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.bootstrapServers());
-    producerConfigs.setProperty(CloudEventSerializer.ENCODING_CONFIG, encoding(resource.ingress().contentMode()));
+    if (resource.ingress().contentMode() != DataPlaneContract.ContentMode.UNRECOGNIZED) {
+      producerConfigs.setProperty(CloudEventSerializer.ENCODING_CONFIG, encoding(resource.ingress().contentMode()));
+    }
     producerConfigs.setProperty(CloudEventSerializer.EVENT_FORMAT_CONFIG, JsonFormat.CONTENT_TYPE);
 
     final KafkaProducer<K, V> producer = producerCreator.apply(producerConfigs);
