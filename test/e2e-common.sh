@@ -32,6 +32,7 @@ readonly CHAOS_CONFIG="test/pkg/config/chaos/chaosduck.yaml"
 # Vendored pkg test iamges.
 readonly VENDOR_PKG_TEST_IMAGES="vendor/knative.dev/pkg/leaderelection/chaosduck"
 
+export EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT="eventing-kafka-controller.yaml"
 export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
 export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
 
@@ -92,6 +93,8 @@ function knative_eventing() {
 }
 
 function test_setup() {
+
+  [ -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" ] && rm "${EVENTING_KAFKA_BROKER_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_SINK_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SINK_ARTIFACT}"
 
@@ -101,8 +104,14 @@ function test_setup() {
   header "Control plane setup"
   control_plane_setup || fail_test "Failed to set up control plane components"
 
+  kubectl apply -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
+  wait_until_pods_running knative-eventing || fail_test "Control plane did not come up"
+
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_BROKER_ARTIFACT}"
+  wait_until_pods_running knative-eventing || fail_test "Broker data plane did not come up"
+
   kubectl apply -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_SINK_ARTIFACT}"
+  wait_until_pods_running knative-eventing || fail_test "Sink data plane did not come up"
 
   # Apply test configurations, and restart data plane components (we don't have hot reload)
   ko apply -f ./test/pkg/config/ || fail_test "Failed to apply test configurations"
@@ -111,10 +120,11 @@ function test_setup() {
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
 
-  scale_controlplane kafka-broker-controller eventing-webhook eventing-controller
+  scale_controlplane kafka-controller eventing-webhook eventing-controller
 }
 
 function test_teardown() {
+  kubectl delete -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || fail_test "Failed to tear down control plane"
   kubectl delete -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to tear down kafka broker"
   kubectl delete -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to tear down kafka sink"
 }

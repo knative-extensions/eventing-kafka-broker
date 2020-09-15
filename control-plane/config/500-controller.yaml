@@ -17,26 +17,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kafka-broker-controller
+  name: kafka-controller
   namespace: knative-eventing
   labels:
-    app: kafka-broker-controller
+    app: kafka-controller
     eventing.knative.dev/release: devel
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kafka-broker-controller
+      app: kafka-controller
   template:
     metadata:
-      name: kafka-broker-controller
+      name: kafka-controller
       labels:
-        app: kafka-broker-controller
+        app: kafka-controller
         eventing.knative.dev/release: devel
     spec:
       securityContext:
         runAsNonRoot: true
-      serviceAccountName: kafka-broker-controller
+      serviceAccountName: kafka-controller
 
       # To avoid node becoming SPOF, spread our replicas to different nodes.
       affinity:
@@ -45,13 +45,13 @@ spec:
             - podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: kafka-broker-controller
+                    app: kafka-controller
                 topologyKey: kubernetes.io/hostname
               weight: 100
 
       containers:
         - name: controller
-          image: ko://knative.dev/eventing-kafka-broker/control-plane/cmd/kafka-broker-controller
+          image: ko://knative.dev/eventing-kafka-broker/control-plane/cmd/kafka-controller
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: config-logging

@@ -94,5 +94,5 @@ spec:
           emptyDir: {}
         - name: kafka-broker-config-logging
           configMap:
-            name: kafka-broker-config-logging
+            name: kafka-config-logging
       restartPolicy: Always

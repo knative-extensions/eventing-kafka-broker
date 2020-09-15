@@ -51,7 +51,7 @@ spec:
             - mountPath: /tmp
               name: cache
             - mountPath: /etc/logging
-              name: kafka-broker-config-logging
+              name: kafka-sink-config-logging
               readOnly: true
           env:
             - name: INGRESS_PORT
@@ -108,9 +108,9 @@ spec:
             name: config-kafka-sink-data-plane
         - name: cache
           emptyDir: {}
-        - name: kafka-broker-config-logging
+        - name: kafka-sink-config-logging
           configMap:
-            name: kafka-broker-config-logging
+            name: kafka-config-logging
       restartPolicy: Always
 ---
 

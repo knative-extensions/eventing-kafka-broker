@@ -17,26 +17,26 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: kafka-broker-controller
+  name: kafka-controller
   labels:
     contrib.eventing.knative.dev/release: devel
 subjects:
   - kind: ServiceAccount
-    name: kafka-broker-controller
+    name: kafka-controller
     namespace: knative-eventing
 roleRef:
   kind: ClusterRole
-  name: kafka-broker-controller
+  name: kafka-controller
   apiGroup: rbac.authorization.k8s.io
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: kafka-broker-addressable-resolver
+  name: kafka-controller-addressable-resolver
 subjects:
   - kind: ServiceAccount
-    name: kafka-broker-controller
+    name: kafka-controller
     namespace: knative-eventing
 roleRef:
   apiGroup: rbac.authorization.k8s.io
