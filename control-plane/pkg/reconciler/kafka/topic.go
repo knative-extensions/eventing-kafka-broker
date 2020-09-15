@@ -128,5 +128,5 @@ func (f NewClusterAdminFunc) IsTopicPresentAndValid(topic string, bootstrapServe
 }
 
 func isValidSingleTopicMetadata(metadata []*sarama.TopicMetadata, topic string) bool {
-	return len(metadata) == 1 && metadata[0].Name == topic && metadata[0].IsInternal == false
+	return len(metadata) == 1 && metadata[0].Name == topic && !metadata[0].IsInternal
 }
