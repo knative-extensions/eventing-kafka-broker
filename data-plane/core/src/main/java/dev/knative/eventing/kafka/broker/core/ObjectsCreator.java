@@ -19,12 +19,14 @@ package dev.knative.eventing.kafka.broker.core;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,9 +60,18 @@ public class ObjectsCreator implements Consumer<DataPlaneContract.Contract> {
    */
   @Override
   public void accept(final DataPlaneContract.Contract contract) {
-    final Collection<Resource> objects = contract.getResourcesList().stream()
-      .map(ResourceWrapper::new)
-      .collect(Collectors.toList());
+    final Map<Resource, Set<Egress>> objects = new HashMap<>();
+
+    for (final var resource : contract.getResourcesList()) {
+      final var egresses = new HashSet<Egress>(
+        resource.getEgressesCount()
+      );
+      for (final var egress : resource.getEgressesList()) {
+        egresses.add(new EgressWrapper(egress));
+      }
+
+      objects.put(new ResourceWrapper(resource), egresses);
+    }
 
     try {
       final var latch = new CountDownLatch(1);

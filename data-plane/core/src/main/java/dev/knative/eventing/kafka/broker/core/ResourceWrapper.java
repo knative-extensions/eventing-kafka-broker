@@ -17,7 +17,6 @@
 package dev.knative.eventing.kafka.broker.core;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -61,13 +60,6 @@ public class ResourceWrapper implements Resource {
   @Override
   public DataPlaneContract.Ingress ingress() {
     return resource.getIngress();
-  }
-
-  @Override
-  public List<Egress> egresses() {
-    return resource.getEgressesList().stream()
-      .map(EgressWrapper::new)
-      .collect(Collectors.toList());
   }
 
   @Override

@@ -43,7 +43,9 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -112,7 +114,7 @@ public class ReceiverVerticleTest {
 
     final var wait = new CountDownLatch(1);
 
-    handler.reconcile(List.of(tc.resource))
+    handler.reconcile(Map.of(tc.resource, new HashSet<>()))
       .onFailure(context::failNow)
       .onSuccess(v -> wait.countDown());
 

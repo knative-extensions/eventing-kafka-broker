@@ -23,10 +23,8 @@ import dev.knative.eventing.kafka.broker.core.Resource;
 import dev.knative.eventing.kafka.broker.core.ResourceWrapper;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -160,11 +158,6 @@ public final class CoreObjects {
       @Override
       public DataPlaneContract.Ingress ingress() {
         return entry.getKey().ingress();
-      }
-
-      @Override
-      public List<Egress> egresses() {
-        return new ArrayList<>(entry.getValue());
       }
 
       @Override

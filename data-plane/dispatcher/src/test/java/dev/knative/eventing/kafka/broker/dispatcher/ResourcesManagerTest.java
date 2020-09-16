@@ -20,7 +20,6 @@ import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.e
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress2;
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress3;
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress4;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.mockResourcesWithNewEgresses;
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource1;
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource2;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -64,7 +63,7 @@ public class ResourcesManagerTest {
       100
     );
 
-    resourcesManager.reconcile(mockResourcesWithNewEgresses(resources))
+    resourcesManager.reconcile(resources)
       .onSuccess(ignored -> context.verify(() -> {
         assertThat(vertx.deploymentIDs()).hasSize(numEgresses);
         checkpoints.flag();
@@ -91,7 +90,7 @@ public class ResourcesManagerTest {
       100
     );
 
-    resourcesManager.reconcile(mockResourcesWithNewEgresses(resources))
+    resourcesManager.reconcile(resources)
       .onFailure(ignored -> context.verify(() -> {
         assertThat(vertx.deploymentIDs()).hasSize(0);
         checkpoint.flag();
@@ -125,7 +124,7 @@ public class ResourcesManagerTest {
       100
     );
 
-    resourcesManager.reconcile(mockResourcesWithNewEgresses(resourcesOld))
+    resourcesManager.reconcile(resourcesOld)
       .onSuccess(ignored -> {
 
         context.verify(() -> {
@@ -133,7 +132,7 @@ public class ResourcesManagerTest {
           checkpoints.flag();
         });
 
-        resourcesManager.reconcile(mockResourcesWithNewEgresses(resourcesNew))
+        resourcesManager.reconcile(resourcesNew)
           .onSuccess(ok -> context.verify(() -> {
             assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew);
             checkpoints.flag();
@@ -170,14 +169,14 @@ public class ResourcesManagerTest {
       100
     );
 
-    resourcesManager.reconcile(mockResourcesWithNewEgresses(resourcesOld))
+    resourcesManager.reconcile(resourcesOld)
       .onSuccess(ignored -> {
         context.verify(() -> {
           assertThat(vertx.deploymentIDs()).hasSize(numEgressesOld);
           checkpoints.flag();
         });
 
-        resourcesManager.reconcile(mockResourcesWithNewEgresses(resourcesNew))
+        resourcesManager.reconcile(resourcesNew)
           .onSuccess(ok -> context.verify(() -> {
             assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew);
             checkpoints.flag();
@@ -216,7 +215,7 @@ public class ResourcesManagerTest {
     );
 
     final var oldDeployments = vertx.deploymentIDs();
-    resourcesManager.reconcile(mockResourcesWithNewEgresses(resourcesOld))
+    resourcesManager.reconcile(resourcesOld)
       .onSuccess(ignored -> {
 
         context.verify(() -> {
@@ -224,7 +223,7 @@ public class ResourcesManagerTest {
           checkpoints.flag();
         });
 
-        resourcesManager.reconcile(mockResourcesWithNewEgresses(resourcesNew))
+        resourcesManager.reconcile(resourcesNew)
           .onSuccess(ok -> {
             context.verify(() -> {
               assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew);
@@ -232,7 +231,7 @@ public class ResourcesManagerTest {
               checkpoints.flag();
             });
 
-            resourcesManager.reconcile(mockResourcesWithNewEgresses(resourcesOld))
+            resourcesManager.reconcile(resourcesOld)
               .onSuccess(ok2 -> context.verify(() -> {
                 assertThat(oldDeployments).hasSize(numEgressesOld);
                 checkpoints.flag();
@@ -269,7 +268,7 @@ public class ResourcesManagerTest {
       100,
       100
     );
-    resourcesManager.reconcile(mockResourcesWithNewEgresses(resources))
+    resourcesManager.reconcile(resources)
       .onSuccess(ignored -> {
 
         final var deployments = vertx.deploymentIDs();
@@ -279,7 +278,7 @@ public class ResourcesManagerTest {
           checkpoints.flag();
         });
 
-        resourcesManager.reconcile(mockResourcesWithNewEgresses(resources2)).onSuccess(ok -> context.verify(() -> {
+        resourcesManager.reconcile(resources2).onSuccess(ok -> context.verify(() -> {
           assertThat(vertx.deploymentIDs()).containsExactly(deployments.toArray(new String[0]));
           checkpoints.flag();
         }));

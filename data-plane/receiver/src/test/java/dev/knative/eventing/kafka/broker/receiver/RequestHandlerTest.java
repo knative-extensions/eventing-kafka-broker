@@ -34,7 +34,8 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -92,7 +93,7 @@ public class RequestHandlerTest {
 
     final var countDown = new CountDownLatch(1);
 
-    handler.reconcile(List.of(resource))
+    handler.reconcile(Map.of(resource, new HashSet<>()))
       .onFailure(cause -> fail())
       .onSuccess(v -> countDown.countDown());
 
@@ -124,7 +125,7 @@ public class RequestHandlerTest {
     );
 
     final var countDown = new CountDownLatch(1);
-    handler.reconcile(List.of(resource))
+    handler.reconcile(Map.of(resource, new HashSet<>()))
       .onFailure(cause -> fail())
       .onSuccess(v -> countDown.countDown());
 
@@ -188,8 +189,8 @@ public class RequestHandlerTest {
       .setBootstrapServers("kafka-1:9092,kafka-3:9092")
       .build());
 
-    handler.reconcile(List.of(resource1))
-      .onSuccess(ignored -> handler.reconcile(List.of(resource2))
+    handler.reconcile(Map.of(resource1, new HashSet<>()))
+      .onSuccess(ignored -> handler.reconcile(Map.of(resource2, new HashSet<>()))
         .onSuccess(i -> context.verify(() -> {
           assertThat(recreated.get()).isTrue();
           checkpoint.flag();
@@ -235,8 +236,8 @@ public class RequestHandlerTest {
       .setBootstrapServers("kafka-1:9092,kafka-2:9092")
       .build());
 
-    handler.reconcile(List.of(resource1))
-      .onSuccess(ignored -> handler.reconcile(List.of(resource2))
+    handler.reconcile(Map.of(resource1, new HashSet<>()))
+      .onSuccess(ignored -> handler.reconcile(Map.of(resource2, new HashSet<>()))
         .onSuccess(i -> context.verify(() -> {
           assertThat(recreated.get()).isFalse();
           checkpoint.flag();

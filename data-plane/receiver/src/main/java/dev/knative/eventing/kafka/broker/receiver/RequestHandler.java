@@ -23,6 +23,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.Egress;
 import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
 import dev.knative.eventing.kafka.broker.core.Resource;
 import io.cloudevents.core.message.Encoding;
@@ -33,12 +34,12 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -136,11 +137,11 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Objects
   }
 
   @Override
-  public Future<Void> reconcile(Collection<Resource> newObjects) {
+  public Future<Void> reconcile(Map<Resource, Set<Egress>> newObjects) {
     final Map<String, Entry<String, Producer<K, V>>> newProducers = new HashMap<>();
     final var producers = this.producers.get();
 
-    for (final var resource : newObjects) {
+    for (final var resource : newObjects.keySet()) {
       //TODO support host ingress too
       //TODO check if there is an ingress, otherwise fail
       final var pair = producers.get(resource.ingress().getPath());

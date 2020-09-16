@@ -17,7 +17,6 @@
 package dev.knative.eventing.kafka.broker.core;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -56,9 +55,6 @@ public interface Resource {
 
   //TODO
   DataPlaneContract.Ingress ingress();
-
-  //TODO
-  List<Egress> egresses();
 
   //TODO
   DataPlaneContract.EgressConfig egressConfig();

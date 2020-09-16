@@ -26,11 +26,11 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +86,7 @@ public final class ResourcesManager implements ObjectsReconciler {
    */
   @Override
   @SuppressWarnings("rawtypes")
-  public Future<Void> reconcile(Collection<Resource> newObjects) {
+  public Future<Void> reconcile(Map<Resource, Set<Egress>> newObjects) {
     final List<Future> futures = new ArrayList<>(newObjects.size() * 2);
 
     // diffing previous and new --> remove deleted objects
@@ -95,10 +95,8 @@ public final class ResourcesManager implements ObjectsReconciler {
       final var resourceEntry = resourcesIterator.next();
       final var oldResource = resourceEntry.getKey();
 
-      final var newResource = newObjects.stream().filter(r -> Objects.equals(r.id(), oldResource.id())).findFirst();
-
       // check if the old resource has been deleted or updated.
-      if (newResource.isEmpty()) {
+      if (!newObjects.containsKey(oldResource)) {
 
         // resource deleted or updated, so remove it
         resourcesIterator.remove();
@@ -107,15 +105,17 @@ public final class ResourcesManager implements ObjectsReconciler {
         for (final var e : resourceEntry.getValue().entrySet()) {
           futures.add(undeployVerticle(oldResource, e.getKey(), e.getValue()));
         }
-      } else {
+
+        continue;
+      }
+
         // resource is there, so check if some egresses have been deleted.
         final var egressesIterator = resourceEntry.getValue().entrySet().iterator();
         while (egressesIterator.hasNext()) {
-
           final var egressEntry = egressesIterator.next();
 
           // check if the egress has been deleted or updated.
-          if (!newResource.get().egresses().contains(egressEntry.getKey())) {
+          if (!newObjects.get(oldResource).contains(egressEntry.getKey())) {
 
             // egress deleted or updated, so remove it
             egressesIterator.remove();
@@ -127,22 +127,15 @@ public final class ResourcesManager implements ObjectsReconciler {
               egressEntry.getValue()
             ));
           }
-        }
+
       }
     }
 
     // add all new objects.
-    for (final var newResource : newObjects) {
-      // Replace key in resources map
-      resources.keySet().stream()
-        .filter(r -> Objects.equals(r.id(), newResource.id())).findFirst()
-        .ifPresentOrElse(
-          oldResource -> resources.put(newResource, resources.remove(oldResource)),
-          () -> resources.put(newResource, new ConcurrentHashMap<>(egressesInitialCapacity))
-        );
-
-      for (final var trigger : newResource.egresses()) {
-        futures.add(addResource(newResource, trigger));
+    for (final var entry : newObjects.entrySet()) {
+      final var resource = entry.getKey();
+      for (final var egress : entry.getValue()) {
+        futures.add(addResource(resource, egress));
       }
     }
 
@@ -150,7 +143,7 @@ public final class ResourcesManager implements ObjectsReconciler {
   }
 
   private Future<Void> addResource(final Resource resource, final Egress egress) {
-    final Map<Egress, AbstractVerticle> egresses = resources.get(resource);
+    final Map<Egress, AbstractVerticle> egresses = resources.computeIfAbsent(resource, v -> new ConcurrentHashMap<>(egressesInitialCapacity));
 
     if (egress == null || egresses.containsKey(egress)) {
       // the trigger is already there and it hasn't been updated.

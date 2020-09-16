@@ -17,11 +17,17 @@
 package dev.knative.eventing.kafka.broker.core;
 
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.contract;
+import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress1;
+import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress2;
+import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress3;
+import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress4;
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource1;
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource2;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.vertx.core.Future;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -34,9 +40,14 @@ public class ObjectsCreatorTest {
   public void shouldPassAllEgresses() {
     final var called = new AtomicBoolean(false);
 
+    final var resources = Map.of(
+      resource1(), Set.of(egress1(), egress2()),
+      resource2(), Set.of(egress3(), egress4())
+    );
+
     final var creator = new ObjectsCreator(objects -> {
       called.set(true);
-      assertThat(objects).containsExactly(resource1(), resource2());
+      assertThat(objects).usingRecursiveComparison().isEqualTo(resources);
       return Future.succeededFuture();
     });
 

@@ -37,7 +37,6 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -91,11 +90,6 @@ public class HttpConsumerVerticleFactoryTest {
 
         @Override
         public DataPlaneContract.Ingress ingress() {
-          return null;
-        }
-
-        @Override
-        public List<Egress> egresses() {
           return null;
         }
 
@@ -184,11 +178,6 @@ public class HttpConsumerVerticleFactoryTest {
 
           @Override
           public DataPlaneContract.Ingress ingress() {
-            return null;
-          }
-
-          @Override
-          public List<Egress> egresses() {
             return null;
           }
 
