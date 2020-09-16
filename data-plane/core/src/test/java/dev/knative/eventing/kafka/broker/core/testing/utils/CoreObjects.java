@@ -18,9 +18,7 @@ package dev.knative.eventing.kafka.broker.core.testing.utils;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.Egress;
-import dev.knative.eventing.kafka.broker.core.EgressConfig;
 import dev.knative.eventing.kafka.broker.core.EgressWrapper;
-import dev.knative.eventing.kafka.broker.core.Ingress;
 import dev.knative.eventing.kafka.broker.core.Resource;
 import dev.knative.eventing.kafka.broker.core.ResourceWrapper;
 import java.net.MalformedURLException;
@@ -160,7 +158,7 @@ public final class CoreObjects {
       }
 
       @Override
-      public Ingress ingress() {
+      public DataPlaneContract.Ingress ingress() {
         return entry.getKey().ingress();
       }
 
@@ -170,7 +168,7 @@ public final class CoreObjects {
       }
 
       @Override
-      public EgressConfig egressConfig() {
+      public DataPlaneContract.EgressConfig egressConfig() {
         return entry.getKey().egressConfig();
       }
     }).collect(Collectors.toList());

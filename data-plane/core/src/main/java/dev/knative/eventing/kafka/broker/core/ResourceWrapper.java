@@ -59,8 +59,8 @@ public class ResourceWrapper implements Resource {
   }
 
   @Override
-  public Ingress ingress() {
-    return resource.getIngress() != null ? new IngressWrapper(resource.getIngress()) : null;
+  public DataPlaneContract.Ingress ingress() {
+    return resource.getIngress();
   }
 
   @Override
@@ -71,8 +71,8 @@ public class ResourceWrapper implements Resource {
   }
 
   @Override
-  public EgressConfig egressConfig() {
-    return resource.hasEgressConfig() ? new EgressConfigWrapper(resource.getEgressConfig()): null;
+  public DataPlaneContract.EgressConfig egressConfig() {
+    return resource.getEgressConfig();
   }
 
   @Override

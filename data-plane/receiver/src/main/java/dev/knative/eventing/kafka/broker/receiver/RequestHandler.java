@@ -143,7 +143,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Objects
     for (final var resource : newObjects) {
       //TODO support host ingress too
       //TODO check if there is an ingress, otherwise fail
-      final var pair = producers.get(resource.ingress().path());
+      final var pair = producers.get(resource.ingress().getPath());
 
       if (pair == null) {
         // There is no producer for this Resource, so create it and add it to newProducers.
@@ -161,7 +161,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Objects
       }
 
       // Nothing changed, so add the previous entry, to newProducers.
-      newProducers.put(resource.ingress().path(), pair);
+      newProducers.put(resource.ingress().getPath(), pair);
     }
 
     this.producers.set(newProducers);
@@ -177,15 +177,15 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Objects
 
     final var producerConfigs = (Properties) this.producerConfigs.clone();
     producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.bootstrapServers());
-    if (resource.ingress().contentMode() != DataPlaneContract.ContentMode.UNRECOGNIZED) {
-      producerConfigs.setProperty(CloudEventSerializer.ENCODING_CONFIG, encoding(resource.ingress().contentMode()));
+    if (resource.ingress().getContentMode() != DataPlaneContract.ContentMode.UNRECOGNIZED) {
+      producerConfigs.setProperty(CloudEventSerializer.ENCODING_CONFIG, encoding(resource.ingress().getContentMode()));
     }
     producerConfigs.setProperty(CloudEventSerializer.EVENT_FORMAT_CONFIG, JsonFormat.CONTENT_TYPE);
 
     final KafkaProducer<K, V> producer = producerCreator.apply(producerConfigs);
 
     producers.put(
-      resource.ingress().path(),
+      resource.ingress().getPath(),
       new SimpleImmutableEntry<>(
         resource.bootstrapServers(),
         new Producer<>(producer, resource.topics().iterator().next())

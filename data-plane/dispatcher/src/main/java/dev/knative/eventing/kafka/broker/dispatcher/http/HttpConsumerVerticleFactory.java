@@ -107,9 +107,9 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     final var egressDestinationSender = createSender(egress.destination(), circuitBreakerOptions);
 
     final ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> egressDeadLetterSender =
-      (resource.egressConfig() == null || resource.egressConfig().deadLetter() == null || resource.egressConfig().deadLetter().isEmpty())
+      (resource.egressConfig() == null || resource.egressConfig().getDeadLetter() == null || resource.egressConfig().getDeadLetter().isEmpty())
         ? NO_DLQ_SENDER
-        : createSender(resource.egressConfig().deadLetter(), circuitBreakerOptions);
+        : createSender(resource.egressConfig().getDeadLetter(), circuitBreakerOptions);
 
     final var consumerOffsetManager = consumerRecordOffsetStrategyFactory
       .get(consumer, resource, egress);

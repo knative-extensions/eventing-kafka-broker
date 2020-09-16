@@ -24,11 +24,10 @@ import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.Egress;
-import dev.knative.eventing.kafka.broker.core.EgressConfig;
 import dev.knative.eventing.kafka.broker.core.EventMatcher;
 import dev.knative.eventing.kafka.broker.core.Filter;
-import dev.knative.eventing.kafka.broker.core.Ingress;
 import dev.knative.eventing.kafka.broker.core.Resource;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import io.cloudevents.CloudEvent;
@@ -91,7 +90,7 @@ public class HttpConsumerVerticleFactoryTest {
         }
 
         @Override
-        public Ingress ingress() {
+        public DataPlaneContract.Ingress ingress() {
           return null;
         }
 
@@ -101,13 +100,8 @@ public class HttpConsumerVerticleFactoryTest {
         }
 
         @Override
-        public EgressConfig egressConfig() {
-          return new EgressConfig() {
-            @Override
-            public String deadLetter() {
-              return "http://localhost:43257";
-            }
-          };
+        public DataPlaneContract.EgressConfig egressConfig() {
+          return DataPlaneContract.EgressConfig.newBuilder().setDeadLetter("http://localhost:43257").build();
         }
       },
       new Egress() {
@@ -189,7 +183,7 @@ public class HttpConsumerVerticleFactoryTest {
           }
 
           @Override
-          public Ingress ingress() {
+          public DataPlaneContract.Ingress ingress() {
             return null;
           }
 
@@ -199,7 +193,7 @@ public class HttpConsumerVerticleFactoryTest {
           }
 
           @Override
-          public EgressConfig egressConfig() {
+          public DataPlaneContract.EgressConfig egressConfig() {
             return null;
           }
         },

@@ -81,7 +81,7 @@ public class RequestHandlerTest {
     final var resource = resource1();
 
     final var request = mock(HttpServerRequest.class);
-    when(request.path()).thenReturn(resource.ingress().path());
+    when(request.path()).thenReturn(resource.ingress().getPath());
     final var response = mockResponse(request, statusCode);
 
     final var handler = new RequestHandler<>(
@@ -114,7 +114,7 @@ public class RequestHandlerTest {
     final var resource = resource1();
 
     final var request = mock(HttpServerRequest.class);
-    when(request.path()).thenReturn(resource.ingress().path());
+    when(request.path()).thenReturn(resource.ingress().getPath());
     final var response = mockResponse(request, RequestHandler.MAPPER_FAILED);
 
     final var handler = new RequestHandler<Object, Object>(
