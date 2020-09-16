@@ -22,18 +22,22 @@ import (
 	"sync"
 	"testing"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/apiserver/pkg/storage/names"
 	testlib "knative.dev/eventing/test/lib"
 	pkgtest "knative.dev/pkg/test"
 )
 
-func Send(t *testing.T, addressable Addressable) []string {
-	return SendN(t, 10, addressable)
+type EventMutator func(event *cloudevents.Event)
+
+func Send(t *testing.T, addressable Addressable, mutators ...EventMutator) []string {
+	return SendN(t, 10, addressable, mutators...)
 }
 
-func SendN(t *testing.T, n int, addressable Addressable) []string {
+func SendN(t *testing.T, n int, addressable Addressable, mutators ...EventMutator) []string {
 
 	idsChan := make(chan string, n)
 	ctx := context.Background()
@@ -60,11 +64,16 @@ func SendN(t *testing.T, n int, addressable Addressable) []string {
 				id := uuid.New().String()
 				event.SetID(id)
 
+				for _, mutator := range mutators {
+					mutator(&event)
+				}
+
 				client.Namespace = addressable.Namespace
 
-				client.SendEventToAddressable(ctx, fmt.Sprintf("%s-%d", addressable.Name, i), addressable.Name, &addressable.TypeMeta, event)
+				name := names.SimpleNameGenerator.GenerateName(fmt.Sprintf("%s-%d", addressable.Name, i))
+				client.SendEventToAddressable(ctx, name, addressable.Name, &addressable.TypeMeta, event)
 
-				idsChan <- id
+				idsChan <- event.ID()
 				wg.Done()
 			}(i)
 

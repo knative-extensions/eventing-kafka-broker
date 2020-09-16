@@ -36,7 +36,7 @@ import (
 )
 
 func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
-	pkgtesting.RunMultipleN(t, 20, func(t *testing.T) {
+	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
 		client := testlib.Setup(t, false)
 		defer testlib.TearDown(client)
@@ -72,7 +72,7 @@ func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
 }
 
 func TestKafkaSinkV1Alpha1StructuredContentMode(t *testing.T) {
-	pkgtesting.RunMultipleN(t, 20, func(t *testing.T) {
+	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
 		client := testlib.Setup(t, false)
 		defer testlib.TearDown(client)
@@ -109,7 +109,7 @@ func TestKafkaSinkV1Alpha1StructuredContentMode(t *testing.T) {
 }
 
 func TestKafkaSinkV1Alpha1BinaryContentMode(t *testing.T) {
-	pkgtesting.RunMultipleN(t, 20, func(t *testing.T) {
+	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
 		client := testlib.Setup(t, false)
 		defer testlib.TearDown(client)
