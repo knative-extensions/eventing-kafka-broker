@@ -16,6 +16,11 @@ message Filter {
   map<string, string> attributes = 1;
 }
 
+message EgressConfig {
+  // Dead letter is where the event is sent when something goes wrong
+  string deadLetter = 1;
+}
+
 message Egress {
   // consumer group name
   string consumerGroup = 1;
@@ -31,8 +36,8 @@ message Egress {
     google.protobuf.Empty replyToOriginalTopic = 4;
   }
 
-  // Dead letter is where the event is sent when something goes wrong
-  string deadLetter = 5;
+  // Egress specific config. Overrides an eventual resource wide egress config
+  EgressConfig egressConfig = 5;
 
   Filter filter = 6;
 }
@@ -74,8 +79,11 @@ message Resource {
   // Optional ingress for this topic
   Ingress ingress = 4;
 
+  // Optional configuration of egress valid for the whole resource
+  EgressConfig egressConfig = 5;
+
   // Optional egresses for this topic
-  repeated Egress egresses = 5;
+  repeated Egress egresses = 6;
 }
 
 message Contract {
