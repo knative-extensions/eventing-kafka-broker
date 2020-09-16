@@ -36,10 +36,7 @@ message Egress {
     google.protobuf.Empty replyToOriginalTopic = 4;
   }
 
-  // Egress specific config. Overrides an eventual resource wide egress config
-  EgressConfig egressConfig = 5;
-
-  Filter filter = 6;
+  Filter filter = 5;
 }
 
 // CloudEvent content mode
