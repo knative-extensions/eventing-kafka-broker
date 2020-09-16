@@ -64,11 +64,6 @@ public class EgressWrapper implements Egress {
   }
 
   @Override
-  public String deadLetter() {
-    return egress.getDeadLetter();
-  }
-
-  @Override
   public Filter<CloudEvent> filter() {
     return egress.getFilter() != null ? new EventMatcher(egress.getFilter().getAttributesMap()) : Filter.noopMatcher();
   }
@@ -83,7 +78,6 @@ public class EgressWrapper implements Egress {
       && Objects.equals(this.destination(), that.destination())
       && Objects.equals(this.isReplyToUrl(), that.isReplyToUrl())
       && Objects.equals(this.replyUrl(), that.replyUrl())
-      && Objects.equals(this.deadLetter(), that.deadLetter())
       && Objects.equals(this.filter(), that.filter());
   }
 
@@ -94,7 +88,6 @@ public class EgressWrapper implements Egress {
       destination(),
       isReplyToUrl(),
       replyUrl(),
-      deadLetter(),
       filter()
     );
   }

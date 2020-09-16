@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import dev.knative.eventing.kafka.broker.core.Egress;
+import dev.knative.eventing.kafka.broker.core.EgressConfig;
 import dev.knative.eventing.kafka.broker.core.EventMatcher;
 import dev.knative.eventing.kafka.broker.core.Filter;
 import dev.knative.eventing.kafka.broker.core.Ingress;
@@ -98,6 +99,16 @@ public class HttpConsumerVerticleFactoryTest {
         public List<Egress> egresses() {
           return null;
         }
+
+        @Override
+        public EgressConfig egressConfig() {
+          return new EgressConfig() {
+            @Override
+            public String deadLetter() {
+              return "http://localhost:43257";
+            }
+          };
+        }
       },
       new Egress() {
         @Override
@@ -128,11 +139,6 @@ public class HttpConsumerVerticleFactoryTest {
         @Override
         public boolean isReplyToOriginalTopic() {
           return true;
-        }
-
-        @Override
-        public String deadLetter() {
-          return "http://localhost:43257";
         }
       }
     );
@@ -191,6 +197,11 @@ public class HttpConsumerVerticleFactoryTest {
           public List<Egress> egresses() {
             return null;
           }
+
+          @Override
+          public EgressConfig egressConfig() {
+            return null;
+          }
         },
         new Egress() {
           @Override
@@ -221,11 +232,6 @@ public class HttpConsumerVerticleFactoryTest {
           @Override
           public boolean isReplyToOriginalTopic() {
             return true;
-          }
-
-          @Override
-          public String deadLetter() {
-            return null;
           }
         });
     });

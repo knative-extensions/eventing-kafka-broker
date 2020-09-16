@@ -58,4 +58,7 @@ public interface Resource {
 
   //TODO
   List<Egress> egresses();
+
+  //TODO
+  EgressConfig egressConfig();
 }

@@ -71,6 +71,11 @@ public class ResourceWrapper implements Resource {
   }
 
   @Override
+  public EgressConfig egressConfig() {
+    return resource.hasEgressConfig() ? new EgressConfigWrapper(resource.getEgressConfig()): null;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -84,7 +89,8 @@ public class ResourceWrapper implements Resource {
       && Objects.equals(this.topics(), that.topics())
       && Objects.equals(this.bootstrapServers(), that.bootstrapServers())
       && Objects.equals(this.ingress(), that.ingress())
-      && Objects.equals(this.egresses(), that.egresses());
+      && Objects.equals(this.egresses(), that.egresses())
+      && Objects.equals(this.egressConfig(), that.egressConfig());
   }
 
   @Override
@@ -94,7 +100,8 @@ public class ResourceWrapper implements Resource {
       this.topics(),
       this.bootstrapServers(),
       this.ingress(),
-      this.egresses()
+      this.egresses(),
+      this.egressConfig()
     );
   }
 

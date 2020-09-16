@@ -50,8 +50,6 @@ public interface Egress {
 
   boolean isReplyToOriginalTopic();
 
-  String deadLetter();
-
   /**
    * Get the filter.
    *

@@ -148,7 +148,6 @@ public class ResourceWrapperTest {
                 .putAttributes("source", "source1")
                 .putAttributes("type", "type1")
               )
-              .setDeadLetter("http://localhost:9090")
             )
             .addEgresses(DataPlaneContract.Egress.newBuilder()
               .setDestination(
@@ -158,8 +157,8 @@ public class ResourceWrapperTest {
                 .putAttributes("source", "source2")
                 .putAttributes("type", "type2")
               )
-              .setDeadLetter("http://localhost:9090")
             )
+            .setEgressConfig(DataPlaneContract.EgressConfig.newBuilder().setDeadLetter("http://localhost:9090"))
             .build()
         ),
         new ResourceWrapper(
@@ -177,7 +176,6 @@ public class ResourceWrapperTest {
                 .putAttributes("source", "source1")
                 .putAttributes("type", "type1")
               )
-              .setDeadLetter("http://localhost:9090")
             )
             .addEgresses(DataPlaneContract.Egress.newBuilder()
               .setDestination(
@@ -187,8 +185,8 @@ public class ResourceWrapperTest {
                 .putAttributes("source", "source2")
                 .putAttributes("type", "type2")
               )
-              .setDeadLetter("http://localhost:9090")
             )
+            .setEgressConfig(DataPlaneContract.EgressConfig.newBuilder().setDeadLetter("http://localhost:9090"))
             .build()
         )
       ),

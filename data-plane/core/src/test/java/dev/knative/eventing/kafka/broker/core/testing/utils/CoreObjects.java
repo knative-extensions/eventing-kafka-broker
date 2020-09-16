@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.core.testing.utils;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.Egress;
+import dev.knative.eventing.kafka.broker.core.EgressConfig;
 import dev.knative.eventing.kafka.broker.core.EgressWrapper;
 import dev.knative.eventing.kafka.broker.core.Ingress;
 import dev.knative.eventing.kafka.broker.core.Resource;
@@ -110,7 +111,6 @@ public final class CoreObjects {
     return DataPlaneContract.Egress.newBuilder()
       .setConsumerGroup("1-1234567")
       .setDestination(DESTINATION)
-      .setDeadLetter(DESTINATION)
       .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
       .build();
   }
@@ -119,7 +119,6 @@ public final class CoreObjects {
     return DataPlaneContract.Egress.newBuilder()
       .setConsumerGroup("2-1234567")
       .setDestination(DESTINATION)
-      .setDeadLetter(DESTINATION)
       .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
       .build();
   }
@@ -128,7 +127,6 @@ public final class CoreObjects {
     return DataPlaneContract.Egress.newBuilder()
       .setConsumerGroup("3-1234567")
       .setDestination(DESTINATION)
-      .setDeadLetter(DESTINATION)
       .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
       .build();
   }
@@ -137,7 +135,6 @@ public final class CoreObjects {
     return DataPlaneContract.Egress.newBuilder()
       .setConsumerGroup("4-1234567")
       .setDestination(DESTINATION)
-      .setDeadLetter(DESTINATION)
       .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
       .build();
   }
@@ -170,6 +167,11 @@ public final class CoreObjects {
       @Override
       public List<Egress> egresses() {
         return new ArrayList<>(entry.getValue());
+      }
+
+      @Override
+      public EgressConfig egressConfig() {
+        return entry.getKey().egressConfig();
       }
     }).collect(Collectors.toList());
   }
