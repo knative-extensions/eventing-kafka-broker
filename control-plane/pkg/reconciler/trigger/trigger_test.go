@@ -19,6 +19,8 @@ package trigger
 import (
 	"context"
 	"fmt"
+	"google.golang.org/protobuf/testing/protocmp"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -38,7 +40,6 @@ import (
 	. "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/resolver"
 
-	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -85,12 +86,12 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				),
 				newTrigger(),
 				NewService(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
 					},
 				}, &configs),
@@ -104,21 +105,21 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 							},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -145,42 +146,42 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				),
 				newTrigger(),
 				NewService(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID + "z",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "z",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Attributes: map[string]string{
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source_value",
-									},
-									Destination: ServiceURL,
-									Id:          TriggerUUID + "a",
+									}},
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID + "a",
 								},
 								{
-									Attributes: map[string]string{
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source_value",
-									},
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									}},
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 							},
 						},
 					},
-					VolumeGeneration: 2,
+					Generation: 2,
 				}, &configs),
 				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
@@ -192,39 +193,39 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID + "z",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "z",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Attributes: map[string]string{
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source_value",
-									},
-									Destination: ServiceURL,
-									Id:          TriggerUUID + "a",
+									}},
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID + "a",
 								},
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 							},
 						},
 					},
-					VolumeGeneration: 3,
+					Generation: 3,
 				}),
 				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "3",
@@ -345,8 +346,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			Objects: []runtime.Object{
 				newTrigger(),
 				NewDeletedBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					VolumeGeneration: 8,
+				NewConfigMapFromContract(&contract.Contract{
+					Generation: 8,
 				}, &configs),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -369,14 +370,14 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			Objects: []runtime.Object{
 				newTrigger(),
 				NewDeletedBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
+							Id:     BrokerUUID,
+							Topics: []string{BrokerTopic()},
 						},
 					},
-					VolumeGeneration: 8,
+					Generation: 8,
 				}, &configs),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -399,24 +400,24 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			Objects: []runtime.Object{
 				newTrigger(),
 				NewDeletedBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Triggers: []*coreconfig.Trigger{
+							Id:     BrokerUUID,
+							Topics: []string{BrokerTopic()},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID + "a",
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID + "a",
 								},
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 							},
 						},
 					},
-					VolumeGeneration: 8,
+					Generation: 8,
 				}, &configs),
 				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
@@ -428,20 +429,20 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Triggers: []*coreconfig.Trigger{
+							Id:     BrokerUUID,
+							Topics: []string{BrokerTopic()},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID + "a",
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID + "a",
 								},
 							},
 						},
 					},
-					VolumeGeneration: 9,
+					Generation: 9,
 				}),
 				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "9",
@@ -467,19 +468,19 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					}),
 				),
 				NewService(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
-									Attributes: map[string]string{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"type": "type1",
-									},
+									}},
 								},
 							},
 						},
@@ -495,24 +496,24 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
-									Attributes: map[string]string{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"type": "type1",
-									},
+									}},
 								},
 							},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -546,63 +547,63 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					}),
 				),
 				NewService(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
@@ -618,71 +619,71 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
-									Attributes: map[string]string{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"type": "type1",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -716,59 +717,59 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					}),
 				),
 				NewService(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
@@ -784,71 +785,71 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
-									Attributes: map[string]string{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"ext": "extval",
-									},
+									}},
 								},
 							},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -878,92 +879,92 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				),
 				newTrigger(),
 				NewService(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
@@ -979,97 +980,97 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -1119,24 +1120,24 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 			Objects: []runtime.Object{
 				newTrigger(),
 				NewDeletedBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Triggers: []*coreconfig.Trigger{
+							Id:     BrokerUUID,
+							Topics: []string{BrokerTopic()},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID + "a",
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID + "a",
 								},
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 							},
 						},
 					},
-					VolumeGeneration: 8,
+					Generation: 8,
 				}, &configs),
 				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
@@ -1148,20 +1149,20 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Triggers: []*coreconfig.Trigger{
+							Id:     BrokerUUID,
+							Topics: []string{BrokerTopic()},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID + "a",
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID + "a",
 								},
 							},
 						},
 					},
-					VolumeGeneration: 9,
+					Generation: 9,
 				}),
 				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "9",
@@ -1180,14 +1181,14 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 			Objects: []runtime.Object{
 				newTrigger(),
 				NewDeletedBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
+							Id:     BrokerUUID,
+							Topics: []string{BrokerTopic()},
 						},
 					},
-					VolumeGeneration: 8,
+					Generation: 8,
 				}, &configs),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -1210,8 +1211,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 			Objects: []runtime.Object{
 				newTrigger(),
 				NewDeletedBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					VolumeGeneration: 8,
+				NewConfigMapFromContract(&contract.Contract{
+					Generation: 8,
 				}, &configs),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -1237,63 +1238,63 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				),
 				newTrigger(),
 				NewService(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
@@ -1309,64 +1310,64 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -1388,63 +1389,63 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				),
 				newTrigger(),
 				NewService(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 							},
 						},
@@ -1460,64 +1461,64 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -1539,92 +1540,92 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				),
 				newTrigger(),
 				NewService(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
@@ -1640,93 +1641,93 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 						{
-							Id:    BrokerUUID + "a",
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
-							Triggers: []*coreconfig.Trigger{
+							Id:      BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
 								{
-									Destination: ServiceURL,
-									Id:          TriggerUUID,
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Destination: "http://example.com/1",
-									Id:          "1",
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
 								},
 								{
-									Destination: "http://example.com/2",
-									Id:          "2",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source2",
-									},
+									}},
 								},
 								{
-									Destination: "http://example.com/3",
-									Id:          "3",
-									Attributes: map[string]string{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source3",
-									},
+									}},
 								},
 							},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -1828,20 +1829,20 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 
 func Test_deleteTrigger(t *testing.T) {
 	type args struct {
-		triggers []*coreconfig.Trigger
+		triggers []*contract.Egress
 		index    int
 	}
 	tests := []struct {
 		name string
 		args args
-		want []*coreconfig.Trigger
+		want []*contract.Egress
 	}{
 		{
 			name: "first element - alone",
 			args: args{
-				triggers: []*coreconfig.Trigger{
+				triggers: []*contract.Egress{
 					{
-						Id: "123",
+						ConsumerGroup: "123",
 					},
 				},
 				index: 0,
@@ -1851,87 +1852,87 @@ func Test_deleteTrigger(t *testing.T) {
 		{
 			name: "first element - with others",
 			args: args{
-				triggers: []*coreconfig.Trigger{
+				triggers: []*contract.Egress{
 					{
-						Id: "123",
+						ConsumerGroup: "123",
 					},
 					{
-						Id: "1234",
+						ConsumerGroup: "1234",
 					},
 				},
 				index: 0,
 			},
-			want: []*coreconfig.Trigger{
+			want: []*contract.Egress{
 				{
-					Id: "1234",
+					ConsumerGroup: "1234",
 				},
 			},
 		},
 		{
 			name: "last element - with others",
 			args: args{
-				triggers: []*coreconfig.Trigger{
+				triggers: []*contract.Egress{
 					{
-						Id: "1",
+						ConsumerGroup: "1",
 					},
 					{
-						Id: "2",
+						ConsumerGroup: "2",
 					},
 					{
-						Id: "3",
+						ConsumerGroup: "3",
 					},
 					{
-						Id: "4",
+						ConsumerGroup: "4",
 					},
 				},
 				index: 3,
 			},
-			want: []*coreconfig.Trigger{
+			want: []*contract.Egress{
 				{
-					Id: "1",
+					ConsumerGroup: "1",
 				},
 				{
-					Id: "2",
+					ConsumerGroup: "2",
 				},
 				{
-					Id: "3",
+					ConsumerGroup: "3",
 				},
 			},
 		},
 		{
 			name: "middle element - with others",
 			args: args{
-				triggers: []*coreconfig.Trigger{
+				triggers: []*contract.Egress{
 					{
-						Id: "1",
+						ConsumerGroup: "1",
 					},
 					{
-						Id: "2",
+						ConsumerGroup: "2",
 					},
 					{
-						Id: "3",
+						ConsumerGroup: "3",
 					},
 					{
-						Id: "4",
+						ConsumerGroup: "4",
 					},
 					{
-						Id: "5",
+						ConsumerGroup: "5",
 					},
 				},
 				index: 2,
 			},
-			want: []*coreconfig.Trigger{
+			want: []*contract.Egress{
 				{
-					Id: "1",
+					ConsumerGroup: "1",
 				},
 				{
-					Id: "2",
+					ConsumerGroup: "2",
 				},
 				{
-					Id: "5",
+					ConsumerGroup: "5",
 				},
 				{
-					Id: "4",
+					ConsumerGroup: "4",
 				},
 			},
 		},
@@ -1939,7 +1940,7 @@ func Test_deleteTrigger(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := deleteTrigger(tt.args.triggers, tt.args.index)
-			if diff := cmp.Diff(tt.want, got); diff != "" {
+			if diff := cmp.Diff(tt.want, got, protocmp.Transform()); diff != "" {
 				t.Errorf("deleteTrigger() = %v, want %v (-want +got) %s", got, tt.want, diff)
 			}
 		})

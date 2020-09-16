@@ -24,13 +24,14 @@ import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CL
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dev.knative.eventing.kafka.broker.core.BrokerWrapper;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.Egress;
+import dev.knative.eventing.kafka.broker.core.EgressWrapper;
 import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
-import dev.knative.eventing.kafka.broker.core.TriggerWrapper;
-import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker;
-import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Trigger;
-import dev.knative.eventing.kafka.broker.dispatcher.BrokersManager;
+import dev.knative.eventing.kafka.broker.core.Resource;
+import dev.knative.eventing.kafka.broker.core.ResourceWrapper;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.ResourcesManager;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.HttpVerticle;
@@ -93,14 +94,14 @@ public class DataPlaneTest {
 
   private static File dataDir;
   private static KafkaCluster kafkaCluster;
-  private static ObjectsReconciler<CloudEvent> brokersManager;
-  private static ObjectsReconciler<CloudEvent> handler;
+  private static ObjectsReconciler resourcesManager;
+  private static ObjectsReconciler handler;
 
   @BeforeAll
   public static void setUp(final Vertx vertx, final VertxTestContext context)
     throws IOException, InterruptedException {
     setUpKafkaCluster();
-    brokersManager = setUpDispatcher(vertx);
+    resourcesManager = setUpDispatcher(vertx);
     handler = setUpReceiver(vertx, context);
     context.completeNow();
   }
@@ -157,40 +158,39 @@ public class DataPlaneTest {
       .withType(TYPE_CE_2)
       .build();
 
-    final Map<dev.knative.eventing.kafka.broker.core.Broker, Set<dev.knative.eventing.kafka.broker.core.Trigger<CloudEvent>>>
-      objectsToReconciler = Map
+    final Map<Resource, Set<Egress>> objectsToReconcile = Map
       .of(
-        new BrokerWrapper(Broker.newBuilder()
-          .setTopic(TOPIC)
-          .setPath(String.format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME))
+        new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
+          .addTopics(TOPIC)
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath(format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME)))
           .setBootstrapServers(bootstrapServers())
           .setId(UUID.randomUUID().toString())
           .build()),
         Set.of(
-          new TriggerWrapper(Trigger.newBuilder()
+          new EgressWrapper(DataPlaneContract.Egress.newBuilder()
             .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_1))
-            .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_1)
-            .setId(UUID.randomUUID().toString())
+            .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_1))
+            .setConsumerGroup(UUID.randomUUID().toString())
             .build()),
-          new TriggerWrapper(Trigger.newBuilder()
+          new EgressWrapper(DataPlaneContract.Egress.newBuilder()
             .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
-            .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_2)
-            .setId(UUID.randomUUID().toString())
+            .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_2))
+            .setConsumerGroup(UUID.randomUUID().toString())
             .build()),
           // the destination of the following trigger should never be reached because events
           // don't pass filters.
-          new TriggerWrapper(Trigger.newBuilder()
-            .setId(UUID.randomUUID().toString())
+          new EgressWrapper(DataPlaneContract.Egress.newBuilder()
+            .setConsumerGroup(UUID.randomUUID().toString())
             .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_3))
-            .putAttributes(
+            .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(
               ContextAttributes.SOURCE.name().toLowerCase(),
               UUID.randomUUID().toString()
-            ).build())
+            )).build())
         )
       );
 
-    // reconcile brokers/triggers
-    brokersManager.reconcile(objectsToReconciler)
+    // reconcile resources/egresss
+    resourcesManager.reconcile(objectsToReconcile)
       // we don't handle or wait onSuccess, because it's fine to create the consumer at any point
       // in time. (eg before or after starting the destination service, or before or after sending
       // the event to the receiver)
@@ -198,7 +198,7 @@ public class DataPlaneTest {
 
     final var waitReconciler = new CountDownLatch(1);
 
-    handler.reconcile(objectsToReconciler)
+    handler.reconcile(objectsToReconcile)
       .onFailure(context::failNow)
       .onSuccess(v -> waitReconciler.countDown());
 
@@ -281,7 +281,7 @@ public class DataPlaneTest {
     kafkaCluster.createTopic(TOPIC, NUM_PARTITIONS, REPLICATION_FACTOR);
   }
 
-  private static BrokersManager<CloudEvent> setUpDispatcher(final Vertx vertx) {
+  private static ResourcesManager setUpDispatcher(final Vertx vertx) {
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
       consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered();
@@ -301,7 +301,7 @@ public class DataPlaneTest {
       producerConfigs
     );
 
-    return new BrokersManager<>(
+    return new ResourcesManager(
       vertx,
       consumerVerticleFactory,
       10,
@@ -309,7 +309,7 @@ public class DataPlaneTest {
     );
   }
 
-  private static ObjectsReconciler<CloudEvent> setUpReceiver(
+  private static ObjectsReconciler setUpReceiver(
     final Vertx vertx,
     final VertxTestContext context) throws InterruptedException {
 

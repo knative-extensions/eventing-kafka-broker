@@ -16,20 +16,23 @@
 
 package config
 
-import "k8s.io/apimachinery/pkg/types"
-
-const (
-	NoTrigger = NoBroker
+import (
+	"k8s.io/apimachinery/pkg/types"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 )
 
-// FindTrigger finds the trigger with the given UID in the given triggers list.
-func FindTrigger(triggers []*Trigger, trigger types.UID) int {
+const (
+	NoEgress = NoResource
+)
 
-	for i, t := range triggers {
-		if t.Id == string(trigger) {
+// FindEgress finds the egress with the given UID in the given egresses list.
+func FindEgress(egresses []*contract.Egress, egress types.UID) int {
+
+	for i, t := range egresses {
+		if t.ConsumerGroup == string(egress) {
 			return i
 		}
 	}
 
-	return NoTrigger
+	return NoEgress
 }

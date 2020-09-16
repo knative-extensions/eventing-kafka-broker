@@ -70,14 +70,14 @@ public class Main {
       producerConfig
     );
 
-    final var brokersManager = new BrokersManager<>(
+    final var resourcesManager = new ResourcesManager(
       vertx,
       consumerVerticleFactory,
-      env.getBrokersInitialCapacity(),
-      env.getTriggersInitialCapacity()
+      env.getResourcesInitialCapacity(),
+      env.getEgressesInitialCapacity()
     );
 
-    final var objectCreator = new ObjectsCreator(brokersManager);
+    final var objectCreator = new ObjectsCreator(resourcesManager);
 
     try {
       final var fw = new FileWatcher(

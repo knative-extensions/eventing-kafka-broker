@@ -25,4 +25,8 @@ package dev.knative.eventing.kafka.broker.core;
 public interface Filter<T> {
 
   boolean match(final T event);
+
+  static <T> Filter<T> noopMatcher() {
+    return t -> true;
+  }
 }

@@ -18,8 +18,8 @@ package dev.knative.eventing.kafka.broker.dispatcher.http;
 
 import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
 
-import dev.knative.eventing.kafka.broker.core.Broker;
-import dev.knative.eventing.kafka.broker.core.Trigger;
+import dev.knative.eventing.kafka.broker.core.Egress;
+import dev.knative.eventing.kafka.broker.core.Resource;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
@@ -44,7 +44,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
-public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<CloudEvent> {
+public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
   private static ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> NO_DLQ_SENDER =
     record -> Future.failedFuture("no DLQ set");
@@ -91,48 +91,48 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
    * {@inheritDoc}
    */
   @Override
-  public Future<AbstractVerticle> get(final Broker broker, final Trigger<CloudEvent> trigger) {
-    Objects.requireNonNull(broker, "provide broker");
-    Objects.requireNonNull(trigger, "provide trigger");
+  public Future<AbstractVerticle> get(final Resource resource, final Egress egress) {
+    Objects.requireNonNull(resource, "provide resource");
+    Objects.requireNonNull(egress, "provide egress");
 
     final io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> consumer
-      = createConsumer(vertx, broker, trigger);
+      = createConsumer(vertx, resource, egress);
 
     final io.vertx.kafka.client.producer.KafkaProducer<String, CloudEvent> producer
-      = createProducer(vertx, broker, trigger);
+      = createProducer(vertx, resource, egress);
 
     final CircuitBreakerOptions circuitBreakerOptions
-      = createCircuitBreakerOptions(vertx, broker, trigger);
+      = createCircuitBreakerOptions(vertx, resource, egress);
 
-    final var triggerDestinationSender = createSender(trigger.destination(), circuitBreakerOptions);
+    final var egressDestinationSender = createSender(egress.destination(), circuitBreakerOptions);
 
-    final ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> brokerDLQSender =
-      (broker.deadLetterSink() == null || broker.deadLetterSink().isEmpty())
+    final ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> egressDeadLetterSender =
+      (resource.egressConfig() == null || resource.egressConfig().getDeadLetter() == null || resource.egressConfig().getDeadLetter().isEmpty())
         ? NO_DLQ_SENDER
-        : createSender(broker.deadLetterSink(), circuitBreakerOptions);
+        : createSender(resource.egressConfig().getDeadLetter(), circuitBreakerOptions);
 
     final var consumerOffsetManager = consumerRecordOffsetStrategyFactory
-      .get(consumer, broker, trigger);
+      .get(consumer, resource, egress);
 
-    final var sinkResponseHandler = new HttpSinkResponseHandler(broker.topic(), producer);
+    final var sinkResponseHandler = new HttpSinkResponseHandler(resource.topics().iterator().next(), producer);
 
     final var consumerRecordHandler = new ConsumerRecordHandler<>(
-      triggerDestinationSender,
-      trigger.filter(),
+      egressDestinationSender,
+      egress.filter(),
       consumerOffsetManager,
       sinkResponseHandler,
-      brokerDLQSender
+      egressDeadLetterSender
     );
 
     return Future.succeededFuture(
-      new ConsumerVerticle<>(consumer, broker.topic(), consumerRecordHandler)
+      new ConsumerVerticle<>(consumer, resource.topics(), consumerRecordHandler)
     );
   }
 
   protected CircuitBreakerOptions createCircuitBreakerOptions(
     final Vertx vertx,
-    final Broker broker,
-    final Trigger<CloudEvent> trigger) {
+    final Resource resource,
+    final Egress egress) {
 
     // TODO set circuit breaker options based on broker/trigger configurations
     return new CircuitBreakerOptions();
@@ -140,13 +140,13 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
 
   protected io.vertx.kafka.client.producer.KafkaProducer<String, CloudEvent> createProducer(
     final Vertx vertx,
-    final Broker broker,
-    final Trigger<CloudEvent> trigger) {
+    final Resource resource,
+    final Egress egress) {
 
     // TODO check producer configurations to change per instance
     // producerConfigs is a shared object and it acts as a prototype for each consumer instance.
     final var producerConfigs = (Properties) this.producerConfigs.clone();
-    producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, broker.bootstrapServers());
+    producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.bootstrapServers());
 
     final var kafkaProducer = new KafkaProducer<>(
       producerConfigs,
@@ -159,14 +159,14 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory<Clou
 
   protected io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> createConsumer(
     final Vertx vertx,
-    final Broker broker,
-    final Trigger<CloudEvent> trigger) {
+    final Resource resource,
+    final Egress egress) {
 
     // TODO check consumer configurations to change per instance
     // consumerConfigs is a shared object and it acts as a prototype for each consumer instance.
     final var consumerConfigs = (Properties) this.consumerConfigs.clone();
-    consumerConfigs.setProperty(GROUP_ID_CONFIG, trigger.id());
-    consumerConfigs.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, broker.bootstrapServers());
+    consumerConfigs.setProperty(GROUP_ID_CONFIG, egress.consumerGroup());
+    consumerConfigs.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.bootstrapServers());
 
     // Note: KafkaConsumer instances are not thread-safe.
     // There are methods thread-safe, but in general they're not.

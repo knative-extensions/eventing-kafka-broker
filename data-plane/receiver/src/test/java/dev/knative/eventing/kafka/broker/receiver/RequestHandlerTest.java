@@ -16,7 +16,7 @@
 
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.broker1;
+import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,17 +25,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import dev.knative.eventing.kafka.broker.core.BrokerWrapper;
-import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker;
-import io.vertx.core.AsyncResult;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.ResourceWrapper;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.RecordMetadata;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
 import java.util.HashSet;
 import java.util.Map;
@@ -73,23 +70,19 @@ public class RequestHandlerTest {
 
     final KafkaProducer<String, String> producer = mock(KafkaProducer.class);
 
-    when(producer.send(any(), any())).thenAnswer(invocationOnMock -> {
+    when(producer.send(any())).thenAnswer(invocationOnMock -> {
 
-      final var handler = (Handler<AsyncResult<RecordMetadata>>) invocationOnMock
-        .getArgument(1, Handler.class);
-      final var result = mock(AsyncResult.class);
-      when(result.failed()).thenReturn(failedToSend);
-      when(result.succeeded()).thenReturn(!failedToSend);
-
-      handler.handle(result);
-
-      return producer;
+      if (failedToSend) {
+        return Future.failedFuture("failure");
+      } else {
+        return Future.succeededFuture();
+      }
     });
 
-    final var broker = broker1();
+    final var resource = resource1();
 
     final var request = mock(HttpServerRequest.class);
-    when(request.path()).thenReturn(broker.path());
+    when(request.path()).thenReturn(resource.ingress().getPath());
     final var response = mockResponse(request, statusCode);
 
     final var handler = new RequestHandler<>(
@@ -100,7 +93,7 @@ public class RequestHandlerTest {
 
     final var countDown = new CountDownLatch(1);
 
-    handler.reconcile(Map.of(broker, new HashSet<>()))
+    handler.reconcile(Map.of(resource, new HashSet<>()))
       .onFailure(cause -> fail())
       .onSuccess(v -> countDown.countDown());
 
@@ -119,10 +112,10 @@ public class RequestHandlerTest {
     final RequestToRecordMapper<Object, Object> mapper
       = (request, topic) -> Future.failedFuture("");
 
-    final var broker = broker1();
+    final var resource = resource1();
 
     final var request = mock(HttpServerRequest.class);
-    when(request.path()).thenReturn(broker.path());
+    when(request.path()).thenReturn(resource.ingress().getPath());
     final var response = mockResponse(request, RequestHandler.MAPPER_FAILED);
 
     final var handler = new RequestHandler<Object, Object>(
@@ -132,7 +125,7 @@ public class RequestHandlerTest {
     );
 
     final var countDown = new CountDownLatch(1);
-    handler.reconcile(Map.of(broker, new HashSet<>()))
+    handler.reconcile(Map.of(resource, new HashSet<>()))
       .onFailure(cause -> fail())
       .onSuccess(v -> countDown.countDown());
 
@@ -184,18 +177,20 @@ public class RequestHandlerTest {
 
     final var checkpoint = context.checkpoint();
 
-    final var broker1 = new BrokerWrapper(Broker.newBuilder()
+    final var resource1 = new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
       .setId("1")
+      .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-2:9092")
       .build());
 
-    final var broker2 = new BrokerWrapper(Broker.newBuilder()
+    final var resource2 = new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
       .setId("1")
+      .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-3:9092")
       .build());
 
-    handler.reconcile(Map.of(broker1, new HashSet<>()))
-      .onSuccess(ignored -> handler.reconcile(Map.of(broker2, new HashSet<>()))
+    handler.reconcile(Map.of(resource1, new HashSet<>()))
+      .onSuccess(ignored -> handler.reconcile(Map.of(resource2, new HashSet<>()))
         .onSuccess(i -> context.verify(() -> {
           assertThat(recreated.get()).isTrue();
           checkpoint.flag();
@@ -229,18 +224,20 @@ public class RequestHandlerTest {
 
     final var checkpoint = context.checkpoint();
 
-    final var broker1 = new BrokerWrapper(Broker.newBuilder()
+    final var resource1 = new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
       .setId("1")
+      .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-2:9092")
       .build());
 
-    final var broker2 = new BrokerWrapper(Broker.newBuilder()
+    final var resource2 = new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
       .setId("1")
+      .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-2:9092")
       .build());
 
-    handler.reconcile(Map.of(broker1, new HashSet<>()))
-      .onSuccess(ignored -> handler.reconcile(Map.of(broker2, new HashSet<>()))
+    handler.reconcile(Map.of(resource1, new HashSet<>()))
+      .onSuccess(ignored -> handler.reconcile(Map.of(resource2, new HashSet<>()))
         .onSuccess(i -> context.verify(() -> {
           assertThat(recreated.get()).isFalse();
           checkpoint.flag();

@@ -16,8 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import dev.knative.eventing.kafka.broker.core.Broker;
-import dev.knative.eventing.kafka.broker.core.Trigger;
+import dev.knative.eventing.kafka.broker.core.Egress;
+import dev.knative.eventing.kafka.broker.core.Resource;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 
@@ -25,13 +25,13 @@ import io.vertx.core.Future;
  * ConsumerVerticleFactory is responsible for instantiating consumer verticles.
  */
 @FunctionalInterface
-public interface ConsumerVerticleFactory<T> {
+public interface ConsumerVerticleFactory {
 
   /**
    * Get a new consumer verticle.
    *
-   * @param trigger trigger data.
+   * @param egress trigger data.
    * @return a new consumer verticle.
    */
-  Future<AbstractVerticle> get(final Broker broker, final Trigger<T> trigger);
+  Future<AbstractVerticle> get(final Resource resource, final Egress egress);
 }

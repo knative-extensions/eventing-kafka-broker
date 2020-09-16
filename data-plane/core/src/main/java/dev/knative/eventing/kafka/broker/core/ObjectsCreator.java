@@ -18,8 +18,7 @@ package dev.knative.eventing.kafka.broker.core;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
-import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers;
-import io.cloudevents.CloudEvent;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -35,20 +34,20 @@ import org.slf4j.LoggerFactory;
  * ObjectsCreator receives updates and converts protobuf objects to core objects often by wrapping
  * protobuf objects by means of wrapper objects.
  */
-public class ObjectsCreator implements Consumer<Brokers> {
+public class ObjectsCreator implements Consumer<DataPlaneContract.Contract> {
 
   private static final Logger logger = LoggerFactory.getLogger(ObjectsCreator.class);
 
   private static final int WAIT_TIMEOUT = 1;
 
-  private final ObjectsReconciler<CloudEvent> objectsReconciler;
+  private final ObjectsReconciler objectsReconciler;
 
   /**
    * All args constructor.
    *
    * @param objectsReconciler brokers and triggers consumer.
    */
-  public ObjectsCreator(final ObjectsReconciler<CloudEvent> objectsReconciler) {
+  public ObjectsCreator(final ObjectsReconciler objectsReconciler) {
     Objects.requireNonNull(objectsReconciler, "provide objectsReconciler");
 
     this.objectsReconciler = objectsReconciler;
@@ -57,41 +56,41 @@ public class ObjectsCreator implements Consumer<Brokers> {
   /**
    * Capture new changes.
    *
-   * @param brokers new brokers config.
+   * @param contract new contract config.
    */
   @Override
-  public void accept(final Brokers brokers) {
+  public void accept(final DataPlaneContract.Contract contract) {
+    final Map<Resource, Set<Egress>> objects = new HashMap<>();
 
-    final Map<Broker, Set<Trigger<CloudEvent>>> objects = new HashMap<>();
-
-    for (final var broker : brokers.getBrokersList()) {
-      final var triggers = new HashSet<Trigger<CloudEvent>>(
-        broker.getTriggersCount()
+    for (final var resource : contract.getResourcesList()) {
+      final var egresses = new HashSet<Egress>(
+        resource.getEgressesCount()
       );
-      for (final var trigger : broker.getTriggersList()) {
-        triggers.add(new TriggerWrapper(trigger));
+      for (final var egress : resource.getEgressesList()) {
+        egresses.add(new EgressWrapper(egress));
       }
 
-      objects.put(new BrokerWrapper(broker), triggers);
+      objects.put(new ResourceWrapper(resource), egresses);
     }
 
     try {
       final var latch = new CountDownLatch(1);
-      objectsReconciler.reconcile(objects).onComplete(result -> {
-        if (result.succeeded()) {
-          logger.info("reconciled objects {}", keyValue("brokers", brokers));
-        } else {
-          logger.error("failed to reconcile {}", keyValue("brokers", brokers), result.cause());
-        }
+      objectsReconciler.reconcile(objects)
+        .onComplete(result -> {
+          if (result.succeeded()) {
+            logger.info("reconciled objects {}", keyValue("contract", contract));
+          } else {
+            logger.error("failed to reconcile {}", keyValue("contract", contract), result.cause());
+          }
 
-        latch.countDown();
-      });
+          latch.countDown();
+        });
 
       // wait the reconcilation
       latch.await(WAIT_TIMEOUT, TimeUnit.MINUTES);
 
     } catch (final Exception ex) {
-      logger.error("{}", keyValue("oobjects", objects), ex);
+      logger.error("{}", keyValue("objects", objects), ex);
     }
   }
 }

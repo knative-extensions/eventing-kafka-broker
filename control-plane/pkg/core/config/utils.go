@@ -18,17 +18,18 @@ package config
 
 import (
 	"fmt"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 )
 
 // ContentModeFromString returns the ContentMode from the given string
-func ContentModeFromString(mode string) ContentMode {
+func ContentModeFromString(mode string) contract.ContentMode {
 	switch mode {
 	case eventing.ModeBinary:
-		return ContentMode_BINARY
+		return contract.ContentMode_BINARY
 	case eventing.ModeStructured:
-		return ContentMode_STRUCTURED
+		return contract.ContentMode_STRUCTURED
 	default:
 		panic(fmt.Errorf(
 			"unknown content mode: %s - allowed: %v",

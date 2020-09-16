@@ -19,6 +19,7 @@ package broker_test // different package name due to import cycles. (broker -> t
 import (
 	"context"
 	"fmt"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"net/url"
 	"sync"
 	"testing"
@@ -45,7 +46,6 @@ import (
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -114,16 +114,16 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
 							Id:               BrokerUUID,
-							Topic:            BrokerTopic(),
-							Path:             receiver.Path(BrokerNamespace, BrokerName),
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -159,8 +159,8 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewBroker(
 					WithDelivery(),
 				),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					VolumeGeneration: 1,
+				NewConfigMapFromContract(&contract.Contract{
+					Generation: 1,
 				}, &configs),
 				NewService(),
 				BrokerReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
@@ -171,18 +171,17 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
 							Id:               BrokerUUID,
-							Topic:            BrokerTopic(),
-							DeadLetterSink:   "http://test-service.test-service-namespace.svc.cluster.local/",
-							Path:             receiver.Path(BrokerNamespace, BrokerName),
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_BINARY,
+							EgressConfig:     &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
 						},
 					},
-					VolumeGeneration: 2,
+					Generation: 2,
 				}),
 				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
@@ -272,18 +271,17 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewConfigMap(&configs, nil),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
 							Id:               BrokerUUID,
-							Topic:            BrokerTopic(),
-							DeadLetterSink:   "http://test-service.test-service-namespace.svc.cluster.local/",
-							Path:             receiver.Path(BrokerNamespace, BrokerName),
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_BINARY,
+							EgressConfig:     &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -328,17 +326,16 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
 							Id:               BrokerUUID,
-							Topic:            BrokerTopic(),
-							Path:             receiver.Path(BrokerNamespace, BrokerName),
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -370,18 +367,18 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Name: "Reconciled normal - preserve config map previous state",
 			Objects: []runtime.Object{
 				NewBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
-							Path:           receiver.Path(BrokerNamespace, BrokerName),
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
-							Topic:          "my-existing-topic-b",
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
+							Topics:       []string{"my-existing-topic-b"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 					},
 				}, &configs),
@@ -398,28 +395,27 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
-							Path:           receiver.Path(BrokerNamespace, BrokerName),
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
-							Topic:          "my-existing-topic-b",
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
+							Topics:       []string{"my-existing-topic-b"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
 							Id:               BrokerUUID,
-							Topic:            BrokerTopic(),
-							Path:             receiver.Path(BrokerNamespace, BrokerName),
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -463,17 +459,17 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						}
 					},
 				),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:             BrokerUUID,
-							Topic:          BrokerTopic(),
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:           BrokerUUID,
+							Topics:       []string{BrokerTopic()},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 					},
 				}, &configs),
@@ -490,23 +486,22 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
 							Id:               BrokerUUID,
-							Topic:            BrokerTopic(),
-							DeadLetterSink:   "http://www.my-sink.com/api",
-							Path:             receiver.Path(BrokerNamespace, BrokerName),
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_BINARY,
+							EgressConfig:     &contract.EgressConfig{DeadLetter: "http://www.my-sink.com/api"},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -552,19 +547,19 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						broker.Spec.Delivery = &eventingduck.DeliverySpec{}
 					},
 				),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
-							Path:           receiver.Path(BrokerNamespace, BrokerName),
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:             BrokerUUID,
-							Topic:          BrokerTopic(),
-							DeadLetterSink: "http://www.my-sink.com",
-							Path:           receiver.Path(BrokerNamespace, BrokerName),
+							Id:           BrokerUUID,
+							Topics:       []string{BrokerTopic()},
+							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 					},
 				}, &configs),
@@ -581,23 +576,22 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
-							Path:           receiver.Path(BrokerNamespace, BrokerName),
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
 							Id:               BrokerUUID,
-							Topic:            BrokerTopic(),
-							Path:             receiver.Path(BrokerNamespace, BrokerName),
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -632,21 +626,21 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Name: "Reconciled normal - increment volume generation",
 			Objects: []runtime.Object{
 				NewBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
-							Path:           receiver.Path(BrokerNamespace, BrokerName),
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}, &configs),
 				NewService(),
 				BrokerReceiverPod(configs.SystemNamespace, map[string]string{
@@ -661,23 +655,22 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
-							Path:           receiver.Path(BrokerNamespace, BrokerName),
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
 							Id:               BrokerUUID,
-							Topic:            BrokerTopic(),
-							Path:             receiver.Path(BrokerNamespace, BrokerName),
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
-					VolumeGeneration: 2,
+					Generation: 2,
 				}),
 				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
@@ -715,23 +708,22 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						}
 					},
 				),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
-							Path:           receiver.Path(BrokerNamespace, BrokerName),
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
+							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
 						{
 							Id:               BrokerUUID,
-							Topic:            BrokerTopic(),
-							Path:             receiver.Path(BrokerNamespace, BrokerName),
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}, &configs),
 				BrokerReceiverPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
@@ -747,7 +739,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"failed to get broker configuration: failed to resolve broker.Spec.Deliver.DeadLetterSink: %v",
+					"failed to get contract configuration: failed to resolve broker.Spec.Deliver.DeadLetterSink: %v",
 					"destination missing Ref and URI, expected at least one",
 				),
 			},
@@ -777,9 +769,9 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Name: "No bootstrap.servers provided",
 			Objects: []runtime.Object{
 				NewBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers:          []*coreconfig.Broker{},
-					VolumeGeneration: 1,
+				NewConfigMapFromContract(&contract.Contract{
+					Resources:  []*contract.Resource{},
+					Generation: 1,
 				}, &configs),
 				BrokerReceiverPod(configs.SystemNamespace, nil),
 				BrokerDispatcherPod(configs.SystemNamespace, nil),
@@ -791,7 +783,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"failed to get broker configuration: no bootstrap.servers provided",
+					"failed to get contract configuration: no bootstrap.servers provided",
 				),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -832,17 +824,16 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
 							Id:               BrokerUUID,
-							Topic:            BrokerTopic(),
-							Path:             receiver.Path(BrokerNamespace, BrokerName),
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_BINARY,
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}),
 				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -897,7 +888,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					fmt.Sprintf(`failed to get broker configuration: failed to get configmap %s/%s: configmap %q not found`, ConfigMapNamespace, ConfigMapName, ConfigMapName),
+					fmt.Sprintf(`failed to get contract configuration: failed to get configmap %s/%s: configmap %q not found`, ConfigMapNamespace, ConfigMapName, ConfigMapName),
 				),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -950,7 +941,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"failed to get broker configuration: supported config Kind: ConfigMap - got Pod",
+					"failed to get contract configuration: supported config Kind: ConfigMap - got Pod",
 				),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -978,40 +969,42 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 		{
 			Name: "Reconciled normal - keep all existing triggers",
 			Objects: []runtime.Object{
-				NewBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewBroker(
+					WithDelivery(),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             BrokerUUID,
-							Topic:          BrokerTopic(),
-							DeadLetterSink: "http://example.com",
-							Triggers: []*coreconfig.Trigger{
+							Id:           BrokerUUID,
+							Topics:       []string{BrokerTopic()},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
+							Egresses: []*contract.Egress{
 								{
-									Attributes: map[string]string{
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source1",
-									},
-									Destination: "http://example.com",
-									Id:          TriggerUUID,
+									}},
+									Destination:   "http://example.com",
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Attributes: map[string]string{
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source1",
-									},
-									Destination: "http://example.com",
-									Id:          TriggerUUID + "a",
+									}},
+									Destination:   "http://example.com",
+									ConsumerGroup: TriggerUUID + "a",
 								},
 								{
-									Attributes: map[string]string{
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source1",
-									},
-									Destination: "http://example.com",
-									Id:          TriggerUUID + "b",
+									}},
+									Destination:   "http://example.com",
+									ConsumerGroup: TriggerUUID + "b",
 								},
 							},
-							Path: receiver.Path(BrokerNamespace, BrokerName),
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}, &configs),
 				NewService(),
 				BrokerReceiverPod(configs.SystemNamespace, nil),
@@ -1022,40 +1015,40 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Triggers: []*coreconfig.Trigger{
+							Id:     BrokerUUID,
+							Topics: []string{BrokerTopic()},
+							Egresses: []*contract.Egress{
 								{
-									Attributes: map[string]string{
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source1",
-									},
-									Destination: "http://example.com",
-									Id:          TriggerUUID,
+									}},
+									Destination:   "http://example.com",
+									ConsumerGroup: TriggerUUID,
 								},
 								{
-									Attributes: map[string]string{
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source1",
-									},
-									Destination: "http://example.com",
-									Id:          TriggerUUID + "a",
+									}},
+									Destination:   "http://example.com",
+									ConsumerGroup: TriggerUUID + "a",
 								},
 								{
-									Attributes: map[string]string{
+									Filter: &contract.Filter{Attributes: map[string]string{
 										"source": "source1",
-									},
-									Destination: "http://example.com",
-									Id:          TriggerUUID + "b",
+									}},
+									Destination:   "http://example.com",
+									ConsumerGroup: TriggerUUID + "b",
 								},
 							},
+							EgressConfig:     &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
 							BootstrapServers: bootstrapServers,
-							ContentMode:      coreconfig.ContentMode_BINARY,
-							Path:             receiver.Path(BrokerNamespace, BrokerName),
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
 					},
-					VolumeGeneration: 2,
+					Generation: 2,
 				}),
 				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
@@ -1070,6 +1063,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewBroker(
+						WithDelivery(),
 						reconcilertesting.WithInitBrokerConditions,
 						BrokerDataPlaneAvailable,
 						BrokerConfigMapUpdatedReady(&configs),
@@ -1138,22 +1132,22 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Name: "Reconciled normal - no DLS",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:    BrokerUUID,
-							Topic: BrokerTopic(),
-							Path:  receiver.Path(BrokerNamespace, BrokerName),
+							Id:      BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}, &configs),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers:          []*coreconfig.Broker{},
-					VolumeGeneration: 1,
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources:  []*contract.Resource{},
+					Generation: 1,
 				}),
 			},
 			OtherTestData: map[string]interface{}{
@@ -1166,22 +1160,22 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewDeletedBroker(
 					WithDelivery(),
 				),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             BrokerUUID,
-							Topic:          BrokerTopic(),
-							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
-							Path:           receiver.Path(BrokerNamespace, BrokerName),
+							Id:           BrokerUUID,
+							Topics:       []string{BrokerTopic()},
+							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}, &configs),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					VolumeGeneration: 1,
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Generation: 1,
 				}),
 			},
 			OtherTestData: map[string]interface{}{
@@ -1192,15 +1186,15 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Name: "Failed to delete topic",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             BrokerUUID,
-							Topic:          BrokerTopic(),
-							DeadLetterSink: "http://test-service.test-service-namespace.svc.cluster.local/",
+							Id:           BrokerUUID,
+							Topics:       []string{BrokerTopic()},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
 						},
 					},
-					VolumeGeneration: 1,
+					Generation: 1,
 				}, &configs),
 			},
 			Key:     testKey,
@@ -1214,8 +1208,8 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					VolumeGeneration: 1,
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Generation: 1,
 				}),
 			},
 			OtherTestData: map[string]interface{}{
@@ -1243,56 +1237,36 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			},
 		},
 		{
-			Name: "Config map not readable",
-			Objects: []runtime.Object{
-				NewDeletedBroker(),
-				NewConfigMap(&configs, []byte(`{"hello"-- "world"}`)),
-			},
-			Key:     testKey,
-			WantErr: true,
-			WantEvents: []string{
-				Eventf(
-					corev1.EventTypeWarning,
-					"InternalError",
-					`failed to get brokers and triggers: failed to unmarshal brokers and triggers: '{"hello"-- "world"}' - %v`,
-					getUnmarshallableError(format),
-				),
-			},
-			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
-			},
-		},
-		{
 			Name: "Reconciled normal - preserve config map previous state",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:             BrokerUUID,
-							Topic:          "my-existing-topic-b",
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:           BrokerUUID,
+							Topics:       []string{"my-existing-topic-b"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 					},
-					VolumeGeneration: 5,
+					Generation: 5,
 				}, &configs),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 					},
-					VolumeGeneration: 5,
+					Generation: 5,
 				}),
 			},
 			OtherTestData: map[string]interface{}{
@@ -1303,33 +1277,33 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Name: "Reconciled normal - topic doesn't exist",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:             BrokerUUID,
-							Topic:          "my-existing-topic-b",
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:           BrokerUUID,
+							Topics:       []string{"my-existing-topic-b"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 					},
-					VolumeGeneration: 5,
+					Generation: 5,
 				}, &configs),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 					},
-					VolumeGeneration: 5,
+					Generation: 5,
 				}),
 			},
 			OtherTestData: map[string]interface{}{
@@ -1341,15 +1315,15 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Name: "Reconciled normal - no broker found in config map",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
-				NewConfigMapFromBrokers(&coreconfig.Brokers{
-					Brokers: []*coreconfig.Broker{
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
 						{
-							Id:             "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topic:          "my-existing-topic-a",
-							DeadLetterSink: "http://www.my-sink.com",
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 					},
-					VolumeGeneration: 5,
+					Generation: 5,
 				}, &configs),
 			},
 			Key: testKey,
@@ -1490,11 +1464,4 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
-}
-
-func getUnmarshallableError(format string) interface{} {
-	if format == base.Protobuf {
-		return "unexpected EOF"
-	}
-	return "invalid character '-' after object key"
 }

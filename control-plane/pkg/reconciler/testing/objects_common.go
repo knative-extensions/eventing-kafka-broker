@@ -17,9 +17,10 @@
 package testing
 
 import (
-	"encoding/json"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -27,7 +28,6 @@ import (
 	clientgotesting "k8s.io/client-go/testing"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 
-	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
@@ -76,13 +76,13 @@ func NewConfigMap(configs *Configs, data []byte) runtime.Object {
 	)
 }
 
-func NewConfigMapFromBrokers(brokers *coreconfig.Brokers, configs *Configs) runtime.Object {
+func NewConfigMapFromContract(contract *contract.Contract, configs *Configs) runtime.Object {
 	var data []byte
 	var err error
 	if configs.DataPlaneConfigFormat == base.Protobuf {
-		data, err = proto.Marshal(brokers)
+		data, err = proto.Marshal(contract)
 	} else {
-		data, err = json.Marshal(brokers)
+		data, err = protojson.Marshal(contract)
 	}
 	if err != nil {
 		panic(err)
@@ -91,7 +91,7 @@ func NewConfigMapFromBrokers(brokers *coreconfig.Brokers, configs *Configs) runt
 	return NewConfigMap(configs, data)
 }
 
-func ConfigMapUpdate(configs *Configs, brokers *coreconfig.Brokers) clientgotesting.UpdateActionImpl {
+func ConfigMapUpdate(configs *Configs, contract *contract.Contract) clientgotesting.UpdateActionImpl {
 	return clientgotesting.NewUpdateAction(
 		schema.GroupVersionResource{
 			Group:    "*",
@@ -99,6 +99,6 @@ func ConfigMapUpdate(configs *Configs, brokers *coreconfig.Brokers) clientgotest
 			Resource: "ConfigMap",
 		},
 		configs.DataPlaneConfigMapNamespace,
-		NewConfigMapFromBrokers(brokers, configs),
+		NewConfigMapFromContract(contract, configs),
 	)
 }

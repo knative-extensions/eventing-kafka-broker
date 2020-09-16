@@ -16,16 +16,16 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import dev.knative.eventing.kafka.broker.core.Broker;
-import dev.knative.eventing.kafka.broker.core.Trigger;
+import dev.knative.eventing.kafka.broker.core.Egress;
+import dev.knative.eventing.kafka.broker.core.Resource;
 import dev.knative.eventing.kafka.broker.dispatcher.strategy.UnorderedConsumerRecordOffsetStrategy;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 
 @FunctionalInterface
 public interface ConsumerRecordOffsetStrategyFactory<K, V> {
 
-  ConsumerRecordOffsetStrategy<K, V> get(final KafkaConsumer<K, V> consumer, final Broker broker,
-                                         final Trigger<V> trigger);
+  ConsumerRecordOffsetStrategy<K, V> get(final KafkaConsumer<K, V> consumer, final Resource resource,
+                                         final Egress egress);
 
   static <K, V> ConsumerRecordOffsetStrategyFactory<K, V> unordered() {
     return (consumer, broker, trigger) -> new UnorderedConsumerRecordOffsetStrategy<>(consumer);

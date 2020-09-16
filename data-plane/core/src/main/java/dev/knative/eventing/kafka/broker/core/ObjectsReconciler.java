@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 @FunctionalInterface
-public interface ObjectsReconciler<T> {
+public interface ObjectsReconciler {
 
-  Future<Void> reconcile(Map<Broker, Set<Trigger<T>>> objects) throws Exception;
+  Future<Void> reconcile(Map<Resource, Set<Egress>> objects) throws Exception;
 }

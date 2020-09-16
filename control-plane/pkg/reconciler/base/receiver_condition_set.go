@@ -94,7 +94,7 @@ func (manager *StatusConditionManager) FailedToGetConfigMap(err error) reconcile
 		err,
 	)
 
-	return fmt.Errorf("failed to get brokers and triggers config map %s: %w", manager.Configs.DataPlaneConfigMapAsString(), err)
+	return fmt.Errorf("failed to get contract config map %s: %w", manager.Configs.DataPlaneConfigMapAsString(), err)
 }
 
 func (manager *StatusConditionManager) FailedToGetDataFromConfigMap(err error) reconciler.Event {
@@ -102,7 +102,7 @@ func (manager *StatusConditionManager) FailedToGetDataFromConfigMap(err error) r
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
 		ConditionConfigMapUpdated,
 		fmt.Sprintf(
-			"Failed to get brokers and trigger data from ConfigMap: %s",
+			"Failed to get contract data from ConfigMap: %s",
 			manager.Configs.DataPlaneConfigMapAsString(),
 		),
 		"%v",
@@ -121,7 +121,7 @@ func (manager *StatusConditionManager) FailedToUpdateConfigMap(err error) reconc
 		err,
 	)
 
-	return fmt.Errorf("failed to update brokers and triggers config map %s: %w", manager.Configs.DataPlaneConfigMapAsString(), err)
+	return fmt.Errorf("failed to update contract config map %s: %w", manager.Configs.DataPlaneConfigMapAsString(), err)
 }
 
 func (manager *StatusConditionManager) ConfigMapUpdated() {
@@ -189,7 +189,7 @@ func (manager *StatusConditionManager) FailedToUpdateReceiverPodsAnnotation(err 
 
 func (manager *StatusConditionManager) FailedToGetConfig(err error) reconciler.Event {
 
-	return fmt.Errorf("failed to get broker configuration: %w", err)
+	return fmt.Errorf("failed to get contract configuration: %w", err)
 }
 
 func (manager *StatusConditionManager) FailedToResolveConfig(err error) reconciler.Event {
@@ -200,7 +200,7 @@ func (manager *StatusConditionManager) FailedToResolveConfig(err error) reconcil
 		"",
 	)
 
-	return fmt.Errorf("failed to get broker configuration: %w", err)
+	return fmt.Errorf("failed to get contract configuration: %w", err)
 }
 
 func (manager *StatusConditionManager) ConfigResolved() {

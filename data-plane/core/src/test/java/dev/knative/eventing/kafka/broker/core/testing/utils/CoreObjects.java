@@ -16,16 +16,18 @@
 
 package dev.knative.eventing.kafka.broker.core.testing.utils;
 
-import dev.knative.eventing.kafka.broker.core.BrokerWrapper;
-import dev.knative.eventing.kafka.broker.core.TriggerWrapper;
-import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Broker;
-import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Brokers;
-import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.Trigger;
-import io.cloudevents.CloudEvent;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.Egress;
+import dev.knative.eventing.kafka.broker.core.EgressWrapper;
+import dev.knative.eventing.kafka.broker.core.Resource;
+import dev.knative.eventing.kafka.broker.core.ResourceWrapper;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public final class CoreObjects {
 
@@ -43,103 +45,125 @@ public final class CoreObjects {
 
   public static final String DESTINATION = DESTINATION_URL.toString();
 
-  public static Brokers brokers() {
-    return Brokers.newBuilder()
-      .addBrokers(broker1Unwrapped())
-      .addBrokers(broker2Unwrapped())
+  public static DataPlaneContract.Contract contract() {
+    return DataPlaneContract.Contract.newBuilder()
+      .addResources(resource1Unwrapped())
+      .addResources(resource2Unwrapped())
       .build();
   }
 
-  public static dev.knative.eventing.kafka.broker.core.Broker broker1() {
-    return new BrokerWrapper(
-      broker1Unwrapped()
+  public static Resource resource1() {
+    return new ResourceWrapper(
+      resource1Unwrapped()
     );
   }
 
-  public static Broker broker1Unwrapped() {
-    return Broker.newBuilder()
-      .setDeadLetterSink(DESTINATION)
+  public static DataPlaneContract.Resource resource1Unwrapped() {
+    return DataPlaneContract.Resource.newBuilder()
       .setId("1-1234")
-      .setTopic("1-12345")
-      .addAllTriggers(Arrays.asList(
-        trigger11(),
-        trigger12()
+      .addTopics("1-12345")
+      .addAllEgresses(Arrays.asList(
+        egress11(),
+        egress12()
       ))
       .build();
   }
 
-  public static dev.knative.eventing.kafka.broker.core.Broker broker2() {
-    return new BrokerWrapper(
-      broker2Unwrapped()
+  public static Resource resource2() {
+    return new ResourceWrapper(
+      resource2Unwrapped()
     );
   }
 
-  public static Broker broker2Unwrapped() {
-    return Broker.newBuilder()
-      .setDeadLetterSink(DESTINATION)
+  public static DataPlaneContract.Resource resource2Unwrapped() {
+    return DataPlaneContract.Resource.newBuilder()
       .setId("2-1234")
-      .setTopic("2-12345")
-      .addAllTriggers(Arrays.asList(
-        trigger13(),
-        trigger14()
+      .addTopics("2-12345")
+      .addAllEgresses(Arrays.asList(
+        egress13(),
+        egress14()
       ))
       .build();
   }
 
 
-  public static dev.knative.eventing.kafka.broker.core.Trigger<CloudEvent> trigger1() {
-    return new TriggerWrapper(trigger11());
+  public static Egress egress1() {
+    return new EgressWrapper(egress11());
   }
 
-  public static dev.knative.eventing.kafka.broker.core.Trigger<CloudEvent> trigger2() {
-    return new TriggerWrapper(trigger12());
+  public static Egress egress2() {
+    return new EgressWrapper(egress12());
   }
 
-  public static dev.knative.eventing.kafka.broker.core.Trigger<CloudEvent> trigger3() {
-    return new TriggerWrapper(trigger13());
+  public static Egress egress3() {
+    return new EgressWrapper(egress13());
   }
 
-  public static dev.knative.eventing.kafka.broker.core.Trigger<CloudEvent> trigger4() {
-    return new TriggerWrapper(trigger14());
+  public static Egress egress4() {
+    return new EgressWrapper(egress14());
   }
 
-  public static Trigger trigger11() {
-    return Trigger.newBuilder()
-      .setId("1-1234567")
+  public static DataPlaneContract.Egress egress11() {
+    return DataPlaneContract.Egress.newBuilder()
+      .setConsumerGroup("1-1234567")
       .setDestination(DESTINATION)
-      .putAllAttributes(Map.of(
-        "type", "dev.knative"
-      ))
+      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
       .build();
   }
 
-  public static Trigger trigger12() {
-    return Trigger.newBuilder()
-      .setId("2-1234567")
+  public static DataPlaneContract.Egress egress12() {
+    return DataPlaneContract.Egress.newBuilder()
+      .setConsumerGroup("2-1234567")
       .setDestination(DESTINATION)
-      .putAllAttributes(Map.of(
-        "type", "dev.knative"
-      ))
+      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
       .build();
   }
 
-  public static Trigger trigger13() {
-    return Trigger.newBuilder()
-      .setId("3-1234567")
+  public static DataPlaneContract.Egress egress13() {
+    return DataPlaneContract.Egress.newBuilder()
+      .setConsumerGroup("3-1234567")
       .setDestination(DESTINATION)
-      .putAllAttributes(Map.of(
-        "type", "dev.knative"
-      ))
+      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
       .build();
   }
 
-  public static Trigger trigger14() {
-    return Trigger.newBuilder()
-      .setId("4-1234567")
+  public static DataPlaneContract.Egress egress14() {
+    return DataPlaneContract.Egress.newBuilder()
+      .setConsumerGroup("4-1234567")
       .setDestination(DESTINATION)
-      .putAllAttributes(Map.of(
-        "type", "dev.knative"
-      ))
+      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
       .build();
+  }
+
+  /**
+   * This method generates a collection of resource mocked with new egresses, so you can use it to test the {@link dev.knative.eventing.kafka.broker.core.ObjectsReconciler}
+   */
+  public static Collection<Resource> mockResourcesWithNewEgresses(Map<Resource, Set<Egress>> newResources) {
+    return newResources.entrySet().stream().map(entry -> new Resource() {
+      @Override
+      public String id() {
+        return entry.getKey().id();
+      }
+
+      @Override
+      public Set<String> topics() {
+        return entry.getKey().topics();
+      }
+
+      @Override
+      public String bootstrapServers() {
+        return entry.getKey().bootstrapServers();
+      }
+
+      @Override
+      public DataPlaneContract.Ingress ingress() {
+        return entry.getKey().ingress();
+      }
+
+      @Override
+      public DataPlaneContract.EgressConfig egressConfig() {
+        return entry.getKey().egressConfig();
+      }
+    }).collect(Collectors.toList());
   }
 }

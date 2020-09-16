@@ -1,0 +1,92 @@
+syntax = 'proto3';
+
+import "google/protobuf/empty.proto";
+
+option go_package = "control-plane/pkg/contract";
+option java_package = "dev.knative.eventing.kafka.broker.contract";
+option java_outer_classname = "DataPlaneContract";
+
+message Filter {
+  // attributes filters events by exact match on event context attributes.
+  // Each key in the map is compared with the equivalent key in the event
+  // context. An event passes the filter if all values are equal to the
+  // specified values.
+  //
+  // Nested context attributes are not supported as keys. Only string values are supported.
+  map<string, string> attributes = 1;
+}
+
+message EgressConfig {
+  // Dead letter is where the event is sent when something goes wrong
+  string deadLetter = 1;
+}
+
+message Egress {
+  // consumer group name
+  string consumerGroup = 1;
+
+  // destination is the sink where events are sent.
+  string destination = 2;
+
+  oneof replyStrategy {
+    // Send the response to an url
+    string replyUrl = 3;
+
+    // Send the response to a Kafka topic
+    google.protobuf.Empty replyToOriginalTopic = 4;
+  }
+
+  Filter filter = 5;
+}
+
+// CloudEvent content mode
+enum ContentMode {
+  BINARY = 0;
+  STRUCTURED = 1;
+}
+
+message Ingress {
+  // Optional content mode to use when pushing messages to Kafka
+  ContentMode contentMode = 1;
+
+  // Ingress can both listen on a specific HTTP path
+  // or listen to the / path but match the Host header
+  oneof ingressType {
+    // path to listen for incoming events.
+    string path = 2;
+
+    // host header to match
+    string host = 3;
+  }
+}
+
+message Resource {
+  // Id of the resource
+  string id = 1;
+
+  // Topics name
+  // Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+  //  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
+  repeated string topics = 2;
+
+  // A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+  // Note: we're using a comma separated list simply because that's how java kafka client likes it.
+  string bootstrapServers = 3;
+
+  // Optional ingress for this topic
+  Ingress ingress = 4;
+
+  // Optional configuration of egress valid for the whole resource
+  EgressConfig egressConfig = 5;
+
+  // Optional egresses for this topic
+  repeated Egress egresses = 6;
+}
+
+message Contract {
+  // Count each contract update.
+  // Make sure each data plane pod has the same contract generation number.
+  uint64 generation = 1;
+
+  repeated Resource resources = 2;
+}

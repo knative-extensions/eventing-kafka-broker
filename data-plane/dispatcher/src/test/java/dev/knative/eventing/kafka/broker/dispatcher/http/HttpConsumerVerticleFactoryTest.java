@@ -24,11 +24,11 @@ import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import dev.knative.eventing.kafka.broker.core.Broker;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.Egress;
 import dev.knative.eventing.kafka.broker.core.EventMatcher;
 import dev.knative.eventing.kafka.broker.core.Filter;
-import dev.knative.eventing.kafka.broker.core.Trigger;
-import dev.knative.eventing.kafka.broker.core.config.BrokersConfig.ContentMode;
+import dev.knative.eventing.kafka.broker.core.Resource;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventDeserializer;
@@ -38,6 +38,7 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.Set;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
@@ -71,20 +72,15 @@ public class HttpConsumerVerticleFactoryTest {
     );
 
     final var consumerFactoryFuture = verticleFactory.get(
-      new Broker() {
+      new Resource() {
         @Override
         public String id() {
           return "123456";
         }
 
         @Override
-        public String topic() {
-          return "t1";
-        }
-
-        @Override
-        public String deadLetterSink() {
-          return "http://localhost:43257";
+        public Set<String> topics() {
+          return Set.of("t1");
         }
 
         @Override
@@ -93,18 +89,18 @@ public class HttpConsumerVerticleFactoryTest {
         }
 
         @Override
-        public String path() {
+        public DataPlaneContract.Ingress ingress() {
           return null;
         }
 
         @Override
-        public ContentMode contentMode() {
-          return null;
+        public DataPlaneContract.EgressConfig egressConfig() {
+          return DataPlaneContract.EgressConfig.newBuilder().setDeadLetter("http://localhost:43257").build();
         }
       },
-      new Trigger<>() {
+      new Egress() {
         @Override
-        public String id() {
+        public String consumerGroup() {
           return "1234";
         }
 
@@ -116,6 +112,21 @@ public class HttpConsumerVerticleFactoryTest {
         @Override
         public String destination() {
           return "http://localhost:43256";
+        }
+
+        @Override
+        public boolean isReplyToUrl() {
+          return false;
+        }
+
+        @Override
+        public String replyUrl() {
+          return null;
+        }
+
+        @Override
+        public boolean isReplyToOriginalTopic() {
+          return true;
         }
       }
     );
@@ -149,20 +160,15 @@ public class HttpConsumerVerticleFactoryTest {
 
     assertDoesNotThrow(() -> {
       verticleFactory.get(
-        new Broker() {
+        new Resource() {
           @Override
           public String id() {
             return "123456";
           }
 
           @Override
-          public String topic() {
-            return "t1";
-          }
-
-          @Override
-          public String deadLetterSink() {
-            return "";
+          public Set<String> topics() {
+            return Set.of("t1");
           }
 
           @Override
@@ -171,18 +177,18 @@ public class HttpConsumerVerticleFactoryTest {
           }
 
           @Override
-          public String path() {
+          public DataPlaneContract.Ingress ingress() {
             return null;
           }
 
           @Override
-          public ContentMode contentMode() {
+          public DataPlaneContract.EgressConfig egressConfig() {
             return null;
           }
         },
-        new Trigger<>() {
+        new Egress() {
           @Override
-          public String id() {
+          public String consumerGroup() {
             return "1234";
           }
 
@@ -194,6 +200,21 @@ public class HttpConsumerVerticleFactoryTest {
           @Override
           public String destination() {
             return "http://localhost:43256";
+          }
+
+          @Override
+          public boolean isReplyToUrl() {
+            return false;
+          }
+
+          @Override
+          public String replyUrl() {
+            return null;
+          }
+
+          @Override
+          public boolean isReplyToOriginalTopic() {
+            return true;
           }
         });
     });
