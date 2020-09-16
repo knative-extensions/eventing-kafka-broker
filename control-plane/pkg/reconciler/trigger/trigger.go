@@ -161,15 +161,6 @@ func (r *Reconciler) getTriggerConfig(ctx context.Context, broker *eventing.Brok
 		}
 	}
 
-	if broker.Spec.Delivery != nil && broker.Spec.Delivery.DeadLetterSink != nil {
-		deadLetterSinkURL, err := r.Resolver.URIFromDestinationV1(ctx, *broker.Spec.Delivery.DeadLetterSink, broker)
-		if err != nil {
-			return nil, fmt.Errorf("failed to resolve broker.Spec.Deliver.DeadLetterSink: %w", err)
-		}
-
-		egress.DeadLetter = deadLetterSinkURL.String()
-	}
-
 	return egress, nil
 }
 

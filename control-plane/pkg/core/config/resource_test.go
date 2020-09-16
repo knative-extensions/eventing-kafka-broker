@@ -95,7 +95,6 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 							{
 								Destination:   "http://localhost:8080",
 								ConsumerGroup: "egress-1",
-								DeadLetter:    "http://localhost:8080",
 								Filter: &contract.Filter{
 									Attributes: map[string]string{
 										"source": "source1",
@@ -127,7 +126,6 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 					{
 						Destination:   "http://localhost:8080",
 						ConsumerGroup: "egress-1",
-						DeadLetter:    "http://localhost:8080",
 						Filter: &contract.Filter{
 							Attributes: map[string]string{
 								"source": "source1",
@@ -153,7 +151,6 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 							{
 								Destination:   "http://localhost:8080",
 								ConsumerGroup: "egress-1",
-								DeadLetter:    "http://localhost:8080",
 								Filter: &contract.Filter{
 									Attributes: map[string]string{
 										"source": "source1",
@@ -170,7 +167,6 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 							{
 								Destination:   "http://localhost:8080",
 								ConsumerGroup: "egress-1",
-								DeadLetter:    "http://localhost:8080",
 								Filter: &contract.Filter{
 									Attributes: map[string]string{
 										"source": "source1",
@@ -206,7 +202,6 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 								},
 								Destination:   "http://localhost:8080",
 								ConsumerGroup: "egress-1",
-								DeadLetter:    "http://localhost:8080",
 							},
 						},
 						BootstrapServers: "broker:9092",
@@ -234,7 +229,6 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 						},
 						Destination:   "http://localhost:8080",
 						ConsumerGroup: "egress-1",
-						DeadLetter:    "http://localhost:8080",
 					},
 				},
 				BootstrapServers: "broker:9092,broker-2:9092",
@@ -260,7 +254,6 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 								},
 								Destination:   "http://localhost:8080",
 								ConsumerGroup: "egress-1",
-								DeadLetter:    "http://localhost:8080",
 							},
 						},
 						BootstrapServers: "broker:9092,broker-2:9092",

@@ -55,6 +55,12 @@ func (b *resourceMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) err
 		}
 	}
 
+	if b.EgressConfig != nil {
+		if err := encoder.AddObject("egressConfig", (*egressConfigMarshaller)(b.EgressConfig)); err != nil {
+			return err
+		}
+	}
+
 	return encoder.AddArray("egresses", zapcore.ArrayMarshalerFunc(func(encoder zapcore.ArrayEncoder) error {
 		for _, e := range b.Egresses {
 			if err := encoder.AppendObject((*egressMarshaller)(e)); err != nil {
@@ -84,7 +90,6 @@ type egressMarshaller contract.Egress
 func (e *egressMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 	encoder.AddString("consumerGroup", e.ConsumerGroup)
 	encoder.AddString("destination", e.Destination)
-	encoder.AddString("deadLetter", e.DeadLetter)
 
 	switch rs := e.ReplyStrategy.(type) {
 	case *contract.Egress_ReplyUrl:
@@ -103,4 +108,11 @@ type filterMarshaller contract.Filter
 
 func (f *filterMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 	return encoder.AddReflected("attributes", f.Attributes)
+}
+
+type egressConfigMarshaller contract.EgressConfig
+
+func (e *egressConfigMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString("deadLetter", e.DeadLetter)
+	return nil
 }

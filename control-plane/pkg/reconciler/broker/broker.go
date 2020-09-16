@@ -305,7 +305,7 @@ func (r *Reconciler) defaultConfig() (*kafka.TopicConfig, error) {
 }
 
 func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, config *kafka.TopicConfig) (*contract.Resource, error) {
-	return &contract.Resource{
+	res := &contract.Resource{
 		Id:     string(broker.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
@@ -314,7 +314,17 @@ func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker
 			},
 		},
 		BootstrapServers: config.GetBootstrapServers(),
-	}, nil
+	}
+
+	if broker.Spec.Delivery != nil && broker.Spec.Delivery.DeadLetterSink != nil {
+		deadLetterSinkURL, err := r.Resolver.URIFromDestinationV1(ctx, *broker.Spec.Delivery.DeadLetterSink, broker)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve broker.Spec.Deliver.DeadLetterSink: %w", err)
+		}
+		res.EgressConfig = &contract.EgressConfig{DeadLetter: deadLetterSinkURL.String()}
+	}
+
+	return res, nil
 }
 
 func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev1.ConfigMap) {

@@ -136,7 +136,7 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 		return &contract.Contract{}, nil
 	}
 
-	contract := &contract.Contract{}
+	ct := &contract.Contract{}
 	var err error
 
 	logger.Debug(
@@ -147,19 +147,19 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 	// determine unmarshalling strategy
 	switch format {
 	case Protobuf:
-		err = proto.Unmarshal(dataPlaneDataRaw, contract)
+		err = proto.Unmarshal(dataPlaneDataRaw, ct)
 	case Json:
-		err = protojson.Unmarshal(dataPlaneDataRaw, contract)
+		err = protojson.Unmarshal(dataPlaneDataRaw, ct)
 	}
 	if err != nil {
 
 		logger.Warn("Failed to unmarshal config map", zap.Error(err))
 
 		// let the caller decide if it want to continue or fail on an error.
-		return contract, fmt.Errorf("failed to unmarshal contract: '%s' - %w", dataPlaneDataRaw, err)
+		return ct, fmt.Errorf("failed to unmarshal contract: '%s' - %w", dataPlaneDataRaw, err)
 	}
 
-	return contract, nil
+	return ct, nil
 }
 
 func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *contract.Contract, configMap *corev1.ConfigMap) error {
