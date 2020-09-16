@@ -119,14 +119,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	logger.Debug("Got contract config map")
 
 	// Get contract data.
-	contract, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
-	if err != nil && contract == nil {
+	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
+	if err != nil && ct == nil {
 		return statusConditionManager.FailedToGetDataFromConfigMap(err)
 	}
 
 	logger.Debug(
 		"Got contract data from config map",
-		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(contract)),
+		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(ct)),
 	)
 
 	// Get resource configuration.
@@ -135,15 +135,15 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		return statusConditionManager.FailedToGetConfig(err)
 	}
 
-	brokerIndex := coreconfig.FindResource(contract, broker.UID)
+	brokerIndex := coreconfig.FindResource(ct, broker.UID)
 	// Update contract data with the new contract configuration
-	coreconfig.AddOrUpdateResourceConfig(contract, brokerResource, brokerIndex, logger)
+	coreconfig.AddOrUpdateResourceConfig(ct, brokerResource, brokerIndex, logger)
 
 	// Increment volumeGeneration
-	contract.Generation = incrementContractGeneration(contract.Generation)
+	ct.Generation = incrementContractGeneration(ct.Generation)
 
 	// Update the configuration map with the new contract data.
-	if err := r.UpdateDataPlaneConfigMap(ctx, contract, contractConfigMap); err != nil {
+	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
 		logger.Error("failed to update data plane config map", zap.Error(
 			statusConditionManager.FailedToUpdateConfigMap(err),
 		))
@@ -160,7 +160,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	// the update even if here eventually means seconds or minutes after the actual update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, contract.Generation); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
 		logger.Error("Failed to update receiver pod annotation", zap.Error(
 			statusConditionManager.FailedToUpdateReceiverPodsAnnotation(err),
 		))
@@ -170,7 +170,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	logger.Debug("Updated receiver pod annotation")
 
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, contract.Generation); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
 		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Broker
 		// ready. So, log out the error and move on to the next step.
@@ -206,24 +206,24 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	logger.Debug("Got contract config map")
 
 	// Get contract data.
-	contract, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
+	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
 	if err != nil {
 		return fmt.Errorf("failed to get contract: %w", err)
 	}
 
 	logger.Debug(
 		"Got contract data from config map",
-		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(contract)),
+		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(ct)),
 	)
 
-	brokerIndex := coreconfig.FindResource(contract, broker.UID)
+	brokerIndex := coreconfig.FindResource(ct, broker.UID)
 	if brokerIndex != coreconfig.NoResource {
-		coreconfig.DeleteBroker(contract, brokerIndex)
+		coreconfig.DeleteResource(ct, brokerIndex)
 
 		logger.Debug("Broker deleted", zap.Int("index", brokerIndex))
 
 		// Update the configuration map with the new contract data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, contract, contractConfigMap); err != nil {
+		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
 			return err
 		}
 
