@@ -89,7 +89,6 @@ public class ResourceWrapper implements Resource {
       && Objects.equals(this.topics(), that.topics())
       && Objects.equals(this.bootstrapServers(), that.bootstrapServers())
       && Objects.equals(this.ingress(), that.ingress())
-      && Objects.equals(this.egresses(), that.egresses())
       && Objects.equals(this.egressConfig(), that.egressConfig());
   }
 
@@ -100,7 +99,6 @@ public class ResourceWrapper implements Resource {
       this.topics(),
       this.bootstrapServers(),
       this.ingress(),
-      this.egresses(),
       this.egressConfig()
     );
   }
