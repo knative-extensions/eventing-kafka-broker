@@ -17,10 +17,11 @@
 package config
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/testing/protocmp"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
@@ -284,10 +285,10 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 func TestDeleteResource(t *testing.T) {
 
 	tests := []struct {
-		name string
-		ct *contract.Contract
-		index   int
-		want contract.Contract
+		name  string
+		ct    *contract.Contract
+		index int
+		want  contract.Contract
 	}{
 		{
 			name: "1 resource",
@@ -382,12 +383,12 @@ func TestDeleteResource(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for i := range tests {
+		t.Run(tests[i].name, func(t *testing.T) {
 
-			DeleteResource(tt.ct, tt.index)
+			DeleteResource(tests[i].ct, tests[i].index)
 
-			assert.Equal(t, *tt.ct, tt.want)
+			assert.Equal(t, tests[i].ct, &tests[i].want)
 		})
 	}
 }

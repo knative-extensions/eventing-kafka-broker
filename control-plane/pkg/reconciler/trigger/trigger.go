@@ -19,8 +19,9 @@ package trigger
 import (
 	"context"
 	"fmt"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"math"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"go.uber.org/zap"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"

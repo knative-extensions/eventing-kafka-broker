@@ -18,9 +18,10 @@ package sink
 
 import (
 	"context"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"fmt"
 	"math"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"

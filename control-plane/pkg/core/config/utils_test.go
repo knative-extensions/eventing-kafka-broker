@@ -17,8 +17,9 @@
 package config
 
 import (
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"testing"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 )

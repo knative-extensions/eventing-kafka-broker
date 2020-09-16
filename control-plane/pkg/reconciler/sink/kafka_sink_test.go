@@ -19,9 +19,10 @@ package sink_test
 import (
 	"context"
 	"fmt"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"io"
 	"testing"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
