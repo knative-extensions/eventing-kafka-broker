@@ -1236,28 +1236,6 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
-		// Because of a funky protobuf bug, the error message is not "deterministic", because sometimes
-		// it uses the character \u00a0 as whitespace character
-		//{
-		//	Name: "Config map not readable",
-		//	Objects: []runtime.Object{
-		//		NewDeletedBroker(),
-		//		NewConfigMap(&configs, []byte(`{"hello"-- "world"}`)),
-		//	},
-		//	Key:     testKey,
-		//	WantErr: true,
-		//	WantEvents: []string{
-		//		Eventf(
-		//			corev1.EventTypeWarning,
-		//			"InternalError",
-		//			`failed to get contract: failed to unmarshal contract: '{"hello"-- "world"}' - %v`,
-		//			getUnmarshallableError(format),
-		//		),
-		//	},
-		//	OtherTestData: map[string]interface{}{
-		//		BootstrapServersConfigMapKey: bootstrapServers,
-		//	},
-		//},
 		{
 			Name: "Reconciled normal - preserve config map previous state",
 			Objects: []runtime.Object{
@@ -1486,11 +1464,4 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
-}
-
-func getUnmarshallableError(format string) interface{} {
-	if format == base.Protobuf {
-		return "unexpected EOF"
-	}
-	return "proto: syntax error (line 1:9): unexpected character -, missing \":\" after field name"
 }

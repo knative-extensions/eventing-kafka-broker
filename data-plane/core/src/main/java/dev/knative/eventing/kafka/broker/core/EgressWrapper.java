@@ -77,8 +77,9 @@ public class EgressWrapper implements Egress {
     return Objects.equals(this.consumerGroup(), that.consumerGroup())
       && Objects.equals(this.destination(), that.destination())
       && Objects.equals(this.isReplyToUrl(), that.isReplyToUrl())
+      && Objects.equals(this.isReplyToOriginalTopic(), that.isReplyToOriginalTopic())
       && Objects.equals(this.replyUrl(), that.replyUrl())
-      && Objects.equals(this.filter(), that.filter());
+      && Objects.equals(this.egress.getFilter(), that.egress.getFilter());
   }
 
   @Override
@@ -87,8 +88,9 @@ public class EgressWrapper implements Egress {
       consumerGroup(),
       destination(),
       isReplyToUrl(),
+      isReplyToOriginalTopic(),
       replyUrl(),
-      filter()
+      egress.getFilter()
     );
   }
 

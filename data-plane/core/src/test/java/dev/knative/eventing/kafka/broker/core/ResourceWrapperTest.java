@@ -39,13 +39,43 @@ public class ResourceWrapperTest {
   }
 
   @Test
-  public void topicCallShouldBeDelegatedToWrappedResource() {
-    final var topic = Set.of("knative-topic");
+  public void topicsCallShouldBeDelegatedToWrappedResource() {
+    final var topics = Set.of("knative-topic");
     final var resource = new ResourceWrapper(
-      DataPlaneContract.Resource.newBuilder().addTopics(topic.iterator().next()).build()
+      DataPlaneContract.Resource.newBuilder().addTopics(topics.iterator().next()).build()
     );
 
-    assertThat(resource.topics()).isEqualTo(topic);
+    assertThat(resource.topics()).isEqualTo(topics);
+  }
+
+  @Test
+  public void bootstrapServersCallShouldBeDelegatedToWrappedResource() {
+    final var bootstrapServers = "http://example.com";
+    final var resource = new ResourceWrapper(
+      DataPlaneContract.Resource.newBuilder().setBootstrapServers(bootstrapServers).build()
+    );
+
+    assertThat(resource.bootstrapServers()).isEqualTo(bootstrapServers);
+  }
+
+  @Test
+  public void ingressCallShouldBeDelegatedToWrappedResource() {
+    final var ingress = DataPlaneContract.Ingress.newBuilder().setPath("http://example.com").build();
+    final var resource = new ResourceWrapper(
+      DataPlaneContract.Resource.newBuilder().setIngress(ingress).build()
+    );
+
+    assertThat(resource.ingress()).isEqualTo(ingress);
+  }
+
+  @Test
+  public void egressConfigCallShouldBeDelegatedToWrappedResource() {
+    final var egressConfig = DataPlaneContract.EgressConfig.newBuilder().setDeadLetter("http://example.com").build();
+    final var resource = new ResourceWrapper(
+      DataPlaneContract.Resource.newBuilder().setEgressConfig(egressConfig).build()
+    );
+
+    assertThat(resource.egressConfig()).isEqualTo(egressConfig);
   }
 
   @ParameterizedTest

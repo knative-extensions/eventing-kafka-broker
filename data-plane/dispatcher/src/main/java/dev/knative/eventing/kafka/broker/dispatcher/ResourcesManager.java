@@ -109,24 +109,24 @@ public final class ResourcesManager implements ObjectsReconciler {
         continue;
       }
 
-        // resource is there, so check if some egresses have been deleted.
-        final var egressesIterator = resourceEntry.getValue().entrySet().iterator();
-        while (egressesIterator.hasNext()) {
-          final var egressEntry = egressesIterator.next();
+      // resource is there, so check if some egresses have been deleted.
+      final var egressesIterator = resourceEntry.getValue().entrySet().iterator();
+      while (egressesIterator.hasNext()) {
+        final var egressEntry = egressesIterator.next();
 
-          // check if the egress has been deleted or updated.
-          if (!newObjects.get(oldResource).contains(egressEntry.getKey())) {
+        // check if the egress has been deleted or updated.
+        if (!newObjects.get(oldResource).contains(egressEntry.getKey())) {
 
-            // egress deleted or updated, so remove it
-            egressesIterator.remove();
+          // egress deleted or updated, so remove it
+          egressesIterator.remove();
 
-            // undeploy verticle associated with the deleted egress.
-            futures.add(undeployVerticle(
-              oldResource,
-              egressEntry.getKey(),
-              egressEntry.getValue()
-            ));
-          }
+          // undeploy verticle associated with the deleted egress.
+          futures.add(undeployVerticle(
+            oldResource,
+            egressEntry.getKey(),
+            egressEntry.getValue()
+          ));
+        }
 
       }
     }

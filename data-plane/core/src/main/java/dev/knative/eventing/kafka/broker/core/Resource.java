@@ -53,9 +53,17 @@ public interface Resource {
    */
   String bootstrapServers();
 
-  //TODO
+  /**
+   * Return the ingress configuration, if any
+   *
+   * @return ingress configuration
+   */
   DataPlaneContract.Ingress ingress();
 
-  //TODO
+  /**
+   * Return the egress global configuration, if any
+   *
+   * @return egress global configuration
+   */
   DataPlaneContract.EgressConfig egressConfig();
 }

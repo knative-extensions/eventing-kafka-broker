@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.protobuf.Empty;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.cloudevents.CloudEvent;
 import java.util.Collections;
@@ -48,7 +49,7 @@ public class EgressWrapperTest {
   }
 
   @Test
-  public void idCallShouldBeDelegatedToWrappedEgress() {
+  public void consumerGroupCallShouldBeDelegatedToWrappedEgress() {
     final var consumerGroup = "123-42";
     final var egressWrapper = new EgressWrapper(
       DataPlaneContract.Egress.newBuilder().setConsumerGroup(consumerGroup).build()
@@ -65,6 +66,33 @@ public class EgressWrapperTest {
     );
 
     assertThat(egressWrapper.destination()).isEqualTo(destination);
+  }
+
+  @Test
+  public void replyToUrlCallShouldBeDelegatedToWrappedEgress() {
+    final var replyToUrl = "123-42";
+    final var egressWrapper = new EgressWrapper(
+      DataPlaneContract.Egress.newBuilder().setReplyUrl(replyToUrl).build()
+    );
+
+    assertThat(egressWrapper.isReplyToUrl())
+      .isTrue();
+    assertThat(egressWrapper.isReplyToOriginalTopic())
+      .isFalse();
+    assertThat(egressWrapper.replyUrl())
+      .isEqualTo(replyToUrl);
+  }
+
+  @Test
+  public void replyToOriginalTopicCallShouldBeDelegatedToWrappedEgress() {
+    final var egressWrapper = new EgressWrapper(
+      DataPlaneContract.Egress.newBuilder().setReplyToOriginalTopic(Empty.newBuilder()).build()
+    );
+
+    assertThat(egressWrapper.isReplyToUrl())
+      .isFalse();
+    assertThat(egressWrapper.isReplyToOriginalTopic())
+      .isTrue();
   }
 
   // test if filter returned by filter() agrees with EventMatcher

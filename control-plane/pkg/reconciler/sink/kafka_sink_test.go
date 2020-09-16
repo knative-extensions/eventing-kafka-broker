@@ -405,9 +405,9 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:     "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topics: []string{"my-existing-topic-a"},
-							//DeadLetterSink: "http://www.my-sink.com",
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
 							Id:               SinkUUID,
@@ -429,9 +429,9 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:     "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
-							Topics: []string{"my-existing-topic-a"},
-							//DeadLetterSink: "http://www.my-sink.com",
+							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:       []string{"my-existing-topic-a"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
 							Id:               SinkUUID,
