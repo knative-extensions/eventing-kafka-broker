@@ -25,22 +25,16 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/stretchr/testify/assert"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 	"knative.dev/eventing/test/lib/sender"
+	pkgtest "knative.dev/pkg/test"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
-)
-
-var (
-	podMeta = metav1.TypeMeta{
-		Kind:       "Pod",
-		APIVersion: "v1",
-	}
 )
 
 func TestBrokerIngressV1Beta1(t *testing.T) {
@@ -87,7 +81,8 @@ func TestBrokerIngressV1Beta1(t *testing.T) {
 				cetest.HasId(eventID),
 				cetest.HasSpecVersion("0.3"),
 			))
-			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			err := pkgtest.WaitForPodRunning(ctx, client.Kube, senderName, client.Namespace)
+			assert.Nil(t, err, err)
 			eventTracker.AssertAtLeast(1, originalEventMatcher)
 		})
 
@@ -108,7 +103,8 @@ func TestBrokerIngressV1Beta1(t *testing.T) {
 				cetest.HasId(eventID),
 				cetest.HasSpecVersion("1.0"),
 			))
-			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			err := pkgtest.WaitForPodRunning(ctx, client.Kube, senderName, client.Namespace)
+			assert.Nil(t, err, err)
 			eventTracker.AssertAtLeast(1, originalEventMatcher)
 
 		})
@@ -128,7 +124,8 @@ func TestBrokerIngressV1Beta1(t *testing.T) {
 			originalEventMatcher := recordevents.MatchEvent(cetest.AllOf(
 				cetest.HasId(eventID),
 			))
-			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			err := pkgtest.WaitForPodRunning(ctx, client.Kube, senderName, client.Namespace)
+			assert.Nil(t, err, err)
 			eventTracker.AssertAtLeast(1, originalEventMatcher)
 		})
 
@@ -147,7 +144,8 @@ func TestBrokerIngressV1Beta1(t *testing.T) {
 			originalEventMatcher := recordevents.MatchEvent(cetest.AllOf(
 				cetest.HasId(eventID),
 			))
-			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			err := pkgtest.WaitForPodRunning(ctx, client.Kube, senderName, client.Namespace)
+			assert.Nil(t, err, err)
 			eventTracker.AssertAtLeast(1, originalEventMatcher)
 		})
 
@@ -167,7 +165,8 @@ func TestBrokerIngressV1Beta1(t *testing.T) {
 				body,
 				sender.WithResponseSink(responseSink),
 			)
-			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			err := pkgtest.WaitForPodRunning(ctx, client.Kube, senderName, client.Namespace)
+			assert.Nil(t, err, err)
 			eventTracker.AssertExact(1, recordevents.MatchEvent(sender.MatchStatusCode(202))) // should probably be a range
 
 		})
@@ -187,7 +186,8 @@ func TestBrokerIngressV1Beta1(t *testing.T) {
 				},
 				body,
 				sender.WithResponseSink(responseSink))
-			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			err := pkgtest.WaitForPodRunning(ctx, client.Kube, senderName, client.Namespace)
+			assert.Nil(t, err, err)
 			eventTracker.AssertExact(1, recordevents.MatchEvent(sender.MatchStatusCode(400)))
 		})
 	})
@@ -279,7 +279,8 @@ func TestBrokerConsumerV1Beta1(t *testing.T) {
 				cetest.HasSpecVersion("0.3"),
 				cetest.HasId("no-upgrade"),
 			))
-			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			err := pkgtest.WaitForPodRunning(ctx, client.Kube, senderName, client.Namespace)
+			assert.Nil(t, err, err)
 			eventTracker.AssertExact(1, originalEventMatcher)
 
 		})
@@ -296,7 +297,8 @@ func TestBrokerConsumerV1Beta1(t *testing.T) {
 				cetest.HasSource(baseSource),
 				cetest.HasSpecVersion("1.0"),
 			)
-			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			err := pkgtest.WaitForPodRunning(ctx, client.Kube, senderName, client.Namespace)
+			assert.Nil(t, err, err)
 			eventTracker.AssertExact(1, originalEventMatcher)
 		})
 
@@ -315,8 +317,10 @@ func TestBrokerConsumerV1Beta1(t *testing.T) {
 			nonEventMatcher := recordevents.MatchEvent(
 				cetest.HasSource(baseSource),
 			)
-			client.WaitForResourceReadyOrFail(firstSenderName, &podMeta)
-			client.WaitForResourceReadyOrFail(secondSenderName, &podMeta)
+			err := pkgtest.WaitForPodRunning(ctx, client.Kube, firstSenderName, client.Namespace)
+			assert.Nil(t, err, err)
+			err = pkgtest.WaitForPodRunning(ctx, client.Kube, secondSenderName, client.Namespace)
+			assert.Nil(t, err, err)
 			secondTracker.AssertAtLeast(1, filteredEventMatcher)
 			secondTracker.AssertNot(nonEventMatcher)
 		})
@@ -330,7 +334,8 @@ func TestBrokerConsumerV1Beta1(t *testing.T) {
 			filteredEventMatcher := recordevents.MatchEvent(
 				cetest.HasSource(source),
 			)
-			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			err := pkgtest.WaitForPodRunning(ctx, client.Kube, senderName, client.Namespace)
+			assert.Nil(t, err, err)
 			eventTracker.AssertAtLeast(1, filteredEventMatcher)
 			secondTracker.AssertAtLeast(1, filteredEventMatcher)
 		})
@@ -344,7 +349,8 @@ func TestBrokerConsumerV1Beta1(t *testing.T) {
 			originalEventMatcher := recordevents.MatchEvent(
 				cetest.HasSource(source),
 			)
-			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			err := pkgtest.WaitForPodRunning(ctx, client.Kube, senderName, client.Namespace)
+			assert.Nil(t, err, err)
 			eventTracker.AssertAtLeast(1, originalEventMatcher)
 		})
 
@@ -361,7 +367,8 @@ func TestBrokerConsumerV1Beta1(t *testing.T) {
 				cetest.HasType("reply-check-type"),
 				cetest.HasData(transformMsg),
 			)
-			client.WaitForResourceReadyOrFail(senderName, &podMeta)
+			err := pkgtest.WaitForPodRunning(ctx, client.Kube, senderName, client.Namespace)
+			assert.Nil(t, err, err)
 			eventTracker.AssertAtLeast(2, transformedEventMatcher)
 		})
 	})
