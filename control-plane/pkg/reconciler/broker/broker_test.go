@@ -19,11 +19,12 @@ package broker_test // different package name due to import cycles. (broker -> t
 import (
 	"context"
 	"fmt"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"net/url"
 	"sync"
 	"testing"
 	"time"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"

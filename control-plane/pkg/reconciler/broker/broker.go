@@ -19,10 +19,11 @@ package broker
 import (
 	"context"
 	"fmt"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"math"
 	"strings"
 	"sync"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"

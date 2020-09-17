@@ -17,9 +17,10 @@
 package config
 
 import (
+	"testing"
+
 	"google.golang.org/protobuf/testing/protocmp"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
