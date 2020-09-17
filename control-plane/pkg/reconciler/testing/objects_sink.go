@@ -132,6 +132,10 @@ func SinkTopicReady(sink *eventing.KafkaSink) {
 	SinkTopicReadyWithName(SinkTopic())(sink)
 }
 
+func SinkConfigParsed(sink *eventing.KafkaSink) {
+	sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrue(base.ConditionConfigParsed)
+}
+
 func SinkTopicNotPresentErr(topic string, err error) func(sink *eventing.KafkaSink) {
 	return func(sink *eventing.KafkaSink) {
 		sink.GetConditionSet().Manage(sink.GetStatus()).MarkFalse(
