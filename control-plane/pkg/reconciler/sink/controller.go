@@ -28,6 +28,7 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 
+	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	sinkinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/eventing/v1alpha1/kafkasink"
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -35,6 +36,8 @@ import (
 )
 
 func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env) *controller.Impl {
+
+	eventing.RegisterConditionSet(base.ConditionSet)
 
 	logger := logging.FromContext(ctx)
 

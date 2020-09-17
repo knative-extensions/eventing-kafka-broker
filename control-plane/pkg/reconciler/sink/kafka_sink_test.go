@@ -78,6 +78,8 @@ var (
 
 func TestSinkReconciler(t *testing.T) {
 
+	v1alpha1.RegisterConditionSet(base.ConditionSet)
+
 	t.Parallel()
 
 	for _, f := range Formats {
@@ -631,6 +633,8 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 }
 
 func TestSinkFinalizer(t *testing.T) {
+
+	v1alpha1.RegisterConditionSet(base.ConditionSet)
 
 	t.Parallel()
 

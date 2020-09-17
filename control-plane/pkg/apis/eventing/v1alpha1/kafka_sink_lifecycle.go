@@ -19,16 +19,14 @@ package v1alpha1
 import "knative.dev/pkg/apis"
 
 const (
-	ConditionAddressable      apis.ConditionType = "Addressable"
-	ConditionTopicReady       apis.ConditionType = "TopicReady"
-	ConditionConfigMapUpdated apis.ConditionType = "ConfigMapUpdated"
+	ConditionAddressable        apis.ConditionType = "Addressable"
 )
 
-var conditionSet = apis.NewLivingConditionSet(
-	ConditionAddressable,
-	ConditionTopicReady,
-	ConditionConfigMapUpdated,
-)
+var conditionSet apis.ConditionSet
+
+func RegisterConditionSet(cs apis.ConditionSet) {
+	conditionSet = cs
+}
 
 func (ks *KafkaSink) GetConditionSet() apis.ConditionSet {
 	return conditionSet
