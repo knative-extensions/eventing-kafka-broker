@@ -187,33 +187,33 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 
 	logger := log.Logger(ctx, "finalize", ks)
 
-	// Get sinks config map.
-	sinksConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	// Get contract config map.
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get sinks config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
+		return fmt.Errorf("failed to get contract config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
 	}
 
-	logger.Debug("Got sinks config map")
+	logger.Debug("Got contract config map")
 
-	// Get sinks data.
-	sinks, err := r.GetDataPlaneConfigMapData(logger, sinksConfigMap)
+	// Get contract data.
+	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
 	if err != nil {
-		return fmt.Errorf("failed to get sinks: %w", err)
+		return fmt.Errorf("failed to get contract: %w", err)
 	}
 
 	logger.Debug(
-		"Got sinks data from config map",
-		zap.Any("sinks", (*log.ContractMarshaller)(sinks)),
+		"Got contract data from config map",
+		zap.Any("contract", (*log.ContractMarshaller)(ct)),
 	)
 
-	sinkIndex := coreconfig.FindResource(sinks, ks.UID)
+	sinkIndex := coreconfig.FindResource(ct, ks.UID)
 	if sinkIndex != coreconfig.NoResource {
-		coreconfig.DeleteResource(sinks, sinkIndex)
+		coreconfig.DeleteResource(ct, sinkIndex)
 
 		logger.Debug("Sink deleted", zap.Int("index", sinkIndex))
 
-		// Update the configuration map with the new sinks data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, sinks, sinksConfigMap); err != nil {
+		// Update the configuration map with the new contract data.
+		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
 			return err
 		}
 
