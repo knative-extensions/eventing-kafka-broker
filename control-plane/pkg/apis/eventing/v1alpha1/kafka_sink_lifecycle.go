@@ -19,7 +19,7 @@ package v1alpha1
 import "knative.dev/pkg/apis"
 
 const (
-	ConditionAddressable        apis.ConditionType = "Addressable"
+	ConditionAddressable apis.ConditionType = "Addressable"
 )
 
 var conditionSet apis.ConditionSet
