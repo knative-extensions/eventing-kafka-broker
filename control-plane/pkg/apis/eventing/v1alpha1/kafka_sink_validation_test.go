@@ -72,12 +72,69 @@ func TestKafkaSink_Validate(t *testing.T) {
 			want: apis.ErrInvalidValue("str", "spec.contentMode"),
 		},
 		{
+			name: "invalid num partitions 0",
+			ks: &KafkaSink{
+				Spec: KafkaSinkSpec{
+					Topic:             "topic-name-1",
+					BootstrapServers:  []string{"broker-1:9092"},
+					ContentMode:       pointer.StringPtr(ModeBinary),
+					ReplicationFactor: pointerInt16(10),
+					NumPartitions:     pointer.Int32Ptr(0),
+				},
+			},
+			ctx:  context.Background(),
+			want: apis.ErrInvalidValue("0", "spec.numPartitions"),
+		},
+		{
+			name: "invalid num partitions",
+			ks: &KafkaSink{
+				Spec: KafkaSinkSpec{
+					Topic:             "topic-name-1",
+					BootstrapServers:  []string{"broker-1:9092"},
+					ContentMode:       pointer.StringPtr(ModeBinary),
+					ReplicationFactor: pointerInt16(10),
+					NumPartitions:     pointer.Int32Ptr(-10),
+				},
+			},
+			ctx:  context.Background(),
+			want: apis.ErrInvalidValue("-10", "spec.numPartitions"),
+		},
+		{
+			name: "invalid replication factor 0",
+			ks: &KafkaSink{
+				Spec: KafkaSinkSpec{
+					Topic:             "topic-name-1",
+					BootstrapServers:  []string{"broker-1:9092"},
+					ContentMode:       pointer.StringPtr(ModeBinary),
+					ReplicationFactor: pointerInt16(0),
+					NumPartitions:     pointer.Int32Ptr(10),
+				},
+			},
+			ctx:  context.Background(),
+			want: apis.ErrInvalidValue("0", "spec.replicationFactor"),
+		},
+		{
+			name: "invalid replication factor",
+			ks: &KafkaSink{
+				Spec: KafkaSinkSpec{
+					Topic:             "topic-name-1",
+					BootstrapServers:  []string{"broker-1:9092"},
+					ContentMode:       pointer.StringPtr(ModeBinary),
+					ReplicationFactor: pointerInt16(-10),
+					NumPartitions:     pointer.Int32Ptr(10),
+				},
+			},
+			ctx:  context.Background(),
+			want: apis.ErrInvalidValue("-10", "spec.replicationFactor"),
+		},
+		{
 			name: "immutable replication factor",
 			ks: &KafkaSink{
 				Spec: KafkaSinkSpec{
 					Topic:             "topic-name-1",
 					BootstrapServers:  []string{"broker-1:9092"},
 					ReplicationFactor: pointerInt16(10),
+					NumPartitions:     pointer.Int32Ptr(10),
 				},
 			},
 			ctx: apis.WithinUpdate(context.Background(), &KafkaSink{
@@ -85,6 +142,7 @@ func TestKafkaSink_Validate(t *testing.T) {
 					Topic:             "topic-name-1",
 					BootstrapServers:  []string{"broker-2:9092"},
 					ReplicationFactor: pointerInt16(11),
+					NumPartitions:     pointer.Int32Ptr(10),
 				},
 			}),
 			want: ErrImmutableField("spec.replicationFactor"),
@@ -93,16 +151,18 @@ func TestKafkaSink_Validate(t *testing.T) {
 			name: "immutable num partitions",
 			ks: &KafkaSink{
 				Spec: KafkaSinkSpec{
-					Topic:            "topic-name-1",
-					BootstrapServers: []string{"broker-1:9092"},
-					NumPartitions:    pointer.Int32Ptr(10),
+					Topic:             "topic-name-1",
+					BootstrapServers:  []string{"broker-1:9092"},
+					ReplicationFactor: pointerInt16(11),
+					NumPartitions:     pointer.Int32Ptr(10),
 				},
 			},
 			ctx: apis.WithinUpdate(context.Background(), &KafkaSink{
 				Spec: KafkaSinkSpec{
-					Topic:            "topic-name-1",
-					BootstrapServers: []string{"broker-2:9092"},
-					NumPartitions:    pointer.Int32Ptr(11),
+					Topic:             "topic-name-1",
+					BootstrapServers:  []string{"broker-2:9092"},
+					ReplicationFactor: pointerInt16(11),
+					NumPartitions:     pointer.Int32Ptr(11),
 				},
 			}),
 			want: ErrImmutableField("spec.numPartitions"),
