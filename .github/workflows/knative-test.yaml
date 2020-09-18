@@ -72,4 +72,5 @@ jobs:
         name: Codecov
         uses: codecov/codecov-action@v1
         with:
-          files: ./coverage.xml,./data-plane/target/jacoco/jacoco.xml
+          files: ./coverage.txt,./data-plane/target/jacoco/jacoco.xml
+          flags: unittests
