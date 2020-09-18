@@ -52,7 +52,7 @@ func NewDefaultingAdmissionController(ctx context.Context, _ configmap.Watcher) 
 
 	return defaulting.NewAdmissionController(ctx,
 		// Name of the resource webhook.
-		"defaulting.webhook.kafka."+eventing.GroupName,
+		"defaulting.webhook.kafka.eventing.knative.dev",
 
 		// The path on which to serve the webhook.
 		"/defaulting",
@@ -71,7 +71,7 @@ func NewDefaultingAdmissionController(ctx context.Context, _ configmap.Watcher) 
 func NewValidationAdmissionController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 	return validation.NewAdmissionController(ctx,
 		// Name of the resource webhook.
-		"validation.webhook.kafka."+eventing.GroupName,
+		"validation.webhook.kafka.eventing.knative.dev",
 
 		// The path on which to serve the webhook.
 		"/resource-validation",
@@ -128,7 +128,7 @@ func main() {
 		ServiceName: logconfig.WebhookName(),
 		Port:        webhook.PortFromEnv(8443),
 		// SecretName must match the name of the Secret created in the configuration.
-		SecretName: "eventing-webhook-certs",
+		SecretName: "kafka-webhook-eventing-certs",
 	})
 
 	sharedmain.MainWithContext(ctx, logconfig.WebhookName(),
