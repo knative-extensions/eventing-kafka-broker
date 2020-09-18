@@ -32,20 +32,25 @@ jobs:
     strategy:
       matrix:
         go-version: [1.14.x]
+        java-version: [ 14 ]
         platform: [ubuntu-latest]
 
     runs-on: ${{ matrix.platform }}
 
     steps:
+      - name: Check out code
+        uses: actions/checkout@v2
 
-      - name: Set up Go ${{ matrix.go-version }}
+      - name: Setup Go ${{ matrix.go-version }}
         uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }}
         id: go
 
-      - name: Check out code
-        uses: actions/checkout@v2
+      - name: Setup java
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java-version }}
 
       - name: Check for .codecov.yaml
         id: codecov-enabled
@@ -57,9 +62,15 @@ jobs:
         name: Produce Go Coverage
         run: echo '::set-env name=COVER_OPTS::-coverprofile=coverage.txt -covermode=atomic'
 
-      - name: Test
+      - name: Go Test
         run: go test -race $COVER_OPTS ./...
+
+      - name: Java Test
+        run: mvn verify --file data-plane/pom.xml --no-transfer-progress
 
       - if: steps.codecov-enabled.outputs.files_exists == 'true'
         name: Codecov
         uses: codecov/codecov-action@v1
+        with:
+          files: ./coverage.txt,./data-plane/target/jacoco/jacoco.xml
+          flags: unittests
