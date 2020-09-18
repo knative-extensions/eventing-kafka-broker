@@ -66,7 +66,7 @@ jobs:
         run: go test -race $COVER_OPTS ./...
 
       - name: Java Test
-        run: mvn verify --file data-plane/pom.xml
+        run: mvn verify --file data-plane/pom.xml --no-transfer-progress
 
       - if: steps.codecov-enabled.outputs.files_exists == 'true'
         name: Codecov
