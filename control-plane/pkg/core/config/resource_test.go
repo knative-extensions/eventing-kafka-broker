@@ -17,9 +17,11 @@
 package config
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/testing/protocmp"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
@@ -276,6 +278,117 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 			if diff := cmp.Diff(tt.wantContract, tt.haveContract, protocmp.Transform()); diff != "" {
 				t.Errorf("(-want, +got) %s", diff)
 			}
+		})
+	}
+}
+
+func TestDeleteResource(t *testing.T) {
+
+	tests := []struct {
+		name  string
+		ct    *contract.Contract
+		index int
+		want  contract.Contract
+	}{
+		{
+			name: "1 resource",
+			ct: &contract.Contract{
+				Resources: []*contract.Resource{
+					{
+						Id: "1",
+					},
+				},
+				Generation: 200,
+			},
+			index: 0,
+			want: contract.Contract{
+				Generation: 200,
+			},
+		},
+		{
+			name: "2 resource",
+			ct: &contract.Contract{
+				Resources: []*contract.Resource{
+					{
+						Id: "1",
+					},
+					{
+						Id: "2",
+					},
+				},
+			},
+			index: 0,
+			want: contract.Contract{
+				Resources: []*contract.Resource{
+					{
+						Id: "2",
+					},
+				},
+			},
+		},
+		{
+			name: "3 resource - delete last",
+			ct: &contract.Contract{
+				Resources: []*contract.Resource{
+					{
+						Id: "1",
+					},
+					{
+						Id: "2",
+					},
+					{
+						Id: "3",
+					},
+				},
+			},
+			index: 2,
+			want: contract.Contract{
+				Resources: []*contract.Resource{
+					{
+						Id: "1",
+					},
+					{
+						Id: "2",
+					},
+				},
+			},
+		},
+		{
+			name: "3 broker - middle",
+			ct: &contract.Contract{
+				Resources: []*contract.Resource{
+					{
+						Id: "1",
+					},
+					{
+						Id: "2",
+					},
+					{
+						Id: "3",
+					},
+				},
+				Generation: 200,
+			},
+			index: 1,
+			want: contract.Contract{
+				Resources: []*contract.Resource{
+					{
+						Id: "1",
+					},
+					{
+						Id: "3",
+					},
+				},
+				Generation: 200,
+			},
+		},
+	}
+	for i := range tests {
+		t.Run(tests[i].name, func(t *testing.T) {
+
+			DeleteResource(tests[i].ct, tests[i].index)
+
+			assert.Equal(t, tests[i].ct, &tests[i].want)
 		})
 	}
 }

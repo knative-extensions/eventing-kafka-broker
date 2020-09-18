@@ -19,6 +19,7 @@ package base
 import (
 	"context"
 	"fmt"
+
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"

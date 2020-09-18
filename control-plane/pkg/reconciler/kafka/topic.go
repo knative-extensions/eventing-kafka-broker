@@ -110,3 +110,23 @@ func (f NewClusterAdminFunc) DeleteTopic(topic string, bootstrapServers []string
 
 	return DeleteTopic(kafkaClusterAdmin, topic)
 }
+
+func (f NewClusterAdminFunc) IsTopicPresentAndValid(topic string, bootstrapServers []string) (bool, error) {
+
+	kafkaClusterAdmin, err := GetClusterAdmin(f, bootstrapServers)
+	if err != nil {
+		return false, err
+	}
+	defer kafkaClusterAdmin.Close()
+
+	metadata, err := kafkaClusterAdmin.DescribeTopics([]string{topic})
+	if err != nil {
+		return false, fmt.Errorf("failed to describe topic %s: %w", topic, err)
+	}
+
+	return isValidSingleTopicMetadata(metadata, topic), nil
+}
+
+func isValidSingleTopicMetadata(metadata []*sarama.TopicMetadata, topic string) bool {
+	return len(metadata) == 1 && metadata[0].Name == topic && !metadata[0].IsInternal
+}

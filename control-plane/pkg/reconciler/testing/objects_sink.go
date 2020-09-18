@@ -19,6 +19,7 @@ package testing
 import (
 	"context"
 	"fmt"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,6 +34,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 )
 
 const (
@@ -42,6 +44,8 @@ const (
 
 	SinkNumPartitions     = 10
 	SinkReplicationFactor = 3
+
+	SinkNotPresentErrFormat = "failed to describe topic %s: %v"
 
 	topicPrefix = "knative-sink-"
 )
@@ -74,6 +78,17 @@ func NewSink(options ...SinkOption) runtime.Object {
 	sink.SetDefaults(context.Background())
 
 	return sink
+}
+
+func NewDeletedSink(options ...SinkOption) runtime.Object {
+	return NewSink(
+		append(
+			options,
+			func(sink *eventing.KafkaSink) {
+				sink.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+			},
+		)...,
+	)
 }
 
 func SinkTopic() string {
@@ -113,8 +128,31 @@ func SinkTopicReadyWithName(topic string) func(sink *eventing.KafkaSink) {
 	}
 }
 
+func SinkTopicReadyWithOwner(topic, owner string) func(sink *eventing.KafkaSink) {
+	return func(sink *eventing.KafkaSink) {
+		sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrueWithReason(
+			base.ConditionTopicReady,
+			fmt.Sprintf("Topic %s (owner %s)", topic, owner),
+			"",
+		)
+	}
+}
 func SinkTopicReady(sink *eventing.KafkaSink) {
 	SinkTopicReadyWithName(SinkTopic())(sink)
+}
+
+func SinkConfigParsed(sink *eventing.KafkaSink) {
+	sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrue(base.ConditionConfigParsed)
+}
+
+func SinkTopicNotPresentErr(topic string, err error) func(sink *eventing.KafkaSink) {
+	return func(sink *eventing.KafkaSink) {
+		sink.GetConditionSet().Manage(sink.GetStatus()).MarkFalse(
+			base.ConditionTopicReady,
+			base.ReasonTopicNotPresent,
+			fmt.Sprintf(SinkNotPresentErrFormat, topic, err),
+		)
+	}
 }
 
 func SinkDataPlaneAvailable(sink *eventing.KafkaSink) {
@@ -127,6 +165,22 @@ func SinkDataPlaneNotAvailable(sink *eventing.KafkaSink) {
 		base.ReasonDataPlaneNotAvailable,
 		base.MessageDataPlaneNotAvailable,
 	)
+}
+
+func SinkControllerOwnsTopic(sink *eventing.KafkaSink) {
+	allocateStatusAnnotations(sink)
+	sink.GetStatus().Annotations[base.TopicOwnerAnnotation] = sinkreconciler.ControllerTopicOwner
+}
+
+func SinkControllerDontOwnTopic(sink *eventing.KafkaSink) {
+	allocateStatusAnnotations(sink)
+	sink.GetStatus().Annotations[base.TopicOwnerAnnotation] = sinkreconciler.ExternalTopicOwner
+}
+
+func allocateStatusAnnotations(sink *eventing.KafkaSink) {
+	if sink.GetStatus().Annotations == nil {
+		sink.GetStatus().Annotations = make(map[string]string, 1)
+	}
 }
 
 func SinkAddressable(configs *config.Env) func(sink *eventing.KafkaSink) {

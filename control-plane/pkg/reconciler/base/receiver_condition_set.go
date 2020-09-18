@@ -48,8 +48,12 @@ var ConditionSet = apis.NewLivingConditionSet(
 )
 
 const (
+	TopicOwnerAnnotation = "eventing.knative.dev/topic.owner"
+
 	ReasonDataPlaneNotAvailable  = "Data plane not available"
 	MessageDataPlaneNotAvailable = "Did you install the data plane for this component?"
+
+	ReasonTopicNotPresent = "Topic is not present"
 )
 
 type Object interface {
@@ -145,7 +149,17 @@ func (manager *StatusConditionManager) FailedToCreateTopic(topic string, err err
 	return fmt.Errorf("failed to create topic: %s: %w", topic, err)
 }
 
-func (manager *StatusConditionManager) TopicCreated(topic string) {
+func (manager *StatusConditionManager) TopicReady(topic string) {
+
+	if owner, ok := manager.Object.GetStatus().Annotations[TopicOwnerAnnotation]; ok {
+		manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrueWithReason(
+			ConditionTopicReady,
+			fmt.Sprintf("Topic %s (owner %s)", topic, owner),
+			"",
+		)
+
+		return
+	}
 
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrueWithReason(
 		ConditionTopicReady,
@@ -205,4 +219,26 @@ func (manager *StatusConditionManager) FailedToResolveConfig(err error) reconcil
 
 func (manager *StatusConditionManager) ConfigResolved() {
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrue(ConditionConfigParsed)
+}
+
+func (manager *StatusConditionManager) TopicNotPresentOrInvalidErr(err error) error {
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
+		ConditionTopicReady,
+		ReasonTopicNotPresent,
+		err.Error(),
+	)
+
+	return fmt.Errorf("topic is not present: %w", err)
+}
+
+func (manager *StatusConditionManager) TopicNotPresentOrInvalid() error {
+
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
+		ConditionTopicReady,
+		ReasonTopicNotPresent,
+		"Check topic configuration",
+	)
+
+	return fmt.Errorf("topic is not present: check topic configuration")
+
 }

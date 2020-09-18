@@ -18,10 +18,11 @@ package observability
 
 import (
 	"context"
-	"google.golang.org/protobuf/encoding/protojson"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"log"
 	"sync"
+
+	"google.golang.org/protobuf/encoding/protojson"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"

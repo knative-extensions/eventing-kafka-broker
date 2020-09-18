@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package sink
+package sink_test
 
 import (
 	"context"
 	"fmt"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"io"
 	"testing"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
@@ -41,6 +43,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 )
 
@@ -49,10 +52,13 @@ const (
 
 	bootstrapServers = "kafka-1:9092,kafka-2:9093"
 
-	wantTopicName          = "wantTopicName"
-	wantErrorOnCreateTopic = "wantErrorOnCreateTopic"
-	wantErrorOnDeleteTopic = "wantErrorOnDeleteTopic"
-	ExpectedTopicDetail    = "expectedTopicDetail"
+	wantTopicName                  = "wantTopicName"
+	wantErrorOnCreateTopic         = "wantErrorOnCreateTopic"
+	wantErrorOnDeleteTopic         = "wantErrorOnDeleteTopic"
+	ExpectedTopicDetail            = "expectedTopicDetail"
+	ExpectedTopicsOnDescribeTopics = "expectedTopicsOnDescribeTopics"
+	ExpectedTopicIsPresent         = "expectedTopicIsPresent"
+	ExpectedErrorOnDescribeTopics  = "expectedErrorOnDescribeTopics"
 
 	TopicPrefix = "knative-sink-"
 )
@@ -72,6 +78,8 @@ var (
 
 func TestSinkReconciler(t *testing.T) {
 
+	v1alpha1.RegisterConditionSet(base.ConditionSet)
+
 	t.Parallel()
 
 	for _, f := range Formats {
@@ -89,7 +97,9 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 		{
 			Name: "Reconciled normal",
 			Objects: []runtime.Object{
-				NewSink(),
+				NewSink(
+					SinkControllerOwnsTopic,
+				),
 				NewConfigMap(&configs, nil),
 				SinkReceiverPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
@@ -123,20 +133,137 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
+						SinkControllerOwnsTopic,
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
+						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
+						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&configs.Env),
 					),
 				},
 			},
 		},
 		{
+			Name: "Reconciled normal - no topic owner",
+			Objects: []runtime.Object{
+				NewSink(
+					SinkControllerDontOwnTopic,
+					func(sink *v1alpha1.KafkaSink) {
+						sink.Spec.ReplicationFactor = nil
+						sink.Spec.NumPartitions = nil
+					},
+				),
+				NewConfigMap(&configs, nil),
+				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Id:               SinkUUID,
+							Topics:           []string{SinkTopic()},
+							BootstrapServers: bootstrapServers,
+							Ingress: &contract.Ingress{
+								ContentMode: contract.ContentMode_STRUCTURED,
+								IngressType: &contract.Ingress_Path{
+									Path: receiver.Path(SinkNamespace, SinkName),
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						SinkControllerDontOwnTopic,
+						func(sink *v1alpha1.KafkaSink) {
+							sink.Spec.ReplicationFactor = nil
+							sink.Spec.NumPartitions = nil
+						},
+						InitSinkConditions,
+						SinkDataPlaneAvailable,
+						SinkConfigParsed,
+						BootstrapServers(bootstrapServersArr),
+						SinkConfigMapUpdatedReady(&configs.Env),
+						SinkTopicReady,
+						SinkTopicReadyWithOwner(SinkTopic(), sink.ExternalTopicOwner),
+						SinkAddressable(&configs.Env),
+					),
+				},
+			},
+		},
+		{
+			Name: "No topic owner - topic present err",
+			Objects: []runtime.Object{
+				NewSink(
+					SinkControllerDontOwnTopic,
+					func(sink *v1alpha1.KafkaSink) {
+						sink.Spec.ReplicationFactor = nil
+						sink.Spec.NumPartitions = nil
+					},
+				),
+				NewConfigMap(&configs, nil),
+				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					"topic is not present: "+SinkNotPresentErrFormat,
+					SinkTopic(), io.EOF,
+				),
+			},
+			WantErr: true,
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						SinkControllerDontOwnTopic,
+						func(sink *v1alpha1.KafkaSink) {
+							sink.Spec.ReplicationFactor = nil
+							sink.Spec.NumPartitions = nil
+						},
+						InitSinkConditions,
+						SinkDataPlaneAvailable,
+						SinkTopicNotPresentErr(SinkTopic(), io.EOF),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				ExpectedErrorOnDescribeTopics: io.EOF,
+			},
+		},
+		{
 			Name: "Reconciled normal - set topic and bootstrap servers",
 			Objects: []runtime.Object{
 				NewSink(
+					SinkControllerOwnsTopic,
 					func(sink *v1alpha1.KafkaSink) {
 						sink.Spec.Topic = "my-topic-1"
 						sink.Spec.BootstrapServers = []string{"kafka-broker:10000"}
@@ -175,15 +302,17 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
+						SinkControllerOwnsTopic,
 						func(sink *v1alpha1.KafkaSink) {
 							sink.Spec.Topic = "my-topic-1"
 							sink.Spec.BootstrapServers = []string{"kafka-broker:10000"}
 						},
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
+						SinkConfigParsed,
 						BootstrapServers([]string{"kafka-broker:10000"}),
+						SinkTopicReadyWithOwner("my-topic-1", sink.ControllerTopicOwner),
 						SinkConfigMapUpdatedReady(&configs.Env),
-						SinkTopicReadyWithName("my-topic-1"),
 						SinkAddressable(&configs.Env),
 					),
 				},
@@ -196,6 +325,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			Name: "Failed to create topic",
 			Objects: []runtime.Object{
 				NewSink(
+					SinkControllerOwnsTopic,
 					BootstrapServers(bootstrapServersArr),
 				),
 				SinkReceiverPod(configs.SystemNamespace, nil),
@@ -217,6 +347,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
+						SinkControllerOwnsTopic,
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
 						BootstrapServers(bootstrapServersArr),
@@ -232,6 +363,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			Name: "Config map not found - create config map",
 			Objects: []runtime.Object{
 				NewSink(
+					SinkControllerOwnsTopic,
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewService(),
@@ -273,11 +405,14 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
+						SinkControllerOwnsTopic,
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
+						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
+						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&configs.Env),
 					),
 				},
@@ -287,6 +422,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			Name: "Reconciled normal - config map not readable",
 			Objects: []runtime.Object{
 				NewSink(
+					SinkControllerOwnsTopic,
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMap(&configs, []byte(`{"hello": "world"}`)),
@@ -318,11 +454,14 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
+						SinkControllerOwnsTopic,
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
+						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
+						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&configs.Env),
 					),
 				},
@@ -332,6 +471,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			Name: "Reconciled normal - preserve config map previous state",
 			Objects: []runtime.Object{
 				NewSink(
+					SinkControllerOwnsTopic,
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMapFromContract(&contract.Contract{
@@ -386,11 +526,14 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
+						SinkControllerOwnsTopic,
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
+						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
+						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&configs.Env),
 					),
 				},
@@ -400,6 +543,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			Name: "Reconciled normal - update existing broker while preserving others",
 			Objects: []runtime.Object{
 				NewSink(
+					SinkControllerOwnsTopic,
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMapFromContract(&contract.Contract{
@@ -452,11 +596,13 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
+						SinkControllerOwnsTopic,
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
+						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
-						SinkTopicReady,
+						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&configs.Env),
 					),
 				},
@@ -498,6 +644,212 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 	useTable(t, table, &configs)
 }
 
+func TestSinkFinalizer(t *testing.T) {
+
+	v1alpha1.RegisterConditionSet(base.ConditionSet)
+
+	t.Parallel()
+
+	for _, f := range Formats {
+		sinkFinalization(t, f, *DefaultConfigs)
+	}
+}
+
+func sinkFinalization(t *testing.T, format string, configs broker.Configs) {
+
+	testKey := fmt.Sprintf("%s/%s", SinkNamespace, SinkName)
+
+	configs.DataPlaneConfigFormat = format
+
+	table := TableTest{
+		{
+			Name: "Reconciled normal - topic externally controlled",
+			Objects: []runtime.Object{
+				NewDeletedSink(
+					SinkControllerDontOwnTopic,
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Id:     SinkUUID + "a",
+							Topics: []string{"topic"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+						{
+							Id:     SinkUUID,
+							Topics: []string{"topic"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 1,
+				}, &configs),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Id:     SinkUUID + "a",
+							Topics: []string{"topic"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 1,
+				}),
+			},
+		},
+		{
+			Name: "Reconciled normal - topic controlled by us",
+			Objects: []runtime.Object{
+				NewDeletedSink(
+					SinkControllerOwnsTopic,
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Id:     SinkUUID + "a",
+							Topics: []string{"topic"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+						{
+							Id:     SinkUUID,
+							Topics: []string{"topic-2"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 1,
+				}, &configs),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Id:     SinkUUID + "a",
+							Topics: []string{"topic"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 1,
+				}),
+			},
+		},
+		{
+			Name: "Reconciled normal - topic controlled by us - error deleting topic",
+			Objects: []runtime.Object{
+				NewDeletedSink(
+					SinkControllerOwnsTopic,
+					func(sink *v1alpha1.KafkaSink) {
+						sink.Spec.Topic = "topic-2"
+					},
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Id:     SinkUUID + "a",
+							Topics: []string{"topic"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+						{
+							Id:     SinkUUID,
+							Topics: []string{"topic-2"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 1,
+				}, &configs),
+			},
+			Key:     testKey,
+			WantErr: true,
+			WantEvents: []string{
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					"failed to delete topic %s: %v",
+					"topic-2", deleteTopicError,
+				),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Id:     SinkUUID + "a",
+							Topics: []string{"topic"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 1,
+				}),
+			},
+			OtherTestData: map[string]interface{}{
+				wantErrorOnDeleteTopic: deleteTopicError,
+				wantTopicName:          "topic-2",
+			},
+		},
+	}
+
+	for i := range table {
+		table[i].Name = table[i].Name + " - " + format
+	}
+
+	useTable(t, table, &configs)
+}
+
 func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 
 	table.Test(t, NewFactory(configs, func(ctx context.Context, listers *Listers, configs *broker.Configs, row *TableRow) controller.Reconciler {
@@ -527,7 +879,31 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 			expectedTopicDetail = td.(sarama.TopicDetail)
 		}
 
-		reconciler := &Reconciler{
+		expectedTopicsOnDescribeTopics := []string{SinkTopic()}
+		if et, ok := row.OtherTestData[ExpectedTopicsOnDescribeTopics]; ok {
+			expectedTopicsOnDescribeTopics = et.([]string)
+		}
+		expectedTopicIsPresent := true
+		if isPresent, ok := row.OtherTestData[ExpectedTopicIsPresent]; ok {
+			expectedTopicIsPresent = isPresent.(bool)
+		}
+
+		var metadata []*sarama.TopicMetadata
+		if expectedTopicIsPresent {
+			for _, topic := range expectedTopicsOnDescribeTopics {
+				metadata = append(metadata, &sarama.TopicMetadata{
+					Name:       topic,
+					IsInternal: false,
+				})
+			}
+		}
+
+		var errorOnDescribeTopics error
+		if isPresentError, ok := row.OtherTestData[ExpectedErrorOnDescribeTopics]; ok {
+			errorOnDescribeTopics = isPresentError.(error)
+		}
+
+		reconciler := &sink.Reconciler{
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
 				PodLister:                   listers.GetPodLister(),
@@ -540,11 +916,14 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 			ConfigMapLister: listers.GetConfigMapLister(),
 			ClusterAdmin: func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
-					ExpectedTopicName:   expectedTopicName,
-					ExpectedTopicDetail: expectedTopicDetail,
-					ErrorOnCreateTopic:  onCreateTopicError,
-					ErrorOnDeleteTopic:  onDeleteTopicError,
-					T:                   t,
+					ExpectedTopicName:                      expectedTopicName,
+					ExpectedTopicDetail:                    expectedTopicDetail,
+					ErrorOnCreateTopic:                     onCreateTopicError,
+					ErrorOnDeleteTopic:                     onDeleteTopicError,
+					ExpectedTopics:                         expectedTopicsOnDescribeTopics,
+					ExpectedTopicsMetadataOnDescribeTopics: metadata,
+					ExpectedErrorOnDescribeTopics:          errorOnDescribeTopics,
+					T:                                      t,
 				}, nil
 			},
 			Configs: &configs.Env,

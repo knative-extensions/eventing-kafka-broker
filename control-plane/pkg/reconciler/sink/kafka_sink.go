@@ -18,8 +18,10 @@ package sink
 
 import (
 	"context"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"fmt"
 	"math"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -35,6 +37,11 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+)
+
+const (
+	ExternalTopicOwner   = "external"
+	ControllerTopicOwner = "kafkasink-controller"
 )
 
 type Reconciler struct {
@@ -71,21 +78,36 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	}
 	statusConditionManager.DataPlaneAvailable()
 
+	if ks.GetStatus().Annotations == nil {
+		ks.GetStatus().Annotations = make(map[string]string, 1)
+	}
+
 	if ks.Spec.NumPartitions != nil && ks.Spec.ReplicationFactor != nil {
-		topicConfig := &kafka.TopicConfig{
-			TopicDetail: sarama.TopicDetail{
-				NumPartitions:     *ks.Spec.NumPartitions,
-				ReplicationFactor: *ks.Spec.ReplicationFactor,
-			},
-			BootstrapServers: ks.Spec.BootstrapServers,
-		}
+
+		ks.GetStatus().Annotations[base.TopicOwnerAnnotation] = ControllerTopicOwner
+
+		topicConfig := topicConfigFromSinkSpec(&ks.Spec)
 
 		topic, err := r.ClusterAdmin.CreateTopic(logger, ks.Spec.Topic, topicConfig)
 		if err != nil {
 			return statusConditionManager.FailedToCreateTopic(topic, err)
 		}
+	} else {
+
+		// If the topic is externally managed, we need to make sure that the topic exists and it's valid.
+
+		ks.GetStatus().Annotations[base.TopicOwnerAnnotation] = ExternalTopicOwner
+
+		isPresentAndValid, err := r.ClusterAdmin.IsTopicPresentAndValid(ks.Spec.Topic, ks.Spec.BootstrapServers)
+		if err != nil {
+			return statusConditionManager.TopicNotPresentOrInvalidErr(err)
+		}
+		if !isPresentAndValid {
+			// The topic might be invalid.
+			return statusConditionManager.TopicNotPresentOrInvalid()
+		}
 	}
-	statusConditionManager.TopicCreated(ks.Spec.Topic)
+	statusConditionManager.TopicReady(ks.Spec.Topic)
 
 	logger.Debug("Topic created", zap.Any("topic", ks.Spec.Topic))
 
@@ -121,6 +143,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		},
 		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
 	}
+	statusConditionManager.ConfigResolved()
 
 	sinkIndex := coreconfig.FindResource(ct, ks.UID)
 	// Update contract data with the new sink configuration.
@@ -161,12 +184,62 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, ks *eventing.KafkaSink) r
 
 func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) error {
 
-	// logger := log.Logger(ctx, "finalize", ks)
+	logger := log.Logger(ctx, "finalize", ks)
 
-	// TODO implement finalizer
+	// Get contract config map.
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get contract config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
+	}
+
+	logger.Debug("Got contract config map")
+
+	// Get contract data.
+	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
+	if err != nil {
+		return fmt.Errorf("failed to get contract: %w", err)
+	}
+
+	logger.Debug(
+		"Got contract data from config map",
+		zap.Any("contract", (*log.ContractMarshaller)(ct)),
+	)
+
+	sinkIndex := coreconfig.FindResource(ct, ks.UID)
+	if sinkIndex != coreconfig.NoResource {
+		coreconfig.DeleteResource(ct, sinkIndex)
+
+		logger.Debug("Sink deleted", zap.Int("index", sinkIndex))
+
+		// Update the configuration map with the new contract data.
+		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
+			return err
+		}
+
+		logger.Debug("Sinks config map updated")
+	}
+
+	if ks.GetStatus().Annotations[base.TopicOwnerAnnotation] == ControllerTopicOwner {
+		topic, err := r.ClusterAdmin.DeleteTopic(ks.Spec.Topic, ks.Spec.BootstrapServers)
+		if err != nil {
+			return err
+		}
+		logger.Debug("Topic deleted", zap.String("topic", topic))
+	}
+
 	return nil
 }
 
 func incrementGeneration(generation uint64) uint64 {
 	return (generation + 1) % (math.MaxUint64 - 1)
+}
+
+func topicConfigFromSinkSpec(kss *eventing.KafkaSinkSpec) *kafka.TopicConfig {
+	return &kafka.TopicConfig{
+		TopicDetail: sarama.TopicDetail{
+			NumPartitions:     *kss.NumPartitions,
+			ReplicationFactor: *kss.ReplicationFactor,
+		},
+		BootstrapServers: kss.BootstrapServers,
+	}
 }
