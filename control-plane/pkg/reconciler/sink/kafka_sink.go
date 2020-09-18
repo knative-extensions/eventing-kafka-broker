@@ -40,8 +40,6 @@ import (
 )
 
 const (
-	TopicOwnerAnnotation = "eventing.knative.dev/topic.owner"
-
 	ExternalTopicOwner   = "external"
 	ControllerTopicOwner = "kafkasink-controller"
 )
@@ -86,7 +84,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	if ks.Spec.NumPartitions != nil && ks.Spec.ReplicationFactor != nil {
 
-		ks.GetStatus().Annotations[TopicOwnerAnnotation] = ControllerTopicOwner
+		ks.GetStatus().Annotations[base.TopicOwnerAnnotation] = ControllerTopicOwner
 
 		topicConfig := topicConfigFromSinkSpec(&ks.Spec)
 
@@ -98,7 +96,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 		// If the topic is externally managed, we need to make sure that the topic exists and it's valid.
 
-		ks.GetStatus().Annotations[TopicOwnerAnnotation] = ExternalTopicOwner
+		ks.GetStatus().Annotations[base.TopicOwnerAnnotation] = ExternalTopicOwner
 
 		isPresentAndValid, err := r.ClusterAdmin.IsTopicPresentAndValid(ks.Spec.Topic, ks.Spec.BootstrapServers)
 		if err != nil {
@@ -221,7 +219,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 		logger.Debug("Sinks config map updated")
 	}
 
-	if ks.GetStatus().Annotations[TopicOwnerAnnotation] == ControllerTopicOwner {
+	if ks.GetStatus().Annotations[base.TopicOwnerAnnotation] == ControllerTopicOwner {
 		topic, err := r.ClusterAdmin.DeleteTopic(ks.Spec.Topic, ks.Spec.BootstrapServers)
 		if err != nil {
 			return err

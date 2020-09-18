@@ -128,6 +128,15 @@ func SinkTopicReadyWithName(topic string) func(sink *eventing.KafkaSink) {
 	}
 }
 
+func SinkTopicReadyWithOwner(topic, owner string) func(sink *eventing.KafkaSink) {
+	return func(sink *eventing.KafkaSink) {
+		sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrueWithReason(
+			base.ConditionTopicReady,
+			fmt.Sprintf("Topic %s (owner %s)", topic, owner),
+			"",
+		)
+	}
+}
 func SinkTopicReady(sink *eventing.KafkaSink) {
 	SinkTopicReadyWithName(SinkTopic())(sink)
 }
@@ -160,12 +169,12 @@ func SinkDataPlaneNotAvailable(sink *eventing.KafkaSink) {
 
 func SinkControllerOwnsTopic(sink *eventing.KafkaSink) {
 	allocateStatusAnnotations(sink)
-	sink.GetStatus().Annotations[sinkreconciler.TopicOwnerAnnotation] = sinkreconciler.ControllerTopicOwner
+	sink.GetStatus().Annotations[base.TopicOwnerAnnotation] = sinkreconciler.ControllerTopicOwner
 }
 
 func SinkControllerDontOwnTopic(sink *eventing.KafkaSink) {
 	allocateStatusAnnotations(sink)
-	sink.GetStatus().Annotations[sinkreconciler.TopicOwnerAnnotation] = sinkreconciler.ExternalTopicOwner
+	sink.GetStatus().Annotations[base.TopicOwnerAnnotation] = sinkreconciler.ExternalTopicOwner
 }
 
 func allocateStatusAnnotations(sink *eventing.KafkaSink) {

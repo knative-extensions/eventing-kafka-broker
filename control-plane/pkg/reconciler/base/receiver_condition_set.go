@@ -48,6 +48,8 @@ var ConditionSet = apis.NewLivingConditionSet(
 )
 
 const (
+	TopicOwnerAnnotation = "eventing.knative.dev/topic.owner"
+
 	ReasonDataPlaneNotAvailable  = "Data plane not available"
 	MessageDataPlaneNotAvailable = "Did you install the data plane for this component?"
 
@@ -148,6 +150,16 @@ func (manager *StatusConditionManager) FailedToCreateTopic(topic string, err err
 }
 
 func (manager *StatusConditionManager) TopicCreated(topic string) {
+
+	if owner, ok := manager.Object.GetStatus().Annotations[TopicOwnerAnnotation]; ok {
+		manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrueWithReason(
+			ConditionTopicReady,
+			fmt.Sprintf("Topic %s (owner %s)", topic, owner),
+			"",
+		)
+
+		return
+	}
 
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrueWithReason(
 		ConditionTopicReady,
