@@ -35,6 +35,10 @@ func RunMultiple(t *testing.T, f func(t *testing.T)) {
 func RunMultipleN(t *testing.T, n int, f func(t *testing.T)) {
 	t.Parallel()
 
+	if testing.Short() {
+		n = 1
+	}
+
 	for i := 0; i < n; i++ {
 		t.Run(fmt.Sprintf("%d", i), f)
 	}
