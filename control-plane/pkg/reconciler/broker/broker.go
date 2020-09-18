@@ -107,7 +107,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topic, err)
 	}
-	statusConditionManager.TopicCreated(topic)
+	statusConditionManager.TopicReady(topic)
 
 	logger.Debug("Topic created", zap.Any("topic", topic))
 

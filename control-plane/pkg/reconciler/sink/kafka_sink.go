@@ -107,7 +107,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 			return statusConditionManager.TopicNotPresentOrInvalid()
 		}
 	}
-	statusConditionManager.TopicCreated(ks.Spec.Topic)
+	statusConditionManager.TopicReady(ks.Spec.Topic)
 
 	logger.Debug("Topic created", zap.Any("topic", ks.Spec.Topic))
 

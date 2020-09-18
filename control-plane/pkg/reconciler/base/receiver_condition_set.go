@@ -149,7 +149,7 @@ func (manager *StatusConditionManager) FailedToCreateTopic(topic string, err err
 	return fmt.Errorf("failed to create topic: %s: %w", topic, err)
 }
 
-func (manager *StatusConditionManager) TopicCreated(topic string) {
+func (manager *StatusConditionManager) TopicReady(topic string) {
 
 	if owner, ok := manager.Object.GetStatus().Annotations[TopicOwnerAnnotation]; ok {
 		manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrueWithReason(
