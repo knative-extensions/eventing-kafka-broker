@@ -71,6 +71,10 @@ spec:
               value: kafka-webhook-eventing
             - name: WEBHOOK_PORT
               value: "8443"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
 
           securityContext:
             allowPrivilegeEscalation: false
