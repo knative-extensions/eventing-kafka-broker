@@ -28,11 +28,9 @@ import (
 	"knative.dev/pkg/webhook"
 	"knative.dev/pkg/webhook/certificates"
 	"knative.dev/pkg/webhook/resourcesemantics"
-	"knative.dev/pkg/webhook/resourcesemantics/conversion"
 	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
 	"knative.dev/pkg/webhook/resourcesemantics/validation"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 )
 
@@ -52,7 +50,7 @@ func NewDefaultingAdmissionController(ctx context.Context, _ configmap.Watcher) 
 
 	return defaulting.NewAdmissionController(ctx,
 		// Name of the resource webhook.
-		"defaulting.webhook.kafka."+eventing.GroupName,
+		"defaulting.webhook.kafka.eventing.knative.dev",
 
 		// The path on which to serve the webhook.
 		"/defaulting",
@@ -71,7 +69,7 @@ func NewDefaultingAdmissionController(ctx context.Context, _ configmap.Watcher) 
 func NewValidationAdmissionController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 	return validation.NewAdmissionController(ctx,
 		// Name of the resource webhook.
-		"validation.webhook.kafka."+eventing.GroupName,
+		"validation.webhook.kafka.eventing.knative.dev",
 
 		// The path on which to serve the webhook.
 		"/resource-validation",
@@ -92,35 +90,6 @@ func NewValidationAdmissionController(ctx context.Context, _ configmap.Watcher) 
 	)
 }
 
-func NewConversionController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
-
-	var (
-		eventingv1alpha1_ = eventingv1alpha1.SchemeGroupVersion.Version
-	)
-
-	return conversion.NewConversionController(ctx,
-
-		// The path on which to serve the webhook
-		"/resource-conversion",
-
-		// Specify the types of custom resource definitions that should be converted
-		map[schema.GroupKind]conversion.GroupKindConversion{
-			eventingv1alpha1.Kind("KafkaSink"): {
-				DefinitionName: eventing.KafkaSinksResource.String(),
-				HubVersion:     eventingv1alpha1_,
-				Zygotes: map[string]conversion.ConvertibleObject{
-					eventingv1alpha1_: &eventingv1alpha1.KafkaSink{},
-				},
-			},
-		},
-
-		// A function that infuses the context passed to ConvertTo/ConvertFrom/SetDefaults with custom metadata.
-		func(ctx context.Context) context.Context {
-			return ctx
-		},
-	)
-}
-
 func main() {
 
 	// Set up a signal context with our webhook options
@@ -128,13 +97,12 @@ func main() {
 		ServiceName: logconfig.WebhookName(),
 		Port:        webhook.PortFromEnv(8443),
 		// SecretName must match the name of the Secret created in the configuration.
-		SecretName: "eventing-webhook-certs",
+		SecretName: "kafka-webhook-eventing-certs",
 	})
 
 	sharedmain.MainWithContext(ctx, logconfig.WebhookName(),
 		certificates.NewController,
 		NewDefaultingAdmissionController,
 		NewValidationAdmissionController,
-		NewConversionController,
 	)
 }

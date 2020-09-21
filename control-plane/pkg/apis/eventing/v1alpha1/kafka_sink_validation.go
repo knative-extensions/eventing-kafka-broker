@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/go-cmp/cmp"
 	"knative.dev/pkg/apis"
 )
 
@@ -54,6 +55,14 @@ func (kss *KafkaSinkSpec) Validate(ctx context.Context) *apis.FieldError {
 		errs = errs.Also(apis.ErrInvalidValue(kss.Topic, "topic"))
 	}
 
+	if kss.ReplicationFactor != nil && *kss.ReplicationFactor <= 0 {
+		errs = errs.Also(apis.ErrInvalidValue(*kss.ReplicationFactor, "replicationFactor"))
+	}
+
+	if kss.NumPartitions != nil && *kss.NumPartitions <= 0 {
+		errs = errs.Also(apis.ErrInvalidValue(*kss.NumPartitions, "numPartitions"))
+	}
+
 	return errs
 }
 
@@ -74,11 +83,11 @@ func (kss *KafkaSinkSpec) CheckImmutableFields(ctx context.Context, original *Ka
 		errs = errs.Also(ErrImmutableField("topic"))
 	}
 
-	if kss.ReplicationFactor != original.ReplicationFactor {
+	if !cmp.Equal(kss.ReplicationFactor, original.ReplicationFactor) {
 		errs = errs.Also(ErrImmutableField("replicationFactor"))
 	}
 
-	if kss.NumPartitions != original.NumPartitions {
+	if !cmp.Equal(kss.NumPartitions, original.NumPartitions) {
 		errs = errs.Also(ErrImmutableField("numPartitions"))
 	}
 
