@@ -15,16 +15,20 @@
 # This file is automagically synced here from github.com/knative-sandbox/.github
 # repo by knobots: https://github.com/mattmoor/knobots and will be overwritten.
 
-name: Build
+name: Test
 
 on:
+
+  push:
+    branches: [ 'master' ]
+
   pull_request:
     branches: [ 'master', 'release-*' ]
 
 jobs:
 
-  build:
-    name: Build
+  test:
+    name: Unit Tests
     strategy:
       matrix:
         go-version: [1.15.x]
@@ -43,17 +47,19 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Build
-        run: |
-          tags="$(grep -I  -r '// +build' . | \
-                grep -v '^./vendor/' | \
-                grep -v '^./hack/' | \
-                grep -v '^./third_party' | \
-                cut -f3 -d' ' | \
-                sort | uniq | \
-                grep -v '^!' | \
-                tr '\n' ' ')"
+      - name: Check for .codecov.yaml
+        id: codecov-enabled
+        uses: andstor/file-existence-action@v1
+        with:
+          files: .codecov.yaml
 
-          echo "Building with tags: ${tags}"
-          go test -vet=off -tags "${tags}" -run=^$ ./... | grep -v "no test" || true
+      - if: steps.codecov-enabled.outputs.files_exists == 'true'
+        name: Produce Go Coverage
+        run: echo '::set-env name=COVER_OPTS::-coverprofile=coverage.txt -covermode=atomic'
 
+      - name: Test
+        run: go test -race $COVER_OPTS ./...
+
+      - if: steps.codecov-enabled.outputs.files_exists == 'true'
+        name: Codecov
+        uses: codecov/codecov-action@v1
