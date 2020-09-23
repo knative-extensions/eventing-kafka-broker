@@ -33,7 +33,8 @@ cd "${ROOT_DIR}"
 # float forward in this repository.
 FLOATING_DEPS=(
   "knative.dev/test-infra@release-0.18"
-  "knative.dev/eventing@release-0.18"
+  "knative.dev/pkg@release-0.18"
+  "knative.dev/eventing@master"
 )
 
 # Parse flags to determine any we should pass to dep.
