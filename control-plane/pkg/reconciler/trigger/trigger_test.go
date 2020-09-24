@@ -1090,6 +1090,31 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				},
 			},
 		},
+		{
+			Name: "Don't reconcile trigger associated with a broker with a different broker class",
+			Objects: []runtime.Object{
+				newTrigger(),
+				NewBroker(func(b *eventing.Broker) {
+					b.Annotations = map[string]string{
+						eventing.BrokerClassAnnotationKey: "MTChannelBasedBroker",
+					}
+				}),
+			},
+			Key: testKey,
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+					),
+				},
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+		},
 	}
 
 	for i := range table {

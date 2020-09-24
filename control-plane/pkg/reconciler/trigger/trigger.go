@@ -22,6 +22,7 @@ import (
 	"math"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 
 	"go.uber.org/zap"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -206,6 +207,12 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		}
 	}
 
+	// Ignore Triggers that are associated with a Broker we don't own.
+	if isOur, brokerClass := isOurBroker(broker); !isOur {
+		logger.Debug("Ignoring Trigger", zap.String(eventing.BrokerClassAnnotationKey, brokerClass))
+		return nil
+	}
+
 	if !broker.GetDeletionTimestamp().IsZero() {
 
 		logger.Debug("broker deleted", zap.String("finalizeDuringReconcile", "deleted"))
@@ -284,6 +291,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	logger.Debug("Contract config map updated")
 
 	return statusConditionManager.reconciled()
+}
+
+func isOurBroker(broker *eventing.Broker) (bool, string) {
+	brokerClass := broker.GetAnnotations()[eventing.BrokerClassAnnotationKey]
+	return brokerClass == kafka.BrokerClass, brokerClass
 }
 
 func incrementGeneration(generation uint64) uint64 {
