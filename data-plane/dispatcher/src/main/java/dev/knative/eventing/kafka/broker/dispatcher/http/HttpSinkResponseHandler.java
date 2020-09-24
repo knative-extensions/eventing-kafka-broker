@@ -62,6 +62,14 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
   public Future<Void> handle(final HttpResponse<Buffer> response) {
     MessageReader messageReader = VertxMessageFactory.createReader(response);
     if (messageReader.getEncoding() == Encoding.UNKNOWN) {
+
+      // When the sink returns a malformed event we return a failed future to avoid committing the message to Kafka.
+      if (response.body().length() > 0) {
+        return Future.failedFuture(
+          new IllegalResponseException("Unable to decode response: unknown encoding and non empty response")
+        );
+      }
+
       // Response is non-event, discard it
       return Future.succeededFuture();
     }
