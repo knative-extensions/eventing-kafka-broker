@@ -54,11 +54,13 @@ func NewBroker(options ...reconcilertesting.BrokerOption) runtime.Object {
 		BrokerName,
 		BrokerNamespace,
 		append(
-			options,
-			reconcilertesting.WithBrokerClass(kafka.BrokerClass),
-			func(broker *eventing.Broker) {
-				broker.UID = BrokerUUID
+			[]reconcilertesting.BrokerOption{
+				reconcilertesting.WithBrokerClass(kafka.BrokerClass),
+				func(broker *eventing.Broker) {
+					broker.UID = BrokerUUID
+				},
 			},
+			options...,
 		)...,
 	)
 }
