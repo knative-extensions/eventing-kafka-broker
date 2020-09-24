@@ -60,4 +60,4 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           file: ./data-plane/target/jacoco/jacoco.xml
-          flags: unittests
+          flags: java-unittests
