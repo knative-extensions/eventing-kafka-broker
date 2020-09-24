@@ -48,7 +48,7 @@ public class HttpSinkResponseHandlerTest {
   private static final String TOPIC = "t1";
 
   @Test
-  public void shouldAlwaysSucceed(final Vertx vertx, final VertxTestContext context) {
+  public void shouldSucceedOnUnknownEncodingAndEmptyResponse(final Vertx vertx, final VertxTestContext context) {
     final var producer = new MockProducer<>(
       true,
       new StringSerializer(),
@@ -67,7 +67,32 @@ public class HttpSinkResponseHandlerTest {
 
     context
       .assertComplete(handler.handle(response))
-      .onComplete(v -> context.completeNow());
+      .onSuccess(v -> context.completeNow());
+  }
+
+  @Test
+  public void shouldFailOnUnknownEncodingAndNonEmptyResponse(final Vertx vertx, final VertxTestContext context) {
+
+    final var producer = new MockProducer<>(
+      true,
+      new StringSerializer(),
+      new CloudEventSerializer()
+    );
+    final var handler = new HttpSinkResponseHandler(
+      TOPIC,
+      KafkaProducer.create(vertx, producer)
+    );
+
+    // Empty response
+    final HttpResponse<Buffer> response = mock(HttpResponse.class);
+    when(response.statusCode()).thenReturn(202);
+    when(response.body()).thenReturn(Buffer.buffer(new byte[]{'a'}));
+    when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap());
+
+    context
+      .assertFailure(handler.handle(response))
+      .onSuccess(s -> context.failNow(new Exception("expected failed future")))
+      .onFailure(v -> context.completeNow());
   }
 
   @Test
