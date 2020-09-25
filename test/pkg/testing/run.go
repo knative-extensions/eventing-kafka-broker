@@ -26,12 +26,12 @@ const (
 	rerunTimes = 5
 )
 
-// RunMultiple run test function f `rerunTimes` times
+// RunMultiple run test function f `rerunTimes` times.
 func RunMultiple(t *testing.T, f func(t *testing.T)) {
 	RunMultipleN(t, rerunTimes, f)
 }
 
-// RunMultiple run test function f n times
+// RunMultiple run test function f n times.
 func RunMultipleN(t *testing.T, n int, f func(t *testing.T)) {
 	t.Parallel()
 

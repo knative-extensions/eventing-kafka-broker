@@ -145,7 +145,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	return nil
 }
 
-func (r *Reconciler) getTriggerConfig(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*contract.Egress, error) {
+func (r *Reconciler) getTriggerConfig(ctx context.Context, trigger *eventing.Trigger) (*contract.Egress, error) {
 	destination, err := r.Resolver.URIFromDestinationV1(ctx, trigger.Spec.Subscriber, trigger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve Trigger.Spec.Subscriber: %w", err)
@@ -195,9 +195,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	if apierrors.IsNotFound(err) {
 
 		// Actually check if the broker doesn't exist.
-		broker, err = r.EventingClient.EventingV1(). // Note: do not introduce another `broker` variable with `:`
-								Brokers(trigger.Namespace).
-								Get(ctx, trigger.Spec.Broker, metav1.GetOptions{})
+		// Note: do not introduce another `broker` variable with `:`
+		broker, err = r.EventingClient.EventingV1().Brokers(trigger.Namespace).Get(ctx, trigger.Spec.Broker, metav1.GetOptions{})
 
 		if apierrors.IsNotFound(err) {
 
@@ -248,7 +247,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 	triggerIndex := coreconfig.FindEgress(ct.Resources[brokerIndex].Egresses, trigger.UID)
 
-	triggerConfig, err := r.getTriggerConfig(ctx, broker, trigger)
+	triggerConfig, err := r.getTriggerConfig(ctx, trigger)
 	if err != nil {
 		return statusConditionManager.failedToResolveTriggerConfig(err)
 	}

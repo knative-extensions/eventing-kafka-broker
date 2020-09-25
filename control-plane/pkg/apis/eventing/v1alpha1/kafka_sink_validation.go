@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/go-cmp/cmp"
 	"knative.dev/pkg/apis"
@@ -96,7 +95,7 @@ func (kss *KafkaSinkSpec) CheckImmutableFields(ctx context.Context, original *Ka
 
 func ErrImmutableField(field string) *apis.FieldError {
 	return &apis.FieldError{
-		Message: fmt.Sprintf("Immutable field updated"),
+		Message: "Immutable field updated",
 		Paths:   []string{field},
 	}
 }
