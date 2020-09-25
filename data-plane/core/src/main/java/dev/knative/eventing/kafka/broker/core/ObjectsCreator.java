@@ -86,7 +86,7 @@ public class ObjectsCreator implements Consumer<DataPlaneContract.Contract> {
           latch.countDown();
         });
 
-      // wait the reconcilation
+      // wait the reconciliation
       latch.await(WAIT_TIMEOUT, TimeUnit.MINUTES);
 
     } catch (final Exception ex) {
