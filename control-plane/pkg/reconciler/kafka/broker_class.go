@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	// Kafka broker class annotation value
+	// Kafka broker class annotation value.
 	BrokerClass = "Kafka"
 )
 

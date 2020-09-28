@@ -34,6 +34,10 @@ import (
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 )
 
+const (
+	defaultWebhookPort = 8443
+)
+
 var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 
 	eventingv1alpha1.SchemeGroupVersion.WithKind("KafkaSink"): &eventingv1alpha1.KafkaSink{},
@@ -95,7 +99,7 @@ func main() {
 	// Set up a signal context with our webhook options
 	ctx := webhook.WithOptions(signals.NewContext(), webhook.Options{
 		ServiceName: logconfig.WebhookName(),
-		Port:        webhook.PortFromEnv(8443),
+		Port:        webhook.PortFromEnv(defaultWebhookPort),
 		// SecretName must match the name of the Secret created in the configuration.
 		SecretName: "kafka-webhook-eventing-certs",
 	})

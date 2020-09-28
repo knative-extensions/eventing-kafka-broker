@@ -45,7 +45,7 @@ import (
 )
 
 const (
-	// TopicPrefix is the Kafka Broker topic prefix - (topic name: knative-broker-<broker-namespace>-<broker-name>)
+	// TopicPrefix is the Kafka Broker topic prefix - (topic name: knative-broker-<broker-namespace>-<broker-name>).
 	TopicPrefix = "knative-broker-"
 )
 

@@ -48,7 +48,7 @@ func BrokerTopic() string {
 	return kafka.Topic(TopicPrefix, broker)
 }
 
-// NewBroker creates a new Broker with broker class equals to kafka.BrokerClass
+// NewBroker creates a new Broker with broker class equals to kafka.BrokerClass.
 func NewBroker(options ...reconcilertesting.BrokerOption) runtime.Object {
 	return reconcilertesting.NewBroker(
 		BrokerName,

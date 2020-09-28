@@ -3,10 +3,40 @@ run:
 
   build-tags:
     - e2e
+  skip-dirs:
+    - control-plane/pkg/client
+    - data-plane
 
 linters:
   enable:
-    - unconvert
+    - asciicheck
+    - gosec
     - prealloc
-  disable:
+    - unconvert
+    - unparam
+    - govet
+    - deadcode
+    - gosimple
+    - ineffassign
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unconvert
+    - unused
+    - varcheck
     - errcheck
+    - godot
+    - goconst
+    - gofmt
+    - goimports
+    - gomnd
+    - exhaustive
+
+issues:
+  exclude-rules:
+    - path: test # Excludes /test, *_test.go etc.
+      linters:
+        - gosec
+        - unparam
+        - gomnd
+        - godot

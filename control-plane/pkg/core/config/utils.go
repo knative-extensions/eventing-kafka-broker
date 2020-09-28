@@ -24,7 +24,7 @@ import (
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 )
 
-// ContentModeFromString returns the ContentMode from the given string
+// ContentModeFromString returns the ContentMode from the given string.
 func ContentModeFromString(mode string) contract.ContentMode {
 	switch mode {
 	case eventing.ModeBinary:
