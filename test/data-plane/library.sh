@@ -41,7 +41,7 @@ readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-knative-kafka-broker-receive
 readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-knative-kafka-broker-dispatcher}"
 readonly sink="${KNATIVE_KAFKA_SINK_RECEIVER:-knative-kafka-sink-receiver}"
 
-readonly JAVA_IMAGE=adoptopenjdk:14-jre-hotspot
+readonly JAVA_IMAGE=docker.io/adoptopenjdk:14-jre-hotspot
 
 readonly RECEIVER_JAR="receiver-1.0-SNAPSHOT.jar"
 readonly RECEIVER_DIRECTORY=receiver
