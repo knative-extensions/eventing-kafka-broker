@@ -16,7 +16,7 @@
 
 package dev.knative.eventing.kafka.broker.core.metrics;
 
-import dev.knative.eventing.kafka.broker.core.utils.MetricsConfigs;
+import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.metrics.MetricsOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
@@ -30,12 +30,12 @@ public class MetricsOptionsProvider {
    * @param metricsConfigs metrics configurations.
    * @return metrics options
    */
-  public static MetricsOptions get(final MetricsConfigs metricsConfigs) {
+  public static MetricsOptions get(final BaseEnv metricsConfigs) {
     return new MicrometerMetricsOptions()
       .setEnabled(true)
       .setPrometheusOptions(new VertxPrometheusOptions()
-        .setEmbeddedServerOptions(new HttpServerOptions().setPort(metricsConfigs.getPort()))
-        .setEmbeddedServerEndpoint(metricsConfigs.getPath())
+        .setEmbeddedServerOptions(new HttpServerOptions().setPort(metricsConfigs.getMetricsPort()))
+        .setEmbeddedServerEndpoint(metricsConfigs.getMetricsPath())
         .setPublishQuantiles(metricsConfigs.isPublishQuantilesEnabled())
         .setStartEmbeddedServer(true)
         .setEnabled(true)

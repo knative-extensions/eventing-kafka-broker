@@ -18,14 +18,14 @@ package dev.knative.eventing.kafka.broker.core.metrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dev.knative.eventing.kafka.broker.core.utils.MetricsConfigs;
+import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import org.junit.jupiter.api.Test;
 
 public class MetricsOptionsProviderTest {
 
   @Test
   public void get() {
-    final var metricsOptions = MetricsOptionsProvider.get(new MetricsConfigs(s -> "1"));
+    final var metricsOptions = MetricsOptionsProvider.get(new BaseEnv(s -> "1"));
     assertThat(metricsOptions.isEnabled()).isTrue();
   }
 }

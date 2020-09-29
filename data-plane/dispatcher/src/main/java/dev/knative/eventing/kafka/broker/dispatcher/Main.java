@@ -22,7 +22,6 @@ import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
-import dev.knative.eventing.kafka.broker.core.utils.MetricsConfigs;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Vertx;
@@ -53,13 +52,12 @@ public class Main {
     // Instantiating an Encoder here we force it to include the class.
     new LogstashEncoder().getFieldNames();
 
-    DispatcherEnv env = new DispatcherEnv(System::getenv);
-    final MetricsConfigs metricsConfigs = new MetricsConfigs(System::getenv);
+    final var env = new DispatcherEnv(System::getenv);
 
-    logger.info("Starting Dispatcher {} {}", keyValue("env", env), keyValue("metricsConfigs", metricsConfigs));
+    logger.info("Starting Dispatcher {}", keyValue("env", env));
 
     final var vertx = Vertx.vertx(
-      new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(metricsConfigs))
+      new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(env))
     );
 
     Runtime.getRuntime().addShutdownHook(new Thread(vertx::close));

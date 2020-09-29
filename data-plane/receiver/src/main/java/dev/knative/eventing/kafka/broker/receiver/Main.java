@@ -22,7 +22,6 @@ import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
-import dev.knative.eventing.kafka.broker.core.utils.MetricsConfigs;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -58,12 +57,10 @@ public class Main {
 
     final var producerConfigs = Configurations.getProperties(env.getProducerConfigFilePath());
 
-    final MetricsConfigs metricsConfigs = new MetricsConfigs(System::getenv);
-
-    logger.info("Starting Receiver {} {}", keyValue("env", env), keyValue("metricsConfigs", metricsConfigs));
+    logger.info("Starting Receiver {}", keyValue("env", env));
 
     final var vertx = Vertx.vertx(
-      new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(metricsConfigs))
+      new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(env))
     );
 
     producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
