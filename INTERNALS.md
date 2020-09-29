@@ -38,3 +38,66 @@ following the
   them.
 - `thirdy_party` contains dependencies licences
 - `vendor` directory contains vendored Go dependencies.
+
+# Collecting Prometheus metrics
+
+<!-- TODO Move this to knative/docs and add control plane configs (separate sink and broker stuff) -->
+
+<!-- prettier-ignore-start -->
+```yaml
+    # scrape kafka-broker-receiver
+    - job_name: kafka-broker-receiver
+      scrape_interval: 5m
+      scrape_timeout: 30s
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      # Scrape only the the targets matching the following metadata
+      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_label_app, __meta_kubernetes_pod_container_port_name]
+        action: keep
+        regex: knative-eventing;kafka-broker-receiver;http-metrics
+      # Rename metadata labels to be reader friendly
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service
+    # scrape kafka-broker-dispatcher
+    - job_name: kafka-broker-dispatcher
+      scrape_interval: 5m
+      scrape_timeout: 30s
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      # Scrape only the the targets matching the following metadata
+      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_label_app, __meta_kubernetes_pod_container_port_name]
+        action: keep
+        regex: knative-eventing;kafka-broker-dispatcher;http-metrics
+      # Rename metadata labels to be reader friendly
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service
+    # scrape kafka-sink-receiver
+    - job_name: kafka-sink-receiver
+      scrape_interval: 5m
+      scrape_timeout: 30s
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      # Scrape only the the targets matching the following metadata
+      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_label_app, __meta_kubernetes_pod_container_port_name]
+        action: keep
+        regex: knative-eventing;kafka-sink-receiver;http-metrics
+      # Rename metadata labels to be reader friendly
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service
+```
+<!-- prettier-ignore-end -->

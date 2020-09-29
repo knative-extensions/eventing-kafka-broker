@@ -16,12 +16,17 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
+import dev.knative.eventing.kafka.broker.core.utils.MetricsConfigs;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import java.io.File;
@@ -40,7 +45,7 @@ public class Main {
    *
    * @param args command line arguments.
    */
-  public static void main(final String[] args) throws Exception {
+  public static void main(final String[] args) {
     // HACK HACK HACK
     // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
     // dependency with scope `provided` nor `runtime`, and adding include rules to
@@ -49,10 +54,14 @@ public class Main {
     new LogstashEncoder().getFieldNames();
 
     DispatcherEnv env = new DispatcherEnv(System::getenv);
+    final MetricsConfigs metricsConfigs = new MetricsConfigs(System::getenv);
 
-    logger.info("Starting Dispatcher");
+    logger.info("Starting Dispatcher {} {}", keyValue("env", env), keyValue("metricsConfigs", metricsConfigs));
 
-    final var vertx = Vertx.vertx();
+    final var vertx = Vertx.vertx(
+      new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(metricsConfigs))
+    );
+
     Runtime.getRuntime().addShutdownHook(new Thread(vertx::close));
 
     final var producerConfig = Configurations.getProperties(env.getProducerConfigFilePath());
@@ -92,5 +101,4 @@ public class Main {
       logger.error("failed during filesystem watch", ex);
     }
   }
-
 }

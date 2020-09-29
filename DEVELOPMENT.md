@@ -95,6 +95,13 @@ follows.
 
 If something goes wrong, re-execute these steps.
 
+# Set up the monitoring stack
+
+1. Execute `source test/e2e-common.sh`
+1. Execute `start_knative_monitoring "${KNATIVE_MONITORING_RELEASE}"`
+
+- [Collecting metrics](./INTERNALS.md#collecting-prometheus-metrics)
+
 # Changing the data-plane
 
 - Run data plane verification: `./mvnw clean verify`

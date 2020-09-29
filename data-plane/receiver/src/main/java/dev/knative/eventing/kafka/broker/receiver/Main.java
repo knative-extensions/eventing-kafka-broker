@@ -20,9 +20,12 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
+import dev.knative.eventing.kafka.broker.core.utils.MetricsConfigs;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.io.File;
@@ -43,7 +46,7 @@ public class Main {
    *
    * @param args command line arguments.
    */
-  public static void main(final String[] args) throws Exception {
+  public static void main(final String[] args) {
     final var env = new ReceiverEnv(System::getenv);
 
     // HACK HACK HACK
@@ -53,11 +56,15 @@ public class Main {
     // Instantiating an Encoder here we force it to include the class.
     new LogstashEncoder().getFieldNames();
 
-    logger.info("Starting Receiver {}", keyValue("env", env));
-
     final var producerConfigs = Configurations.getProperties(env.getProducerConfigFilePath());
 
-    final var vertx = Vertx.vertx();
+    final MetricsConfigs metricsConfigs = new MetricsConfigs(System::getenv);
+
+    logger.info("Starting Receiver {} {}", keyValue("env", env), keyValue("metricsConfigs", metricsConfigs));
+
+    final var vertx = Vertx.vertx(
+      new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(metricsConfigs))
+    );
 
     producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
     producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -72,9 +79,12 @@ public class Main {
     );
     httpServerOptions.setPort(env.getIngressPort());
 
-    final var verticle = new HttpVerticle(httpServerOptions, new SimpleProbeHandlerDecorator(
-      env.getLivenessProbePath(), env.getReadinessProbePath(), handler
-    ));
+    final var probeHandlerDecorator = new SimpleProbeHandlerDecorator(
+      env.getLivenessProbePath(),
+      env.getReadinessProbePath(),
+      handler
+    );
+    final var verticle = new HttpVerticle(httpServerOptions, probeHandlerDecorator);
 
     vertx.deployVerticle(verticle)
       .onSuccess(v -> logger.info("receiver started"))
@@ -83,7 +93,7 @@ public class Main {
     try {
       // TODO add a shutdown hook that calls objectsCreator.reconcile(Brokers.newBuilder().build()),
       //  so that producers flush their buffers.
-      //  Note: reconcile(Brokers) isn't thread safe so we need to make sure to not stop the watcher
+      //  Note: reconcile(Brokers) isn't thread safe so we need to make sure to stop the watcher
       //  from calling reconcile first
 
       final var objectsCreator = new ObjectsCreator(handler);
