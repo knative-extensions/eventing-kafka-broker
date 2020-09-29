@@ -24,9 +24,6 @@ set -o pipefail
 export GO111MODULE=on
 export GOFLAGS=-mod=
 
-# This controls the release branch we track.
-VERSION="master"
-
 cd "${ROOT_DIR}"
 
 # The list of dependencies that we track at HEAD and periodically
@@ -34,7 +31,7 @@ cd "${ROOT_DIR}"
 FLOATING_DEPS=(
   "knative.dev/test-infra@release-0.18"
   "knative.dev/pkg@release-0.18"
-  "knative.dev/eventing@master"
+  "knative.dev/eventing@v0.18.0"
 )
 
 # Parse flags to determine any we should pass to dep.
