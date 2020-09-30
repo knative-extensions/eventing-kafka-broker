@@ -32,9 +32,9 @@ cd "${ROOT_DIR}"
 # The list of dependencies that we track at HEAD and periodically
 # float forward in this repository.
 FLOATING_DEPS=(
-  "knative.dev/test-infra@release-0.18"
-  "knative.dev/pkg@release-0.18"
-  "knative.dev/eventing@master"
+  "knative.dev/test-infra@${VERSION}"
+  "knative.dev/pkg@${VERSION}"
+  "knative.dev/eventing@${VERSION}"
 )
 
 # Parse flags to determine any we should pass to dep.

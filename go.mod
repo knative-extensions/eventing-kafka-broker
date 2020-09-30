@@ -21,8 +21,8 @@ require (
 	k8s.io/kubernetes v1.14.7
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
 	knative.dev/eventing v0.18.0
-	knative.dev/pkg v0.0.0-20200922164940-4bf40ad82aab
-	knative.dev/test-infra v0.0.0-20200921012245-37f1a12adbd3
+	knative.dev/pkg v0.0.0-20200929211029-1e373a9e5dea
+	knative.dev/test-infra v0.0.0-20200929224429-f46f815aa607
 )
 
 replace (
