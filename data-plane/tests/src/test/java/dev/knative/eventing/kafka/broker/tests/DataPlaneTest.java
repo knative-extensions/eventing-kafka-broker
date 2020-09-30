@@ -23,6 +23,7 @@ import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZE
 import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.Egress;
@@ -44,6 +45,7 @@ import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.debezium.kafka.KafkaCluster;
+import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.client.WebClient;
@@ -169,12 +171,14 @@ public class DataPlaneTest {
         Set.of(
           new EgressWrapper(DataPlaneContract.Egress.newBuilder()
             .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_1))
-            .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_1))
+            .setFilter(DataPlaneContract.Filter.newBuilder()
+              .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_1))
             .setConsumerGroup(UUID.randomUUID().toString())
             .build()),
           new EgressWrapper(DataPlaneContract.Egress.newBuilder()
             .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
-            .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_2))
+            .setFilter(DataPlaneContract.Filter.newBuilder()
+              .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_2))
             .setConsumerGroup(UUID.randomUUID().toString())
             .build()),
           // the destination of the following trigger should never be reached because events
@@ -284,7 +288,7 @@ public class DataPlaneTest {
   private static ResourcesManager setUpDispatcher(final Vertx vertx) {
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-      consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered();
+      consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class));
 
     final var consumerConfigs = new Properties();
     consumerConfigs.put(BOOTSTRAP_SERVERS_CONFIG, format("localhost:%d", KAFKA_PORT));
@@ -316,7 +320,9 @@ public class DataPlaneTest {
     final var handler = new RequestHandler<>(
       producerConfigs(),
       new CloudEventRequestToRecordMapper(),
-      properties -> KafkaProducer.create(vertx, properties)
+      properties -> KafkaProducer.create(vertx, properties),
+      mock(Counter.class),
+      mock(Counter.class)
     );
 
     final var httpServerOptions = new HttpServerOptions();

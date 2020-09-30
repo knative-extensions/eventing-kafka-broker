@@ -23,10 +23,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Meter.Id;
+import io.micrometer.core.instrument.cumulative.CumulativeCounter;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.junit5.VertxExtension;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
@@ -40,36 +41,34 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.mockito.Mockito;
 
-@ExtendWith(VertxExtension.class)
 @Execution(value = ExecutionMode.CONCURRENT)
 public class UnorderedConsumerRecordOffsetStrategyTest {
-
-  private static final int TIMEOUT_MS = 200;
 
   @Test
   @SuppressWarnings("unchecked")
   public void recordReceived() {
     final KafkaConsumer<Object, Object> consumer = mock(KafkaConsumer.class);
-    new UnorderedConsumerRecordOffsetStrategy<>(consumer).recordReceived(null);
+    final Counter eventsSentCounter = mock(Counter.class);
+    new UnorderedConsumerRecordOffsetStrategy<>(consumer, eventsSentCounter).recordReceived(null);
 
     shouldNeverCommit(consumer);
     shouldNeverPause(consumer);
+    verify(eventsSentCounter, never()).increment();
   }
 
   @Test
-  public void shouldCommitSuccessfullyOnSuccessfullySentToSubscriber(final Vertx vertx) {
-    shouldCommit(vertx, (kafkaConsumerRecord, unorderedConsumerOffsetManager)
+  public void shouldCommitSuccessfullyOnSuccessfullySentToSubscriber() {
+    shouldCommit((kafkaConsumerRecord, unorderedConsumerOffsetManager)
       -> unorderedConsumerOffsetManager.successfullySentToSubscriber(kafkaConsumerRecord));
   }
 
   @Test
-  public void shouldCommitSuccessfullyOnSuccessfullySentToDLQ(final Vertx vertx) {
-    shouldCommit(vertx, (kafkaConsumerRecord, unorderedConsumerOffsetManager)
+  public void shouldCommitSuccessfullyOnSuccessfullySentToDLQ() {
+    shouldCommit((kafkaConsumerRecord, unorderedConsumerOffsetManager)
       -> unorderedConsumerOffsetManager.successfullySentToDLQ(kafkaConsumerRecord));
   }
 
@@ -77,21 +76,23 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
   @SuppressWarnings("unchecked")
   public void failedToSendToDLQ() {
     final KafkaConsumer<Object, Object> consumer = mock(KafkaConsumer.class);
-    new UnorderedConsumerRecordOffsetStrategy<>(consumer).failedToSendToDLQ(null, null);
+    final Counter eventsSentCounter = mock(Counter.class);
+
+    new UnorderedConsumerRecordOffsetStrategy<>(consumer, eventsSentCounter).failedToSendToDLQ(null, null);
 
     shouldNeverCommit(consumer);
     shouldNeverPause(consumer);
+    verify(eventsSentCounter, never()).increment();
   }
 
   @Test
-  public void ShouldCommitSuccessfullyOnRecordDiscarded(final Vertx vertx) {
-    shouldCommit(vertx, (kafkaConsumerRecord, unorderedConsumerOffsetManager)
-      -> unorderedConsumerOffsetManager.recordDiscarded(kafkaConsumerRecord));
+  public void ShouldCommitSuccessfullyOnRecordDiscarded() {
+    shouldCommit((kafkaConsumerRecord, unorderedConsumerOffsetManager) ->
+      unorderedConsumerOffsetManager.recordDiscarded(kafkaConsumerRecord));
   }
 
   @SuppressWarnings("unchecked")
   private static <K, V> void shouldCommit(
-    final Vertx vertx,
     final BiConsumer<KafkaConsumerRecord<K, V>, UnorderedConsumerRecordOffsetStrategy<K, V>> rConsumer) {
 
     final var topic = "topic-42";
@@ -122,7 +123,10 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
     }).when(consumer).commit(
       (Map<io.vertx.kafka.client.common.TopicPartition, io.vertx.kafka.client.consumer.OffsetAndMetadata>) any());
 
-    final var offsetManager = new UnorderedConsumerRecordOffsetStrategy<>(consumer);
+    final Counter eventsSentCounter = new CumulativeCounter(mock(Id.class));
+
+    final var offsetManager = new UnorderedConsumerRecordOffsetStrategy<>(consumer, eventsSentCounter);
+
     final var record = new KafkaConsumerRecordImpl<>(
       new ConsumerRecord<K, V>(
         topic,
@@ -140,6 +144,7 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
     assertThat(committed).hasSize(1);
     assertThat(committed.keySet()).containsExactlyInAnyOrder(topicPartition);
     assertThat(committed.values()).containsExactlyInAnyOrder(new OffsetAndMetadata(offset + 1, ""));
+    assertThat(eventsSentCounter.count()).isEqualTo(1.0D);
   }
 
   @SuppressWarnings("unchecked")

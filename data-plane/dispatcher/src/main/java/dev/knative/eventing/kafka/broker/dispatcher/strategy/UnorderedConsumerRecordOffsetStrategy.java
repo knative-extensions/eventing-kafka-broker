@@ -19,6 +19,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.strategy;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategy;
+import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
@@ -36,16 +37,20 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
     .getLogger(UnorderedConsumerRecordOffsetStrategy.class);
 
   private final KafkaConsumer<K, V> consumer;
+  private final Counter eventsSentCounter;
 
   /**
    * All args constructor.
    *
-   * @param consumer Kafka consumer.
+   * @param consumer          Kafka consumer.
+   * @param eventsSentCounter events sent counter
    */
-  public UnorderedConsumerRecordOffsetStrategy(final KafkaConsumer<K, V> consumer) {
+  public UnorderedConsumerRecordOffsetStrategy(final KafkaConsumer<K, V> consumer, final Counter eventsSentCounter) {
     Objects.requireNonNull(consumer, "provide consumer");
+    Objects.requireNonNull(eventsSentCounter, "provide eventsSentCounter");
 
     this.consumer = consumer;
+    this.eventsSentCounter = eventsSentCounter;
   }
 
   /**
@@ -64,12 +69,15 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
     // TODO evaluate if it's worth committing offsets at specified intervals per partition.
     // commit each record
     commit(record)
-      .onSuccess(ignored -> logger.debug(
-        "committed {} {} {}",
-        keyValue("topic", record.topic()),
-        keyValue("partition", record.partition()),
-        keyValue("offset", record.offset())
-      ))
+      .onSuccess(ignored -> {
+        eventsSentCounter.increment();
+        logger.debug(
+          "committed {} {} {}",
+          keyValue("topic", record.topic()),
+          keyValue("partition", record.partition()),
+          keyValue("offset", record.offset())
+        );
+      })
       .onFailure(cause -> logger.error(
         "failed to commit {} {} {}",
         keyValue("topic", record.topic()),

@@ -29,6 +29,7 @@ import dev.knative.eventing.kafka.broker.core.Resource;
 import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
+import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
@@ -64,17 +65,24 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Objects
   private final AtomicReference<Map<String, Entry<String, Producer<K, V>>>> producers;
   private final Properties producerConfigs;
   private final Function<Properties, KafkaProducer<K, V>> producerCreator;
+  private final Counter badRequestCounter;
+  private final Counter produceEventsCounter;
 
   /**
    * Create a new Request handler.
    *
    * @param producerConfigs       common producers configurations
    * @param requestToRecordMapper request to record mapper
+   * @param producerCreator       creates a producer
+   * @param badRequestCounter     count bad request responses
+   * @param produceEventsCounter  count events sent to Kafka
    */
   public RequestHandler(
     final Properties producerConfigs,
     final RequestToRecordMapper<K, V> requestToRecordMapper,
-    final Function<Properties, KafkaProducer<K, V>> producerCreator) {
+    final Function<Properties, KafkaProducer<K, V>> producerCreator,
+    final Counter badRequestCounter,
+    final Counter produceEventsCounter) {
 
     Objects.requireNonNull(producerConfigs, "provide producerConfigs");
     Objects.requireNonNull(requestToRecordMapper, "provide a mapper");
@@ -84,6 +92,8 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Objects
     this.requestToRecordMapper = requestToRecordMapper;
     this.producerCreator = producerCreator;
     producers = new AtomicReference<>(new HashMap<>());
+    this.badRequestCounter = badRequestCounter;
+    this.produceEventsCounter = produceEventsCounter;
   }
 
   @Override
@@ -107,6 +117,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Objects
       .onSuccess(record -> producer.getValue().producer.send(record)
         .onSuccess(ignore -> {
           request.response().setStatusCode(RECORD_PRODUCED).end();
+          produceEventsCounter.increment();
 
           logger.debug("Record produced {} {} {} {} {}",
             keyValue("topic", record.topic()),
@@ -128,6 +139,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Objects
       )
       .onFailure(cause -> {
         request.response().setStatusCode(MAPPER_FAILED).end();
+        badRequestCounter.increment();
 
         logger.warn("Failed to send record {}",
           keyValue("path", request.path()),

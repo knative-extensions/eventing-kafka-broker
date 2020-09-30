@@ -17,6 +17,7 @@
 package dev.knative.eventing.kafka.broker.receiver.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.FloatNode;
@@ -31,6 +32,9 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.kafka.CloudEventSerializer;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Meter.Id;
+import io.micrometer.core.instrument.cumulative.CumulativeCounter;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -54,7 +58,6 @@ import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -70,9 +73,11 @@ public class ReceiverVerticleTest {
 
   private static MockProducer<String, CloudEvent> mockProducer;
   private static RequestHandler<String, CloudEvent> handler;
+  private static Counter badRequestCount;
+  private static Counter produceRequestCount;
 
-  @BeforeAll
-  public static void setUp(final Vertx vertx, final VertxTestContext testContext) {
+  @BeforeEach
+  public void setUp(final Vertx vertx, final VertxTestContext testContext) {
     webClient = WebClient.create(vertx);
     ReceiverVerticleTest.mockProducer = new MockProducer<>(
       true,
@@ -80,10 +85,16 @@ public class ReceiverVerticleTest {
       new CloudEventSerializer()
     );
     KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, mockProducer);
+
+    badRequestCount = new CumulativeCounter(mock(Id.class));
+    produceRequestCount = new CumulativeCounter(mock(Id.class));
+
     handler = new RequestHandler<>(
       new Properties(),
       new CloudEventRequestToRecordMapper(),
-      properties -> producer
+      properties -> producer,
+      badRequestCount,
+      produceRequestCount
     );
 
     final var httpServerOptions = new HttpServerOptions();
@@ -122,14 +133,17 @@ public class ReceiverVerticleTest {
 
     tc.requestSender.apply(webClient.post(PORT, "localhost", tc.path))
       .onFailure(context::failNow)
-      .onSuccess(response -> {
+      .onSuccess(response -> context.verify(() -> {
         assertThat(response.statusCode())
           .as("verify path: " + tc.path)
           .isEqualTo(tc.responseStatusCode);
 
+        assertThat((double) tc.badRequestCount).isEqualTo(badRequestCount.count());
+        assertThat((double) tc.produceEventCount).isEqualTo(produceRequestCount.count());
+
         checkpoints.flag();
         countDown.countDown();
-      });
+      }));
 
     countDown.await(TIMEOUT, TimeUnit.SECONDS);
 
@@ -313,18 +327,32 @@ public class ReceiverVerticleTest {
     final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender;
     final int responseStatusCode;
     final Resource resource;
+    final int badRequestCount;
+    final int produceEventCount;
 
     TestCase(
       final ProducerRecord<String, CloudEvent> record,
       final String path,
       final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender,
-      final int responseStatusCode, Resource resource) {
+      final int responseStatusCode,
+      final Resource resource) {
 
       this.path = path;
       this.requestSender = requestSender;
       this.responseStatusCode = responseStatusCode;
       this.record = record;
       this.resource = resource;
+
+      int badRequestCount = 0;
+      int produceEventsCount = 0;
+      if (responseStatusCode == RequestHandler.MAPPER_FAILED) {
+        badRequestCount = 1;
+      } else if (responseStatusCode == RequestHandler.RECORD_PRODUCED) {
+        produceEventsCount = 1;
+      }
+
+      this.badRequestCount = badRequestCount;
+      this.produceEventCount = produceEventsCount;
     }
   }
 }
