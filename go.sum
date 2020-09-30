@@ -1911,6 +1911,8 @@ knative.dev/pkg v0.0.0-20200528142800-1c6815d7e4c9/go.mod h1:QgNZTxnwpB/oSpNcfnL
 knative.dev/pkg v0.0.0-20200711004937-22502028e31a/go.mod h1:AqAJV6rYi8IGikDjJ/9ZQd9qKdkXVlesVnVjwx62YB8=
 knative.dev/pkg v0.0.0-20200922164940-4bf40ad82aab h1:4Q+sGqdN4ecLPZnIJcLDdQArEE9oOtRYiU2J6NPCCjU=
 knative.dev/pkg v0.0.0-20200922164940-4bf40ad82aab/go.mod h1:MCyt5KqLaai6ENUitOgRAQsu7Gw7cAIIiXQ2IS+O0NI=
+knative.dev/pkg v0.0.0-20200929211029-1e373a9e5dea h1:RnM4DLUfEzuWbDJ3Qd4x/oC9qapo5acupbUGBRmgyJQ=
+knative.dev/pkg v0.0.0-20200929211029-1e373a9e5dea/go.mod h1:/HM1zJbhqiicYwpkfA3GvhO3EoIXb2bNZOsb9zi2WEk=
 knative.dev/test-infra v0.0.0-20200407185800-1b88cb3b45a5/go.mod h1:xcdUkMJrLlBswIZqL5zCuBFOC22WIPMQoVX1L35i0vQ=
 knative.dev/test-infra v0.0.0-20200505052144-5ea2f705bb55/go.mod h1:WqF1Azka+FxPZ20keR2zCNtiQA1MP9ZB4BH4HuI+SIU=
 knative.dev/test-infra v0.0.0-20200513011557-d03429a76034/go.mod h1:aMif0KXL4g19YCYwsy4Ocjjz5xgPlseYV+B95Oo4JGE=
@@ -1918,6 +1920,9 @@ knative.dev/test-infra v0.0.0-20200519015156-82551620b0a9/go.mod h1:A5b2OAXTOeHT
 knative.dev/test-infra v0.0.0-20200707183444-aed09e56ddc7/go.mod h1:RjYAhXnZqeHw9+B0zsbqSPlae0lCvjekO/nw5ZMpLCs=
 knative.dev/test-infra v0.0.0-20200921012245-37f1a12adbd3 h1:abacWewpeP9QUByQAunuOA8F9hQ6Ryr2P63r38ns5sA=
 knative.dev/test-infra v0.0.0-20200921012245-37f1a12adbd3/go.mod h1:Pmg2c7Z7q7BGFUV/GOpU5BlrD3ePJft4MPqx8AYBplc=
+knative.dev/test-infra v0.0.0-20200928212629-45266e61aa32/go.mod h1:Pmg2c7Z7q7BGFUV/GOpU5BlrD3ePJft4MPqx8AYBplc=
+knative.dev/test-infra v0.0.0-20200929224429-f46f815aa607 h1:oWiazpe7fgr7HY5pbXTOJPHhKiDZayCCCAoEuzHf6fI=
+knative.dev/test-infra v0.0.0-20200929224429-f46f815aa607/go.mod h1:Pmg2c7Z7q7BGFUV/GOpU5BlrD3ePJft4MPqx8AYBplc=
 mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed/go.mod h1:Xkxe497xwlCKkIaQYRfC7CSLworTXY9RMqwhhCm+8Nc=
 mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b/go.mod h1:2odslEg/xrtNQqCYg2/jCoyKnw3vv5biOc3JnIcYfL4=
 mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f/go.mod h1:4G1h5nDURzA3bwVMZIVpwbkw+04kSxk3rAtzlimaUJw=
