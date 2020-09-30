@@ -16,8 +16,8 @@
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>dev.knative.eventing.kafka.broker</groupId>
@@ -40,6 +40,7 @@
     <!-- dependencies version -->
     <vertx.version>4.0.0.Beta3</vertx.version>
     <cloudevents.sdk.version>2.0.0-milestone3</cloudevents.sdk.version>
+    <micrometer.version>1.5.2</micrometer.version>
     <jackson.version>2.11.2</jackson.version>
     <protobuf.version>3.13.0</protobuf.version>
     <slf4j.version>1.7.30</slf4j.version>
@@ -73,6 +74,7 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- Vertx -->
       <dependency>
         <groupId>io.vertx</groupId>
         <artifactId>vertx-stack-depchain</artifactId>
@@ -81,6 +83,16 @@
         <scope>import</scope>
       </dependency>
 
+      <!-- Micrometer -->
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-bom</artifactId>
+        <version>${micrometer.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- Jackson -->
       <dependency>
         <groupId>com.fasterxml.jackson</groupId>
         <artifactId>jackson-bom</artifactId>

@@ -53,6 +53,13 @@ spec:
             - mountPath: /etc/logging
               name: kafka-broker-config-logging
               readOnly: true
+          ports:
+            - containerPort: 9090
+              name: http-metrics
+              protocol: TCP
+            - containerPort: 8080
+              name: http
+              protocol: TCP
           env:
             - name: INGRESS_PORT
               value: "8080"
@@ -66,6 +73,12 @@ spec:
               value: /healthz
             - name: READINESS_PROBE_PATH
               value: /readyz
+            - name: METRICS_PATH
+              value: /metrics
+            - name: METRICS_PORT
+              value: "9090"
+            - name: METRICS_PUBLISH_QUANTILES
+              value: "false"
           command:
             - "java"
           # TODO add JVM arguments
@@ -128,4 +141,8 @@ spec:
       port: 80
       protocol: TCP
       targetPort: 8080
+    - name: http-metrics
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
 ---
