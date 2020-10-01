@@ -17,15 +17,17 @@
 package dev.knative.eventing.kafka.broker.core.metrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.Test;
 
 public class MetricsOptionsProviderTest {
 
   @Test
   public void get() {
-    final var metricsOptions = MetricsOptionsProvider.get(new BaseEnv(s -> "1"));
+    final var metricsOptions = MetricsOptionsProvider.get(new BaseEnv(s -> "1"), "name");
     assertThat(metricsOptions.isEnabled()).isTrue();
   }
 }

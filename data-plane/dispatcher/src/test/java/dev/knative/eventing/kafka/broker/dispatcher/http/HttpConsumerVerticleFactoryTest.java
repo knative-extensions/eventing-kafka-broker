@@ -23,6 +23,7 @@ import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CL
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.Egress;
@@ -33,6 +34,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategy
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
+import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
@@ -64,7 +66,7 @@ public class HttpConsumerVerticleFactoryTest {
       .setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
 
     final var verticleFactory = new HttpConsumerVerticleFactory(
-      ConsumerRecordOffsetStrategyFactory.unordered(),
+      ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class)),
       consumerProperties,
       WebClient.create(vertx),
       vertx,
@@ -151,7 +153,7 @@ public class HttpConsumerVerticleFactoryTest {
       .setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
 
     final var verticleFactory = new HttpConsumerVerticleFactory(
-      ConsumerRecordOffsetStrategyFactory.unordered(),
+      ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class)),
       consumerProperties,
       WebClient.create(vertx),
       vertx,

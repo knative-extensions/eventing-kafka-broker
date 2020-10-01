@@ -28,6 +28,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -36,6 +37,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Main {
+
+  // Micrometer employs a naming convention that separates lowercase words with a '.' (dot) character.
+  // Different monitoring systems have different recommendations regarding naming convention, and some naming
+  // conventions may be incompatible for one system and not another.
+  // Each Micrometer implementation for a monitoring system comes with a naming convention that transforms lowercase
+  // dot notation names to the monitoring system’s recommended naming convention.
+  // Additionally, this naming convention implementation sanitizes metric names and tags of special characters that
+  // are disallowed by the monitoring system.
+  public static final String HTTP_EVENTS_SENT_COUNT = "http.events.sent"; // prometheus format --> http_events_sent_total
+  public static final String METRICS_REGISTRY_NAME = "metrics";
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
@@ -57,8 +68,11 @@ public class Main {
     logger.info("Starting Dispatcher {}", keyValue("env", env));
 
     final var vertx = Vertx.vertx(
-      new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(env))
+      new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
     );
+
+    final var metricsRegistry = BackendRegistries.getNow(METRICS_REGISTRY_NAME);
+    final var eventsSentCounter = metricsRegistry.counter(HTTP_EVENTS_SENT_COUNT);
 
     Runtime.getRuntime().addShutdownHook(new Thread(vertx::close));
 
@@ -67,7 +81,7 @@ public class Main {
     final var webClientConfig = Configurations.getPropertiesAsJson(env.getWebClientConfigFilePath());
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-      consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered();
+      consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered(eventsSentCounter);
 
     final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
       consumerRecordOffsetStrategyFactory,

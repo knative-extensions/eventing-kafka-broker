@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ResourceWrapper;
+import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
@@ -88,8 +89,9 @@ public class RequestHandlerTest {
     final var handler = new RequestHandler<>(
       new Properties(),
       mapper,
-      properties -> producer
-    );
+      properties -> producer,
+      mock(Counter.class),
+      mock(Counter.class));
 
     final var countDown = new CountDownLatch(1);
 
@@ -121,8 +123,9 @@ public class RequestHandlerTest {
     final var handler = new RequestHandler<Object, Object>(
       new Properties(),
       mapper,
-      properties -> producer
-    );
+      properties -> producer,
+      mock(Counter.class),
+      mock(Counter.class));
 
     final var countDown = new CountDownLatch(1);
     handler.reconcile(Map.of(resource, new HashSet<>()))
@@ -172,8 +175,9 @@ public class RequestHandlerTest {
           recreated.set(true);
         }
         return mock(KafkaProducer.class);
-      }
-    );
+      },
+      mock(Counter.class),
+      mock(Counter.class));
 
     final var checkpoint = context.checkpoint();
 
@@ -219,8 +223,9 @@ public class RequestHandlerTest {
           context.failNow(new IllegalStateException("producer should be recreated"));
         }
         return mock(KafkaProducer.class);
-      }
-    );
+      },
+      mock(Counter.class),
+      mock(Counter.class));
 
     final var checkpoint = context.checkpoint();
 

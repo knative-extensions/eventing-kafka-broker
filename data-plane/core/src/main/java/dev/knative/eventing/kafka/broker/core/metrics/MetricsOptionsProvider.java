@@ -28,11 +28,13 @@ public class MetricsOptionsProvider {
    * Get metrics options from the given metrics configurations.
    *
    * @param metricsConfigs metrics configurations.
+   * @param registry       registry name
    * @return metrics options
    */
-  public static MetricsOptions get(final BaseEnv metricsConfigs) {
+  public static MetricsOptions get(final BaseEnv metricsConfigs, final String registry) {
     return new MicrometerMetricsOptions()
       .setEnabled(true)
+      .setRegistryName(registry)
       .setPrometheusOptions(new VertxPrometheusOptions()
         .setEmbeddedServerOptions(new HttpServerOptions().setPort(metricsConfigs.getMetricsPort()))
         .setEmbeddedServerEndpoint(metricsConfigs.getMetricsPath())

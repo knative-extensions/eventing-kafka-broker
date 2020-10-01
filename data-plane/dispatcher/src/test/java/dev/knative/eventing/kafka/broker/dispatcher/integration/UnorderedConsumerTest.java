@@ -19,6 +19,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.integration;
 import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
 import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.contract;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
@@ -31,6 +32,7 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
+import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
@@ -69,7 +71,7 @@ public class UnorderedConsumerTest {
       client,
       vertx,
       producerConfigs,
-      ConsumerRecordOffsetStrategyFactory.unordered()
+      ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class))
     );
 
     final var event = new CloudEventBuilder()
