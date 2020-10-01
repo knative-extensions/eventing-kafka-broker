@@ -14,19 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/eventing/pkg/apis/sources/v1alpha2"
+	"k8s.io/apimachinery/pkg/runtime"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/kmeta"
 )
 
 // +genclient
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:defaulter-gen=true
 
 // ApiServerSource is the Schema for the apiserversources API
 type ApiServerSource struct {
@@ -37,43 +38,48 @@ type ApiServerSource struct {
 	Status ApiServerSourceStatus `json:"status,omitempty"`
 }
 
+// Check the interfaces that ApiServerSource should be implementing.
 var (
-	// Check that we can create OwnerReferences to an ApiServerSource.
+	_ runtime.Object     = (*ApiServerSource)(nil)
 	_ kmeta.OwnerRefable = (*ApiServerSource)(nil)
-
-	// Check that ApiServerSource can return its spec untyped.
-	_ apis.HasSpec = (*ApiServerSource)(nil)
+	_ apis.Validatable   = (*ApiServerSource)(nil)
+	_ apis.Defaultable   = (*ApiServerSource)(nil)
+	_ apis.HasSpec       = (*ApiServerSource)(nil)
+	_ duckv1.KRShaped    = (*ApiServerSource)(nil)
 )
 
 // ApiServerSourceSpec defines the desired state of ApiServerSource
 type ApiServerSourceSpec struct {
-	// Resources is the list of resources to watch
-	Resources []ApiServerResource `json:"resources"`
+	// inherits duck/v1 SourceSpec, which currently provides:
+	// * Sink - a reference to an object that will resolve to a domain name or
+	//   a URI directly to use as the sink.
+	// * CloudEventOverrides - defines overrides to control the output format
+	//   and modifications of the event sent to the sink.
+	duckv1.SourceSpec `json:",inline"`
 
-	// ServiceAccountName is the name of the ServiceAccount to use to run this
-	// source.
-	// +optional
-	ServiceAccountName string `json:"serviceAccountName,omitempty"`
-
-	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
-	// +optional
-	Sink *duckv1beta1.Destination `json:"sink,omitempty"`
-
-	// CloudEventOverrides defines overrides to control the output format and
-	// modifications of the event sent to the sink.
-	// +optional
-	CloudEventOverrides *duckv1.CloudEventOverrides `json:"ceOverrides,omitempty"`
+	// Resource are the resources this source will track and send related
+	// lifecycle events from the Kubernetes ApiServer, with an optional label
+	// selector to help filter.
+	// +required
+	Resources []APIVersionKindSelector `json:"resources,omitempty"`
 
 	// ResourceOwner is an additional filter to only track resources that are
 	// owned by a specific resource type. If ResourceOwner matches Resources[n]
 	// then Resources[n] is allowed to pass the ResourceOwner filter.
 	// +optional
-	ResourceOwner *v1alpha2.APIVersionKind `json:"owner,omitempty"`
+	ResourceOwner *APIVersionKind `json:"owner,omitempty"`
 
-	// Mode is the mode the receive adapter controller runs under: Ref or Resource.
-	// `Ref` sends only the reference to the resource.
-	// `Resource` send the full resource.
-	Mode string `json:"mode,omitempty"`
+	// EventMode controls the format of the event.
+	// `Reference` sends a dataref event type for the resource under watch.
+	// `Resource` send the full resource lifecycle event.
+	// Defaults to `Reference`
+	// +optional
+	EventMode string `json:"mode,omitempty"`
+
+	// ServiceAccountName is the name of the ServiceAccount to use to run this
+	// source. Defaults to default if not set.
+	// +optional
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 }
 
 // ApiServerSourceStatus defines the observed state of ApiServerSource
@@ -88,29 +94,30 @@ type ApiServerSourceStatus struct {
 	duckv1.SourceStatus `json:",inline"`
 }
 
-// ApiServerResource defines the resource to watch
-type ApiServerResource struct {
-	// API version of the resource to watch.
+// APIVersionKind is an APIVersion and Kind tuple.
+type APIVersionKind struct {
+	// APIVersion - the API version of the resource to watch.
+	APIVersion string `json:"apiVersion"`
+
+	// Kind of the resource to watch.
+	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+	Kind string `json:"kind"`
+}
+
+// APIVersionKindSelector is an APIVersion Kind tuple with a LabelSelector.
+type APIVersionKindSelector struct {
+	// APIVersion - the API version of the resource to watch.
 	APIVersion string `json:"apiVersion"`
 
 	// Kind of the resource to watch.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
 	Kind string `json:"kind"`
 
-	// LabelSelector restricts this source to objects with the selected labels
+	// LabelSelector filters this source to objects to those resources pass the
+	// label selector.
 	// More info: http://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
-	LabelSelector metav1.LabelSelector `json:"labelSelector"`
-
-	// ControllerSelector restricts this source to objects with a controlling owner reference of the specified kind.
-	// Only apiVersion and kind are used. Both are optional.
-	// Deprecated: Per-resource owner refs will no longer be supported in
-	// v1alpha2, please use Spec.Owner as a GKV.
-	ControllerSelector metav1.OwnerReference `json:"controllerSelector"`
-
-	// If true, send an event referencing the object controlling the resource
-	// Deprecated: Per-resource controller flag will no longer be supported in
-	// v1alpha2, please use Spec.Owner as a GKV.
-	Controller bool `json:"controller"`
+	// +optional
+	LabelSelector *metav1.LabelSelector `json:"selector,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -120,4 +127,9 @@ type ApiServerSourceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ApiServerSource `json:"items"`
+}
+
+// GetStatus retrieves the status of the ApiServerSource . Implements the KRShaped interface.
+func (a *ApiServerSource) GetStatus() *duckv1.Status {
+	return &a.Status.Status
 }
