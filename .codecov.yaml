@@ -4,3 +4,5 @@ ignore:
   - "third_party"
   - "vendor"
   - "data-plane/contract"
+  - "hack"
+  - "test"
