@@ -22,10 +22,21 @@ apply_chaos || fail_test "Failed to apply chaos"
 
 header "Waiting Knative eventing to come up"
 
-wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
+apply_sacura || fail_test "Failed to apply Sacura"
 
 header "Running tests"
 
 go_test_e2e -timeout=30m ./test/... || fail_test "Integration test failed"
+
+kubectl wait --for=condition=complete --timeout=10m -n sacura job/sacura || job_completed=$?
+
+# Export logs from pods in the namespace sacura
+go run test/cmd/logs-exporter/main.go --logs-namespace sacura
+
+if [[ "${job_completed}" -ne "0" ]]; then
+  kubectl logs -n knative-eventing -l=app=sacura
+  kubectl describe -n knative-eventing job sacura
+  fail_test "Sacura Job not completed"
+fi
 
 success

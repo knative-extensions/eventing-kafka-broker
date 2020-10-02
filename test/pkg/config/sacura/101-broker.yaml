@@ -1,0 +1,10 @@
+apiVersion: eventing.knative.dev/v1
+kind: Broker
+metadata:
+  name: broker
+  namespace: sacura
+spec:
+  delivery:
+    retry: 3
+    backoffPolicy: exponential
+    backoffDelay: PT0.5S

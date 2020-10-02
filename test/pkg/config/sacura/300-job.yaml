@@ -1,0 +1,64 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sacura
+  namespace: sacura
+  labels:
+    app: sacura
+spec:
+  backoffLimit: 0
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: sacura
+    spec:
+
+      securityContext:
+        runAsNonRoot: true
+
+      # To avoid scheduling the Job on the same node of the receiver and the dispatcher
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: kafka-broker-receiver
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: kafka-broker-dispatcher
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+
+      containers:
+        - name: sacura
+          image: ko://github.com/pierdipi/sacura/cmd/sacura
+          args:
+            - "--config"
+            - "/etc/sacura/sacura.yaml"
+          securityContext:
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - mountPath: /etc/sacura
+              name: config
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 4Gi
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: receiver
+      volumes:
+        - name: config
+          configMap:
+            name: config-sacura
+      restartPolicy: Never

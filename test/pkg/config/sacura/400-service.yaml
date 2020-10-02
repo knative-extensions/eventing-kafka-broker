@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sacura
+  namespace: sacura
+spec:
+  selector:
+    app: sacura
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: receiver
+      name: http

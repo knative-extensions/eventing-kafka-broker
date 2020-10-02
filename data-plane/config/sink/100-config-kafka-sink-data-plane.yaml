@@ -27,7 +27,6 @@ data:
     retries=2147483647
     batch.size=16384
     client.dns.lookup=use_all_dns_ips
-    client.id=KKBD
     connections.max.idle.ms=600000
     delivery.timeout.ms=120000
     linger.ms=0
