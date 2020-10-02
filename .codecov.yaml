@@ -6,4 +6,3 @@ ignore:
   - "data-plane/contract"
   - "hack"
   - "test"
-  - "**/*.pb.go"
