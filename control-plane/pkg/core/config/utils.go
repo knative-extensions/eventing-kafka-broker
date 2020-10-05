@@ -19,6 +19,8 @@ package config
 import (
 	"fmt"
 
+	duck "knative.dev/eventing/pkg/apis/duck/v1"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
@@ -38,4 +40,34 @@ func ContentModeFromString(mode string) contract.ContentMode {
 			[]string{eventing.ModeStructured, eventing.ModeBinary},
 		))
 	}
+}
+
+// BackoffPolicyFromString returns the BackoffPolicy from the given string.
+//
+// Default value is contract.BackoffPolicy_Exponential.
+func BackoffPolicyFromString(backoffPolicy *duck.BackoffPolicyType) contract.BackoffPolicy {
+	if backoffPolicy == nil {
+		return contract.BackoffPolicy_Exponential
+	}
+
+	bp := *backoffPolicy
+	switch bp {
+	case duck.BackoffPolicyLinear:
+		return contract.BackoffPolicy_Linear
+	case duck.BackoffPolicyExponential: // The linter complains for missing case in switch
+		return contract.BackoffPolicy_Exponential
+	default:
+		return contract.BackoffPolicy_Exponential
+	}
+}
+
+// BackoffDelayFromString returns the BackoffDelay from the given string.
+//
+// Default value is the specified defaultDelay.
+func BackoffDelayFromString(backoffDelay *string, defaultDelay string) string {
+	if backoffDelay == nil {
+		return defaultDelay
+	}
+
+	return *backoffDelay
 }

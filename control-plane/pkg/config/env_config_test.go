@@ -78,6 +78,22 @@ func TestGetEnvConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "invalid backoff delay",
+			args: args{
+				prefix: "BROKER",
+			},
+			setEnv: func() {
+				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE", "knative-eventing")
+				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAME", "kafka-brokers-triggers")
+				_ = os.Setenv("BROKER_GENERAL_CONFIG_MAP_NAME", "kafka-config")
+				_ = os.Setenv("BROKER_INGRESS_NAME", "kafka-broker-ingress")
+				_ = os.Setenv("BROKER_SYSTEM_NAMESPACE", "knative-eventing")
+				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_FORMAT", "json")
+				_ = os.Setenv("BROKER_DEFAULT_BACKOFF_DELAY", "PTT")
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
