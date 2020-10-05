@@ -16,9 +16,35 @@ message Filter {
   map<string, string> attributes = 1;
 }
 
+// BackoffPolicyType is the type for backoff policies
+enum BackoffPolicy {
+
+  // Exponential backoff policy
+  Exponential = 0;
+
+  // Linear backoff policy
+  Linear = 1;
+}
+
 message EgressConfig {
   // Dead letter is where the event is sent when something goes wrong
   string deadLetter = 1;
+
+  // retry is the minimum number of retries the sender should attempt when
+  // sending an event before moving it to the dead letter sink.
+  uint32 retry = 2;
+
+  // backoffPolicy is the retry backoff policy (linear, exponential).
+  BackoffPolicy backoffPolicy = 3;
+
+  // backoffDelay is the delay before retrying.
+  // More information on Duration format:
+  //  - https://www.iso.org/iso-8601-date-and-time-format.html
+  //  - https://en.wikipedia.org/wiki/ISO_8601
+  //
+  // For linear policy, backoff delay is backoffDelay*<numberOfRetries>.
+  // For exponential policy, backoff delay is backoffDelay*2^<numberOfRetries>.
+  string backoffDelay = 4;
 }
 
 message Egress {

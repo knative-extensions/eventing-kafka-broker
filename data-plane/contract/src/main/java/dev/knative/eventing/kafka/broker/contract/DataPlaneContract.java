@@ -16,6 +16,134 @@ public final class DataPlaneContract {
   }
   /**
    * <pre>
+   * BackoffPolicyType is the type for backoff policies
+   * </pre>
+   *
+   * Protobuf enum {@code BackoffPolicy}
+   */
+  public enum BackoffPolicy
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <pre>
+     * Exponential backoff policy
+     * </pre>
+     *
+     * <code>Exponential = 0;</code>
+     */
+    Exponential(0),
+    /**
+     * <pre>
+     * Linear backoff policy
+     * </pre>
+     *
+     * <code>Linear = 1;</code>
+     */
+    Linear(1),
+    UNRECOGNIZED(-1),
+    ;
+
+    /**
+     * <pre>
+     * Exponential backoff policy
+     * </pre>
+     *
+     * <code>Exponential = 0;</code>
+     */
+    public static final int Exponential_VALUE = 0;
+    /**
+     * <pre>
+     * Linear backoff policy
+     * </pre>
+     *
+     * <code>Linear = 1;</code>
+     */
+    public static final int Linear_VALUE = 1;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static BackoffPolicy valueOf(int value) {
+      return forNumber(value);
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
+    public static BackoffPolicy forNumber(int value) {
+      switch (value) {
+        case 0: return Exponential;
+        case 1: return Linear;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<BackoffPolicy>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        BackoffPolicy> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<BackoffPolicy>() {
+            public BackoffPolicy findValueByNumber(int number) {
+              return BackoffPolicy.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalStateException(
+            "Can't get the descriptor of an unrecognized enum value.");
+      }
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(0);
+    }
+
+    private static final BackoffPolicy[] VALUES = values();
+
+    public static BackoffPolicy valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private BackoffPolicy(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:BackoffPolicy)
+  }
+
+  /**
+   * <pre>
    * CloudEvent content mode
    * </pre>
    *
@@ -100,7 +228,7 @@ public final class DataPlaneContract {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(0);
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(1);
     }
 
     private static final ContentMode[] VALUES = values();
@@ -1015,6 +1143,66 @@ public final class DataPlaneContract {
      */
     com.google.protobuf.ByteString
         getDeadLetterBytes();
+
+    /**
+     * <pre>
+     * retry is the minimum number of retries the sender should attempt when
+     * sending an event before moving it to the dead letter sink.
+     * </pre>
+     *
+     * <code>uint32 retry = 2;</code>
+     * @return The retry.
+     */
+    int getRetry();
+
+    /**
+     * <pre>
+     * backoffPolicy is the retry backoff policy (linear, exponential).
+     * </pre>
+     *
+     * <code>.BackoffPolicy backoffPolicy = 3;</code>
+     * @return The enum numeric value on the wire for backoffPolicy.
+     */
+    int getBackoffPolicyValue();
+    /**
+     * <pre>
+     * backoffPolicy is the retry backoff policy (linear, exponential).
+     * </pre>
+     *
+     * <code>.BackoffPolicy backoffPolicy = 3;</code>
+     * @return The backoffPolicy.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy getBackoffPolicy();
+
+    /**
+     * <pre>
+     * backoffDelay is the delay before retrying.
+     * More information on Duration format:
+     *  - https://www.iso.org/iso-8601-date-and-time-format.html
+     *  - https://en.wikipedia.org/wiki/ISO_8601
+     * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
+     * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+     * </pre>
+     *
+     * <code>string backoffDelay = 4;</code>
+     * @return The backoffDelay.
+     */
+    java.lang.String getBackoffDelay();
+    /**
+     * <pre>
+     * backoffDelay is the delay before retrying.
+     * More information on Duration format:
+     *  - https://www.iso.org/iso-8601-date-and-time-format.html
+     *  - https://en.wikipedia.org/wiki/ISO_8601
+     * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
+     * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+     * </pre>
+     *
+     * <code>string backoffDelay = 4;</code>
+     * @return The bytes for backoffDelay.
+     */
+    com.google.protobuf.ByteString
+        getBackoffDelayBytes();
   }
   /**
    * Protobuf type {@code EgressConfig}
@@ -1030,6 +1218,8 @@ public final class DataPlaneContract {
     }
     private EgressConfig() {
       deadLetter_ = "";
+      backoffPolicy_ = 0;
+      backoffDelay_ = "";
     }
 
     @java.lang.Override
@@ -1066,6 +1256,23 @@ public final class DataPlaneContract {
               java.lang.String s = input.readStringRequireUtf8();
 
               deadLetter_ = s;
+              break;
+            }
+            case 16: {
+
+              retry_ = input.readUInt32();
+              break;
+            }
+            case 24: {
+              int rawValue = input.readEnum();
+
+              backoffPolicy_ = rawValue;
+              break;
+            }
+            case 34: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              backoffDelay_ = s;
               break;
             }
             default: {
@@ -1146,6 +1353,105 @@ public final class DataPlaneContract {
       }
     }
 
+    public static final int RETRY_FIELD_NUMBER = 2;
+    private int retry_;
+    /**
+     * <pre>
+     * retry is the minimum number of retries the sender should attempt when
+     * sending an event before moving it to the dead letter sink.
+     * </pre>
+     *
+     * <code>uint32 retry = 2;</code>
+     * @return The retry.
+     */
+    @java.lang.Override
+    public int getRetry() {
+      return retry_;
+    }
+
+    public static final int BACKOFFPOLICY_FIELD_NUMBER = 3;
+    private int backoffPolicy_;
+    /**
+     * <pre>
+     * backoffPolicy is the retry backoff policy (linear, exponential).
+     * </pre>
+     *
+     * <code>.BackoffPolicy backoffPolicy = 3;</code>
+     * @return The enum numeric value on the wire for backoffPolicy.
+     */
+    @java.lang.Override public int getBackoffPolicyValue() {
+      return backoffPolicy_;
+    }
+    /**
+     * <pre>
+     * backoffPolicy is the retry backoff policy (linear, exponential).
+     * </pre>
+     *
+     * <code>.BackoffPolicy backoffPolicy = 3;</code>
+     * @return The backoffPolicy.
+     */
+    @java.lang.Override public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy getBackoffPolicy() {
+      @SuppressWarnings("deprecation")
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.valueOf(backoffPolicy_);
+      return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.UNRECOGNIZED : result;
+    }
+
+    public static final int BACKOFFDELAY_FIELD_NUMBER = 4;
+    private volatile java.lang.Object backoffDelay_;
+    /**
+     * <pre>
+     * backoffDelay is the delay before retrying.
+     * More information on Duration format:
+     *  - https://www.iso.org/iso-8601-date-and-time-format.html
+     *  - https://en.wikipedia.org/wiki/ISO_8601
+     * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
+     * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+     * </pre>
+     *
+     * <code>string backoffDelay = 4;</code>
+     * @return The backoffDelay.
+     */
+    @java.lang.Override
+    public java.lang.String getBackoffDelay() {
+      java.lang.Object ref = backoffDelay_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        backoffDelay_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * backoffDelay is the delay before retrying.
+     * More information on Duration format:
+     *  - https://www.iso.org/iso-8601-date-and-time-format.html
+     *  - https://en.wikipedia.org/wiki/ISO_8601
+     * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
+     * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+     * </pre>
+     *
+     * <code>string backoffDelay = 4;</code>
+     * @return The bytes for backoffDelay.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getBackoffDelayBytes() {
+      java.lang.Object ref = backoffDelay_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        backoffDelay_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -1163,6 +1469,15 @@ public final class DataPlaneContract {
       if (!getDeadLetterBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, deadLetter_);
       }
+      if (retry_ != 0) {
+        output.writeUInt32(2, retry_);
+      }
+      if (backoffPolicy_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.Exponential.getNumber()) {
+        output.writeEnum(3, backoffPolicy_);
+      }
+      if (!getBackoffDelayBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, backoffDelay_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -1174,6 +1489,17 @@ public final class DataPlaneContract {
       size = 0;
       if (!getDeadLetterBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, deadLetter_);
+      }
+      if (retry_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(2, retry_);
+      }
+      if (backoffPolicy_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.Exponential.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(3, backoffPolicy_);
+      }
+      if (!getBackoffDelayBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, backoffDelay_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1192,6 +1518,11 @@ public final class DataPlaneContract {
 
       if (!getDeadLetter()
           .equals(other.getDeadLetter())) return false;
+      if (getRetry()
+          != other.getRetry()) return false;
+      if (backoffPolicy_ != other.backoffPolicy_) return false;
+      if (!getBackoffDelay()
+          .equals(other.getBackoffDelay())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -1205,6 +1536,12 @@ public final class DataPlaneContract {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + DEADLETTER_FIELD_NUMBER;
       hash = (53 * hash) + getDeadLetter().hashCode();
+      hash = (37 * hash) + RETRY_FIELD_NUMBER;
+      hash = (53 * hash) + getRetry();
+      hash = (37 * hash) + BACKOFFPOLICY_FIELD_NUMBER;
+      hash = (53 * hash) + backoffPolicy_;
+      hash = (37 * hash) + BACKOFFDELAY_FIELD_NUMBER;
+      hash = (53 * hash) + getBackoffDelay().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1340,6 +1677,12 @@ public final class DataPlaneContract {
         super.clear();
         deadLetter_ = "";
 
+        retry_ = 0;
+
+        backoffPolicy_ = 0;
+
+        backoffDelay_ = "";
+
         return this;
       }
 
@@ -1367,6 +1710,9 @@ public final class DataPlaneContract {
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig buildPartial() {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig(this);
         result.deadLetter_ = deadLetter_;
+        result.retry_ = retry_;
+        result.backoffPolicy_ = backoffPolicy_;
+        result.backoffDelay_ = backoffDelay_;
         onBuilt();
         return result;
       }
@@ -1417,6 +1763,16 @@ public final class DataPlaneContract {
         if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.getDefaultInstance()) return this;
         if (!other.getDeadLetter().isEmpty()) {
           deadLetter_ = other.deadLetter_;
+          onChanged();
+        }
+        if (other.getRetry() != 0) {
+          setRetry(other.getRetry());
+        }
+        if (other.backoffPolicy_ != 0) {
+          setBackoffPolicyValue(other.getBackoffPolicyValue());
+        }
+        if (!other.getBackoffDelay().isEmpty()) {
+          backoffDelay_ = other.backoffDelay_;
           onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
@@ -1540,6 +1896,247 @@ public final class DataPlaneContract {
   checkByteStringIsUtf8(value);
         
         deadLetter_ = value;
+        onChanged();
+        return this;
+      }
+
+      private int retry_ ;
+      /**
+       * <pre>
+       * retry is the minimum number of retries the sender should attempt when
+       * sending an event before moving it to the dead letter sink.
+       * </pre>
+       *
+       * <code>uint32 retry = 2;</code>
+       * @return The retry.
+       */
+      @java.lang.Override
+      public int getRetry() {
+        return retry_;
+      }
+      /**
+       * <pre>
+       * retry is the minimum number of retries the sender should attempt when
+       * sending an event before moving it to the dead letter sink.
+       * </pre>
+       *
+       * <code>uint32 retry = 2;</code>
+       * @param value The retry to set.
+       * @return This builder for chaining.
+       */
+      public Builder setRetry(int value) {
+        
+        retry_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * retry is the minimum number of retries the sender should attempt when
+       * sending an event before moving it to the dead letter sink.
+       * </pre>
+       *
+       * <code>uint32 retry = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearRetry() {
+        
+        retry_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int backoffPolicy_ = 0;
+      /**
+       * <pre>
+       * backoffPolicy is the retry backoff policy (linear, exponential).
+       * </pre>
+       *
+       * <code>.BackoffPolicy backoffPolicy = 3;</code>
+       * @return The enum numeric value on the wire for backoffPolicy.
+       */
+      @java.lang.Override public int getBackoffPolicyValue() {
+        return backoffPolicy_;
+      }
+      /**
+       * <pre>
+       * backoffPolicy is the retry backoff policy (linear, exponential).
+       * </pre>
+       *
+       * <code>.BackoffPolicy backoffPolicy = 3;</code>
+       * @param value The enum numeric value on the wire for backoffPolicy to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBackoffPolicyValue(int value) {
+        
+        backoffPolicy_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * backoffPolicy is the retry backoff policy (linear, exponential).
+       * </pre>
+       *
+       * <code>.BackoffPolicy backoffPolicy = 3;</code>
+       * @return The backoffPolicy.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy getBackoffPolicy() {
+        @SuppressWarnings("deprecation")
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.valueOf(backoffPolicy_);
+        return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.UNRECOGNIZED : result;
+      }
+      /**
+       * <pre>
+       * backoffPolicy is the retry backoff policy (linear, exponential).
+       * </pre>
+       *
+       * <code>.BackoffPolicy backoffPolicy = 3;</code>
+       * @param value The backoffPolicy to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBackoffPolicy(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        
+        backoffPolicy_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * backoffPolicy is the retry backoff policy (linear, exponential).
+       * </pre>
+       *
+       * <code>.BackoffPolicy backoffPolicy = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearBackoffPolicy() {
+        
+        backoffPolicy_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object backoffDelay_ = "";
+      /**
+       * <pre>
+       * backoffDelay is the delay before retrying.
+       * More information on Duration format:
+       *  - https://www.iso.org/iso-8601-date-and-time-format.html
+       *  - https://en.wikipedia.org/wiki/ISO_8601
+       * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
+       * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+       * </pre>
+       *
+       * <code>string backoffDelay = 4;</code>
+       * @return The backoffDelay.
+       */
+      public java.lang.String getBackoffDelay() {
+        java.lang.Object ref = backoffDelay_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          backoffDelay_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * backoffDelay is the delay before retrying.
+       * More information on Duration format:
+       *  - https://www.iso.org/iso-8601-date-and-time-format.html
+       *  - https://en.wikipedia.org/wiki/ISO_8601
+       * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
+       * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+       * </pre>
+       *
+       * <code>string backoffDelay = 4;</code>
+       * @return The bytes for backoffDelay.
+       */
+      public com.google.protobuf.ByteString
+          getBackoffDelayBytes() {
+        java.lang.Object ref = backoffDelay_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          backoffDelay_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * backoffDelay is the delay before retrying.
+       * More information on Duration format:
+       *  - https://www.iso.org/iso-8601-date-and-time-format.html
+       *  - https://en.wikipedia.org/wiki/ISO_8601
+       * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
+       * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+       * </pre>
+       *
+       * <code>string backoffDelay = 4;</code>
+       * @param value The backoffDelay to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBackoffDelay(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        backoffDelay_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * backoffDelay is the delay before retrying.
+       * More information on Duration format:
+       *  - https://www.iso.org/iso-8601-date-and-time-format.html
+       *  - https://en.wikipedia.org/wiki/ISO_8601
+       * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
+       * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+       * </pre>
+       *
+       * <code>string backoffDelay = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearBackoffDelay() {
+        
+        backoffDelay_ = getDefaultInstance().getBackoffDelay();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * backoffDelay is the delay before retrying.
+       * More information on Duration format:
+       *  - https://www.iso.org/iso-8601-date-and-time-format.html
+       *  - https://en.wikipedia.org/wiki/ISO_8601
+       * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
+       * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+       * </pre>
+       *
+       * <code>string backoffDelay = 4;</code>
+       * @param value The bytes for backoffDelay to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBackoffDelayBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        backoffDelay_ = value;
         onChanged();
         return this;
       }
@@ -7288,23 +7885,26 @@ public final class DataPlaneContract {
       "buf/empty.proto\"h\n\006Filter\022+\n\nattributes\030" +
       "\001 \003(\0132\027.Filter.AttributesEntry\0321\n\017Attrib" +
       "utesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028" +
-      "\001\"\"\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\"\252\001" +
-      "\n\006Egress\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n\013desti" +
-      "nation\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\0226\n\024repl" +
-      "yToOriginalTopic\030\004 \001(\0132\026.google.protobuf" +
-      ".EmptyH\000\022\027\n\006filter\030\005 \001(\0132\007.FilterB\017\n\rrep" +
-      "lyStrategy\"[\n\007Ingress\022!\n\013contentMode\030\001 \001" +
-      "(\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH\000\022\016\n\004host" +
-      "\030\003 \001(\tH\000B\r\n\013ingressType\"\233\001\n\010Resource\022\n\n\002" +
-      "id\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrapSer" +
-      "vers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress\022#\n" +
-      "\014egressConfig\030\005 \001(\0132\r.EgressConfig\022\031\n\010eg" +
-      "resses\030\006 \003(\0132\007.Egress\"<\n\010Contract\022\022\n\ngen" +
-      "eration\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t.Resou" +
-      "rce*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCT" +
-      "URED\020\001B[\n*dev.knative.eventing.kafka.bro" +
-      "ker.contractB\021DataPlaneContractZ\032control" +
-      "-plane/pkg/contractb\006proto3"
+      "\001\"n\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\r\n" +
+      "\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.Ba" +
+      "ckoffPolicy\022\024\n\014backoffDelay\030\004 \001(\t\"\252\001\n\006Eg" +
+      "ress\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n\013destinati" +
+      "on\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\0226\n\024replyToO" +
+      "riginalTopic\030\004 \001(\0132\026.google.protobuf.Emp" +
+      "tyH\000\022\027\n\006filter\030\005 \001(\0132\007.FilterB\017\n\rreplySt" +
+      "rategy\"[\n\007Ingress\022!\n\013contentMode\030\001 \001(\0162\014" +
+      ".ContentMode\022\016\n\004path\030\002 \001(\tH\000\022\016\n\004host\030\003 \001" +
+      "(\tH\000B\r\n\013ingressType\"\233\001\n\010Resource\022\n\n\002id\030\001" +
+      " \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrapServers" +
+      "\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress\022#\n\014egr" +
+      "essConfig\030\005 \001(\0132\r.EgressConfig\022\031\n\010egress" +
+      "es\030\006 \003(\0132\007.Egress\"<\n\010Contract\022\022\n\ngenerat" +
+      "ion\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t.Resource*" +
+      ",\n\rBackoffPolicy\022\017\n\013Exponential\020\000\022\n\n\006Lin" +
+      "ear\020\001*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRU" +
+      "CTURED\020\001B[\n*dev.knative.eventing.kafka.b" +
+      "roker.contractB\021DataPlaneContractZ\032contr" +
+      "ol-plane/pkg/contractb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -7328,7 +7928,7 @@ public final class DataPlaneContract {
     internal_static_EgressConfig_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_EgressConfig_descriptor,
-        new java.lang.String[] { "DeadLetter", });
+        new java.lang.String[] { "DeadLetter", "Retry", "BackoffPolicy", "BackoffDelay", });
     internal_static_Egress_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_Egress_fieldAccessorTable = new
