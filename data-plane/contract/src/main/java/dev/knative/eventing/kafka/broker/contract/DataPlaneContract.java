@@ -1148,6 +1148,7 @@ public final class DataPlaneContract {
      * <pre>
      * retry is the minimum number of retries the sender should attempt when
      * sending an event before moving it to the dead letter sink.
+     * Setting retry to 0 means don't retry.
      * </pre>
      *
      * <code>uint32 retry = 2;</code>
@@ -1359,6 +1360,7 @@ public final class DataPlaneContract {
      * <pre>
      * retry is the minimum number of retries the sender should attempt when
      * sending an event before moving it to the dead letter sink.
+     * Setting retry to 0 means don't retry.
      * </pre>
      *
      * <code>uint32 retry = 2;</code>
@@ -1905,6 +1907,7 @@ public final class DataPlaneContract {
        * <pre>
        * retry is the minimum number of retries the sender should attempt when
        * sending an event before moving it to the dead letter sink.
+       * Setting retry to 0 means don't retry.
        * </pre>
        *
        * <code>uint32 retry = 2;</code>
@@ -1918,6 +1921,7 @@ public final class DataPlaneContract {
        * <pre>
        * retry is the minimum number of retries the sender should attempt when
        * sending an event before moving it to the dead letter sink.
+       * Setting retry to 0 means don't retry.
        * </pre>
        *
        * <code>uint32 retry = 2;</code>
@@ -1934,6 +1938,7 @@ public final class DataPlaneContract {
        * <pre>
        * retry is the minimum number of retries the sender should attempt when
        * sending an event before moving it to the dead letter sink.
+       * Setting retry to 0 means don't retry.
        * </pre>
        *
        * <code>uint32 retry = 2;</code>

@@ -32,6 +32,8 @@ message EgressConfig {
 
   // retry is the minimum number of retries the sender should attempt when
   // sending an event before moving it to the dead letter sink.
+  //
+  // Setting retry to 0 means don't retry.
   uint32 retry = 2;
 
   // backoffPolicy is the retry backoff policy (linear, exponential).

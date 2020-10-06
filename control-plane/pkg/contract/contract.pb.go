@@ -184,6 +184,8 @@ type EgressConfig struct {
 	DeadLetter string `protobuf:"bytes,1,opt,name=deadLetter,proto3" json:"deadLetter,omitempty"`
 	// retry is the minimum number of retries the sender should attempt when
 	// sending an event before moving it to the dead letter sink.
+	//
+	// Setting retry to 0 means don't retry.
 	Retry uint32 `protobuf:"varint,2,opt,name=retry,proto3" json:"retry,omitempty"`
 	// backoffPolicy is the retry backoff policy (linear, exponential).
 	BackoffPolicy BackoffPolicy `protobuf:"varint,3,opt,name=backoffPolicy,proto3,enum=BackoffPolicy" json:"backoffPolicy,omitempty"`
