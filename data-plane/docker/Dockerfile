@@ -13,12 +13,16 @@
 # limitations under the License.
 
 ARG JAVA_IMAGE
+ARG BASE_IMAGE
+FROM ${JAVA_IMAGE} as builder
+
 ARG APP_DIR
 ARG APP_JAR
 
-FROM ${JAVA_IMAGE} as builder
-
 WORKDIR /app
+
+# https://github.com/AdoptOpenJDK/openjdk-docker/issues/260
+RUN apt-get update && apt-get install -y binutils
 
 COPY pom.xml .
 COPY .editorconfig .
@@ -29,24 +33,32 @@ COPY contract/pom.xml contract/pom.xml
 COPY tests/pom.xml tests/pom.xml
 COPY ./mvnw .
 COPY ./.mvn/wrapper .mvn/wrapper
+COPY docker/generate_jdk.sh .
 
-RUN ./mvnw install -DskipTests -Deditorconfig.skip --no-transfer-progress
+RUN ./mvnw install -pl=${APP_DIR} -am -DskipTests -Deditorconfig.skip --no-transfer-progress
 
 COPY . .
 
-RUN ./mvnw package -DskipTests -Deditorconfig.skip --no-transfer-progress
+RUN ./mvnw package -pl=${APP_DIR} -am -DskipTests -Deditorconfig.skip --no-transfer-progress
 
-FROM ${JAVA_IMAGE} as running
+RUN ./generate_jdk.sh /app/${APP_DIR}/target/${APP_JAR}
+
+FROM ${BASE_IMAGE} as running
 
 ARG APP_DIR
 ARG APP_JAR
-ARG JAVA_IMAGE
 
-RUN groupadd -g 999 appuser && useradd -r -u 999 -g appuser appuser
-RUN mkdir /tmp/vertx-cache && \
-      chown -R appuser:appuser /tmp/vertx-cache && \
-      mkdir /app && \
-      chown -R appuser:appuser /app
+# Create appuser and directories
+RUN addgroup -S appuser && adduser -S appuser -G appuser
+RUN mkdir /tmp/vertx-cache && chown -R appuser:appuser /tmp/vertx-cache
+RUN mkdir /app
+
+# Copy jar and jdk inside /app
+COPY --from=builder /app/jdk /app/jdk
+COPY --from=builder /app/${APP_DIR}/target/${APP_JAR} /app/app.jar
+RUN chown -R appuser:appuser /app
+
+# Set appuser and configure PATH
 USER appuser
 WORKDIR /app
-COPY --from=builder /app/${APP_DIR}/target/${APP_JAR} /app/app.jar
+ENV PATH="/app/jdk/bin:${PATH}"

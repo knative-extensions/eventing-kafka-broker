@@ -41,7 +41,8 @@ readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-knative-kafka-broker-receive
 readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-knative-kafka-broker-dispatcher}"
 readonly sink="${KNATIVE_KAFKA_SINK_RECEIVER:-knative-kafka-sink-receiver}"
 
-readonly JAVA_IMAGE=docker.io/adoptopenjdk:14-jre-hotspot
+readonly JAVA_IMAGE=docker.io/adoptopenjdk:14-jdk-hotspot
+readonly BASE_IMAGE=docker.io/alpine:latest
 
 readonly RECEIVER_JAR="receiver-1.0-SNAPSHOT.jar"
 readonly RECEIVER_DIRECTORY=receiver
@@ -87,6 +88,7 @@ function receiver_build_push() {
   docker build \
     -f ${DATA_PLANE_DIR}/docker/Dockerfile \
     --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
+    --build-arg BASE_IMAGE=${BASE_IMAGE} \
     --build-arg APP_JAR=${RECEIVER_JAR} \
     --build-arg APP_DIR=${RECEIVER_DIRECTORY} \
     -t "${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}" ${DATA_PLANE_DIR} &&
@@ -102,6 +104,7 @@ function dispatcher_build_push() {
   docker build \
     -f ${DATA_PLANE_DIR}/docker/Dockerfile \
     --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
+    --build-arg BASE_IMAGE=${BASE_IMAGE} \
     --build-arg APP_JAR=${DISPATCHER_JAR} \
     --build-arg APP_DIR=${DISPATCHER_DIRECTORY} \
     -t "${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}" ${DATA_PLANE_DIR} &&
@@ -117,6 +120,7 @@ function sink_build_push() {
   docker build \
     -f ${DATA_PLANE_DIR}/docker/Dockerfile \
     --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
+    --build-arg BASE_IMAGE=${BASE_IMAGE} \
     --build-arg APP_JAR=${RECEIVER_JAR} \
     --build-arg APP_DIR=${RECEIVER_DIRECTORY} \
     -t "${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}" ${DATA_PLANE_DIR} &&
