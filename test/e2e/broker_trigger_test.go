@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"testing"
 
+	. "github.com/cloudevents/sdk-go/v2/test"
+
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
