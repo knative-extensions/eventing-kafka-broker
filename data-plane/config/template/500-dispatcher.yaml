@@ -85,6 +85,7 @@ spec:
           # TODO add JVM arguments
           args:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
+            - "-Dvertx.disableDnsResolver=true"
             - "-jar"
             - "/app/app.jar"
           terminationMessagePolicy: FallbackToLogsOnError

@@ -83,6 +83,7 @@ spec:
             - "java"
           args:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
+            - "-Dvertx.disableDnsResolver=true"
             - "-jar"
             - "/app/app.jar"
           # TODO set resources (limits and requests)
