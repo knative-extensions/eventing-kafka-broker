@@ -87,6 +87,26 @@ spec:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              port: 9090
+              path: /metrics
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              port: 9090
+              path: /metrics
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 1
           terminationMessagePolicy: FallbackToLogsOnError
           terminationMessagePath: /dev/temination-log
           securityContext:
@@ -101,7 +121,7 @@ spec:
           configMap:
             name: kafka-broker-brokers-triggers
         - name: cache
-          emptyDir: {}
+          emptyDir: { }
         - name: kafka-broker-config-logging
           configMap:
             name: kafka-config-logging
