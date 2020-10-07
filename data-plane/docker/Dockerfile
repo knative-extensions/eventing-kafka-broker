@@ -49,7 +49,7 @@ ARG APP_DIR
 ARG APP_JAR
 
 # Create appuser and directories
-RUN addgroup -S appuser && adduser -S appuser -G appuser
+RUN groupadd -g 999 appuser && useradd -r -u 999 -g appuser appuser
 RUN mkdir /tmp/vertx-cache && chown -R appuser:appuser /tmp/vertx-cache
 RUN mkdir /app
 

@@ -41,8 +41,11 @@ readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-knative-kafka-broker-receive
 readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-knative-kafka-broker-dispatcher}"
 readonly sink="${KNATIVE_KAFKA_SINK_RECEIVER:-knative-kafka-sink-receiver}"
 
+# The BASE_IMAGE for the running image should be based on the same base of JAVA_IMAGE
+# because jlink generates a jdk linked to the libc available on the local machine
+# adoptopenjdk uses ubuntu:bionic as base
 readonly JAVA_IMAGE=docker.io/adoptopenjdk:14-jdk-hotspot
-readonly BASE_IMAGE=docker.io/alpine:latest
+readonly BASE_IMAGE=docker.io/ubuntu:bionic
 
 readonly RECEIVER_JAR="receiver-1.0-SNAPSHOT.jar"
 readonly RECEIVER_DIRECTORY=receiver
