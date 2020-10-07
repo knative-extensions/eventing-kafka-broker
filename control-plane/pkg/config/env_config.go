@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/kelseyhightower/envconfig"
+	"github.com/rickb777/date/period"
 )
 
 type Env struct {
@@ -29,6 +30,7 @@ type Env struct {
 	IngressName                 string `required:"true" split_words:"true"`
 	SystemNamespace             string `required:"true" split_words:"true"`
 	DataPlaneConfigFormat       string `required:"true" split_words:"true"`
+	DefaultBackoffDelay         string `required:"false" split_words:"true"`
 }
 
 func GetEnvConfig(prefix string) (*Env, error) {
@@ -38,9 +40,20 @@ func GetEnvConfig(prefix string) (*Env, error) {
 		return nil, fmt.Errorf("failed to process env config: %w", err)
 	}
 
+	if env.DefaultBackoffDelay != "" {
+		if isNotValidBackoffDelay(env.DefaultBackoffDelay) {
+			return nil, fmt.Errorf("invalid backoff delay: %s", env.DefaultBackoffDelay)
+		}
+	}
+
 	return env, nil
 }
 
 func (c *Env) DataPlaneConfigMapAsString() string {
 	return fmt.Sprintf("%s/%s", c.DataPlaneConfigMapNamespace, c.DataPlaneConfigMapName)
+}
+
+func isNotValidBackoffDelay(delay string) bool {
+	_, err := period.Parse(delay)
+	return err != nil
 }

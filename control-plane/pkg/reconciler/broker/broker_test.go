@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	"k8s.io/utils/pointer"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/Shopify/sarama"
@@ -76,6 +78,9 @@ var (
 
 	createTopicError = fmt.Errorf("failed to create topic")
 	deleteTopicError = fmt.Errorf("failed to delete topic")
+
+	linear      = eventingduck.BackoffPolicyLinear
+	exponential = eventingduck.BackoffPolicyExponential
 )
 
 func TestBrokerReconciler(t *testing.T) {
@@ -1103,6 +1108,259 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerDataPlaneNotAvailable,
 					),
 				},
+			},
+		},
+		{
+			Name: "Reconciled normal - with retry config - exponential",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithDelivery(),
+					WithRetry(pointer.Int32Ptr(10), &exponential, pointer.StringPtr("PT2S")),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Generation: 1,
+				}, &configs),
+				NewService(),
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Id:               BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							BootstrapServers: bootstrapServers,
+							EgressConfig: &contract.EgressConfig{
+								DeadLetter:    "http://test-service.test-service-namespace.svc.cluster.local/",
+								Retry:         10,
+								BackoffPolicy: contract.BackoffPolicy_Exponential,
+								BackoffDelay:  "PT2S",
+							},
+						},
+					},
+					Generation: 2,
+				}),
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithDelivery(),
+						WithRetry(pointer.Int32Ptr(10), &exponential, pointer.StringPtr("PT2S")),
+						reconcilertesting.WithInitBrokerConditions,
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerDataPlaneAvailable,
+						BrokerTopicReady,
+						BrokerConfigParsed,
+						BrokerAddressable(&configs),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
+		},
+		{
+			Name: "Reconciled normal - with retry config - linear",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithDelivery(),
+					WithRetry(pointer.Int32Ptr(10), &linear, pointer.StringPtr("PT2S")),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Generation: 1,
+				}, &configs),
+				NewService(),
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Id:               BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							BootstrapServers: bootstrapServers,
+							EgressConfig: &contract.EgressConfig{
+								DeadLetter:    "http://test-service.test-service-namespace.svc.cluster.local/",
+								Retry:         10,
+								BackoffPolicy: contract.BackoffPolicy_Linear,
+								BackoffDelay:  "PT2S",
+							},
+						},
+					},
+					Generation: 2,
+				}),
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithDelivery(),
+						WithRetry(pointer.Int32Ptr(10), &linear, pointer.StringPtr("PT2S")),
+						reconcilertesting.WithInitBrokerConditions,
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerDataPlaneAvailable,
+						BrokerTopicReady,
+						BrokerConfigParsed,
+						BrokerAddressable(&configs),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
+		},
+		{
+			Name: "Reconciled normal - with no retry num",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithDelivery(),
+					WithRetry(nil, &linear, pointer.StringPtr("PT2S")),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Generation: 1,
+				}, &configs),
+				NewService(),
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Id:               BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							BootstrapServers: bootstrapServers,
+							EgressConfig: &contract.EgressConfig{
+								DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/",
+							},
+						},
+					},
+					Generation: 2,
+				}),
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithDelivery(),
+						WithRetry(nil, &linear, pointer.StringPtr("PT2S")),
+						reconcilertesting.WithInitBrokerConditions,
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerDataPlaneAvailable,
+						BrokerTopicReady,
+						BrokerConfigParsed,
+						BrokerAddressable(&configs),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
+		},
+		{
+			Name: "Reconciled normal - with retry config - no retry delay - use default delay",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithDelivery(),
+					WithRetry(pointer.Int32Ptr(10), &linear, nil),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Generation: 1,
+				}, &configs),
+				NewService(),
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Id:               BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							BootstrapServers: bootstrapServers,
+							EgressConfig: &contract.EgressConfig{
+								DeadLetter:    "http://test-service.test-service-namespace.svc.cluster.local/",
+								Retry:         10,
+								BackoffPolicy: contract.BackoffPolicy_Linear,
+								BackoffDelay:  configs.DefaultBackoffDelay,
+							},
+						},
+					},
+					Generation: 2,
+				}),
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithDelivery(),
+						WithRetry(pointer.Int32Ptr(10), &linear, nil),
+						reconcilertesting.WithInitBrokerConditions,
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerDataPlaneAvailable,
+						BrokerTopicReady,
+						BrokerConfigParsed,
+						BrokerAddressable(&configs),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 	}

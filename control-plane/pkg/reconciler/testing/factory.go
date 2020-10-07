@@ -50,11 +50,12 @@ const (
 var DefaultConfigs = &broker.Configs{
 
 	Env: config.Env{
-		DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
 		DataPlaneConfigMapNamespace: "knative-eventing",
+		DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
 		IngressName:                 "kafka-broker-receiver",
 		SystemNamespace:             "knative-eventing",
 		DataPlaneConfigFormat:       base.Json,
+		DefaultBackoffDelay:         "PT1S",
 	},
 
 	BootstrapServers: "",

@@ -80,16 +80,28 @@ func WithDelivery() func(*eventing.Broker) {
 	service := NewService()
 
 	return func(broker *eventing.Broker) {
-		broker.Spec.Delivery = &eventingduck.DeliverySpec{
-			DeadLetterSink: &duckv1.Destination{
-				Ref: &duckv1.KReference{
-					Kind:       service.Kind,
-					Namespace:  service.Namespace,
-					Name:       service.Name,
-					APIVersion: service.APIVersion,
-				},
+		if broker.Spec.Delivery == nil {
+			broker.Spec.Delivery = &eventingduck.DeliverySpec{}
+		}
+		broker.Spec.Delivery.DeadLetterSink = &duckv1.Destination{
+			Ref: &duckv1.KReference{
+				Kind:       service.Kind,
+				Namespace:  service.Namespace,
+				Name:       service.Name,
+				APIVersion: service.APIVersion,
 			},
 		}
+	}
+}
+
+func WithRetry(retry *int32, policy *eventingduck.BackoffPolicyType, delay *string) func(*eventing.Broker) {
+	return func(broker *eventing.Broker) {
+		if broker.Spec.Delivery == nil {
+			broker.Spec.Delivery = &eventingduck.DeliverySpec{}
+		}
+		broker.Spec.Delivery.Retry = retry
+		broker.Spec.Delivery.BackoffPolicy = policy
+		broker.Spec.Delivery.BackoffDelay = delay
 	}
 }
 

@@ -317,15 +317,35 @@ func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker
 		BootstrapServers: config.GetBootstrapServers(),
 	}
 
-	if broker.Spec.Delivery != nil && broker.Spec.Delivery.DeadLetterSink != nil {
-		deadLetterSinkURL, err := r.Resolver.URIFromDestinationV1(ctx, *broker.Spec.Delivery.DeadLetterSink, broker)
-		if err != nil {
-			return nil, fmt.Errorf("failed to resolve broker.Spec.Deliver.DeadLetterSink: %w", err)
+	delivery := broker.Spec.Delivery
+	if delivery != nil {
+
+		if delivery.DeadLetterSink != nil {
+
+			deadLetterSinkURL, err := r.Resolver.URIFromDestinationV1(ctx, *delivery.DeadLetterSink, broker)
+			if err != nil {
+				return nil, fmt.Errorf("failed to resolve broker.Spec.Deliver.DeadLetterSink: %w", err)
+			}
+
+			ensureEgressConfig(res)
+			res.EgressConfig.DeadLetter = deadLetterSinkURL.String()
 		}
-		res.EgressConfig = &contract.EgressConfig{DeadLetter: deadLetterSinkURL.String()}
+
+		if delivery.Retry != nil {
+			ensureEgressConfig(res)
+			res.EgressConfig.Retry = uint32(*delivery.Retry)
+			res.EgressConfig.BackoffDelay = coreconfig.BackoffDelayFromString(delivery.BackoffDelay, "PT1S")
+			res.EgressConfig.BackoffPolicy = coreconfig.BackoffPolicyFromString(delivery.BackoffPolicy)
+		}
 	}
 
 	return res, nil
+}
+
+func ensureEgressConfig(res *contract.Resource) {
+	if res.EgressConfig == nil {
+		res.EgressConfig = &contract.EgressConfig{}
+	}
 }
 
 func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev1.ConfigMap) {
