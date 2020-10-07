@@ -49,9 +49,9 @@ ARG APP_DIR
 ARG APP_JAR
 
 # Create appuser and directories
-RUN groupadd -g 999 appuser && useradd -r -u 999 -g appuser appuser
-RUN mkdir /tmp/vertx-cache && chown -R appuser:appuser /tmp/vertx-cache
-RUN mkdir /app
+RUN groupadd -g 999 appuser && useradd -r -u 999 -g appuser appuser && \
+  mkdir /tmp/vertx-cache && chown -R appuser:appuser /tmp/vertx-cache && \
+  mkdir /app
 
 # Copy jar and jdk inside /app
 COPY --from=builder /app/jdk /app/jdk
