@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Knative Authors
+Copyright 2020 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,19 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package helpers
+package recorder_vent
 
 import (
-	"log"
+	"encoding/json"
+
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
+
+	"knative.dev/eventing/test/lib/recordevents"
 )
 
-// Run can run functions that needs dryrun support.
-func Run(message string, call func() error, dryrun bool) error {
-	if dryrun {
-		log.Print("[dry run] ", message)
-		return nil
-	}
-	log.Print(message)
+type recorder struct {
+	out record.EventRecorder
+	on  runtime.Object
+}
 
-	return call()
+func (r *recorder) Vent(observed recordevents.EventInfo) error {
+	b, err := json.Marshal(observed)
+	if err != nil {
+		return err
+	}
+
+	r.out.Eventf(r.on, corev1.EventTypeNormal, recordevents.CloudEventObservedReason, "%s", string(b))
+
+	return nil
 }

@@ -23,8 +23,9 @@ import (
 	"fmt"
 	"testing"
 
-	cloudevents "github.com/cloudevents/sdk-go/v2"
 	. "github.com/cloudevents/sdk-go/v2/test"
+
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	testlib "knative.dev/eventing/test/lib"
@@ -72,7 +73,6 @@ func TestBrokerTrigger(t *testing.T) {
 		)
 
 		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber)
-		defer eventTracker.Cleanup()
 
 		client.CreateTriggerOrFailV1Beta1(
 			triggerName,
@@ -204,7 +204,6 @@ func TestBrokerWithConfig(t *testing.T) {
 		)
 
 		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber)
-		defer eventTracker.Cleanup()
 
 		client.CreateTriggerOrFailV1Beta1(
 			triggerName,

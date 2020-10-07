@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Knative Authors
+Copyright 2020 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,19 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package helpers
+package recordevents
 
-import (
-	"log"
-)
+// EventLog is the contract for an event logger to vent an event.
+type EventLog interface {
+	Vent(observed EventInfo) error
+}
 
-// Run can run functions that needs dryrun support.
-func Run(message string, call func() error, dryrun bool) error {
-	if dryrun {
-		log.Print("[dry run] ", message)
-		return nil
+type EventLogs []EventLog
+
+func (e EventLogs) Vent(observed EventInfo) error {
+	for _, el := range e {
+		if err := el.Vent(observed); err != nil {
+			return err
+		}
 	}
-	log.Print(message)
-
-	return call()
+	return nil
 }
