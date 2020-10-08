@@ -197,8 +197,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     final EgressConfig egress) {
 
     final var circuitBreaker = CircuitBreaker.create(target, vertx, circuitBreakerOptions);
-
-    setRetryPolicy(egress, circuitBreaker);
+    circuitBreaker.retryPolicy(computeRetryPolicy(egress));
 
     return new HttpConsumerRecordSender(
       client,
@@ -207,21 +206,22 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     );
   }
 
-  private void setRetryPolicy(EgressConfig egress, CircuitBreaker circuitBreaker) {
-    if (egress != null) {
+  private static Function<Integer, Long> computeRetryPolicy(EgressConfig egress) {
+    if (egress != null && egress.getBackoffPolicy() != null) {
       try {
         final var delay = Duration.parse(egress.getBackoffDelay()).toMillis();
 
-        final Function<Integer, Long> retryPolicy = switch (egress.getBackoffPolicy()) {
+        return switch (egress.getBackoffPolicy()) {
           case Linear -> retryCount -> linearRetryPolicy(retryCount, delay);
           case Exponential, UNRECOGNIZED -> retryCount -> exponentialRetryPolicy(retryCount, delay);
         };
 
-        circuitBreaker.retryPolicy(retryPolicy);
       } catch (final Exception ex) {
         logger.error("failed to set retry policy", ex);
       }
     }
+
+    return retry -> 0L; // Default Vert.x retry policy
   }
 
   private static Long exponentialRetryPolicy(final int retryCount, final long delay) {
