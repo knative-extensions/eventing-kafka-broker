@@ -49,7 +49,6 @@ func TestBrokerTrigger(t *testing.T) {
 
 		const (
 			senderName  = "sender"
-			brokerName  = "broker"
 			triggerName = "trigger"
 			subscriber  = "subscriber"
 
@@ -169,7 +168,6 @@ func TestBrokerWithConfig(t *testing.T) {
 		const (
 			configMapName = "br-config"
 			senderName    = "sender"
-			brokerName    = "broker"
 			triggerName   = "trigger"
 			subscriber    = "subscriber"
 
