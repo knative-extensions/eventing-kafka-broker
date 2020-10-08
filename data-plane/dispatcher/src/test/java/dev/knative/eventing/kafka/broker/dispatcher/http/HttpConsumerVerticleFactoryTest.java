@@ -30,6 +30,7 @@ import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
 import dev.knative.eventing.kafka.broker.core.wrappers.EventMatcher;
 import dev.knative.eventing.kafka.broker.core.wrappers.Filter;
 import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventDeserializer;
@@ -97,7 +98,12 @@ public class HttpConsumerVerticleFactoryTest {
 
         @Override
         public DataPlaneContract.EgressConfig egressConfig() {
-          return DataPlaneContract.EgressConfig.newBuilder().setDeadLetter("http://localhost:43257").build();
+          return DataPlaneContract.EgressConfig.newBuilder()
+            .setBackoffDelay("PT1S")
+            .setBackoffPolicy(BackoffPolicy.Exponential)
+            .setRetry(10)
+            .setDeadLetter("http://localhost:43257")
+            .build();
         }
       },
       new Egress() {
