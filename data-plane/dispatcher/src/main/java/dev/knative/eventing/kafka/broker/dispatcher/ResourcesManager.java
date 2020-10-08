@@ -36,8 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * ResourcesManager manages Resource and Egress objects by instantiating and starting verticles based
- * on resources configurations.
+ * ResourcesManager manages Resource and Egress objects by instantiating and starting verticles based on resources
+ * configurations.
  *
  * <p>Note: {@link ResourcesManager} is not thread-safe and it's not supposed to be shared between
  * threads.
@@ -143,7 +143,8 @@ public final class ResourcesManager implements ResourcesReconciler {
   }
 
   private Future<Void> addResource(final Resource resource, final Egress egress) {
-    final Map<Egress, AbstractVerticle> egresses = resources.computeIfAbsent(resource, v -> new ConcurrentHashMap<>(egressesInitialCapacity));
+    final Map<Egress, AbstractVerticle> egresses =
+      resources.computeIfAbsent(resource, v -> new ConcurrentHashMap<>(egressesInitialCapacity));
 
     if (egress == null || egresses.containsKey(egress)) {
       // the trigger is already there and it hasn't been updated.

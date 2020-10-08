@@ -22,7 +22,9 @@ import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.rw.CloudEventRWException;
+import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
@@ -32,72 +34,81 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class HttpConsumerRecordSender implements
-  ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> {
+public final class HttpConsumerRecordSender implements ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpConsumerRecordSender.class);
 
   private final WebClient client;
   private final String subscriberURI;
+  private final CircuitBreaker circuitBreaker;
 
   /**
    * All args constructor.
    *
-   * @param client        http client.
-   * @param subscriberURI subscriber URI
+   * @param client         http client.
+   * @param subscriberURI  subscriber URI
+   * @param circuitBreaker circuit breaker
    */
   public HttpConsumerRecordSender(
     final WebClient client,
-    final String subscriberURI) {
+    final String subscriberURI,
+    final CircuitBreaker circuitBreaker) {
 
     Objects.requireNonNull(client, "provide client");
     Objects.requireNonNull(subscriberURI, "provide subscriber URI");
     if (subscriberURI.equals("") || !URI.create(subscriberURI).isAbsolute()) {
       throw new IllegalArgumentException("provide a valid subscriber URI");
     }
+    Objects.requireNonNull(circuitBreaker, "provide circuitBreaker");
 
     this.client = client;
     this.subscriberURI = subscriberURI;
+    this.circuitBreaker = circuitBreaker;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public Future<HttpResponse<Buffer>> send(final KafkaConsumerRecord<String, CloudEvent> record) {
-    try {
-      return VertxMessageFactory
-        .createWriter(client.postAbs(subscriberURI))
-        .writeBinary(record.value())
-        .compose(response -> {
-          if (response.statusCode() >= 300 || response.statusCode() < 200) {
-            if (logger.isDebugEnabled()) {
-              logger.error("failed to send event to subscriber {} {} {}",
-                keyValue("subscriberURI", subscriberURI),
-                keyValue("statusCode", response.statusCode()),
-                keyValue("event", record.value())
-              );
-            } else {
-              logger.error("failed to send event to subscriber {} {}",
-                keyValue("subscriberURI", subscriberURI),
-                keyValue("statusCode", response.statusCode())
-              );
-            }
+    return circuitBreaker.execute(breaker -> {
+      try {
+        send(record, breaker);
+      } catch (CloudEventRWException e) {
+        logger.error("failed to write event to the request {}", keyValue("subscriberURI", subscriberURI), e);
+        breaker.tryFail(e);
+      }
+    });
+  }
 
-            // TODO determine which status codes are retryable
-            //  (channels -> https://github.com/knative/eventing/issues/2411)
-            return Future
-              .failedFuture("response status code is not 2xx - got: " + response.statusCode());
-          }
+  private void send(final KafkaConsumerRecord<String, CloudEvent> record, final Promise<HttpResponse<Buffer>> breaker) {
+    VertxMessageFactory
+      .createWriter(client.postAbs(subscriberURI))
+      .writeBinary(record.value())
+      .onFailure(breaker::tryFail)
+      .onSuccess(response -> {
 
-          return Future.succeededFuture(response);
-        });
-    } catch (CloudEventRWException e) {
-      logger.error("failed to write event to the request {}",
+        if (response.statusCode() >= 300 || response.statusCode() < 200) {
+          logError(record, response);
+          // TODO determine which status codes are retryable
+          //  (channels -> https://github.com/knative/eventing/issues/2411)
+          breaker.tryFail("response status code is not 2xx - got: " + response.statusCode());
+          return;
+        }
+
+        breaker.tryComplete(response);
+      });
+  }
+
+  private void logError(final KafkaConsumerRecord<String, CloudEvent> record, final HttpResponse<Buffer> response) {
+    if (logger.isDebugEnabled()) {
+      logger.error("failed to send event to subscriber {} {} {}",
         keyValue("subscriberURI", subscriberURI),
-        e
+        keyValue("statusCode", response.statusCode()),
+        keyValue("event", record.value())
       );
-      return Future.failedFuture(e);
+    } else {
+      logger.error("failed to send event to subscriber {} {}",
+        keyValue("subscriberURI", subscriberURI),
+        keyValue("statusCode", response.statusCode())
+      );
     }
   }
 }
