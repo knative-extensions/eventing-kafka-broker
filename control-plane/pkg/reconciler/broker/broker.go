@@ -334,7 +334,7 @@ func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker
 		if delivery.Retry != nil {
 			ensureEgressConfig(res)
 			res.EgressConfig.Retry = uint32(*delivery.Retry)
-			res.EgressConfig.BackoffDelay = coreconfig.BackoffDelayFromString(delivery.BackoffDelay, "PT1S")
+			res.EgressConfig.BackoffDelay = coreconfig.BackoffDelayFromString(delivery.BackoffDelay, r.Configs.DefaultBackoffDelay)
 			res.EgressConfig.BackoffPolicy = coreconfig.BackoffPolicyFromString(delivery.BackoffPolicy)
 		}
 	}
