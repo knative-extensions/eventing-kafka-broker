@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.core;
+package dev.knative.eventing.kafka.broker.core.wrappers;
 
 import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 
@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 
 public class EventMatcher implements Filter<CloudEvent> {
 

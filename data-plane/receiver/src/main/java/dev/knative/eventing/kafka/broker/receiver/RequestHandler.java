@@ -23,9 +23,9 @@ import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.Egress;
-import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
-import dev.knative.eventing.kafka.broker.core.Resource;
+import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
+import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
+import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
 import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to Kafka through the Kafka
  * producer and terminating requests with the appropriate status code.
  */
-public class RequestHandler<K, V> implements Handler<HttpServerRequest>, ObjectsReconciler {
+public class RequestHandler<K, V> implements Handler<HttpServerRequest>, ResourcesReconciler {
 
   public static final int MAPPER_FAILED = BAD_REQUEST.code();
   public static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
@@ -149,11 +149,11 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Objects
   }
 
   @Override
-  public Future<Void> reconcile(Map<Resource, Set<Egress>> newObjects) {
+  public Future<Void> reconcile(Map<Resource, Set<Egress>> resourcesMap) {
     final Map<String, Entry<String, Producer<K, V>>> newProducers = new HashMap<>();
     final var producers = this.producers.get();
 
-    for (final var resource : newObjects.keySet()) {
+    for (final var resource : resourcesMap.keySet()) {
       //TODO support host ingress too
       //TODO check if there is an ingress, otherwise fail
       final var pair = producers.get(resource.ingress().getPath());

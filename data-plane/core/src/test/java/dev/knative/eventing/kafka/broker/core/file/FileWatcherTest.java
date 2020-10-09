@@ -16,8 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.core.file;
 
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource1Unwrapped;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource2Unwrapped;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1Unwrapped;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2Unwrapped;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.util.JsonFormat;

@@ -18,9 +18,9 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
-import dev.knative.eventing.kafka.broker.core.Egress;
-import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
-import dev.knative.eventing.kafka.broker.core.Resource;
+import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
+import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
+import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * <p>Note: {@link ResourcesManager} is not thread-safe and it's not supposed to be shared between
  * threads.
  */
-public final class ResourcesManager implements ObjectsReconciler {
+public final class ResourcesManager implements ResourcesReconciler {
 
   private static final Logger logger = LoggerFactory.getLogger(ResourcesManager.class);
 
@@ -86,8 +86,8 @@ public final class ResourcesManager implements ObjectsReconciler {
    */
   @Override
   @SuppressWarnings("rawtypes")
-  public Future<Void> reconcile(Map<Resource, Set<Egress>> newObjects) {
-    final List<Future> futures = new ArrayList<>(newObjects.size() * 2);
+  public Future<Void> reconcile(Map<Resource, Set<Egress>> resourcesMap) {
+    final List<Future> futures = new ArrayList<>(resourcesMap.size() * 2);
 
     // diffing previous and new --> remove deleted objects
     final var resourcesIterator = resources.entrySet().iterator();
@@ -96,7 +96,7 @@ public final class ResourcesManager implements ObjectsReconciler {
       final var oldResource = resourceEntry.getKey();
 
       // check if the old resource has been deleted or updated.
-      if (!newObjects.containsKey(oldResource)) {
+      if (!resourcesMap.containsKey(oldResource)) {
 
         // resource deleted or updated, so remove it
         resourcesIterator.remove();
@@ -115,7 +115,7 @@ public final class ResourcesManager implements ObjectsReconciler {
         final var egressEntry = egressesIterator.next();
 
         // check if the egress has been deleted or updated.
-        if (!newObjects.get(oldResource).contains(egressEntry.getKey())) {
+        if (!resourcesMap.get(oldResource).contains(egressEntry.getKey())) {
 
           // egress deleted or updated, so remove it
           egressesIterator.remove();
@@ -132,7 +132,7 @@ public final class ResourcesManager implements ObjectsReconciler {
     }
 
     // add all new objects.
-    for (final var entry : newObjects.entrySet()) {
+    for (final var entry : resourcesMap.entrySet()) {
       final var resource = entry.getKey();
       for (final var egress : entry.getValue()) {
         futures.add(addResource(resource, egress));

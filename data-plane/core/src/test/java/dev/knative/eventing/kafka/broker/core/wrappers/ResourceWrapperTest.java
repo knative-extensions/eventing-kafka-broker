@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.core;
+package dev.knative.eventing.kafka.broker.core.wrappers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

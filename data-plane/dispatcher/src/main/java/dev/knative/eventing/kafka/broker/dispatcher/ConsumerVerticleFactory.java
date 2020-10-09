@@ -16,8 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import dev.knative.eventing.kafka.broker.core.Egress;
-import dev.knative.eventing.kafka.broker.core.Resource;
+import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
+import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 

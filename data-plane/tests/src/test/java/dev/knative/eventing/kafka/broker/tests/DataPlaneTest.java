@@ -26,11 +26,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.Egress;
-import dev.knative.eventing.kafka.broker.core.EgressWrapper;
-import dev.knative.eventing.kafka.broker.core.ObjectsReconciler;
-import dev.knative.eventing.kafka.broker.core.Resource;
-import dev.knative.eventing.kafka.broker.core.ResourceWrapper;
+import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
+import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
+import dev.knative.eventing.kafka.broker.core.wrappers.EgressWrapper;
+import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
+import dev.knative.eventing.kafka.broker.core.wrappers.ResourceWrapper;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.ResourcesManager;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
@@ -96,8 +96,8 @@ public class DataPlaneTest {
 
   private static File dataDir;
   private static KafkaCluster kafkaCluster;
-  private static ObjectsReconciler resourcesManager;
-  private static ObjectsReconciler handler;
+  private static ResourcesReconciler resourcesManager;
+  private static ResourcesReconciler handler;
 
   @BeforeAll
   public static void setUp(final Vertx vertx, final VertxTestContext context)
@@ -313,7 +313,7 @@ public class DataPlaneTest {
     );
   }
 
-  private static ObjectsReconciler setUpReceiver(
+  private static ResourcesReconciler setUpReceiver(
     final Vertx vertx,
     final VertxTestContext context) throws InterruptedException {
 

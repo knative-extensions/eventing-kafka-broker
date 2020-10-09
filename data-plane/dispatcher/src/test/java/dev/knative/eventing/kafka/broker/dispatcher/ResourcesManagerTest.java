@@ -16,16 +16,16 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress1;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress2;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress3;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress4;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource1;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource2;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress1;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress2;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress3;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress4;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dev.knative.eventing.kafka.broker.core.Egress;
-import dev.knative.eventing.kafka.broker.core.Resource;
+import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
+import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;

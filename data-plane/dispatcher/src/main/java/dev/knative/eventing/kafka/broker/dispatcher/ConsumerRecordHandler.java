@@ -18,7 +18,7 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
-import dev.knative.eventing.kafka.broker.core.Filter;
+import dev.knative.eventing.kafka.broker.core.wrappers.Filter;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
