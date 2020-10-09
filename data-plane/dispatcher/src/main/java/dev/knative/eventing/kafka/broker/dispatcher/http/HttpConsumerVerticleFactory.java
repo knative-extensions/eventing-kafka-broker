@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.http;
 
 import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
 import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
 import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordHandler;
@@ -28,6 +29,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
+import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -35,18 +37,24 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.function.Function;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
-  private static ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> NO_DLQ_SENDER =
+  private static final Logger logger = LoggerFactory.getLogger(HttpConsumerVerticleFactory.class);
+
+  private final static ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> NO_DLQ_SENDER =
     record -> Future.failedFuture("no DLQ set");
 
   private final Properties consumerConfigs;
@@ -101,15 +109,19 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     final io.vertx.kafka.client.producer.KafkaProducer<String, CloudEvent> producer
       = createProducer(vertx, resource, egress);
 
-    final CircuitBreakerOptions circuitBreakerOptions
-      = createCircuitBreakerOptions(vertx, resource, egress);
+    final CircuitBreakerOptions circuitBreakerOptions = createCircuitBreakerOptions(resource);
 
-    final var egressDestinationSender = createSender(egress.destination(), circuitBreakerOptions);
+    final var egressDestinationSender = createSender(
+      egress.destination(),
+      circuitBreakerOptions,
+      resource.egressConfig()
+    );
 
+    final var egressConfig = resource.egressConfig();
     final ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> egressDeadLetterSender =
-      (resource.egressConfig() == null || resource.egressConfig().getDeadLetter() == null || resource.egressConfig().getDeadLetter().isEmpty())
+      egressConfig == null || egressConfig.getDeadLetter() == null || egressConfig.getDeadLetter().isEmpty()
         ? NO_DLQ_SENDER
-        : createSender(resource.egressConfig().getDeadLetter(), circuitBreakerOptions);
+        : createSender(resource.egressConfig().getDeadLetter(), circuitBreakerOptions, resource.egressConfig());
 
     final var consumerOffsetManager = consumerRecordOffsetStrategyFactory
       .get(consumer, resource, egress);
@@ -129,13 +141,15 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     );
   }
 
-  protected CircuitBreakerOptions createCircuitBreakerOptions(
-    final Vertx vertx,
-    final Resource resource,
-    final Egress egress) {
+  private static CircuitBreakerOptions createCircuitBreakerOptions(final Resource resource) {
 
-    // TODO set circuit breaker options based on broker/trigger configurations
-    return new CircuitBreakerOptions();
+    final var config = resource.egressConfig();
+    if (config == null) {
+      return new CircuitBreakerOptions();
+    }
+
+    return new CircuitBreakerOptions()
+      .setMaxRetries(config.getRetry());
   }
 
   protected io.vertx.kafka.client.producer.KafkaProducer<String, CloudEvent> createProducer(
@@ -143,7 +157,6 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     final Resource resource,
     final Egress egress) {
 
-    // TODO check producer configurations to change per instance
     // producerConfigs is a shared object and it acts as a prototype for each consumer instance.
     final var producerConfigs = (Properties) this.producerConfigs.clone();
     producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.bootstrapServers());
@@ -162,7 +175,6 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     final Resource resource,
     final Egress egress) {
 
-    // TODO check consumer configurations to change per instance
     // consumerConfigs is a shared object and it acts as a prototype for each consumer instance.
     final var consumerConfigs = (Properties) this.consumerConfigs.clone();
     consumerConfigs.setProperty(GROUP_ID_CONFIG, egress.consumerGroup());
@@ -181,11 +193,42 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
   private HttpConsumerRecordSender createSender(
     final String target,
-    final CircuitBreakerOptions circuitBreakerOptions) {
+    final CircuitBreakerOptions circuitBreakerOptions,
+    final EgressConfig egress) {
+
+    final var circuitBreaker = CircuitBreaker.create(target, vertx, circuitBreakerOptions);
+    circuitBreaker.retryPolicy(computeRetryPolicy(egress));
 
     return new HttpConsumerRecordSender(
       client,
-      target
+      target,
+      circuitBreaker
     );
+  }
+
+  private static Function<Integer, Long> computeRetryPolicy(EgressConfig egress) {
+    if (egress != null && egress.getBackoffPolicy() != null) {
+      try {
+        final var delay = Duration.parse(egress.getBackoffDelay()).toMillis();
+
+        return switch (egress.getBackoffPolicy()) {
+          case Linear -> retryCount -> linearRetryPolicy(retryCount, delay);
+          case Exponential, UNRECOGNIZED -> retryCount -> exponentialRetryPolicy(retryCount, delay);
+        };
+
+      } catch (final Exception ex) {
+        logger.error("failed to set retry policy", ex);
+      }
+    }
+
+    return retry -> 0L; // Default Vert.x retry policy
+  }
+
+  private static Long exponentialRetryPolicy(final int retryCount, final long delay) {
+    return delay * Math.round(Math.pow(2, retryCount));
+  }
+
+  private static Long linearRetryPolicy(final int retryCount, final long delay) {
+    return delay * retryCount;
   }
 }

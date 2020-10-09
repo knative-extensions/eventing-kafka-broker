@@ -30,6 +30,7 @@ import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
 import dev.knative.eventing.kafka.broker.core.wrappers.EventMatcher;
 import dev.knative.eventing.kafka.broker.core.wrappers.Filter;
 import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventDeserializer;
@@ -54,16 +55,13 @@ public class HttpConsumerVerticleFactoryTest {
 
     final var consumerProperties = new Properties();
     consumerProperties.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
-    consumerProperties
-      .setProperty(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-    consumerProperties
-      .setProperty(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
+    consumerProperties.setProperty(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    consumerProperties.setProperty(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
 
     final var producerConfigs = new Properties();
     producerConfigs.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
     producerConfigs.setProperty(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-    producerConfigs
-      .setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
+    producerConfigs.setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
 
     final var verticleFactory = new HttpConsumerVerticleFactory(
       ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class)),
@@ -97,7 +95,12 @@ public class HttpConsumerVerticleFactoryTest {
 
         @Override
         public DataPlaneContract.EgressConfig egressConfig() {
-          return DataPlaneContract.EgressConfig.newBuilder().setDeadLetter("http://localhost:43257").build();
+          return DataPlaneContract.EgressConfig.newBuilder()
+            .setBackoffDelay("PT1S")
+            .setBackoffPolicy(BackoffPolicy.Exponential)
+            .setRetry(10)
+            .setDeadLetter("http://localhost:43257")
+            .build();
         }
       },
       new Egress() {
