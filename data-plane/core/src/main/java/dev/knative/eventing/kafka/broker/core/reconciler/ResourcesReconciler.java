@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.core;
+package dev.knative.eventing.kafka.broker.core.reconciler;
 
+import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
+import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
 import io.vertx.core.Future;
 import java.util.Map;
 import java.util.Set;
 
 @FunctionalInterface
-public interface ObjectsReconciler {
+public interface ResourcesReconciler {
 
-  Future<Void> reconcile(Map<Resource, Set<Egress>> objects) throws Exception;
+  Future<Void> reconcile(Map<Resource, Set<Egress>> resourcesMap) throws Exception;
 }

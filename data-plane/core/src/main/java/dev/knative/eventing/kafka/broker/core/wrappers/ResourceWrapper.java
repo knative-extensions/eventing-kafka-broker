@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.core;
+package dev.knative.eventing.kafka.broker.core.wrappers;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import java.util.Objects;

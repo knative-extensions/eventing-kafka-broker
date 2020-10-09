@@ -16,7 +16,7 @@
 
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource1;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.ResourceWrapper;
+import dev.knative.eventing.kafka.broker.core.wrappers.ResourceWrapper;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;

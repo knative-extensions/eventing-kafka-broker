@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.core;
+package dev.knative.eventing.kafka.broker.core.file;
 
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.contract;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress1;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress2;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress3;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.egress4;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource1;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.resource2;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.contract;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress1;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress2;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress3;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress4;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.vertx.core.Future;
@@ -34,7 +34,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
 @Execution(ExecutionMode.CONCURRENT)
-public class ObjectsCreatorTest {
+public class ResourcesReconcilerAdapterTest {
 
   @Test
   public void shouldPassAllEgresses() {
@@ -45,7 +45,7 @@ public class ObjectsCreatorTest {
       resource2(), Set.of(egress3(), egress4())
     );
 
-    final var creator = new ObjectsCreator(objects -> {
+    final var creator = new ResourcesReconcilerAdapter(objects -> {
       called.set(true);
       assertThat(objects).usingRecursiveComparison().isEqualTo(resources);
       return Future.succeededFuture();

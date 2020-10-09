@@ -17,15 +17,15 @@
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
 import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
-import static dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects.contract;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.contract;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
-import dev.knative.eventing.kafka.broker.core.testing.utils.CoreObjects;
+import dev.knative.eventing.kafka.broker.core.file.ResourcesReconcilerAdapter;
+import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.ResourcesManager;
 import io.cloudevents.CloudEvent;
@@ -95,7 +95,7 @@ public class UnorderedConsumerTest {
       100
     );
 
-    final var objectsCreator = new ObjectsCreator(resourcesManager);
+    final var objectsCreator = new ResourcesReconcilerAdapter(resourcesManager);
 
     final var contract = contract();
     final var numEgresses = contract.getResourcesList().stream()

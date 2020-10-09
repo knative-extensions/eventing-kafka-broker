@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.core.testing.utils;
+package dev.knative.eventing.kafka.broker.core.testing;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.Egress;
-import dev.knative.eventing.kafka.broker.core.EgressWrapper;
-import dev.knative.eventing.kafka.broker.core.Resource;
-import dev.knative.eventing.kafka.broker.core.ResourceWrapper;
+import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
+import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
+import dev.knative.eventing.kafka.broker.core.wrappers.EgressWrapper;
+import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
+import dev.knative.eventing.kafka.broker.core.wrappers.ResourceWrapper;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -136,7 +137,7 @@ public final class CoreObjects {
   }
 
   /**
-   * This method generates a collection of resource mocked with new egresses, so you can use it to test the {@link dev.knative.eventing.kafka.broker.core.ObjectsReconciler}
+   * This method generates a collection of resource mocked with new egresses, so you can use it to test the {@link ResourcesReconciler}
    */
   public static Collection<Resource> mockResourcesWithNewEgresses(Map<Resource, Set<Egress>> newResources) {
     return newResources.entrySet().stream().map(entry -> new Resource() {

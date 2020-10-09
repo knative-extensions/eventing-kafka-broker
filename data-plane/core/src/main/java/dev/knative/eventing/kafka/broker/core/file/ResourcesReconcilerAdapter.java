@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.core;
+package dev.knative.eventing.kafka.broker.core.file;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
+import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
+import dev.knative.eventing.kafka.broker.core.wrappers.EgressWrapper;
+import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
+import dev.knative.eventing.kafka.broker.core.wrappers.ResourceWrapper;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,26 +36,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * ObjectsCreator receives updates and converts protobuf objects to core objects often by wrapping
- * protobuf objects by means of wrapper objects.
+ * This class adapts the {@link dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract} received from the {@link FileWatcher}
+ * and invokes the provided {@link ResourcesReconciler}
  */
-public class ObjectsCreator implements Consumer<DataPlaneContract.Contract> {
+public class ResourcesReconcilerAdapter implements Consumer<DataPlaneContract.Contract> {
 
-  private static final Logger logger = LoggerFactory.getLogger(ObjectsCreator.class);
+  private static final Logger logger = LoggerFactory.getLogger(ResourcesReconcilerAdapter.class);
 
   private static final int WAIT_TIMEOUT = 1;
 
-  private final ObjectsReconciler objectsReconciler;
+  private final ResourcesReconciler resourcesReconciler;
 
   /**
    * All args constructor.
    *
-   * @param objectsReconciler brokers and triggers consumer.
+   * @param resourcesReconciler brokers and triggers consumer.
    */
-  public ObjectsCreator(final ObjectsReconciler objectsReconciler) {
-    Objects.requireNonNull(objectsReconciler, "provide objectsReconciler");
+  public ResourcesReconcilerAdapter(final ResourcesReconciler resourcesReconciler) {
+    Objects.requireNonNull(resourcesReconciler, "provide objectsReconciler");
 
-    this.objectsReconciler = objectsReconciler;
+    this.resourcesReconciler = resourcesReconciler;
   }
 
   /**
@@ -75,7 +80,7 @@ public class ObjectsCreator implements Consumer<DataPlaneContract.Contract> {
 
     try {
       final var latch = new CountDownLatch(1);
-      objectsReconciler.reconcile(objects)
+      resourcesReconciler.reconcile(objects)
         .onComplete(result -> {
           if (result.succeeded()) {
             logger.info("reconciled objects {}", keyValue("contract", contract));

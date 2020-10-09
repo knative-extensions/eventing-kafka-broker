@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.core;
+package dev.knative.eventing.kafka.broker.core.wrappers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -97,7 +97,7 @@ public class EgressWrapperTest {
 
   // test if filter returned by filter() agrees with EventMatcher
   @ParameterizedTest
-  @MethodSource(value = "dev.knative.eventing.kafka.broker.core.EventMatcherTest#testCases")
+  @MethodSource(value = "dev.knative.eventing.kafka.broker.core.wrappers.EventMatcherTest#testCases")
   public void testFilter(
     final Map<String, String> attributes,
     final CloudEvent event,

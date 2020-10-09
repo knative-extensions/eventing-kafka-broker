@@ -18,8 +18,8 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
-import dev.knative.eventing.kafka.broker.core.ObjectsCreator;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.file.ResourcesReconcilerAdapter;
 import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
@@ -98,7 +98,7 @@ public class Main {
       env.getEgressesInitialCapacity()
     );
 
-    final var objectCreator = new ObjectsCreator(resourcesManager);
+    final var objectCreator = new ResourcesReconcilerAdapter(resourcesManager);
 
     try {
       final var fw = new FileWatcher(
