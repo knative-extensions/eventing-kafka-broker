@@ -289,10 +289,10 @@ github.com/prometheus/statsd_exporter/pkg/mapper
 github.com/prometheus/statsd_exporter/pkg/mapper/fsm
 # github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0
 github.com/rcrowley/go-metrics
-# github.com/rickb777/date v1.13.0
+# github.com/rickb777/date v1.14.1
 ## explicit
 github.com/rickb777/date/period
-# github.com/rickb777/plural v1.2.1
+# github.com/rickb777/plural v1.2.2
 github.com/rickb777/plural
 # github.com/robfig/cron/v3 v3.0.1
 github.com/robfig/cron/v3
@@ -378,7 +378,6 @@ golang.org/x/lint/golint
 golang.org/x/mod/module
 golang.org/x/mod/semver
 # golang.org/x/net v0.0.0-20201006153459-a7d1128ccaa0
-## explicit
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/http/httpguts

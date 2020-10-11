@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/kelseyhightower/envconfig"
-	"github.com/rickb777/date/period"
 )
 
 type Env struct {
@@ -30,19 +29,22 @@ type Env struct {
 	IngressName                 string `required:"true" split_words:"true"`
 	SystemNamespace             string `required:"true" split_words:"true"`
 	DataPlaneConfigFormat       string `required:"true" split_words:"true"`
-	DefaultBackoffDelay         string `required:"false" split_words:"true"`
+	DefaultBackoffDelayMs       uint64 `required:"false" split_words:"true"`
 }
 
-func GetEnvConfig(prefix string) (*Env, error) {
+// ValidationOption represents a function to validate the Env configurations.
+type ValidationOption func(env Env) error
+
+func GetEnvConfig(prefix string, validations ...ValidationOption) (*Env, error) {
 	env := &Env{}
 
 	if err := envconfig.Process(prefix, env); err != nil {
 		return nil, fmt.Errorf("failed to process env config: %w", err)
 	}
 
-	if env.DefaultBackoffDelay != "" {
-		if isNotValidBackoffDelay(env.DefaultBackoffDelay) {
-			return nil, fmt.Errorf("invalid backoff delay: %s", env.DefaultBackoffDelay)
+	for _, v := range validations {
+		if err := v(*env); err != nil {
+			return nil, fmt.Errorf("env config validation failed: %w", err)
 		}
 	}
 
@@ -51,9 +53,4 @@ func GetEnvConfig(prefix string) (*Env, error) {
 
 func (c *Env) DataPlaneConfigMapAsString() string {
 	return fmt.Sprintf("%s/%s", c.DataPlaneConfigMapNamespace, c.DataPlaneConfigMapName)
-}
-
-func isNotValidBackoffDelay(delay string) bool {
-	_, err := period.Parse(delay)
-	return err != nil
 }

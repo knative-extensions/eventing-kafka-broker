@@ -37,7 +37,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
-import java.time.Duration;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
@@ -47,12 +46,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
-
-  private static final Logger logger = LoggerFactory.getLogger(HttpConsumerVerticleFactory.class);
 
   private final static ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> NO_DLQ_SENDER =
     record -> Future.failedFuture("no DLQ set");
@@ -206,21 +201,15 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     );
   }
 
-  private static Function<Integer, Long> computeRetryPolicy(EgressConfig egress) {
-    if (egress != null && egress.getBackoffPolicy() != null) {
-      try {
-        final var delay = Duration.parse(egress.getBackoffDelay()).toMillis();
-
-        return switch (egress.getBackoffPolicy()) {
-          case Linear -> retryCount -> linearRetryPolicy(retryCount, delay);
-          case Exponential, UNRECOGNIZED -> retryCount -> exponentialRetryPolicy(retryCount, delay);
-        };
-
-      } catch (final Exception ex) {
-        logger.error("failed to set retry policy", ex);
-      }
+  private static Function<Integer, Long> computeRetryPolicy(final EgressConfig egress) {
+    if (egress != null && egress.getBackoffPolicy() != null && egress.getBackoffDelay() > 0) {
+      final var delay = egress.getBackoffDelay();
+      return switch (egress.getBackoffPolicy()) {
+        case Linear -> retryCount -> linearRetryPolicy(retryCount, delay);
+        case Exponential, UNRECOGNIZED -> retryCount -> exponentialRetryPolicy(retryCount, delay);
+      };
     }
-    return retry -> 0L; // Default Vert.x retry policy
+    return retry -> 0L; // Default Vert.x retry policy, it means don't retry
   }
 
   private static Long exponentialRetryPolicy(final int retryCount, final long delay) {

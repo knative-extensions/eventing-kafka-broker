@@ -11,12 +11,11 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/pierdipi/sacura v0.0.0-20201003135834-e90e3a725ff9
-	github.com/rickb777/date v1.13.0
+	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.6.1
 	go.opencensus.io v0.22.5 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0
-	golang.org/x/net v0.0.0-20201006153459-a7d1128ccaa0 // indirect
 	google.golang.org/protobuf v1.25.0
 	k8s.io/api v0.18.8
 	k8s.io/apiextensions-apiserver v0.18.4

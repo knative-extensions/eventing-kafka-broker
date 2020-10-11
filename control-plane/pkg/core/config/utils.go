@@ -18,7 +18,9 @@ package config
 
 import (
 	"fmt"
+	"math"
 
+	"github.com/rickb777/date/period"
 	duck "knative.dev/eventing/pkg/apis/duck/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -61,13 +63,20 @@ func BackoffPolicyFromString(backoffPolicy *duck.BackoffPolicyType) contract.Bac
 	}
 }
 
-// BackoffDelayFromString returns the BackoffDelay from the given string.
+// BackoffDelayFromISO8601String returns the BackoffDelay from the given string.
 //
 // Default value is the specified defaultDelay.
-func BackoffDelayFromString(backoffDelay *string, defaultDelay string) string {
+func BackoffDelayFromISO8601String(backoffDelay *string, defaultDelay uint64) (uint64, error) {
 	if backoffDelay == nil {
-		return defaultDelay
+		return defaultDelay, nil
 	}
 
-	return *backoffDelay
+	d, err := period.Parse(*backoffDelay, false)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse backoffDelay: %w", err)
+	}
+
+	ms, _ := d.Duration()
+
+	return uint64(math.Abs(float64(ms.Milliseconds()))), nil
 }

@@ -39,14 +39,8 @@ message EgressConfig {
   // backoffPolicy is the retry backoff policy (linear, exponential).
   BackoffPolicy backoffPolicy = 3;
 
-  // backoffDelay is the delay before retrying.
-  // More information on Duration format:
-  //  - https://www.iso.org/iso-8601-date-and-time-format.html
-  //  - https://en.wikipedia.org/wiki/ISO_8601
-  //
-  // For linear policy, backoff delay is backoffDelay*<numberOfRetries>.
-  // For exponential policy, backoff delay is backoffDelay*2^<numberOfRetries>.
-  string backoffDelay = 4;
+  // backoffDelay is the delay before retrying in milliseconds.
+  uint64 backoffDelay = 4;
 }
 
 message Egress {

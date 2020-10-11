@@ -96,7 +96,7 @@ public class HttpConsumerVerticleFactoryTest {
         @Override
         public DataPlaneContract.EgressConfig egressConfig() {
           return DataPlaneContract.EgressConfig.newBuilder()
-            .setBackoffDelay("PT1S")
+            .setBackoffDelay(1000)
             .setBackoffPolicy(BackoffPolicy.Exponential)
             .setRetry(10)
             .setDeadLetter("http://localhost:43257")

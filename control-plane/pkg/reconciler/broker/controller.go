@@ -18,6 +18,7 @@ package broker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Shopify/sarama"
@@ -36,6 +37,7 @@ import (
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
@@ -112,4 +114,11 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 	watcher.Watch(configs.GeneralConfigMapName, reconciler.ConfigMapUpdated(ctx))
 
 	return impl
+}
+
+func ValidateDefaultBackoffDelayMs(env config.Env) error {
+	if env.DefaultBackoffDelayMs == 0 {
+		return errors.New("default backoff delay cannot be 0")
+	}
+	return nil
 }

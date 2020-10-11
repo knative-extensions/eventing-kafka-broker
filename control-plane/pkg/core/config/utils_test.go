@@ -104,25 +104,48 @@ func TestBackoffDelayFromString(t *testing.T) {
 	tests := []struct {
 		name         string
 		backoffDelay *string
-		defaultDelay string
-		want         string
+		defaultDelay uint64
+		want         uint64
+		wantError    bool
 	}{
 		{
 			name:         "happy case",
 			backoffDelay: pointer.StringPtr("PT2S"),
-			defaultDelay: "PT1S",
-			want:         "PT2S",
+			defaultDelay: 1000,
+			want:         2000,
+		},
+		{
+			name:         "happy case fractional",
+			backoffDelay: pointer.StringPtr("PT0.2S"),
+			defaultDelay: 1000,
+			want:         200,
+		},
+		{
+			name:         "happy case fractional - 2 decimals",
+			backoffDelay: pointer.StringPtr("PT0.25S"),
+			defaultDelay: 1000,
+			want:         200, // The library we use don't support more than one decimal, it should be 250 though.
+		},
+		{
+			name:         "happy case fractional minutes",
+			backoffDelay: pointer.StringPtr("PT1M0.2S"),
+			defaultDelay: 1000,
+			want:         1*60*1000 + 200,
 		},
 		{
 			name:         "default",
-			defaultDelay: "PT1S",
-			want:         "PT1S",
+			defaultDelay: 1000,
+			want:         1000,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := BackoffDelayFromString(tt.backoffDelay, tt.defaultDelay); got != tt.want {
-				t.Errorf("BackoffDelayFromString() = %v, want %v", got, tt.want)
+			got, err := BackoffDelayFromISO8601String(tt.backoffDelay, tt.defaultDelay)
+			if (err != nil) != tt.wantError {
+				t.Errorf("wantError = %v got %v", tt.wantError, err)
+			}
+			if got != tt.want {
+				t.Errorf("BackoffDelayFromISO8601String() = %v, want %v", got, tt.want)
 			}
 		})
 	}
