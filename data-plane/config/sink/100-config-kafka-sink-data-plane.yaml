@@ -20,7 +20,7 @@ metadata:
   name: config-kafka-sink-data-plane
   namespace: knative-eventing
 data:
-  config-kafka-broker-producer.properties: |
+  config-kafka-sink-producer.properties: |
     acks=1
     buffer.memory=33554432
     # compression.type=snappy
@@ -49,3 +49,5 @@ data:
     retry.backoff.ms=100
     # transaction.timeout.ms=60000
     # transactional.id=null
+  config-kafka-sink-httpserver.properties: |
+    idleTimeout=0
