@@ -36,7 +36,7 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
-        runAsUser: 999
+        runAsUser: 65532
       containers:
         - name: kafka-broker-receiver
           image: ${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}
