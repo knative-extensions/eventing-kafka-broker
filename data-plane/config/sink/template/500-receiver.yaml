@@ -57,9 +57,9 @@ spec:
             - name: INGRESS_PORT
               value: "8080"
             - name: PRODUCER_CONFIG_FILE_PATH
-              value: /etc/config/config-kafka-broker-producer.properties
+              value: /etc/config/config-kafka-sink-producer.properties
             - name: HTTPSERVER_CONFIG_FILE_PATH
-              value: /etc/config/config-kafka-broker-httpserver.properties
+              value: /etc/config/config-kafka-sink-httpserver.properties
             - name: DATA_PLANE_CONFIG_FILE_PATH
               value: /etc/sinks/data
             - name: LIVENESS_PROBE_PATH
