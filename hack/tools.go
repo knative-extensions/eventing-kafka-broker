@@ -31,7 +31,6 @@ import (
 	_ "knative.dev/eventing/test/test_images/recordevents"
 	_ "knative.dev/eventing/test/test_images/request-sender"
 	_ "knative.dev/eventing/test/test_images/sequencestepper"
-	_ "knative.dev/eventing/test/test_images/transformevents"
 
 	// For chaos testing the leader election.
 	_ "knative.dev/pkg/leaderelection/chaosduck"
