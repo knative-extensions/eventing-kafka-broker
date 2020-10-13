@@ -53,10 +53,6 @@ spec:
         - name: controller
           image: ko://knative.dev/eventing-kafka-broker/control-plane/cmd/kafka-controller
           imagePullPolicy: IfNotPresent
-          volumeMounts:
-            - name: config-logging
-              mountPath: /etc/config-logging
-              readOnly: true
           env:
             - name: BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE
               value: knative-eventing
@@ -111,8 +107,4 @@ spec:
             allowPrivilegeEscalation: false
             privileged: false
             readOnlyRootFilesystem: true
-      volumes:
-        - name: config-logging
-          configMap:
-            name: config-logging
       restartPolicy: Always
