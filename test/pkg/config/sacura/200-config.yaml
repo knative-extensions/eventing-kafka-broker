@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-sacura
+  namespace: sacura
+data:
+  sacura.yaml: |
+    sender:
+      target: http://kafka-broker-ingress.knative-eventing.svc.cluster.local/sacura/broker
+      frequency: 200
+      workers: 15
+      keepAlive: true
+    receiver:
+      port: 8080
+      timeout: 5m
+    duration: 10m
+    timeout: 5m

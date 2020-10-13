@@ -16,6 +16,7 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -69,6 +70,30 @@ public class HttpSinkResponseHandlerTest {
       .assertComplete(handler.handle(response))
       .onSuccess(v -> context.completeNow());
   }
+
+  @Test
+  public void shouldSucceedOnUnknownEncodingAndNullResponseBody(final Vertx vertx, final VertxTestContext context) {
+    final var producer = new MockProducer<>(
+      true,
+      new StringSerializer(),
+      new CloudEventSerializer()
+    );
+    final var handler = new HttpSinkResponseHandler(
+      TOPIC,
+      KafkaProducer.create(vertx, producer)
+    );
+
+    // Empty response
+    final HttpResponse<Buffer> response = mock(HttpResponse.class);
+    when(response.statusCode()).thenReturn(202);
+    when(response.body()).thenReturn(null);
+    when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap());
+
+    context
+      .assertComplete(handler.handle(response))
+      .onSuccess(v -> context.completeNow());
+  }
+
 
   @Test
   public void shouldFailOnUnknownEncodingAndNonEmptyResponse(final Vertx vertx, final VertxTestContext context) {

@@ -22,7 +22,7 @@ metadata:
 data:
   default-br-config: |
     clusterDefault:
-      brokerClass: kafka
+      brokerClass: Kafka
       apiVersion: v1
       kind: ConfigMap
       name: kafka-broker-config

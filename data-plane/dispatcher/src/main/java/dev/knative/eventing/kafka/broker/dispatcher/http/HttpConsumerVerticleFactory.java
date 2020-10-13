@@ -220,7 +220,6 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
         logger.error("failed to set retry policy", ex);
       }
     }
-
     return retry -> 0L; // Default Vert.x retry policy
   }
 

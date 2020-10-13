@@ -17,7 +17,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kafka-broker-config-logging
+  name: kafka-config-logging
   namespace: knative-eventing
 data:
   config.xml: |

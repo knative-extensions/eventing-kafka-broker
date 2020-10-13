@@ -143,3 +143,12 @@ function scale_controlplane() {
 function apply_chaos() {
   ko apply -f ./test/pkg/config/chaos || return $?
 }
+
+function apply_sacura() {
+  ko apply --strict -f ./test/pkg/config/sacura/0-namespace.yaml || return $?
+  ko apply --strict -f ./test/pkg/config/sacura/101-broker.yaml || return $?
+
+  kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || return $?
+
+  ko apply --strict -f ./test/pkg/config/sacura || return $?
+}

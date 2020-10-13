@@ -88,7 +88,7 @@ github.com/cespare/xxhash/v2
 # github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.2.0
 ## explicit
 github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2
-# github.com/cloudevents/sdk-go/v2 v2.2.0
+# github.com/cloudevents/sdk-go/v2 v2.3.1
 ## explicit
 github.com/cloudevents/sdk-go/v2
 github.com/cloudevents/sdk-go/v2/binding
@@ -133,6 +133,8 @@ github.com/go-openapi/jsonreference
 github.com/go-openapi/spec
 # github.com/go-openapi/swag v0.19.7
 github.com/go-openapi/swag
+# github.com/go-yaml/yaml v2.1.0+incompatible
+github.com/go-yaml/yaml
 # github.com/gobuffalo/envy v1.7.1
 github.com/gobuffalo/envy
 # github.com/gogo/protobuf v1.3.1
@@ -181,7 +183,7 @@ github.com/google/mako/internal/go/common
 github.com/google/mako/internal/quickstore_microservice/proto/quickstore_go_proto
 github.com/google/mako/proto/quickstore/quickstore_go_proto
 github.com/google/mako/spec/proto/mako_go_proto
-# github.com/google/uuid v1.1.1
+# github.com/google/uuid v1.1.2
 ## explicit
 github.com/google/uuid
 # github.com/googleapis/gax-go/v2 v2.0.5
@@ -205,7 +207,7 @@ github.com/hashicorp/golang-lru
 github.com/hashicorp/golang-lru/simplelru
 # github.com/imdario/mergo v0.3.9
 github.com/imdario/mergo
-# github.com/influxdata/tdigest v0.0.0-20191024211133-5d87a7585faa
+# github.com/influxdata/tdigest v0.0.1
 github.com/influxdata/tdigest
 # github.com/jcmturner/gofork v1.0.0
 github.com/jcmturner/gofork/encoding/asn1
@@ -214,6 +216,8 @@ github.com/jcmturner/gofork/x/crypto/pbkdf2
 github.com/jmespath/go-jmespath
 # github.com/joho/godotenv v1.3.0
 github.com/joho/godotenv
+# github.com/josharian/intern v1.0.0
+github.com/josharian/intern
 # github.com/json-iterator/go v1.1.10
 github.com/json-iterator/go
 # github.com/jstemmer/go-junit-report v0.9.1
@@ -234,7 +238,8 @@ github.com/konsorten/go-windows-terminal-sequences
 # github.com/lightstep/tracecontext.go v0.0.0-20181129014701-1757c391b1ac
 github.com/lightstep/tracecontext.go/traceparent
 github.com/lightstep/tracecontext.go/tracestate
-# github.com/mailru/easyjson v0.7.1-0.20191009090205-6c0755d89d1e
+# github.com/mailru/easyjson v0.7.6
+github.com/mailru/easyjson
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
@@ -253,6 +258,10 @@ github.com/openzipkin/zipkin-go/model
 github.com/openzipkin/zipkin-go/propagation
 github.com/openzipkin/zipkin-go/reporter
 github.com/openzipkin/zipkin-go/reporter/http
+# github.com/pierdipi/sacura v0.0.0-20201003135834-e90e3a725ff9
+## explicit
+github.com/pierdipi/sacura
+github.com/pierdipi/sacura/cmd/sacura
 # github.com/pierrec/lz4 v2.5.2+incompatible
 github.com/pierrec/lz4
 github.com/pierrec/lz4/internal/xxh32
@@ -297,13 +306,16 @@ github.com/rogpeppe/go-internal/semver
 github.com/sirupsen/logrus
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
-# github.com/stretchr/testify v1.6.0
+# github.com/stretchr/testify v1.6.1
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/tsenart/vegeta v12.7.1-0.20190725001342-b5f4fca92137+incompatible
 github.com/tsenart/vegeta/lib
-# go.opencensus.io v0.22.4
+# github.com/tsenart/vegeta/v12 v12.8.3
+github.com/tsenart/vegeta/v12/lib
+# go.opencensus.io v0.22.5
+## explicit
 go.opencensus.io
 go.opencensus.io/internal
 go.opencensus.io/internal/tagencoding
@@ -328,16 +340,17 @@ go.opencensus.io/trace/tracestate
 go.opentelemetry.io/otel/api/core
 go.opentelemetry.io/otel/api/propagation
 go.opentelemetry.io/otel/api/trace
-# go.uber.org/atomic v1.6.0
+# go.uber.org/atomic v1.7.0
 go.uber.org/atomic
 # go.uber.org/automaxprocs v1.3.0
 go.uber.org/automaxprocs
 go.uber.org/automaxprocs/internal/cgroups
 go.uber.org/automaxprocs/internal/runtime
 go.uber.org/automaxprocs/maxprocs
-# go.uber.org/multierr v1.5.0
+# go.uber.org/multierr v1.6.0
+## explicit
 go.uber.org/multierr
-# go.uber.org/zap v1.15.0
+# go.uber.org/zap v1.16.0
 ## explicit
 go.uber.org/zap
 go.uber.org/zap/buffer
@@ -364,7 +377,8 @@ golang.org/x/lint/golint
 # golang.org/x/mod v0.3.0
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20200904194848-62affa334b73
+# golang.org/x/net v0.0.0-20201006153459-a7d1128ccaa0
+## explicit
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/http/httpguts
@@ -385,7 +399,7 @@ golang.org/x/oauth2/jwt
 # golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.0.0-20200905004654-be1d3432aa8f
+# golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
@@ -399,7 +413,7 @@ golang.org/x/text/unicode/norm
 golang.org/x/text/width
 # golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
 golang.org/x/time/rate
-# golang.org/x/tools v0.0.0-20200828161849-5deb26317202
+# golang.org/x/tools v0.0.0-20201002161817-08f19738fac6
 golang.org/x/tools/cmd/goimports
 golang.org/x/tools/go/analysis
 golang.org/x/tools/go/analysis/passes/inspect
@@ -620,7 +634,7 @@ gopkg.in/jcmturner/rpc.v1/ndr
 gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 gopkg.in/yaml.v3
-# honnef.co/go/tools v0.0.1-2020.1.4
+# honnef.co/go/tools v0.0.1-2020.1.5
 honnef.co/go/tools/arg
 honnef.co/go/tools/cmd/staticcheck
 honnef.co/go/tools/code
@@ -707,7 +721,7 @@ k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextension
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1/fake
 k8s.io/apiextensions-apiserver/pkg/client/listers/apiextensions/v1
 k8s.io/apiextensions-apiserver/pkg/client/listers/apiextensions/v1beta1
-# k8s.io/apimachinery v0.18.8 => k8s.io/apimachinery v0.18.8
+# k8s.io/apimachinery v0.19.2 => k8s.io/apimachinery v0.18.8
 ## explicit
 k8s.io/apimachinery/pkg/api/apitesting/fuzzer
 k8s.io/apimachinery/pkg/api/equality

@@ -34,7 +34,7 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
-      serviceAccountName: kafka-broker-controller # use the same service account of our controller
+      serviceAccountName: kafka-controller # use the same service account of our controller
       containers:
         - name: test-kafka-broker-cm-watcher
           image: ko://knative.dev/eventing-kafka-broker/test/cmd/watch-cm

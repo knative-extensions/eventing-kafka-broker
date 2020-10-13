@@ -35,14 +35,9 @@ import org.slf4j.LoggerFactory;
  * @param <R> type of the response of given senders.
  * @see ConsumerRecordHandler#handle(KafkaConsumerRecord)
  */
-public final class ConsumerRecordHandler<K, V, R> implements
-  Handler<KafkaConsumerRecord<K, V>> {
+public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsumerRecord<K, V>> {
 
-  private static final Logger logger = LoggerFactory
-    .getLogger(ConsumerRecordHandler.class);
-
-  private static final String SUBSCRIBER = "subscriber";
-  private static final String DLQ = "dead letter queue";
+  private static final Logger logger = LoggerFactory.getLogger(ConsumerRecordHandler.class);
 
   private final Filter<V> filter;
   private final ConsumerRecordSender<K, V, R> subscriberSender;
@@ -55,9 +50,8 @@ public final class ConsumerRecordHandler<K, V, R> implements
    *
    * @param subscriberSender      sender to trigger subscriber
    * @param filter                event filter
-   * @param receiver              hook receiver {@link ConsumerRecordOffsetStrategy}. It allows to
-   *                              plug in custom offset management depending on the success/failure
-   *                              during the algorithm.
+   * @param receiver              hook receiver {@link ConsumerRecordOffsetStrategy}. It allows to plug in custom offset
+   *                              management depending on the success/failure during the algorithm.
    * @param sinkResponseHandler   handler of the response from {@code subscriberSender}
    * @param deadLetterQueueSender sender to DLQ
    */
@@ -86,9 +80,8 @@ public final class ConsumerRecordHandler<K, V, R> implements
    *
    * @param subscriberSender    sender to trigger subscriber
    * @param filter              event filter
-   * @param receiver            hook receiver {@link ConsumerRecordOffsetStrategy}. It allows to
-   *                            plug in custom offset management depending on the success/failure
-   *                            during the algorithm.
+   * @param receiver            hook receiver {@link ConsumerRecordOffsetStrategy}. It allows to plug in custom offset
+   *                            management depending on the success/failure during the algorithm.
    * @param sinkResponseHandler handler of the response
    */
   public ConsumerRecordHandler(
@@ -116,77 +109,81 @@ public final class ConsumerRecordHandler<K, V, R> implements
   @Override
   public void handle(final KafkaConsumerRecord<K, V> record) {
 
-    logger.debug("handling record {}", record);
+    logDebug("handling record", record);
 
     receiver.recordReceived(record);
 
     if (filter.match(record.value())) {
-      logger.debug("record match filtering {}", record);
-
-      subscriberSender.send(record)
-        .onSuccess(response -> onSuccessfullySentToSubscriber(record))
-        .onFailure(cause -> onFailedToSendToSubscriber(record, cause))
-        .compose(sinkResponseHandler::handle)
-        .onFailure(
-          t -> logger.error("Failed to send the subscriber response to the broker topic", t));
+      logDebug("record match filtering", record);
+      send(record);
     } else {
-      logger.debug("record doesn't match filtering {}", record);
-
+      logDebug("record doesn't match filtering", record);
       receiver.recordDiscarded(record);
     }
   }
 
-  private void onSuccessfullySentToSubscriber(final KafkaConsumerRecord<K, V> record) {
-    logSuccessfulSendTo(SUBSCRIBER, record);
-
-    receiver.successfullySentToSubscriber(record);
+  private void send(final KafkaConsumerRecord<K, V> record) {
+    subscriberSender.send(record)
+      .onSuccess(response -> sinkResponseHandler.handle(response)
+        .onSuccess(ignored -> {
+          logDebug("Successfully send response to the broker", record);
+          receiver.successfullySentToSubscriber(record);
+        })
+        .onFailure(cause -> {
+          logError("Failed to handle response", record, cause);
+          sendToDLS(record);
+        }))
+      .onFailure(cause -> {
+        logError("Failed to send event to subscriber", record, cause);
+        sendToDLS(record);
+      });
   }
 
-  private void onFailedToSendToSubscriber(
-    final KafkaConsumerRecord<K, V> record,
-    final Throwable cause) {
-
-    logFailedSendTo(SUBSCRIBER, record, cause);
-
+  private void sendToDLS(KafkaConsumerRecord<K, V> record) {
     deadLetterQueueSender.send(record)
-      .onSuccess(ignored -> onSuccessfullySentToDLQ(record))
-      .onFailure(ex -> onFailedToSendToDLQ(record, ex))
-      .compose(sinkResponseHandler::handle)
-      .onFailure(
-        t -> logger.error("Failed to send the subscriber response to the broker topic", t));
+      .onFailure(ex -> {
+        logError("Failed to send record to dead letter sink", record, ex);
+        receiver.failedToSendToDLQ(record, ex);
+      })
+      .onSuccess(response -> sinkResponseHandler.handle(response)
+        .onSuccess(ignored -> {
+          logDebug("Successfully send response to the broker", record);
+          receiver.successfullySentToDLQ(record);
+        })
+        .onFailure(cause -> {
+          logError("Failed to handle response", record, cause);
+          receiver.failedToSendToDLQ(record, cause);
+        }));
   }
 
-  private void onSuccessfullySentToDLQ(final KafkaConsumerRecord<K, V> record) {
-    logSuccessfulSendTo(DLQ, record);
-
-    receiver.successfullySentToDLQ(record);
-  }
-
-  private void onFailedToSendToDLQ(KafkaConsumerRecord<K, V> record, Throwable ex) {
-    logFailedSendTo(DLQ, record, ex);
-
-    receiver.failedToSendToDLQ(record, ex);
-  }
-
-  private static <K, V> void logFailedSendTo(
-    final String component,
+  private static <K, V> void logError(
+    final String msg,
     final KafkaConsumerRecord<K, V> record,
     final Throwable cause) {
 
-    logger.error(component + " sender failed to send record {} {} {}",
-      keyValue("topic", record.topic()),
-      keyValue("partition", record.partition()),
-      keyValue("offset", record.offset()),
-      keyValue("event", record.value()),
-      cause
-    );
+    if (logger.isDebugEnabled()) {
+      logger.error(msg + " {} {} {}",
+        keyValue("topic", record.topic()),
+        keyValue("partition", record.partition()),
+        keyValue("offset", record.offset()),
+        keyValue("event", record.value()),
+        cause
+      );
+    } else {
+      logger.error(msg + " {} {} {}",
+        keyValue("topic", record.topic()),
+        keyValue("partition", record.partition()),
+        keyValue("offset", record.offset()),
+        cause
+      );
+    }
   }
 
-  private static <K, V> void logSuccessfulSendTo(
-    final String component,
+  private static <K, V> void logDebug(
+    final String msg,
     final KafkaConsumerRecord<K, V> record) {
 
-    logger.debug("record successfully handled by " + component + " {} {} {}",
+    logger.debug(msg + " {} {} {}",
       keyValue("topic", record.topic()),
       keyValue("partition", record.partition()),
       keyValue("offset", record.offset()),

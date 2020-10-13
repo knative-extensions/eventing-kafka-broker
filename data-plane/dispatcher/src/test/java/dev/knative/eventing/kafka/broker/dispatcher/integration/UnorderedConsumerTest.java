@@ -125,8 +125,7 @@ public class UnorderedConsumerTest {
 
     Thread.sleep(6000); // reduce flakiness
 
-    assertThat(vertx.deploymentIDs())
-      .hasSize(numEgresses);
+    assertThat(vertx.deploymentIDs()).hasSize(numEgresses);
 
     waitEvents.await();
 
@@ -146,10 +145,8 @@ public class UnorderedConsumerTest {
       final var history = producerEntry.getValue().history();
       assertThat(history).hasSameSizeAs(consumerRecords);
 
-      assertThat(history.stream().map(ProducerRecord::value))
-        .containsExactlyInAnyOrder(events);
-      assertThat(history.stream().map(ProducerRecord::key))
-        .containsAnyElementsOf(partitionKeys);
+      assertThat(history.stream().map(ProducerRecord::value)).containsExactlyInAnyOrder(events);
+      assertThat(history.stream().map(ProducerRecord::key)).containsAnyElementsOf(partitionKeys);
     }
 
     executorService.shutdown();

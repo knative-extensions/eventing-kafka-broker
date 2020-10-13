@@ -35,4 +35,7 @@ import (
 
 	// For chaos testing the leader election.
 	_ "knative.dev/pkg/leaderelection/chaosduck"
+
+	// For detecting events loss
+	_ "github.com/pierdipi/sacura/cmd/sacura"
 )
