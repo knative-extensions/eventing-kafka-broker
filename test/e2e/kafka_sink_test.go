@@ -148,7 +148,7 @@ func TestKafkaSinkV1Alpha1BinaryContentMode(t *testing.T) {
 func verify(t *testing.T, client *testlib.Client, mode, topic string, ids []string) {
 
 	err := kafkatest.VerifyMessagesInTopic(
-		client.Kube.Kube,
+		client.Kube,
 		client.Tracker,
 		types.NamespacedName{
 			Namespace: client.Namespace,

@@ -73,7 +73,7 @@ func BrokerDataPlaneSetupHelper(ctx context.Context, client *testlib.Client, bro
 func BrokerDataPlaneNamespaceSetupOption(ctx context.Context, namespace string) testlib.SetupClientOption {
 	return func(client *testlib.Client) {
 		if namespace != "" {
-			client.Kube.Kube.CoreV1().Namespaces().Delete(ctx, client.Namespace, metav1.DeleteOptions{})
+			client.Kube.CoreV1().Namespaces().Delete(ctx, client.Namespace, metav1.DeleteOptions{})
 			client.Namespace = namespace
 		}
 	}
@@ -276,14 +276,16 @@ func BrokerV1Beta1ConsumerDataPlaneTestHelper(
 		}
 
 		transformMsg := []byte(`{"msg":"Transformed!"}`)
-		transformPod := resources.EventTransformationPod(
+		recordevents.DeployEventRecordOrFail(
+			ctx,
+			client,
 			transformerName,
-			"reply-check-type",
-			"reply-check-source",
-			transformMsg,
+			recordevents.ReplyWithTransformedEvent(
+				"reply-check-type",
+				"reply-check-source",
+				string(transformMsg),
+			),
 		)
-		client.CreatePodOrFail(transformPod, testlib.WithService(transformerName))
-		client.WaitForAllTestResourcesReadyOrFail(ctx)
 
 		trigger := client.CreateTriggerOrFailV1Beta1(
 			triggerName,

@@ -47,7 +47,7 @@ type Config struct {
 }
 
 func VerifyNumPartitionAndReplicationFactor(
-	client *kubernetes.Clientset,
+	client kubernetes.Interface,
 	tracker *testlib.Tracker,
 	namespace string,
 	name string,
