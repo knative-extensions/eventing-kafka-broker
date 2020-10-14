@@ -227,15 +227,17 @@ func TestBrokerConsumerV1Beta1(t *testing.T) {
 			t.Fatalf("Cannot set the payload of the baseEvent: %s", err.Error())
 		}
 
-		transformMsg := []byte(`{"msg":"Transformed!"}`)
-		transformPod := resources.EventTransformationPod(
+		transformMsg := `{"msg":"Transformed!"}`
+		recordevents.DeployEventRecordOrFail(
+			ctx,
+			client,
 			transformerName,
-			"reply-check-type",
-			"reply-check-source",
-			transformMsg,
+			recordevents.ReplyWithTransformedEvent(
+				"reply-check-type",
+				"reply-check-source",
+				transformMsg,
+			),
 		)
-		client.CreatePodOrFail(transformPod, testlib.WithService(transformerName))
-		client.WaitForAllTestResourcesReadyOrFail(ctx)
 
 		trigger := client.CreateTriggerOrFailV1Beta1(
 			triggerName,
@@ -365,7 +367,7 @@ func TestBrokerConsumerV1Beta1(t *testing.T) {
 			transformedEventMatcher := recordevents.MatchEvent(
 				cetest.HasSource("reply-check-source"),
 				cetest.HasType("reply-check-type"),
-				cetest.HasData(transformMsg),
+				cetest.HasData([]byte(transformMsg)),
 			)
 			err := pkgtest.WaitForPodRunning(ctx, client.Kube, senderName, client.Namespace)
 			assert.Nil(t, err, err)
