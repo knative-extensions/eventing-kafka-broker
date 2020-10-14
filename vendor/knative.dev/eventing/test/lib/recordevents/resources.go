@@ -73,6 +73,24 @@ func ReplyWithTransformedEvent(replyEventType string, replyEventSource string, r
 	}
 }
 
+// ReplyWithAppendedData is an option to let the recordevents reply with the transformed event with appended data
+func ReplyWithAppendedData(appendData string) EventRecordOption {
+	return func(pod *corev1.Pod, client *testlib.Client) error {
+		pod.Spec.Containers[0].Env = append(
+			pod.Spec.Containers[0].Env,
+			corev1.EnvVar{Name: "REPLY", Value: "true"},
+		)
+		if appendData != "" {
+			pod.Spec.Containers[0].Env = append(
+				pod.Spec.Containers[0].Env,
+				corev1.EnvVar{Name: "REPLY_APPEND_DATA", Value: appendData},
+			)
+		}
+
+		return nil
+	}
+}
+
 // DeployEventRecordOrFail deploys the recordevents image with necessary sa, roles, rb to execute the image
 func DeployEventRecordOrFail(ctx context.Context, client *testlib.Client, name string, options ...EventRecordOption) *corev1.Pod {
 	client.CreateServiceAccountOrFail(name)
@@ -90,7 +108,7 @@ func DeployEventRecordOrFail(ctx context.Context, client *testlib.Client, name s
 	))
 	client.CreateRoleBindingOrFail(name, "Role", name, name, client.Namespace)
 
-	eventRecordPod := EventRecordPod(name, name)
+	eventRecordPod := eventRecordPod(name, name)
 	client.CreatePodOrFail(eventRecordPod, append(options, testlib.WithService(name))...)
 	err := pkgtest.WaitForPodRunning(ctx, client.Kube, name, client.Namespace)
 	if err != nil {
@@ -100,8 +118,8 @@ func DeployEventRecordOrFail(ctx context.Context, client *testlib.Client, name s
 	return eventRecordPod
 }
 
-// EventRecordPod creates a Pod that stores received events for test retrieval.
-func EventRecordPod(name string, serviceAccountName string) *corev1.Pod {
+// eventRecordPod creates a Pod that stores received events for test retrieval.
+func eventRecordPod(name string, serviceAccountName string) *corev1.Pod {
 	return recordEventsPod("recordevents", name, serviceAccountName)
 }
 
