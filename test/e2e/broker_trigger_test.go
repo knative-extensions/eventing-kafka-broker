@@ -145,7 +145,7 @@ func TestBrokerTrigger(t *testing.T) {
 		}
 
 		err := kafkatest.VerifyNumPartitionAndReplicationFactor(
-			client.Kube.Kube,
+			client.Kube,
 			client.Tracker,
 			client.Namespace,
 			verifierName,
@@ -256,7 +256,7 @@ func TestBrokerWithConfig(t *testing.T) {
 		}
 
 		err := kafkatest.VerifyNumPartitionAndReplicationFactor(
-			client.Kube.Kube,
+			client.Kube,
 			client.Tracker,
 			client.Namespace,
 			verifierName,

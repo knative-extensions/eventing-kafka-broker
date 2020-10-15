@@ -44,7 +44,7 @@ type ConsumerConfig struct {
 }
 
 func VerifyMessagesInTopic(
-	client *kubernetes.Clientset,
+	client kubernetes.Interface,
 	tracker *testlib.Tracker,
 	namespacedName types.NamespacedName,
 	config *ConsumerConfig) error {
