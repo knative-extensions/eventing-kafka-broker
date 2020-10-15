@@ -27,6 +27,7 @@ import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
 import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
 import dev.knative.eventing.kafka.broker.core.wrappers.EventMatcher;
 import dev.knative.eventing.kafka.broker.core.wrappers.Filter;
@@ -223,5 +224,57 @@ public class HttpConsumerVerticleFactoryTest {
           }
         });
     });
+  }
+
+  @Test
+  public void linearBackoffPolicy() {
+
+    final var policy = HttpConsumerVerticleFactory.computeRetryPolicy(EgressConfig.newBuilder()
+      .setRetry(10)
+      .setBackoffPolicy(BackoffPolicy.Linear)
+      .setBackoffDelay(100)
+      .build());
+
+    final var delay = policy.apply(5);
+
+    assertThat(delay).isEqualTo(100 * 5);
+  }
+
+  @Test
+  public void exponentialBackoffPolicy() {
+
+    final var policy = HttpConsumerVerticleFactory.computeRetryPolicy(EgressConfig.newBuilder()
+      .setRetry(10)
+      .setBackoffPolicy(BackoffPolicy.Exponential)
+      .setBackoffDelay(100)
+      .build());
+
+    final var delay = policy.apply(5);
+
+    assertThat(delay).isEqualTo((long) (100 * Math.pow(2, 5)));
+  }
+
+  @Test
+  public void exponentialBackoffPolicyByDefault() {
+
+    final var policy = HttpConsumerVerticleFactory.computeRetryPolicy(EgressConfig.newBuilder()
+      .setRetry(10)
+      .setBackoffPolicy(BackoffPolicy.Exponential)
+      .setBackoffDelay(100)
+      .build());
+
+    final var delay = policy.apply(5);
+
+    assertThat(delay).isEqualTo((long) (100 * Math.pow(2, 5)));
+  }
+
+  @Test
+  public void noRetry() {
+
+    final var policy = HttpConsumerVerticleFactory.computeRetryPolicy(null);
+
+    final var delay = policy.apply(Double.valueOf(Math.random()).intValue());
+
+    assertThat(delay).isEqualTo(0);
   }
 }

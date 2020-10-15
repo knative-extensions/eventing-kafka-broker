@@ -133,6 +133,24 @@ func TestBackoffDelayFromString(t *testing.T) {
 			want:         1*60*1000 + 200,
 		},
 		{
+			name:         "milliseconds",
+			backoffDelay: pointer.StringPtr("PT0.001S"),
+			defaultDelay: 1000,
+			want:         0,
+		},
+		{
+			name:         "microseconds",
+			backoffDelay: pointer.StringPtr("PT0.000001S"),
+			defaultDelay: 1000,
+			want:         0,
+		},
+		{
+			name:         "65 seconds",
+			backoffDelay: pointer.StringPtr("PT65S"),
+			defaultDelay: 1000,
+			want:         1*65*1000,
+		},
+		{
 			name:         "default",
 			defaultDelay: 1000,
 			want:         1000,

@@ -201,7 +201,8 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     );
   }
 
-  private static Function<Integer, Long> computeRetryPolicy(final EgressConfig egress) {
+  /* package visibility for test */
+  static Function<Integer, Long> computeRetryPolicy(final EgressConfig egress) {
     if (egress != null && egress.getBackoffPolicy() != null && egress.getBackoffDelay() > 0) {
       final var delay = egress.getBackoffDelay();
       return switch (egress.getBackoffPolicy()) {
