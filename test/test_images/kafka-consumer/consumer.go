@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -26,9 +27,9 @@ import (
 	protocolkafka "github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
-	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/pkg/signals"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
@@ -47,7 +48,8 @@ func main() {
 		log.Fatal("Failed to process environment variables", err)
 	}
 
-	log.Println(envConfig)
+	j, _ := json.MarshalIndent(envConfig, "", " ")
+	log.Println(string(j))
 
 	consumerConfig := sarama.NewConfig()
 	consumerConfig.Version = sarama.V2_0_0_0
@@ -94,22 +96,21 @@ func main() {
 	}()
 
 	ids := strings.Split(envConfig.IDS, ",")
-	matchers := make([]cetest.EventMatcher, 0, len(ids))
-	for _, id := range ids {
-		matchers = append(matchers, cetest.HasId(id))
-	}
+	set := sets.NewString(ids...)
+	defer func() {
+		log.Println("Remaining", set)
+	}()
 
-	matcher := cetest.AnyOf(matchers...)
-
-	for i := 0; i < len(ids); i++ {
+	for set.Len() == 0 {
 		select {
 		case err := <-exitError:
 			log.Fatal("Failed to consume", err)
 		case e := <-events:
-			if err := matcher(e); err != nil {
-				log.Fatalf("Failed to match event: %s\n", e.String())
+			if set.Has(e.ID()) {
+				set.Delete(e.ID())
+				log.Printf("Event matching received: %s\nRemaining: %v\n", e.ID(), set)
 			} else {
-				log.Println("event matching received", e.String())
+				log.Fatalf("Failed to match event: %s\n%v\n", e.String(), set.List())
 			}
 		}
 	}
@@ -120,11 +121,11 @@ type handler struct {
 	encoding binding.Encoding
 }
 
-func (h *handler) Setup(session sarama.ConsumerGroupSession) error {
+func (h *handler) Setup(_ sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-func (h *handler) Cleanup(session sarama.ConsumerGroupSession) error {
+func (h *handler) Cleanup(_ sarama.ConsumerGroupSession) error {
 	return nil
 }
 
@@ -147,8 +148,6 @@ func (h *handler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 			log.Println(err)
 			return fmt.Errorf("failed to convert message to event: %w", err)
 		}
-
-		log.Println(event.String())
 
 		h.events <- *event
 	}
