@@ -16,14 +16,13 @@
 
 package dev.knative.eventing.kafka.broker.core.reconciler;
 
-import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
-import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.vertx.core.Future;
-import java.util.Map;
-import java.util.Set;
+import java.util.Collection;
 
 @FunctionalInterface
 public interface ResourcesReconciler {
 
-  Future<Void> reconcile(Map<Resource, Set<Egress>> resourcesMap) throws Exception;
+  Future<Void> reconcile(Collection<DataPlaneContract.Resource> resources) throws Exception;
+
 }
