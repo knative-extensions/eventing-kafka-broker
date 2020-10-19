@@ -182,13 +182,13 @@ public class RequestHandlerTest {
     final var checkpoint = context.checkpoint();
 
     final var resource1 = new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
-      .setId("1")
+      .setUid("1")
       .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-2:9092")
       .build());
 
     final var resource2 = new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
-      .setId("1")
+      .setUid("1")
       .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-3:9092")
       .build());
@@ -230,13 +230,13 @@ public class RequestHandlerTest {
     final var checkpoint = context.checkpoint();
 
     final var resource1 = new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
-      .setId("1")
+      .setUid("1")
       .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-2:9092")
       .build());
 
     final var resource2 = new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
-      .setId("1")
+      .setUid("1")
       .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-2:9092")
       .build());

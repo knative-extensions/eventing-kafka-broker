@@ -44,7 +44,7 @@ func TestFindResource(t *testing.T) {
 				contract: &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id: "2",
+							Uid: "2",
 						},
 					},
 					Generation: 1,
@@ -59,7 +59,7 @@ func TestFindResource(t *testing.T) {
 				contract: &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id: "1",
+							Uid: "1",
 						},
 					},
 					Generation: 1,
@@ -91,7 +91,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 			haveContract: &contract.Contract{
 				Resources: []*contract.Resource{
 					{
-						Id:     "2",
+						Uid:    "2",
 						Topics: []string{"topic-name-1"},
 						Egresses: []*contract.Egress{
 							{
@@ -102,6 +102,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 										"source": "source1",
 									},
 								},
+								Uid: "egress-1",
 							},
 						},
 						Ingress: &contract.Ingress{
@@ -116,7 +117,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 				Generation: 1,
 			},
 			newResource: &contract.Resource{
-				Id:     "1",
+				Uid:    "1",
 				Topics: []string{"topic-name-1"},
 				Ingress: &contract.Ingress{
 					IngressType: &contract.Ingress_Path{
@@ -133,6 +134,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 								"source": "source1",
 							},
 						},
+						Uid: "egress-1",
 					},
 				},
 				BootstrapServers: "broker:9092",
@@ -141,7 +143,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 			wantContract: &contract.Contract{
 				Resources: []*contract.Resource{
 					{
-						Id:     "2",
+						Uid:    "2",
 						Topics: []string{"topic-name-1"},
 						Ingress: &contract.Ingress{
 							IngressType: &contract.Ingress_Path{
@@ -158,12 +160,13 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 										"source": "source1",
 									},
 								},
+								Uid: "egress-1",
 							},
 						},
 						BootstrapServers: "broker:9092",
 					},
 					{
-						Id:     "1",
+						Uid:    "1",
 						Topics: []string{"topic-name-1"},
 						Egresses: []*contract.Egress{
 							{
@@ -174,6 +177,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 										"source": "source1",
 									},
 								},
+								Uid: "egress-1",
 							},
 						},
 						BootstrapServers: "broker:9092",
@@ -193,7 +197,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 			haveContract: &contract.Contract{
 				Resources: []*contract.Resource{
 					{
-						Id:     "1",
+						Uid:    "1",
 						Topics: []string{"topic-name-1"},
 						Egresses: []*contract.Egress{
 							{
@@ -204,6 +208,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 								},
 								Destination:   "http://localhost:8080",
 								ConsumerGroup: "egress-1",
+								Uid:           "egress-1",
 							},
 						},
 						BootstrapServers: "broker:9092",
@@ -218,7 +223,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 				Generation: 1,
 			},
 			newResource: &contract.Resource{
-				Id:     "1",
+				Uid:    "1",
 				Topics: []string{"topic-name-1"},
 				// Any Trigger will be ignored, since the function will be called when we're reconciling a contract.Resource,
 				// and it should preserve Egresses already added to the ConfigMap.
@@ -231,6 +236,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 						},
 						Destination:   "http://localhost:8080",
 						ConsumerGroup: "egress-1",
+						Uid:           "egress-1",
 					},
 				},
 				BootstrapServers: "broker:9092,broker-2:9092",
@@ -245,7 +251,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 			wantContract: &contract.Contract{
 				Resources: []*contract.Resource{
 					{
-						Id:     "1",
+						Uid:    "1",
 						Topics: []string{"topic-name-1"},
 						Egresses: []*contract.Egress{
 							{
@@ -256,6 +262,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 								},
 								Destination:   "http://localhost:8080",
 								ConsumerGroup: "egress-1",
+								Uid:           "egress-1",
 							},
 						},
 						BootstrapServers: "broker:9092,broker-2:9092",
@@ -295,7 +302,7 @@ func TestDeleteResource(t *testing.T) {
 			ct: &contract.Contract{
 				Resources: []*contract.Resource{
 					{
-						Id: "1",
+						Uid: "1",
 					},
 				},
 				Generation: 200,
@@ -310,10 +317,10 @@ func TestDeleteResource(t *testing.T) {
 			ct: &contract.Contract{
 				Resources: []*contract.Resource{
 					{
-						Id: "1",
+						Uid: "1",
 					},
 					{
-						Id: "2",
+						Uid: "2",
 					},
 				},
 			},
@@ -321,7 +328,7 @@ func TestDeleteResource(t *testing.T) {
 			want: contract.Contract{
 				Resources: []*contract.Resource{
 					{
-						Id: "2",
+						Uid: "2",
 					},
 				},
 			},
@@ -331,13 +338,13 @@ func TestDeleteResource(t *testing.T) {
 			ct: &contract.Contract{
 				Resources: []*contract.Resource{
 					{
-						Id: "1",
+						Uid: "1",
 					},
 					{
-						Id: "2",
+						Uid: "2",
 					},
 					{
-						Id: "3",
+						Uid: "3",
 					},
 				},
 			},
@@ -345,10 +352,10 @@ func TestDeleteResource(t *testing.T) {
 			want: contract.Contract{
 				Resources: []*contract.Resource{
 					{
-						Id: "1",
+						Uid: "1",
 					},
 					{
-						Id: "2",
+						Uid: "2",
 					},
 				},
 			},
@@ -358,13 +365,13 @@ func TestDeleteResource(t *testing.T) {
 			ct: &contract.Contract{
 				Resources: []*contract.Resource{
 					{
-						Id: "1",
+						Uid: "1",
 					},
 					{
-						Id: "2",
+						Uid: "2",
 					},
 					{
-						Id: "3",
+						Uid: "3",
 					},
 				},
 				Generation: 200,
@@ -373,10 +380,10 @@ func TestDeleteResource(t *testing.T) {
 			want: contract.Contract{
 				Resources: []*contract.Resource{
 					{
-						Id: "1",
+						Uid: "1",
 					},
 					{
-						Id: "3",
+						Uid: "3",
 					},
 				},
 				Generation: 200,

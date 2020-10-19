@@ -307,7 +307,7 @@ func (r *Reconciler) defaultConfig() (*kafka.TopicConfig, error) {
 
 func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, config *kafka.TopicConfig) (*contract.Resource, error) {
 	res := &contract.Resource{
-		Id:     string(broker.UID),
+		Uid:    string(broker.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
 			IngressType: &contract.Ingress_Path{

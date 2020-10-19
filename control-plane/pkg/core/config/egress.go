@@ -29,7 +29,7 @@ const (
 func FindEgress(egresses []*contract.Egress, egress types.UID) int {
 
 	for i, t := range egresses {
-		if t.ConsumerGroup == string(egress) {
+		if t.Uid == string(egress) {
 			return i
 		}
 	}

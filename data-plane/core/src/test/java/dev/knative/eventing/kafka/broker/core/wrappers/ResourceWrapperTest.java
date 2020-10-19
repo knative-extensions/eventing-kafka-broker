@@ -32,7 +32,7 @@ public class ResourceWrapperTest {
   public void idCallShouldBeDelegatedToWrappedResource() {
     final var id = "123-42";
     final var resource = new ResourceWrapper(
-      DataPlaneContract.Resource.newBuilder().setId(id).build()
+      DataPlaneContract.Resource.newBuilder().setUid(id).build()
     );
 
     assertThat(resource.id()).isEqualTo(id);
@@ -103,7 +103,7 @@ public class ResourceWrapperTest {
       Arguments.of(
         new ResourceWrapper(
           DataPlaneContract.Resource.newBuilder()
-            .setId("1234-id")
+            .setUid("1234-id")
             .build()
         ),
         new ResourceWrapper(
@@ -167,7 +167,7 @@ public class ResourceWrapperTest {
           DataPlaneContract.Resource.newBuilder()
             .setIngress(DataPlaneContract.Ingress.newBuilder()
               .setPath("/broker/test-event-transformation-for-trigger-v1-broker-v1-6wlx9"))
-            .setId("93ab71bd-9e3c-42ee-a0a2-aeec6dca48c9")
+            .setUid("93ab71bd-9e3c-42ee-a0a2-aeec6dca48c9")
             .addTopics(
               "knative-broker-test-event-transformation-for-trigger-v1-broker-v1-6wlx9-broker")
             .addEgresses(DataPlaneContract.Egress.newBuilder()
@@ -195,7 +195,7 @@ public class ResourceWrapperTest {
           DataPlaneContract.Resource.newBuilder()
             .setIngress(DataPlaneContract.Ingress.newBuilder()
               .setPath("/broker/test-event-transformation-for-trigger-v1-broker-v1-6wlx9"))
-            .setId("93ab71bd-9e3c-42ee-a0a2-aeec6dca48c9")
+            .setUid("93ab71bd-9e3c-42ee-a0a2-aeec6dca48c9")
             .addTopics(
               "knative-broker-test-event-transformation-for-trigger-v1-broker-v1-6wlx9-broker")
             .addEgresses(DataPlaneContract.Egress.newBuilder()

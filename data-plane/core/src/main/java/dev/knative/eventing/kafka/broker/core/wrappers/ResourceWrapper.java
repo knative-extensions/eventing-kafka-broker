@@ -42,7 +42,7 @@ public class ResourceWrapper implements Resource {
 
   @Override
   public String id() {
-    return resource.getId();
+    return resource.getUid();
   }
 
   @Override

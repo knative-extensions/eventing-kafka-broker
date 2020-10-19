@@ -59,6 +59,10 @@ message Egress {
   }
 
   Filter filter = 5;
+
+  // Id of the egress
+  // It's the same as the Kubernetes resource uid
+  string uid = 6;
 }
 
 // CloudEvent content mode
@@ -84,7 +88,8 @@ message Ingress {
 
 message Resource {
   // Id of the resource
-  string id = 1;
+  // It's the same as the Kubernetes resource uid
+  string uid = 1;
 
   // Topics name
   // Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,

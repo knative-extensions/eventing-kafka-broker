@@ -135,7 +135,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	// Get sink configuration.
 	sinkConfig := &contract.Resource{
-		Id:     string(ks.UID),
+		Uid:    string(ks.UID),
 		Topics: []string{ks.Spec.Topic},
 		Ingress: &contract.Ingress{
 			ContentMode: coreconfig.ContentModeFromString(*ks.Spec.ContentMode),
