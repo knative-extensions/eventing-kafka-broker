@@ -39,6 +39,8 @@ export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
 # The number of control plane replicas to run.
 readonly REPLICAS=${REPLICAS:-3}
 
+export SYSTEM_NAMESPACE="knative-eventing"
+
 function knative_setup() {
   knative_eventing "apply --strict"
   return $?
