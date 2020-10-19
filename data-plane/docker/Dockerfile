@@ -20,7 +20,7 @@ FROM ${JAVA_IMAGE} as builder
 ARG APP_DIR
 ARG APP_JAR
 
-WORKDIR /app
+WORKDIR /build
 
 # https://github.com/AdoptOpenJDK/openjdk-docker/issues/260
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y binutils
@@ -42,24 +42,13 @@ COPY . .
 
 RUN ./mvnw package -pl=${APP_DIR} -am -DskipTests -Deditorconfig.skip --no-transfer-progress
 
-RUN ./generate_jdk.sh /app/${APP_DIR}/target/${APP_JAR}
+RUN ./generate_jdk.sh /build/${APP_DIR}/target/${APP_JAR}
+
+RUN cp /build/${APP_DIR}/target/${APP_JAR} /app/app.jar
 
 FROM ${BASE_IMAGE} as running
 
-ARG APP_DIR
-ARG APP_JAR
+COPY --from=builder /app /app
 
-# Create appuser and directories
-RUN groupadd -g 999 appuser && useradd -r -u 999 -g appuser appuser && \
-  mkdir /tmp/vertx-cache && chown -R appuser:appuser /tmp/vertx-cache && \
-  mkdir /app
-
-# Copy jar and jdk inside /app
-COPY --from=builder /app/jdk /app/jdk
-COPY --from=builder /app/${APP_DIR}/target/${APP_JAR} /app/app.jar
-RUN chown -R appuser:appuser /app
-
-# Set appuser and configure PATH
-USER appuser
-WORKDIR /app
+# Configure PATH
 ENV PATH="/app/jdk/bin:${PATH}"
