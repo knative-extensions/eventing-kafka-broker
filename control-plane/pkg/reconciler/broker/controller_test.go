@@ -73,3 +73,34 @@ func TestNewController(t *testing.T) {
 		t.Error("failed to create controller: <nil>")
 	}
 }
+
+func TestValidateDefaultBackoffDelayMs(t *testing.T) {
+
+	tests := []struct {
+		name    string
+		env     config.Env
+		wantErr bool
+	}{
+		{
+			name: "0 want error",
+			env: config.Env{
+				DefaultBackoffDelayMs: 0,
+			},
+			wantErr: true,
+		},
+		{
+			name: "non 0 no error",
+			env: config.Env{
+				DefaultBackoffDelayMs: 1,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := ValidateDefaultBackoffDelayMs(tt.env); (err != nil) != tt.wantErr {
+				t.Errorf("ValidateDefaultBackoffDelayMs() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

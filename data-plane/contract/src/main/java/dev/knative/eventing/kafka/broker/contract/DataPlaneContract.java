@@ -1177,33 +1177,13 @@ public final class DataPlaneContract {
 
     /**
      * <pre>
-     * backoffDelay is the delay before retrying.
-     * More information on Duration format:
-     *  - https://www.iso.org/iso-8601-date-and-time-format.html
-     *  - https://en.wikipedia.org/wiki/ISO_8601
-     * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
-     * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+     * backoffDelay is the delay before retrying in milliseconds.
      * </pre>
      *
-     * <code>string backoffDelay = 4;</code>
+     * <code>uint64 backoffDelay = 4;</code>
      * @return The backoffDelay.
      */
-    java.lang.String getBackoffDelay();
-    /**
-     * <pre>
-     * backoffDelay is the delay before retrying.
-     * More information on Duration format:
-     *  - https://www.iso.org/iso-8601-date-and-time-format.html
-     *  - https://en.wikipedia.org/wiki/ISO_8601
-     * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
-     * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
-     * </pre>
-     *
-     * <code>string backoffDelay = 4;</code>
-     * @return The bytes for backoffDelay.
-     */
-    com.google.protobuf.ByteString
-        getBackoffDelayBytes();
+    long getBackoffDelay();
   }
   /**
    * Protobuf type {@code EgressConfig}
@@ -1220,7 +1200,6 @@ public final class DataPlaneContract {
     private EgressConfig() {
       deadLetter_ = "";
       backoffPolicy_ = 0;
-      backoffDelay_ = "";
     }
 
     @java.lang.Override
@@ -1270,10 +1249,9 @@ public final class DataPlaneContract {
               backoffPolicy_ = rawValue;
               break;
             }
-            case 34: {
-              java.lang.String s = input.readStringRequireUtf8();
+            case 32: {
 
-              backoffDelay_ = s;
+              backoffDelay_ = input.readUInt64();
               break;
             }
             default: {
@@ -1399,59 +1377,18 @@ public final class DataPlaneContract {
     }
 
     public static final int BACKOFFDELAY_FIELD_NUMBER = 4;
-    private volatile java.lang.Object backoffDelay_;
+    private long backoffDelay_;
     /**
      * <pre>
-     * backoffDelay is the delay before retrying.
-     * More information on Duration format:
-     *  - https://www.iso.org/iso-8601-date-and-time-format.html
-     *  - https://en.wikipedia.org/wiki/ISO_8601
-     * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
-     * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+     * backoffDelay is the delay before retrying in milliseconds.
      * </pre>
      *
-     * <code>string backoffDelay = 4;</code>
+     * <code>uint64 backoffDelay = 4;</code>
      * @return The backoffDelay.
      */
     @java.lang.Override
-    public java.lang.String getBackoffDelay() {
-      java.lang.Object ref = backoffDelay_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        backoffDelay_ = s;
-        return s;
-      }
-    }
-    /**
-     * <pre>
-     * backoffDelay is the delay before retrying.
-     * More information on Duration format:
-     *  - https://www.iso.org/iso-8601-date-and-time-format.html
-     *  - https://en.wikipedia.org/wiki/ISO_8601
-     * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
-     * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
-     * </pre>
-     *
-     * <code>string backoffDelay = 4;</code>
-     * @return The bytes for backoffDelay.
-     */
-    @java.lang.Override
-    public com.google.protobuf.ByteString
-        getBackoffDelayBytes() {
-      java.lang.Object ref = backoffDelay_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        backoffDelay_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
+    public long getBackoffDelay() {
+      return backoffDelay_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -1477,8 +1414,8 @@ public final class DataPlaneContract {
       if (backoffPolicy_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.Exponential.getNumber()) {
         output.writeEnum(3, backoffPolicy_);
       }
-      if (!getBackoffDelayBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, backoffDelay_);
+      if (backoffDelay_ != 0L) {
+        output.writeUInt64(4, backoffDelay_);
       }
       unknownFields.writeTo(output);
     }
@@ -1500,8 +1437,9 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(3, backoffPolicy_);
       }
-      if (!getBackoffDelayBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, backoffDelay_);
+      if (backoffDelay_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(4, backoffDelay_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1523,8 +1461,8 @@ public final class DataPlaneContract {
       if (getRetry()
           != other.getRetry()) return false;
       if (backoffPolicy_ != other.backoffPolicy_) return false;
-      if (!getBackoffDelay()
-          .equals(other.getBackoffDelay())) return false;
+      if (getBackoffDelay()
+          != other.getBackoffDelay()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -1543,7 +1481,8 @@ public final class DataPlaneContract {
       hash = (37 * hash) + BACKOFFPOLICY_FIELD_NUMBER;
       hash = (53 * hash) + backoffPolicy_;
       hash = (37 * hash) + BACKOFFDELAY_FIELD_NUMBER;
-      hash = (53 * hash) + getBackoffDelay().hashCode();
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getBackoffDelay());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1683,7 +1622,7 @@ public final class DataPlaneContract {
 
         backoffPolicy_ = 0;
 
-        backoffDelay_ = "";
+        backoffDelay_ = 0L;
 
         return this;
       }
@@ -1773,9 +1712,8 @@ public final class DataPlaneContract {
         if (other.backoffPolicy_ != 0) {
           setBackoffPolicyValue(other.getBackoffPolicyValue());
         }
-        if (!other.getBackoffDelay().isEmpty()) {
-          backoffDelay_ = other.backoffDelay_;
-          onChanged();
+        if (other.getBackoffDelay() != 0L) {
+          setBackoffDelay(other.getBackoffDelay());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2025,123 +1963,45 @@ public final class DataPlaneContract {
         return this;
       }
 
-      private java.lang.Object backoffDelay_ = "";
+      private long backoffDelay_ ;
       /**
        * <pre>
-       * backoffDelay is the delay before retrying.
-       * More information on Duration format:
-       *  - https://www.iso.org/iso-8601-date-and-time-format.html
-       *  - https://en.wikipedia.org/wiki/ISO_8601
-       * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
-       * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+       * backoffDelay is the delay before retrying in milliseconds.
        * </pre>
        *
-       * <code>string backoffDelay = 4;</code>
+       * <code>uint64 backoffDelay = 4;</code>
        * @return The backoffDelay.
        */
-      public java.lang.String getBackoffDelay() {
-        java.lang.Object ref = backoffDelay_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          backoffDelay_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
+      @java.lang.Override
+      public long getBackoffDelay() {
+        return backoffDelay_;
       }
       /**
        * <pre>
-       * backoffDelay is the delay before retrying.
-       * More information on Duration format:
-       *  - https://www.iso.org/iso-8601-date-and-time-format.html
-       *  - https://en.wikipedia.org/wiki/ISO_8601
-       * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
-       * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+       * backoffDelay is the delay before retrying in milliseconds.
        * </pre>
        *
-       * <code>string backoffDelay = 4;</code>
-       * @return The bytes for backoffDelay.
-       */
-      public com.google.protobuf.ByteString
-          getBackoffDelayBytes() {
-        java.lang.Object ref = backoffDelay_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          backoffDelay_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <pre>
-       * backoffDelay is the delay before retrying.
-       * More information on Duration format:
-       *  - https://www.iso.org/iso-8601-date-and-time-format.html
-       *  - https://en.wikipedia.org/wiki/ISO_8601
-       * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
-       * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
-       * </pre>
-       *
-       * <code>string backoffDelay = 4;</code>
+       * <code>uint64 backoffDelay = 4;</code>
        * @param value The backoffDelay to set.
        * @return This builder for chaining.
        */
-      public Builder setBackoffDelay(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  
+      public Builder setBackoffDelay(long value) {
+        
         backoffDelay_ = value;
         onChanged();
         return this;
       }
       /**
        * <pre>
-       * backoffDelay is the delay before retrying.
-       * More information on Duration format:
-       *  - https://www.iso.org/iso-8601-date-and-time-format.html
-       *  - https://en.wikipedia.org/wiki/ISO_8601
-       * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
-       * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
+       * backoffDelay is the delay before retrying in milliseconds.
        * </pre>
        *
-       * <code>string backoffDelay = 4;</code>
+       * <code>uint64 backoffDelay = 4;</code>
        * @return This builder for chaining.
        */
       public Builder clearBackoffDelay() {
         
-        backoffDelay_ = getDefaultInstance().getBackoffDelay();
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * backoffDelay is the delay before retrying.
-       * More information on Duration format:
-       *  - https://www.iso.org/iso-8601-date-and-time-format.html
-       *  - https://en.wikipedia.org/wiki/ISO_8601
-       * For linear policy, backoff delay is backoffDelay*&lt;numberOfRetries&gt;.
-       * For exponential policy, backoff delay is backoffDelay*2^&lt;numberOfRetries&gt;.
-       * </pre>
-       *
-       * <code>string backoffDelay = 4;</code>
-       * @param value The bytes for backoffDelay to set.
-       * @return This builder for chaining.
-       */
-      public Builder setBackoffDelayBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
-        backoffDelay_ = value;
+        backoffDelay_ = 0L;
         onChanged();
         return this;
       }
@@ -7892,7 +7752,7 @@ public final class DataPlaneContract {
       "utesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028" +
       "\001\"n\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\r\n" +
       "\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.Ba" +
-      "ckoffPolicy\022\024\n\014backoffDelay\030\004 \001(\t\"\252\001\n\006Eg" +
+      "ckoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\"\252\001\n\006Eg" +
       "ress\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n\013destinati" +
       "on\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\0226\n\024replyToO" +
       "riginalTopic\030\004 \001(\0132\026.google.protobuf.Emp" +

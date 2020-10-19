@@ -1,28 +1,41 @@
+/*
+ * Copyright 2020 The Knative Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package config
 
 import (
+	"io"
 	"os"
 	"reflect"
 	"testing"
 )
 
 func TestGetEnvConfig(t *testing.T) {
-	type args struct {
-		prefix string
-	}
 
 	tests := []struct {
-		name    string
-		args    args
-		setEnv  func()
-		want    *Env
-		wantErr bool
+		name        string
+		prefix      string
+		validations []ValidationOption
+		setEnv      func()
+		want        *Env
+		wantErr     bool
 	}{
 		{
-			name: "broker prefix",
-			args: args{
-				prefix: "BROKER",
-			},
+			name:   "broker prefix",
+			prefix: "BROKER",
 			want: &Env{
 				DataPlaneConfigMapNamespace: "knative-eventing",
 				DataPlaneConfigMapName:      "kafka-brokers-triggers",
@@ -42,10 +55,8 @@ func TestGetEnvConfig(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "sink prefix",
-			args: args{
-				prefix: "SINK",
-			},
+			name:   "sink prefix",
+			prefix: "SINK",
 			want: &Env{
 				DataPlaneConfigMapNamespace: "knative-eventing",
 				DataPlaneConfigMapName:      "kafka-sinks",
@@ -65,10 +76,8 @@ func TestGetEnvConfig(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "missing required variable - SINK_DATA_PLANE_CONFIG_MAP_NAMESPACE",
-			args: args{
-				prefix: "SINK",
-			},
+			name:   "missing required variable - SINK_DATA_PLANE_CONFIG_MAP_NAMESPACE",
+			prefix: "SINK",
 			setEnv: func() {
 				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_MAP_NAME", "kafka-sinks")
 				_ = os.Setenv("SINK_GENERAL_CONFIG_MAP_NAME", "kafka-config")
@@ -79,9 +88,15 @@ func TestGetEnvConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "invalid backoff delay",
-			args: args{
-				prefix: "BROKER",
+			name:   "invalid backoff delay 0",
+			prefix: "BROKER",
+			validations: []ValidationOption{
+				func(env Env) error {
+					if env.DefaultBackoffDelayMs == 0 {
+						return io.EOF
+					}
+					return nil
+				},
 			},
 			setEnv: func() {
 				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE", "knative-eventing")
@@ -90,7 +105,28 @@ func TestGetEnvConfig(t *testing.T) {
 				_ = os.Setenv("BROKER_INGRESS_NAME", "kafka-broker-ingress")
 				_ = os.Setenv("BROKER_SYSTEM_NAMESPACE", "knative-eventing")
 				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_FORMAT", "json")
-				_ = os.Setenv("BROKER_DEFAULT_BACKOFF_DELAY", "PTT")
+				_ = os.Setenv("BROKER_DEFAULT_BACKOFF_DELAY_MS", "0")
+			},
+			wantErr: true,
+		},
+		{
+			name:   "invalid backoff delay unset",
+			prefix: "BROKER",
+			validations: []ValidationOption{
+				func(env Env) error {
+					if env.DefaultBackoffDelayMs == 0 {
+						return io.EOF
+					}
+					return nil
+				},
+			},
+			setEnv: func() {
+				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE", "knative-eventing")
+				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAME", "kafka-brokers-triggers")
+				_ = os.Setenv("BROKER_GENERAL_CONFIG_MAP_NAME", "kafka-config")
+				_ = os.Setenv("BROKER_INGRESS_NAME", "kafka-broker-ingress")
+				_ = os.Setenv("BROKER_SYSTEM_NAMESPACE", "knative-eventing")
+				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_FORMAT", "json")
 			},
 			wantErr: true,
 		},
@@ -101,7 +137,7 @@ func TestGetEnvConfig(t *testing.T) {
 			tt.setEnv()
 			defer os.Clearenv()
 
-			got, err := GetEnvConfig(tt.args.prefix)
+			got, err := GetEnvConfig(tt.prefix, tt.validations...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetEnvConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return

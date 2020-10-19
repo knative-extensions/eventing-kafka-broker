@@ -55,7 +55,7 @@ var DefaultConfigs = &broker.Configs{
 		IngressName:                 "kafka-broker-receiver",
 		SystemNamespace:             "knative-eventing",
 		DataPlaneConfigFormat:       base.Json,
-		DefaultBackoffDelay:         "PT1S",
+		DefaultBackoffDelayMs:       1000,
 	},
 
 	BootstrapServers: "",
