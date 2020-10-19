@@ -166,7 +166,7 @@ public class DataPlaneTest {
           .addTopics(TOPIC)
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath(format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME)))
           .setBootstrapServers(bootstrapServers())
-          .setId(UUID.randomUUID().toString())
+          .setUid(UUID.randomUUID().toString())
           .build()),
         Set.of(
           new EgressWrapper(DataPlaneContract.Egress.newBuilder()

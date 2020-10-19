@@ -39,7 +39,7 @@ func (m *ContractMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) err
 type resourceMarshaller contract.Resource
 
 func (b *resourceMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
-	encoder.AddString("id", b.Id)
+	encoder.AddString("uid", b.Uid)
 	if err := encoder.AddArray("topics", zapcore.ArrayMarshalerFunc(func(encoder zapcore.ArrayEncoder) error {
 		for _, t := range b.Topics {
 			encoder.AppendString(t)
@@ -88,6 +88,7 @@ func (i *ingressMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) erro
 type egressMarshaller contract.Egress
 
 func (e *egressMarshaller) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString("uid", e.Uid)
 	encoder.AddString("consumerGroup", e.ConsumerGroup)
 	encoder.AddString("destination", e.Destination)
 

@@ -155,6 +155,7 @@ func (r *Reconciler) getTriggerConfig(ctx context.Context, trigger *eventing.Tri
 	egress := &contract.Egress{
 		Destination:   destination.String(),
 		ConsumerGroup: string(trigger.UID),
+		Uid:           string(trigger.UID),
 	}
 
 	if trigger.Spec.Filter != nil && trigger.Spec.Filter.Attributes != nil {

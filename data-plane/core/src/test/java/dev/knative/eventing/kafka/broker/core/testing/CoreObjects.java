@@ -61,7 +61,7 @@ public final class CoreObjects {
 
   public static DataPlaneContract.Resource resource1Unwrapped() {
     return DataPlaneContract.Resource.newBuilder()
-      .setId("1-1234")
+      .setUid("1-1234")
       .addTopics("1-12345")
       .addAllEgresses(Arrays.asList(
         egress11(),
@@ -78,7 +78,7 @@ public final class CoreObjects {
 
   public static DataPlaneContract.Resource resource2Unwrapped() {
     return DataPlaneContract.Resource.newBuilder()
-      .setId("2-1234")
+      .setUid("2-1234")
       .addTopics("2-12345")
       .addAllEgresses(Arrays.asList(
         egress13(),

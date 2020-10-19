@@ -123,7 +123,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -180,7 +180,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -280,7 +280,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -335,7 +335,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -376,13 +376,13 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
 							Topics:       []string{"my-existing-topic-b"},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
@@ -404,18 +404,18 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
 							Topics:       []string{"my-existing-topic-b"},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -468,12 +468,12 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:           BrokerUUID,
+							Uid:          BrokerUUID,
 							Topics:       []string{BrokerTopic()},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
@@ -495,12 +495,12 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -556,13 +556,13 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:           BrokerUUID,
+							Uid:          BrokerUUID,
 							Topics:       []string{BrokerTopic()},
 							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
@@ -585,13 +585,13 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -635,13 +635,13 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:      BrokerUUID,
+							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
 							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
@@ -664,13 +664,13 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -717,13 +717,13 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -833,7 +833,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -981,7 +981,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           BrokerUUID,
+							Uid:          BrokerUUID,
 							Topics:       []string{BrokerTopic()},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
 							Egresses: []*contract.Egress{
@@ -1024,7 +1024,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:     BrokerUUID,
+							Uid:    BrokerUUID,
 							Topics: []string{BrokerTopic()},
 							Egresses: []*contract.Egress{
 								{
@@ -1132,7 +1132,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -1196,7 +1196,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -1260,7 +1260,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -1321,7 +1321,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:               BrokerUUID,
+							Uid:              BrokerUUID,
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
@@ -1394,7 +1394,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:      BrokerUUID,
+							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
 							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
@@ -1422,7 +1422,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           BrokerUUID,
+							Uid:          BrokerUUID,
 							Topics:       []string{BrokerTopic()},
 							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
@@ -1448,7 +1448,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           BrokerUUID,
+							Uid:          BrokerUUID,
 							Topics:       []string{BrokerTopic()},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
 						},
@@ -1502,12 +1502,12 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:           BrokerUUID,
+							Uid:          BrokerUUID,
 							Topics:       []string{"my-existing-topic-b"},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
@@ -1520,7 +1520,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
@@ -1539,12 +1539,12 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 						{
-							Id:           BrokerUUID,
+							Uid:          BrokerUUID,
 							Topics:       []string{"my-existing-topic-b"},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
@@ -1557,7 +1557,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
@@ -1577,7 +1577,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Id:           "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
 							Topics:       []string{"my-existing-topic-a"},
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},

@@ -2164,6 +2164,28 @@ public final class DataPlaneContract {
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder getFilterOrBuilder();
 
+    /**
+     * <pre>
+     * Id of the egress
+     * It's the same as the Kubernetes resource uid
+     * </pre>
+     *
+     * <code>string uid = 6;</code>
+     * @return The uid.
+     */
+    java.lang.String getUid();
+    /**
+     * <pre>
+     * Id of the egress
+     * It's the same as the Kubernetes resource uid
+     * </pre>
+     *
+     * <code>string uid = 6;</code>
+     * @return The bytes for uid.
+     */
+    com.google.protobuf.ByteString
+        getUidBytes();
+
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.ReplyStrategyCase getReplyStrategyCase();
   }
   /**
@@ -2181,6 +2203,7 @@ public final class DataPlaneContract {
     private Egress() {
       consumerGroup_ = "";
       destination_ = "";
+      uid_ = "";
     }
 
     @java.lang.Override
@@ -2256,6 +2279,12 @@ public final class DataPlaneContract {
                 filter_ = subBuilder.buildPartial();
               }
 
+              break;
+            }
+            case 50: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              uid_ = s;
               break;
             }
             default: {
@@ -2545,6 +2574,54 @@ public final class DataPlaneContract {
       return getFilter();
     }
 
+    public static final int UID_FIELD_NUMBER = 6;
+    private volatile java.lang.Object uid_;
+    /**
+     * <pre>
+     * Id of the egress
+     * It's the same as the Kubernetes resource uid
+     * </pre>
+     *
+     * <code>string uid = 6;</code>
+     * @return The uid.
+     */
+    @java.lang.Override
+    public java.lang.String getUid() {
+      java.lang.Object ref = uid_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        uid_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Id of the egress
+     * It's the same as the Kubernetes resource uid
+     * </pre>
+     *
+     * <code>string uid = 6;</code>
+     * @return The bytes for uid.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getUidBytes() {
+      java.lang.Object ref = uid_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        uid_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2574,6 +2651,9 @@ public final class DataPlaneContract {
       if (filter_ != null) {
         output.writeMessage(5, getFilter());
       }
+      if (!getUidBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, uid_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -2600,6 +2680,9 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, getFilter());
       }
+      if (!getUidBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, uid_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -2624,6 +2707,8 @@ public final class DataPlaneContract {
         if (!getFilter()
             .equals(other.getFilter())) return false;
       }
+      if (!getUid()
+          .equals(other.getUid())) return false;
       if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
       switch (replyStrategyCase_) {
         case 3:
@@ -2656,6 +2741,8 @@ public final class DataPlaneContract {
         hash = (37 * hash) + FILTER_FIELD_NUMBER;
         hash = (53 * hash) + getFilter().hashCode();
       }
+      hash = (37 * hash) + UID_FIELD_NUMBER;
+      hash = (53 * hash) + getUid().hashCode();
       switch (replyStrategyCase_) {
         case 3:
           hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
@@ -2811,6 +2898,8 @@ public final class DataPlaneContract {
           filter_ = null;
           filterBuilder_ = null;
         }
+        uid_ = "";
+
         replyStrategyCase_ = 0;
         replyStrategy_ = null;
         return this;
@@ -2856,6 +2945,7 @@ public final class DataPlaneContract {
         } else {
           result.filter_ = filterBuilder_.build();
         }
+        result.uid_ = uid_;
         result.replyStrategyCase_ = replyStrategyCase_;
         onBuilt();
         return result;
@@ -2915,6 +3005,10 @@ public final class DataPlaneContract {
         }
         if (other.hasFilter()) {
           mergeFilter(other.getFilter());
+        }
+        if (!other.getUid().isEmpty()) {
+          uid_ = other.uid_;
+          onChanged();
         }
         switch (other.getReplyStrategyCase()) {
           case REPLYURL: {
@@ -3570,6 +3664,107 @@ public final class DataPlaneContract {
           filter_ = null;
         }
         return filterBuilder_;
+      }
+
+      private java.lang.Object uid_ = "";
+      /**
+       * <pre>
+       * Id of the egress
+       * It's the same as the Kubernetes resource uid
+       * </pre>
+       *
+       * <code>string uid = 6;</code>
+       * @return The uid.
+       */
+      public java.lang.String getUid() {
+        java.lang.Object ref = uid_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          uid_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Id of the egress
+       * It's the same as the Kubernetes resource uid
+       * </pre>
+       *
+       * <code>string uid = 6;</code>
+       * @return The bytes for uid.
+       */
+      public com.google.protobuf.ByteString
+          getUidBytes() {
+        java.lang.Object ref = uid_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          uid_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Id of the egress
+       * It's the same as the Kubernetes resource uid
+       * </pre>
+       *
+       * <code>string uid = 6;</code>
+       * @param value The uid to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUid(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        uid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Id of the egress
+       * It's the same as the Kubernetes resource uid
+       * </pre>
+       *
+       * <code>string uid = 6;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearUid() {
+        
+        uid_ = getDefaultInstance().getUid();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Id of the egress
+       * It's the same as the Kubernetes resource uid
+       * </pre>
+       *
+       * <code>string uid = 6;</code>
+       * @param value The bytes for uid to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUidBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        uid_ = value;
+        onChanged();
+        return this;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -4689,22 +4884,24 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Id of the resource
+     * It's the same as the Kubernetes resource uid
      * </pre>
      *
-     * <code>string id = 1;</code>
-     * @return The id.
+     * <code>string uid = 1;</code>
+     * @return The uid.
      */
-    java.lang.String getId();
+    java.lang.String getUid();
     /**
      * <pre>
      * Id of the resource
+     * It's the same as the Kubernetes resource uid
      * </pre>
      *
-     * <code>string id = 1;</code>
-     * @return The bytes for id.
+     * <code>string uid = 1;</code>
+     * @return The bytes for uid.
      */
     com.google.protobuf.ByteString
-        getIdBytes();
+        getUidBytes();
 
     /**
      * <pre>
@@ -4888,7 +5085,7 @@ public final class DataPlaneContract {
       super(builder);
     }
     private Resource() {
-      id_ = "";
+      uid_ = "";
       topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       bootstrapServers_ = "";
       egresses_ = java.util.Collections.emptyList();
@@ -4928,7 +5125,7 @@ public final class DataPlaneContract {
             case 10: {
               java.lang.String s = input.readStringRequireUtf8();
 
-              id_ = s;
+              uid_ = s;
               break;
             }
             case 18: {
@@ -5019,46 +5216,48 @@ public final class DataPlaneContract {
               dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder.class);
     }
 
-    public static final int ID_FIELD_NUMBER = 1;
-    private volatile java.lang.Object id_;
+    public static final int UID_FIELD_NUMBER = 1;
+    private volatile java.lang.Object uid_;
     /**
      * <pre>
      * Id of the resource
+     * It's the same as the Kubernetes resource uid
      * </pre>
      *
-     * <code>string id = 1;</code>
-     * @return The id.
+     * <code>string uid = 1;</code>
+     * @return The uid.
      */
     @java.lang.Override
-    public java.lang.String getId() {
-      java.lang.Object ref = id_;
+    public java.lang.String getUid() {
+      java.lang.Object ref = uid_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        id_ = s;
+        uid_ = s;
         return s;
       }
     }
     /**
      * <pre>
      * Id of the resource
+     * It's the same as the Kubernetes resource uid
      * </pre>
      *
-     * <code>string id = 1;</code>
-     * @return The bytes for id.
+     * <code>string uid = 1;</code>
+     * @return The bytes for uid.
      */
     @java.lang.Override
     public com.google.protobuf.ByteString
-        getIdBytes() {
-      java.lang.Object ref = id_;
+        getUidBytes() {
+      java.lang.Object ref = uid_;
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        id_ = b;
+        uid_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
@@ -5322,8 +5521,8 @@ public final class DataPlaneContract {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (!getIdBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, id_);
+      if (!getUidBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, uid_);
       }
       for (int i = 0; i < topics_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, topics_.getRaw(i));
@@ -5349,8 +5548,8 @@ public final class DataPlaneContract {
       if (size != -1) return size;
 
       size = 0;
-      if (!getIdBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, id_);
+      if (!getUidBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, uid_);
       }
       {
         int dataSize = 0;
@@ -5390,8 +5589,8 @@ public final class DataPlaneContract {
       }
       dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource) obj;
 
-      if (!getId()
-          .equals(other.getId())) return false;
+      if (!getUid()
+          .equals(other.getUid())) return false;
       if (!getTopicsList()
           .equals(other.getTopicsList())) return false;
       if (!getBootstrapServers()
@@ -5419,8 +5618,8 @@ public final class DataPlaneContract {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + ID_FIELD_NUMBER;
-      hash = (53 * hash) + getId().hashCode();
+      hash = (37 * hash) + UID_FIELD_NUMBER;
+      hash = (53 * hash) + getUid().hashCode();
       if (getTopicsCount() > 0) {
         hash = (37 * hash) + TOPICS_FIELD_NUMBER;
         hash = (53 * hash) + getTopicsList().hashCode();
@@ -5573,7 +5772,7 @@ public final class DataPlaneContract {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        id_ = "";
+        uid_ = "";
 
         topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -5624,7 +5823,7 @@ public final class DataPlaneContract {
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource buildPartial() {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource(this);
         int from_bitField0_ = bitField0_;
-        result.id_ = id_;
+        result.uid_ = uid_;
         if (((bitField0_ & 0x00000001) != 0)) {
           topics_ = topics_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000001);
@@ -5698,8 +5897,8 @@ public final class DataPlaneContract {
 
       public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource other) {
         if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.getDefaultInstance()) return this;
-        if (!other.getId().isEmpty()) {
-          id_ = other.id_;
+        if (!other.getUid().isEmpty()) {
+          uid_ = other.uid_;
           onChanged();
         }
         if (!other.topics_.isEmpty()) {
@@ -5778,22 +5977,23 @@ public final class DataPlaneContract {
       }
       private int bitField0_;
 
-      private java.lang.Object id_ = "";
+      private java.lang.Object uid_ = "";
       /**
        * <pre>
        * Id of the resource
+       * It's the same as the Kubernetes resource uid
        * </pre>
        *
-       * <code>string id = 1;</code>
-       * @return The id.
+       * <code>string uid = 1;</code>
+       * @return The uid.
        */
-      public java.lang.String getId() {
-        java.lang.Object ref = id_;
+      public java.lang.String getUid() {
+        java.lang.Object ref = uid_;
         if (!(ref instanceof java.lang.String)) {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          id_ = s;
+          uid_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5802,19 +6002,20 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Id of the resource
+       * It's the same as the Kubernetes resource uid
        * </pre>
        *
-       * <code>string id = 1;</code>
-       * @return The bytes for id.
+       * <code>string uid = 1;</code>
+       * @return The bytes for uid.
        */
       public com.google.protobuf.ByteString
-          getIdBytes() {
-        java.lang.Object ref = id_;
+          getUidBytes() {
+        java.lang.Object ref = uid_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
-          id_ = b;
+          uid_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
@@ -5823,53 +6024,56 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Id of the resource
+       * It's the same as the Kubernetes resource uid
        * </pre>
        *
-       * <code>string id = 1;</code>
-       * @param value The id to set.
+       * <code>string uid = 1;</code>
+       * @param value The uid to set.
        * @return This builder for chaining.
        */
-      public Builder setId(
+      public Builder setUid(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
   
-        id_ = value;
+        uid_ = value;
         onChanged();
         return this;
       }
       /**
        * <pre>
        * Id of the resource
+       * It's the same as the Kubernetes resource uid
        * </pre>
        *
-       * <code>string id = 1;</code>
+       * <code>string uid = 1;</code>
        * @return This builder for chaining.
        */
-      public Builder clearId() {
+      public Builder clearUid() {
         
-        id_ = getDefaultInstance().getId();
+        uid_ = getDefaultInstance().getUid();
         onChanged();
         return this;
       }
       /**
        * <pre>
        * Id of the resource
+       * It's the same as the Kubernetes resource uid
        * </pre>
        *
-       * <code>string id = 1;</code>
-       * @param value The bytes for id to set.
+       * <code>string uid = 1;</code>
+       * @param value The bytes for uid to set.
        * @return This builder for chaining.
        */
-      public Builder setIdBytes(
+      public Builder setUidBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
         
-        id_ = value;
+        uid_ = value;
         onChanged();
         return this;
       }
@@ -7752,24 +7956,25 @@ public final class DataPlaneContract {
       "utesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028" +
       "\001\"n\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\r\n" +
       "\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.Ba" +
-      "ckoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\"\252\001\n\006Eg" +
+      "ckoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\"\267\001\n\006Eg" +
       "ress\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n\013destinati" +
       "on\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\0226\n\024replyToO" +
       "riginalTopic\030\004 \001(\0132\026.google.protobuf.Emp" +
-      "tyH\000\022\027\n\006filter\030\005 \001(\0132\007.FilterB\017\n\rreplySt" +
-      "rategy\"[\n\007Ingress\022!\n\013contentMode\030\001 \001(\0162\014" +
-      ".ContentMode\022\016\n\004path\030\002 \001(\tH\000\022\016\n\004host\030\003 \001" +
-      "(\tH\000B\r\n\013ingressType\"\233\001\n\010Resource\022\n\n\002id\030\001" +
-      " \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrapServers" +
-      "\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress\022#\n\014egr" +
-      "essConfig\030\005 \001(\0132\r.EgressConfig\022\031\n\010egress" +
-      "es\030\006 \003(\0132\007.Egress\"<\n\010Contract\022\022\n\ngenerat" +
-      "ion\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t.Resource*" +
-      ",\n\rBackoffPolicy\022\017\n\013Exponential\020\000\022\n\n\006Lin" +
-      "ear\020\001*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRU" +
-      "CTURED\020\001B[\n*dev.knative.eventing.kafka.b" +
-      "roker.contractB\021DataPlaneContractZ\032contr" +
-      "ol-plane/pkg/contractb\006proto3"
+      "tyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001" +
+      "(\tB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n\013conten" +
+      "tMode\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH" +
+      "\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"\234\001\n\010Res" +
+      "ource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bo" +
+      "otstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010." +
+      "Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.EgressCo" +
+      "nfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\"<\n\010Contr" +
+      "act\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 \003" +
+      "(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Expone" +
+      "ntial\020\000\022\n\n\006Linear\020\001*)\n\013ContentMode\022\n\n\006BI" +
+      "NARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knative.ev" +
+      "enting.kafka.broker.contractB\021DataPlaneC" +
+      "ontractZ\032control-plane/pkg/contractb\006pro" +
+      "to3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -7799,7 +8004,7 @@ public final class DataPlaneContract {
     internal_static_Egress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Egress_descriptor,
-        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "Filter", "ReplyStrategy", });
+        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "Filter", "Uid", "ReplyStrategy", });
     internal_static_Ingress_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_Ingress_fieldAccessorTable = new
@@ -7811,7 +8016,7 @@ public final class DataPlaneContract {
     internal_static_Resource_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Resource_descriptor,
-        new java.lang.String[] { "Id", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", });
+        new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", });
     internal_static_Contract_descriptor =
       getDescriptor().getMessageTypes().get(5);
     internal_static_Contract_fieldAccessorTable = new

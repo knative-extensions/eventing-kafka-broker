@@ -31,7 +31,7 @@ const (
 func FindResource(contract *contract.Contract, resource types.UID) int {
 	resourceIndex := NoResource
 	for i, b := range contract.Resources {
-		if b.Id == string(resource) {
+		if b.Uid == string(resource) {
 			resourceIndex = i
 			break
 		}
