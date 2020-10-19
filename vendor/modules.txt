@@ -312,7 +312,7 @@ github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/tsenart/vegeta v12.7.1-0.20190725001342-b5f4fca92137+incompatible
 github.com/tsenart/vegeta/lib
-# github.com/tsenart/vegeta/v12 v12.8.3
+# github.com/tsenart/vegeta/v12 v12.8.4
 github.com/tsenart/vegeta/v12/lib
 # go.opencensus.io v0.22.5
 ## explicit
@@ -1051,7 +1051,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.18.1-0.20201014222731-ba7af495d562
+# knative.dev/eventing v0.18.1-0.20201016165957-4612d3391fca
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/configs
@@ -1150,7 +1150,6 @@ knative.dev/eventing/pkg/reconciler/sugar
 knative.dev/eventing/pkg/reconciler/testing
 knative.dev/eventing/pkg/reconciler/testing/v1
 knative.dev/eventing/pkg/reconciler/testing/v1beta1
-knative.dev/eventing/pkg/tracing
 knative.dev/eventing/pkg/utils
 knative.dev/eventing/test/conformance/helpers
 knative.dev/eventing/test/conformance/helpers/tracing
@@ -1181,7 +1180,7 @@ knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/request-sender
 knative.dev/eventing/test/test_images/sequencestepper
 knative.dev/eventing/test/test_images/transformevents
-# knative.dev/pkg v0.0.0-20201014184531-9e655c6b02f6
+# knative.dev/pkg v0.0.0-20201018212257-b39d5da935b0
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1267,7 +1266,7 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/test-infra v0.0.0-20201014021030-ae3984a33f82
+# knative.dev/test-infra v0.0.0-20201015231956-d236fb0ea9ff
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/structured-merge-diff/v3 v3.0.1-0.20200706213357-43c19bbb7fba
