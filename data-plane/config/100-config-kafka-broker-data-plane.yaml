@@ -27,7 +27,6 @@ data:
     retries=2147483647
     batch.size=16384
     client.dns.lookup=use_all_dns_ips
-    client.id=KKBD
     connections.max.idle.ms=600000
     delivery.timeout.ms=120000
     linger.ms=0
@@ -87,7 +86,6 @@ data:
     # ssl.provider=
     auto.commit.interval.ms=5000
     check.crcs=true
-    client.id=KKBD
     # client.rack=
     fetch.max.wait.ms=500
     # interceptor.classes=
