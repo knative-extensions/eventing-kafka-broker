@@ -60,11 +60,12 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
    */
   @Override
   public Future<Void> handle(final HttpResponse<Buffer> response) {
+    // TODO if it's in structured, the SDK just calls getBytes on the response.body() which might lead to NPE.
     MessageReader messageReader = VertxMessageFactory.createReader(response);
     if (messageReader.getEncoding() == Encoding.UNKNOWN) {
 
       // When the sink returns a malformed event we return a failed future to avoid committing the message to Kafka.
-      if (response.body().length() > 0) {
+      if (response.body() != null && response.body().length() > 0) {
         return Future.failedFuture(
           new IllegalResponseException("Unable to decode response: unknown encoding and non empty response")
         );
