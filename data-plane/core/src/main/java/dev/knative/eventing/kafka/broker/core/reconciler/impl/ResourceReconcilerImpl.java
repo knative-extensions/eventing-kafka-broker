@@ -52,14 +52,24 @@ public class ResourceReconcilerImpl implements ResourcesReconciler {
 
       final var newResource = newResourcesMap.remove(oldResourceUid);
 
-      if (newResource != null && resourceEquals(oldResource, newResource)) {
+      if (newResource != null && !resourceEquals(oldResource, newResource)) {
         // Resource updated
         resourceEntry.setValue(newResource);
 
-        if (isReconcilingIngress() && newResource.hasIngress()) {
-          futures.add(
-            this.ingressReconcilerListener.onUpdateIngress(newResource, newResource.getIngress())
-          );
+        if (isReconcilingIngress()) {
+          if (!oldResource.hasIngress() && newResource.hasIngress()) {
+            futures.add(
+              this.ingressReconcilerListener.onNewIngress(newResource, newResource.getIngress())
+            );
+          } else if (!newResource.hasIngress()) {
+            futures.add(
+              this.ingressReconcilerListener.onDeleteIngress(oldResource, oldResource.getIngress())
+            );
+          } else {
+            futures.add(
+              this.ingressReconcilerListener.onUpdateIngress(newResource, newResource.getIngress())
+            );
+          }
         }
         continue;
       }
@@ -121,12 +131,14 @@ public class ResourceReconcilerImpl implements ResourcesReconciler {
 
     public Builder watchIngress(
       IngressReconcilerListener ingressReconcilerListener) {
+      Objects.requireNonNull(ingressReconcilerListener);
       this.ingressReconcilerListener = ingressReconcilerListener;
       return this;
     }
 
     public Builder watchEgress(
       EgressReconcilerListener egressReconcilerListener) {
+      Objects.requireNonNull(egressReconcilerListener);
       this.egressReconcilerListener = egressReconcilerListener;
       return this;
     }

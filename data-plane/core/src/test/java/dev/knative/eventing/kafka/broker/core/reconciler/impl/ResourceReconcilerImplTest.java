@@ -24,27 +24,19 @@ class ResourceReconcilerImplTest {
     new ResourceReconcilerTestRunner()
       .enableIngressListener()
       .step(List.of(
-        Resource.newBuilder()
-          .setUid("1-1234")
-          .addTopics("1-12345")
+        baseResource("1-1234")
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
           .build(),
-        Resource.newBuilder()
-          .setUid("2-1234")
-          .addTopics("1-12345")
+        baseResource("2-1234")
           .build()
       ))
       .newIngress("1-1234")
       .done()
       .step(List.of(
-        Resource.newBuilder()
-          .setUid("1-1234")
-          .addTopics("1-12345")
+        baseResource("1-1234")
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
           .build(),
-        Resource.newBuilder()
-          .setUid("2-1234")
-          .addTopics("1-12345")
+        baseResource("2-1234")
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
           .build()
       ))
@@ -53,5 +45,50 @@ class ResourceReconcilerImplTest {
       .run();
   }
 
+  @Test
+  void reconcileIngressAndRemoveIngressAtSecondStep() {
+    new ResourceReconcilerTestRunner()
+      .enableIngressListener()
+      .step(List.of(
+        baseResource("1-1234")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
+          .build()
+      ))
+      .newIngress("1-1234")
+      .done()
+      .step(List.of(
+        Resource.newBuilder()
+          .setUid("1-1234")
+          .build()
+      ))
+      .deletedIngress("1-1234")
+      .done()
+      .run();
+  }
+
+  @Test
+  void reconcileIngressAndUpdateIngressAtSecondStep() {
+    new ResourceReconcilerTestRunner()
+      .enableIngressListener()
+      .step(List.of(
+        baseResource("1-1234")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
+          .build()
+      ))
+      .newIngress("1-1234")
+      .done()
+      .step(List.of(
+        baseResource("1-1234")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello/world"))
+          .build()
+      ))
+      .updatedIngress("1-1234")
+      .done()
+      .run();
+  }
+
+  private Resource.Builder baseResource(String uid) {
+    return Resource.newBuilder().setUid(uid).addTopics("hello.topic");
+  }
 
 }
