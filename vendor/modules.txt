@@ -1171,14 +1171,11 @@ knative.dev/eventing/test/performance/infra/receiver
 knative.dev/eventing/test/performance/infra/sender
 knative.dev/eventing/test/test_images
 knative.dev/eventing/test/test_images/event-sender
-knative.dev/eventing/test/test_images/filterevents
 knative.dev/eventing/test/test_images/heartbeats
 knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/request-sender
-knative.dev/eventing/test/test_images/sequencestepper
-knative.dev/eventing/test/test_images/transformevents
 # knative.dev/pkg v0.0.0-20201019114258-95e9532f0457
 ## explicit
 knative.dev/pkg/apis
