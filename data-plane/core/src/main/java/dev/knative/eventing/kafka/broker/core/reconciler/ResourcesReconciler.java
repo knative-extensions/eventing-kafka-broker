@@ -23,6 +23,6 @@ import java.util.Collection;
 @FunctionalInterface
 public interface ResourcesReconciler {
 
-  Future<Void> reconcile(Collection<DataPlaneContract.Resource> resources) throws Exception;
+  Future<Void> reconcile(Collection<DataPlaneContract.Resource> resources);
 
 }

@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -29,77 +30,85 @@ public class ResourceReconcilerImpl implements ResourcesReconciler {
     this.ingressReconcilerListener = ingressReconcilerListener;
     this.egressReconcilerListener = egressReconcilerListener;
 
-    this.cachedResources = this.ingressReconcilerListener != null ? new HashMap<>() : null;
-    this.cachedEgresses = this.egressReconcilerListener != null ? new HashMap<>() : null;
+    this.cachedResources = new HashMap<>();
+    this.cachedEgresses = new HashMap<>();
   }
 
   @Override
   public Future<Void> reconcile(
-    Collection<DataPlaneContract.Resource> newResources) throws Exception {
-    final Map<String, DataPlaneContract.Resource> newResourcesMap = newResources
-      .stream()
-      .collect(Collectors.toMap(DataPlaneContract.Resource::getUid, Function.identity()));
+    Collection<DataPlaneContract.Resource> newResources) {
+    final Map<String, DataPlaneContract.Resource> newResourcesMap = new HashMap<>(
+      newResources
+        .stream()
+        .collect(Collectors.toMap(DataPlaneContract.Resource::getUid, Function.identity()))
+    );
     final List<Future> futures = new ArrayList<>(newResources.size() * 2);
 
-    // diffing previous and new --> remove deleted objects
     final var resourcesIterator = this.cachedResources.entrySet().iterator();
     while (resourcesIterator.hasNext()) {
       final var resourceEntry = resourcesIterator.next();
       final var oldResourceUid = resourceEntry.getKey();
+      final var oldResource = resourceEntry.getValue();
 
-      // check if the old resource has been deleted or updated.
-      if (!newResourcesMap.containsKey(oldResourceUid)) {
+      final var newResource = newResourcesMap.remove(oldResourceUid);
 
-        // resource deleted or updated, so remove it
-        resourcesIterator.remove();
+      if (newResource != null && resourceEquals(oldResource, newResource)) {
+        // Resource updated
+        resourceEntry.setValue(newResource);
 
-        // undeploy all verticles associated with egresses of the deleted resource.
-        for (final var e : resourceEntry.getValue().entrySet()) {
-          futures.add(undeployVerticle(oldResourceUid, e.getKey(), e.getValue()));
+        if (isReconcilingIngress() && newResource.hasIngress()) {
+          futures.add(
+            this.ingressReconcilerListener.onUpdateIngress(newResource, newResource.getIngress())
+          );
         }
-
         continue;
       }
 
-      // resource is there, so check if some egresses have been deleted.
-      final var egressesIterator = resourceEntry.getValue().entrySet().iterator();
-      while (egressesIterator.hasNext()) {
-        final var egressEntry = egressesIterator.next();
+      if (newResource == null) {
+        // Resource deleted
+        resourcesIterator.remove();
 
-        // check if the egress has been deleted or updated.
-        if (!resourcesMap.get(oldResourceUid).contains(egressEntry.getKey())) {
-
-          // egress deleted or updated, so remove it
-          egressesIterator.remove();
-
-          // undeploy verticle associated with the deleted egress.
-          futures.add(undeployVerticle(
-            oldResourceUid,
-            egressEntry.getKey(),
-            egressEntry.getValue()
-          ));
+        if (isReconcilingIngress() && oldResource.hasIngress()) {
+          futures.add(
+            this.ingressReconcilerListener.onDeleteIngress(oldResource, oldResource.getIngress())
+          );
         }
-
       }
     }
 
-    // add all new objects.
-    for (final var entry : newResources.entrySet()) {
-      final var resource = entry.getKey();
-      for (final var egress : entry.getValue()) {
-        futures.add(addResource(resource, egress));
+    // Now newResourcesMap contains only the new resource
+    this.cachedResources.putAll(newResourcesMap);
+    newResourcesMap.forEach((uid, resource) -> {
+      if (isReconcilingIngress() && resource.hasIngress()) {
+        futures.add(
+          this.ingressReconcilerListener.onNewIngress(resource, resource.getIngress())
+        );
       }
-    }
+    });
 
     return CompositeFuture.all(futures).mapEmpty();
   }
 
   private boolean isReconcilingIngress() {
-    return this.cachedResources != null;
+    return this.ingressReconcilerListener != null;
   }
 
   private boolean isReconcilingEgress() {
-    return this.cachedEgresses != null;
+    return this.egressReconcilerListener != null;
+  }
+
+  private boolean resourceEquals(DataPlaneContract.Resource r1, DataPlaneContract.Resource r2) {
+    if (r1 == r2) {
+      return true;
+    }
+    if (r1 == null || r2 == null) {
+      return false;
+    }
+    return Objects.equals(r1.getUid(), r2.getUid())
+      && Objects.equals(r1.getTopicsList(), r2.getTopicsList())
+      && Objects.equals(r1.getBootstrapServers(), r2.getBootstrapServers())
+      && Objects.equals(r1.getIngress(), r2.getIngress())
+      && Objects.equals(r1.getEgressConfig(), r2.getEgressConfig());
   }
 
   public static Builder builder() {
