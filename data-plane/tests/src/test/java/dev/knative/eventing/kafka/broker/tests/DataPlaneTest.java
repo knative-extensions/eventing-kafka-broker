@@ -26,11 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
-import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
-import dev.knative.eventing.kafka.broker.core.wrappers.EgressWrapper;
-import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
-import dev.knative.eventing.kafka.broker.core.wrappers.ResourceWrapper;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployer;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
@@ -56,9 +52,8 @@ import io.vertx.kafka.client.producer.KafkaProducer;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Map;
+import java.util.Collections;
 import java.util.Properties;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -96,15 +91,15 @@ public class DataPlaneTest {
 
   private static File dataDir;
   private static KafkaCluster kafkaCluster;
-  private static ResourcesReconciler resourcesManager;
-  private static ResourcesReconciler handler;
+  private static ConsumerDeployer consumerDeployer;
+  private static RequestHandler<String, CloudEvent> requestHandler;
 
   @BeforeAll
   public static void setUp(final Vertx vertx, final VertxTestContext context)
     throws IOException, InterruptedException {
     setUpKafkaCluster();
-    resourcesManager = setUpDispatcher(vertx);
-    handler = setUpReceiver(vertx, context);
+    consumerDeployer = setUpDispatcher(vertx);
+    requestHandler = setUpReceiver(vertx, context);
     context.completeNow();
   }
 
@@ -160,49 +155,50 @@ public class DataPlaneTest {
       .withType(TYPE_CE_2)
       .build();
 
-    final Map<Resource, Set<Egress>> objectsToReconcile = Map
-      .of(
-        new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
-          .addTopics(TOPIC)
-          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath(format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME)))
-          .setBootstrapServers(bootstrapServers())
-          .setUid(UUID.randomUUID().toString())
-          .build()),
-        Set.of(
-          new EgressWrapper(DataPlaneContract.Egress.newBuilder()
-            .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_1))
-            .setFilter(DataPlaneContract.Filter.newBuilder()
-              .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_1))
-            .setConsumerGroup(UUID.randomUUID().toString())
-            .build()),
-          new EgressWrapper(DataPlaneContract.Egress.newBuilder()
-            .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
-            .setFilter(DataPlaneContract.Filter.newBuilder()
-              .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_2))
-            .setConsumerGroup(UUID.randomUUID().toString())
-            .build()),
-          // the destination of the following trigger should never be reached because events
-          // don't pass filters.
-          new EgressWrapper(DataPlaneContract.Egress.newBuilder()
-            .setConsumerGroup(UUID.randomUUID().toString())
-            .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_3))
-            .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(
-              ContextAttributes.SOURCE.name().toLowerCase(),
-              UUID.randomUUID().toString()
-            )).build())
-        )
-      );
+    final var resource = DataPlaneContract.Resource.newBuilder()
+      .addTopics(TOPIC)
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath(format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME)))
+      .setBootstrapServers(bootstrapServers())
+      .setUid(UUID.randomUUID().toString())
+      .addEgresses(
+        DataPlaneContract.Egress.newBuilder()
+          .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_1))
+          .setFilter(DataPlaneContract.Filter.newBuilder()
+            .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_1))
+          .setConsumerGroup(UUID.randomUUID().toString())
+          .build()
+      )
+      .addEgresses(
+        DataPlaneContract.Egress.newBuilder()
+          .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
+          .setFilter(DataPlaneContract.Filter.newBuilder()
+            .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_2))
+          .setConsumerGroup(UUID.randomUUID().toString())
+          .build()
+      )
+      .addEgresses(
+        // the destination of the following trigger should never be reached because events
+        // don't pass filters.
+        DataPlaneContract.Egress.newBuilder()
+          .setConsumerGroup(UUID.randomUUID().toString())
+          .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_3))
+          .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(
+            ContextAttributes.SOURCE.name().toLowerCase(),
+            UUID.randomUUID().toString()
+          )).build()
+      )
+      .build();
 
-    // reconcile resources/egresss
-    resourcesManager.reconcile(objectsToReconcile)
-      // we don't handle or wait onSuccess, because it's fine to create the consumer at any point
-      // in time. (eg before or after starting the destination service, or before or after sending
-      // the event to the receiver)
-      .onFailure(context::failNow);
+    final var reconciler = ResourcesReconcilerImpl
+      .builder()
+      .watchIngress(requestHandler)
+      .watchEgress(consumerDeployer)
+      .build();
 
     final var waitReconciler = new CountDownLatch(1);
 
-    handler.reconcile(objectsToReconcile)
+    // reconcile ingress/egress
+    reconciler.reconcile(Collections.singletonList(resource))
       .onFailure(context::failNow)
       .onSuccess(v -> waitReconciler.countDown());
 
@@ -308,12 +304,11 @@ public class DataPlaneTest {
     return new ConsumerDeployer(
       vertx,
       consumerVerticleFactory,
-      10,
       10
     );
   }
 
-  private static ResourcesReconciler setUpReceiver(
+  private static RequestHandler<String, CloudEvent> setUpReceiver(
     final Vertx vertx,
     final VertxTestContext context) throws InterruptedException {
 
