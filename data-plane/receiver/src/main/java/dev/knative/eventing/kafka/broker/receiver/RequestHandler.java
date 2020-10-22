@@ -23,9 +23,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
-import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
-import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
+import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
@@ -40,7 +38,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -51,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to Kafka through the Kafka
  * producer and terminating requests with the appropriate status code.
  */
-public class RequestHandler<K, V> implements Handler<HttpServerRequest>, ResourcesReconciler {
+public class RequestHandler<K, V> implements Handler<HttpServerRequest>, IngressReconcilerListener {
 
   public static final int MAPPER_FAILED = BAD_REQUEST.code();
   public static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
@@ -98,10 +95,8 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Resourc
 
   @Override
   public void handle(final HttpServerRequest request) {
-
     final var producer = producers.get().get(request.path());
     if (producer == null) {
-
       request.response().setStatusCode(RESOURCE_NOT_FOUND).end();
 
       logger.warn("resource not found {} {}",
@@ -149,61 +144,46 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Resourc
   }
 
   @Override
-  public Future<Void> reconcile(Map<Resource, Set<Egress>> resourcesMap) {
-    final Map<String, Entry<String, Producer<K, V>>> newProducers = new HashMap<>();
-    final var producers = this.producers.get();
-
-    for (final var resource : resourcesMap.keySet()) {
-      //TODO support host ingress too
-      //TODO check if there is an ingress, otherwise fail
-      final var pair = producers.get(resource.ingress().getPath());
-
-      if (pair == null) {
-        // There is no producer for this Resource, so create it and add it to newProducers.
-        addResource(newProducers, resource);
-        continue;
-      }
-
-      if (!pair.getKey().equals(resource.bootstrapServers())) {
-        // Bootstrap servers changed, close the old producer, and re-create a new one.
-        final var producer = pair.getValue().producer;
-        producer.flush(complete -> producer.close());
-
-        addResource(newProducers, resource);
-        continue;
-      }
-
-      // Nothing changed, so add the previous entry, to newProducers.
-      newProducers.put(resource.ingress().getPath(), pair);
-    }
-
-    this.producers.set(newProducers);
-
-    logger.debug("Added resources to handler {}", keyValue("resources", newProducers.keySet()));
-
-    return Future.succeededFuture();
-  }
-
-  private void addResource(
-    final Map<String, Entry<String, Producer<K, V>>> producers,
-    final Resource resource) {
-
+  public Future<Void> onNewIngress(
+    DataPlaneContract.Resource resource,
+    DataPlaneContract.Ingress ingress) {
     final var producerConfigs = (Properties) this.producerConfigs.clone();
-    producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.bootstrapServers());
-    if (resource.ingress().getContentMode() != DataPlaneContract.ContentMode.UNRECOGNIZED) {
-      producerConfigs.setProperty(CloudEventSerializer.ENCODING_CONFIG, encoding(resource.ingress().getContentMode()));
+    producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
+    if (ingress.getContentMode() != DataPlaneContract.ContentMode.UNRECOGNIZED) {
+      producerConfigs.setProperty(CloudEventSerializer.ENCODING_CONFIG, encoding(ingress.getContentMode()));
     }
     producerConfigs.setProperty(CloudEventSerializer.EVENT_FORMAT_CONFIG, JsonFormat.CONTENT_TYPE);
 
     final KafkaProducer<K, V> producer = producerCreator.apply(producerConfigs);
 
-    producers.put(
-      resource.ingress().getPath(),
+    this.producers.get().put(
+      ingress.getPath(),
       new SimpleImmutableEntry<>(
-        resource.bootstrapServers(),
-        new Producer<>(producer, resource.topics().iterator().next())
+        resource.getBootstrapServers(),
+        new Producer<>(producer, resource.getTopics(0))
       )
     );
+
+    return Future.succeededFuture();
+  }
+
+  @Override
+  public Future<Void> onUpdateIngress(
+    DataPlaneContract.Resource resource,
+    DataPlaneContract.Ingress ingress) {
+    return onDeleteIngress(resource, ingress)
+      .compose(v -> onNewIngress(resource, ingress));
+  }
+
+  @Override
+  public Future<Void> onDeleteIngress(
+    DataPlaneContract.Resource resource,
+    DataPlaneContract.Ingress ingress) {
+    var producer = this.producers.get().remove(ingress.getPath())
+      .getValue().producer;
+    return producer
+      .flush()
+      .compose(v -> producer.close());
   }
 
   private static String encoding(final DataPlaneContract.ContentMode contentMode) {

@@ -31,8 +31,8 @@ import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
 import dev.knative.eventing.kafka.broker.core.wrappers.EgressWrapper;
 import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
 import dev.knative.eventing.kafka.broker.core.wrappers.ResourceWrapper;
+import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployer;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
-import dev.knative.eventing.kafka.broker.dispatcher.ResourcesManager;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.HttpVerticle;
@@ -285,7 +285,7 @@ public class DataPlaneTest {
     kafkaCluster.createTopic(TOPIC, NUM_PARTITIONS, REPLICATION_FACTOR);
   }
 
-  private static ResourcesManager setUpDispatcher(final Vertx vertx) {
+  private static ConsumerDeployer setUpDispatcher(final Vertx vertx) {
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
       consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class));
@@ -305,7 +305,7 @@ public class DataPlaneTest {
       producerConfigs
     );
 
-    return new ResourcesManager(
+    return new ConsumerDeployer(
       vertx,
       consumerVerticleFactory,
       10,

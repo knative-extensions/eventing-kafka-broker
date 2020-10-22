@@ -88,7 +88,7 @@ public class ResourceReconcilerTestRunner {
     final var ingressListener = enableIngressListener ? new IngressReconcilerListenerMock() : null;
     final var egressListener = enableEgressListener ? new EgressReconcilerListenerMock() : null;
 
-    final var reconcilerBuilder = ResourceReconcilerImpl
+    final var reconcilerBuilder = ResourcesReconcilerImpl
       .builder();
 
     if (ingressListener != null) {

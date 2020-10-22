@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ResourceReconcilerImpl implements ResourcesReconciler {
+public class ResourcesReconcilerImpl implements ResourcesReconciler {
 
   private final IngressReconcilerListener ingressReconcilerListener;
   private final EgressReconcilerListener egressReconcilerListener;
@@ -25,7 +25,7 @@ public class ResourceReconcilerImpl implements ResourcesReconciler {
   private final Map<String, DataPlaneContract.Resource> cachedResources;
   private final Map<String, DataPlaneContract.Egress> cachedEgresses;
 
-  private ResourceReconcilerImpl(
+  private ResourcesReconcilerImpl(
     IngressReconcilerListener ingressReconcilerListener,
     EgressReconcilerListener egressReconcilerListener) {
     this.ingressReconcilerListener = ingressReconcilerListener;
@@ -226,8 +226,8 @@ public class ResourceReconcilerImpl implements ResourcesReconciler {
       return this;
     }
 
-    public ResourceReconcilerImpl build() {
-      return new ResourceReconcilerImpl(ingressReconcilerListener, egressReconcilerListener);
+    public ResourcesReconcilerImpl build() {
+      return new ResourcesReconcilerImpl(ingressReconcilerListener, egressReconcilerListener);
     }
   }
 }
