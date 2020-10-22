@@ -16,8 +16,7 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
-import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
-import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
@@ -61,8 +60,8 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
   @Override
   protected KafkaProducer<String, CloudEvent> createProducer(
     final Vertx vertx,
-    final Resource resource,
-    final Egress egress) {
+    final DataPlaneContract.Resource resource,
+    final DataPlaneContract.Egress egress) {
 
     final var producer = new MockProducer<>(
       true,
@@ -70,7 +69,7 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
       new CloudEventSerializer()
     );
 
-    mockProducer.put(egress.consumerGroup(), producer);
+    mockProducer.put(egress.getConsumerGroup(), producer);
 
     return KafkaProducer.create(vertx, producer);
   }
@@ -78,30 +77,30 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
   @Override
   protected KafkaConsumer<String, CloudEvent> createConsumer(
     final Vertx vertx,
-    final Resource resource,
-    final Egress egress) {
+    final DataPlaneContract.Resource resource,
+    final DataPlaneContract.Egress egress) {
 
     final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
 
-    mockConsumer.put(egress.consumerGroup(), consumer);
+    mockConsumer.put(egress.getConsumerGroup(), consumer);
 
     consumer.schedulePollTask(() -> {
       consumer.unsubscribe();
 
       consumer.assign(records.stream()
-        .map(r -> new TopicPartition(resource.topics().iterator().next(), r.partition()))
+        .map(r -> new TopicPartition(resource.getTopics(0), r.partition()))
         .collect(Collectors.toList()));
 
       for (final var record : records) {
         consumer.addRecord(new ConsumerRecord<>(
-          resource.topics().iterator().next(),
+          resource.getTopics(0),
           record.partition(),
           record.offset(),
           record.key(),
           record.value()
         ));
         consumer.updateEndOffsets(Map.of(
-          new TopicPartition(resource.topics().iterator().next(), record.partition()), 0L
+          new TopicPartition(resource.getTopics(0), record.partition()), 0L
         ));
       }
     });

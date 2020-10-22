@@ -25,24 +25,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mock;
 
+import com.google.protobuf.Empty;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
-import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
-import dev.knative.eventing.kafka.broker.core.wrappers.EventMatcher;
-import dev.knative.eventing.kafka.broker.core.wrappers.Filter;
-import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
-import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
-import java.util.HashMap;
 import java.util.Properties;
-import java.util.Set;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
@@ -72,71 +66,26 @@ public class HttpConsumerVerticleFactoryTest {
       producerConfigs
     );
 
-    final var consumerFactoryFuture = verticleFactory.get(
-      new Resource() {
-        @Override
-        public String id() {
-          return "123456";
-        }
+    final var egress = DataPlaneContract.Egress.newBuilder()
+      .setConsumerGroup("1234")
+      .setUid("1234")
+      .setDestination("http://localhost:43256")
+      .setReplyToOriginalTopic(Empty.newBuilder().build())
+      .build();
+    final var resource = DataPlaneContract.Resource.newBuilder()
+      .setUid("123456")
+      .setBootstrapServers("0.0.0.0:9092")
+      .addTopics("t1")
+      .setEgressConfig(DataPlaneContract.EgressConfig.newBuilder()
+        .setBackoffDelay(1000)
+        .setBackoffPolicy(BackoffPolicy.Exponential)
+        .setRetry(10)
+        .setDeadLetter("http://localhost:43257")
+      )
+      .addEgresses(egress)
+      .build();
 
-        @Override
-        public Set<String> topics() {
-          return Set.of("t1");
-        }
-
-        @Override
-        public String bootstrapServers() {
-          return "0.0.0.0:9092";
-        }
-
-        @Override
-        public DataPlaneContract.Ingress ingress() {
-          return null;
-        }
-
-        @Override
-        public DataPlaneContract.EgressConfig egressConfig() {
-          return DataPlaneContract.EgressConfig.newBuilder()
-            .setBackoffDelay(1000)
-            .setBackoffPolicy(BackoffPolicy.Exponential)
-            .setRetry(10)
-            .setDeadLetter("http://localhost:43257")
-            .build();
-        }
-      },
-      new Egress() {
-        @Override
-        public String consumerGroup() {
-          return "1234";
-        }
-
-        @Override
-        public Filter<CloudEvent> filter() {
-          return new EventMatcher(new HashMap<>());
-        }
-
-        @Override
-        public String destination() {
-          return "http://localhost:43256";
-        }
-
-        @Override
-        public boolean isReplyToUrl() {
-          return false;
-        }
-
-        @Override
-        public String replyUrl() {
-          return null;
-        }
-
-        @Override
-        public boolean isReplyToOriginalTopic() {
-          return true;
-        }
-      }
-    );
-
+    final var consumerFactoryFuture = verticleFactory.get(resource, egress);
     assertThat(consumerFactoryFuture.succeeded()).isTrue();
   }
 
@@ -164,66 +113,20 @@ public class HttpConsumerVerticleFactoryTest {
       producerConfigs
     );
 
-    assertDoesNotThrow(() -> {
-      verticleFactory.get(
-        new Resource() {
-          @Override
-          public String id() {
-            return "123456";
-          }
+    final var egress = DataPlaneContract.Egress.newBuilder()
+      .setConsumerGroup("1234")
+      .setUid("1234")
+      .setDestination("http://localhost:43256")
+      .setReplyToOriginalTopic(Empty.newBuilder().build())
+      .build();
+    final var resource = DataPlaneContract.Resource.newBuilder()
+      .setUid("123456")
+      .setBootstrapServers("0.0.0.0:9092")
+      .addTopics("t1")
+      .addEgresses(egress)
+      .build();
 
-          @Override
-          public Set<String> topics() {
-            return Set.of("t1");
-          }
-
-          @Override
-          public String bootstrapServers() {
-            return "0.0.0.0:9092";
-          }
-
-          @Override
-          public DataPlaneContract.Ingress ingress() {
-            return null;
-          }
-
-          @Override
-          public DataPlaneContract.EgressConfig egressConfig() {
-            return null;
-          }
-        },
-        new Egress() {
-          @Override
-          public String consumerGroup() {
-            return "1234";
-          }
-
-          @Override
-          public Filter<CloudEvent> filter() {
-            return new EventMatcher(new HashMap<>());
-          }
-
-          @Override
-          public String destination() {
-            return "http://localhost:43256";
-          }
-
-          @Override
-          public boolean isReplyToUrl() {
-            return false;
-          }
-
-          @Override
-          public String replyUrl() {
-            return null;
-          }
-
-          @Override
-          public boolean isReplyToOriginalTopic() {
-            return true;
-          }
-        });
-    });
+    assertDoesNotThrow(() -> verticleFactory.get(resource, egress));
   }
 
   @Test

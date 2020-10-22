@@ -16,23 +16,26 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress1;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress2;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress3;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress4;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress11;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress12;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress13;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress14;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress5;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress6;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1Unwrapped;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2Unwrapped;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
-import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import java.util.Map;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -42,28 +45,31 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 
 @ExtendWith(VertxExtension.class)
 @Execution(ExecutionMode.CONCURRENT)
-public class ResourcesManagerTest {
+public class ConsumerDeployerTest {
 
   @Test
   @Timeout(value = 2)
   public void shouldAddResourceAndDeployVerticles(final Vertx vertx, final VertxTestContext context) {
-
-    final var resources = Map.of(
-      resource1(), Set.of(egress1(), egress2(), egress4()),
-      resource2(), Set.of(egress1(), egress2(), egress3())
+    final var resources = List.of(
+      resource1Unwrapped(),
+      resource2Unwrapped()
     );
     final var numEgresses = numEgresses(resources);
     final var checkpoints = context.checkpoint(1);
 
-    final var resourcesManager = new ResourcesManager(
+    final var consumerDeployer = new ConsumerDeployer(
       vertx,
       (resource, egress) -> Future.succeededFuture(new AbstractVerticle() {
       }),
-      100,
       100
     );
 
-    resourcesManager.reconcile(resources)
+    final var reconciler = ResourcesReconcilerImpl
+      .builder()
+      .watchEgress(consumerDeployer)
+      .build();
+
+    reconciler.reconcile(resources)
       .onSuccess(ignored -> context.verify(() -> {
         assertThat(vertx.deploymentIDs()).hasSize(numEgresses);
         checkpoints.flag();
@@ -77,20 +83,24 @@ public class ResourcesManagerTest {
     final Vertx vertx,
     final VertxTestContext context) {
 
-    final var resources = Map.of(
-      resource1(), Set.of(egress1(), egress2(), egress4()),
-      resource2(), Set.of(egress1(), egress2(), egress3())
+    final var resources = List.of(
+      resource1Unwrapped(),
+      resource2Unwrapped()
     );
     final var checkpoint = context.checkpoint(1);
 
-    final var resourcesManager = new ResourcesManager(
+    final var consumerDeployer = new ConsumerDeployer(
       vertx,
       (resource, egress) -> Future.failedFuture(new UnsupportedOperationException()),
-      100,
       100
     );
 
-    resourcesManager.reconcile(resources)
+    final var reconciler = ResourcesReconcilerImpl
+      .builder()
+      .watchEgress(consumerDeployer)
+      .build();
+
+    reconciler.reconcile(resources)
       .onFailure(ignored -> context.verify(() -> {
         assertThat(vertx.deploymentIDs()).hasSize(0);
         checkpoint.flag();
@@ -104,27 +114,38 @@ public class ResourcesManagerTest {
     final Vertx vertx,
     final VertxTestContext context) {
 
-    final var resourcesOld = Map.of(
-      resource1(), Set.of(egress1())
+    final var resourcesOld = List.of(
+      DataPlaneContract.Resource.newBuilder()
+        .setUid("1-1234")
+        .addTopics("1-12345")
+        .addEgresses(egress11())
+        .build()
     );
     final var numEgressesOld = numEgresses(resourcesOld);
 
-    final Map<Resource, Set<Egress>> resourcesNew = Map.of(
-      resource1(), Set.of()
+    final var resourcesNew = List.of(
+      DataPlaneContract.Resource.newBuilder()
+        .setUid("1-1234")
+        .addTopics("1-12345")
+        .build()
     );
     final var numEgressesNew = numEgresses(resourcesNew);
 
     final var checkpoints = context.checkpoint(2);
 
-    final var resourcesManager = new ResourcesManager(
+    final var consumerDeployer = new ConsumerDeployer(
       vertx,
       (resource, egress) -> Future.succeededFuture(new AbstractVerticle() {
       }),
-      100,
       100
     );
 
-    resourcesManager.reconcile(resourcesOld)
+    final var reconciler = ResourcesReconcilerImpl
+      .builder()
+      .watchEgress(consumerDeployer)
+      .build();
+
+    reconciler.reconcile(resourcesOld)
       .onSuccess(ignored -> {
 
         context.verify(() -> {
@@ -132,7 +153,7 @@ public class ResourcesManagerTest {
           checkpoints.flag();
         });
 
-        resourcesManager.reconcile(resourcesNew)
+        reconciler.reconcile(resourcesNew)
           .onSuccess(ok -> context.verify(() -> {
             assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew);
             checkpoints.flag();
@@ -148,35 +169,56 @@ public class ResourcesManagerTest {
     final Vertx vertx,
     final VertxTestContext context) {
 
-    final var resourcesOld = Map.of(
-      resource1(), Set.of(egress1(), egress2(), egress4()),
-      resource2(), Set.of(egress1(), egress2(), egress3())
+    final var resourcesOld = List.of(
+      DataPlaneContract.Resource.newBuilder()
+        .setUid("1-1234")
+        .addTopics("1-12345")
+        .addAllEgresses(Arrays.asList(
+          egress11(),
+          egress12(),
+          egress13()
+        ))
+        .build(),
+      DataPlaneContract.Resource.newBuilder()
+        .setUid("2-1234")
+        .addTopics("2-12345")
+        .addAllEgresses(Arrays.asList(
+          egress14()
+        ))
+        .build()
     );
     final var numEgressesOld = numEgresses(resourcesOld);
 
-    final Map<Resource, Set<Egress>> resourcesNew = Map.of(
-      resource1(), Set.of()
+    final var resourcesNew = List.of(
+      DataPlaneContract.Resource.newBuilder()
+        .setUid("1-1234")
+        .addTopics("1-12345")
+        .build()
     );
     final var numEgressesNew = numEgresses(resourcesNew);
 
     final var checkpoints = context.checkpoint(2);
 
-    final var resourcesManager = new ResourcesManager(
+    final var consumerDeployer = new ConsumerDeployer(
       vertx,
       (resource, egress) -> Future.succeededFuture(new AbstractVerticle() {
       }),
-      100,
       100
     );
 
-    resourcesManager.reconcile(resourcesOld)
+    final var reconciler = ResourcesReconcilerImpl
+      .builder()
+      .watchEgress(consumerDeployer)
+      .build();
+
+    reconciler.reconcile(resourcesOld)
       .onSuccess(ignored -> {
         context.verify(() -> {
           assertThat(vertx.deploymentIDs()).hasSize(numEgressesOld);
           checkpoints.flag();
         });
 
-        resourcesManager.reconcile(resourcesNew)
+        reconciler.reconcile(resourcesNew)
           .onSuccess(ok -> context.verify(() -> {
             assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew);
             checkpoints.flag();
@@ -192,30 +234,62 @@ public class ResourcesManagerTest {
     final Vertx vertx,
     final VertxTestContext context) {
 
-    final var resourcesOld = Map.of(
-      resource1(), Set.of(egress1(), egress2(), egress4()),
-      resource2(), Set.of(egress1(), egress2(), egress3())
+    final var resourcesOld = List.of(
+      DataPlaneContract.Resource.newBuilder()
+        .setUid("1-1234")
+        .addTopics("1-12345")
+        .addAllEgresses(Arrays.asList(
+          egress11(),
+          egress12()
+        ))
+        .build(),
+      DataPlaneContract.Resource.newBuilder()
+        .setUid("2-1234")
+        .addTopics("2-12345")
+        .addAllEgresses(Arrays.asList(
+          egress14(),
+          egress5(),
+          egress6()
+        ))
+        .build()
     );
     final var numEgressesOld = numEgresses(resourcesOld);
 
-    final Map<Resource, Set<Egress>> resourcesNew = Map.of(
-      resource1(), Set.of(egress3(), egress1()),
-      resource2(), Set.of(egress1())
+    final var resourcesNew = List.of(
+      DataPlaneContract.Resource.newBuilder()
+        .setUid("1-1234")
+        .addTopics("1-12345")
+        .addAllEgresses(Arrays.asList(
+          egress11(),
+          egress13()
+        ))
+        .build(),
+      DataPlaneContract.Resource.newBuilder()
+        .setUid("2-1234")
+        .addTopics("2-12345")
+        .addEgresses(
+          egress14()
+        )
+        .build()
     );
     final var numEgressesNew = numEgresses(resourcesNew);
 
     final var checkpoints = context.checkpoint(3);
 
-    final var resourcesManager = new ResourcesManager(
+    final var consumerDeployer = new ConsumerDeployer(
       vertx,
       (resource, egress) -> Future.succeededFuture(new AbstractVerticle() {
       }),
-      100,
       100
     );
 
+    final var reconciler = ResourcesReconcilerImpl
+      .builder()
+      .watchEgress(consumerDeployer)
+      .build();
+
     final var oldDeployments = vertx.deploymentIDs();
-    resourcesManager.reconcile(resourcesOld)
+    reconciler.reconcile(resourcesOld)
       .onSuccess(ignored -> {
 
         context.verify(() -> {
@@ -223,7 +297,7 @@ public class ResourcesManagerTest {
           checkpoints.flag();
         });
 
-        resourcesManager.reconcile(resourcesNew)
+        reconciler.reconcile(resourcesNew)
           .onSuccess(ok -> {
             context.verify(() -> {
               assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew);
@@ -231,7 +305,7 @@ public class ResourcesManagerTest {
               checkpoints.flag();
             });
 
-            resourcesManager.reconcile(resourcesOld)
+            reconciler.reconcile(resourcesOld)
               .onSuccess(ok2 -> context.verify(() -> {
                 assertThat(oldDeployments).hasSize(numEgressesOld);
                 checkpoints.flag();
@@ -248,27 +322,42 @@ public class ResourcesManagerTest {
     final Vertx vertx,
     final VertxTestContext context) {
 
-    final var resources = Map.of(
-      resource1(), Set.of(egress1(), egress2(), egress4()),
-      resource2(), Set.of(egress1(), egress2(), egress3())
+    final var resources = List.of(
+      DataPlaneContract.Resource.newBuilder()
+        .setUid("1-1234")
+        .addTopics("1-12345")
+        .addAllEgresses(Arrays.asList(
+          egress11(),
+          egress12()
+        ))
+        .build(),
+      DataPlaneContract.Resource.newBuilder()
+        .setUid("2-1234")
+        .addTopics("2-12345")
+        .addAllEgresses(Arrays.asList(
+          egress14(),
+          egress5(),
+          egress6()
+        ))
+        .build()
     );
     final var numEgresses = numEgresses(resources);
 
-    final var resources2 = Map.of(
-      resource1(), Set.of(egress1(), egress2(), egress4()),
-      resource2(), Set.of(egress1(), egress2(), egress3())
-    );
-
     final var checkpoints = context.checkpoint(2);
 
-    final var resourcesManager = new ResourcesManager(
+    final var consumerDeployer = new ConsumerDeployer(
       vertx,
       (resource, egress) -> Future.succeededFuture(new AbstractVerticle() {
       }),
-      100,
       100
     );
-    resourcesManager.reconcile(resources)
+
+    final var reconciler = ResourcesReconcilerImpl
+      .builder()
+      .watchEgress(consumerDeployer)
+      .build();
+
+    reconciler.reconcile(resources)
       .onSuccess(ignored -> {
 
         final var deployments = vertx.deploymentIDs();
@@ -278,7 +367,7 @@ public class ResourcesManagerTest {
           checkpoints.flag();
         });
 
-        resourcesManager.reconcile(resources2).onSuccess(ok -> context.verify(() -> {
+        reconciler.reconcile(resources).onSuccess(ok -> context.verify(() -> {
           assertThat(vertx.deploymentIDs()).containsExactly(deployments.toArray(new String[0]));
           checkpoints.flag();
         }));
@@ -287,26 +376,15 @@ public class ResourcesManagerTest {
   }
 
   @Test
-  public void shouldThrowIfResourcesInitialCapacityIsLessOrEqualToZero(final Vertx vertx) {
-    Assertions.assertThrows(IllegalArgumentException.class, () -> new ResourcesManager(
-      vertx,
-      (resource, egress) -> Future.succeededFuture(),
-      -1,
-      100
-    ));
-  }
-
-  @Test
   public void shouldThrowIfEgressesInitialCapacityIsLessOrEqualToZero(final Vertx vertx) {
-    Assertions.assertThrows(IllegalArgumentException.class, () -> new ResourcesManager(
+    Assertions.assertThrows(IllegalArgumentException.class, () -> new ConsumerDeployer(
       vertx,
       (resource, egress) -> Future.succeededFuture(),
-      100,
       -1
     ));
   }
 
-  private static int numEgresses(Map<Resource, Set<Egress>> resources) {
-    return resources.values().stream().mapToInt(Set::size).sum();
+  private static int numEgresses(Collection<DataPlaneContract.Resource> resources) {
+    return resources.stream().mapToInt(DataPlaneContract.Resource::getEgressesCount).sum();
   }
 }
