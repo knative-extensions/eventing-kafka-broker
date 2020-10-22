@@ -4,6 +4,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
+import dev.knative.eventing.kafka.broker.core.utils.CollectionsUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import java.util.ArrayList;
@@ -52,47 +53,113 @@ public class ResourceReconcilerImpl implements ResourcesReconciler {
 
       final var newResource = newResourcesMap.remove(oldResourceUid);
 
-      if (newResource != null && !resourceEquals(oldResource, newResource)) {
-        // Resource updated
+      if (newResource != null) {
+        // Update to new resource
         resourceEntry.setValue(newResource);
 
-        if (isReconcilingIngress()) {
+        boolean resourceAreEquals = resourceEquals(oldResource, newResource);
+
+        // Reconcile ingress
+        if (isReconcilingIngress() && !resourceAreEquals) {
           if (!oldResource.hasIngress() && newResource.hasIngress()) {
             futures.add(
               this.ingressReconcilerListener.onNewIngress(newResource, newResource.getIngress())
             );
-          } else if (!newResource.hasIngress()) {
+          } else if (oldResource.hasIngress() && !newResource.hasIngress()) {
             futures.add(
               this.ingressReconcilerListener.onDeleteIngress(oldResource, oldResource.getIngress())
             );
-          } else {
+          } else if (newResource.hasIngress()) {
             futures.add(
               this.ingressReconcilerListener.onUpdateIngress(newResource, newResource.getIngress())
             );
           }
         }
-        continue;
+
+        // Reconcile egress
+        if (isReconcilingEgress()) {
+          final var oldEgresses = oldResource
+            .getEgressesList()
+            .stream()
+            .collect(Collectors.toMap(DataPlaneContract.Egress::getUid, Function.identity()));
+          final var newEgresses = newResource
+            .getEgressesList()
+            .stream()
+            .collect(Collectors.toMap(DataPlaneContract.Egress::getUid, Function.identity()));
+
+          final var diff = CollectionsUtils.diff(oldEgresses.keySet(), newEgresses.keySet());
+
+          // Handle added
+          for (String uid : diff.getAdded()) {
+            final var newEgress = newEgresses.get(uid);
+            this.cachedEgresses.put(uid, newEgress);
+            futures.add(
+              this.egressReconcilerListener.onNewEgress(newResource, newEgress)
+            );
+          }
+
+          // Handle removed
+          for (String uid : diff.getRemoved()) {
+            futures.add(
+              this.egressReconcilerListener.onDeleteEgress(oldResource, this.cachedEgresses.remove(uid))
+            );
+          }
+
+          // Handle intersection
+          for (String uid : diff.getIntersection()) {
+            final var newEgress = newEgresses.get(uid);
+            final var oldEgress = this.cachedEgresses.replace(uid, newEgress);
+
+            if (!egressEquals(newEgress, oldEgress) || !resourceAreEquals) {
+              futures.add(
+                this.egressReconcilerListener.onUpdateEgress(newResource, newEgress)
+              );
+            }
+          }
+        }
       }
 
       if (newResource == null) {
         // Resource deleted
         resourcesIterator.remove();
 
+        // Reconcile ingress
         if (isReconcilingIngress() && oldResource.hasIngress()) {
           futures.add(
             this.ingressReconcilerListener.onDeleteIngress(oldResource, oldResource.getIngress())
           );
+        }
+
+        // Reconcile egress
+        if (isReconcilingEgress() && oldResource.getEgressesCount() != 0) {
+          for (DataPlaneContract.Egress egress : oldResource.getEgressesList()) {
+            this.cachedEgresses.remove(egress.getUid());
+            futures.add(
+              this.egressReconcilerListener.onDeleteEgress(oldResource, egress)
+            );
+          }
         }
       }
     }
 
     // Now newResourcesMap contains only the new resource
     this.cachedResources.putAll(newResourcesMap);
-    newResourcesMap.forEach((uid, resource) -> {
-      if (isReconcilingIngress() && resource.hasIngress()) {
+    newResourcesMap.forEach((uid, newResource) -> {
+      // Reconcile ingress
+      if (isReconcilingIngress() && newResource.hasIngress()) {
         futures.add(
-          this.ingressReconcilerListener.onNewIngress(resource, resource.getIngress())
+          this.ingressReconcilerListener.onNewIngress(newResource, newResource.getIngress())
         );
+      }
+
+      // Reconcile ingress
+      if (isReconcilingEgress() && newResource.getEgressesCount() != 0) {
+        for (DataPlaneContract.Egress egress : newResource.getEgressesList()) {
+          this.cachedEgresses.put(egress.getUid(), egress);
+          futures.add(
+            this.egressReconcilerListener.onNewEgress(newResource, egress)
+          );
+        }
       }
     });
 
@@ -118,7 +185,23 @@ public class ResourceReconcilerImpl implements ResourcesReconciler {
       && Objects.equals(r1.getTopicsList(), r2.getTopicsList())
       && Objects.equals(r1.getBootstrapServers(), r2.getBootstrapServers())
       && Objects.equals(r1.getIngress(), r2.getIngress())
+      // In the case of ingress reconcile, do we really care about this one?
       && Objects.equals(r1.getEgressConfig(), r2.getEgressConfig());
+  }
+
+  private boolean egressEquals(DataPlaneContract.Egress e1, DataPlaneContract.Egress e2) {
+    if (e1 == e2) {
+      return true;
+    }
+    if (e1 == null || e2 == null) {
+      return false;
+    }
+    return Objects.equals(e1.getUid(), e2.getUid())
+      && Objects.equals(e1.getConsumerGroup(), e2.getConsumerGroup())
+      && Objects.equals(e1.getDestination(), e2.getDestination())
+      && Objects.equals(e1.getReplyUrl(), e2.getReplyUrl())
+      && Objects.equals(e1.getReplyToOriginalTopic(), e2.getReplyToOriginalTopic())
+      && Objects.equals(e1.getFilter(), e2.getFilter());
   }
 
   public static Builder builder() {

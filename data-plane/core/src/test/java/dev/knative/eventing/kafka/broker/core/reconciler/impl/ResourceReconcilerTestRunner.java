@@ -5,7 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ResourceReconcilerTestRunner {
 
@@ -14,12 +16,12 @@ public class ResourceReconcilerTestRunner {
     private final Collection<DataPlaneContract.Resource> resources;
     private final ResourceReconcilerTestRunner runner;
 
-    private final List<String> newEgresses = new ArrayList<>();
-    private final List<String> updatedEgresses = new ArrayList<>();
-    private final List<String> deletedEgresses = new ArrayList<>();
-    private final List<String> newIngresses = new ArrayList<>();
-    private final List<String> updatedIngresses = new ArrayList<>();
-    private final List<String> deletedIngresses = new ArrayList<>();
+    private final Set<String> newIngresses = new HashSet<>();
+    private final Set<String> updatedIngresses = new HashSet<>();
+    private final Set<String> deletedIngresses = new HashSet<>();
+    private final Set<String> newEgresses = new HashSet<>();
+    private final Set<String> updatedEgresses = new HashSet<>();
+    private final Set<String> deletedEgresses = new HashSet<>();
 
     public Step(Collection<DataPlaneContract.Resource> resources,
                 ResourceReconcilerTestRunner runner) {

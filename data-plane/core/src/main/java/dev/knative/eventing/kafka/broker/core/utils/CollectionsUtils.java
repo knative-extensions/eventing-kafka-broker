@@ -12,12 +12,12 @@ public class CollectionsUtils {
   public static class DiffResult<T> {
 
     private final Set<T> added;
-    private final Set<T> same;
+    private final Set<T> intersection;
     private final Set<T> removed;
 
-    private DiffResult(Set<T> added, Set<T> same, Set<T> removed) {
+    private DiffResult(Set<T> added, Set<T> intersection, Set<T> removed) {
       this.added = added;
-      this.same = same;
+      this.intersection = intersection;
       this.removed = removed;
     }
 
@@ -25,8 +25,8 @@ public class CollectionsUtils {
       return added;
     }
 
-    public Set<T> getSame() {
-      return same;
+    public Set<T> getIntersection() {
+      return intersection;
     }
 
     public Set<T> getRemoved() {
@@ -42,12 +42,12 @@ public class CollectionsUtils {
     added.removeAll(oldSet);
 
     Set<T> removed = new HashSet<>(oldSet);
-    added.removeAll(newSet);
+    removed.removeAll(newSet);
 
-    Set<T> same = new HashSet<>(oldSet);
-    same.retainAll(newSet);
+    Set<T> intersection = new HashSet<>(oldSet);
+    intersection.retainAll(newSet);
 
-    return new DiffResult<>(added, same, removed);
+    return new DiffResult<>(added, intersection, removed);
   }
 
 }

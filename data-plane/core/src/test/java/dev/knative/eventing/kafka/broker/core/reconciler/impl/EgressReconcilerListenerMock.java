@@ -3,20 +3,20 @@ package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
 import io.vertx.core.Future;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class EgressReconcilerListenerMock implements EgressReconcilerListener {
 
-  private final List<String> newEgresses;
-  private final List<String> updatedEgresses;
-  private final List<String> deletedEgresses;
+  private final Set<String> newEgresses;
+  private final Set<String> updatedEgresses;
+  private final Set<String> deletedEgresses;
 
   public EgressReconcilerListenerMock() {
-    this.newEgresses = new ArrayList<>();
-    this.updatedEgresses = new ArrayList<>();
-    this.deletedEgresses = new ArrayList<>();
+    this.newEgresses = new HashSet<>();
+    this.updatedEgresses = new HashSet<>();
+    this.deletedEgresses = new HashSet<>();
   }
 
   @Override
@@ -25,7 +25,7 @@ public class EgressReconcilerListenerMock implements EgressReconcilerListener {
     DataPlaneContract.Egress egress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(egress);
-    this.newEgresses.add(resource.getUid());
+    this.newEgresses.add(egress.getUid());
     return Future.succeededFuture();
   }
 
@@ -35,7 +35,7 @@ public class EgressReconcilerListenerMock implements EgressReconcilerListener {
     DataPlaneContract.Egress egress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(egress);
-    this.updatedEgresses.add(resource.getUid());
+    this.updatedEgresses.add(egress.getUid());
     return Future.succeededFuture();
   }
 
@@ -45,19 +45,19 @@ public class EgressReconcilerListenerMock implements EgressReconcilerListener {
     DataPlaneContract.Egress egress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(egress);
-    this.deletedEgresses.add(resource.getUid());
+    this.deletedEgresses.add(egress.getUid());
     return Future.succeededFuture();
   }
 
-  public List<String> getNewEgresses() {
+  public Set<String> getNewEgresses() {
     return newEgresses;
   }
 
-  public List<String> getUpdatedEgresses() {
+  public Set<String> getUpdatedEgresses() {
     return updatedEgresses;
   }
 
-  public List<String> getDeletedEgresses() {
+  public Set<String> getDeletedEgresses() {
     return deletedEgresses;
   }
 }
