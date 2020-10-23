@@ -18,9 +18,10 @@ package dev.knative.eventing.kafka.broker.dispatcher.http;
 
 import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
-import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
-import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
+import dev.knative.eventing.kafka.broker.core.wrappers.EventMatcher;
+import dev.knative.eventing.kafka.broker.core.wrappers.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
@@ -37,6 +38,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
@@ -94,7 +96,8 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
    * {@inheritDoc}
    */
   @Override
-  public Future<AbstractVerticle> get(final Resource resource, final Egress egress) {
+  public Future<AbstractVerticle> get(final DataPlaneContract.Resource resource,
+                                      final DataPlaneContract.Egress egress) {
     Objects.requireNonNull(resource, "provide resource");
     Objects.requireNonNull(egress, "provide egress");
 
@@ -106,55 +109,53 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
     final CircuitBreakerOptions circuitBreakerOptions = createCircuitBreakerOptions(resource);
 
-    final var egressDestinationSender = createSender(
-      egress.destination(),
-      circuitBreakerOptions,
-      resource.egressConfig()
-    );
+    final var egressConfig = resource.getEgressConfig();
 
-    final var egressConfig = resource.egressConfig();
-    final ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> egressDeadLetterSender =
+    final var egressDestinationSender = createSender(
+      egress.getDestination(),
+      circuitBreakerOptions,
+      egressConfig
+    );
+    final var egressDeadLetterSender =
       egressConfig == null || egressConfig.getDeadLetter() == null || egressConfig.getDeadLetter().isEmpty()
         ? NO_DLQ_SENDER
-        : createSender(resource.egressConfig().getDeadLetter(), circuitBreakerOptions, resource.egressConfig());
+        : createSender(egressConfig.getDeadLetter(), circuitBreakerOptions, egressConfig);
 
     final var consumerOffsetManager = consumerRecordOffsetStrategyFactory
       .get(consumer, resource, egress);
 
-    final var sinkResponseHandler = new HttpSinkResponseHandler(resource.topics().iterator().next(), producer);
+    final var sinkResponseHandler = new HttpSinkResponseHandler(resource.getTopics(0), producer);
 
     final var consumerRecordHandler = new ConsumerRecordHandler<>(
       egressDestinationSender,
-      egress.filter(),
+      (egress.hasFilter()) ? new EventMatcher(egress.getFilter().getAttributesMap()) : Filter.noopMatcher(),
       consumerOffsetManager,
       sinkResponseHandler,
       egressDeadLetterSender
     );
 
     return Future.succeededFuture(
-      new ConsumerVerticle<>(consumer, resource.topics(), consumerRecordHandler)
+      new ConsumerVerticle<>(consumer, new HashSet<>(resource.getTopicsList()), consumerRecordHandler)
     );
   }
 
-  private static CircuitBreakerOptions createCircuitBreakerOptions(final Resource resource) {
-
-    final var config = resource.egressConfig();
-    if (config == null) {
-      return new CircuitBreakerOptions();
+  private static CircuitBreakerOptions createCircuitBreakerOptions(final DataPlaneContract.Resource resource) {
+    if (resource.hasEgressConfig()) {
+      return new CircuitBreakerOptions()
+        .setMaxRetries(resource.getEgressConfig().getRetry());
     }
 
-    return new CircuitBreakerOptions()
-      .setMaxRetries(config.getRetry());
+    return new CircuitBreakerOptions();
   }
 
   protected io.vertx.kafka.client.producer.KafkaProducer<String, CloudEvent> createProducer(
     final Vertx vertx,
-    final Resource resource,
-    final Egress egress) {
+    final DataPlaneContract.Resource resource,
+    final DataPlaneContract.Egress egress) {
 
     // producerConfigs is a shared object and it acts as a prototype for each consumer instance.
     final var producerConfigs = (Properties) this.producerConfigs.clone();
-    producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.bootstrapServers());
+    producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
 
     final var kafkaProducer = new KafkaProducer<>(
       producerConfigs,
@@ -167,13 +168,13 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
   protected io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> createConsumer(
     final Vertx vertx,
-    final Resource resource,
-    final Egress egress) {
+    final DataPlaneContract.Resource resource,
+    final DataPlaneContract.Egress egress) {
 
     // consumerConfigs is a shared object and it acts as a prototype for each consumer instance.
     final var consumerConfigs = (Properties) this.consumerConfigs.clone();
-    consumerConfigs.setProperty(GROUP_ID_CONFIG, egress.consumerGroup());
-    consumerConfigs.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.bootstrapServers());
+    consumerConfigs.setProperty(GROUP_ID_CONFIG, egress.getConsumerGroup());
+    consumerConfigs.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
 
     // Note: KafkaConsumer instances are not thread-safe.
     // There are methods thread-safe, but in general they're not.

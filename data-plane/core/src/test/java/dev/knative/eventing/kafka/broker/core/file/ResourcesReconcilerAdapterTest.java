@@ -47,7 +47,8 @@ public class ResourcesReconcilerAdapterTest {
 
     final var creator = new ResourcesReconcilerAdapter(objects -> {
       called.set(true);
-      assertThat(objects).usingRecursiveComparison().isEqualTo(resources);
+      assertThat(objects).usingRecursiveComparison()
+        .isEqualTo(contract().getResourcesList());
       return Future.succeededFuture();
     });
 

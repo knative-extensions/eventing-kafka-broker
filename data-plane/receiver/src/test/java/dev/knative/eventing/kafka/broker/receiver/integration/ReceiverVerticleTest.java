@@ -23,8 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.FloatNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
-import dev.knative.eventing.kafka.broker.core.wrappers.ResourceWrapper;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
 import dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.HttpVerticle;
 import dev.knative.eventing.kafka.broker.receiver.RequestHandler;
@@ -47,9 +46,7 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -125,7 +122,10 @@ public class ReceiverVerticleTest {
 
     final var wait = new CountDownLatch(1);
 
-    handler.reconcile(Map.of(tc.resource, new HashSet<>()))
+    final var reconciler = ResourcesReconcilerImpl.builder()
+      .watchIngress(handler)
+      .build();
+    reconciler.reconcile(List.of(tc.resource))
       .onFailure(context::failNow)
       .onSuccess(v -> wait.countDown());
 
@@ -164,12 +164,12 @@ public class ReceiverVerticleTest {
           .withId("1234")
           .build()),
         RequestHandler.RESOURCE_NOT_FOUND,
-        new ResourceWrapper(
-          DataPlaneContract.Resource.newBuilder()
-            .addTopics("topic")
-            .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
-            .build()
-        )),
+        DataPlaneContract.Resource.newBuilder()
+          .setUid("1")
+          .addTopics("topic")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
+          .build()
+      ),
       new TestCase(
         null,
         "/broker-ns/broker-name/hello",
@@ -180,12 +180,12 @@ public class ReceiverVerticleTest {
           .withId("1234")
           .build()),
         RequestHandler.RESOURCE_NOT_FOUND,
-        new ResourceWrapper(
-          DataPlaneContract.Resource.newBuilder()
-            .addTopics("topic")
-            .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-name/hello"))
-            .build()
-        )),
+        DataPlaneContract.Resource.newBuilder()
+          .setUid("1")
+          .addTopics("topic")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-name/hello"))
+          .build()
+      ),
       new TestCase(
         null,
         "/broker-ns/h/hello",
@@ -196,12 +196,12 @@ public class ReceiverVerticleTest {
           .withId("1234")
           .build()),
         RequestHandler.RESOURCE_NOT_FOUND,
-        new ResourceWrapper(
-          DataPlaneContract.Resource.newBuilder()
-            .addTopics("topic")
-            .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/h/hello"))
-            .build()
-        )),
+        DataPlaneContract.Resource.newBuilder()
+          .setUid("1")
+          .addTopics("topic")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/h/hello"))
+          .build()
+      ),
       new TestCase(
         new ProducerRecord<>(
           "topic-name-1",
@@ -221,34 +221,34 @@ public class ReceiverVerticleTest {
           .withId("1234")
           .build()),
         RequestHandler.RECORD_PRODUCED,
-        new ResourceWrapper(
-          DataPlaneContract.Resource.newBuilder()
-            .addTopics("topic-name-1")
-            .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name1"))
-            .build()
-        )),
+        DataPlaneContract.Resource.newBuilder()
+          .setUid("1")
+          .addTopics("topic-name-1")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name1"))
+          .build()
+      ),
       new TestCase(
         null,
         "/broker-ns/broker-name",
         request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
         RequestHandler.MAPPER_FAILED,
-        new ResourceWrapper(
-          DataPlaneContract.Resource.newBuilder()
-            .addTopics("topic")
-            .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
-            .build()
-        )),
+        DataPlaneContract.Resource.newBuilder()
+          .setUid("1")
+          .addTopics("topic")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
+          .build()
+      ),
       new TestCase(
         null,
         "/broker-ns/broker-name/hello",
         request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
         RequestHandler.RESOURCE_NOT_FOUND,
-        new ResourceWrapper(
-          DataPlaneContract.Resource.newBuilder()
-            .addTopics("topic")
-            .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
-            .build()
-        )),
+        DataPlaneContract.Resource.newBuilder()
+          .setUid("1")
+          .addTopics("topic")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
+          .build()
+      ),
       new TestCase(
         null,
         "/broker-ns/broker-name3",
@@ -261,12 +261,12 @@ public class ReceiverVerticleTest {
           return request.sendBuffer(Buffer.buffer(objectNode.toString()));
         },
         RequestHandler.MAPPER_FAILED,
-        new ResourceWrapper(
-          DataPlaneContract.Resource.newBuilder()
-            .addTopics("topic")
-            .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name3"))
-            .build()
-        )),
+        DataPlaneContract.Resource.newBuilder()
+          .setUid("1")
+          .addTopics("topic")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name3"))
+          .build()
+      ),
       new TestCase(
         null,
         "/broker-ns/broker-name4",
@@ -281,12 +281,12 @@ public class ReceiverVerticleTest {
           return request.sendBuffer(Buffer.buffer(objectNode.toString()));
         },
         RequestHandler.MAPPER_FAILED,
-        new ResourceWrapper(
-          DataPlaneContract.Resource.newBuilder()
-            .addTopics("topic")
-            .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name4"))
-            .build()
-        )),
+        DataPlaneContract.Resource.newBuilder()
+          .setUid("1")
+          .addTopics("topic")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name4"))
+          .build()
+      ),
       new TestCase(
         new ProducerRecord<>(
           "topic-name-42",
@@ -306,12 +306,12 @@ public class ReceiverVerticleTest {
           .withId("1234")
           .build()),
         RequestHandler.RECORD_PRODUCED,
-        new ResourceWrapper(
-          DataPlaneContract.Resource.newBuilder()
-            .addTopics("topic-name-42")
-            .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name5"))
-            .build()
-        ))
+        DataPlaneContract.Resource.newBuilder()
+          .setUid("1")
+          .addTopics("topic-name-42")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name5"))
+          .build()
+      )
     );
   }
 
@@ -326,7 +326,7 @@ public class ReceiverVerticleTest {
     final String path;
     final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender;
     final int responseStatusCode;
-    final Resource resource;
+    final DataPlaneContract.Resource resource;
     final int badRequestCount;
     final int produceEventCount;
 
@@ -335,7 +335,7 @@ public class ReceiverVerticleTest {
       final String path,
       final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender,
       final int responseStatusCode,
-      final Resource resource) {
+      final DataPlaneContract.Resource resource) {
 
       this.path = path;
       this.requestSender = requestSender;

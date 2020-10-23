@@ -25,9 +25,10 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.file.ResourcesReconcilerAdapter;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
+import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployer;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
-import dev.knative.eventing.kafka.broker.dispatcher.ResourcesManager;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventBuilder;
@@ -88,14 +89,18 @@ public class UnorderedConsumerTest {
     );
     consumerVerticleFactoryMock.setRecords(consumerRecords);
 
-    final var resourcesManager = new ResourcesManager(
+    final var consumerDeployer = new ConsumerDeployer(
       vertx,
       consumerVerticleFactoryMock,
-      100,
       100
     );
 
-    final var objectsCreator = new ResourcesReconcilerAdapter(resourcesManager);
+    final var reconciler = ResourcesReconcilerImpl
+      .builder()
+      .watchEgress(consumerDeployer)
+      .build();
+
+    final var objectsCreator = new ResourcesReconcilerAdapter(reconciler);
 
     final var contract = contract();
     final var numEgresses = contract.getResourcesList().stream()

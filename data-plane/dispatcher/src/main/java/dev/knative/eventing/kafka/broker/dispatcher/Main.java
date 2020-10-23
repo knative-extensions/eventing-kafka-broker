@@ -21,6 +21,7 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.file.ResourcesReconcilerAdapter;
 import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
@@ -91,14 +92,18 @@ public class Main {
       producerConfig
     );
 
-    final var resourcesManager = new ResourcesManager(
+    final var consumerDeployer = new ConsumerDeployer(
       vertx,
       consumerVerticleFactory,
-      env.getResourcesInitialCapacity(),
       env.getEgressesInitialCapacity()
     );
 
-    final var objectCreator = new ResourcesReconcilerAdapter(resourcesManager);
+    final var objectCreator = new ResourcesReconcilerAdapter(
+      ResourcesReconcilerImpl
+        .builder()
+        .watchEgress(consumerDeployer)
+        .build()
+    );
 
     try {
       final var fw = new FileWatcher(

@@ -21,6 +21,7 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.file.ResourcesReconcilerAdapter;
 import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Vertx;
@@ -112,7 +113,11 @@ public class Main {
       //  Note: reconcile(Brokers) isn't thread safe so we need to make sure to stop the watcher
       //  from calling reconcile first
 
-      final var objectsCreator = new ResourcesReconcilerAdapter(handler);
+      final var objectsCreator = new ResourcesReconcilerAdapter(
+        ResourcesReconcilerImpl.builder()
+          .watchIngress(handler)
+          .build()
+      );
       final var fw = new FileWatcher(
         FileSystems.getDefault().newWatchService(),
         objectsCreator,

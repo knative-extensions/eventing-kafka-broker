@@ -16,7 +16,6 @@
 
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,7 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.wrappers.ResourceWrapper;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
@@ -35,8 +34,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -69,10 +67,9 @@ public class RequestHandlerTest {
     final RequestToRecordMapper<String, String> mapper
       = (request, topic) -> Future.succeededFuture(record);
 
-    final KafkaProducer<String, String> producer = mock(KafkaProducer.class);
+    final KafkaProducer<String, String> producer = mockProducer();
 
     when(producer.send(any())).thenAnswer(invocationOnMock -> {
-
       if (failedToSend) {
         return Future.failedFuture("failure");
       } else {
@@ -80,10 +77,15 @@ public class RequestHandlerTest {
       }
     });
 
-    final var resource = resource1();
+    final var resource = DataPlaneContract.Resource.newBuilder()
+      .setUid("1")
+      .setUid("1-1234")
+      .addTopics("1-12345")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
+      .build();
 
     final var request = mock(HttpServerRequest.class);
-    when(request.path()).thenReturn(resource.ingress().getPath());
+    when(request.path()).thenReturn(resource.getIngress().getPath());
     final var response = mockResponse(request, statusCode);
 
     final var handler = new RequestHandler<>(
@@ -91,11 +93,15 @@ public class RequestHandlerTest {
       mapper,
       properties -> producer,
       mock(Counter.class),
-      mock(Counter.class));
+      mock(Counter.class)
+    );
+    final var reconciler = ResourcesReconcilerImpl.builder()
+      .watchIngress(handler)
+      .build();
 
     final var countDown = new CountDownLatch(1);
 
-    handler.reconcile(Map.of(resource, new HashSet<>()))
+    reconciler.reconcile(List.of(resource))
       .onFailure(cause -> fail())
       .onSuccess(v -> countDown.countDown());
 
@@ -109,15 +115,20 @@ public class RequestHandlerTest {
   @Test
   @SuppressWarnings({"unchecked"})
   public void shouldReturnBadRequestIfNoRecordCanBeCreated() throws InterruptedException {
-    final var producer = mock(KafkaProducer.class);
+    final var producer = mockProducer();
 
     final RequestToRecordMapper<Object, Object> mapper
       = (request, topic) -> Future.failedFuture("");
 
-    final var resource = resource1();
+    final var resource = DataPlaneContract.Resource.newBuilder()
+      .setUid("1")
+      .setUid("1-1234")
+      .addTopics("1-12345")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
+      .build();
 
     final var request = mock(HttpServerRequest.class);
-    when(request.path()).thenReturn(resource.ingress().getPath());
+    when(request.path()).thenReturn(resource.getIngress().getPath());
     final var response = mockResponse(request, RequestHandler.MAPPER_FAILED);
 
     final var handler = new RequestHandler<Object, Object>(
@@ -125,10 +136,14 @@ public class RequestHandlerTest {
       mapper,
       properties -> producer,
       mock(Counter.class),
-      mock(Counter.class));
+      mock(Counter.class)
+    );
+    final var reconciler = ResourcesReconcilerImpl.builder()
+      .watchIngress(handler)
+      .build();
 
     final var countDown = new CountDownLatch(1);
-    handler.reconcile(Map.of(resource, new HashSet<>()))
+    reconciler.reconcile(List.of(resource))
       .onFailure(cause -> fail())
       .onSuccess(v -> countDown.countDown());
 
@@ -146,21 +161,9 @@ public class RequestHandlerTest {
     verify(response, times(1)).end();
   }
 
-  private static HttpServerResponse mockResponse(
-    final HttpServerRequest request,
-    final int statusCode) {
-
-    final var response = mock(HttpServerResponse.class);
-    when(response.setStatusCode(statusCode)).thenReturn(response);
-
-    when(request.response()).thenReturn(response);
-    return response;
-  }
-
   @Test
   @SuppressWarnings("unchecked")
   public void shouldRecreateProducerWhenBootstrapServerChange(final VertxTestContext context) {
-
     final RequestToRecordMapper<Object, Object> mapper
       = (request, topic) -> Future.succeededFuture();
 
@@ -174,33 +177,37 @@ public class RequestHandlerTest {
         if (!first.getAndSet(false)) {
           recreated.set(true);
         }
-        return mock(KafkaProducer.class);
+        return mockProducer();
       },
       mock(Counter.class),
-      mock(Counter.class));
+      mock(Counter.class)
+    );
+    final var reconciler = ResourcesReconcilerImpl.builder()
+      .watchIngress(handler)
+      .build();
 
     final var checkpoint = context.checkpoint();
 
-    final var resource1 = new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
+    final var resource1 = DataPlaneContract.Resource.newBuilder()
       .setUid("1")
       .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-2:9092")
-      .build());
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello").build())
+      .build();
 
-    final var resource2 = new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
+    final var resource2 = DataPlaneContract.Resource.newBuilder()
       .setUid("1")
       .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-3:9092")
-      .build());
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello").build())
+      .build();
 
-    handler.reconcile(Map.of(resource1, new HashSet<>()))
-      .onSuccess(ignored -> handler.reconcile(Map.of(resource2, new HashSet<>()))
-        .onSuccess(i -> context.verify(() -> {
-          assertThat(recreated.get()).isTrue();
-          checkpoint.flag();
-        }))
-        .onFailure(context::failNow)
-      )
+    reconciler.reconcile(List.of(resource1))
+      .compose(ignored -> reconciler.reconcile(List.of(resource2)))
+      .onSuccess(i -> context.verify(() -> {
+        assertThat(recreated.get()).isTrue();
+        checkpoint.flag();
+      }))
       .onFailure(context::failNow);
   }
 
@@ -208,7 +215,6 @@ public class RequestHandlerTest {
   @SuppressWarnings("unchecked")
   public void shouldNotRecreateProducerWhenBootstrapServerNotChanged(
     final VertxTestContext context) {
-
     final RequestToRecordMapper<Object, Object> mapper
       = (request, topic) -> Future.succeededFuture();
 
@@ -222,33 +228,46 @@ public class RequestHandlerTest {
         if (!first.getAndSet(false)) {
           context.failNow(new IllegalStateException("producer should be recreated"));
         }
-        return mock(KafkaProducer.class);
+        return mockProducer();
       },
       mock(Counter.class),
-      mock(Counter.class));
+      mock(Counter.class)
+    );
+    final var reconciler = ResourcesReconcilerImpl.builder()
+      .watchIngress(handler)
+      .build();
 
     final var checkpoint = context.checkpoint();
 
-    final var resource1 = new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
+    final var resource = DataPlaneContract.Resource.newBuilder()
       .setUid("1")
       .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-2:9092")
-      .build());
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello").build())
+      .build();
 
-    final var resource2 = new ResourceWrapper(DataPlaneContract.Resource.newBuilder()
-      .setUid("1")
-      .addTopics("topic")
-      .setBootstrapServers("kafka-1:9092,kafka-2:9092")
-      .build());
-
-    handler.reconcile(Map.of(resource1, new HashSet<>()))
-      .onSuccess(ignored -> handler.reconcile(Map.of(resource2, new HashSet<>()))
-        .onSuccess(i -> context.verify(() -> {
-          assertThat(recreated.get()).isFalse();
-          checkpoint.flag();
-        }))
-        .onFailure(context::failNow)
-      )
+    reconciler.reconcile(List.of(resource))
+      .compose(ignored -> reconciler.reconcile(List.of(resource)))
+      .onSuccess(i -> context.verify(() -> {
+        assertThat(recreated.get()).isFalse();
+        checkpoint.flag();
+      }))
       .onFailure(context::failNow);
+  }
+
+  private static KafkaProducer mockProducer() {
+    var producer = mock(KafkaProducer.class);
+    when(producer.flush()).thenReturn(Future.succeededFuture());
+    when(producer.close()).thenReturn(Future.succeededFuture());
+    return producer;
+  }
+
+  private static HttpServerResponse mockResponse(
+    final HttpServerRequest request,
+    final int statusCode) {
+    final var response = mock(HttpServerResponse.class);
+    when(response.setStatusCode(statusCode)).thenReturn(response);
+    when(request.response()).thenReturn(response);
+    return response;
   }
 }

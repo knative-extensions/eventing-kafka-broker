@@ -106,6 +106,7 @@ public final class CoreObjects {
 
   public static DataPlaneContract.Egress egress11() {
     return DataPlaneContract.Egress.newBuilder()
+      .setUid("1-1234567")
       .setConsumerGroup("1-1234567")
       .setDestination(DESTINATION)
       .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
@@ -114,6 +115,7 @@ public final class CoreObjects {
 
   public static DataPlaneContract.Egress egress12() {
     return DataPlaneContract.Egress.newBuilder()
+      .setUid("2-1234567")
       .setConsumerGroup("2-1234567")
       .setDestination(DESTINATION)
       .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
@@ -122,6 +124,7 @@ public final class CoreObjects {
 
   public static DataPlaneContract.Egress egress13() {
     return DataPlaneContract.Egress.newBuilder()
+      .setUid("3-1234567")
       .setConsumerGroup("3-1234567")
       .setDestination(DESTINATION)
       .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
@@ -130,7 +133,26 @@ public final class CoreObjects {
 
   public static DataPlaneContract.Egress egress14() {
     return DataPlaneContract.Egress.newBuilder()
+      .setUid("4-1234567")
       .setConsumerGroup("4-1234567")
+      .setDestination(DESTINATION)
+      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
+      .build();
+  }
+
+  public static DataPlaneContract.Egress egress5() {
+    return DataPlaneContract.Egress.newBuilder()
+      .setUid("5-1234567")
+      .setConsumerGroup("5-1234567")
+      .setDestination(DESTINATION)
+      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
+      .build();
+  }
+
+  public static DataPlaneContract.Egress egress6() {
+    return DataPlaneContract.Egress.newBuilder()
+      .setUid("6-1234567")
+      .setConsumerGroup("6-1234567")
       .setDestination(DESTINATION)
       .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
       .build();
