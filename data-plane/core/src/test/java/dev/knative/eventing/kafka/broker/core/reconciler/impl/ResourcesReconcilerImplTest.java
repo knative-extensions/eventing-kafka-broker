@@ -22,11 +22,10 @@ class ResourcesReconcilerImplTest {
   void reconcileIngressAddNewResourcesWithoutIngress() {
     new ResourceReconcilerTestRunner()
       .enableIngressListener()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234").build(),
         baseResource("2-1234").build()
       ))
-      .done()
       .run();
   }
 
@@ -34,16 +33,17 @@ class ResourcesReconcilerImplTest {
   void reconcileIngressAddNewIngressAtSecondStep() {
     new ResourceReconcilerTestRunner()
       .enableIngressListener()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
           .build(),
         baseResource("2-1234")
           .build()
       ))
+      .expect()
       .newIngress("1-1234")
       .done()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
           .build(),
@@ -51,6 +51,7 @@ class ResourcesReconcilerImplTest {
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
           .build()
       ))
+      .expect()
       .newIngress("2-1234")
       .done()
       .run();
@@ -60,17 +61,19 @@ class ResourcesReconcilerImplTest {
   void reconcileIngressAndRemoveIngressAtSecondStep() {
     new ResourceReconcilerTestRunner()
       .enableIngressListener()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
           .build()
       ))
+      .expect()
       .newIngress("1-1234")
       .done()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .build()
       ))
+      .expect()
       .deletedIngress("1-1234")
       .done()
       .run();
@@ -80,18 +83,20 @@ class ResourcesReconcilerImplTest {
   void reconcileIngressAndUpdateIngressAtSecondStep() {
     new ResourceReconcilerTestRunner()
       .enableIngressListener()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
           .build()
       ))
+      .expect()
       .newIngress("1-1234")
       .done()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello/world"))
           .build()
       ))
+      .expect()
       .updatedIngress("1-1234")
       .done()
       .run();
@@ -101,24 +106,26 @@ class ResourcesReconcilerImplTest {
   void reconcileIngressAddUpdateAndRemoveResource() {
     new ResourceReconcilerTestRunner()
       .enableIngressListener()
-      .step(Collections.emptyList())
-      .done()
-      .step(List.of(
+      .reconcile(Collections.emptyList())
+      .reconcile(List.of(
         baseResource("1-1234")
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello/world"))
           .build()
       ))
+      .expect()
       .newIngress("1-1234")
       .done()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .addTopics("hello-2")
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello/world"))
           .build()
       ))
+      .expect()
       .updatedIngress("1-1234")
       .done()
-      .step(Collections.emptyList())
+      .reconcile(Collections.emptyList())
+      .expect()
       .deletedIngress("1-1234")
       .done()
       .run();
@@ -128,42 +135,45 @@ class ResourcesReconcilerImplTest {
   void reconcileEgressModifyingTheResource() {
     new ResourceReconcilerTestRunner()
       .enableEgressListener()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234").build()
       ))
-      .done()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .addEgresses(egress("aaa"))
           .addEgresses(egress("bbb"))
           .addEgresses(egress("ccc"))
           .build()
       ))
+      .expect()
       .newEgress("aaa")
       .newEgress("bbb")
       .newEgress("ccc")
       .done()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .addEgresses(egress("aaa"))
           .addEgresses(baseEgress("bbb").setFilter(Filter.newBuilder().putAttributes("id", "hello")))
           .addEgresses(egress("ccc"))
           .build()
       ))
+      .expect()
       .updatedEgress("bbb")
       .done()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .addEgresses(egress("aaa"))
           .addEgresses(egress("ccc"))
           .build()
       ))
+      .expect()
       .deletedEgress("bbb")
       .done()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .build()
       ))
+      .expect()
       .deletedEgress("aaa")
       .deletedEgress("ccc")
       .done()
@@ -174,18 +184,19 @@ class ResourcesReconcilerImplTest {
   void reconcileEgressModifyingTheGlobalEgressConfig() {
     new ResourceReconcilerTestRunner()
       .enableEgressListener()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .addEgresses(egress("aaa"))
           .addEgresses(egress("bbb"))
           .addEgresses(egress("ccc"))
           .build()
       ))
+      .expect()
       .newEgress("aaa")
       .newEgress("bbb")
       .newEgress("ccc")
       .done()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .setEgressConfig(DataPlaneContract.EgressConfig.newBuilder().setRetry(10))
           .addEgresses(egress("aaa"))
@@ -193,17 +204,19 @@ class ResourcesReconcilerImplTest {
           .addEgresses(egress("ccc"))
           .build()
       ))
+      .expect()
       .updatedEgress("aaa")
       .updatedEgress("bbb")
       .updatedEgress("ccc")
       .done()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .addEgresses(egress("aaa"))
           .addEgresses(egress("bbb"))
           .addEgresses(egress("ccc"))
           .build()
       ))
+      .expect()
       .updatedEgress("aaa")
       .updatedEgress("bbb")
       .updatedEgress("ccc")
@@ -215,18 +228,20 @@ class ResourcesReconcilerImplTest {
   void reconcileEgressAddingAndRemovingResource() {
     new ResourceReconcilerTestRunner()
       .enableEgressListener()
-      .step(List.of(
+      .reconcile(List.of(
         baseResource("1-1234")
           .addEgresses(egress("aaa"))
           .addEgresses(egress("bbb"))
           .addEgresses(egress("ccc"))
           .build()
       ))
+      .expect()
       .newEgress("aaa")
       .newEgress("bbb")
       .newEgress("ccc")
       .done()
-      .step(Collections.emptyList())
+      .reconcile(Collections.emptyList())
+      .expect()
       .deletedEgress("aaa")
       .deletedEgress("bbb")
       .deletedEgress("ccc")

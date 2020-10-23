@@ -11,7 +11,7 @@ import java.util.Set;
 
 public class ResourceReconcilerTestRunner {
 
-  public static class Step {
+  public static class ReconcileStep {
 
     private final Collection<DataPlaneContract.Resource> resources;
     private final ResourceReconcilerTestRunner runner;
@@ -23,38 +23,38 @@ public class ResourceReconcilerTestRunner {
     private final Set<String> updatedEgresses = new HashSet<>();
     private final Set<String> deletedEgresses = new HashSet<>();
 
-    public Step(Collection<DataPlaneContract.Resource> resources,
-                ResourceReconcilerTestRunner runner) {
+    public ReconcileStep(Collection<DataPlaneContract.Resource> resources,
+                         ResourceReconcilerTestRunner runner) {
       this.resources = resources;
       this.runner = runner;
     }
 
-    public Step newIngress(String uid) {
+    public ReconcileStep newIngress(String uid) {
       this.newIngresses.add(uid);
       return this;
     }
 
-    public Step updatedIngress(String uid) {
+    public ReconcileStep updatedIngress(String uid) {
       this.updatedIngresses.add(uid);
       return this;
     }
 
-    public Step deletedIngress(String uid) {
+    public ReconcileStep deletedIngress(String uid) {
       this.deletedIngresses.add(uid);
       return this;
     }
 
-    public Step newEgress(String uid) {
+    public ReconcileStep newEgress(String uid) {
       this.newEgresses.add(uid);
       return this;
     }
 
-    public Step updatedEgress(String uid) {
+    public ReconcileStep updatedEgress(String uid) {
       this.updatedEgresses.add(uid);
       return this;
     }
 
-    public Step deletedEgress(String uid) {
+    public ReconcileStep deletedEgress(String uid) {
       this.deletedEgresses.add(uid);
       return this;
     }
@@ -64,14 +64,18 @@ public class ResourceReconcilerTestRunner {
     }
   }
 
-  private final List<Step> steps = new ArrayList<>();
+  private final List<ReconcileStep> reconcileSteps = new ArrayList<>();
   private boolean enableIngressListener = false;
   private boolean enableEgressListener = false;
 
-  public Step step(Collection<DataPlaneContract.Resource> resources) {
-    final var step = new Step(resources, this);
-    this.steps.add(step);
-    return step;
+  public ResourceReconcilerTestRunner reconcile(Collection<DataPlaneContract.Resource> resources) {
+    final var step = new ReconcileStep(resources, this);
+    this.reconcileSteps.add(step);
+    return this;
+  }
+
+  public ReconcileStep expect() {
+    return this.reconcileSteps.get(this.reconcileSteps.size() - 1);
   }
 
   public ResourceReconcilerTestRunner enableIngressListener() {
@@ -100,8 +104,8 @@ public class ResourceReconcilerTestRunner {
 
     final var reconciler = reconcilerBuilder.build();
 
-    for (int i = 0; i < steps.size(); i++) {
-      final var step = steps.get(i);
+    for (int i = 0; i < reconcileSteps.size(); i++) {
+      final var step = reconcileSteps.get(i);
       reconciler.reconcile(step.resources);
 
       if (ingressListener != null) {
