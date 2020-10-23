@@ -26,6 +26,7 @@ import com.google.protobuf.util.JsonFormat;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
 /**
  * FileWatcher is the class responsible for watching a given file and reports update.
  */
-public class FileWatcher {
+public class FileWatcher implements Closeable, AutoCloseable {
 
   private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
 
@@ -48,6 +49,7 @@ public class FileWatcher {
 
   private final WatchService watcher;
   private final File toWatch;
+  private volatile boolean closed;
 
   /**
    * All args constructor.
@@ -129,6 +131,9 @@ public class FileWatcher {
   }
 
   private void update() throws IOException {
+    if (closed) {
+      return;
+    }
     try (
       final var fileReader = new FileReader(toWatch);
       final var bufferedReader = new BufferedReader(fileReader)) {
@@ -147,5 +152,10 @@ public class FileWatcher {
     } catch (final InvalidProtocolBufferException ex) {
       logger.warn("failed to parse from JSON", ex);
     }
+  }
+
+  @Override
+  public void close() {
+    closed = true;
   }
 }
