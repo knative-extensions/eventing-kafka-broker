@@ -3,20 +3,20 @@ package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import io.vertx.core.Future;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 public class IngressReconcilerListenerMock implements IngressReconcilerListener {
 
-  private final Set<String> newIngresses;
-  private final Set<String> updatedIngresses;
-  private final Set<String> deletedIngresses;
+  private final List<String> newIngresses;
+  private final List<String> updatedIngresses;
+  private final List<String> deletedIngresses;
 
   public IngressReconcilerListenerMock() {
-    this.newIngresses = new HashSet<>();
-    this.updatedIngresses = new HashSet<>();
-    this.deletedIngresses = new HashSet<>();
+    this.newIngresses = new ArrayList<>();
+    this.updatedIngresses = new ArrayList<>();
+    this.deletedIngresses = new ArrayList<>();
   }
 
   @Override
@@ -49,15 +49,15 @@ public class IngressReconcilerListenerMock implements IngressReconcilerListener 
     return Future.succeededFuture();
   }
 
-  public Set<String> getNewIngresses() {
+  public List<String> getNewIngresses() {
     return newIngresses;
   }
 
-  public Set<String> getUpdatedIngresses() {
+  public List<String> getUpdatedIngresses() {
     return updatedIngresses;
   }
 
-  public Set<String> getDeletedIngresses() {
+  public List<String> getDeletedIngresses() {
     return deletedIngresses;
   }
 }

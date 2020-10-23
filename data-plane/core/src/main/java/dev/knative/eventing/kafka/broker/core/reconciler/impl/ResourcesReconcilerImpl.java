@@ -28,6 +28,9 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
   private ResourcesReconcilerImpl(
     IngressReconcilerListener ingressReconcilerListener,
     EgressReconcilerListener egressReconcilerListener) {
+    if (ingressReconcilerListener == null && egressReconcilerListener == null) {
+      throw new NullPointerException("You need to specify at least one listener");
+    }
     this.ingressReconcilerListener = ingressReconcilerListener;
     this.egressReconcilerListener = egressReconcilerListener;
 
@@ -78,16 +81,17 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
 
         // Reconcile egress
         if (isReconcilingEgress()) {
-          final var oldEgresses = oldResource
+          final var oldEgressesKeys = oldResource
             .getEgressesList()
             .stream()
-            .collect(Collectors.toMap(DataPlaneContract.Egress::getUid, Function.identity()));
+            .map(DataPlaneContract.Egress::getUid)
+            .collect(Collectors.toSet());
           final var newEgresses = newResource
             .getEgressesList()
             .stream()
             .collect(Collectors.toMap(DataPlaneContract.Egress::getUid, Function.identity()));
 
-          final var diff = CollectionsUtils.diff(oldEgresses.keySet(), newEgresses.keySet());
+          final var diff = CollectionsUtils.diff(oldEgressesKeys, newEgresses.keySet());
 
           // Handle added
           for (String uid : diff.getAdded()) {

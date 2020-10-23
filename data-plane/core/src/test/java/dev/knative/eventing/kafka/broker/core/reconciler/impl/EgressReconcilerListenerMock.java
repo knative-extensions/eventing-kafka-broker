@@ -3,20 +3,20 @@ package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
 import io.vertx.core.Future;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 public class EgressReconcilerListenerMock implements EgressReconcilerListener {
 
-  private final Set<String> newEgresses;
-  private final Set<String> updatedEgresses;
-  private final Set<String> deletedEgresses;
+  private final List<String> newEgresses;
+  private final List<String> updatedEgresses;
+  private final List<String> deletedEgresses;
 
   public EgressReconcilerListenerMock() {
-    this.newEgresses = new HashSet<>();
-    this.updatedEgresses = new HashSet<>();
-    this.deletedEgresses = new HashSet<>();
+    this.newEgresses = new ArrayList<>();
+    this.updatedEgresses = new ArrayList<>();
+    this.deletedEgresses = new ArrayList<>();
   }
 
   @Override
@@ -49,15 +49,15 @@ public class EgressReconcilerListenerMock implements EgressReconcilerListener {
     return Future.succeededFuture();
   }
 
-  public Set<String> getNewEgresses() {
+  public List<String> getNewEgresses() {
     return newEgresses;
   }
 
-  public Set<String> getUpdatedEgresses() {
+  public List<String> getUpdatedEgresses() {
     return updatedEgresses;
   }
 
-  public Set<String> getDeletedEgresses() {
+  public List<String> getDeletedEgresses() {
     return deletedEgresses;
   }
 }

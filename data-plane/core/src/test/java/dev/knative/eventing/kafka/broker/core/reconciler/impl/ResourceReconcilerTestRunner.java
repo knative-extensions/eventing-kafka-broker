@@ -107,13 +107,13 @@ public class ResourceReconcilerTestRunner {
       if (ingressListener != null) {
         assertThat(ingressListener.getNewIngresses())
           .as("New ingresses at step " + i)
-          .isEqualTo(step.newIngresses);
+          .containsExactlyInAnyOrderElementsOf(step.newIngresses);
         assertThat(ingressListener.getUpdatedIngresses())
           .as("Updated ingresses at step " + i)
-          .isEqualTo(step.updatedIngresses);
+          .containsExactlyInAnyOrderElementsOf(step.updatedIngresses);
         assertThat(ingressListener.getDeletedIngresses())
           .as("Deleted ingresses at step " + i)
-          .isEqualTo(step.deletedIngresses);
+          .containsExactlyInAnyOrderElementsOf(step.deletedIngresses);
 
         ingressListener.getNewIngresses().clear();
         ingressListener.getUpdatedIngresses().clear();
@@ -123,13 +123,13 @@ public class ResourceReconcilerTestRunner {
       if (egressListener != null) {
         assertThat(egressListener.getNewEgresses())
           .as("New egresses at step " + i)
-          .isEqualTo(step.newEgresses);
+          .containsExactlyInAnyOrderElementsOf(step.newEgresses);
         assertThat(egressListener.getUpdatedEgresses())
           .as("Updated egresses at step " + i)
-          .isEqualTo(step.updatedEgresses);
+          .containsExactlyInAnyOrderElementsOf(step.updatedEgresses);
         assertThat(egressListener.getDeletedEgresses())
           .as("Deleted egresses at step " + i)
-          .isEqualTo(step.deletedEgresses);
+          .containsExactlyInAnyOrderElementsOf(step.deletedEgresses);
 
         egressListener.getNewEgresses().clear();
         egressListener.getUpdatedEgresses().clear();

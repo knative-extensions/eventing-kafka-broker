@@ -3,6 +3,7 @@ package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 import static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress;
 import static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter;
 import static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import java.util.Collections;
@@ -10,6 +11,12 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class ResourcesReconcilerImplTest {
+
+  @Test
+  void nullPointerExceptionWhenNoListenerIsProvided() {
+    assertThatThrownBy(() -> ResourcesReconcilerImpl.builder().build())
+      .isInstanceOf(NullPointerException.class);
+  }
 
   @Test
   void reconcileIngressAddNewResourcesWithoutIngress() {
