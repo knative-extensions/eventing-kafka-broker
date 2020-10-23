@@ -22,6 +22,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -62,7 +63,8 @@ public final class ConsumerDeployer implements EgressReconcilerListener {
     }
     this.vertx = vertx;
     this.consumerFactory = consumerFactory;
-    this.deployedDispatchers = new HashMap<>(egressesInitialCapacity);
+    //TODO(slinkydeveloper) https://github.com/knative-sandbox/eventing-kafka-broker/issues/332
+    this.deployedDispatchers = Collections.synchronizedMap(new HashMap<>(egressesInitialCapacity));
   }
 
   @Override
@@ -78,24 +80,25 @@ public final class ConsumerDeployer implements EgressReconcilerListener {
           cause
         );
       })
-      .compose(vertx::deployVerticle)
-      .onSuccess(deploymentId -> {
-        this.deployedDispatchers.put(egress.getUid(), deploymentId);
-        logger.info("Verticle deployed {} {} {}",
-          keyValue("egress", egress),
-          keyValue("resource", resource),
-          keyValue("deploymentId", deploymentId)
-        );
-      })
-      .onFailure(cause -> {
-        // this is a bad state we cannot start the verticle for consuming messages.
-        logger.error("failed to start verticle {} {}",
-          keyValue("egress", egress),
-          keyValue("resource", resource),
-          cause
-        );
-      })
-      .mapEmpty();
+      .compose(verticle -> vertx.deployVerticle(verticle)
+        .onSuccess(deploymentId -> {
+          this.deployedDispatchers.put(egress.getUid(), deploymentId);
+          logger.info("Verticle deployed {} {} {}",
+            keyValue("egress", egress),
+            keyValue("resource", resource),
+            keyValue("deploymentId", deploymentId)
+          );
+        })
+        .onFailure(cause -> {
+          // this is a bad state we cannot start the verticle for consuming messages.
+          logger.error("failed to start verticle {} {}",
+            keyValue("egress", egress),
+            keyValue("resource", resource),
+            cause
+          );
+        })
+        .mapEmpty()
+      );
   }
 
   @Override

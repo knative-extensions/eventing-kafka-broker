@@ -68,8 +68,7 @@ class ResourcesReconcilerImplTest {
       .newIngress("1-1234")
       .done()
       .step(List.of(
-        Resource.newBuilder()
-          .setUid("1-1234")
+        baseResource("1-1234")
           .build()
       ))
       .deletedIngress("1-1234")
@@ -167,6 +166,47 @@ class ResourcesReconcilerImplTest {
       ))
       .deletedEgress("aaa")
       .deletedEgress("ccc")
+      .done()
+      .run();
+  }
+
+  @Test
+  void reconcileEgressModifyingTheGlobalEgressConfig() {
+    new ResourceReconcilerTestRunner()
+      .enableEgressListener()
+      .step(List.of(
+        baseResource("1-1234")
+          .addEgresses(egress("aaa"))
+          .addEgresses(egress("bbb"))
+          .addEgresses(egress("ccc"))
+          .build()
+      ))
+      .newEgress("aaa")
+      .newEgress("bbb")
+      .newEgress("ccc")
+      .done()
+      .step(List.of(
+        baseResource("1-1234")
+          .setEgressConfig(DataPlaneContract.EgressConfig.newBuilder().setRetry(10))
+          .addEgresses(egress("aaa"))
+          .addEgresses(egress("bbb"))
+          .addEgresses(egress("ccc"))
+          .build()
+      ))
+      .updatedEgress("aaa")
+      .updatedEgress("bbb")
+      .updatedEgress("ccc")
+      .done()
+      .step(List.of(
+        baseResource("1-1234")
+          .addEgresses(egress("aaa"))
+          .addEgresses(egress("bbb"))
+          .addEgresses(egress("ccc"))
+          .build()
+      ))
+      .updatedEgress("aaa")
+      .updatedEgress("bbb")
+      .updatedEgress("ccc")
       .done()
       .run();
   }
