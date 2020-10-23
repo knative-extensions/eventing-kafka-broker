@@ -156,13 +156,17 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Ingress
 
     final KafkaProducer<K, V> producer = producerCreator.apply(producerConfigs);
 
-    this.producers.get().put(
-      ingress.getPath(),
-      new SimpleImmutableEntry<>(
-        resource.getBootstrapServers(),
-        new Producer<>(producer, resource.getTopics(0))
-      )
-    );
+    //TODO(slinkydeveloper) https://github.com/knative-sandbox/eventing-kafka-broker/issues/332
+    this.producers.getAndUpdate(map -> {
+      map.put(
+        ingress.getPath(),
+        new SimpleImmutableEntry<>(
+          resource.getBootstrapServers(),
+          new Producer<>(producer, resource.getTopics(0))
+        )
+      );
+      return map;
+    });
 
     return Future.succeededFuture();
   }
@@ -179,8 +183,13 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Ingress
   public Future<Void> onDeleteIngress(
     DataPlaneContract.Resource resource,
     DataPlaneContract.Ingress ingress) {
-    var producer = this.producers.get().remove(ingress.getPath())
-      .getValue().producer;
+    //TODO(slinkydeveloper) https://github.com/knative-sandbox/eventing-kafka-broker/issues/332
+    AtomicReference<Producer<K, V>> producerAtomicReference = new AtomicReference<>();
+    this.producers.updateAndGet(map -> {
+      producerAtomicReference.set(map.remove(ingress.getPath()).getValue());
+      return map;
+    });
+    var producer = producerAtomicReference.get().producer;
     return producer
       .flush()
       .compose(v -> producer.close());
