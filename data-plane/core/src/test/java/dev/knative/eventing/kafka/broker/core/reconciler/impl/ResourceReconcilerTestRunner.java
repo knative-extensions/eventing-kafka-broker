@@ -59,7 +59,7 @@ public class ResourceReconcilerTestRunner {
       return this;
     }
 
-    public ResourceReconcilerTestRunner next() {
+    public ResourceReconcilerTestRunner then() {
       return runner;
     }
   }
