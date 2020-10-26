@@ -34,7 +34,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategy
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.ReceiverVerticle;
-import dev.knative.eventing.kafka.broker.receiver.RequestHandler;
+import dev.knative.eventing.kafka.broker.receiver.RequestMapper;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.message.MessageReader;
@@ -312,7 +312,7 @@ public class DataPlaneTest {
     final Vertx vertx,
     final VertxTestContext context) throws InterruptedException {
 
-    final var handler = new RequestHandler<>(
+    final var handler = new RequestMapper<>(
       producerConfigs(),
       new CloudEventRequestToRecordMapper(),
       properties -> KafkaProducer.create(vertx, properties),
@@ -323,7 +323,7 @@ public class DataPlaneTest {
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(INGRESS_PORT);
 
-    final var verticle = new ReceiverVerticle("/live", "/ready", httpServerOptions, handler);
+    final var verticle = new ReceiverVerticle(httpServerOptions, handler);
 
     final CountDownLatch latch = new CountDownLatch(1);
     vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));

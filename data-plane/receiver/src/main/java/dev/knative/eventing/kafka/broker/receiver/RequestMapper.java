@@ -47,14 +47,14 @@ import org.slf4j.LoggerFactory;
  * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to Kafka through the Kafka
  * producer and terminating requests with the appropriate status code.
  */
-public class RequestHandler<K, V> implements Handler<HttpServerRequest>, IngressReconcilerListener {
+public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressReconcilerListener {
 
   public static final int MAPPER_FAILED = BAD_REQUEST.code();
   public static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
   public static final int RECORD_PRODUCED = ACCEPTED.code();
   public static final int RESOURCE_NOT_FOUND = NOT_FOUND.code();
 
-  private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(RequestMapper.class);
 
   private final RequestToRecordMapper<K, V> requestToRecordMapper;
   // path -> <bootstrapServers, producer>
@@ -73,7 +73,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Ingress
    * @param badRequestCounter     count bad request responses
    * @param produceEventsCounter  count events sent to Kafka
    */
-  public RequestHandler(
+  public RequestMapper(
     final Properties producerConfigs,
     final RequestToRecordMapper<K, V> requestToRecordMapper,
     final Function<Properties, KafkaProducer<K, V>> producerCreator,

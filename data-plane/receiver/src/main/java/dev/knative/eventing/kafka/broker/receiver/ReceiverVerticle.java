@@ -21,18 +21,20 @@ import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcile
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
+import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.http.HttpServerRequest;
 import java.util.Objects;
+import java.util.function.Function;
 
 public class ReceiverVerticle extends AbstractVerticle {
 
-  private final String livenessPath;
-  private final String readinessPath;
   private final HttpServerOptions httpServerOptions;
-  private final RequestHandler<String, CloudEvent> requestHandler;
+  private final RequestMapper<String, CloudEvent> requestMapper;
+  private final Handler<HttpServerRequest> requestHandler;
 
   private HttpServer server;
   private MessageConsumer<Object> messageConsumer;
@@ -40,22 +42,24 @@ public class ReceiverVerticle extends AbstractVerticle {
   /**
    * Create a new HttpVerticle.
    *
-   * @param livenessPath
-   * @param readinessPath
    * @param httpServerOptions server options.
-   * @param requestHandler    request handler.
+   * @param requestMapper     request handler.
    */
+  @SafeVarargs
   public ReceiverVerticle(
-    final String livenessPath,
-    final String readinessPath,
     final HttpServerOptions httpServerOptions,
-    final RequestHandler<String, CloudEvent> requestHandler) {
-    this.livenessPath = livenessPath;
-    this.readinessPath = readinessPath;
+    final RequestMapper<String, CloudEvent> requestMapper,
+    Function<Handler<HttpServerRequest>, Handler<HttpServerRequest>>... handlerDecoratorFactories) {
     Objects.requireNonNull(httpServerOptions, "provide http server options");
-    Objects.requireNonNull(requestHandler, "provide request handler");
+    Objects.requireNonNull(requestMapper, "provide request handler");
 
     this.httpServerOptions = httpServerOptions;
+    this.requestMapper = requestMapper;
+
+    Handler<HttpServerRequest> requestHandler = requestMapper;
+    for (var decFactory : handlerDecoratorFactories) {
+      requestHandler = decFactory.apply(requestHandler);
+    }
     this.requestHandler = requestHandler;
   }
 
@@ -65,16 +69,12 @@ public class ReceiverVerticle extends AbstractVerticle {
       vertx.eventBus(),
       ResourcesReconcilerImpl
         .builder()
-        .watchIngress(this.requestHandler)
+        .watchIngress(this.requestMapper)
         .build()
     );
     this.server = vertx.createHttpServer(httpServerOptions);
 
-    this.server.requestHandler(new SimpleProbeHandlerDecorator(
-      this.livenessPath,
-      this.readinessPath,
-      requestHandler
-    ))
+    this.server.requestHandler(this.requestHandler)
       .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
       .<Void>mapEmpty()
       .onComplete(startPromise);

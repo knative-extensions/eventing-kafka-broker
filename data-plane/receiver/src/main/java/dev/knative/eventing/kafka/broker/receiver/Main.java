@@ -85,7 +85,7 @@ public class Main {
 
     producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
     producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    final var handler = new RequestHandler<>(
+    final var handler = new RequestMapper<>(
       producerConfigs,
       new CloudEventRequestToRecordMapper(),
       properties -> KafkaProducer.create(vertx, properties),
@@ -99,10 +99,13 @@ public class Main {
     httpServerOptions.setPort(env.getIngressPort());
 
     final var verticle = new ReceiverVerticle(
-      env.getLivenessProbePath(),
-      env.getReadinessProbePath(),
       httpServerOptions,
-      handler
+      handler,
+      h -> new SimpleProbeHandlerDecorator(
+        env.getLivenessProbePath(),
+        env.getReadinessProbePath(),
+        h
+      )
     );
 
     vertx.deployVerticle(verticle)

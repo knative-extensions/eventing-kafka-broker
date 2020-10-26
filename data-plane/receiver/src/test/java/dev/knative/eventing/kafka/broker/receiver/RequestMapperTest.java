@@ -43,18 +43,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
-public class RequestHandlerTest {
+public class RequestMapperTest {
 
   private static final int TIMEOUT = 3;
 
   @Test
   public void shouldSendRecordAndTerminateRequestWithRecordProduced() throws InterruptedException {
-    shouldSendRecord(false, RequestHandler.RECORD_PRODUCED);
+    shouldSendRecord(false, RequestMapper.RECORD_PRODUCED);
   }
 
   @Test
   public void shouldSendRecordAndTerminateRequestWithFailedToProduce() throws InterruptedException {
-    shouldSendRecord(true, RequestHandler.FAILED_TO_PRODUCE);
+    shouldSendRecord(true, RequestMapper.FAILED_TO_PRODUCE);
   }
 
   @SuppressWarnings("unchecked")
@@ -88,7 +88,7 @@ public class RequestHandlerTest {
     when(request.path()).thenReturn(resource.getIngress().getPath());
     final var response = mockResponse(request, statusCode);
 
-    final var handler = new RequestHandler<>(
+    final var handler = new RequestMapper<>(
       new Properties(),
       mapper,
       properties -> producer,
@@ -129,9 +129,9 @@ public class RequestHandlerTest {
 
     final var request = mock(HttpServerRequest.class);
     when(request.path()).thenReturn(resource.getIngress().getPath());
-    final var response = mockResponse(request, RequestHandler.MAPPER_FAILED);
+    final var response = mockResponse(request, RequestMapper.MAPPER_FAILED);
 
-    final var handler = new RequestHandler<Object, Object>(
+    final var handler = new RequestMapper<Object, Object>(
       new Properties(),
       mapper,
       properties -> producer,
@@ -151,7 +151,7 @@ public class RequestHandlerTest {
 
     handler.handle(request);
 
-    verifySetStatusCodeAndTerminateResponse(RequestHandler.MAPPER_FAILED, response);
+    verifySetStatusCodeAndTerminateResponse(RequestMapper.MAPPER_FAILED, response);
   }
 
   private static void verifySetStatusCodeAndTerminateResponse(
@@ -170,7 +170,7 @@ public class RequestHandlerTest {
     final var first = new AtomicBoolean(true);
     final var recreated = new AtomicBoolean(false);
 
-    final var handler = new RequestHandler<Object, Object>(
+    final var handler = new RequestMapper<Object, Object>(
       new Properties(),
       mapper,
       properties -> {
@@ -221,7 +221,7 @@ public class RequestHandlerTest {
     final var first = new AtomicBoolean(true);
     final var recreated = new AtomicBoolean(false);
 
-    final var handler = new RequestHandler<Object, Object>(
+    final var handler = new RequestMapper<Object, Object>(
       new Properties(),
       mapper,
       properties -> {
