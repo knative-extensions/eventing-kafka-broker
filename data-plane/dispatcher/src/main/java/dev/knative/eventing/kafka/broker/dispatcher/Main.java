@@ -18,10 +18,11 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
+import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
+import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
-import dev.knative.eventing.kafka.broker.core.file.ResourcesReconcilerAdapter;
 import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
-import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
@@ -71,6 +72,7 @@ public class Main {
     final var vertx = Vertx.vertx(
       new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
     );
+    ContractMessageCodec.register(vertx.eventBus());
 
     final var metricsRegistry = BackendRegistries.getNow(METRICS_REGISTRY_NAME);
     final var eventsSentCounter = metricsRegistry.counter(HTTP_EVENTS_SENT_COUNT);
@@ -92,23 +94,23 @@ public class Main {
       producerConfig
     );
 
-    final var consumerDeployer = new ConsumerDeployer(
-      vertx,
+    final var consumerDeployerVerticle = new ConsumerDeployer(
       consumerVerticleFactory,
       env.getEgressesInitialCapacity()
     );
 
-    final var objectCreator = new ResourcesReconcilerAdapter(
-      ResourcesReconcilerImpl
-        .builder()
-        .watchEgress(consumerDeployer)
-        .build()
-    );
+    vertx.deployVerticle(consumerDeployerVerticle)
+      .onSuccess(v -> logger.info("consumer deployer started"))
+      .onFailure(t -> {
+        // This is a catastrophic failure, close the application
+        logger.error("consumer deployer not started", t);
+        vertx.close(v -> System.exit(1));
+      });
 
     try {
       final var fw = new FileWatcher(
         FileSystems.getDefault().newWatchService(),
-        objectCreator,
+        new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS),
         new File(env.getDataPlaneConfigFilePath())
       );
 

@@ -18,10 +18,12 @@ package dev.knative.eventing.kafka.broker.receiver;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
+import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
+import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
-import dev.knative.eventing.kafka.broker.core.file.ResourcesReconcilerAdapter;
 import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
-import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
+import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Vertx;
@@ -75,6 +77,7 @@ public class Main {
     final var vertx = Vertx.vertx(
       new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
     );
+    ContractMessageCodec.register(vertx.eventBus());
 
     final var metricsRegistry = BackendRegistries.getNow(METRICS_REGISTRY_NAME);
 
@@ -101,7 +104,14 @@ public class Main {
       env.getReadinessProbePath(),
       handler
     );
-    final var verticle = new HttpVerticle(httpServerOptions, probeHandlerDecorator);
+    final var verticle = new ReceiverVerticle(
+      httpServerOptions,
+      probeHandlerDecorator,
+      ResourcesReconcilerImpl
+        .builder()
+        .watchIngress(handler)
+        .build()
+    );
 
     vertx.deployVerticle(verticle)
       .onSuccess(v -> logger.info("receiver started"))
@@ -113,14 +123,9 @@ public class Main {
       //  Note: reconcile(Brokers) isn't thread safe so we need to make sure to stop the watcher
       //  from calling reconcile first
 
-      final var objectsCreator = new ResourcesReconcilerAdapter(
-        ResourcesReconcilerImpl.builder()
-          .watchIngress(handler)
-          .build()
-      );
       final var fw = new FileWatcher(
         FileSystems.getDefault().newWatchService(),
-        objectsCreator,
+        new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS),
         new File(env.getDataPlaneConfigFilePath())
       );
 

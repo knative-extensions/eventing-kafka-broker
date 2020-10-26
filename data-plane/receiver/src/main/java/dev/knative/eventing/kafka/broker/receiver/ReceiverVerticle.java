@@ -16,19 +16,26 @@
 
 package dev.knative.eventing.kafka.broker.receiver;
 
+import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import java.util.Objects;
 
-public class HttpVerticle extends AbstractVerticle {
+public class ReceiverVerticle extends AbstractVerticle {
 
   private final HttpServerOptions httpServerOptions;
   private final Handler<HttpServerRequest> requestHandler;
+  private final ResourcesReconciler resourcesReconciler;
+
   private HttpServer server;
+  private MessageConsumer<Object> messageConsumer;
 
   /**
    * Create a new HttpVerticle.
@@ -36,28 +43,37 @@ public class HttpVerticle extends AbstractVerticle {
    * @param httpServerOptions server options.
    * @param requestHandler    request handler.
    */
-  public HttpVerticle(
+  public ReceiverVerticle(
     final HttpServerOptions httpServerOptions,
-    final Handler<HttpServerRequest> requestHandler) {
-
+    final Handler<HttpServerRequest> requestHandler,
+    final ResourcesReconciler resourcesReconciler) {
     Objects.requireNonNull(httpServerOptions, "provide http server options");
     Objects.requireNonNull(requestHandler, "provide request handler");
+    Objects.requireNonNull(resourcesReconciler, "provide resources reconciler");
 
     this.httpServerOptions = httpServerOptions;
     this.requestHandler = requestHandler;
+    this.resourcesReconciler = resourcesReconciler;
   }
 
   @Override
   public void start(final Promise<Void> startPromise) {
-    server = vertx.createHttpServer(httpServerOptions);
-    server.requestHandler(requestHandler)
+    this.messageConsumer = ResourcesReconcilerMessageHandler.start(vertx.eventBus(), this.resourcesReconciler);
+    this.server = vertx.createHttpServer(httpServerOptions);
+
+    this.server.requestHandler(requestHandler)
       .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
       .<Void>mapEmpty()
       .onComplete(startPromise);
   }
 
   @Override
-  public void stop() {
-    server.close();
+  public void stop(Promise<Void> stopPromise) {
+    CompositeFuture.all(
+      server.close().mapEmpty(),
+      messageConsumer.unregister()
+    )
+      .<Void>mapEmpty()
+      .onComplete(stopPromise);
   }
 }

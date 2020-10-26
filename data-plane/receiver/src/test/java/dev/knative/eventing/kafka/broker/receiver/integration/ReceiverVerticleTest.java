@@ -23,9 +23,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.FloatNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
+import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper;
-import dev.knative.eventing.kafka.broker.receiver.HttpVerticle;
+import dev.knative.eventing.kafka.broker.receiver.ReceiverVerticle;
 import dev.knative.eventing.kafka.broker.receiver.RequestHandler;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
@@ -75,6 +78,8 @@ public class ReceiverVerticleTest {
 
   @BeforeEach
   public void setUp(final Vertx vertx, final VertxTestContext testContext) {
+    ContractMessageCodec.register(vertx.eventBus());
+
     webClient = WebClient.create(vertx);
     ReceiverVerticleTest.mockProducer = new MockProducer<>(
       true,
@@ -97,7 +102,9 @@ public class ReceiverVerticleTest {
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(PORT);
     httpServerOptions.setHost("localhost");
-    final var verticle = new HttpVerticle(httpServerOptions, handler);
+    final var verticle = new ReceiverVerticle(httpServerOptions, handler, ResourcesReconcilerImpl.builder()
+      .watchIngress(handler)
+      .build());
     vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));
   }
 
@@ -121,16 +128,8 @@ public class ReceiverVerticleTest {
     final var checkpoints = context.checkpoint(1);
     final var countDown = new CountDownLatch(1);
 
-    final var wait = new CountDownLatch(1);
-
-    final var reconciler = ResourcesReconcilerImpl.builder()
-      .watchIngress(handler)
-      .build();
-    reconciler.reconcile(List.of(tc.resource))
-      .onFailure(context::failNow)
-      .onSuccess(v -> wait.countDown());
-
-    wait.await(TIMEOUT, TimeUnit.SECONDS);
+    new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS)
+      .accept(tc.getContract());
 
     tc.requestSender.apply(webClient.post(PORT, "localhost", tc.path))
       .onFailure(context::failNow)
@@ -354,6 +353,12 @@ public class ReceiverVerticleTest {
 
       this.badRequestCount = badRequestCount;
       this.produceEventCount = produceEventsCount;
+    }
+
+    DataPlaneContract.Contract getContract() {
+      return DataPlaneContract.Contract.newBuilder()
+        .addResources(this.resource)
+        .build();
     }
   }
 }
