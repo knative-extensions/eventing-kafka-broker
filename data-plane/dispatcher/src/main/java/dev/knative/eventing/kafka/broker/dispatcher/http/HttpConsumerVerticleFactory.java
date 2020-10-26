@@ -96,8 +96,8 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
    * {@inheritDoc}
    */
   @Override
-  public Future<AbstractVerticle> get(final DataPlaneContract.Resource resource,
-                                      final DataPlaneContract.Egress egress) {
+  public AbstractVerticle get(final DataPlaneContract.Resource resource,
+                              final DataPlaneContract.Egress egress) {
     Objects.requireNonNull(resource, "provide resource");
     Objects.requireNonNull(egress, "provide egress");
 
@@ -134,9 +134,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
       egressDeadLetterSender
     );
 
-    return Future.succeededFuture(
-      new ConsumerVerticle<>(consumer, new HashSet<>(resource.getTopicsList()), consumerRecordHandler)
-    );
+    return new ConsumerVerticle<>(consumer, new HashSet<>(resource.getTopicsList()), consumerRecordHandler);
   }
 
   private static CircuitBreakerOptions createCircuitBreakerOptions(final DataPlaneContract.Resource resource) {

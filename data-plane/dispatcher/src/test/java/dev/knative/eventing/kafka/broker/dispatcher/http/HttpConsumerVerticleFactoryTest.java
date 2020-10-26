@@ -85,8 +85,7 @@ public class HttpConsumerVerticleFactoryTest {
       .addEgresses(egress)
       .build();
 
-    final var consumerFactoryFuture = verticleFactory.get(resource, egress);
-    assertThat(consumerFactoryFuture.succeeded()).isTrue();
+    assertDoesNotThrow(() -> verticleFactory.get(resource, egress));
   }
 
   @Test

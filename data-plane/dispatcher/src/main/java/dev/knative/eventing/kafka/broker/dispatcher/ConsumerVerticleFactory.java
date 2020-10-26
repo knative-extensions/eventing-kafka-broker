@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
 
 /**
  * ConsumerVerticleFactory is responsible for instantiating consumer verticles.
@@ -32,5 +31,5 @@ public interface ConsumerVerticleFactory {
    * @param egress trigger data.
    * @return a new consumer verticle.
    */
-  Future<AbstractVerticle> get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress);
+  AbstractVerticle get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress);
 }

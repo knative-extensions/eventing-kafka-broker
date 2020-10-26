@@ -20,6 +20,7 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import java.util.Collections;
@@ -71,16 +72,9 @@ public final class ConsumerDeployer implements EgressReconcilerListener {
   public Future<Void> onNewEgress(
     DataPlaneContract.Resource resource,
     DataPlaneContract.Egress egress) {
-    return consumerFactory.get(resource, egress)
-      .onFailure(cause -> {
-        // probably configuration are wrong, so do not retry.
-        logger.error("potential control-plane bug: failed to get verticle {} {}",
-          keyValue("egress", egress),
-          keyValue("resource", resource),
-          cause
-        );
-      })
-      .compose(verticle -> vertx.deployVerticle(verticle)
+    try {
+      AbstractVerticle verticle = consumerFactory.get(resource, egress);
+      return vertx.deployVerticle(verticle)
         .onSuccess(deploymentId -> {
           this.deployedDispatchers.put(egress.getUid(), deploymentId);
           logger.info("Verticle deployed {} {} {}",
@@ -97,8 +91,15 @@ public final class ConsumerDeployer implements EgressReconcilerListener {
             cause
           );
         })
-        .mapEmpty()
+        .mapEmpty();
+    } catch (Exception e) {
+      logger.error("potential control-plane bug: failed to get verticle {} {}",
+        keyValue("egress", egress),
+        keyValue("resource", resource),
+        e
       );
+      return Future.failedFuture(new IllegalStateException("Potential control-plane bug: failed to get verticle", e));
+    }
   }
 
   @Override
