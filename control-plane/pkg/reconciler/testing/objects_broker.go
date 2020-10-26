@@ -27,10 +27,10 @@ import (
 	clientgotesting "k8s.io/client-go/testing"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	"knative.dev/eventing/pkg/reconciler/names"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/network"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -189,7 +189,7 @@ func BrokerAddressable(configs *Configs) func(broker *eventing.Broker) {
 
 		broker.Status.Address.URL = &apis.URL{
 			Scheme: "http",
-			Host:   names.ServiceHostName(configs.IngressName, configs.SystemNamespace),
+			Host:   network.GetServiceHostname(configs.IngressName, configs.SystemNamespace),
 			Path:   fmt.Sprintf("/%s/%s", broker.Namespace, broker.Name),
 		}
 

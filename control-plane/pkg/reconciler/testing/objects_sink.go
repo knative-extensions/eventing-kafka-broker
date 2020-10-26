@@ -27,8 +27,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/utils/pointer"
-	"knative.dev/eventing/pkg/reconciler/names"
 	"knative.dev/pkg/apis"
+	"knative.dev/pkg/network"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -189,7 +189,7 @@ func SinkAddressable(configs *config.Env) func(sink *eventing.KafkaSink) {
 
 		sink.Status.Address.URL = &apis.URL{
 			Scheme: "http",
-			Host:   names.ServiceHostName(configs.IngressName, configs.SystemNamespace),
+			Host:   network.GetServiceHostname(configs.IngressName, configs.SystemNamespace),
 			Path:   fmt.Sprintf("/%s/%s", sink.Namespace, sink.Name),
 		}
 
