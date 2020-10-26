@@ -6,7 +6,8 @@ import io.vertx.core.eventbus.EventBus;
 import java.util.function.Consumer;
 
 /**
- * This object publishes all consumed contracts to the event bus
+ * This object publishes all consumed contracts to the event bus.
+ * This class requires the codec {@link ContractMessageCodec} registered in the provided event bus.
  */
 public class ContractPublisher implements Consumer<DataPlaneContract.Contract> {
 
