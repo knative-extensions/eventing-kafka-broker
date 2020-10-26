@@ -18,11 +18,11 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
-import dev.knative.eventing.kafka.broker.core.wrappers.Filter;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import java.util.Objects;
+import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
 
   private static final Logger logger = LoggerFactory.getLogger(ConsumerRecordHandler.class);
 
-  private final Filter<V> filter;
+  private final Predicate<V> filter;
   private final ConsumerRecordSender<K, V, R> subscriberSender;
   private final ConsumerRecordSender<K, V, R> deadLetterQueueSender;
   private final ConsumerRecordOffsetStrategy<K, V> receiver;
@@ -57,7 +57,7 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
    */
   public ConsumerRecordHandler(
     final ConsumerRecordSender<K, V, R> subscriberSender,
-    final Filter<V> filter,
+    final Predicate<V> filter,
     final ConsumerRecordOffsetStrategy<K, V> receiver,
     final SinkResponseHandler<R> sinkResponseHandler,
     final ConsumerRecordSender<K, V, R> deadLetterQueueSender) {
@@ -86,7 +86,7 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
    */
   public ConsumerRecordHandler(
     final ConsumerRecordSender<K, V, R> subscriberSender,
-    final Filter<V> filter,
+    final Predicate<V> filter,
     final ConsumerRecordOffsetStrategy<K, V> receiver,
     final SinkResponseHandler<R> sinkResponseHandler) {
 
@@ -113,7 +113,7 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
 
     receiver.recordReceived(record);
 
-    if (filter.match(record.value())) {
+    if (filter.test(record.value())) {
       logDebug("record match filtering", record);
       send(record);
     } else {

@@ -20,8 +20,8 @@ import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
-import dev.knative.eventing.kafka.broker.core.wrappers.EventMatcher;
-import dev.knative.eventing.kafka.broker.core.wrappers.Filter;
+import dev.knative.eventing.kafka.broker.core.filter.Filter;
+import dev.knative.eventing.kafka.broker.core.filter.impl.AttributesFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
@@ -128,7 +128,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
     final var consumerRecordHandler = new ConsumerRecordHandler<>(
       egressDestinationSender,
-      (egress.hasFilter()) ? new EventMatcher(egress.getFilter().getAttributesMap()) : Filter.noopMatcher(),
+      (egress.hasFilter()) ? new AttributesFilter(egress.getFilter().getAttributesMap()) : Filter.noop(),
       consumerOffsetManager,
       sinkResponseHandler,
       egressDeadLetterSender

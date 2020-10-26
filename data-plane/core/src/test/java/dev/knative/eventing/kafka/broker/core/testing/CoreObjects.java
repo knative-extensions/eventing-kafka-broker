@@ -17,18 +17,9 @@
 package dev.knative.eventing.kafka.broker.core.testing;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
-import dev.knative.eventing.kafka.broker.core.wrappers.Egress;
-import dev.knative.eventing.kafka.broker.core.wrappers.EgressWrapper;
-import dev.knative.eventing.kafka.broker.core.wrappers.Resource;
-import dev.knative.eventing.kafka.broker.core.wrappers.ResourceWrapper;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public final class CoreObjects {
 
@@ -48,63 +39,34 @@ public final class CoreObjects {
 
   public static DataPlaneContract.Contract contract() {
     return DataPlaneContract.Contract.newBuilder()
-      .addResources(resource1Unwrapped())
-      .addResources(resource2Unwrapped())
+      .addResources(resource1())
+      .addResources(resource2())
       .build();
   }
 
-  public static Resource resource1() {
-    return new ResourceWrapper(
-      resource1Unwrapped()
-    );
-  }
-
-  public static DataPlaneContract.Resource resource1Unwrapped() {
+  public static DataPlaneContract.Resource resource1() {
     return DataPlaneContract.Resource.newBuilder()
       .setUid("1-1234")
       .addTopics("1-12345")
       .addAllEgresses(Arrays.asList(
-        egress11(),
-        egress12()
+        egress1(),
+        egress2()
       ))
       .build();
   }
 
-  public static Resource resource2() {
-    return new ResourceWrapper(
-      resource2Unwrapped()
-    );
-  }
-
-  public static DataPlaneContract.Resource resource2Unwrapped() {
+  public static DataPlaneContract.Resource resource2() {
     return DataPlaneContract.Resource.newBuilder()
       .setUid("2-1234")
       .addTopics("2-12345")
       .addAllEgresses(Arrays.asList(
-        egress13(),
-        egress14()
+        egress3(),
+        egress4()
       ))
       .build();
   }
 
-
-  public static Egress egress1() {
-    return new EgressWrapper(egress11());
-  }
-
-  public static Egress egress2() {
-    return new EgressWrapper(egress12());
-  }
-
-  public static Egress egress3() {
-    return new EgressWrapper(egress13());
-  }
-
-  public static Egress egress4() {
-    return new EgressWrapper(egress14());
-  }
-
-  public static DataPlaneContract.Egress egress11() {
+  public static DataPlaneContract.Egress egress1() {
     return DataPlaneContract.Egress.newBuilder()
       .setUid("1-1234567")
       .setConsumerGroup("1-1234567")
@@ -113,7 +75,7 @@ public final class CoreObjects {
       .build();
   }
 
-  public static DataPlaneContract.Egress egress12() {
+  public static DataPlaneContract.Egress egress2() {
     return DataPlaneContract.Egress.newBuilder()
       .setUid("2-1234567")
       .setConsumerGroup("2-1234567")
@@ -122,7 +84,7 @@ public final class CoreObjects {
       .build();
   }
 
-  public static DataPlaneContract.Egress egress13() {
+  public static DataPlaneContract.Egress egress3() {
     return DataPlaneContract.Egress.newBuilder()
       .setUid("3-1234567")
       .setConsumerGroup("3-1234567")
@@ -131,7 +93,7 @@ public final class CoreObjects {
       .build();
   }
 
-  public static DataPlaneContract.Egress egress14() {
+  public static DataPlaneContract.Egress egress4() {
     return DataPlaneContract.Egress.newBuilder()
       .setUid("4-1234567")
       .setConsumerGroup("4-1234567")
@@ -156,37 +118,5 @@ public final class CoreObjects {
       .setDestination(DESTINATION)
       .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
       .build();
-  }
-
-  /**
-   * This method generates a collection of resource mocked with new egresses, so you can use it to test the {@link ResourcesReconciler}
-   */
-  public static Collection<Resource> mockResourcesWithNewEgresses(Map<Resource, Set<Egress>> newResources) {
-    return newResources.entrySet().stream().map(entry -> new Resource() {
-      @Override
-      public String id() {
-        return entry.getKey().id();
-      }
-
-      @Override
-      public Set<String> topics() {
-        return entry.getKey().topics();
-      }
-
-      @Override
-      public String bootstrapServers() {
-        return entry.getKey().bootstrapServers();
-      }
-
-      @Override
-      public DataPlaneContract.Ingress ingress() {
-        return entry.getKey().ingress();
-      }
-
-      @Override
-      public DataPlaneContract.EgressConfig egressConfig() {
-        return entry.getKey().egressConfig();
-      }
-    }).collect(Collectors.toList());
   }
 }

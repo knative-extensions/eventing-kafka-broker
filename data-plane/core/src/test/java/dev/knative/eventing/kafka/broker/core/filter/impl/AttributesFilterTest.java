@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.core.wrappers;
+package dev.knative.eventing.kafka.broker.core.filter.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dev.knative.eventing.kafka.broker.core.wrappers.EventMatcher.Constants;
+import dev.knative.eventing.kafka.broker.core.filter.impl.AttributesFilter.Constants;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import java.net.URI;
@@ -32,7 +32,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class EventMatcherTest {
+public class AttributesFilterTest {
 
   @ParameterizedTest
   @MethodSource(value = {"testCases"})
@@ -41,9 +41,9 @@ public class EventMatcherTest {
     final CloudEvent event,
     final boolean shouldMatch) {
 
-    final var matcher = new EventMatcher(attributes);
+    final var filter = new AttributesFilter(attributes);
 
-    final var match = matcher.match(event);
+    final var match = filter.test(event);
 
     assertThat(match).isEqualTo(shouldMatch);
   }
@@ -63,9 +63,9 @@ public class EventMatcherTest {
       "type", ""
     );
 
-    final var eventMatcher = new EventMatcher(attributes);
+    final var filter = new AttributesFilter(attributes);
 
-    final boolean match = eventMatcher.match(event);
+    final boolean match = filter.test(event);
 
     assertThat(match).isTrue();
   }
@@ -88,9 +88,9 @@ public class EventMatcherTest {
       "extension2", "valueExtension2"
     );
 
-    final var eventMatcher = new EventMatcher(attributes);
+    final var filter = new AttributesFilter(attributes);
 
-    final boolean match = eventMatcher.match(event);
+    final boolean match = filter.test(event);
 
     assertThat(match).isTrue();
   }
@@ -110,9 +110,9 @@ public class EventMatcherTest {
       "extension2", "valueExtension"
     );
 
-    final var eventMatcher = new EventMatcher(attributes);
+    final var filter = new AttributesFilter(attributes);
 
-    final boolean match = eventMatcher.match(event);
+    final boolean match = filter.test(event);
 
     assertThat(match).isFalse();
   }
@@ -134,9 +134,9 @@ public class EventMatcherTest {
       "type", ""
     );
 
-    final var eventMatcher = new EventMatcher(attributes);
+    final var filter = new AttributesFilter(attributes);
 
-    final boolean match = eventMatcher.match(event);
+    final boolean match = filter.test(event);
 
     assertThat(match).isTrue();
   }
@@ -369,6 +369,6 @@ public class EventMatcherTest {
       .size();
 
     // DATACONTENTENCODING isn't usable, so +1
-    assertThat(EventMatcher.attributesMapper.size() + 1).isEqualTo(size);
+    assertThat(AttributesFilter.attributesMapper.size() + 1).isEqualTo(size);
   }
 }
