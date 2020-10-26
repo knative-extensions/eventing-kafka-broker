@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.receiver.integration;
+package dev.knative.eventing.kafka.broker.receiver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -25,11 +25,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
-import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
-import dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper;
-import dev.knative.eventing.kafka.broker.receiver.ReceiverVerticle;
-import dev.knative.eventing.kafka.broker.receiver.RequestHandler;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
@@ -102,9 +98,12 @@ public class ReceiverVerticleTest {
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(PORT);
     httpServerOptions.setHost("localhost");
-    final var verticle = new ReceiverVerticle(httpServerOptions, handler, ResourcesReconcilerImpl.builder()
-      .watchIngress(handler)
-      .build());
+    final var verticle = new ReceiverVerticle(
+      "/live",
+      "/ready",
+      httpServerOptions,
+      handler
+    );
     vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));
   }
 

@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.receiver.integration;
+package dev.knative.eventing.kafka.broker.receiver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dev.knative.eventing.kafka.broker.receiver.ReceiverVerticle;
-import dev.knative.eventing.kafka.broker.receiver.SimpleProbeHandlerDecorator;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
@@ -27,7 +25,6 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

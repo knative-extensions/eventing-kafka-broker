@@ -23,11 +23,12 @@ import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
+import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
+import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
-import dev.knative.eventing.kafka.broker.core.file.ResourcesReconcilerAdapter;
-import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
-import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployer;
+import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
@@ -45,6 +46,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -61,7 +63,8 @@ public class UnorderedConsumerTest {
 
   @Test
   public void testUnorderedConsumer(final Vertx vertx, final VertxTestContext context)
-    throws IOException, InterruptedException {
+    throws IOException, InterruptedException, ExecutionException {
+    ContractMessageCodec.register(vertx.eventBus());
 
     final var producerConfigs = new Properties();
     final var consumerConfigs = new Properties();
@@ -89,18 +92,15 @@ public class UnorderedConsumerTest {
     );
     consumerVerticleFactoryMock.setRecords(consumerRecords);
 
-    final var consumerDeployer = new ConsumerDeployer(
-      vertx,
+    final var consumerDeployer = new ConsumerDeployerVerticle(
       consumerVerticleFactoryMock,
       100
     );
 
-    final var reconciler = ResourcesReconcilerImpl
-      .builder()
-      .watchEgress(consumerDeployer)
-      .build();
-
-    final var objectsCreator = new ResourcesReconcilerAdapter(reconciler);
+    vertx.deployVerticle(consumerDeployer)
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get();
 
     final var contract = contract();
     final var numEgresses = contract.getResourcesList().stream()
@@ -113,7 +113,7 @@ public class UnorderedConsumerTest {
     final var file = Files.createTempFile("fw-", "-fw").toFile();
     final var fileWatcher = new FileWatcher(
       FileSystems.getDefault().newWatchService(),
-      objectsCreator,
+      new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS),
       file
     );
 
@@ -130,7 +130,7 @@ public class UnorderedConsumerTest {
 
     Thread.sleep(6000); // reduce flakiness
 
-    assertThat(vertx.deploymentIDs()).hasSize(numEgresses);
+    assertThat(vertx.deploymentIDs()).hasSize(numEgresses + 1);
 
     waitEvents.await();
 

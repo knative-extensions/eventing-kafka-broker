@@ -22,7 +22,6 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
-import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import io.cloudevents.kafka.CloudEventSerializer;
@@ -99,18 +98,11 @@ public class Main {
     );
     httpServerOptions.setPort(env.getIngressPort());
 
-    final var probeHandlerDecorator = new SimpleProbeHandlerDecorator(
+    final var verticle = new ReceiverVerticle(
       env.getLivenessProbePath(),
       env.getReadinessProbePath(),
-      handler
-    );
-    final var verticle = new ReceiverVerticle(
       httpServerOptions,
-      probeHandlerDecorator,
-      ResourcesReconcilerImpl
-        .builder()
-        .watchIngress(handler)
-        .build()
+      handler
     );
 
     vertx.deployVerticle(verticle)

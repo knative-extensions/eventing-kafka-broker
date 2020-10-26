@@ -26,8 +26,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
-import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployer;
+import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
+import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
+import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper;
@@ -52,7 +54,6 @@ import io.vertx.kafka.client.producer.KafkaProducer;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collections;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -91,15 +92,16 @@ public class DataPlaneTest {
 
   private static File dataDir;
   private static KafkaCluster kafkaCluster;
-  private static ConsumerDeployer consumerDeployer;
-  private static RequestHandler<String, CloudEvent> requestHandler;
+  private static ConsumerDeployerVerticle consumerDeployerVerticle;
+  private static ReceiverVerticle receiverVerticle;
 
   @BeforeAll
   public static void setUp(final Vertx vertx, final VertxTestContext context)
     throws IOException, InterruptedException {
     setUpKafkaCluster();
-    consumerDeployer = setUpDispatcher(vertx);
-    requestHandler = setUpReceiver(vertx, context);
+    ContractMessageCodec.register(vertx.eventBus());
+    consumerDeployerVerticle = setUpDispatcher(vertx, context);
+    receiverVerticle = setUpReceiver(vertx, context);
     context.completeNow();
   }
 
@@ -189,20 +191,12 @@ public class DataPlaneTest {
       )
       .build();
 
-    final var reconciler = ResourcesReconcilerImpl
-      .builder()
-      .watchIngress(requestHandler)
-      .watchEgress(consumerDeployer)
-      .build();
+    new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS)
+      .accept(DataPlaneContract.Contract.newBuilder().addResources(resource).build());
 
-    final var waitReconciler = new CountDownLatch(1);
-
-    // reconcile ingress/egress
-    reconciler.reconcile(Collections.singletonList(resource))
-      .onFailure(context::failNow)
-      .onSuccess(v -> waitReconciler.countDown());
-
-    waitReconciler.await(TIMEOUT, TimeUnit.SECONDS);
+    //TODO(slinkydeveloper) for testing purpose, we need to implement a way to propagate results of reconciliation
+    // Or should we use awaitability or similar?
+    Thread.sleep(10000);
 
     // start service
     vertx.createHttpServer()
@@ -281,7 +275,8 @@ public class DataPlaneTest {
     kafkaCluster.createTopic(TOPIC, NUM_PARTITIONS, REPLICATION_FACTOR);
   }
 
-  private static ConsumerDeployer setUpDispatcher(final Vertx vertx) {
+  private static ConsumerDeployerVerticle setUpDispatcher(final Vertx vertx, final VertxTestContext context)
+    throws InterruptedException {
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
       consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class));
@@ -301,14 +296,19 @@ public class DataPlaneTest {
       producerConfigs
     );
 
-    return new ConsumerDeployer(
-      vertx,
+    final var verticle = new ConsumerDeployerVerticle(
       consumerVerticleFactory,
       10
     );
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));
+    latch.await();
+
+    return verticle;
   }
 
-  private static RequestHandler<String, CloudEvent> setUpReceiver(
+  private static ReceiverVerticle setUpReceiver(
     final Vertx vertx,
     final VertxTestContext context) throws InterruptedException {
 
@@ -323,13 +323,13 @@ public class DataPlaneTest {
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(INGRESS_PORT);
 
-    final var verticle = new ReceiverVerticle(httpServerOptions, handler);
+    final var verticle = new ReceiverVerticle("/live", "/ready", httpServerOptions, handler);
 
     final CountDownLatch latch = new CountDownLatch(1);
     vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));
     latch.await();
 
-    return handler;
+    return verticle;
   }
 
   private static Properties producerConfigs() {

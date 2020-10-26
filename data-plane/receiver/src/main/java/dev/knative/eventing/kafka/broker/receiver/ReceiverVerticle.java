@@ -16,23 +16,23 @@
 
 package dev.knative.eventing.kafka.broker.receiver;
 
-import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
+import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.http.HttpServerRequest;
 import java.util.Objects;
 
 public class ReceiverVerticle extends AbstractVerticle {
 
+  private final String livenessPath;
+  private final String readinessPath;
   private final HttpServerOptions httpServerOptions;
-  private final Handler<HttpServerRequest> requestHandler;
-  private final ResourcesReconciler resourcesReconciler;
+  private final RequestHandler<String, CloudEvent> requestHandler;
 
   private HttpServer server;
   private MessageConsumer<Object> messageConsumer;
@@ -40,28 +40,41 @@ public class ReceiverVerticle extends AbstractVerticle {
   /**
    * Create a new HttpVerticle.
    *
+   * @param livenessPath
+   * @param readinessPath
    * @param httpServerOptions server options.
    * @param requestHandler    request handler.
    */
   public ReceiverVerticle(
+    final String livenessPath,
+    final String readinessPath,
     final HttpServerOptions httpServerOptions,
-    final Handler<HttpServerRequest> requestHandler,
-    final ResourcesReconciler resourcesReconciler) {
+    final RequestHandler<String, CloudEvent> requestHandler) {
+    this.livenessPath = livenessPath;
+    this.readinessPath = readinessPath;
     Objects.requireNonNull(httpServerOptions, "provide http server options");
     Objects.requireNonNull(requestHandler, "provide request handler");
-    Objects.requireNonNull(resourcesReconciler, "provide resources reconciler");
 
     this.httpServerOptions = httpServerOptions;
     this.requestHandler = requestHandler;
-    this.resourcesReconciler = resourcesReconciler;
   }
 
   @Override
   public void start(final Promise<Void> startPromise) {
-    this.messageConsumer = ResourcesReconcilerMessageHandler.start(vertx.eventBus(), this.resourcesReconciler);
+    this.messageConsumer = ResourcesReconcilerMessageHandler.start(
+      vertx.eventBus(),
+      ResourcesReconcilerImpl
+        .builder()
+        .watchIngress(this.requestHandler)
+        .build()
+    );
     this.server = vertx.createHttpServer(httpServerOptions);
 
-    this.server.requestHandler(requestHandler)
+    this.server.requestHandler(new SimpleProbeHandlerDecorator(
+      this.livenessPath,
+      this.readinessPath,
+      requestHandler
+    ))
       .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
       .<Void>mapEmpty()
       .onComplete(startPromise);

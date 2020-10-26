@@ -94,7 +94,7 @@ public class Main {
       producerConfig
     );
 
-    final var consumerDeployerVerticle = new ConsumerDeployer(
+    final var consumerDeployerVerticle = new ConsumerDeployerVerticle(
       consumerVerticleFactory,
       env.getEgressesInitialCapacity()
     );

@@ -35,6 +35,7 @@ import io.vertx.junit5.VertxTestContext;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -44,11 +45,12 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 
 @ExtendWith(VertxExtension.class)
 @Execution(ExecutionMode.CONCURRENT)
-public class ConsumerDeployerTest {
+public class ConsumerDeployerVerticleTest {
 
   @Test
   @Timeout(value = 2)
-  public void shouldAddResourceAndDeployVerticles(final Vertx vertx, final VertxTestContext context) {
+  public void shouldAddResourceAndDeployVerticles(final Vertx vertx, final VertxTestContext context)
+    throws ExecutionException, InterruptedException {
     final var resources = List.of(
       resource1(),
       resource2()
@@ -56,12 +58,16 @@ public class ConsumerDeployerTest {
     final var numEgresses = numEgresses(resources);
     final var checkpoints = context.checkpoint(1);
 
-    final var consumerDeployer = new ConsumerDeployer(
-      vertx,
+    final var consumerDeployer = new ConsumerDeployerVerticle(
       (resource, egress) -> new AbstractVerticle() {
       },
       100
     );
+
+    vertx.deployVerticle(consumerDeployer)
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get();
 
     final var reconciler = ResourcesReconcilerImpl
       .builder()
@@ -70,7 +76,7 @@ public class ConsumerDeployerTest {
 
     reconciler.reconcile(resources)
       .onSuccess(ignored -> context.verify(() -> {
-        assertThat(vertx.deploymentIDs()).hasSize(numEgresses);
+        assertThat(vertx.deploymentIDs()).hasSize(numEgresses + 1);
         checkpoints.flag();
       }))
       .onFailure(context::failNow);
@@ -80,7 +86,7 @@ public class ConsumerDeployerTest {
   @Timeout(value = 2)
   public void shouldNotDeployWhenFailedToGetVerticle(
     final Vertx vertx,
-    final VertxTestContext context) {
+    final VertxTestContext context) throws ExecutionException, InterruptedException {
 
     final var resources = List.of(
       resource1(),
@@ -88,13 +94,17 @@ public class ConsumerDeployerTest {
     );
     final var checkpoint = context.checkpoint(1);
 
-    final var consumerDeployer = new ConsumerDeployer(
-      vertx,
+    final var consumerDeployer = new ConsumerDeployerVerticle(
       (resource, egress) -> {
         throw new UnsupportedOperationException();
       },
       100
     );
+
+    vertx.deployVerticle(consumerDeployer)
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get();
 
     final var reconciler = ResourcesReconcilerImpl
       .builder()
@@ -103,7 +113,7 @@ public class ConsumerDeployerTest {
 
     reconciler.reconcile(resources)
       .onFailure(ignored -> context.verify(() -> {
-        assertThat(vertx.deploymentIDs()).hasSize(0);
+        assertThat(vertx.deploymentIDs()).hasSize(1);
         checkpoint.flag();
       }))
       .onFailure(context::failNow);
@@ -113,7 +123,7 @@ public class ConsumerDeployerTest {
   @Timeout(value = 2)
   public void shouldStopVerticleWhenEgressDeleted(
     final Vertx vertx,
-    final VertxTestContext context) {
+    final VertxTestContext context) throws ExecutionException, InterruptedException {
 
     final var resourcesOld = List.of(
       DataPlaneContract.Resource.newBuilder()
@@ -134,12 +144,16 @@ public class ConsumerDeployerTest {
 
     final var checkpoints = context.checkpoint(2);
 
-    final var consumerDeployer = new ConsumerDeployer(
-      vertx,
+    final var consumerDeployer = new ConsumerDeployerVerticle(
       (resource, egress) -> new AbstractVerticle() {
       },
       100
     );
+
+    vertx.deployVerticle(consumerDeployer)
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get();
 
     final var reconciler = ResourcesReconcilerImpl
       .builder()
@@ -150,13 +164,13 @@ public class ConsumerDeployerTest {
       .onSuccess(ignored -> {
 
         context.verify(() -> {
-          assertThat(vertx.deploymentIDs()).hasSize(numEgressesOld);
+          assertThat(vertx.deploymentIDs()).hasSize(numEgressesOld + 1);
           checkpoints.flag();
         });
 
         reconciler.reconcile(resourcesNew)
           .onSuccess(ok -> context.verify(() -> {
-            assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew);
+            assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew + 1);
             checkpoints.flag();
           }))
           .onFailure(context::failNow);
@@ -168,7 +182,7 @@ public class ConsumerDeployerTest {
   @Timeout(value = 2)
   public void shouldStopVerticlesWhenResourceDeleted(
     final Vertx vertx,
-    final VertxTestContext context) {
+    final VertxTestContext context) throws ExecutionException, InterruptedException {
 
     final var resourcesOld = List.of(
       DataPlaneContract.Resource.newBuilder()
@@ -200,12 +214,16 @@ public class ConsumerDeployerTest {
 
     final var checkpoints = context.checkpoint(2);
 
-    final var consumerDeployer = new ConsumerDeployer(
-      vertx,
+    final var consumerDeployer = new ConsumerDeployerVerticle(
       (resource, egress) -> new AbstractVerticle() {
       },
       100
     );
+
+    vertx.deployVerticle(consumerDeployer)
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get();
 
     final var reconciler = ResourcesReconcilerImpl
       .builder()
@@ -215,13 +233,13 @@ public class ConsumerDeployerTest {
     reconciler.reconcile(resourcesOld)
       .onSuccess(ignored -> {
         context.verify(() -> {
-          assertThat(vertx.deploymentIDs()).hasSize(numEgressesOld);
+          assertThat(vertx.deploymentIDs()).hasSize(numEgressesOld + 1);
           checkpoints.flag();
         });
 
         reconciler.reconcile(resourcesNew)
           .onSuccess(ok -> context.verify(() -> {
-            assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew);
+            assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew + 1);
             checkpoints.flag();
           }))
           .onFailure(context::failNow);
@@ -233,7 +251,7 @@ public class ConsumerDeployerTest {
   @Timeout(value = 2)
   public void shouldStopAndStartVerticlesWhenEgressDeletedAndReAdded(
     final Vertx vertx,
-    final VertxTestContext context) {
+    final VertxTestContext context) throws ExecutionException, InterruptedException {
 
     final var resourcesOld = List.of(
       DataPlaneContract.Resource.newBuilder()
@@ -277,12 +295,16 @@ public class ConsumerDeployerTest {
 
     final var checkpoints = context.checkpoint(3);
 
-    final var consumerDeployer = new ConsumerDeployer(
-      vertx,
+    final var consumerDeployer = new ConsumerDeployerVerticle(
       (resource, egress) -> new AbstractVerticle() {
       },
       100
     );
+
+    vertx.deployVerticle(consumerDeployer)
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get();
 
     final var reconciler = ResourcesReconcilerImpl
       .builder()
@@ -294,21 +316,21 @@ public class ConsumerDeployerTest {
       .onSuccess(ignored -> {
 
         context.verify(() -> {
-          assertThat(oldDeployments).hasSize(numEgressesOld);
+          assertThat(oldDeployments).hasSize(numEgressesOld + 1);
           checkpoints.flag();
         });
 
         reconciler.reconcile(resourcesNew)
           .onSuccess(ok -> {
             context.verify(() -> {
-              assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew);
+              assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew + 1);
               assertThat(vertx.deploymentIDs()).containsAll(oldDeployments);
               checkpoints.flag();
             });
 
             reconciler.reconcile(resourcesOld)
               .onSuccess(ok2 -> context.verify(() -> {
-                assertThat(oldDeployments).hasSize(numEgressesOld);
+                assertThat(oldDeployments).hasSize(numEgressesOld + 1);
                 checkpoints.flag();
               }));
           })
@@ -321,7 +343,7 @@ public class ConsumerDeployerTest {
   @Timeout(value = 2)
   public void shouldDoNothingWhenTheStateIsTheSame(
     final Vertx vertx,
-    final VertxTestContext context) {
+    final VertxTestContext context) throws ExecutionException, InterruptedException {
 
     final var resources = List.of(
       DataPlaneContract.Resource.newBuilder()
@@ -346,12 +368,16 @@ public class ConsumerDeployerTest {
 
     final var checkpoints = context.checkpoint(2);
 
-    final var consumerDeployer = new ConsumerDeployer(
-      vertx,
+    final var consumerDeployer = new ConsumerDeployerVerticle(
       (resource, egress) -> new AbstractVerticle() {
       },
       100
     );
+
+    vertx.deployVerticle(consumerDeployer)
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get();
 
     final var reconciler = ResourcesReconcilerImpl
       .builder()
@@ -364,12 +390,12 @@ public class ConsumerDeployerTest {
         final var deployments = vertx.deploymentIDs();
 
         context.verify(() -> {
-          assertThat(deployments).hasSize(numEgresses);
+          assertThat(deployments).hasSize(numEgresses + 1);
           checkpoints.flag();
         });
 
         reconciler.reconcile(resources).onSuccess(ok -> context.verify(() -> {
-          assertThat(vertx.deploymentIDs()).containsExactly(deployments.toArray(new String[0]));
+          assertThat(vertx.deploymentIDs()).containsAll(deployments);
           checkpoints.flag();
         }));
       })
@@ -378,8 +404,7 @@ public class ConsumerDeployerTest {
 
   @Test
   public void shouldThrowIfEgressesInitialCapacityIsLessOrEqualToZero(final Vertx vertx) {
-    Assertions.assertThrows(IllegalArgumentException.class, () -> new ConsumerDeployer(
-      vertx,
+    Assertions.assertThrows(IllegalArgumentException.class, () -> new ConsumerDeployerVerticle(
       (resource, egress) -> null,
       -1
     ));
