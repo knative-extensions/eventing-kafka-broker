@@ -29,7 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -59,8 +58,8 @@ public class ConsumerDeployerTest {
 
     final var consumerDeployer = new ConsumerDeployer(
       vertx,
-      (resource, egress) -> Future.succeededFuture(new AbstractVerticle() {
-      }),
+      (resource, egress) -> new AbstractVerticle() {
+      },
       100
     );
 
@@ -91,7 +90,9 @@ public class ConsumerDeployerTest {
 
     final var consumerDeployer = new ConsumerDeployer(
       vertx,
-      (resource, egress) -> Future.failedFuture(new UnsupportedOperationException()),
+      (resource, egress) -> {
+        throw new UnsupportedOperationException();
+      },
       100
     );
 
@@ -135,8 +136,8 @@ public class ConsumerDeployerTest {
 
     final var consumerDeployer = new ConsumerDeployer(
       vertx,
-      (resource, egress) -> Future.succeededFuture(new AbstractVerticle() {
-      }),
+      (resource, egress) -> new AbstractVerticle() {
+      },
       100
     );
 
@@ -201,8 +202,8 @@ public class ConsumerDeployerTest {
 
     final var consumerDeployer = new ConsumerDeployer(
       vertx,
-      (resource, egress) -> Future.succeededFuture(new AbstractVerticle() {
-      }),
+      (resource, egress) -> new AbstractVerticle() {
+      },
       100
     );
 
@@ -278,8 +279,8 @@ public class ConsumerDeployerTest {
 
     final var consumerDeployer = new ConsumerDeployer(
       vertx,
-      (resource, egress) -> Future.succeededFuture(new AbstractVerticle() {
-      }),
+      (resource, egress) -> new AbstractVerticle() {
+      },
       100
     );
 
@@ -347,8 +348,8 @@ public class ConsumerDeployerTest {
 
     final var consumerDeployer = new ConsumerDeployer(
       vertx,
-      (resource, egress) -> Future.succeededFuture(new AbstractVerticle() {
-      }),
+      (resource, egress) -> new AbstractVerticle() {
+      },
       100
     );
 
@@ -379,7 +380,7 @@ public class ConsumerDeployerTest {
   public void shouldThrowIfEgressesInitialCapacityIsLessOrEqualToZero(final Vertx vertx) {
     Assertions.assertThrows(IllegalArgumentException.class, () -> new ConsumerDeployer(
       vertx,
-      (resource, egress) -> Future.succeededFuture(),
+      (resource, egress) -> null,
       -1
     ));
   }
