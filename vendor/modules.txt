@@ -360,7 +360,7 @@ go.uber.org/zap/internal/exit
 go.uber.org/zap/internal/ztest
 go.uber.org/zap/zapcore
 go.uber.org/zap/zaptest
-# golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
+# golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
 golang.org/x/crypto/cast5
 golang.org/x/crypto/md4
 golang.org/x/crypto/openpgp
@@ -1052,7 +1052,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.18.1-0.20201023125437-f66baf60b568
+# knative.dev/eventing v0.18.1-0.20201023191938-7734430d30b3
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/configs
@@ -1178,7 +1178,7 @@ knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/request-sender
-# knative.dev/pkg v0.0.0-20201023012137-324e49bc7fe1
+# knative.dev/pkg v0.0.0-20201026015042-efadd36f9c63
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1265,7 +1265,7 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/test-infra v0.0.0-20201022003632-7d3ea6019158
+# knative.dev/test-infra v0.0.0-20201023182438-7efa632471b9
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/structured-merge-diff/v3 v3.0.1-0.20200706213357-43c19bbb7fba
