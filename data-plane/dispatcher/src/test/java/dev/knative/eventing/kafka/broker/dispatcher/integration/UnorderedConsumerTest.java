@@ -60,6 +60,7 @@ import org.slf4j.LoggerFactory;
 public class UnorderedConsumerTest {
 
   private static final Logger logger = LoggerFactory.getLogger(UnorderedConsumerTest.class);
+  private static final int NUM_SYSTEM_VERTICLES = 1;
 
   @Test
   public void testUnorderedConsumer(final Vertx vertx, final VertxTestContext context)
@@ -130,7 +131,7 @@ public class UnorderedConsumerTest {
 
     Thread.sleep(6000); // reduce flakiness
 
-    assertThat(vertx.deploymentIDs()).hasSize(numEgresses + 1);
+    assertThat(vertx.deploymentIDs()).hasSize(numEgresses + NUM_SYSTEM_VERTICLES);
 
     waitEvents.await();
 

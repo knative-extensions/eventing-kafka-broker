@@ -47,6 +47,8 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 @Execution(ExecutionMode.CONCURRENT)
 public class ConsumerDeployerVerticleTest {
 
+  private static final int NUM_SYSTEM_VERTICLES = 1;
+
   @Test
   @Timeout(value = 2)
   public void shouldAddResourceAndDeployVerticles(final Vertx vertx, final VertxTestContext context)
@@ -76,7 +78,7 @@ public class ConsumerDeployerVerticleTest {
 
     reconciler.reconcile(resources)
       .onSuccess(ignored -> context.verify(() -> {
-        assertThat(vertx.deploymentIDs()).hasSize(numEgresses + 1);
+        assertThat(vertx.deploymentIDs()).hasSize(numEgresses + NUM_SYSTEM_VERTICLES);
         checkpoints.flag();
       }))
       .onFailure(context::failNow);
@@ -164,13 +166,13 @@ public class ConsumerDeployerVerticleTest {
       .onSuccess(ignored -> {
 
         context.verify(() -> {
-          assertThat(vertx.deploymentIDs()).hasSize(numEgressesOld + 1);
+          assertThat(vertx.deploymentIDs()).hasSize(numEgressesOld + NUM_SYSTEM_VERTICLES);
           checkpoints.flag();
         });
 
         reconciler.reconcile(resourcesNew)
           .onSuccess(ok -> context.verify(() -> {
-            assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew + 1);
+            assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew + NUM_SYSTEM_VERTICLES);
             checkpoints.flag();
           }))
           .onFailure(context::failNow);
@@ -233,13 +235,13 @@ public class ConsumerDeployerVerticleTest {
     reconciler.reconcile(resourcesOld)
       .onSuccess(ignored -> {
         context.verify(() -> {
-          assertThat(vertx.deploymentIDs()).hasSize(numEgressesOld + 1);
+          assertThat(vertx.deploymentIDs()).hasSize(numEgressesOld + NUM_SYSTEM_VERTICLES);
           checkpoints.flag();
         });
 
         reconciler.reconcile(resourcesNew)
           .onSuccess(ok -> context.verify(() -> {
-            assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew + 1);
+            assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew + NUM_SYSTEM_VERTICLES);
             checkpoints.flag();
           }))
           .onFailure(context::failNow);
@@ -316,21 +318,21 @@ public class ConsumerDeployerVerticleTest {
       .onSuccess(ignored -> {
 
         context.verify(() -> {
-          assertThat(oldDeployments).hasSize(numEgressesOld + 1);
+          assertThat(oldDeployments).hasSize(numEgressesOld + NUM_SYSTEM_VERTICLES);
           checkpoints.flag();
         });
 
         reconciler.reconcile(resourcesNew)
           .onSuccess(ok -> {
             context.verify(() -> {
-              assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew + 1);
+              assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew + NUM_SYSTEM_VERTICLES);
               assertThat(vertx.deploymentIDs()).containsAll(oldDeployments);
               checkpoints.flag();
             });
 
             reconciler.reconcile(resourcesOld)
               .onSuccess(ok2 -> context.verify(() -> {
-                assertThat(oldDeployments).hasSize(numEgressesOld + 1);
+                assertThat(oldDeployments).hasSize(numEgressesOld + NUM_SYSTEM_VERTICLES);
                 checkpoints.flag();
               }));
           })
@@ -390,7 +392,7 @@ public class ConsumerDeployerVerticleTest {
         final var deployments = vertx.deploymentIDs();
 
         context.verify(() -> {
-          assertThat(deployments).hasSize(numEgresses + 1);
+          assertThat(deployments).hasSize(numEgresses + NUM_SYSTEM_VERTICLES);
           checkpoints.flag();
         });
 
