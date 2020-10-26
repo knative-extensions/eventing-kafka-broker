@@ -16,14 +16,14 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress11;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress12;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress13;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress14;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress1;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress2;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress3;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress4;
 import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress5;
 import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress6;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1Unwrapped;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2Unwrapped;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
@@ -50,8 +50,8 @@ public class ConsumerDeployerTest {
   @Timeout(value = 2)
   public void shouldAddResourceAndDeployVerticles(final Vertx vertx, final VertxTestContext context) {
     final var resources = List.of(
-      resource1Unwrapped(),
-      resource2Unwrapped()
+      resource1(),
+      resource2()
     );
     final var numEgresses = numEgresses(resources);
     final var checkpoints = context.checkpoint(1);
@@ -83,8 +83,8 @@ public class ConsumerDeployerTest {
     final VertxTestContext context) {
 
     final var resources = List.of(
-      resource1Unwrapped(),
-      resource2Unwrapped()
+      resource1(),
+      resource2()
     );
     final var checkpoint = context.checkpoint(1);
 
@@ -119,7 +119,7 @@ public class ConsumerDeployerTest {
       DataPlaneContract.Resource.newBuilder()
         .setUid("1-1234")
         .addTopics("1-12345")
-        .addEgresses(egress11())
+        .addEgresses(egress1())
         .build()
     );
     final var numEgressesOld = numEgresses(resourcesOld);
@@ -175,16 +175,16 @@ public class ConsumerDeployerTest {
         .setUid("1-1234")
         .addTopics("1-12345")
         .addAllEgresses(Arrays.asList(
-          egress11(),
-          egress12(),
-          egress13()
+          egress1(),
+          egress2(),
+          egress3()
         ))
         .build(),
       DataPlaneContract.Resource.newBuilder()
         .setUid("2-1234")
         .addTopics("2-12345")
         .addAllEgresses(Arrays.asList(
-          egress14()
+          egress4()
         ))
         .build()
     );
@@ -240,15 +240,15 @@ public class ConsumerDeployerTest {
         .setUid("1-1234")
         .addTopics("1-12345")
         .addAllEgresses(Arrays.asList(
-          egress11(),
-          egress12()
+          egress1(),
+          egress2()
         ))
         .build(),
       DataPlaneContract.Resource.newBuilder()
         .setUid("2-1234")
         .addTopics("2-12345")
         .addAllEgresses(Arrays.asList(
-          egress14(),
+          egress4(),
           egress5(),
           egress6()
         ))
@@ -261,15 +261,15 @@ public class ConsumerDeployerTest {
         .setUid("1-1234")
         .addTopics("1-12345")
         .addAllEgresses(Arrays.asList(
-          egress11(),
-          egress13()
+          egress1(),
+          egress3()
         ))
         .build(),
       DataPlaneContract.Resource.newBuilder()
         .setUid("2-1234")
         .addTopics("2-12345")
         .addEgresses(
-          egress14()
+          egress4()
         )
         .build()
     );
@@ -328,15 +328,15 @@ public class ConsumerDeployerTest {
         .setUid("1-1234")
         .addTopics("1-12345")
         .addAllEgresses(Arrays.asList(
-          egress11(),
-          egress12()
+          egress1(),
+          egress2()
         ))
         .build(),
       DataPlaneContract.Resource.newBuilder()
         .setUid("2-1234")
         .addTopics("2-12345")
         .addAllEgresses(Arrays.asList(
-          egress14(),
+          egress4(),
           egress5(),
           egress6()
         ))

@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.core.wrappers;
+package dev.knative.eventing.kafka.broker.core.filter.impl;
 
 import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 
+import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.ContextAttributes;
 import io.cloudevents.lang.Nullable;
@@ -29,7 +30,7 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class EventMatcher implements Filter<CloudEvent> {
+public class AttributesFilter implements Filter {
 
   private static final String DEFAULT_STRING = "";
 
@@ -56,7 +57,7 @@ public class EventMatcher implements Filter<CloudEvent> {
    *
    * @param attributes attributes to match to pass filter.
    */
-  public EventMatcher(final Map<String, String> attributes) {
+  public AttributesFilter(final Map<String, String> attributes) {
     this.attributes = attributes.entrySet().stream()
       .filter(entry -> isNotEmpty(entry.getValue()))
       .map(entry -> new SimpleImmutableEntry<>(
@@ -85,7 +86,7 @@ public class EventMatcher implements Filter<CloudEvent> {
    * @return true if event matches attributes, otherwise false.
    */
   @Override
-  public boolean match(final CloudEvent event) {
+  public boolean test(final CloudEvent event) {
 
     for (final var entry : attributes) {
       if (!entry.getKey().apply(event).equals(entry.getValue())) {

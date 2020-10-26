@@ -16,8 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.core.file;
 
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1Unwrapped;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2Unwrapped;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.util.JsonFormat;
@@ -42,11 +42,11 @@ public class FileWatcherTest {
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
     final var broker1 = DataPlaneContract.Contract.newBuilder()
-      .addResources(resource1Unwrapped())
+      .addResources(resource1())
       .build();
 
     final var broker2 = DataPlaneContract.Contract.newBuilder()
-      .addResources(resource2Unwrapped())
+      .addResources(resource2())
       .build();
 
     final var isFirst = new AtomicBoolean(true);
@@ -92,7 +92,7 @@ public class FileWatcherTest {
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
     final var broker1 = DataPlaneContract.Contract.newBuilder()
-      .addResources(resource1Unwrapped())
+      .addResources(resource1())
       .build();
     write(file, broker1);
 

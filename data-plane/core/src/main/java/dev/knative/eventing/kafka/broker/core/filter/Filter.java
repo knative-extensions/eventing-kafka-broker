@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.core.wrappers;
+package dev.knative.eventing.kafka.broker.core.filter;
+
+import io.cloudevents.CloudEvent;
+import java.util.function.Predicate;
 
 /**
- * Filter interface abstract the filtering logic.
- *
- * @param <T> type of objects to filter.
+ * Filter interface abstract the filtering logic of broker.
  */
 @FunctionalInterface
-public interface Filter<T> {
+public interface Filter extends Predicate<CloudEvent> {
 
-  boolean match(final T event);
-
-  static <T> Filter<T> noopMatcher() {
-    return t -> true;
+  static Filter noop() {
+    return ce -> true;
   }
 }
