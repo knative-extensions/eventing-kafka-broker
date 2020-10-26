@@ -1146,7 +1146,6 @@ knative.dev/eventing/pkg/client/listers/sources/v1beta1
 knative.dev/eventing/pkg/configmap
 knative.dev/eventing/pkg/kncloudevents
 knative.dev/eventing/pkg/logconfig
-knative.dev/eventing/pkg/reconciler/names
 knative.dev/eventing/pkg/reconciler/sugar
 knative.dev/eventing/pkg/reconciler/testing
 knative.dev/eventing/pkg/reconciler/testing/v1

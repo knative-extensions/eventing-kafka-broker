@@ -23,9 +23,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
-	"knative.dev/eventing/pkg/reconciler/names"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -174,7 +174,7 @@ func (manager *StatusConditionManager) Reconciled() reconciler.Event {
 
 	manager.SetAddress(&apis.URL{
 		Scheme: "http",
-		Host:   names.ServiceHostName(manager.Configs.IngressName, manager.Configs.SystemNamespace),
+		Host:   network.GetServiceHostname(manager.Configs.IngressName, manager.Configs.SystemNamespace),
 		Path:   fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName()),
 	})
 	object.GetConditionSet().Manage(object.GetStatus()).MarkTrue(ConditionAddressable)
