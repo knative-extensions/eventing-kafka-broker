@@ -115,6 +115,7 @@ public class ReceiverVerticleTest {
   @MethodSource({"getValidNonValidEvents"})
   public void shouldProduceMessagesReceivedConcurrently(
     final TestCase tc,
+    final Vertx vertx,
     final VertxTestContext context) throws InterruptedException {
 
     final var checkpoints = context.checkpoint(1);
@@ -133,7 +134,7 @@ public class ReceiverVerticleTest {
 
     tc.requestSender.apply(webClient.post(PORT, "localhost", tc.path))
       .onFailure(context::failNow)
-      .onSuccess(response -> context.verify(() -> {
+      .onSuccess(response -> vertx.setTimer(1000, ignored -> context.verify(() -> {
         assertThat(response.statusCode())
           .as("verify path: " + tc.path)
           .isEqualTo(tc.responseStatusCode);
@@ -143,7 +144,7 @@ public class ReceiverVerticleTest {
 
         checkpoints.flag();
         countDown.countDown();
-      }));
+      })));
 
     countDown.await(TIMEOUT, TimeUnit.SECONDS);
 
