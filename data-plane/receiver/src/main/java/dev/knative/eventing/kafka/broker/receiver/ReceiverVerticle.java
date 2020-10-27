@@ -16,48 +16,77 @@
 
 package dev.knative.eventing.kafka.broker.receiver;
 
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
+import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import java.util.Objects;
+import java.util.function.Function;
 
-public class HttpVerticle extends AbstractVerticle {
+public class ReceiverVerticle extends AbstractVerticle {
 
   private final HttpServerOptions httpServerOptions;
+  private final RequestMapper<String, CloudEvent> requestMapper;
   private final Handler<HttpServerRequest> requestHandler;
+
   private HttpServer server;
+  private MessageConsumer<Object> messageConsumer;
 
   /**
    * Create a new HttpVerticle.
    *
    * @param httpServerOptions server options.
-   * @param requestHandler    request handler.
+   * @param requestMapper     request handler.
    */
-  public HttpVerticle(
+  @SafeVarargs
+  public ReceiverVerticle(
     final HttpServerOptions httpServerOptions,
-    final Handler<HttpServerRequest> requestHandler) {
-
+    final RequestMapper<String, CloudEvent> requestMapper,
+    Function<Handler<HttpServerRequest>, Handler<HttpServerRequest>>... handlerDecoratorFactories) {
     Objects.requireNonNull(httpServerOptions, "provide http server options");
-    Objects.requireNonNull(requestHandler, "provide request handler");
+    Objects.requireNonNull(requestMapper, "provide request handler");
 
     this.httpServerOptions = httpServerOptions;
+    this.requestMapper = requestMapper;
+
+    Handler<HttpServerRequest> requestHandler = requestMapper;
+    for (var decFactory : handlerDecoratorFactories) {
+      requestHandler = decFactory.apply(requestHandler);
+    }
     this.requestHandler = requestHandler;
   }
 
   @Override
   public void start(final Promise<Void> startPromise) {
-    server = vertx.createHttpServer(httpServerOptions);
-    server.requestHandler(requestHandler)
+    this.messageConsumer = ResourcesReconcilerMessageHandler.start(
+      vertx.eventBus(),
+      ResourcesReconcilerImpl
+        .builder()
+        .watchIngress(this.requestMapper)
+        .build()
+    );
+    this.server = vertx.createHttpServer(httpServerOptions);
+
+    this.server.requestHandler(this.requestHandler)
       .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
       .<Void>mapEmpty()
       .onComplete(startPromise);
   }
 
   @Override
-  public void stop() {
-    server.close();
+  public void stop(Promise<Void> stopPromise) {
+    CompositeFuture.all(
+      server.close().mapEmpty(),
+      messageConsumer.unregister()
+    )
+      .<Void>mapEmpty()
+      .onComplete(stopPromise);
   }
 }

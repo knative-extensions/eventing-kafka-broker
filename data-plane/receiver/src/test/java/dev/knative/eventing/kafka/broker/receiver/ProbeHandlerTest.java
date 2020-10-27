@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.receiver.integration;
+package dev.knative.eventing.kafka.broker.receiver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dev.knative.eventing.kafka.broker.receiver.HttpVerticle;
-import dev.knative.eventing.kafka.broker.receiver.SimpleProbeHandlerDecorator;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,25 +40,31 @@ public class ProbeHandlerTest {
   private static final int OK = HttpResponseStatus.OK.code();
   private static final int NEXT_HANDLER_STATUS_CODE = HttpResponseStatus.SERVICE_UNAVAILABLE.code();
 
-  private static WebClient webClient;
+  private WebClient webClient;
+  private HttpServer server;
 
   @BeforeEach
   public void setUp(final Vertx vertx, final VertxTestContext context) {
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(PORT);
     httpServerOptions.setHost("localhost");
-    final var verticle = new HttpVerticle(httpServerOptions, new SimpleProbeHandlerDecorator(
-      LIVENESS_PATH,
-      READINESS_PATH,
-      r -> r.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end()
-    ));
-    webClient = WebClient.create(vertx);
-    vertx.deployVerticle(verticle, context.succeeding(ar -> context.completeNow()));
+
+    this.webClient = WebClient.create(vertx);
+
+    this.server = vertx.createHttpServer(httpServerOptions);
+    this.server.requestHandler(new SimpleProbeHandlerDecorator(
+        LIVENESS_PATH,
+        READINESS_PATH,
+        r -> r.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end()
+      ))
+      .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
+      .onComplete(context.succeedingThenComplete());
   }
 
-  @AfterAll
-  public static void tearDown() {
-    webClient.close();
+  @AfterEach
+  public void tearDown(final VertxTestContext context) {
+    this.webClient.close();
+    this.server.close().onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -77,7 +82,7 @@ public class ProbeHandlerTest {
     mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, "/does-not-exists-42");
   }
 
-  private static void mustReceiveStatusCodeOnPath(
+  private void mustReceiveStatusCodeOnPath(
     final VertxTestContext context,
     final int expectedStatusCode,
     final String path) {

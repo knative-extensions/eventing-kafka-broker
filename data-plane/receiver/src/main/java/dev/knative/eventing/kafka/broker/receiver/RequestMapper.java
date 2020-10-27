@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
@@ -48,18 +47,18 @@ import org.slf4j.LoggerFactory;
  * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to Kafka through the Kafka
  * producer and terminating requests with the appropriate status code.
  */
-public class RequestHandler<K, V> implements Handler<HttpServerRequest>, IngressReconcilerListener {
+public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressReconcilerListener {
 
   public static final int MAPPER_FAILED = BAD_REQUEST.code();
   public static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
   public static final int RECORD_PRODUCED = ACCEPTED.code();
   public static final int RESOURCE_NOT_FOUND = NOT_FOUND.code();
 
-  private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(RequestMapper.class);
 
   private final RequestToRecordMapper<K, V> requestToRecordMapper;
   // path -> <bootstrapServers, producer>
-  private final AtomicReference<Map<String, Entry<String, Producer<K, V>>>> producers;
+  private final Map<String, Entry<String, Producer<K, V>>> producers;
   private final Properties producerConfigs;
   private final Function<Properties, KafkaProducer<K, V>> producerCreator;
   private final Counter badRequestCounter;
@@ -74,7 +73,7 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Ingress
    * @param badRequestCounter     count bad request responses
    * @param produceEventsCounter  count events sent to Kafka
    */
-  public RequestHandler(
+  public RequestMapper(
     final Properties producerConfigs,
     final RequestToRecordMapper<K, V> requestToRecordMapper,
     final Function<Properties, KafkaProducer<K, V>> producerCreator,
@@ -88,19 +87,19 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Ingress
     this.producerConfigs = producerConfigs;
     this.requestToRecordMapper = requestToRecordMapper;
     this.producerCreator = producerCreator;
-    producers = new AtomicReference<>(new HashMap<>());
+    producers = new HashMap<>();
     this.badRequestCounter = badRequestCounter;
     this.produceEventsCounter = produceEventsCounter;
   }
 
   @Override
   public void handle(final HttpServerRequest request) {
-    final var producer = producers.get().get(request.path());
+    final var producer = producers.get(request.path());
     if (producer == null) {
       request.response().setStatusCode(RESOURCE_NOT_FOUND).end();
 
       logger.warn("resource not found {} {}",
-        keyValue("resources", producers.get().keySet()),
+        keyValue("resources", producers.keySet()),
         keyValue("path", request.path())
       );
 
@@ -156,17 +155,13 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Ingress
 
     final KafkaProducer<K, V> producer = producerCreator.apply(producerConfigs);
 
-    //TODO(slinkydeveloper) https://github.com/knative-sandbox/eventing-kafka-broker/issues/332
-    this.producers.getAndUpdate(map -> {
-      map.put(
-        ingress.getPath(),
-        new SimpleImmutableEntry<>(
-          resource.getBootstrapServers(),
-          new Producer<>(producer, resource.getTopics(0))
-        )
-      );
-      return map;
-    });
+    this.producers.put(
+      ingress.getPath(),
+      new SimpleImmutableEntry<>(
+        resource.getBootstrapServers(),
+        new Producer<>(producer, resource.getTopics(0))
+      )
+    );
 
     return Future.succeededFuture();
   }
@@ -183,16 +178,11 @@ public class RequestHandler<K, V> implements Handler<HttpServerRequest>, Ingress
   public Future<Void> onDeleteIngress(
     DataPlaneContract.Resource resource,
     DataPlaneContract.Ingress ingress) {
-    //TODO(slinkydeveloper) https://github.com/knative-sandbox/eventing-kafka-broker/issues/332
-    AtomicReference<Producer<K, V>> producerAtomicReference = new AtomicReference<>();
-    this.producers.updateAndGet(map -> {
-      producerAtomicReference.set(map.remove(ingress.getPath()).getValue());
-      return map;
-    });
-    var producer = producerAtomicReference.get().producer;
+    var producer = this.producers.remove(ingress.getPath()).getValue();
     return producer
+      .producer
       .flush()
-      .compose(v -> producer.close());
+      .compose(v -> producer.producer.close());
   }
 
   private static String encoding(final DataPlaneContract.ContentMode contentMode) {

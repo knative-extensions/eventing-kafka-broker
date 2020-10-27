@@ -20,10 +20,12 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import java.util.Collections;
+import io.vertx.core.Promise;
+import io.vertx.core.eventbus.MessageConsumer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -34,38 +36,49 @@ import org.slf4j.LoggerFactory;
  * ResourcesManager manages Resource and Egress objects by instantiating and starting verticles based on resources
  * configurations.
  *
- * <p>Note: {@link ConsumerDeployer} is not thread-safe and it's not supposed to be shared between
+ * <p>Note: {@link ConsumerDeployerVerticle} is not thread-safe and it's not supposed to be shared between
  * threads.
  */
-public final class ConsumerDeployer implements EgressReconcilerListener {
+public final class ConsumerDeployerVerticle extends AbstractVerticle implements EgressReconcilerListener {
 
-  private static final Logger logger = LoggerFactory.getLogger(ConsumerDeployer.class);
+  private static final Logger logger = LoggerFactory.getLogger(ConsumerDeployerVerticle.class);
 
   private final Map<String, String> deployedDispatchers;
-
-  private final Vertx vertx;
   private final ConsumerVerticleFactory consumerFactory;
+
+  private MessageConsumer<Object> messageConsumer;
 
   /**
    * All args constructor.
    *
-   * @param vertx                   vertx instance.
    * @param consumerFactory         consumer factory.
    * @param egressesInitialCapacity egresses container initial capacity.
    */
-  public ConsumerDeployer(
-    final Vertx vertx,
+  public ConsumerDeployerVerticle(
     final ConsumerVerticleFactory consumerFactory,
     final int egressesInitialCapacity) {
-    Objects.requireNonNull(vertx, "provide vertx instance");
     Objects.requireNonNull(consumerFactory, "provide consumer factory");
     if (egressesInitialCapacity <= 0) {
       throw new IllegalArgumentException("egressesInitialCapacity cannot be negative or 0");
     }
-    this.vertx = vertx;
     this.consumerFactory = consumerFactory;
-    //TODO(slinkydeveloper) https://github.com/knative-sandbox/eventing-kafka-broker/issues/332
-    this.deployedDispatchers = Collections.synchronizedMap(new HashMap<>(egressesInitialCapacity));
+    this.deployedDispatchers = new HashMap<>(egressesInitialCapacity);
+  }
+
+  @Override
+  public void start() {
+    this.messageConsumer = ResourcesReconcilerMessageHandler.start(
+      vertx.eventBus(),
+      ResourcesReconcilerImpl
+        .builder()
+        .watchEgress(this)
+        .build()
+    );
+  }
+
+  @Override
+  public void stop(Promise<Void> stopPromise) {
+    this.messageConsumer.unregister().onComplete(stopPromise);
   }
 
   @Override
