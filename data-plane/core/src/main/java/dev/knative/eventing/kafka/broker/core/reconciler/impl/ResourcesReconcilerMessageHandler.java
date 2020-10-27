@@ -28,13 +28,8 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
   public void handle(Message<Object> event) {
     DataPlaneContract.Contract contract = (DataPlaneContract.Contract) event.body();
     resourcesReconciler.reconcile(contract.getResourcesList())
-      .onComplete(result -> {
-        if (result.succeeded()) {
-          logger.info("reconciled objects {}", keyValue("contract", contract));
-        } else {
-          logger.error("failed to reconcile {}", keyValue("contract", contract), result.cause());
-        }
-      });
+      .onSuccess(v -> logger.info("reconciled objects {}", keyValue("contract", contract)))
+      .onFailure(cause -> logger.error("failed to reconcile {}", keyValue("contract", contract), cause));
   }
 
   public static MessageConsumer<Object> start(EventBus eventBus, ResourcesReconciler reconciler) {

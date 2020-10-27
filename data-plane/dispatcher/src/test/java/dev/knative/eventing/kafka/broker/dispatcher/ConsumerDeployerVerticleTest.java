@@ -115,7 +115,7 @@ public class ConsumerDeployerVerticleTest {
 
     reconciler.reconcile(resources)
       .onFailure(ignored -> context.verify(() -> {
-        assertThat(vertx.deploymentIDs()).hasSize(1);
+        assertThat(vertx.deploymentIDs()).hasSize(NUM_SYSTEM_VERTICLES);
         checkpoint.flag();
       }))
       .onFailure(context::failNow);
