@@ -16,7 +16,7 @@
 
 set -e
 
-source $(dirname $0)/../../vendor/knative.dev/test-infra/scripts/e2e-tests.sh
+source $(dirname $0)/../../vendor/knative.dev/hack/e2e-tests.sh
 
 strimzi_version=$(curl https://github.com/strimzi/strimzi-kafka-operator/releases/latest | awk -F 'tag/' '{print $2}' | awk -F '"' '{print $1}' 2>/dev/null)
 
