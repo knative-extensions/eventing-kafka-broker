@@ -17,7 +17,7 @@
 # variables used:
 # - SKIP_INITIALIZE (default: false) - skip cluster creation
 
-source $(pwd)/vendor/knative.dev/test-infra/scripts/e2e-tests.sh
+source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
 source $(pwd)/test/data-plane/library.sh
 source $(pwd)/test/control-plane/library.sh
 

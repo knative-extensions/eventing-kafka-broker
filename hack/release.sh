@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/release.sh
+source $(dirname $0)/../vendor/knative.dev/hack/release.sh
 source $(dirname $0)/../test/data-plane/library.sh
 source $(dirname $0)/../test/control-plane/library.sh
 
