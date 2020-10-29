@@ -6,15 +6,13 @@ require (
 	github.com/Shopify/sarama v1.27.0
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.2.0
 	github.com/cloudevents/sdk-go/v2 v2.3.1
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.4.3
 	github.com/google/go-cmp v0.5.2
 	github.com/google/uuid v1.1.2
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/pierdipi/sacura v0.0.0-20201003135834-e90e3a725ff9
 	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.6.1
-	go.opencensus.io v0.22.5 // indirect
-	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0
 	google.golang.org/protobuf v1.25.0
 	k8s.io/api v0.18.8
@@ -23,9 +21,9 @@ require (
 	k8s.io/apiserver v0.18.8
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
-	knative.dev/eventing v0.18.1-0.20201028151034-7c24cda5fd71
-	knative.dev/hack v0.0.0-20201027221733-0d7f2f064b7b
-	knative.dev/pkg v0.0.0-20201028142834-e135a1737847
+	knative.dev/eventing v0.18.1-0.20201028182234-8d571d40acf8
+	knative.dev/hack v0.0.0-20201028205534-fe80f1c8af68
+	knative.dev/pkg v0.0.0-20201029020134-08619d8055ca
 )
 
 replace (
