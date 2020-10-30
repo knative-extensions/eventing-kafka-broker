@@ -18,13 +18,13 @@ package dev.knative.eventing.kafka.broker.receiver;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
+import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -79,7 +79,7 @@ public class Main {
     final var vertx = Vertx.vertx(
       new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
     );
-    Runtime.getRuntime().addShutdownHook(new Thread(vertx::close));
+    Runtime.getRuntime().addShutdownHook(new Thread(Shutdown.closeSync(vertx)));
 
     ContractMessageCodec.register(vertx.eventBus());
 
@@ -131,17 +131,7 @@ public class Main {
     var fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
 
     // Gracefully clean up resources.
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      fw.close();
-      publisher.accept(Contract.newBuilder().build());
-      final var waitClose = new CountDownLatch(1);
-      vertx.close(ignore -> waitClose.countDown());
-      try {
-        waitClose.await(5, TimeUnit.SECONDS);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }));
+    Runtime.getRuntime().addShutdownHook(new Thread(Shutdown.run(vertx, fw, publisher)));
 
     try {
 
@@ -149,9 +139,7 @@ public class Main {
 
     } catch (final Exception ex) {
       logger.error("Failed during filesystem watch", ex);
-      final var wait = new CountDownLatch(1);
-      vertx.close(ignore -> wait.countDown());
-      wait.await(5, TimeUnit.SECONDS);
+      Shutdown.closeSync(vertx).run();
       throw ex;
     }
   }
