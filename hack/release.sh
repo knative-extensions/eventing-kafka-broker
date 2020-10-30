@@ -25,6 +25,7 @@ source $(dirname $0)/../test/control-plane/library.sh
 export EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT="eventing-kafka-controller.yaml"
 export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
 export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
+export EVENTING_KAFKA_ARTIFACT="eventing-kafka.yaml"
 
 function fail() {
   echo "$1"
@@ -47,7 +48,13 @@ function build_release() {
     fail "failed to create data plane artifact"
   fi
 
-  export ARTIFACTS_TO_PUBLISH=("${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT} ${EVENTING_KAFKA_BROKER_ARTIFACT} ${EVENTING_KAFKA_SINK_ARTIFACT}")
+  {
+    cat ${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}
+    cat ${EVENTING_KAFKA_BROKER_ARTIFACT}
+    cat ${EVENTING_KAFKA_SINK_ARTIFACT}
+  } >>${EVENTING_KAFKA_ARTIFACT}
+
+  export ARTIFACTS_TO_PUBLISH=("${EVENTING_KAFKA_ARTIFACT} ${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT} ${EVENTING_KAFKA_BROKER_ARTIFACT} ${EVENTING_KAFKA_SINK_ARTIFACT}")
 }
 
 main $@
