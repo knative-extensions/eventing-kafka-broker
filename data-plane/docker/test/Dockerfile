@@ -22,3 +22,5 @@ WORKDIR /app
 COPY . .
 
 RUN ./mvnw clean verify --no-transfer-progress
+
+RUN mkdir /reports && find . -type f -regextype posix-extended -regex ".*/TEST-.*.xml$" | xargs -I '{}' cp {} /reports/
