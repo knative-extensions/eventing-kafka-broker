@@ -36,7 +36,7 @@ wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing 
 
 header "Running tests"
 
-go_test_e2e -timeout=30m ./test/... || fail_test "Integration test failed"
+go_test_e2e -timeout=30m -parallel=12 ./test/... || fail_test "Integration test failed"
 
 if ! ${LOCAL_DEVELOPMENT}; then
 
