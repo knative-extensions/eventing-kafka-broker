@@ -24,6 +24,7 @@ import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
+import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -31,8 +32,9 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import net.logstash.logback.encoder.LogstashEncoder;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -76,58 +78,67 @@ public class Main {
     final var vertx = Vertx.vertx(
       new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
     );
-    ContractMessageCodec.register(vertx.eventBus());
-
-    final var metricsRegistry = BackendRegistries.getNow(METRICS_REGISTRY_NAME);
-
-    final var badRequestCounter = metricsRegistry.counter(HTTP_REQUESTS_MALFORMED_COUNT);
-    final var produceEventsCounter = metricsRegistry.counter(HTTP_REQUESTS_PRODUCE_COUNT);
-
-    producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
-    producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    final var handler = new RequestMapper<>(
-      producerConfigs,
-      new CloudEventRequestToRecordMapper(),
-      properties -> KafkaProducer.create(vertx, properties),
-      badRequestCounter,
-      produceEventsCounter
-    );
-
-    final var httpServerOptions = new HttpServerOptions(
-      Configurations.getPropertiesAsJson(env.getHttpServerConfigFilePath())
-    );
-    httpServerOptions.setPort(env.getIngressPort());
-
-    final var verticle = new ReceiverVerticle(
-      httpServerOptions,
-      handler,
-      h -> new SimpleProbeHandlerDecorator(
-        env.getLivenessProbePath(),
-        env.getReadinessProbePath(),
-        h
-      )
-    );
-
-    vertx.deployVerticle(verticle)
-      .onSuccess(v -> logger.info("receiver started"))
-      .onFailure(t -> logger.error("receiver not started", t));
 
     try {
-      // TODO add a shutdown hook that calls objectsCreator.reconcile(Brokers.newBuilder().build()),
-      //  so that producers flush their buffers.
-      //  Note: reconcile(Brokers) isn't thread safe so we need to make sure to stop the watcher
-      //  from calling reconcile first
 
-      final var fw = new FileWatcher(
-        FileSystems.getDefault().newWatchService(),
-        new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS),
-        new File(env.getDataPlaneConfigFilePath())
+      ContractMessageCodec.register(vertx.eventBus());
+
+      final var metricsRegistry = BackendRegistries.getNow(METRICS_REGISTRY_NAME);
+
+      final var badRequestCounter = metricsRegistry.counter(HTTP_REQUESTS_MALFORMED_COUNT);
+      final var produceEventsCounter = metricsRegistry.counter(HTTP_REQUESTS_PRODUCE_COUNT);
+
+      producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
+      producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+      final var handler = new RequestMapper<>(
+        producerConfigs,
+        new CloudEventRequestToRecordMapper(),
+        properties -> KafkaProducer.create(vertx, properties),
+        badRequestCounter,
+        produceEventsCounter
       );
+
+      final var httpServerOptions = new HttpServerOptions(
+        Configurations.getPropertiesAsJson(env.getHttpServerConfigFilePath())
+      );
+      httpServerOptions.setPort(env.getIngressPort());
+
+      final var verticle = new ReceiverVerticle(
+        httpServerOptions,
+        handler,
+        h -> new SimpleProbeHandlerDecorator(
+          env.getLivenessProbePath(),
+          env.getReadinessProbePath(),
+          h
+        )
+      );
+
+      final var waitVerticle = new CountDownLatch(1);
+      vertx.deployVerticle(verticle)
+        .onSuccess(v -> {
+          logger.info("Receiver started");
+          waitVerticle.countDown();
+        })
+        .onFailure(t -> {
+          // This is a catastrophic failure, close the application
+          logger.error("Consumer deployer not started", t);
+          vertx.close(v -> System.exit(1));
+        });
+      waitVerticle.await(5, TimeUnit.SECONDS);
+
+      final var publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
+      final var fs = FileSystems.getDefault().newWatchService();
+      var fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
+
+      // Gracefully clean up resources.
+      Runtime.getRuntime().addShutdownHook(new Thread(Shutdown.run(vertx, fw, publisher)));
 
       fw.watch(); // block forever
 
-    } catch (InterruptedException | IOException ex) {
-      logger.error("failed during filesystem watch", ex);
+    } catch (final Exception ex) {
+      logger.error("Failed during filesystem watch", ex);
+
+      Shutdown.closeSync(vertx).run();
     }
   }
 }
