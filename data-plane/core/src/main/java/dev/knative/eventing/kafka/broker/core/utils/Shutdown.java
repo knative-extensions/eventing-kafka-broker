@@ -31,7 +31,7 @@ public class Shutdown {
       final var wait = new CountDownLatch(1);
       vertx.close(ignore -> wait.countDown());
       try {
-        wait.await(10, TimeUnit.SECONDS);
+        wait.await(2, TimeUnit.MINUTES);
       } catch (InterruptedException e) {
         logger.error("Timeout waiting for vertx close", e);
       }
