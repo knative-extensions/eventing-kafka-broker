@@ -33,7 +33,6 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -60,7 +59,7 @@ public class Main {
    *
    * @param args command line arguments.
    */
-  public static void main(final String[] args) throws IOException, InterruptedException {
+  public static void main(final String[] args) {
     // HACK HACK HACK
     // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
     // dependency with scope `provided` nor `runtime`, and adding include rules to
@@ -75,61 +74,60 @@ public class Main {
     final var vertx = Vertx.vertx(
       new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
     );
-    Runtime.getRuntime().addShutdownHook(new Thread(Shutdown.closeSync(vertx)));
-
-    ContractMessageCodec.register(vertx.eventBus());
-
-    final var metricsRegistry = BackendRegistries.getNow(METRICS_REGISTRY_NAME);
-    final var eventsSentCounter = metricsRegistry.counter(HTTP_EVENTS_SENT_COUNT);
-
-    final var producerConfig = Configurations.getProperties(env.getProducerConfigFilePath());
-    final var consumerConfig = Configurations.getProperties(env.getConsumerConfigFilePath());
-    final var webClientConfig = Configurations.getPropertiesAsJson(env.getWebClientConfigFilePath());
-
-    final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-      consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered(eventsSentCounter);
-
-    final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
-      consumerRecordOffsetStrategyFactory,
-      consumerConfig,
-      WebClient.create(vertx, new WebClientOptions(webClientConfig)),
-      vertx,
-      producerConfig
-    );
-
-    final var consumerDeployerVerticle = new ConsumerDeployerVerticle(
-      consumerVerticleFactory,
-      env.getEgressesInitialCapacity()
-    );
-
-    final var waitConsumerDeployer = new CountDownLatch(1);
-    vertx.deployVerticle(consumerDeployerVerticle)
-      .onSuccess(v -> {
-        logger.info("Consumer deployer started");
-        waitConsumerDeployer.countDown();
-      })
-      .onFailure(t -> {
-        // This is a catastrophic failure, close the application
-        logger.error("Consumer deployer not started", t);
-        vertx.close(v -> System.exit(1));
-      });
-    waitConsumerDeployer.await(5, TimeUnit.SECONDS);
-
-    final var publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
-    final var fs = FileSystems.getDefault().newWatchService();
-    var fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
-
-    // Gracefully clean up resources.
-    Runtime.getRuntime().addShutdownHook(new Thread(Shutdown.run(vertx, fw, publisher)));
 
     try {
+
+      ContractMessageCodec.register(vertx.eventBus());
+
+      final var metricsRegistry = BackendRegistries.getNow(METRICS_REGISTRY_NAME);
+      final var eventsSentCounter = metricsRegistry.counter(HTTP_EVENTS_SENT_COUNT);
+
+      final var producerConfig = Configurations.getProperties(env.getProducerConfigFilePath());
+      final var consumerConfig = Configurations.getProperties(env.getConsumerConfigFilePath());
+      final var webClientConfig = Configurations.getPropertiesAsJson(env.getWebClientConfigFilePath());
+
+      final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
+        consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered(eventsSentCounter);
+
+      final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
+        consumerRecordOffsetStrategyFactory,
+        consumerConfig,
+        WebClient.create(vertx, new WebClientOptions(webClientConfig)),
+        vertx,
+        producerConfig
+      );
+
+      final var consumerDeployerVerticle = new ConsumerDeployerVerticle(
+        consumerVerticleFactory,
+        env.getEgressesInitialCapacity()
+      );
+
+      final var waitConsumerDeployer = new CountDownLatch(1);
+      vertx.deployVerticle(consumerDeployerVerticle)
+        .onSuccess(v -> {
+          logger.info("Consumer deployer started");
+          waitConsumerDeployer.countDown();
+        })
+        .onFailure(t -> {
+          // This is a catastrophic failure, close the application
+          logger.error("Consumer deployer not started", t);
+          vertx.close(v -> System.exit(1));
+        });
+      waitConsumerDeployer.await(5, TimeUnit.SECONDS);
+
+      final var publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
+      final var fs = FileSystems.getDefault().newWatchService();
+      var fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
+
+      // Gracefully clean up resources.
+      Runtime.getRuntime().addShutdownHook(new Thread(Shutdown.run(vertx, fw, publisher)));
 
       fw.watch(); // block forever
 
     } catch (final Exception ex) {
       logger.error("Failed during filesystem watch", ex);
-      Shutdown.closeSync(vertx).run();
-      throw ex;
     }
+
+    Shutdown.closeSync(vertx).run();
   }
 }
