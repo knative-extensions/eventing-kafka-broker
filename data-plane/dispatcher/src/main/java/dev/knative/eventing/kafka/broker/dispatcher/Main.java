@@ -126,8 +126,8 @@ public class Main {
 
     } catch (final Exception ex) {
       logger.error("Failed during filesystem watch", ex);
-    }
 
-    Shutdown.closeSync(vertx).run();
+      Shutdown.closeSync(vertx).run();
+    }
   }
 }
