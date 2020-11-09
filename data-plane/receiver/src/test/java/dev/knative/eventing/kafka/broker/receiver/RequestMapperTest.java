@@ -255,6 +255,57 @@ public class RequestMapperTest {
       .onFailure(context::failNow);
   }
 
+  @Test
+  @SuppressWarnings("unchecked")
+  public void shouldNotRecreateProducerWhenAddingNewIngressWithSameBootstrapServer(
+    final VertxTestContext context) {
+    final RequestToRecordMapper<Object, Object> mapper
+      = (request, topic) -> Future.succeededFuture();
+
+    final var first = new AtomicBoolean(true);
+    final var recreated = new AtomicBoolean(false);
+
+    final var handler = new RequestMapper<Object, Object>(
+      new Properties(),
+      mapper,
+      properties -> {
+        if (!first.getAndSet(false)) {
+          context.failNow(new IllegalStateException("producer should be recreated"));
+        }
+        return mockProducer();
+      },
+      mock(Counter.class),
+      mock(Counter.class)
+    );
+    final var reconciler = ResourcesReconcilerImpl.builder()
+      .watchIngress(handler)
+      .build();
+
+    final var checkpoint = context.checkpoint();
+
+    final var resource1 = DataPlaneContract.Resource.newBuilder()
+      .setUid("1")
+      .addTopics("topic")
+      .setBootstrapServers("kafka-1:9092,kafka-2:9092")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello").build())
+      .build();
+
+    final var resource2 = DataPlaneContract.Resource.newBuilder()
+      .setUid("2")
+      .addTopics("topic")
+      .setBootstrapServers("kafka-1:9092,kafka-2:9092")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello_world").build())
+      .build();
+
+    reconciler.reconcile(List.of(resource1))
+      .compose(ignored -> reconciler.reconcile(List.of(resource1, resource2)))
+      .onSuccess(i -> context.verify(() -> {
+        assertThat(recreated.get()).isFalse();
+        checkpoint.flag();
+      }))
+      .onFailure(context::failNow);
+  }
+
   private static KafkaProducer mockProducer() {
     var producer = mock(KafkaProducer.class);
     when(producer.flush()).thenReturn(Future.succeededFuture());
