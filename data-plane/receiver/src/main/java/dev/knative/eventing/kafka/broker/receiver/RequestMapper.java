@@ -223,6 +223,7 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     private int refs;
 
     ReferenceCounter(final T value) {
+      Objects.requireNonNull(value);
       this.value = value;
       this.refs = 0;
     }
