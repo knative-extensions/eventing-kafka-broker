@@ -58,7 +58,7 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
   // This map is used to resolve the ingress info in the reconciler listener
   private final Map<String, IngressInfo<K, V>> ingressInfos;
   // producerConfig -> producer
-  // This map is used to count the references to the producer instantiated for each bootstrapServers
+  // This map is used to count the references to the producer instantiated for each producerConfig
   private final Map<Properties, ReferenceCounter<KafkaProducer<K, V>>> producerReferences;
   // path -> IngressInfo
   // We use this map on the hot path to directly resolve the producer from the path
@@ -196,12 +196,12 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     DataPlaneContract.Resource resource,
     DataPlaneContract.Ingress ingress) {
     // Remove ingress info from the maps
-    var ingressInfo = this.ingressInfos.remove(resource.getUid());
+    final var ingressInfo = this.ingressInfos.remove(resource.getUid());
     this.pathMapper.remove(ingressInfo.getPath());
 
     // Get the rc
-    var rc = this.producerReferences.get(ingressInfo.getProducerProperties());
-    if (rc.decrement()) {
+    final var rc = this.producerReferences.get(ingressInfo.getProducerProperties());
+    if (rc.decrementAndCheck()) {
       // Nobody is referring to this producer anymore, clean it up and close it
       this.producerReferences.remove(ingressInfo.getProducerProperties());
       return rc.getValue().flush().compose(v -> rc.getValue().close());
@@ -218,59 +218,61 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
   }
 
   private static class ReferenceCounter<T> {
-    final T value;
-    int count;
 
-    public ReferenceCounter(T value) {
+    private final T value;
+    private int refs;
+
+    ReferenceCounter(final T value) {
       this.value = value;
-      this.count = 0;
+      this.refs = 0;
     }
 
-    public T getValue() {
+    T getValue() {
       return value;
     }
 
-    public void increment() {
-      this.count++;
+    void increment() {
+      this.refs++;
     }
 
     /**
      * @return true if the count is 0, hence nobody is referring anymore to this value
      */
-    public boolean decrement() {
-      this.count--;
-      return this.count == 0;
+    boolean decrementAndCheck() {
+      this.refs--;
+      return this.refs == 0;
     }
 
   }
 
   private static class IngressInfo<K, V> {
-    final KafkaProducer<K, V> producer;
-    final String topic;
-    final String path;
-    final Properties producerProperties;
 
-    private IngressInfo(final KafkaProducer<K, V> producer, final String topic, String path,
-                        Properties producerProperties) {
+    private final KafkaProducer<K, V> producer;
+    private final String topic;
+    private final String path;
+    private final Properties producerProperties;
+
+    IngressInfo(final KafkaProducer<K, V> producer, final String topic, final String path,
+                final Properties producerProperties) {
       this.producer = producer;
       this.topic = topic;
       this.path = path;
       this.producerProperties = producerProperties;
     }
 
-    public KafkaProducer<K, V> getProducer() {
+    KafkaProducer<K, V> getProducer() {
       return producer;
     }
 
-    public String getTopic() {
+    String getTopic() {
       return topic;
     }
 
-    public String getPath() {
+    String getPath() {
       return path;
     }
 
-    public Properties getProducerProperties() {
+    Properties getProducerProperties() {
       return producerProperties;
     }
   }

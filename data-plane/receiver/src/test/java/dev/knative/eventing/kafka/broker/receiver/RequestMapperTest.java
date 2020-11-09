@@ -17,6 +17,8 @@
 package dev.knative.eventing.kafka.broker.receiver;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.InstanceOfAssertFactories.map;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -34,11 +36,14 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -164,80 +169,51 @@ public class RequestMapperTest {
   @Test
   @SuppressWarnings("unchecked")
   public void shouldRecreateProducerWhenBootstrapServerChange(final VertxTestContext context) {
-    final RequestToRecordMapper<Object, Object> mapper
-      = (request, topic) -> Future.succeededFuture();
-
-    final var first = new AtomicBoolean(true);
-    final var recreated = new AtomicBoolean(false);
-
-    final var handler = new RequestMapper<Object, Object>(
-      new Properties(),
-      mapper,
-      properties -> {
-        if (!first.getAndSet(false)) {
-          recreated.set(true);
-        }
-        return mockProducer();
-      },
-      mock(Counter.class),
-      mock(Counter.class)
-    );
-    final var reconciler = ResourcesReconcilerImpl.builder()
-      .watchIngress(handler)
-      .build();
-
-    final var checkpoint = context.checkpoint();
-
-    final var resource1 = DataPlaneContract.Resource.newBuilder()
+    final var resource = DataPlaneContract.Resource.newBuilder()
       .setUid("1")
       .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-2:9092")
       .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello").build())
       .build();
 
-    final var resource2 = DataPlaneContract.Resource.newBuilder()
+    final var resourceUpdated = DataPlaneContract.Resource.newBuilder()
       .setUid("1")
       .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-3:9092")
       .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello").build())
       .build();
 
-    reconciler.reconcile(List.of(resource1))
-      .compose(ignored -> reconciler.reconcile(List.of(resource2)))
-      .onSuccess(i -> context.verify(() -> {
-        assertThat(recreated.get()).isTrue();
-        checkpoint.flag();
-      }))
-      .onFailure(context::failNow);
+    testRequestMapper(context,
+      entry(List.of(resource), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(1);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(1);
+      }),
+      entry(List.of(resourceUpdated), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(2);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(1);
+      }),
+      entry(Collections.emptyList(), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(2);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(0);
+      })
+    );
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void shouldNotRecreateProducerWhenBootstrapServerNotChanged(
     final VertxTestContext context) {
-    final RequestToRecordMapper<Object, Object> mapper
-      = (request, topic) -> Future.succeededFuture();
-
-    final var first = new AtomicBoolean(true);
-    final var recreated = new AtomicBoolean(false);
-
-    final var handler = new RequestMapper<Object, Object>(
-      new Properties(),
-      mapper,
-      properties -> {
-        if (!first.getAndSet(false)) {
-          context.failNow(new IllegalStateException("producer should be recreated"));
-        }
-        return mockProducer();
-      },
-      mock(Counter.class),
-      mock(Counter.class)
-    );
-    final var reconciler = ResourcesReconcilerImpl.builder()
-      .watchIngress(handler)
-      .build();
-
-    final var checkpoint = context.checkpoint();
 
     final var resource = DataPlaneContract.Resource.newBuilder()
       .setUid("1")
@@ -246,43 +222,37 @@ public class RequestMapperTest {
       .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello").build())
       .build();
 
-    reconciler.reconcile(List.of(resource))
-      .compose(ignored -> reconciler.reconcile(List.of(resource)))
-      .onSuccess(i -> context.verify(() -> {
-        assertThat(recreated.get()).isFalse();
-        checkpoint.flag();
-      }))
-      .onFailure(context::failNow);
+    testRequestMapper(context,
+      entry(List.of(resource), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(1);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(1);
+      }),
+      entry(List.of(resource), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(1);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(1);
+      }),
+      entry(Collections.emptyList(), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(1);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(0);
+      })
+    );
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void shouldNotRecreateProducerWhenAddingNewIngressWithSameBootstrapServer(
     final VertxTestContext context) {
-    final RequestToRecordMapper<Object, Object> mapper
-      = (request, topic) -> Future.succeededFuture();
-
-    final var first = new AtomicBoolean(true);
-    final var recreated = new AtomicBoolean(false);
-
-    final var handler = new RequestMapper<Object, Object>(
-      new Properties(),
-      mapper,
-      properties -> {
-        if (!first.getAndSet(false)) {
-          context.failNow(new IllegalStateException("producer should be recreated"));
-        }
-        return mockProducer();
-      },
-      mock(Counter.class),
-      mock(Counter.class)
-    );
-    final var reconciler = ResourcesReconcilerImpl.builder()
-      .watchIngress(handler)
-      .build();
-
-    final var checkpoint = context.checkpoint();
-
     final var resource1 = DataPlaneContract.Resource.newBuilder()
       .setUid("1")
       .addTopics("topic")
@@ -297,13 +267,160 @@ public class RequestMapperTest {
       .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello_world").build())
       .build();
 
-    reconciler.reconcile(List.of(resource1))
-      .compose(ignored -> reconciler.reconcile(List.of(resource1, resource2)))
-      .onSuccess(i -> context.verify(() -> {
-        assertThat(recreated.get()).isFalse();
-        checkpoint.flag();
-      }))
-      .onFailure(context::failNow);
+    testRequestMapper(context,
+      entry(List.of(resource1), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(1);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(1);
+      }),
+      entry(List.of(resource1, resource2), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(1);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(1);
+      }),
+      entry(Collections.emptyList(), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(1);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(0);
+      })
+    );
+  }
+
+  @Test
+  public void shouldNotRecreateProducerWhenAddingNewIngressWithSameBootstrapServerAndContentMode(
+    final VertxTestContext context) {
+    final var resource1 = DataPlaneContract.Resource.newBuilder()
+      .setUid("1")
+      .addTopics("topic")
+      .setBootstrapServers("kafka-1:9092,kafka-2:9092")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello")
+        .setContentMode(DataPlaneContract.ContentMode.STRUCTURED).build())
+      .build();
+
+    final var resource2 = DataPlaneContract.Resource.newBuilder()
+      .setUid("2")
+      .addTopics("topic")
+      .setBootstrapServers("kafka-1:9092,kafka-2:9092")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello_world")
+        .setContentMode(DataPlaneContract.ContentMode.STRUCTURED).build())
+      .build();
+
+    testRequestMapper(context,
+      entry(List.of(resource1, resource2), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(1);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(1);
+      }),
+      entry(Collections.emptyList(), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(1);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(0);
+      })
+    );
+  }
+
+  @Test
+  public void shouldCreateDifferentProducersWhenAddingDifferentIngresses(
+    final VertxTestContext context) {
+    final var resource1 = DataPlaneContract.Resource.newBuilder()
+      .setUid("1")
+      .addTopics("topic")
+      .setBootstrapServers("kafka-1:9092,kafka-2:9092")
+      .setIngress(
+        DataPlaneContract.Ingress.newBuilder().setPath("/hello").setContentMode(DataPlaneContract.ContentMode.BINARY)
+          .build())
+      .build();
+
+    final var resource2 = DataPlaneContract.Resource.newBuilder()
+      .setUid("2")
+      .addTopics("topic")
+      .setBootstrapServers("kafka-3:9092,kafka-4:9092")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello_world")
+        .setContentMode(DataPlaneContract.ContentMode.BINARY).build())
+      .build();
+
+    final var resource2Updated = DataPlaneContract.Resource.newBuilder()
+      .setUid("2")
+      .addTopics("topic")
+      .setBootstrapServers("kafka-3:9092,kafka-4:9092")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello_world")
+        .setContentMode(DataPlaneContract.ContentMode.STRUCTURED).build())
+      .build();
+
+    testRequestMapper(context,
+      entry(List.of(resource1, resource2), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(2);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(2);
+      }),
+      entry(List.of(resource1, resource2Updated), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(3);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(2);
+      }),
+      entry(Collections.emptyList(), (producerFactoryInvocations, mapper) -> {
+        assertThat(producerFactoryInvocations)
+          .isEqualTo(3);
+        assertThat(mapper)
+          .extracting("producerReferences")
+          .asInstanceOf(map(Properties.class, Object.class))
+          .hasSize(0);
+      })
+    );
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  private void testRequestMapper(VertxTestContext context,
+                                 Map.Entry<List<DataPlaneContract.Resource>, BiConsumer<Integer, RequestMapper<Object, Object>>>... invocations) {
+    final var checkpoint = context.checkpoint(invocations.length);
+
+    final var producerFactoryInvocations = new AtomicInteger(0);
+
+    final var handler = new RequestMapper<Object, Object>(
+      new Properties(),
+      (request, topic) -> Future.succeededFuture(),
+      properties -> {
+        producerFactoryInvocations.incrementAndGet();
+        return mockProducer();
+      },
+      mock(Counter.class),
+      mock(Counter.class)
+    );
+    final var reconciler = ResourcesReconcilerImpl.builder()
+      .watchIngress(handler)
+      .build();
+
+    Future<Void> fut = Future.succeededFuture();
+    for (Map.Entry<List<DataPlaneContract.Resource>, BiConsumer<Integer, RequestMapper<Object, Object>>> entry : invocations) {
+      fut = fut.compose(v -> reconciler.reconcile(entry.getKey()))
+        .onSuccess(i -> context.verify(() -> {
+          entry.getValue().accept(producerFactoryInvocations.get(), handler);
+          checkpoint.flag();
+        }))
+        .onFailure(context::failNow);
+    }
   }
 
   private static KafkaProducer mockProducer() {
