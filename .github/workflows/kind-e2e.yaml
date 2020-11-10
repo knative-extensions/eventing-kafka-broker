@@ -128,10 +128,10 @@ jobs:
           source test/e2e-common.sh
 
           # Use persistent cluster to make tests more reliable.
-          strimzi_version=`curl https://github.com/strimzi/strimzi-kafka-operator/releases/latest |  awk -F 'tag/' '{print $2}' | awk -F '"' '{print $1}' 2>/dev/null`
+          # strimzi_version=`curl https://github.com/strimzi/strimzi-kafka-operator/releases/latest |  awk -F 'tag/' '{print $2}' | awk -F '"' '{print $1}' 2>/dev/null`
 
-          curl -Lo ./kafka-single.yaml "https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/${strimzi_version}/examples/kafka/kafka-persistent-single.yaml"
-          mv kafka-single.yaml test/kafka/kafka-ephemeral-single.yaml
+          # curl -Lo ./kafka-single.yaml "https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/${strimzi_version}/examples/kafka/kafka-persistent-single.yaml"
+          # mv kafka-single.yaml test/kafka/kafka-ephemeral-single.yaml
 
           knative_setup
 
