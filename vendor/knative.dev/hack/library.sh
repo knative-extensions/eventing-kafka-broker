@@ -517,7 +517,7 @@ function go_update_deps() {
   echo "=== Update Deps for Golang"
 
   local UPGRADE=0
-  local VERSION="master"
+  local VERSION="v9000.1" # release v9000 is so far in the future, it will always pick the default branch.
   local DOMAIN="knative.dev"
   while [[ $# -ne 0 ]]; do
     parameter=$1
