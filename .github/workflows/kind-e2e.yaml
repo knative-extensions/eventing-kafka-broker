@@ -142,12 +142,14 @@ jobs:
           source test/e2e-common.sh
 
           # Kafka and Zookeeper are dinamically created by strimzi and don't exist yet, so sleep a "bit".
-          sleep 600
+          sleep 20m
           
           free
 
           kubectl wait deployment -v 9 --all --timeout=-1s --for=condition=Available -n knative-eventing
           kubectl wait deployment -v 9 --all --timeout=-1s --for=condition=Available -n kafka
+          
+          kubectl describe -n kafka kafka my-cluster
 
           # Print all pods in the cluster.
           kubectl get pods -v 9 -A
