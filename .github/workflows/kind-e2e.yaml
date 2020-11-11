@@ -144,11 +144,11 @@ jobs:
           # Kafka and Zookeeper are dinamically created by strimzi and don't exist yet, so sleep a "bit".
           sleep 600
 
-          kubectl wait deployment --all --timeout=-1s --for=condition=Available -n knative-eventing
-          kubectl wait deployment --all --timeout=-1s --for=condition=Available -n kafka
+          kubectl wait deployment -v 9 --all --timeout=-1s --for=condition=Available -n knative-eventing
+          kubectl wait deployment -v 9 --all --timeout=-1s --for=condition=Available -n kafka
 
           # Print all pods in the cluster.
-          kubectl get pods -A
+          kubectl get pods -v 9 -A
 
           wait_until_pods_running kafka && wait_until_pods_running knative-eventing
 
