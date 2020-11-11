@@ -274,11 +274,7 @@
               <rules>
                 <dependencyConvergence/>
                 <requireReleaseDeps>
-                  <excludes>dev.knative.eventing.kafka.broker:*</excludes>
-                  <failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
-                </requireReleaseDeps>
-                <requireReleaseDeps>
-                  <excludes>io.cloudevents:*</excludes>
+                  <excludes>dev.knative.eventing.kafka.broker:*,io.cloudevents:*</excludes>
                   <failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
                 </requireReleaseDeps>
               </rules>
