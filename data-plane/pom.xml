@@ -277,6 +277,10 @@
                   <excludes>dev.knative.eventing.kafka.broker:*</excludes>
                   <failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
                 </requireReleaseDeps>
+                <requireReleaseDeps>
+                  <excludes>io.cloudevents:*</excludes>
+                  <failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
+                </requireReleaseDeps>
               </rules>
             </configuration>
           </execution>
