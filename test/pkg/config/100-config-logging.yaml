@@ -22,7 +22,7 @@ metadata:
 data:
   config.xml: |
     <configuration>
-      <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+      <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender" additivity="false">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
       </appender>
       <logger name="dev.knative" level="DEBUG">
