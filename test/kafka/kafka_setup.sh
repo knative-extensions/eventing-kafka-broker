@@ -18,8 +18,7 @@ set -e
 
 source $(dirname $0)/../../vendor/knative.dev/hack/e2e-tests.sh
 
-#strimzi_version=$(curl https://github.com/strimzi/strimzi-kafka-operator/releases/latest | awk -F 'tag/' '{print $2}' | awk -F '"' '{print $1}' 2>/dev/null)
-strimzi_version=0.19.0
+strimzi_version=$(curl https://github.com/strimzi/strimzi-kafka-operator/releases/latest | awk -F 'tag/' '{print $2}' | awk -F '"' '{print $1}' 2>/dev/null)
 
 header "Using Strimzi Version: ${strimzi_version}"
 
