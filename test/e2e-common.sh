@@ -40,7 +40,7 @@ export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
 readonly REPLICAS=${REPLICAS:-3}
 
 export SYSTEM_NAMESPACE="knative-eventing"
-export CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-".cluster.local"}
+export CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}
 
 function knative_setup() {
   knative_eventing "apply --strict"
