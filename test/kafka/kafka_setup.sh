@@ -24,7 +24,7 @@ kubectl create namespace kafka --dry-run -o yaml | kubectl apply -f -
 sleep 5
 
 header "Applying Strimzi Cluster Operator file"
-cat $(dirname $0)/strimzi-cluster-operator.yaml | sed "s/.cluster.local/${CLUSTER_SUFFIX}/g" | kubectl apply -f -
+cat $(dirname $0)/strimzi-cluster-operator.yaml | sed "s/.cluster.local/${CLUSTER_SUFFIX}/g" | kubectl apply -n kafka -f -
 
 sleep 5
 
