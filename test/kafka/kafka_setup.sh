@@ -18,19 +18,16 @@ set -e
 
 source $(dirname $0)/../../vendor/knative.dev/hack/e2e-tests.sh
 
-strimzi_version=$(curl https://github.com/strimzi/strimzi-kafka-operator/releases/latest | awk -F 'tag/' '{print $2}' | awk -F '"' '{print $1}' 2>/dev/null)
-
-header "Using Strimzi Version: ${strimzi_version}"
 
 kubectl create namespace kafka --dry-run -o yaml | kubectl apply -f -
 
-curl -L "https://github.com/strimzi/strimzi-kafka-operator/releases/download/${strimzi_version}/strimzi-cluster-operator-${strimzi_version}.yaml" |
-  sed 's/namespace: .*/namespace: kafka/' |
-  kubectl -n kafka apply -f -
+sleep 5
+
+header "Applying Strimzi Cluster Operator file"
+cat $(dirname $0)/strimzi-cluster-operator.yaml | sed "s/cluster.local/${CLUSTER_SUFFIX}/g" | kubectl apply -n kafka -f -
 
 sleep 5
 
-header "Applying Strimzi Cluster file"
 kubectl -n kafka apply -f $(dirname $0)/kafka-ephemeral-single.yaml
 
 sleep 5

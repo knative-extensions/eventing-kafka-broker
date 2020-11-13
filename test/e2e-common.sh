@@ -40,6 +40,7 @@ export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
 readonly REPLICAS=${REPLICAS:-3}
 
 export SYSTEM_NAMESPACE="knative-eventing"
+export CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}
 
 function knative_setup() {
   knative_eventing "apply --strict"
@@ -121,8 +122,6 @@ function test_setup() {
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
-
-  scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
 }
 
 function test_teardown() {

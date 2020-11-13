@@ -22,6 +22,11 @@ if ! ${SKIP_INITIALIZE}; then
   initialize $@ --skip-istio-addon
 fi
 
+
+if ! ${LOCAL_DEVELOPMENT}; then
+  scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
+fi
+
 if ! ${LOCAL_DEVELOPMENT}; then
   apply_chaos || fail_test "Failed to apply chaos"
 fi
