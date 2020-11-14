@@ -34,6 +34,14 @@ import (
 	testlib "knative.dev/eventing/test/lib"
 )
 
+const (
+	app       = "sacura"
+	namespace = "sacura"
+
+	pollTimeout  = 10 * time.Minute
+	pollInterval = 10 * time.Second
+)
+
 func TestSacuraJob(t *testing.T) {
 
 	c := testlib.Setup(t, false)
@@ -41,12 +49,7 @@ func TestSacuraJob(t *testing.T) {
 
 	ctx := context.Background()
 
-	const (
-		app       = "sacura"
-		namespace = "sacura"
-	)
-
-	jobPollError := wait.Poll(10*time.Second, 10*time.Minute, func() (done bool, err error) {
+	jobPollError := wait.Poll(pollInterval, pollTimeout, func() (done bool, err error) {
 		job, err := c.Kube.BatchV1().Jobs(namespace).Get(ctx, app, metav1.GetOptions{})
 		assert.Nil(t, err)
 
