@@ -22,7 +22,6 @@ if ! ${SKIP_INITIALIZE}; then
   initialize $@ --skip-istio-addon
 fi
 
-
 if ! ${LOCAL_DEVELOPMENT}; then
   scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
 fi
@@ -41,21 +40,10 @@ wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing 
 
 header "Running tests"
 
-go_test_e2e -timeout=30m ./test/... || fail_test "Integration test failed"
+go_test_e2e -timeout=30m ./test/... || fail_test "Integration tests failed"
 
 if ! ${LOCAL_DEVELOPMENT}; then
-
-  kubectl wait --for=condition=complete --timeout=10m -n sacura job/sacura || job_completed=$?
-
-  # Export logs from pods in the namespace sacura.
-  go run test/cmd/logs-exporter/main.go --logs-namespace sacura
-
-  if [[ "${job_completed}" -ne "0" ]]; then
-    kubectl logs -n sacura -l=app=sacura
-    kubectl describe -n sacura job sacura
-    fail_test "Sacura Job not completed"
-  fi
-
+  go_test_e2e -tags=sacura -timeout=20m ./test/... || fail_test "Sacura tests failed"
 fi
 
 success
