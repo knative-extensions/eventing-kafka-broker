@@ -170,15 +170,21 @@ function k8s() {
 
 function data_plane_unit_tests() {
 
-  docker build \
-    --file ${DATA_PLANE_DIR}/docker/test/Dockerfile \
-    --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
-    --tag tests ${DATA_PLANE_DIR}
+  java_ut || java_ut || fail_test "Data plane unit tests failed"
 
   echo "Copy test reports in ${ARTIFACTS}"
   docker cp "$(docker create --rm tests)":/reports "${ARTIFACTS}" || fail_test "Failed to copy test reports in ${ARTIFACTS}"
 
   cd ${ARTIFACTS}/reports && find * -maxdepth 0 -exec mv {} ../junit_{} \; && cd - && rm -r ${ARTIFACTS}/reports
+
+  return $?
+}
+
+function java_ut() {
+  docker build \
+    --file ${DATA_PLANE_DIR}/docker/test/Dockerfile \
+    --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
+    --tag tests ${DATA_PLANE_DIR}
 
   return $?
 }
