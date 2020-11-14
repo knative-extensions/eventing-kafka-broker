@@ -145,9 +145,9 @@ function data_plane_build_push() {
 
   export KNATIVE_KAFKA_SINK_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${sink}":"${uuid}"
 
-  receiver_build_push || fail_test "failed to build receiver"
-  dispatcher_build_push || fail_test "failed to build dispatcher"
-  sink_build_push || fail_test "failed to build sink"
+  receiver_build_push || receiver_build_push || fail_test "failed to build receiver"
+  dispatcher_build_push || dispatcher_build_push || fail_test "failed to build dispatcher"
+  sink_build_push || sink_build_push || fail_test "failed to build sink"
 }
 
 function k8s() {
