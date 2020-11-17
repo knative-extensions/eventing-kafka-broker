@@ -1,0 +1,95 @@
+package dev.knative.eventing.kafka.broker.core.tracing;
+
+import static java.nio.file.StandardOpenOption.APPEND;
+import static java.nio.file.StandardOpenOption.CREATE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
+import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.Backend;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+
+public class TracingConfigTest {
+
+  @Test
+  public void shouldParseConfigGivenDirectory() throws IOException {
+
+    final var dir = Files.createTempDirectory("tracing");
+
+    write(dir, "/backend", " zipkin ");
+    write(dir, "/sample-rate", " 0.1 ");
+    write(dir, "/zipkin-endpoint", "  http://localhost:9241/v2/api/spans/     ");
+
+    final var config = TracingConfig.fromDir(dir.toAbsolutePath().toString());
+
+    assertThat(config.getBackend()).isEqualTo(Backend.ZIPKIN);
+    assertThat(config.getSamplingRate()).isEqualTo(0.1F);
+    assertThat(config.getURL()).isEqualTo("http://localhost:9241/v2/api/spans/");
+  }
+
+  @Test
+  public void shouldReturnUnknownBackendWhenBackendContainsUnknownName() throws IOException {
+
+    final var dir = Files.createTempDirectory("tracing");
+
+    write(dir, "/backend", " 1234 ");
+    write(dir, "/sample-rate", " 0.1 ");
+    write(dir, "/zipkin-endpoint", "  http://localhost:9241/v2/api/spans/     ");
+
+    final var config = TracingConfig.fromDir(dir.toAbsolutePath().toString());
+
+    assertThat(config.getBackend()).isEqualTo(Backend.UNKNOWN);
+  }
+
+  @Test
+  public void shouldReturnUnknownBackendWhenNoFilesArePresent() throws IOException {
+
+    final var dir = Files.createTempDirectory("tracing");
+
+    final var config = TracingConfig.fromDir(dir.toAbsolutePath().toString());
+
+    assertThat(config.getBackend()).isEqualTo(Backend.UNKNOWN);
+  }
+
+  @Test
+  public void shouldReturnUnknownBackendWhenDirectoryIsNotPresent() throws IOException {
+
+    final var config = TracingConfig.fromDir("/tmp/" + UUID.randomUUID().toString());
+
+    assertThat(config.getBackend()).isEqualTo(Backend.UNKNOWN);
+  }
+
+  @Test
+  public void throwWhenURLIsNotAbsolute() throws IOException {
+
+    final var dir = Files.createTempDirectory("tracing");
+
+    write(dir, "/backend", " zipkin ");
+    write(dir, "/sample-rate", " 0.1 ");
+    write(dir, "/zipkin-endpoint", "  /v2/api/spans/     ");
+
+    assertThatThrownBy(() -> TracingConfig.fromDir(dir.toAbsolutePath().toString()));
+  }
+
+  @Test
+  public void shouldNotThrowWhenURLIsNotAbsoluteAndBackendUnknown() throws IOException {
+
+    final var dir = Files.createTempDirectory("tracing");
+
+    write(dir, "/backend", " 1234 ");
+    write(dir, "/sample-rate", " 0.1 ");
+    write(dir, "/zipkin-endpoint", "  /v2/api/spans/     ");
+
+    assertDoesNotThrow(() -> TracingConfig.fromDir(dir.toAbsolutePath().toString()));
+  }
+
+  private static void write(final Path root, final String name, final String s) throws IOException {
+    try (final var f = Files.newOutputStream(Path.of(root.toAbsolutePath().toString() + name), CREATE, APPEND)) {
+      f.write(s.getBytes());
+    }
+  }
+}

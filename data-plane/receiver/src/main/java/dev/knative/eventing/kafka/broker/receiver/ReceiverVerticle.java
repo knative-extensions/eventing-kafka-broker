@@ -27,6 +27,7 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.impl.ContextInternal;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -74,10 +75,18 @@ public class ReceiverVerticle extends AbstractVerticle {
     );
     this.server = vertx.createHttpServer(httpServerOptions);
 
-    this.server.requestHandler(this.requestHandler)
+    this.server.requestHandler(this::handler)
+      .exceptionHandler(startPromise::tryFail)
       .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
       .<Void>mapEmpty()
       .onComplete(startPromise);
+  }
+
+  private void handler(final HttpServerRequest request) {
+    final var ctx  = ((ContextInternal) this.context).duplicate();
+    this.requestHandler.handle(request);
+
+    final var tracer = ctx.tracer();
   }
 
   @Override

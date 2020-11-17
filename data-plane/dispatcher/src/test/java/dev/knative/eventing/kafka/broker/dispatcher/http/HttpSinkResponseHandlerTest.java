@@ -16,7 +16,6 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
-import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 

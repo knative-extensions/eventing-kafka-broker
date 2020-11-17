@@ -23,15 +23,20 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
+import dev.knative.eventing.kafka.broker.core.tracing.OpenTelemetryVertxTracingFactory;
+import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
+import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.tracing.TracingOptions;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +45,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class Main {
 
@@ -56,13 +62,20 @@ public class Main {
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
+  static {
+    SLF4JBridgeHandler.removeHandlersForRootLogger();
+    SLF4JBridgeHandler.install();
+  }
+
   /**
    * Start receiver.
    *
    * @param args command line arguments.
    */
-  public static void main(final String[] args) {
+  public static void main(final String[] args) throws IOException {
     final var env = new ReceiverEnv(System::getenv);
+
+    Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
 
     // HACK HACK HACK
     // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
@@ -76,7 +89,11 @@ public class Main {
     logger.info("Starting Receiver {}", keyValue("env", env));
 
     final var vertx = Vertx.vertx(
-      new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
+      new VertxOptions()
+        .setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
+        .setTracingOptions(new TracingOptions()
+          .setFactory(new OpenTelemetryVertxTracingFactory())
+        )
     );
 
     try {

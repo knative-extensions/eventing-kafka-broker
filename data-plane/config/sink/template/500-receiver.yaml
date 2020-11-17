@@ -53,6 +53,9 @@ spec:
             - mountPath: /etc/logging
               name: kafka-sink-config-logging
               readOnly: true
+            - mountPath: /etc/tracing
+              name: config-tracing
+              readOnly: true
           ports:
             - containerPort: 9090
               name: http-metrics
@@ -61,6 +64,12 @@ spec:
               name: http
               protocol: TCP
           env:
+            - name: SERVICE_NAME
+              value: "kafka-sink-receiver"
+            - name: SERVICE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: INGRESS_PORT
               value: "8080"
             - name: PRODUCER_CONFIG_FILE_PATH
@@ -79,10 +88,13 @@ spec:
               value: "9090"
             - name: METRICS_PUBLISH_QUANTILES
               value: "false"
+            - name: CONFIG_TRACING_PATH
+              value: "/etc/tracing"
           command:
             - "java"
           args:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
+            - "-Djava.util.logging.config.file=/etc/logging/config.properties"
             - "-jar"
             - "/app/app.jar"
           # TODO set resources (limits and requests)
@@ -120,10 +132,13 @@ spec:
           configMap:
             name: config-kafka-sink-data-plane
         - name: cache
-          emptyDir: {}
+          emptyDir: { }
         - name: kafka-sink-config-logging
           configMap:
             name: kafka-config-logging
+        - name: config-tracing
+          configMap:
+            name: config-tracing
       restartPolicy: Always
 ---
 

@@ -30,8 +30,7 @@ import org.slf4j.LoggerFactory;
 
 public class CloudEventRequestToRecordMapper implements RequestToRecordMapper<String, CloudEvent> {
 
-  private static final Logger logger = LoggerFactory
-    .getLogger(CloudEventRequestToRecordMapper.class);
+  private static final Logger logger = LoggerFactory.getLogger(CloudEventRequestToRecordMapper.class);
 
   @Override
   public Future<KafkaProducerRecord<String, CloudEvent>> recordFromRequest(

@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.core.reconciler;
+package dev.knative.eventing.kafka.broker.core.tracing;
 
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import io.vertx.core.Future;
+import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.vertx.kafka.client.producer.KafkaProducerRecord;
 
-public interface IngressReconcilerListener {
+final class KafkaProducerRecordSetter<K, V> implements Setter<KafkaProducerRecord<K, V>> {
 
-  Future<Void> onNewIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
+  @Override
+  public void set(final KafkaProducerRecord<K, V> record, final String key, final String value) {
+    if (record == null) {
+      return;
+    }
 
-  Future<Void> onUpdateIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
-
-  Future<Void> onDeleteIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
-
+    record.addHeader(key, value);
+  }
 }

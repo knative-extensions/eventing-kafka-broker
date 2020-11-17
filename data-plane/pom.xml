@@ -41,6 +41,7 @@
     <vertx.version>4.0.0.CR1</vertx.version>
     <cloudevents.sdk.version>2.0.0-milestone3</cloudevents.sdk.version>
     <micrometer.version>1.6.1</micrometer.version>
+    <opentelemetry.version>0.10.0</opentelemetry.version>
     <jackson.version>2.11.3</jackson.version>
     <protobuf.version>3.14.0</protobuf.version>
     <slf4j.version>1.7.30</slf4j.version>
@@ -92,6 +93,14 @@
         <scope>import</scope>
       </dependency>
 
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-bom</artifactId>
+        <version>${opentelemetry.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <!-- Jackson -->
       <dependency>
         <groupId>com.fasterxml.jackson</groupId>
@@ -105,6 +114,11 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>jul-to-slf4j</artifactId>
         <version>${slf4j.version}</version>
       </dependency>
       <dependency>

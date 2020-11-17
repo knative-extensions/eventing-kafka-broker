@@ -23,6 +23,8 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
+import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
+import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
@@ -33,12 +35,14 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import net.logstash.logback.encoder.LogstashEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class Main {
 
@@ -54,12 +58,17 @@ public class Main {
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
+  static {
+    SLF4JBridgeHandler.removeHandlersForRootLogger();
+    SLF4JBridgeHandler.install();
+  }
+
   /**
    * Dispatcher entry point.
    *
    * @param args command line arguments.
    */
-  public static void main(final String[] args) {
+  public static void main(final String[] args) throws IOException {
     // HACK HACK HACK
     // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
     // dependency with scope `provided` nor `runtime`, and adding include rules to
@@ -68,6 +77,8 @@ public class Main {
     new LogstashEncoder().getFieldNames();
 
     final var env = new DispatcherEnv(System::getenv);
+
+    Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
 
     logger.info("Starting Dispatcher {}", keyValue("env", env));
 
