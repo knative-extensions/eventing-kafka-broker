@@ -32,21 +32,22 @@ public class OpenTelemetryVertxTracingFactory implements VertxTracerFactory {
   }
 
   @Override
-  public VertxTracer<?, ?> tracer(final TracingOptions options) {
+  public VertxTracer<Span, Span> tracer(final TracingOptions options) {
     return new Tracer(this.tracer);
   }
 
-  public static class Tracer implements VertxTracer<Span, Span> {
+  static class Tracer implements VertxTracer<Span, Span> {
 
-    public static String ACTIVE_SPAN = "opentelemetry.span";
-    public static String ACTIVE_CONTEXT = "opentelemetry.context";
+    static String ACTIVE_CONTEXT = "opentelemetry.context";
 
-    public final static String SERVICE_NAME;
-    public final static String SERVICE_NAMESPACE;
+    static String DEFAULT_SERVICE_NAME = "Knative";
+
+    final static String SERVICE_NAME;
+    final static String SERVICE_NAMESPACE;
 
     static {
-      SERVICE_NAME = fromEnvOrDefault("SERVICE_NAME", "knative");
-      SERVICE_NAMESPACE = fromEnvOrDefault("SERVICE_NAMESPACE", "knative");
+      SERVICE_NAME = fromEnvOrDefault("SERVICE_NAME", DEFAULT_SERVICE_NAME);
+      SERVICE_NAMESPACE = fromEnvOrDefault("SERVICE_NAMESPACE", DEFAULT_SERVICE_NAME);
     }
 
     private static final Getter<Iterable<Entry<String, String>>> getter = new HeadersPropagatorGetter();
@@ -97,8 +98,7 @@ public class OpenTelemetryVertxTracingFactory implements VertxTracerFactory {
 
       tagExtractor.extractTo(request, span::setAttribute);
 
-      context.putLocal(ACTIVE_SPAN, span);
-      context.putLocal(ACTIVE_CONTEXT, tracingContext);
+      context.putLocal(ACTIVE_CONTEXT, tracingContext.with(span));
 
       return span;
     }
@@ -115,7 +115,7 @@ public class OpenTelemetryVertxTracingFactory implements VertxTracerFactory {
         return;
       }
 
-      // context.removeLocal(ACTIVE_SPAN);
+      // TODO figure out if this leaks resources.
       // context.removeLocal(ACTIVE_CONTEXT);
 
       logger.debug("{} {}",
@@ -155,41 +155,48 @@ public class OpenTelemetryVertxTracingFactory implements VertxTracerFactory {
         return null;
       }
 
-      // TODO there is not need to put span and context, only context is enough
-      final Span activeSpan = context.getLocal(ACTIVE_SPAN);
-      io.opentelemetry.context.Context tracingContext = context.getLocal(ACTIVE_CONTEXT);
-      if (activeSpan == null || tracingContext == null) {
+      final var spanKind = SpanKind.RPC.equals(kind) ? Kind.CLIENT : Kind.PRODUCER;
 
-        logger.debug("No active span or context {} {} {} {}",
+      final io.opentelemetry.context.Context tracingContext = context.getLocal(ACTIVE_CONTEXT);
+      if (tracingContext == null) {
+
+        logger.debug("No active span or context {} {}",
           keyValue("request", request),
-          keyValue("operation", "sendRequest"),
-          keyValue("activeSpan", activeSpan),
-          keyValue("tracingContext", tracingContext)
+          keyValue("operation", "sendRequest")
         );
+
+        if (TracingPolicy.ALWAYS.equals(policy)) {
+
+          final var span = tracer.spanBuilder(operation)
+            .setSpanKind(spanKind)
+            .setAttribute(SemanticAttributes.SERVICE_NAME, SERVICE_NAME)
+            .setAttribute(SemanticAttributes.SERVICE_NAMESPACE, SERVICE_NAMESPACE)
+            .startSpan();
+
+          tagExtractor.extractTo(request, span::setAttribute);
+
+          HttpTraceContext.getInstance().inject(current(), headers, setter);
+
+          return span;
+        }
 
         return null;
       }
 
-      tracingContext = tracingContext.with(activeSpan);
-
       final var span = tracer.spanBuilder(operation)
         .setParent(tracingContext)
-        .setSpanKind(SpanKind.RPC.equals(kind) ? Kind.CLIENT : Kind.PRODUCER)
+        .setSpanKind(spanKind)
         .setAttribute(SemanticAttributes.SERVICE_NAME, SERVICE_NAME)
         .setAttribute(SemanticAttributes.SERVICE_NAMESPACE, SERVICE_NAMESPACE)
         .startSpan();
 
-      tracingContext = tracingContext.with(span);
-
       tagExtractor.extractTo(request, span::setAttribute);
 
-      HttpTraceContext.getInstance().inject(tracingContext, headers, setter);
+      HttpTraceContext.getInstance().inject(tracingContext.with(span), headers, setter);
 
-      logger.debug("{} {} {} {}",
+      logger.debug("{} {}",
         keyValue("span", span.getClass()),
-        keyValue("operation", "sendRequest"),
-        keyValue("context", tracingContext.getClass()),
-        keyValue("headers", headers)
+        keyValue("operation", "sendRequest")
       );
 
       return span;
@@ -228,7 +235,7 @@ public class OpenTelemetryVertxTracingFactory implements VertxTracerFactory {
     private static String fromEnvOrDefault(final String key, final String defaultValue) {
       final var v = System.getenv(key);
 
-      if (v == null || v.isEmpty()) {
+      if (v == null || v.isBlank()) {
         return defaultValue;
       }
 

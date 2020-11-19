@@ -78,7 +78,6 @@ public class DataPlaneTest {
   private static final int REPLICATION_FACTOR = 1;
   private static final int INGRESS_PORT = 12345;
   private static final int SERVICE_PORT = INGRESS_PORT + 1;
-  private static final int TIMEOUT = 3;
 
   private static final String TYPE_CE_1 = "type-ce-1";
   private static final String TYPE_CE_2 = "type-ce-2";
@@ -251,10 +250,13 @@ public class DataPlaneTest {
   }
 
   @AfterAll
-  public static void teardown() {
+  public static void teardown(final Vertx vertx) {
 
     // TODO figure out why shutdown times out Vertx context even with timeout increased.
     // kafkaCluster.shutdown();
+
+    vertx.undeploy(consumerDeployerVerticle.deploymentID());
+    vertx.undeploy(receiverVerticle.deploymentID());
 
     if (!dataDir.delete()) {
       dataDir.deleteOnExit();
@@ -283,8 +285,8 @@ public class DataPlaneTest {
 
     final var consumerConfigs = new Properties();
     consumerConfigs.put(BOOTSTRAP_SERVERS_CONFIG, format("localhost:%d", KAFKA_PORT));
-    consumerConfigs.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-    consumerConfigs.put(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class);
+    consumerConfigs.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    consumerConfigs.put(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
 
     final var producerConfigs = producerConfigs();
 
@@ -334,8 +336,8 @@ public class DataPlaneTest {
 
   private static Properties producerConfigs() {
     final var configs = new Properties();
-    configs.put(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    configs.put(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
+    configs.put(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+    configs.put(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
     return configs;
   }
 
