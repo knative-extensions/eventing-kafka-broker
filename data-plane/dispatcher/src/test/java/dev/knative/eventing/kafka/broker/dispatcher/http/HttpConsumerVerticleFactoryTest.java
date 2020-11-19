@@ -93,16 +93,13 @@ public class HttpConsumerVerticleFactoryTest {
 
     final var consumerProperties = new Properties();
     consumerProperties.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
-    consumerProperties
-      .setProperty(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-    consumerProperties
-      .setProperty(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
+    consumerProperties.setProperty(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    consumerProperties.setProperty(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
 
     final var producerConfigs = new Properties();
     producerConfigs.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
     producerConfigs.setProperty(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-    producerConfigs
-      .setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
+    producerConfigs.setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
 
     final var verticleFactory = new HttpConsumerVerticleFactory(
       ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class)),

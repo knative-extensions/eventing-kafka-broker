@@ -21,6 +21,8 @@ metadata:
   namespace: knative-eventing
 data:
   config-kafka-sink-producer.properties: |
+    key.serializer=org.apache.kafka.common.serialization.StringSerializer
+    value.serializer=io.cloudevents.kafka.CloudEventSerializer
     acks=1
     buffer.memory=33554432
     # compression.type=snappy

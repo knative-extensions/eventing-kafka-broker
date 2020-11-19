@@ -97,7 +97,7 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
       sinkResponseHandler,
       // If there is no DLQ configured by default DLQ sender always fails, which means
       // implementors will receive failedToSendToDLQ if the subscriber sender fails.
-      record -> Future.failedFuture("no DLQ configured")
+      record -> Future.failedFuture("No DLQ configured")
     );
   }
 
@@ -109,15 +109,15 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
   @Override
   public void handle(final KafkaConsumerRecord<K, V> record) {
 
-    logDebug("handling record", record);
+    logDebug("Handling record", record);
 
     receiver.recordReceived(record);
 
     if (filter.test(record.value())) {
-      logDebug("record match filtering", record);
+      logDebug("Record match filtering", record);
       send(record);
     } else {
-      logDebug("record doesn't match filtering", record);
+      logDebug("Record doesn't match filtering", record);
       receiver.recordDiscarded(record);
     }
   }
@@ -162,9 +162,10 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
     final Throwable cause) {
 
     if (logger.isDebugEnabled()) {
-      logger.error(msg + " {} {} {}",
+      logger.error(msg + " {} {} {} {} {}",
         keyValue("topic", record.topic()),
         keyValue("partition", record.partition()),
+        keyValue("headers", record.headers()),
         keyValue("offset", record.offset()),
         keyValue("event", record.value()),
         cause
@@ -183,9 +184,10 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
     final String msg,
     final KafkaConsumerRecord<K, V> record) {
 
-    logger.debug(msg + " {} {} {}",
+    logger.debug(msg + " {} {} {} {} {}",
       keyValue("topic", record.topic()),
       keyValue("partition", record.partition()),
+      keyValue("headers", record.headers()),
       keyValue("offset", record.offset()),
       keyValue("event", record.value())
     );

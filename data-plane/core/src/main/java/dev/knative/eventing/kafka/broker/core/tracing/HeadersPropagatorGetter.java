@@ -16,19 +16,29 @@
 
 package dev.knative.eventing.kafka.broker.core.tracing;
 
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-final class HttpHeadersPropagatorGetter implements TextMapPropagator.Getter<Iterable<Entry<String, String>>> {
+final class HeadersPropagatorGetter implements TextMapPropagator.Getter<Iterable<Entry<String, String>>> {
+
+  private static final Logger logger = LoggerFactory.getLogger(HeadersPropagatorGetter.class);
 
   @Override
   public Iterable<String> keys(final Iterable<Entry<String, String>> carrier) {
-    return StreamSupport.stream(carrier.spliterator(), false)
+    final var keys = StreamSupport.stream(carrier.spliterator(), false)
       .map(Entry::getKey)
       .collect(Collectors.toSet());
+
+    logger.debug("Keys {}", keyValue("keys", keys));
+
+    return keys;
   }
 
   @Override
@@ -37,10 +47,14 @@ final class HttpHeadersPropagatorGetter implements TextMapPropagator.Getter<Iter
       return null;
     }
 
-    return StreamSupport.stream(carrier.spliterator(), false)
-      .filter(e -> e.getKey().equals(key))
+    final var value = StreamSupport.stream(carrier.spliterator(), false)
+      .filter(e -> e.getKey().equalsIgnoreCase(key))
       .findFirst()
-      .map(Entry::getKey)
+      .map(Entry::getValue)
       .orElse(null);
+
+    logger.debug("Get {} {}", keyValue("key", key), keyValue("value", value));
+
+    return value;
   }
 }

@@ -26,13 +26,16 @@ import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcile
 import dev.knative.eventing.kafka.broker.core.tracing.OpenTelemetryVertxTracingFactory;
 import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
+import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.kafka.CloudEventSerializer;
+import io.opentelemetry.api.OpenTelemetry;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.tracing.TracingOptions;
+import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.File;
@@ -45,7 +48,6 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class Main {
 
@@ -61,11 +63,6 @@ public class Main {
   public static final String METRICS_REGISTRY_NAME = "metrics";
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
-
-  static {
-    SLF4JBridgeHandler.removeHandlersForRootLogger();
-    SLF4JBridgeHandler.install();
-  }
 
   /**
    * Start receiver.
@@ -92,7 +89,7 @@ public class Main {
       new VertxOptions()
         .setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
         .setTracingOptions(new TracingOptions()
-          .setFactory(new OpenTelemetryVertxTracingFactory())
+          .setFactory(new OpenTelemetryVertxTracingFactory(OpenTelemetry.getGlobalTracer(TracingSpan.SERVICE_NAME)))
         )
     );
 
@@ -105,8 +102,9 @@ public class Main {
       final var badRequestCounter = metricsRegistry.counter(HTTP_REQUESTS_MALFORMED_COUNT);
       final var produceEventsCounter = metricsRegistry.counter(HTTP_REQUESTS_PRODUCE_COUNT);
 
-      producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
       producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+      producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
+
       final var handler = new RequestMapper<>(
         producerConfigs,
         new CloudEventRequestToRecordMapper(),
@@ -119,6 +117,7 @@ public class Main {
         Configurations.getPropertiesAsJson(env.getHttpServerConfigFilePath())
       );
       httpServerOptions.setPort(env.getIngressPort());
+      httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
       final var verticle = new ReceiverVerticle(
         httpServerOptions,
