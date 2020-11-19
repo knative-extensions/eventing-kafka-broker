@@ -23,6 +23,17 @@ import org.slf4j.LoggerFactory;
 
 public class OpenTelemetryVertxTracingFactory implements VertxTracerFactory {
 
+  public final static String SERVICE_NAME;
+  public final static String SERVICE_NAMESPACE;
+
+  private static final String DEFAULT_SERVICE_NAME = "Knative";
+
+  static {
+    SERVICE_NAME = fromEnvOrDefault("SERVICE_NAME", DEFAULT_SERVICE_NAME);
+    SERVICE_NAMESPACE = fromEnvOrDefault("SERVICE_NAMESPACE", DEFAULT_SERVICE_NAME);
+  }
+
+
   private static final Logger logger = LoggerFactory.getLogger(OpenTelemetryVertxTracingFactory.class);
 
   private final io.opentelemetry.api.trace.Tracer tracer;
@@ -39,16 +50,6 @@ public class OpenTelemetryVertxTracingFactory implements VertxTracerFactory {
   static class Tracer implements VertxTracer<Span, Span> {
 
     static String ACTIVE_CONTEXT = "opentelemetry.context";
-
-    static String DEFAULT_SERVICE_NAME = "Knative";
-
-    final static String SERVICE_NAME;
-    final static String SERVICE_NAMESPACE;
-
-    static {
-      SERVICE_NAME = fromEnvOrDefault("SERVICE_NAME", DEFAULT_SERVICE_NAME);
-      SERVICE_NAMESPACE = fromEnvOrDefault("SERVICE_NAMESPACE", DEFAULT_SERVICE_NAME);
-    }
 
     private static final Getter<Iterable<Entry<String, String>>> getter = new HeadersPropagatorGetter();
     private static final Setter<BiConsumer<String, String>> setter = new HeadersPropagatorSetter();
@@ -231,15 +232,15 @@ public class OpenTelemetryVertxTracingFactory implements VertxTracerFactory {
 
       span.end();
     }
+  }
 
-    private static String fromEnvOrDefault(final String key, final String defaultValue) {
-      final var v = System.getenv(key);
+  private static String fromEnvOrDefault(final String key, final String defaultValue) {
+    final var v = System.getenv(key);
 
-      if (v == null || v.isBlank()) {
-        return defaultValue;
-      }
-
-      return v;
+    if (v == null || v.isBlank()) {
+      return defaultValue;
     }
+
+    return v;
   }
 }

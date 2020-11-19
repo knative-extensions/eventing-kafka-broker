@@ -1,5 +1,6 @@
 package dev.knative.eventing.kafka.broker.core.tracing;
 
+import static dev.knative.eventing.kafka.broker.core.tracing.OpenTelemetryVertxTracingFactory.SERVICE_NAME;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.Backend;
@@ -69,7 +70,7 @@ public class Tracing {
     return ZipkinSpanExporter
       .builder()
       .setEndpoint(tracingConfig.getURL())
-      .setServiceName(TracingSpan.SERVICE_NAME)
+      .setServiceName(SERVICE_NAME)
       .build();
   }
 }

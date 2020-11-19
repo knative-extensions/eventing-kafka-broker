@@ -16,6 +16,7 @@
 
 package dev.knative.eventing.kafka.broker.receiver;
 
+import static dev.knative.eventing.kafka.broker.core.tracing.OpenTelemetryVertxTracingFactory.SERVICE_NAME;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
@@ -26,7 +27,6 @@ import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcile
 import dev.knative.eventing.kafka.broker.core.tracing.OpenTelemetryVertxTracingFactory;
 import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
-import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.kafka.CloudEventSerializer;
@@ -89,7 +89,7 @@ public class Main {
       new VertxOptions()
         .setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
         .setTracingOptions(new TracingOptions()
-          .setFactory(new OpenTelemetryVertxTracingFactory(OpenTelemetry.getGlobalTracer(TracingSpan.SERVICE_NAME)))
+          .setFactory(new OpenTelemetryVertxTracingFactory(OpenTelemetry.getGlobalTracer(SERVICE_NAME)))
         )
     );
 
