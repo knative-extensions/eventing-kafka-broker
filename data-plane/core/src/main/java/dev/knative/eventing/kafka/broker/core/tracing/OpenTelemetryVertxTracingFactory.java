@@ -36,10 +36,10 @@ public class OpenTelemetryVertxTracingFactory implements VertxTracerFactory {
     return new Tracer(this.tracer);
   }
 
-  private static class Tracer implements VertxTracer<Span, Span> {
+  public static class Tracer implements VertxTracer<Span, Span> {
 
-    public static String ACTIVE_SPAN = "opentracing.span";
-    public static String ACTIVE_CONTEXT = "opentracing.context";
+    public static String ACTIVE_SPAN = "opentelemetry.span";
+    public static String ACTIVE_CONTEXT = "opentelemetry.context";
 
     public final static String SERVICE_NAME;
     public final static String SERVICE_NAMESPACE;
@@ -115,8 +115,8 @@ public class OpenTelemetryVertxTracingFactory implements VertxTracerFactory {
         return;
       }
 
-      context.removeLocal(ACTIVE_SPAN);
-      context.removeLocal(ACTIVE_CONTEXT);
+      // context.removeLocal(ACTIVE_SPAN);
+      // context.removeLocal(ACTIVE_CONTEXT);
 
       logger.debug("{} {}",
         keyValue("span", span.getClass()),
@@ -155,6 +155,7 @@ public class OpenTelemetryVertxTracingFactory implements VertxTracerFactory {
         return null;
       }
 
+      // TODO there is not need to put span and context, only context is enough
       final Span activeSpan = context.getLocal(ACTIVE_SPAN);
       io.opentelemetry.context.Context tracingContext = context.getLocal(ACTIVE_CONTEXT);
       if (activeSpan == null || tracingContext == null) {

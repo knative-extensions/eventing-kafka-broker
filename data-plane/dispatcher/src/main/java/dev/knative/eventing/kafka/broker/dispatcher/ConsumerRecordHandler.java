@@ -18,9 +18,13 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
+import dev.knative.eventing.kafka.broker.core.tracing.OpenTelemetryVertxTracingFactory.Tracer;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.impl.ContextInternal;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.function.Predicate;
 import org.slf4j.Logger;
@@ -108,6 +112,15 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
    */
   @Override
   public void handle(final KafkaConsumerRecord<K, V> record) {
+
+    final ContextInternal ctx = (ContextInternal) Vertx.currentContext();
+    final var span = ctx.getLocal(Tracer.ACTIVE_SPAN);
+
+    logger.debug("Span {} {} {}",
+      keyValue("span", span),
+      keyValue("tracer", ctx.tracer()),
+      keyValue("contextKeys", new HashSet<>(ctx.localContextData().keySet()))
+    );
 
     logDebug("Handling record", record);
 
