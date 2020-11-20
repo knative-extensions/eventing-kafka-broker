@@ -110,7 +110,11 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
-		Handler:    controller.HandleAll(globalResync),
+		Handler: cache.ResourceEventHandlerFuncs{
+			DeleteFunc: func(obj interface{}) {
+				globalResync(obj)
+			},
+		},
 	})
 
 	cm, err := reconciler.KubeClient.CoreV1().ConfigMaps(configs.SystemNamespace).Get(ctx, configs.GeneralConfigMapName, metav1.GetOptions{})
