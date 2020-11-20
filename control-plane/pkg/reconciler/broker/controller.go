@@ -104,7 +104,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 
-	globalResync := func(obj interface{}) {
+	globalResync := func(_ interface{}) {
 		impl.GlobalResync(brokerInformer.Informer())
 	}
 

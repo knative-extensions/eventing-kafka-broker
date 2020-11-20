@@ -95,7 +95,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 		Handler:    enqueueTriggers(logger, triggerLister, impl.Enqueue),
 	})
 
-	globalResync := func(obj interface{}) {
+	globalResync := func(_ interface{}) {
 		impl.GlobalResync(triggerInformer.Informer())
 	}
 

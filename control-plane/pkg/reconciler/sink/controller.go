@@ -73,7 +73,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 
 	sinkInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
-	globalResync := func(obj interface{}) {
+	globalResync := func(_ interface{}) {
 		impl.GlobalResync(sinkInformer.Informer())
 	}
 
