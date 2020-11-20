@@ -5,7 +5,6 @@ import static dev.knative.eventing.kafka.broker.core.tracing.TracingSpan.ACTIVE_
 import static io.opentelemetry.context.Context.current;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
-import io.opentelemetry.api.spi.OpenTelemetryFactory;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
@@ -24,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 public class OpenTelemetryTracer implements VertxTracer<Span, Span> {
 
-  private static final Logger logger = LoggerFactory.getLogger(OpenTelemetryFactory.class);
+  private static final Logger logger = LoggerFactory.getLogger(OpenTelemetryTracer.class);
 
   private static final Getter<Iterable<Entry<String, String>>> getter = new HeadersPropagatorGetter();
   private static final Setter<BiConsumer<String, String>> setter = new HeadersPropagatorSetter();
