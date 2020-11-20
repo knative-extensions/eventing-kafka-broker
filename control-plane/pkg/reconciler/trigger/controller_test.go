@@ -29,6 +29,7 @@ import (
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker/fake"
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger/fake"
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"

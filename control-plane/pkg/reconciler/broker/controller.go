@@ -104,6 +104,15 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 
+	globalResync := func(obj interface{}) {
+		impl.GlobalResync(brokerInformer.Informer())
+	}
+
+	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
+		Handler:    controller.HandleAll(globalResync),
+	})
+
 	cm, err := reconciler.KubeClient.CoreV1().ConfigMaps(configs.SystemNamespace).Get(ctx, configs.GeneralConfigMapName, metav1.GetOptions{})
 	if err != nil {
 		panic(fmt.Errorf("failed to get config map %s/%s: %w", configs.SystemNamespace, configs.GeneralConfigMapName, err))
