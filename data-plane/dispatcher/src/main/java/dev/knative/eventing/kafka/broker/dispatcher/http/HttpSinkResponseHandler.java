@@ -17,6 +17,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
 import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
+import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.SinkResponseHandler;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.Encoding;
@@ -24,6 +25,7 @@ import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.rw.CloudEventRWException;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.producer.KafkaProducer;
@@ -34,22 +36,27 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
 
   private final String topic;
   private final KafkaProducer<String, CloudEvent> producer;
+  private final Vertx vertx;
 
   /**
    * All args constructor.
    *
+   * @param vertx    vertx instance
    * @param topic    topic to produce records.
    * @param producer Kafka producer.
    */
   public HttpSinkResponseHandler(
+    final Vertx vertx,
     final String topic,
     final KafkaProducer<String, CloudEvent> producer) {
 
+    Objects.requireNonNull(vertx, "provide vertx");
     Objects.requireNonNull(topic, "provide topic");
     Objects.requireNonNull(producer, "provide producer");
 
     this.topic = topic;
     this.producer = producer;
+    this.vertx = vertx;
   }
 
   /**
@@ -77,8 +84,6 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
 
     CloudEvent event;
     try {
-      // TODO is this conversion really necessary?
-      //      can we use Message?
       event = messageReader.toEvent();
     } catch (CloudEventRWException e) {
       return Future.failedFuture(e);
@@ -86,6 +91,8 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
     if (event == null) {
       return Future.failedFuture(new IllegalArgumentException("event cannot be null"));
     }
+
+    TracingSpan.decorateCurrent(vertx, event);
 
     return producer
       .send(KafkaProducerRecord.create(topic, PartitionKey.extract(event), event))

@@ -119,7 +119,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     final var consumerOffsetManager = consumerRecordOffsetStrategyFactory
       .get(consumer, resource, egress);
 
-    final var sinkResponseHandler = new HttpSinkResponseHandler(resource.getTopics(0), producer);
+    final var sinkResponseHandler = new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer);
 
     final var consumerRecordHandler = new ConsumerRecordHandler<>(
       egressDestinationSender,
@@ -188,9 +188,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     circuitBreaker.retryPolicy(computeRetryPolicy(egress));
 
     return new HttpConsumerRecordSender(
-      client,
-      target,
-      circuitBreaker
+      vertx, target, circuitBreaker, client
     );
   }
 

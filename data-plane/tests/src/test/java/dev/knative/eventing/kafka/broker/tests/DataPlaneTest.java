@@ -316,7 +316,7 @@ public class DataPlaneTest {
 
     final var handler = new RequestMapper<>(
       producerConfigs(),
-      new CloudEventRequestToRecordMapper(),
+      new CloudEventRequestToRecordMapper(vertx),
       properties -> KafkaProducer.create(vertx, properties),
       mock(Counter.class),
       mock(Counter.class)

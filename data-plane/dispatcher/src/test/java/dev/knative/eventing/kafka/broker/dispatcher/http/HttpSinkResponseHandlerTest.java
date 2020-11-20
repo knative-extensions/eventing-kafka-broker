@@ -55,6 +55,7 @@ public class HttpSinkResponseHandlerTest {
       new CloudEventSerializer()
     );
     final var handler = new HttpSinkResponseHandler(
+      vertx,
       TOPIC,
       KafkaProducer.create(vertx, producer)
     );
@@ -78,6 +79,7 @@ public class HttpSinkResponseHandlerTest {
       new CloudEventSerializer()
     );
     final var handler = new HttpSinkResponseHandler(
+      vertx,
       TOPIC,
       KafkaProducer.create(vertx, producer)
     );
@@ -103,6 +105,7 @@ public class HttpSinkResponseHandlerTest {
       new CloudEventSerializer()
     );
     final var handler = new HttpSinkResponseHandler(
+      vertx,
       TOPIC,
       KafkaProducer.create(vertx, producer)
     );
@@ -128,6 +131,7 @@ public class HttpSinkResponseHandlerTest {
       new CloudEventSerializer()
     );
     final var handler = new HttpSinkResponseHandler(
+      vertx,
       TOPIC,
       KafkaProducer.create(vertx, producer)
     );

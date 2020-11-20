@@ -1,5 +1,6 @@
 package dev.knative.eventing.kafka.broker.core.tracing;
 
+import static dev.knative.eventing.kafka.broker.core.tracing.TracingSpan.ACTIVE_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.mockito.Mockito.doNothing;
@@ -89,7 +90,7 @@ public class OpenTelemetryVertxTracingFactoryTest {
 
     assertThat(span).isNotNull();
 
-    final var tracingContext = ctx.getLocal(OpenTelemetryVertxTracingFactory.Tracer.ACTIVE_CONTEXT);
+    final var tracingContext = ctx.getLocal(ACTIVE_CONTEXT);
     assertThat(tracingContext).isNotNull();
   }
 
@@ -137,7 +138,7 @@ public class OpenTelemetryVertxTracingFactoryTest {
     final var tracer = f.tracer(null);
 
     final var ctx = vertx.getOrCreateContext();
-    ctx.putLocal(OpenTelemetryVertxTracingFactory.Tracer.ACTIVE_CONTEXT, Context.current());
+    ctx.putLocal(ACTIVE_CONTEXT, Context.current());
 
     final var span = tracer.sendRequest(
       ctx,
@@ -161,7 +162,7 @@ public class OpenTelemetryVertxTracingFactoryTest {
     final var tracer = f.tracer(null);
 
     final var ctx = vertx.getOrCreateContext();
-    ctx.putLocal(OpenTelemetryVertxTracingFactory.Tracer.ACTIVE_CONTEXT, Context.current());
+    ctx.putLocal(ACTIVE_CONTEXT, Context.current());
 
     final var span = tracer.sendRequest(
       ctx,
@@ -207,7 +208,7 @@ public class OpenTelemetryVertxTracingFactoryTest {
     final var tracer = f.tracer(null);
 
     final var ctx = vertx.getOrCreateContext();
-    ctx.putLocal(OpenTelemetryVertxTracingFactory.Tracer.ACTIVE_CONTEXT, Context.current());
+    ctx.putLocal(ACTIVE_CONTEXT, Context.current());
 
     final var span = tracer.sendRequest(
       ctx,

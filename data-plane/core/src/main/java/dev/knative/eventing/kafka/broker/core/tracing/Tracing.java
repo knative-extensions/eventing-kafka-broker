@@ -1,6 +1,5 @@
 package dev.knative.eventing.kafka.broker.core.tracing;
 
-import static dev.knative.eventing.kafka.broker.core.tracing.OpenTelemetryVertxTracingFactory.SERVICE_NAME;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.Backend;
@@ -9,6 +8,7 @@ import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.TracerSdkManagement;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
@@ -16,6 +16,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Tracing {
+
+  public final static String SERVICE_NAME;
+  public final static String SERVICE_NAMESPACE;
+  public final static String TRACE_ID_KEY = "traceId";
+
+  private static final String DEFAULT_SERVICE_NAME = "Knative";
+
+  static {
+    SERVICE_NAME = fromEnvOrDefault("SERVICE_NAME", DEFAULT_SERVICE_NAME);
+    SERVICE_NAMESPACE = fromEnvOrDefault("SERVICE_NAMESPACE", DEFAULT_SERVICE_NAME);
+  }
 
   private static final Logger logger = LoggerFactory.getLogger(Tracing.class);
 
@@ -43,7 +54,7 @@ public class Tracing {
       logger.debug("Add Zipkin processor");
 
       tracerManagement.addSpanProcessor(
-        SimpleSpanProcessor // TODO move to batch span processor
+        BatchSpanProcessor
           .builder(zipkinExporter(tracingConfig))
           .setExportOnlySampled(true)
           .build()
@@ -72,5 +83,15 @@ public class Tracing {
       .setEndpoint(tracingConfig.getURL())
       .setServiceName(SERVICE_NAME)
       .build();
+  }
+
+  private static String fromEnvOrDefault(final String key, final String defaultValue) {
+    final var v = System.getenv(key);
+
+    if (v == null || v.isBlank()) {
+      return defaultValue;
+    }
+
+    return v;
   }
 }
