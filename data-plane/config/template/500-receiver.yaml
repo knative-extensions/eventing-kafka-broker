@@ -95,7 +95,6 @@ spec:
           # TODO add JVM arguments
           args:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
-            - "-Djava.util.logging.config.file=/etc/logging/config.properties"
             - "-jar"
             - "/app/app.jar"
           # TODO set resources (limits and requests)
