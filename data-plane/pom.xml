@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2020 The Knative Authors
-  ~
-  ~ Licensed under the Apache License, Version 2.0 (the "License");
-  ~ you may not use this file except in compliance with the License.
-  ~ You may obtain a copy of the License at
-  ~
-  ~     http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
 
+    Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>dev.knative.eventing.kafka.broker</groupId>
@@ -36,6 +37,9 @@
     <maven.editorconfig.plugin.version>0.1.0</maven.editorconfig.plugin.version>
     <maven.jacoco.plugin.version>0.8.6</maven.jacoco.plugin.version>
     <maven.enforcer.plugin.version>3.0.0-M3</maven.enforcer.plugin.version>
+    <maven.license.plugin.version>2.0.0</maven.license.plugin.version>
+
+    <mycila.license.plugin.version>4.0.rc2</mycila.license.plugin.version>
 
     <!-- dependencies version -->
     <vertx.version>4.0.0.CR2</vertx.version>
@@ -300,6 +304,70 @@
             <goals>
               <goal>prepare-agent</goal>
             </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Aggregate third party licenses in THIRD-PARTY.txt -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${maven.license.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>aggregate-download-licenses</id>
+            <goals>
+              <goal>aggregate-download-licenses</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>aggregate-add-third-party</id>
+            <goals>
+              <goal>aggregate-add-third-party</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${maven.multiModuleProjectDirectory}</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!--
+      Use this Plugin for headers due to https://github.com/mojohaus/license-maven-plugin/issues/112 and bad format.
+
+      To add header to all files run: `./mvnw com.mycila:license-maven-plugin:format`
+
+      -->
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${mycila.license.plugin.version}</version>
+        <configuration>
+          <licenseSets>
+            <licenseSet>
+              <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
+              <excludes>
+                <exclude>**/README</exclude>
+                <exclude>src/test/resources/**</exclude>
+                <exclude>src/main/resources/**</exclude>
+                <exclude>**/*.yaml</exclude>
+                <exclude>**/*.yml</exclude>
+                <exclude>**/*.txt</exclude>
+                <exclude>**/DataPlaneContract.java</exclude>
+              </excludes>
+            </licenseSet>
+          </licenseSets>
+          <properties>
+            <owner>Knative Authors</owner>
+            <email>knative-dev@googlegroups.com</email>
+            <project.inceptionYear>2018</project.inceptionYear>
+          </properties>
+        </configuration>
+        <executions>
+          <execution>
+            <id>check-license</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>verify</phase>
           </execution>
         </executions>
       </plugin>

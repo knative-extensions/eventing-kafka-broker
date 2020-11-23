@@ -1,4 +1,5 @@
-# Copyright 2020 The Knative Authors
+#
+# Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
 ARG JAVA_IMAGE
 ARG BASE_IMAGE
@@ -36,7 +38,9 @@ COPY ./mvnw .
 COPY ./.mvn/wrapper .mvn/wrapper
 COPY docker/generate_jdk.sh .
 
-RUN ./mvnw install -pl=${APP_DIR} -am -DskipTests -Deditorconfig.skip --no-transfer-progress
+# Install dependencies. Note: don't build a single submodule (recever or dispatcher) since it just slows down
+# consecutive builds.
+RUN ./mvnw install -am -DskipTests -Dlicense.skip -Deditorconfig.skip --no-transfer-progress
 
 COPY . .
 
