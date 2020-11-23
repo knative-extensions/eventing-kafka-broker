@@ -29,8 +29,3 @@ data:
         <appender-ref ref="jsonConsoleAppender"/>
       </root>
     </configuration>
-  config.properties: |
-    io.opentelemetry.level = ALL
-    java.util.logging.ConsoleHandler.level = ALL
-    io.opentelemetry.sdk.trace.export.BatchSpanProcessor.level = ALL
-
