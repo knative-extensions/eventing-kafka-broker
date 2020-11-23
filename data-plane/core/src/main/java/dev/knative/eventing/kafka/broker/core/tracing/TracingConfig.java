@@ -30,6 +30,20 @@ public final class TracingConfig {
   private final String URL;
   private final float samplingRate;
 
+  private TracingConfig(final Backend backend, final String url, final float samplingRate) {
+    if (!backend.equals(Backend.UNKNOWN) && !URI.create(url).isAbsolute()) {
+      throw new IllegalArgumentException(String.format(
+        "Backend is %s but the endpoint isn't an absolute URI: %s",
+        backend,
+        url
+      ));
+    }
+
+    this.backend = backend;
+    this.URL = url;
+    this.samplingRate = Math.min(1, Math.max(samplingRate, 0));
+  }
+
   public static TracingConfig fromDir(final String path) throws IOException {
 
     final var backendPath = backendPath(path);
@@ -73,20 +87,6 @@ public final class TracingConfig {
       .setSamplingRate(sampleRate)
       .setUrl(endpoint)
       .createTracingConfig();
-  }
-
-  private TracingConfig(final Backend backend, final String url, final float samplingRate) {
-    if (!backend.equals(Backend.UNKNOWN) && !URI.create(url).isAbsolute()) {
-      throw new IllegalArgumentException(String.format(
-        "Backend is %s but the endpoint isn't an absolute URI: %s",
-        backend,
-        url
-      ));
-    }
-
-    this.backend = backend;
-    this.URL = url;
-    this.samplingRate = Math.min(1, Math.max(samplingRate, 0));
   }
 
   public static Builder builder() {
