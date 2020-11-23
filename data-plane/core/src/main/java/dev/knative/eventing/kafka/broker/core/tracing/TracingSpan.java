@@ -31,7 +31,7 @@ public class TracingSpan {
   static String ACTIVE_SPAN = "tracing.span";
 
   public static final AttributeKey<String> MESSAGING_MESSAGE_SOURCE = stringKey("messaging.message_source");
-  public static final AttributeKey<String> MESSAGING_MESSAGE_TYPE = stringKey("messaging.message_source");
+  public static final AttributeKey<String> MESSAGING_MESSAGE_TYPE = stringKey("messaging.message_type");
 
   public static void decorateCurrent(final Vertx vertx, final CloudEvent event) {
 
