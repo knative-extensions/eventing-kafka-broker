@@ -75,18 +75,11 @@ public class ReceiverVerticle extends AbstractVerticle {
     );
     this.server = vertx.createHttpServer(httpServerOptions);
 
-    this.server.requestHandler(this::handler)
+    this.server.requestHandler(this.requestHandler)
       .exceptionHandler(startPromise::tryFail)
       .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
       .<Void>mapEmpty()
       .onComplete(startPromise);
-  }
-
-  private void handler(final HttpServerRequest request) {
-    final var ctx  = ((ContextInternal) this.context).duplicate();
-    this.requestHandler.handle(request);
-
-    final var tracer = ctx.tracer();
   }
 
   @Override
