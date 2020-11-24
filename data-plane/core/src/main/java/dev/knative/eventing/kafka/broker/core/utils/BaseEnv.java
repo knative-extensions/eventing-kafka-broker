@@ -13,6 +13,8 @@ public class BaseEnv {
   public static final String METRICS_PATH = "METRICS_PATH";
   public static final String METRICS_PUBLISH_QUANTILES = "METRICS_PUBLISH_QUANTILES";
 
+  public static final String CONFIG_TRACING_PATH = "CONFIG_TRACING_PATH";
+
   private final String producerConfigFilePath;
   private final String dataPlaneConfigFilePath;
 
@@ -20,12 +22,15 @@ public class BaseEnv {
   private final String metricsPath;
   private final boolean metricsPublishQuantiles;
 
+  private final String configTracingPath;
+
   public BaseEnv(Function<String, String> envProvider) {
     this.metricsPath = requireNonNull(envProvider.apply(METRICS_PATH));
     this.metricsPort = Integer.parseInt(requireNonNull(envProvider.apply(METRICS_PORT)));
     this.metricsPublishQuantiles = Boolean.parseBoolean(envProvider.apply(METRICS_PUBLISH_QUANTILES));
     this.producerConfigFilePath = requireNonNull(envProvider.apply(PRODUCER_CONFIG_FILE_PATH));
     this.dataPlaneConfigFilePath = requireNonNull(envProvider.apply(DATA_PLANE_CONFIG_FILE_PATH));
+    this.configTracingPath = requireNonNull(envProvider.apply(CONFIG_TRACING_PATH));
   }
 
   public String getProducerConfigFilePath() {
@@ -46,6 +51,10 @@ public class BaseEnv {
 
   public boolean isPublishQuantilesEnabled() {
     return metricsPublishQuantiles;
+  }
+
+  public String getConfigTracingPath() {
+    return configTracingPath;
   }
 
   @Override

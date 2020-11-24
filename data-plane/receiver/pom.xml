@@ -117,12 +117,6 @@
               </transformers>
               <filters>
                 <filter>
-                  <artifact>micrometer:micrometer</artifact>
-                  <includes>
-                    <include>io/micrometer/prometheus/PrometheusMeterRegistry</include>
-                  </includes>
-                </filter>
-                <filter>
                   <artifact>*:*</artifact>
                   <excludeDefaults>false</excludeDefaults>
                 </filter>

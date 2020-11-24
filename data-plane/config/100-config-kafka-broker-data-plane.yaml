@@ -21,6 +21,8 @@ metadata:
   namespace: knative-eventing
 data:
   config-kafka-broker-producer.properties: |
+    key.serializer=org.apache.kafka.common.serialization.StringSerializer
+    value.serializer=io.cloudevents.kafka.CloudEventSerializer
     acks=1
     buffer.memory=33554432
     # compression.type=snappy
@@ -49,6 +51,8 @@ data:
     # transaction.timeout.ms=60000
     # transactional.id=null
   config-kafka-broker-consumer.properties: |
+    key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+    value.deserializer=io.cloudevents.kafka.CloudEventDeserializer
     fetch.min.bytes=1
     heartbeat.interval.ms=3000
     max.partition.fetch.bytes=1048576

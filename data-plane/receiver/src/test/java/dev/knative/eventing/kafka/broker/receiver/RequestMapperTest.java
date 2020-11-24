@@ -27,14 +27,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Future;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import io.vertx.kafka.client.producer.RecordMetadata;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
 import java.util.Collections;
 import java.util.List;
@@ -78,7 +82,7 @@ public class RequestMapperTest {
       if (failedToSend) {
         return Future.failedFuture("failure");
       } else {
-        return Future.succeededFuture();
+        return Future.succeededFuture(mock(RecordMetadata.class));
       }
     });
 
@@ -89,8 +93,7 @@ public class RequestMapperTest {
       .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
       .build();
 
-    final var request = mock(HttpServerRequest.class);
-    when(request.path()).thenReturn(resource.getIngress().getPath());
+    final HttpServerRequest request = mockHttpServerRequest(resource);
     final var response = mockResponse(request, statusCode);
 
     final var handler = new RequestMapper<>(
@@ -132,8 +135,7 @@ public class RequestMapperTest {
       .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
       .build();
 
-    final var request = mock(HttpServerRequest.class);
-    when(request.path()).thenReturn(resource.getIngress().getPath());
+    final HttpServerRequest request = mockHttpServerRequest(resource);
     final var response = mockResponse(request, RequestMapper.MAPPER_FAILED);
 
     final var handler = new RequestMapper<Object, Object>(
@@ -428,6 +430,16 @@ public class RequestMapperTest {
     when(producer.flush()).thenReturn(Future.succeededFuture());
     when(producer.close()).thenReturn(Future.succeededFuture());
     return producer;
+  }
+
+  private static HttpServerRequest mockHttpServerRequest(Resource resource) {
+    final var request = mock(HttpServerRequest.class);
+    when(request.path()).thenReturn(resource.getIngress().getPath());
+    when(request.method()).thenReturn(new HttpMethod("POST"));
+    when(request.host()).thenReturn("127.0.0.1");
+    when(request.scheme()).thenReturn("http");
+    when(request.headers()).thenReturn(new HeadersMultiMap());
+    return request;
   }
 
   private static HttpServerResponse mockResponse(

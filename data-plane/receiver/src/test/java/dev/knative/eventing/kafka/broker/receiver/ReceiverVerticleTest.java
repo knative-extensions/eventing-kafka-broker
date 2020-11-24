@@ -89,7 +89,7 @@ public class ReceiverVerticleTest {
 
     handler = new RequestMapper<>(
       new Properties(),
-      new CloudEventRequestToRecordMapper(),
+      new CloudEventRequestToRecordMapper(vertx),
       properties -> producer,
       badRequestCount,
       produceRequestCount

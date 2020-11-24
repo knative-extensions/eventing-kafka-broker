@@ -96,7 +96,6 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     this.badRequestCounter = badRequestCounter;
     this.produceEventsCounter = produceEventsCounter;
 
-
     this.ingressInfos = new HashMap<>();
     this.producerReferences = new HashMap<>();
     this.pathMapper = new HashMap<>();
@@ -119,13 +118,14 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     requestToRecordMapper
       .recordFromRequest(request, ingressInfo.getTopic())
       .onSuccess(record -> ingressInfo.getProducer().send(record)
-        .onSuccess(ignore -> {
+        .onSuccess(metadata -> {
           request.response().setStatusCode(RECORD_PRODUCED).end();
           produceEventsCounter.increment();
 
-          logger.debug("Record produced {} {} {} {} {}",
+          logger.debug("Record produced {} {} {} {} {} {}",
             keyValue("topic", record.topic()),
-            keyValue("partition", record.partition()),
+            keyValue("partition", metadata.getPartition()),
+            keyValue("offset", metadata.getOffset()),
             keyValue("value", record.value()),
             keyValue("headers", record.headers()),
             keyValue("path", request.path())
@@ -254,7 +254,7 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     private final Properties producerProperties;
 
     IngressInfo(final KafkaProducer<K, V> producer, final String topic, final String path,
-                final Properties producerProperties) {
+      final Properties producerProperties) {
       this.producer = producer;
       this.topic = topic;
       this.path = path;

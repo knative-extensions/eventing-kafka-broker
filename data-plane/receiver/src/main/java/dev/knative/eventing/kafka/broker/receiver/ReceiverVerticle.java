@@ -27,6 +27,7 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.impl.ContextInternal;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -75,6 +76,7 @@ public class ReceiverVerticle extends AbstractVerticle {
     this.server = vertx.createHttpServer(httpServerOptions);
 
     this.server.requestHandler(this.requestHandler)
+      .exceptionHandler(startPromise::tryFail)
       .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
       .<Void>mapEmpty()
       .onComplete(startPromise);

@@ -14,6 +14,7 @@ public class BaseEnvTest {
     case "METRICS_PORT" -> "9092";
     case "METRICS_PATH" -> "/path";
     case "METRICS_PUBLISH_QUANTILES" -> "TRUE";
+    case "CONFIG_TRACING_PATH" -> "/etc/tracing";
     default -> throw new IllegalArgumentException("unknown " + s);
   };
 
@@ -36,6 +37,13 @@ public class BaseEnvTest {
     final var metricsConfigs = new BaseEnv(provider);
     final var isPublishQuantiles = metricsConfigs.isPublishQuantilesEnabled();
     assertThat(isPublishQuantiles).isEqualTo(true);
+  }
+
+  @Test
+  public void shouldGetConfigTracingPath() {
+    final var metricsConfigs = new BaseEnv(provider);
+    final var configTracingPath = metricsConfigs.getConfigTracingPath();
+    assertThat(configTracingPath).isEqualTo("/etc/tracing");
   }
 
   @Test

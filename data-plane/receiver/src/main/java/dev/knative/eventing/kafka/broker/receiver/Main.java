@@ -23,15 +23,22 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
+import dev.knative.eventing.kafka.broker.core.tracing.OpenTelemetryVertxTracingFactory;
+import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
+import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.kafka.CloudEventSerializer;
+import io.opentelemetry.api.OpenTelemetry;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.tracing.TracingOptions;
+import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -61,8 +68,10 @@ public class Main {
    *
    * @param args command line arguments.
    */
-  public static void main(final String[] args) {
+  public static void main(final String[] args) throws IOException {
     final var env = new ReceiverEnv(System::getenv);
+
+    Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
 
     // HACK HACK HACK
     // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
@@ -76,7 +85,11 @@ public class Main {
     logger.info("Starting Receiver {}", keyValue("env", env));
 
     final var vertx = Vertx.vertx(
-      new VertxOptions().setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
+      new VertxOptions()
+        .setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
+        .setTracingOptions(new TracingOptions()
+          .setFactory(new OpenTelemetryVertxTracingFactory(OpenTelemetry.getGlobalTracer(Tracing.SERVICE_NAME)))
+        )
     );
 
     try {
@@ -88,11 +101,12 @@ public class Main {
       final var badRequestCounter = metricsRegistry.counter(HTTP_REQUESTS_MALFORMED_COUNT);
       final var produceEventsCounter = metricsRegistry.counter(HTTP_REQUESTS_PRODUCE_COUNT);
 
-      producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
       producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+      producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
+
       final var handler = new RequestMapper<>(
         producerConfigs,
-        new CloudEventRequestToRecordMapper(),
+        new CloudEventRequestToRecordMapper(vertx),
         properties -> KafkaProducer.create(vertx, properties),
         badRequestCounter,
         produceEventsCounter
@@ -102,6 +116,7 @@ public class Main {
         Configurations.getPropertiesAsJson(env.getHttpServerConfigFilePath())
       );
       httpServerOptions.setPort(env.getIngressPort());
+      httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
       final var verticle = new ReceiverVerticle(
         httpServerOptions,

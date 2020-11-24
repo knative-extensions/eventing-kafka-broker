@@ -1,4 +1,4 @@
----
+#!/usr/bin/env bash
 
 # Copyright 2020 The Knative Authors
 #
@@ -14,18 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kafka-config-logging
-  namespace: knative-eventing
-data:
-  config.xml: |
-    <configuration>
-      <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
-      </appender>
-      <root level="INFO">
-        <appender-ref ref="jsonConsoleAppender"/>
-      </root>
-    </configuration>
+set -o errexit
+set -o nounset
+set -o pipefail
+
+export GO111MODULE=on
+
+if [ -z "${GOPATH:-}" ]; then
+  export GOPATH=$(go env GOPATH)
+fi
+
+source $(dirname $0)/../vendor/knative.dev/hack/library.sh
+
+go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/control-plane/config/100-config-tracing.yaml

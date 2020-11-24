@@ -28,26 +28,27 @@ import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
-import io.cloudevents.kafka.CloudEventDeserializer;
-import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.kafka.client.common.KafkaClientOptions;
+import io.vertx.kafka.client.consumer.KafkaConsumer;
+import io.vertx.kafka.client.producer.KafkaProducer;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashSet;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 
 public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
@@ -58,8 +59,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
   private final WebClient client;
   private final Vertx vertx;
   private final Properties producerConfigs;
-  private final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-    consumerRecordOffsetStrategyFactory;
+  private final ConsumerRecordOffsetStrategyFactory<String, CloudEvent> consumerRecordOffsetStrategyFactory;
 
   /**
    * All args constructor.
@@ -71,15 +71,13 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
    * @param producerConfigs                     base producer configurations.
    */
   public HttpConsumerVerticleFactory(
-    final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-      consumerRecordOffsetStrategyFactory,
+    final ConsumerRecordOffsetStrategyFactory<String, CloudEvent> consumerRecordOffsetStrategyFactory,
     final Properties consumerConfigs,
     final WebClient client,
     final Vertx vertx,
     final Properties producerConfigs) {
 
-    Objects.requireNonNull(consumerRecordOffsetStrategyFactory,
-      "provide consumerRecordOffsetStrategyFactory");
+    Objects.requireNonNull(consumerRecordOffsetStrategyFactory, "provide consumerRecordOffsetStrategyFactory");
     Objects.requireNonNull(consumerConfigs, "provide consumerConfigs");
     Objects.requireNonNull(client, "provide message");
     Objects.requireNonNull(vertx, "provide vertx");
@@ -97,15 +95,12 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
    */
   @Override
   public AbstractVerticle get(final DataPlaneContract.Resource resource,
-                              final DataPlaneContract.Egress egress) {
+    final DataPlaneContract.Egress egress) {
     Objects.requireNonNull(resource, "provide resource");
     Objects.requireNonNull(egress, "provide egress");
 
-    final io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> consumer
-      = createConsumer(vertx, resource, egress);
-
-    final io.vertx.kafka.client.producer.KafkaProducer<String, CloudEvent> producer
-      = createProducer(vertx, resource, egress);
+    final KafkaConsumer<String, CloudEvent> consumer = createConsumer(vertx, resource, egress);
+    final KafkaProducer<String, CloudEvent> producer = createProducer(vertx, resource, egress);
 
     final CircuitBreakerOptions circuitBreakerOptions = createCircuitBreakerOptions(resource);
 
@@ -124,7 +119,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     final var consumerOffsetManager = consumerRecordOffsetStrategyFactory
       .get(consumer, resource, egress);
 
-    final var sinkResponseHandler = new HttpSinkResponseHandler(resource.getTopics(0), producer);
+    final var sinkResponseHandler = new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer);
 
     final var consumerRecordHandler = new ConsumerRecordHandler<>(
       egressDestinationSender,
@@ -146,43 +141,42 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     return new CircuitBreakerOptions();
   }
 
-  protected io.vertx.kafka.client.producer.KafkaProducer<String, CloudEvent> createProducer(
+  protected KafkaProducer<String, CloudEvent> createProducer(
     final Vertx vertx,
     final DataPlaneContract.Resource resource,
     final DataPlaneContract.Egress egress) {
 
     // producerConfigs is a shared object and it acts as a prototype for each consumer instance.
-    final var producerConfigs = (Properties) this.producerConfigs.clone();
-    producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
+    final var producerConfigs = this.producerConfigs.entrySet()
+      .stream()
+      .map(e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue().toString()))
+      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
-    final var kafkaProducer = new KafkaProducer<>(
-      producerConfigs,
-      new StringSerializer(),
-      new CloudEventSerializer()
-    );
+    // TODO create a single producer per bootstrap servers.
+    producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
 
-    return io.vertx.kafka.client.producer.KafkaProducer.create(vertx, kafkaProducer);
+    return KafkaProducer.create(vertx, producerConfigs);
   }
 
-  protected io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> createConsumer(
+  protected KafkaConsumer<String, CloudEvent> createConsumer(
     final Vertx vertx,
     final DataPlaneContract.Resource resource,
     final DataPlaneContract.Egress egress) {
 
-    // consumerConfigs is a shared object and it acts as a prototype for each consumer instance.
-    final var consumerConfigs = (Properties) this.consumerConfigs.clone();
-    consumerConfigs.setProperty(GROUP_ID_CONFIG, egress.getConsumerGroup());
-    consumerConfigs.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
+    // this.consumerConfigs is a shared object and it acts as a prototype for each consumer instance.
+    final var consumerConfigs = this.consumerConfigs.entrySet()
+      .stream()
+      .map(e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue()))
+      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
-    // Note: KafkaConsumer instances are not thread-safe.
-    // There are methods thread-safe, but in general they're not.
-    final var kafkaConsumer = new KafkaConsumer<>(
-      consumerConfigs,
-      new StringDeserializer(),
-      new CloudEventDeserializer()
-    );
+    consumerConfigs.put(GROUP_ID_CONFIG, egress.getConsumerGroup());
+    consumerConfigs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
 
-    return io.vertx.kafka.client.consumer.KafkaConsumer.create(vertx, kafkaConsumer);
+    final var opt = new KafkaClientOptions()
+      .setConfig(consumerConfigs)
+      .setTracingPolicy(TracingPolicy.PROPAGATE);
+
+    return KafkaConsumer.create(vertx, opt);
   }
 
   private HttpConsumerRecordSender createSender(
@@ -194,9 +188,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     circuitBreaker.retryPolicy(computeRetryPolicy(egress));
 
     return new HttpConsumerRecordSender(
-      client,
-      target,
-      circuitBreaker
+      vertx, target, circuitBreaker, client
     );
   }
 

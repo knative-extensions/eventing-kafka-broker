@@ -16,7 +16,6 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
-import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -56,6 +55,7 @@ public class HttpSinkResponseHandlerTest {
       new CloudEventSerializer()
     );
     final var handler = new HttpSinkResponseHandler(
+      vertx,
       TOPIC,
       KafkaProducer.create(vertx, producer)
     );
@@ -79,6 +79,7 @@ public class HttpSinkResponseHandlerTest {
       new CloudEventSerializer()
     );
     final var handler = new HttpSinkResponseHandler(
+      vertx,
       TOPIC,
       KafkaProducer.create(vertx, producer)
     );
@@ -104,6 +105,7 @@ public class HttpSinkResponseHandlerTest {
       new CloudEventSerializer()
     );
     final var handler = new HttpSinkResponseHandler(
+      vertx,
       TOPIC,
       KafkaProducer.create(vertx, producer)
     );
@@ -129,6 +131,7 @@ public class HttpSinkResponseHandlerTest {
       new CloudEventSerializer()
     );
     final var handler = new HttpSinkResponseHandler(
+      vertx,
       TOPIC,
       KafkaProducer.create(vertx, producer)
     );

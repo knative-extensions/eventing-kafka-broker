@@ -29,6 +29,7 @@ class ReceiverEnvTest {
   private static final String PRODUCER_CONFIG_PATH = "/etc/producer";
   private static final String DATA_PLANE_CONFIG_FILE_PATH = "/etc/brokers";
   private static final String HTTPSERVER_CONFIG_FILE_PATH = "/etc/http-server-config";
+  private static final String TRACING_CONFIG_PATH = "/etc/tracing";
 
   @Test
   public void create() {
@@ -43,6 +44,7 @@ class ReceiverEnvTest {
         case BaseEnv.METRICS_PORT -> "9092";
         case BaseEnv.METRICS_PATH -> "/path";
         case BaseEnv.METRICS_PUBLISH_QUANTILES -> "TRUE";
+        case BaseEnv.CONFIG_TRACING_PATH -> TRACING_CONFIG_PATH;
         default -> throw new IllegalArgumentException();
       }
     );
@@ -53,6 +55,7 @@ class ReceiverEnvTest {
     assertThat(env.getProducerConfigFilePath()).isEqualTo(PRODUCER_CONFIG_PATH);
     assertThat(env.getDataPlaneConfigFilePath()).isEqualTo(DATA_PLANE_CONFIG_FILE_PATH);
     assertThat(env.getHttpServerConfigFilePath()).isEqualTo(HTTPSERVER_CONFIG_FILE_PATH);
+    assertThat(env.getConfigTracingPath()).isEqualTo(TRACING_CONFIG_PATH);
 
     // Check toString is overridden
     assertThat(env.toString()).doesNotContain("@");

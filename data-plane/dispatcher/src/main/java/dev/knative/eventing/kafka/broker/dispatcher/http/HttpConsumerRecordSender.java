@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.http;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
+import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
@@ -25,6 +26,7 @@ import io.cloudevents.rw.CloudEventRWException;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
@@ -41,19 +43,23 @@ public final class HttpConsumerRecordSender implements ConsumerRecordSender<Stri
   private final WebClient client;
   private final String subscriberURI;
   private final CircuitBreaker circuitBreaker;
+  private final Vertx vertx;
 
   /**
    * All args constructor.
    *
-   * @param client         http client.
+   * @param vertx          vertx instance
    * @param subscriberURI  subscriber URI
    * @param circuitBreaker circuit breaker
+   * @param client         http client.
    */
   public HttpConsumerRecordSender(
-    final WebClient client,
+    final Vertx vertx,
     final String subscriberURI,
-    final CircuitBreaker circuitBreaker) {
+    final CircuitBreaker circuitBreaker,
+    final WebClient client) {
 
+    Objects.requireNonNull(vertx, "provide vertx");
     Objects.requireNonNull(client, "provide client");
     Objects.requireNonNull(subscriberURI, "provide subscriber URI");
     if (subscriberURI.equals("") || !URI.create(subscriberURI).isAbsolute()) {
@@ -61,6 +67,7 @@ public final class HttpConsumerRecordSender implements ConsumerRecordSender<Stri
     }
     Objects.requireNonNull(circuitBreaker, "provide circuitBreaker");
 
+    this.vertx = vertx;
     this.client = client;
     this.subscriberURI = subscriberURI;
     this.circuitBreaker = circuitBreaker;
@@ -68,6 +75,9 @@ public final class HttpConsumerRecordSender implements ConsumerRecordSender<Stri
 
   @Override
   public Future<HttpResponse<Buffer>> send(final KafkaConsumerRecord<String, CloudEvent> record) {
+
+    TracingSpan.decorateCurrent(vertx, record.value());
+
     return circuitBreaker.execute(breaker -> {
       try {
         send(record, breaker);

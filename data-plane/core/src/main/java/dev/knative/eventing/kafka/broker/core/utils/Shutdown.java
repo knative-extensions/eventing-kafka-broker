@@ -1,6 +1,7 @@
 package dev.knative.eventing.kafka.broker.core.utils;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract;
+import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
 import io.vertx.core.Vertx;
 import java.io.Closeable;
 import java.io.IOException;
@@ -35,6 +36,7 @@ public class Shutdown {
       } catch (InterruptedException e) {
         logger.error("Timeout waiting for vertx close", e);
       }
+      Tracing.shutdown();
     };
   }
 }
