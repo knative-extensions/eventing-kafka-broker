@@ -19,10 +19,7 @@ import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.SinkResponseHandler;
 import io.cloudevents.CloudEvent;
-import io.cloudevents.core.message.Encoding;
-import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
-import io.cloudevents.rw.CloudEventRWException;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -66,35 +63,28 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
    */
   @Override
   public Future<Void> handle(final HttpResponse<Buffer> response) {
-    // TODO if it's in structured, the SDK just calls getBytes on the response.body() which might lead to NPE.
-    MessageReader messageReader = VertxMessageFactory.createReader(response);
-    if (messageReader.getEncoding() == Encoding.UNKNOWN) {
+    try {
+      final var event = VertxMessageFactory.createReader(response).toEvent();
+      if (event == null) {
+        return Future.failedFuture(new IllegalArgumentException("event cannot be null"));
+      }
 
-      // When the sink returns a malformed event we return a failed future to avoid committing the message to Kafka.
+      TracingSpan.decorateCurrent(vertx, event);
+
+      return producer
+        .send(KafkaProducerRecord.create(topic, PartitionKey.extract(event), event))
+        .mapEmpty();
+
+    } catch (final Exception ex) {
       if (response.body() != null && response.body().length() > 0) {
+        // When the sink returns a malformed event we return a failed future to avoid committing the message to Kafka.
         return Future.failedFuture(
-          new IllegalResponseException("Unable to decode response: unknown encoding and non empty response")
+          new IllegalResponseException("Unable to decode response: unknown encoding and non empty response", ex)
         );
       }
 
       // Response is non-event, discard it
       return Future.succeededFuture();
     }
-
-    CloudEvent event;
-    try {
-      event = messageReader.toEvent();
-    } catch (CloudEventRWException e) {
-      return Future.failedFuture(e);
-    }
-    if (event == null) {
-      return Future.failedFuture(new IllegalArgumentException("event cannot be null"));
-    }
-
-    TracingSpan.decorateCurrent(vertx, event);
-
-    return producer
-      .send(KafkaProducerRecord.create(topic, PartitionKey.extract(event), event))
-      .mapEmpty();
   }
 }
