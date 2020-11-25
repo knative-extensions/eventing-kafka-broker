@@ -39,8 +39,7 @@ public class Configurations {
     final var props = getProperties(path);
 
     final JsonObject json = new JsonObject();
-    props.stringPropertyNames()
-      .forEach(name -> json.put(name, convert(props.getProperty(name))));
+    props.stringPropertyNames().forEach(name -> json.put(name, convert(props.getProperty(name))));
     return json;
   }
 
