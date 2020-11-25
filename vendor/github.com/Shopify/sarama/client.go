@@ -56,6 +56,11 @@ type Client interface {
 	// partition. Offline replicas are replicas which are offline
 	OfflineReplicas(topic string, partitionID int32) ([]int32, error)
 
+	// RefreshBrokers takes a list of addresses to be used as seed brokers.
+	// Existing broker connections are closed and the updated list of seed brokers
+	// will be used for the next metadata fetch.
+	RefreshBrokers(addrs []string) error
+
 	// RefreshMetadata takes a list of topics and queries the cluster to refresh the
 	// available metadata for those topics. If no topics are provided, it will refresh
 	// metadata for all topics.
@@ -155,10 +160,7 @@ func NewClient(addrs []string, conf *Config) (Client, error) {
 		coordinators:            make(map[string]int32),
 	}
 
-	random := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for _, index := range random.Perm(len(addrs)) {
-		client.seedBrokers = append(client.seedBrokers, NewBroker(addrs[index]))
-	}
+	client.randomizeSeedBrokers(addrs)
 
 	if conf.Metadata.Full {
 		// do an initial fetch of all cluster metadata by specifying an empty list of topics
@@ -429,6 +431,27 @@ func (client *client) Leader(topic string, partitionID int32) (*Broker, error) {
 	return leader, err
 }
 
+func (client *client) RefreshBrokers(addrs []string) error {
+	if client.Closed() {
+		return ErrClosedClient
+	}
+
+	client.lock.Lock()
+	defer client.lock.Unlock()
+
+	for _, broker := range client.brokers {
+		_ = broker.Close()
+		delete(client.brokers, broker.ID())
+	}
+
+	client.seedBrokers = nil
+	client.deadSeeds = nil
+
+	client.randomizeSeedBrokers(addrs)
+
+	return nil
+}
+
 func (client *client) RefreshMetadata(topics ...string) error {
 	if client.Closed() {
 		return ErrClosedClient
@@ -561,6 +584,13 @@ func (client *client) RefreshCoordinator(consumerGroup string) error {
 }
 
 // private broker management helpers
+
+func (client *client) randomizeSeedBrokers(addrs []string) {
+	random := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for _, index := range random.Perm(len(addrs)) {
+		client.seedBrokers = append(client.seedBrokers, NewBroker(addrs[index]))
+	}
+}
 
 func (client *client) updateBroker(brokers []*Broker) {
 	var currentBroker = make(map[int32]*Broker, len(brokers))
