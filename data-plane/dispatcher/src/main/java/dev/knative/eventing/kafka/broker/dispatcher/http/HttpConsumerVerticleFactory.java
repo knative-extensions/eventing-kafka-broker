@@ -23,6 +23,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource;
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.core.filter.impl.AttributesFilter;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
@@ -168,7 +169,11 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
     producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
-    return KafkaProducer.create(vertx, producerConfigs);
+    final KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, producerConfigs);
+
+    Metrics.register(producer.unwrap());
+
+    return producer;
   }
 
   private ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> createConsumerRecordSender(

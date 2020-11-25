@@ -16,24 +16,39 @@
 package dev.knative.eventing.kafka.broker.core.metrics;
 
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.metrics.MetricsOptions;
+import io.vertx.micrometer.MetricsDomain;
+import io.vertx.micrometer.MetricsNaming;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.producer.Producer;
 
-public class MetricsOptionsProvider {
+public class Metrics {
+
+  public static final String METRICS_REGISTRY_NAME = "metrics";
 
   /**
    * Get metrics options from the given metrics configurations.
    *
    * @param metricsConfigs metrics configurations.
-   * @param registry       registry name
    * @return metrics options
    */
-  public static MetricsOptions get(final BaseEnv metricsConfigs, final String registry) {
+  public static MetricsOptions getOptions(final BaseEnv metricsConfigs) {
     return new MicrometerMetricsOptions()
       .setEnabled(true)
-      .setRegistryName(registry)
+      .addDisabledMetricsCategory(MetricsDomain.EVENT_BUS)
+      .addDisabledMetricsCategory(MetricsDomain.DATAGRAM_SOCKET)
+      // NAMED_POOL allocates a lot, so disable it.
+      // See https://github.com/vert-x3/vertx-micrometer-metrics/blob/0646e66de120366c622a7240676d63cb69965ec5/src/main/java/io/vertx/micrometer/impl/meters/Gauges.java#L56-L69
+      .addDisabledMetricsCategory(MetricsDomain.NAMED_POOLS)
+      .setMetricsNaming(MetricsNaming.v4Names())
+      .setRegistryName(METRICS_REGISTRY_NAME)
+      .setJvmMetricsEnabled(metricsConfigs.isMetricsJvmEnabled())
       .setPrometheusOptions(new VertxPrometheusOptions()
         .setEmbeddedServerOptions(new HttpServerOptions().setPort(metricsConfigs.getMetricsPort()))
         .setEmbeddedServerEndpoint(metricsConfigs.getMetricsPath())
@@ -41,5 +56,17 @@ public class MetricsOptionsProvider {
         .setStartEmbeddedServer(true)
         .setEnabled(true)
       );
+  }
+
+  public static MeterRegistry getRegistry() {
+    return BackendRegistries.getNow(METRICS_REGISTRY_NAME);
+  }
+
+  public static <K, V> void register(final Consumer<K, V> consumer) {
+    new KafkaClientMetrics(consumer).bindTo(getRegistry());
+  }
+
+  public static <K, V> void register(final Producer<K, V> producer) {
+    new KafkaClientMetrics(producer).bindTo(getRegistry());
   }
 }

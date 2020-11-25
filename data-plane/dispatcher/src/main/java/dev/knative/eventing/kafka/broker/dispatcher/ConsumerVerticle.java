@@ -15,12 +15,15 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.micrometer.backends.BackendRegistries;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -66,6 +69,9 @@ public final class ConsumerVerticle<K, V> extends AbstractVerticle {
   @Override
   public void start(Promise<Void> startPromise) {
     this.consumer = consumerFactory.apply(vertx);
+
+    Metrics.register(this.consumer.unwrap());
+
     consumer.handler(recordHandler.apply(vertx, this.consumer));
     consumer.exceptionHandler(startPromise::tryFail);
     consumer.subscribe(topics, startPromise);

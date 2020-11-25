@@ -43,11 +43,15 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
   public void handle(Message<Object> event) {
     DataPlaneContract.Contract contract = (DataPlaneContract.Contract) event.body();
     resourcesReconciler.reconcile(contract.getResourcesList())
-      .onSuccess(
-        v -> logger.info("reconciled contract generation {}", keyValue("contractGeneration", contract.getGeneration())))
-      .onFailure(cause -> logger
-        .error("failed to reconcile contract generation {}", keyValue("contractGeneration", contract.getGeneration()),
-          cause));
+      .onSuccess(v -> logger.info(
+        "reconciled contract generation {}",
+        keyValue("contractGeneration", contract.getGeneration())
+      ))
+      .onFailure(cause -> logger.error(
+        "failed to reconcile contract generation {}",
+        keyValue("contractGeneration", contract.getGeneration()),
+        cause
+      ));
   }
 
   public static MessageConsumer<Object> start(EventBus eventBus, ResourcesReconciler reconciler) {
