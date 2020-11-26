@@ -43,7 +43,7 @@
 
     <!-- dependencies version -->
     <vertx.version>4.0.0.CR2</vertx.version>
-    <cloudevents.sdk.version>2.0.0-SNAPSHOT</cloudevents.sdk.version>
+    <cloudevents.sdk.version>2.0.0.RC1</cloudevents.sdk.version>
     <micrometer.version>1.6.1</micrometer.version>
     <opentelemetry.version>0.11.0</opentelemetry.version>
     <jackson.version>2.11.3</jackson.version>
@@ -287,7 +287,7 @@
               <rules>
                 <dependencyConvergence/>
                 <requireReleaseDeps>
-                  <excludes>dev.knative.eventing.kafka.broker:*,io.cloudevents:*</excludes>
+                  <excludes>dev.knative.eventing.kafka.broker:*</excludes>
                   <failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
                 </requireReleaseDeps>
               </rules>
