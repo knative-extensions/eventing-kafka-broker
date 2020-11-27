@@ -46,6 +46,7 @@ import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -292,8 +293,7 @@ public class DataPlaneTest {
     final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
       consumerRecordOffsetStrategyFactory,
       consumerConfigs,
-      WebClient.create(vertx),
-      vertx,
+      new WebClientOptions(),
       producerConfigs
     );
 

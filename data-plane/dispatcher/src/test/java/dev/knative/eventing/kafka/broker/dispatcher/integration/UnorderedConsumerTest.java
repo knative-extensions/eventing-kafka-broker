@@ -35,7 +35,6 @@ import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
-import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
@@ -68,12 +67,9 @@ public class UnorderedConsumerTest {
 
     final var producerConfigs = new Properties();
     final var consumerConfigs = new Properties();
-    final var client = WebClient.create(vertx);
 
     final var consumerVerticleFactoryMock = new ConsumerVerticleFactoryMock(
       consumerConfigs,
-      client,
-      vertx,
       producerConfigs,
       ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class))
     );

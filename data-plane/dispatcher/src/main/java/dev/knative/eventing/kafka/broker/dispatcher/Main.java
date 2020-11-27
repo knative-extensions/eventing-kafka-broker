@@ -36,7 +36,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.tracing.TracingOptions;
 import io.vertx.core.tracing.TracingPolicy;
-import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.File;
@@ -119,8 +118,7 @@ public class Main {
       final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
         consumerRecordOffsetStrategyFactory,
         consumerConfig,
-        WebClient.create(vertx, clientOptions),
-        vertx,
+        clientOptions,
         producerConfig
       );
 

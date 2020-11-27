@@ -21,13 +21,14 @@ import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFac
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Vertx;
-import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
@@ -46,65 +47,65 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
 
   public ConsumerVerticleFactoryMock(
     final Properties consumerConfigs,
-    final WebClient client,
-    final Vertx vertx,
     final Properties producerConfigs,
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent> consumerRecordOffsetStrategyFactory) {
 
-    super(consumerRecordOffsetStrategyFactory, consumerConfigs, client, vertx, producerConfigs);
+    super(consumerRecordOffsetStrategyFactory, consumerConfigs, new WebClientOptions(), producerConfigs);
     mockProducer = new ConcurrentHashMap<>();
     mockConsumer = new ConcurrentHashMap<>();
   }
 
   @Override
-  protected KafkaProducer<String, CloudEvent> createProducer(
-    final Vertx vertx,
+  protected Function<Vertx, KafkaProducer<String, CloudEvent>> createProducer(
     final DataPlaneContract.Resource resource,
     final DataPlaneContract.Egress egress) {
 
-    final var producer = new MockProducer<>(
-      true,
-      new StringSerializer(),
-      new CloudEventSerializer()
-    );
+    return vertx -> {
+      final var producer = new MockProducer<>(
+        true,
+        new StringSerializer(),
+        new CloudEventSerializer()
+      );
 
-    mockProducer.put(egress.getConsumerGroup(), producer);
+      mockProducer.put(egress.getConsumerGroup(), producer);
 
-    return KafkaProducer.create(vertx, producer);
+      return KafkaProducer.create(vertx, producer);
+    };
   }
 
   @Override
-  protected KafkaConsumer<String, CloudEvent> createConsumer(
-    final Vertx vertx,
+  protected Function<Vertx, KafkaConsumer<String, CloudEvent>> createConsumer(
     final DataPlaneContract.Resource resource,
     final DataPlaneContract.Egress egress) {
+    return vertx -> {
 
-    final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
+      final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
 
-    mockConsumer.put(egress.getConsumerGroup(), consumer);
+      mockConsumer.put(egress.getConsumerGroup(), consumer);
 
-    consumer.schedulePollTask(() -> {
-      consumer.unsubscribe();
+      consumer.schedulePollTask(() -> {
+        consumer.unsubscribe();
 
-      consumer.assign(records.stream()
-        .map(r -> new TopicPartition(resource.getTopics(0), r.partition()))
-        .collect(Collectors.toList()));
+        consumer.assign(records.stream()
+          .map(r -> new TopicPartition(resource.getTopics(0), r.partition()))
+          .collect(Collectors.toList()));
 
-      for (final var record : records) {
-        consumer.addRecord(new ConsumerRecord<>(
-          resource.getTopics(0),
-          record.partition(),
-          record.offset(),
-          record.key(),
-          record.value()
-        ));
-        consumer.updateEndOffsets(Map.of(
-          new TopicPartition(resource.getTopics(0), record.partition()), 0L
-        ));
-      }
-    });
+        for (final var record : records) {
+          consumer.addRecord(new ConsumerRecord<>(
+            resource.getTopics(0),
+            record.partition(),
+            record.offset(),
+            record.key(),
+            record.value()
+          ));
+          consumer.updateEndOffsets(Map.of(
+            new TopicPartition(resource.getTopics(0), record.partition()), 0L
+          ));
+        }
+      });
 
-    return KafkaConsumer.create(vertx, consumer);
+      return KafkaConsumer.create(vertx, consumer);
+    };
   }
 
   public void setRecords(final List<ConsumerRecord<String, CloudEvent>> records) {
