@@ -154,6 +154,7 @@ public class UnorderedConsumerTest {
       assertThat(history.stream().map(ProducerRecord::key)).containsAnyElementsOf(partitionKeys);
     }
 
+    fileWatcher.close();
     executorService.shutdown();
     context.completeNow();
   }
@@ -178,12 +179,14 @@ public class UnorderedConsumerTest {
 
           context.verify(() -> {
             assertThat(receivedEvent).isEqualTo(event);
+
+            VertxMessageFactory
+              .createWriter(request.response())
+              .writeBinary(event);
+
             waitEvents.countDown();
           });
 
-          VertxMessageFactory
-            .createWriter(request.response())
-            .writeBinary(event);
         })
       )
       .listen(

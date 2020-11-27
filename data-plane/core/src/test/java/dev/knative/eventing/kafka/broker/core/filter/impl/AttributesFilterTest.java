@@ -17,14 +17,14 @@ package dev.knative.eventing.kafka.broker.core.filter.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dev.knative.eventing.kafka.broker.core.filter.impl.AttributesFilter.Constants;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
+import io.cloudevents.core.v03.CloudEventV03;
+import io.cloudevents.core.v1.CloudEventV1;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -144,7 +144,7 @@ public class AttributesFilterTest {
     return Stream.of(
       Arguments.of(
         Map.of(
-          Constants.SPEC_VERSION, "1.0"
+          CloudEventV1.SPECVERSION, "1.0"
         ),
         new io.cloudevents.core.v1.CloudEventBuilder()
           .withId("1234")
@@ -155,7 +155,7 @@ public class AttributesFilterTest {
       ),
       Arguments.of(
         Map.of(
-          Constants.SPEC_VERSION, "0.3"
+          CloudEventV1.SPECVERSION, "0.3"
         ),
         new io.cloudevents.core.v03.CloudEventBuilder()
           .withId("1234")
@@ -166,8 +166,8 @@ public class AttributesFilterTest {
       ),
       Arguments.of(
         Map.of(
-          Constants.SPEC_VERSION, "0.3",
-          Constants.ID, "123-42"
+          CloudEventV1.SPECVERSION, "0.3",
+          CloudEventV1.ID, "123-42"
         ),
         new io.cloudevents.core.v03.CloudEventBuilder()
           .withId("123-42")
@@ -178,8 +178,8 @@ public class AttributesFilterTest {
       ),
       Arguments.of(
         Map.of(
-          Constants.SPEC_VERSION, "0.3",
-          Constants.ID, "123-42"
+          CloudEventV1.SPECVERSION, "0.3",
+          CloudEventV1.ID, "123-42"
         ),
         new io.cloudevents.core.v03.CloudEventBuilder()
           .withId("123-423")
@@ -190,9 +190,9 @@ public class AttributesFilterTest {
       ),
       Arguments.of(
         Map.of(
-          Constants.SPEC_VERSION, "0.3",
-          Constants.ID, "123-42",
-          Constants.DATA_CONTENT_TYPE, "application/cloudevents+json"
+          CloudEventV1.SPECVERSION, "0.3",
+          CloudEventV1.ID, "123-42",
+          CloudEventV1.DATACONTENTTYPE, "application/cloudevents+json"
         ),
         new io.cloudevents.core.v03.CloudEventBuilder()
           .withId("123-42")
@@ -204,10 +204,10 @@ public class AttributesFilterTest {
       ),
       Arguments.of(
         Map.of(
-          Constants.SPEC_VERSION, "1.0",
-          Constants.ID, "123-42",
-          Constants.DATA_CONTENT_TYPE, "application/cloudevents+json",
-          Constants.DATA_SCHEMA, "/api/schema"
+          CloudEventV1.SPECVERSION, "1.0",
+          CloudEventV1.ID, "123-42",
+          CloudEventV1.DATACONTENTTYPE, "application/cloudevents+json",
+          CloudEventV1.DATASCHEMA, "/api/schema"
         ),
         new io.cloudevents.core.v1.CloudEventBuilder()
           .withId("123-42")
@@ -220,11 +220,11 @@ public class AttributesFilterTest {
       ),
       Arguments.of(
         Map.of(
-          Constants.SPEC_VERSION, "1.0",
-          Constants.ID, "123-42",
-          Constants.DATA_CONTENT_TYPE, "application/cloudevents+json",
-          Constants.DATA_SCHEMA, "/api/schema",
-          Constants.SOURCE, "/api/some-source"
+          CloudEventV1.SPECVERSION, "1.0",
+          CloudEventV1.ID, "123-42",
+          CloudEventV1.DATACONTENTTYPE, "application/cloudevents+json",
+          CloudEventV1.DATASCHEMA, "/api/schema",
+          CloudEventV1.SOURCE, "/api/some-source"
         ),
         new io.cloudevents.core.v1.CloudEventBuilder()
           .withId("123-42")
@@ -237,11 +237,11 @@ public class AttributesFilterTest {
       ),
       Arguments.of(
         Map.of(
-          Constants.SPEC_VERSION, "1.0",
-          Constants.ID, "123-42",
-          Constants.DATA_CONTENT_TYPE, "application/cloudevents+json",
-          Constants.SOURCE, "/api/schema",
-          Constants.DATA_SCHEMA, "/api/some-source"
+          CloudEventV1.SPECVERSION, "1.0",
+          CloudEventV1.ID, "123-42",
+          CloudEventV1.DATACONTENTTYPE, "application/cloudevents+json",
+          CloudEventV1.SOURCE, "/api/schema",
+          CloudEventV1.DATASCHEMA, "/api/some-source"
         ),
         new io.cloudevents.core.v1.CloudEventBuilder()
           .withId("123-42")
@@ -254,14 +254,14 @@ public class AttributesFilterTest {
       ),
       Arguments.of(
         Map.of(
-          Constants.SPEC_VERSION, "1.0",
-          Constants.ID, "123-42",
-          Constants.DATA_CONTENT_TYPE, "application/cloudevents+json",
-          Constants.DATA_SCHEMA, "/api/schema",
-          Constants.SOURCE, "/api/some-source",
-          Constants.SUBJECT, "a-subject-42",
-          Constants.TIME, "1985-04-12T23:20:50Z",
-          Constants.SCHEMA_URL, "/api/schema-url"
+          CloudEventV1.SPECVERSION, "1.0",
+          CloudEventV1.ID, "123-42",
+          CloudEventV1.DATACONTENTTYPE, "application/cloudevents+json",
+          CloudEventV1.DATASCHEMA, "/api/schema",
+          CloudEventV1.SOURCE, "/api/some-source",
+          CloudEventV1.SUBJECT, "a-subject-42",
+          CloudEventV1.TIME, "1985-04-12T23:20:50Z",
+          CloudEventV03.SCHEMAURL, "/api/schema-url"
         ),
         new io.cloudevents.core.v1.CloudEventBuilder()
           .withId("123-42")
@@ -280,13 +280,13 @@ public class AttributesFilterTest {
       ),
       Arguments.of(
         Map.of(
-          Constants.SPEC_VERSION, "0.3",
-          Constants.ID, "123-42",
-          Constants.DATA_CONTENT_TYPE, "application/cloudevents+json",
-          Constants.SOURCE, "/api/some-source",
-          Constants.SUBJECT, "a-subject-42",
-          Constants.TIME, "1985-04-12T23:20:50Z",
-          Constants.SCHEMA_URL, "/api/schema-url"
+          CloudEventV1.SPECVERSION, "0.3",
+          CloudEventV1.ID, "123-42",
+          CloudEventV1.DATACONTENTTYPE, "application/cloudevents+json",
+          CloudEventV1.SOURCE, "/api/some-source",
+          CloudEventV1.SUBJECT, "a-subject-42",
+          CloudEventV1.TIME, "1985-04-12T23:20:50Z",
+          CloudEventV03.SCHEMAURL, "/api/schema-url"
         ),
         new io.cloudevents.core.v03.CloudEventBuilder()
           .withId("123-42")
@@ -305,14 +305,14 @@ public class AttributesFilterTest {
       ),
       Arguments.of(
         Map.of(
-          Constants.SPEC_VERSION, "0.3",
-          Constants.ID, "123-42",
-          Constants.DATA_CONTENT_TYPE, "application/cloudevents+json",
-          Constants.SOURCE, "/api/some-source",
-          Constants.SUBJECT, "a-subject-42",
-          Constants.TIME, "1985-04-12T23:20:50Z",
-          Constants.SCHEMA_URL, "/api/schema-url",
-          Constants.TYPE, "dev.knative.eventing.create"
+          CloudEventV1.SPECVERSION, "0.3",
+          CloudEventV1.ID, "123-42",
+          CloudEventV1.DATACONTENTTYPE, "application/cloudevents+json",
+          CloudEventV1.SOURCE, "/api/some-source",
+          CloudEventV1.SUBJECT, "a-subject-42",
+          CloudEventV1.TIME, "1985-04-12T23:20:50Z",
+          CloudEventV03.SCHEMAURL, "/api/schema-url",
+          CloudEventV1.TYPE, "dev.knative.eventing.create"
         ),
         new io.cloudevents.core.v03.CloudEventBuilder()
           .withId("123-42")
@@ -331,14 +331,14 @@ public class AttributesFilterTest {
       ),
       Arguments.of(
         Map.of(
-          Constants.SPEC_VERSION, "1.0",
-          Constants.ID, "123-42",
-          Constants.DATA_CONTENT_TYPE, "application/cloudevents+json",
-          Constants.SOURCE, "/api/some-source",
-          Constants.SUBJECT, "a-subject-42",
-          Constants.TIME, "1985-04-12T23:20:50Z",
-          Constants.DATA_SCHEMA, "/api/schema",
-          Constants.TYPE, "dev.knative.eventing.create"
+          CloudEventV1.SPECVERSION, "1.0",
+          CloudEventV1.ID, "123-42",
+          CloudEventV1.DATACONTENTTYPE, "application/cloudevents+json",
+          CloudEventV1.SOURCE, "/api/some-source",
+          CloudEventV1.SUBJECT, "a-subject-42",
+          CloudEventV1.TIME, "1985-04-12T23:20:50Z",
+          CloudEventV1.DATASCHEMA, "/api/schema",
+          CloudEventV1.TYPE, "dev.knative.eventing.create"
         ),
         new io.cloudevents.core.v1.CloudEventBuilder()
           .withId("123-42")
@@ -356,18 +356,5 @@ public class AttributesFilterTest {
         true
       )
     );
-  }
-
-  @Test
-  public void shouldSetAllAttributes() {
-    final var size = Stream.concat(
-      io.cloudevents.core.v1.ContextAttributes.VALUES.stream(),
-      io.cloudevents.core.v03.ContextAttributes.VALUES.stream()
-    )
-      .collect(Collectors.toSet())
-      .size();
-
-    // DATACONTENTENCODING isn't usable, so +1
-    assertThat(AttributesFilter.attributesMapper.size() + 1).isEqualTo(size);
   }
 }

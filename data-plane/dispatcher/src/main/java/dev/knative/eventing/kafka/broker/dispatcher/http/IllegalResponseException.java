@@ -15,9 +15,9 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
-public class IllegalResponseException extends Exception {
+public class IllegalResponseException extends RuntimeException {
 
-  public IllegalResponseException(String s) {
-    super(s);
+  public IllegalResponseException(final String s, final Throwable ex) {
+    super(s, ex);
   }
 }

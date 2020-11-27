@@ -37,7 +37,7 @@ import dev.knative.eventing.kafka.broker.receiver.RequestMapper;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.message.MessageReader;
-import io.cloudevents.core.v1.ContextAttributes;
+import io.cloudevents.core.v1.CloudEventV1;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
@@ -164,7 +164,7 @@ public class DataPlaneTest {
         DataPlaneContract.Egress.newBuilder()
           .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_1))
           .setFilter(DataPlaneContract.Filter.newBuilder()
-            .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_1))
+            .putAttributes(CloudEventV1.TYPE, TYPE_CE_1))
           .setConsumerGroup(UUID.randomUUID().toString())
           .build()
       )
@@ -172,7 +172,7 @@ public class DataPlaneTest {
         DataPlaneContract.Egress.newBuilder()
           .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
           .setFilter(DataPlaneContract.Filter.newBuilder()
-            .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_2))
+            .putAttributes(CloudEventV1.TYPE, TYPE_CE_2))
           .setConsumerGroup(UUID.randomUUID().toString())
           .build()
       )
@@ -183,7 +183,7 @@ public class DataPlaneTest {
           .setConsumerGroup(UUID.randomUUID().toString())
           .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_3))
           .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(
-            ContextAttributes.SOURCE.name().toLowerCase(),
+            CloudEventV1.SOURCE,
             UUID.randomUUID().toString()
           )).build()
       )

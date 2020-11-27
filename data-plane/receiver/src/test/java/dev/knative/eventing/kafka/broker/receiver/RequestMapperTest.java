@@ -168,7 +168,6 @@ public class RequestMapperTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void shouldRecreateProducerWhenBootstrapServerChange(final VertxTestContext context) {
     final var resource = DataPlaneContract.Resource.newBuilder()
       .setUid("1")
@@ -424,6 +423,7 @@ public class RequestMapperTest {
     }
   }
 
+  @SuppressWarnings("rawtypes")
   private static KafkaProducer mockProducer() {
     var producer = mock(KafkaProducer.class);
     when(producer.flush()).thenReturn(Future.succeededFuture());
