@@ -42,21 +42,21 @@ public final class ConsumerVerticle<K, V> extends AbstractVerticle {
   /**
    * All args constructor.
    *
-   * @param consumerFactory Kafka consumer.
-   * @param topics          topic to consume.
-   * @param recordHandler   handler of consumed Kafka records.
+   * @param consumerFactory      Kafka consumer.
+   * @param topics               topic to consume.
+   * @param recordHandlerFactory record handler factory.
    */
   public ConsumerVerticle(
     final Function<Vertx, KafkaConsumer<K, V>> consumerFactory,
     final Set<String> topics,
-    final BiFunction<Vertx, KafkaConsumer<K, V>, Handler<KafkaConsumerRecord<K, V>>> recordHandler) {
+    final BiFunction<Vertx, KafkaConsumer<K, V>, Handler<KafkaConsumerRecord<K, V>>> recordHandlerFactory) {
 
     Objects.requireNonNull(consumerFactory, "provide consumerFactory");
     Objects.requireNonNull(topics, "provide topic");
-    Objects.requireNonNull(recordHandler, "provide recordHandler");
+    Objects.requireNonNull(recordHandlerFactory, "provide recordHandlerFactory");
 
     this.topics = topics;
-    this.recordHandler = recordHandler;
+    this.recordHandler = recordHandlerFactory;
     this.consumerFactory = consumerFactory;
   }
 

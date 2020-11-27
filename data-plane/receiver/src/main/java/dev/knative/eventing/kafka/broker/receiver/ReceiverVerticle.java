@@ -50,7 +50,7 @@ public class ReceiverVerticle extends AbstractVerticle {
   public ReceiverVerticle(
     final HttpServerOptions httpServerOptions,
     final Function<Vertx, RequestMapper<String, CloudEvent>> requestHandlerFactory,
-    Function<Handler<HttpServerRequest>, Handler<HttpServerRequest>>... handlerDecoratorFactories) {
+    final Function<Handler<HttpServerRequest>, Handler<HttpServerRequest>>... handlerDecoratorFactories) {
     Objects.requireNonNull(httpServerOptions, "provide http server options");
     Objects.requireNonNull(requestHandlerFactory, "provide request handler");
 

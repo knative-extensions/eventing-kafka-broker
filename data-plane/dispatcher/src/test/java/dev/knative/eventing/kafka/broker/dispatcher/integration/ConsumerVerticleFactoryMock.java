@@ -16,6 +16,8 @@
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
@@ -56,25 +58,24 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
   }
 
   @Override
-  protected Function<Vertx, KafkaProducer<String, CloudEvent>> createProducer(
-    final DataPlaneContract.Resource resource,
-    final DataPlaneContract.Egress egress) {
+  protected KafkaProducer<String, CloudEvent> createProducer(
+    final Vertx vertx,
+    final Resource resource,
+    final Egress egress) {
 
-    return vertx -> {
-      final var producer = new MockProducer<>(
-        true,
-        new StringSerializer(),
-        new CloudEventSerializer()
-      );
+    final var producer = new MockProducer<>(
+      true,
+      new StringSerializer(),
+      new CloudEventSerializer()
+    );
 
-      mockProducer.put(egress.getConsumerGroup(), producer);
+    mockProducer.put(egress.getConsumerGroup(), producer);
 
-      return KafkaProducer.create(vertx, producer);
-    };
+    return KafkaProducer.create(vertx, producer);
   }
 
   @Override
-  protected Function<Vertx, KafkaConsumer<String, CloudEvent>> createConsumer(
+  protected Function<Vertx, KafkaConsumer<String, CloudEvent>> createConsumerFactory(
     final DataPlaneContract.Resource resource,
     final DataPlaneContract.Egress egress) {
     return vertx -> {

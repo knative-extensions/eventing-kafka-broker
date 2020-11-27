@@ -314,7 +314,7 @@ public class DataPlaneTest {
     final Vertx vertx,
     final VertxTestContext context) throws InterruptedException {
 
-    final Function<Vertx, RequestMapper<String, CloudEvent>> handler = v -> new RequestMapper<>(
+    final Function<Vertx, RequestMapper<String, CloudEvent>> handlerFactory = v -> new RequestMapper<>(
       producerConfigs(),
       new CloudEventRequestToRecordMapper(v),
       properties -> KafkaProducer.create(v, properties),
@@ -325,7 +325,7 @@ public class DataPlaneTest {
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(INGRESS_PORT);
 
-    final var verticle = new ReceiverVerticle(httpServerOptions, handler);
+    final var verticle = new ReceiverVerticle(httpServerOptions, handlerFactory);
 
     final CountDownLatch latch = new CountDownLatch(1);
     vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));
