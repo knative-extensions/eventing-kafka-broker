@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.SinkResponseHandler;
@@ -27,8 +29,12 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpResponse<Buffer>> {
+
+  private static final Logger logger = LoggerFactory.getLogger(HttpSinkResponseHandler.class);
 
   private final String topic;
   private final KafkaProducer<String, CloudEvent> producer;
@@ -63,6 +69,7 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
    */
   @Override
   public Future<Void> handle(final HttpResponse<Buffer> response) {
+
     try {
       final var event = VertxMessageFactory.createReader(response).toEvent();
       if (event == null) {
@@ -76,15 +83,26 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
         .mapEmpty();
 
     } catch (final Exception ex) {
-      if (response.body() != null && response.body().length() > 0) {
-        // When the sink returns a malformed event we return a failed future to avoid committing the message to Kafka.
-        return Future.failedFuture(
-          new IllegalResponseException("Unable to decode response: unknown encoding and non empty response", ex)
+      if (maybeIsNotEvent(response)) {
+        logger.debug(
+          "Response is not recognized as event, discarding it {} {} {}",
+          keyValue("response", response),
+          keyValue("response.body", response == null || response.body() == null ? "null" : response.body()),
+          keyValue("response.body.len", response == null || response.body() == null ? "null" : response.body().length())
         );
+        return Future.succeededFuture();
       }
 
-      // Response is non-event, discard it
-      return Future.succeededFuture();
+      // When the sink returns a malformed event we return a failed future to avoid committing the message to Kafka.
+      return Future.failedFuture(
+        new IllegalResponseException("Unable to decode response: unknown encoding and non empty response", ex)
+      );
     }
+  }
+
+  private static boolean maybeIsNotEvent(final HttpResponse<Buffer> response) {
+    // This checks whether there is something in the body or not, though binary events can contain only headers and they
+    // are valid Cloud Events.
+    return response == null || response.body() == null || response.body().length() <= 0;
   }
 }
