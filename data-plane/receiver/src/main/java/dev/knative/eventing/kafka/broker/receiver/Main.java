@@ -27,6 +27,7 @@ import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
+import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.opentelemetry.api.OpenTelemetry;
 import io.vertx.core.Vertx;
@@ -41,6 +42,7 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import net.logstash.logback.encoder.LogstashEncoder;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -103,10 +105,10 @@ public class Main {
       producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
       producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
 
-      final var handler = new RequestMapper<>(
+      final Function<Vertx, RequestMapper<String, CloudEvent>> handler = v -> new RequestMapper<>(
         producerConfigs,
-        new CloudEventRequestToRecordMapper(vertx),
-        properties -> KafkaProducer.create(vertx, properties),
+        new CloudEventRequestToRecordMapper(v),
+        properties -> KafkaProducer.create(v, properties),
         badRequestCounter,
         produceEventsCounter
       );
