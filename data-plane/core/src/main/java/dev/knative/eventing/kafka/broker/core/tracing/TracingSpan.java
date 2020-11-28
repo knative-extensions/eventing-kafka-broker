@@ -44,6 +44,9 @@ public class TracingSpan {
   }
 
   public static Span getCurrent(final Vertx vertx) {
+    if (vertx == null) {
+      return null;
+    }
     final var ctx = vertx.getOrCreateContext();
     if (ctx == null) {
       return null;
