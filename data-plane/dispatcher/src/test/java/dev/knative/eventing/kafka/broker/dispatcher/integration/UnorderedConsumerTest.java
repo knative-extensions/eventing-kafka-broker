@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
@@ -143,7 +142,13 @@ public class UnorderedConsumerTest {
       .map(ConsumerRecord::value)
       .toArray(CloudEvent[]::new);
     final var partitionKeys = Arrays.stream(events)
-      .map(PartitionKey::extract)
+      .map(e -> {
+        final var partitionKey = e.getExtension("partitionkey");
+        if (partitionKey == null) {
+          return null;
+        }
+        return partitionKey.toString();
+      })
       .collect(Collectors.toList());
 
     for (final var producerEntry : producers.entrySet()) {

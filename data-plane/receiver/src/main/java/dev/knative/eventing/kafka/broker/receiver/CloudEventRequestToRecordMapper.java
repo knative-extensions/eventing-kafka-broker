@@ -17,7 +17,6 @@ package dev.knative.eventing.kafka.broker.receiver;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
-import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import io.cloudevents.CloudEvent;
@@ -66,7 +65,7 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper<St
 
         TracingSpan.decorateCurrent(vertx, event);
 
-        return KafkaProducerRecord.create(topic, PartitionKey.extract(event), event);
+        return KafkaProducerRecord.create(topic, event);
       });
   }
 }
