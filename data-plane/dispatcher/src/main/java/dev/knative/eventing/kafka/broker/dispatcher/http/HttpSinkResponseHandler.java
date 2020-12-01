@@ -17,7 +17,6 @@ package dev.knative.eventing.kafka.broker.dispatcher.http;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
-import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.SinkResponseHandler;
 import io.cloudevents.CloudEvent;
@@ -79,7 +78,7 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
       TracingSpan.decorateCurrent(vertx, event);
 
       return producer
-        .send(KafkaProducerRecord.create(topic, PartitionKey.extract(event), event))
+        .send(KafkaProducerRecord.create(topic, event))
         .mapEmpty();
 
     } catch (final Exception ex) {
