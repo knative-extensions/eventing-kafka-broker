@@ -38,18 +38,21 @@ public class ConsumerVerticleTest {
     final var consumer = new MockConsumer<>(OffsetResetStrategy.LATEST);
     final var topic = "topic1";
 
-    final var kafkaConsumer = KafkaConsumer.create(vertx, consumer);
-    final var verticle = new ConsumerVerticle<>(kafkaConsumer, Set.of(topic), record -> fail());
+    final var verticle = new ConsumerVerticle<>(
+      v -> KafkaConsumer.create(v, consumer),
+      Set.of(topic),
+      (a, b) -> record -> fail()
+    );
 
-    final Promise<Void> promise = Promise.promise();
-    verticle.start(promise);
+    final Promise<String> promise = Promise.promise();
+    vertx.deployVerticle(verticle, promise);
 
     promise.future()
-      .onSuccess(ignored -> {
+      .onSuccess(ignored -> context.verify(() -> {
         assertThat(consumer.subscription()).containsExactlyInAnyOrder(topic);
         assertThat(consumer.closed()).isFalse();
         context.completeNow();
-      })
+      }))
       .onFailure(Assertions::fail);
   }
 
@@ -58,19 +61,27 @@ public class ConsumerVerticleTest {
     final var consumer = new MockConsumer<>(OffsetResetStrategy.LATEST);
     final var topic = "topic1";
 
-    final var kafkaConsumer = KafkaConsumer.create(vertx, consumer);
-    final var verticle = new ConsumerVerticle<>(kafkaConsumer, Set.of(topic), record -> fail());
+    final var verticle = new ConsumerVerticle<>(
+      v -> KafkaConsumer.create(v, consumer),
+      Set.of(topic),
+      (a, b) -> record -> fail()
+    );
 
-    final Promise<Void> promise = Promise.promise();
-    verticle.start(Promise.promise());
-    verticle.stop(promise);
+    final Promise<String> deployPromise = Promise.promise();
+    vertx.deployVerticle(verticle, deployPromise);
 
-    promise.future()
+    final Promise<Void> undeployPromise = Promise.promise();
+
+    deployPromise.future()
+      .onSuccess(deploymentID -> vertx.undeploy(deploymentID, undeployPromise))
+      .onFailure(context::failNow);
+
+    undeployPromise.future()
       .onSuccess(ignored -> {
         assertThat(consumer.closed()).isTrue();
         context.completeNow();
       })
-      .onFailure(Assertions::fail);
+      .onFailure(context::failNow);
 
   }
 }

@@ -46,6 +46,7 @@ import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -57,6 +58,7 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.AfterAll;
@@ -292,8 +294,7 @@ public class DataPlaneTest {
     final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
       consumerRecordOffsetStrategyFactory,
       consumerConfigs,
-      WebClient.create(vertx),
-      vertx,
+      new WebClientOptions(),
       producerConfigs
     );
 
@@ -313,10 +314,10 @@ public class DataPlaneTest {
     final Vertx vertx,
     final VertxTestContext context) throws InterruptedException {
 
-    final var handler = new RequestMapper<>(
+    final Function<Vertx, RequestMapper<String, CloudEvent>> handlerFactory = v -> new RequestMapper<>(
       producerConfigs(),
-      new CloudEventRequestToRecordMapper(vertx),
-      properties -> KafkaProducer.create(vertx, properties),
+      new CloudEventRequestToRecordMapper(v),
+      properties -> KafkaProducer.create(v, properties),
       mock(Counter.class),
       mock(Counter.class)
     );
@@ -324,7 +325,7 @@ public class DataPlaneTest {
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(INGRESS_PORT);
 
-    final var verticle = new ReceiverVerticle(httpServerOptions, handler);
+    final var verticle = new ReceiverVerticle(httpServerOptions, handlerFactory);
 
     final CountDownLatch latch = new CountDownLatch(1);
     vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));

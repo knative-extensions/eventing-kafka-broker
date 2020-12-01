@@ -35,7 +35,7 @@ import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
-import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.VertxExtension;
 import java.util.Properties;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -63,8 +63,7 @@ public class HttpConsumerVerticleFactoryTest {
     final var verticleFactory = new HttpConsumerVerticleFactory(
       ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class)),
       consumerProperties,
-      WebClient.create(vertx),
-      vertx,
+      new WebClientOptions(),
       producerConfigs
     );
 
@@ -91,7 +90,7 @@ public class HttpConsumerVerticleFactoryTest {
   }
 
   @Test
-  public void shouldNotThrowIllegalArgumentExceptionIfNotDLQ(final Vertx vertx) {
+  public void shouldNotThrowIllegalArgumentExceptionIfNotDLQ() {
 
     final var consumerProperties = new Properties();
     consumerProperties.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
@@ -107,8 +106,7 @@ public class HttpConsumerVerticleFactoryTest {
     final var verticleFactory = new HttpConsumerVerticleFactory(
       ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class)),
       consumerProperties,
-      WebClient.create(vertx),
-      vertx,
+      new WebClientOptions(),
       producerConfigs
     );
 

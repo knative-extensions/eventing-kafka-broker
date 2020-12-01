@@ -18,10 +18,13 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * ConsumerVerticle is responsible for manging the consumer lifecycle.
@@ -31,29 +34,30 @@ import java.util.Set;
  */
 public final class ConsumerVerticle<K, V> extends AbstractVerticle {
 
-  private final KafkaConsumer<K, V> consumer;
+  private final Function<Vertx, KafkaConsumer<K, V>> consumerFactory;
+  private KafkaConsumer<K, V> consumer;
   private final Set<String> topics;
-  private final Handler<KafkaConsumerRecord<K, V>> recordHandler;
+  private final BiFunction<Vertx, KafkaConsumer<K, V>, Handler<KafkaConsumerRecord<K, V>>> recordHandler;
 
   /**
    * All args constructor.
    *
-   * @param consumer      Kafka consumer.
-   * @param topics        topic to consume.
-   * @param recordHandler handler of consumed Kafka records.
+   * @param consumerFactory      Kafka consumer.
+   * @param topics               topic to consume.
+   * @param recordHandlerFactory record handler factory.
    */
   public ConsumerVerticle(
-    final KafkaConsumer<K, V> consumer,
+    final Function<Vertx, KafkaConsumer<K, V>> consumerFactory,
     final Set<String> topics,
-    final Handler<KafkaConsumerRecord<K, V>> recordHandler) {
+    final BiFunction<Vertx, KafkaConsumer<K, V>, Handler<KafkaConsumerRecord<K, V>>> recordHandlerFactory) {
 
-    Objects.requireNonNull(consumer, "provide consumer");
+    Objects.requireNonNull(consumerFactory, "provide consumerFactory");
     Objects.requireNonNull(topics, "provide topic");
-    Objects.requireNonNull(recordHandler, "provide record handler");
+    Objects.requireNonNull(recordHandlerFactory, "provide recordHandlerFactory");
 
-    this.recordHandler = recordHandler;
-    this.consumer = consumer;
     this.topics = topics;
+    this.recordHandler = recordHandlerFactory;
+    this.consumerFactory = consumerFactory;
   }
 
   /**
@@ -61,7 +65,8 @@ public final class ConsumerVerticle<K, V> extends AbstractVerticle {
    */
   @Override
   public void start(Promise<Void> startPromise) {
-    consumer.handler(recordHandler);
+    this.consumer = consumerFactory.apply(vertx);
+    consumer.handler(recordHandler.apply(vertx, this.consumer));
     consumer.exceptionHandler(startPromise::tryFail);
     consumer.subscribe(topics, startPromise);
   }

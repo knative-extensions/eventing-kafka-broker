@@ -22,59 +22,62 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.impl.ContextInternal;
 import java.util.Objects;
 import java.util.function.Function;
 
 public class ReceiverVerticle extends AbstractVerticle {
 
   private final HttpServerOptions httpServerOptions;
-  private final RequestMapper<String, CloudEvent> requestMapper;
-  private final Handler<HttpServerRequest> requestHandler;
 
   private HttpServer server;
   private MessageConsumer<Object> messageConsumer;
+  private final Function<Vertx, RequestMapper<String, CloudEvent>> requestHandlerFactory;
+  private final Function<Handler<HttpServerRequest>, Handler<HttpServerRequest>>[] handlerDecoratorFactories;
 
   /**
    * Create a new HttpVerticle.
    *
-   * @param httpServerOptions server options.
-   * @param requestMapper     request handler.
+   * @param httpServerOptions         server options.
+   * @param requestHandlerFactory     request handler factory.
+   * @param handlerDecoratorFactories request handler decorators functions
    */
   @SafeVarargs
   public ReceiverVerticle(
     final HttpServerOptions httpServerOptions,
-    final RequestMapper<String, CloudEvent> requestMapper,
-    Function<Handler<HttpServerRequest>, Handler<HttpServerRequest>>... handlerDecoratorFactories) {
+    final Function<Vertx, RequestMapper<String, CloudEvent>> requestHandlerFactory,
+    final Function<Handler<HttpServerRequest>, Handler<HttpServerRequest>>... handlerDecoratorFactories) {
     Objects.requireNonNull(httpServerOptions, "provide http server options");
-    Objects.requireNonNull(requestMapper, "provide request handler");
+    Objects.requireNonNull(requestHandlerFactory, "provide request handler");
 
     this.httpServerOptions = httpServerOptions;
-    this.requestMapper = requestMapper;
-
-    Handler<HttpServerRequest> requestHandler = requestMapper;
-    for (var decFactory : handlerDecoratorFactories) {
-      requestHandler = decFactory.apply(requestHandler);
-    }
-    this.requestHandler = requestHandler;
+    this.requestHandlerFactory = requestHandlerFactory;
+    this.handlerDecoratorFactories = handlerDecoratorFactories;
   }
 
   @Override
   public void start(final Promise<Void> startPromise) {
+    final var requestMapper = this.requestHandlerFactory.apply(vertx);
+
     this.messageConsumer = ResourcesReconcilerMessageHandler.start(
       vertx.eventBus(),
       ResourcesReconcilerImpl
         .builder()
-        .watchIngress(this.requestMapper)
+        .watchIngress(requestMapper)
         .build()
     );
     this.server = vertx.createHttpServer(httpServerOptions);
 
-    this.server.requestHandler(this.requestHandler)
+    Handler<HttpServerRequest> requestHandler = requestMapper;
+    for (final var handlerDecoratorFactory : this.handlerDecoratorFactories) {
+      requestHandler = handlerDecoratorFactory.apply(requestHandler);
+    }
+
+    this.server.requestHandler(requestHandler)
       .exceptionHandler(startPromise::tryFail)
       .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
       .<Void>mapEmpty()

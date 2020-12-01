@@ -99,7 +99,7 @@ public class ReceiverVerticleTest {
     httpServerOptions.setHost("localhost");
     final var verticle = new ReceiverVerticle(
       httpServerOptions,
-      handler
+      v -> handler
     );
     vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));
   }
