@@ -45,7 +45,9 @@ import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
@@ -60,9 +62,9 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
   private final static ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> NO_DLQ_SENDER =
     record -> Future.failedFuture("No DLQ set");
 
-  private final Properties consumerConfigs;
+  private final Map<String, Object> consumerConfigs;
   private final WebClientOptions webClientOptions;
-  private final Properties producerConfigs;
+  private final Map<String, String> producerConfigs;
   private final ConsumerRecordOffsetStrategyFactory<String, CloudEvent> consumerRecordOffsetStrategyFactory;
 
   /**
@@ -85,8 +87,14 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     Objects.requireNonNull(producerConfigs, "provide producerConfigs");
 
     this.consumerRecordOffsetStrategyFactory = consumerRecordOffsetStrategyFactory;
-    this.consumerConfigs = consumerConfigs;
-    this.producerConfigs = producerConfigs;
+    this.consumerConfigs = consumerConfigs.entrySet()
+      .stream()
+      .map(e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue()))
+      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    this.producerConfigs = producerConfigs.entrySet()
+      .stream()
+      .map(e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue().toString()))
+      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     this.webClientOptions = webClientOptions;
   }
 
@@ -99,19 +107,15 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     Objects.requireNonNull(resource, "provide resource");
     Objects.requireNonNull(egress, "provide egress");
 
-    // consumerFactory allows us to create a consumer using the context of the verticle returned.
     final Function<Vertx, KafkaConsumer<String, CloudEvent>> consumerFactory = createConsumerFactory(resource, egress);
 
-    // recordHandlerFactory allows us to create our record handler `ConsumerRecordHandler`  using the context of the
-    // verticle returned.
-    // (vertx, consumer) -> consumerRecordHandler
     final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Handler<KafkaConsumerRecord<String, CloudEvent>>> recordHandlerFactory = (vertx, consumer) -> {
 
       final var producer = createProducer(vertx, resource, egress);
       final var circuitBreakerOptions = createCircuitBreakerOptions(resource);
       final var egressConfig = resource.getEgressConfig();
 
-      final var egressSubscriberSender = createSender(
+      final var egressSubscriberSender = createConsumerRecordSender(
         vertx,
         egress.getDestination(),
         circuitBreakerOptions,
@@ -120,7 +124,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
       final var egressDeadLetterSender = isDeadLetterSinkAbsent(egressConfig)
         ? NO_DLQ_SENDER
-        : createSender(vertx, egressConfig.getDeadLetter(), circuitBreakerOptions, egressConfig);
+        : createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), circuitBreakerOptions, egressConfig);
 
       return new ConsumerRecordHandler<>(
         egressSubscriberSender,
@@ -139,10 +143,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     final DataPlaneContract.Egress egress) {
 
     // this.consumerConfigs is a shared object and it acts as a prototype for each consumer instance.
-    final var consumerConfigs = this.consumerConfigs.entrySet()
-      .stream()
-      .map(e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue()))
-      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    final var consumerConfigs = new HashMap<>(this.consumerConfigs);
 
     consumerConfigs.put(GROUP_ID_CONFIG, egress.getConsumerGroup());
     consumerConfigs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
@@ -159,11 +160,8 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     final Resource resource,
     final Egress egress) {
 
-    // producerConfigs is a shared object and it acts as a prototype for each consumer instance.
-    final var producerConfigs = this.producerConfigs.entrySet()
-      .stream()
-      .map(e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue().toString()))
-      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    // producerConfigs is a shared object and it acts as a prototype for each producer instance.
+    final var producerConfigs = new HashMap<>(this.producerConfigs);
 
     // TODO create a single producer per bootstrap servers.
     producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
@@ -171,7 +169,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     return KafkaProducer.create(vertx, producerConfigs);
   }
 
-  private ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> createSender(
+  private ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> createConsumerRecordSender(
     final Vertx vertx,
     final String target,
     final CircuitBreakerOptions circuitBreakerOptions,
