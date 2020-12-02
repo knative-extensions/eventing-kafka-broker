@@ -53,7 +53,7 @@ func TestBrokerTrigger(t *testing.T) {
 			subscriber  = "subscriber"
 
 			defaultNumPartitions     = 10
-			defaultReplicationFactor = 1
+			defaultReplicationFactor = 3
 			verifierName             = "num-partitions-replication-factor-verifier"
 
 			eventType       = "type1"

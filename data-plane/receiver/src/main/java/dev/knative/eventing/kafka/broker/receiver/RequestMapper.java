@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package dev.knative.eventing.kafka.broker.receiver;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
@@ -32,10 +31,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
@@ -56,10 +53,18 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
 
   private static final Logger logger = LoggerFactory.getLogger(RequestMapper.class);
 
-  private final RequestToRecordMapper<K, V> requestToRecordMapper;
-  // path -> <bootstrapServers, producer>
-  private final Map<String, Entry<String, Producer<K, V>>> producers;
+  // ingress uuid -> IngressInfo
+  // This map is used to resolve the ingress info in the reconciler listener
+  private final Map<String, IngressInfo<K, V>> ingressInfos;
+  // producerConfig -> producer
+  // This map is used to count the references to the producer instantiated for each producerConfig
+  private final Map<Properties, ReferenceCounter<KafkaProducer<K, V>>> producerReferences;
+  // path -> IngressInfo
+  // We use this map on the hot path to directly resolve the producer from the path
+  private final Map<String, IngressInfo<K, V>> pathMapper;
+
   private final Properties producerConfigs;
+  private final RequestToRecordMapper<K, V> requestToRecordMapper;
   private final Function<Properties, KafkaProducer<K, V>> producerCreator;
   private final Counter badRequestCounter;
   private final Counter produceEventsCounter;
@@ -87,19 +92,22 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     this.producerConfigs = producerConfigs;
     this.requestToRecordMapper = requestToRecordMapper;
     this.producerCreator = producerCreator;
-    producers = new HashMap<>();
     this.badRequestCounter = badRequestCounter;
     this.produceEventsCounter = produceEventsCounter;
+
+    this.ingressInfos = new HashMap<>();
+    this.producerReferences = new HashMap<>();
+    this.pathMapper = new HashMap<>();
   }
 
   @Override
   public void handle(final HttpServerRequest request) {
-    final var producer = producers.get(request.path());
-    if (producer == null) {
+    final var ingressInfo = pathMapper.get(request.path());
+    if (ingressInfo == null) {
       request.response().setStatusCode(RESOURCE_NOT_FOUND).end();
 
       logger.warn("resource not found {} {}",
-        keyValue("resources", producers.keySet()),
+        keyValue("resources", pathMapper.keySet()),
         keyValue("path", request.path())
       );
 
@@ -107,15 +115,16 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     }
 
     requestToRecordMapper
-      .recordFromRequest(request, producer.getValue().topic)
-      .onSuccess(record -> producer.getValue().producer.send(record)
-        .onSuccess(ignore -> {
+      .recordFromRequest(request, ingressInfo.getTopic())
+      .onSuccess(record -> ingressInfo.getProducer().send(record)
+        .onSuccess(metadata -> {
           request.response().setStatusCode(RECORD_PRODUCED).end();
           produceEventsCounter.increment();
 
-          logger.debug("Record produced {} {} {} {} {}",
+          logger.debug("Record produced {} {} {} {} {} {}",
             keyValue("topic", record.topic()),
-            keyValue("partition", record.partition()),
+            keyValue("partition", metadata.getPartition()),
+            keyValue("offset", metadata.getOffset()),
             keyValue("value", record.value()),
             keyValue("headers", record.headers()),
             keyValue("path", request.path())
@@ -146,22 +155,29 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
   public Future<Void> onNewIngress(
     DataPlaneContract.Resource resource,
     DataPlaneContract.Ingress ingress) {
-    final var producerConfigs = (Properties) this.producerConfigs.clone();
-    producerConfigs.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
+    // Compute the properties
+    final var producerProps = (Properties) this.producerConfigs.clone();
+    producerProps.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
     if (ingress.getContentMode() != DataPlaneContract.ContentMode.UNRECOGNIZED) {
-      producerConfigs.setProperty(CloudEventSerializer.ENCODING_CONFIG, encoding(ingress.getContentMode()));
+      producerProps.setProperty(CloudEventSerializer.ENCODING_CONFIG, encoding(ingress.getContentMode()));
     }
-    producerConfigs.setProperty(CloudEventSerializer.EVENT_FORMAT_CONFIG, JsonFormat.CONTENT_TYPE);
+    producerProps.setProperty(CloudEventSerializer.EVENT_FORMAT_CONFIG, JsonFormat.CONTENT_TYPE);
 
-    final KafkaProducer<K, V> producer = producerCreator.apply(producerConfigs);
+    // Get the rc and increment it
+    final ReferenceCounter<KafkaProducer<K, V>> rc = this
+      .producerReferences
+      .computeIfAbsent(producerProps, props -> new ReferenceCounter<>(producerCreator.apply(props)));
+    rc.increment();
 
-    this.producers.put(
+    IngressInfo<K, V> ingressInfo = new IngressInfo<>(
+      rc.getValue(),
+      resource.getTopics(0),
       ingress.getPath(),
-      new SimpleImmutableEntry<>(
-        resource.getBootstrapServers(),
-        new Producer<>(producer, resource.getTopics(0))
-      )
+      producerProps
     );
+
+    this.pathMapper.put(ingress.getPath(), ingressInfo);
+    this.ingressInfos.put(resource.getUid(), ingressInfo);
 
     return Future.succeededFuture();
   }
@@ -178,11 +194,18 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
   public Future<Void> onDeleteIngress(
     DataPlaneContract.Resource resource,
     DataPlaneContract.Ingress ingress) {
-    var producer = this.producers.remove(ingress.getPath()).getValue();
-    return producer
-      .producer
-      .flush()
-      .compose(v -> producer.producer.close());
+    // Remove ingress info from the maps
+    final var ingressInfo = this.ingressInfos.remove(resource.getUid());
+    this.pathMapper.remove(ingressInfo.getPath());
+
+    // Get the rc
+    final var rc = this.producerReferences.get(ingressInfo.getProducerProperties());
+    if (rc.decrementAndCheck()) {
+      // Nobody is referring to this producer anymore, clean it up and close it
+      this.producerReferences.remove(ingressInfo.getProducerProperties());
+      return rc.getValue().flush().compose(v -> rc.getValue().close());
+    }
+    return Future.succeededFuture();
   }
 
   private static String encoding(final DataPlaneContract.ContentMode contentMode) {
@@ -193,14 +216,64 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     };
   }
 
-  private static class Producer<K, V> {
+  private static class ReferenceCounter<T> {
 
-    final KafkaProducer<K, V> producer;
-    final String topic;
+    private final T value;
+    private int refs;
 
-    private Producer(final KafkaProducer<K, V> producer, final String topic) {
+    ReferenceCounter(final T value) {
+      Objects.requireNonNull(value);
+      this.value = value;
+      this.refs = 0;
+    }
+
+    T getValue() {
+      return value;
+    }
+
+    void increment() {
+      this.refs++;
+    }
+
+    /**
+     * @return true if the count is 0, hence nobody is referring anymore to this value
+     */
+    boolean decrementAndCheck() {
+      this.refs--;
+      return this.refs == 0;
+    }
+
+  }
+
+  private static class IngressInfo<K, V> {
+
+    private final KafkaProducer<K, V> producer;
+    private final String topic;
+    private final String path;
+    private final Properties producerProperties;
+
+    IngressInfo(final KafkaProducer<K, V> producer, final String topic, final String path,
+      final Properties producerProperties) {
       this.producer = producer;
       this.topic = topic;
+      this.path = path;
+      this.producerProperties = producerProperties;
+    }
+
+    KafkaProducer<K, V> getProducer() {
+      return producer;
+    }
+
+    String getTopic() {
+      return topic;
+    }
+
+    String getPath() {
+      return path;
+    }
+
+    Properties getProducerProperties() {
+      return producerProperties;
     }
   }
 }

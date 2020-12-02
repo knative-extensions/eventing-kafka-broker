@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
 import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
@@ -22,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
@@ -36,7 +34,6 @@ import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
-import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
@@ -69,12 +66,9 @@ public class UnorderedConsumerTest {
 
     final var producerConfigs = new Properties();
     final var consumerConfigs = new Properties();
-    final var client = WebClient.create(vertx);
 
     final var consumerVerticleFactoryMock = new ConsumerVerticleFactoryMock(
       consumerConfigs,
-      client,
-      vertx,
       producerConfigs,
       ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class))
     );
@@ -144,7 +138,13 @@ public class UnorderedConsumerTest {
       .map(ConsumerRecord::value)
       .toArray(CloudEvent[]::new);
     final var partitionKeys = Arrays.stream(events)
-      .map(PartitionKey::extract)
+      .map(e -> {
+        final var partitionKey = e.getExtension("partitionkey");
+        if (partitionKey == null) {
+          return null;
+        }
+        return partitionKey.toString();
+      })
       .collect(Collectors.toList());
 
     for (final var producerEntry : producers.entrySet()) {
@@ -155,6 +155,7 @@ public class UnorderedConsumerTest {
       assertThat(history.stream().map(ProducerRecord::key)).containsAnyElementsOf(partitionKeys);
     }
 
+    fileWatcher.close();
     executorService.shutdown();
     context.completeNow();
   }
@@ -179,12 +180,14 @@ public class UnorderedConsumerTest {
 
           context.verify(() -> {
             assertThat(receivedEvent).isEqualTo(event);
+
+            VertxMessageFactory
+              .createWriter(request.response())
+              .writeBinary(event);
+
             waitEvents.countDown();
           });
 
-          VertxMessageFactory
-            .createWriter(request.response())
-            .writeBinary(event);
         })
       )
       .listen(

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,43 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
-import dev.knative.eventing.kafka.broker.core.cloudevents.PartitionKey;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
+import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.SinkResponseHandler;
 import io.cloudevents.CloudEvent;
-import io.cloudevents.core.message.Encoding;
-import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
-import io.cloudevents.rw.CloudEventRWException;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpResponse<Buffer>> {
 
+  private static final Logger logger = LoggerFactory.getLogger(HttpSinkResponseHandler.class);
+
   private final String topic;
   private final KafkaProducer<String, CloudEvent> producer;
+  private final Vertx vertx;
 
   /**
    * All args constructor.
    *
+   * @param vertx    vertx instance
    * @param topic    topic to produce records.
    * @param producer Kafka producer.
    */
   public HttpSinkResponseHandler(
+    final Vertx vertx,
     final String topic,
     final KafkaProducer<String, CloudEvent> producer) {
 
+    Objects.requireNonNull(vertx, "provide vertx");
     Objects.requireNonNull(topic, "provide topic");
     Objects.requireNonNull(producer, "provide producer");
 
     this.topic = topic;
     this.producer = producer;
+    this.vertx = vertx;
   }
 
   /**
@@ -60,35 +68,40 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
    */
   @Override
   public Future<Void> handle(final HttpResponse<Buffer> response) {
-    // TODO if it's in structured, the SDK just calls getBytes on the response.body() which might lead to NPE.
-    MessageReader messageReader = VertxMessageFactory.createReader(response);
-    if (messageReader.getEncoding() == Encoding.UNKNOWN) {
 
-      // When the sink returns a malformed event we return a failed future to avoid committing the message to Kafka.
-      if (response.body() != null && response.body().length() > 0) {
-        return Future.failedFuture(
-          new IllegalResponseException("Unable to decode response: unknown encoding and non empty response")
-        );
+    try {
+      final var event = VertxMessageFactory.createReader(response).toEvent();
+      if (event == null) {
+        return Future.failedFuture(new IllegalArgumentException("event cannot be null"));
       }
 
-      // Response is non-event, discard it
-      return Future.succeededFuture();
-    }
+      TracingSpan.decorateCurrent(vertx, event);
 
-    CloudEvent event;
-    try {
-      // TODO is this conversion really necessary?
-      //      can we use Message?
-      event = messageReader.toEvent();
-    } catch (CloudEventRWException e) {
-      return Future.failedFuture(e);
-    }
-    if (event == null) {
-      return Future.failedFuture(new IllegalArgumentException("event cannot be null"));
-    }
+      return producer
+        .send(KafkaProducerRecord.create(topic, event))
+        .mapEmpty();
 
-    return producer
-      .send(KafkaProducerRecord.create(topic, PartitionKey.extract(event), event))
-      .mapEmpty();
+    } catch (final Exception ex) {
+      if (maybeIsNotEvent(response)) {
+        logger.debug(
+          "Response is not recognized as event, discarding it {} {} {}",
+          keyValue("response", response),
+          keyValue("response.body", response == null || response.body() == null ? "null" : response.body()),
+          keyValue("response.body.len", response == null || response.body() == null ? "null" : response.body().length())
+        );
+        return Future.succeededFuture();
+      }
+
+      // When the sink returns a malformed event we return a failed future to avoid committing the message to Kafka.
+      return Future.failedFuture(
+        new IllegalResponseException("Unable to decode response: unknown encoding and non empty response", ex)
+      );
+    }
+  }
+
+  private static boolean maybeIsNotEvent(final HttpResponse<Buffer> response) {
+    // This checks whether there is something in the body or not, though binary events can contain only headers and they
+    // are valid Cloud Events.
+    return response == null || response.body() == null || response.body().length() <= 0;
   }
 }

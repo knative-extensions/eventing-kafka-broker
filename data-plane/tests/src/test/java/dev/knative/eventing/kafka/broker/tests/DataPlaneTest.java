@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package dev.knative.eventing.kafka.broker.tests;
 
 import static java.lang.String.format;
@@ -38,7 +37,7 @@ import dev.knative.eventing.kafka.broker.receiver.RequestMapper;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.message.MessageReader;
-import io.cloudevents.core.v1.ContextAttributes;
+import io.cloudevents.core.v1.CloudEventV1;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
@@ -47,6 +46,7 @@ import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -58,6 +58,7 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.AfterAll;
@@ -78,7 +79,6 @@ public class DataPlaneTest {
   private static final int REPLICATION_FACTOR = 1;
   private static final int INGRESS_PORT = 12345;
   private static final int SERVICE_PORT = INGRESS_PORT + 1;
-  private static final int TIMEOUT = 3;
 
   private static final String TYPE_CE_1 = "type-ce-1";
   private static final String TYPE_CE_2 = "type-ce-2";
@@ -166,7 +166,7 @@ public class DataPlaneTest {
         DataPlaneContract.Egress.newBuilder()
           .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_1))
           .setFilter(DataPlaneContract.Filter.newBuilder()
-            .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_1))
+            .putAttributes(CloudEventV1.TYPE, TYPE_CE_1))
           .setConsumerGroup(UUID.randomUUID().toString())
           .build()
       )
@@ -174,7 +174,7 @@ public class DataPlaneTest {
         DataPlaneContract.Egress.newBuilder()
           .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
           .setFilter(DataPlaneContract.Filter.newBuilder()
-            .putAttributes(ContextAttributes.TYPE.name().toLowerCase(), TYPE_CE_2))
+            .putAttributes(CloudEventV1.TYPE, TYPE_CE_2))
           .setConsumerGroup(UUID.randomUUID().toString())
           .build()
       )
@@ -185,7 +185,7 @@ public class DataPlaneTest {
           .setConsumerGroup(UUID.randomUUID().toString())
           .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_3))
           .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(
-            ContextAttributes.SOURCE.name().toLowerCase(),
+            CloudEventV1.SOURCE,
             UUID.randomUUID().toString()
           )).build()
       )
@@ -251,10 +251,13 @@ public class DataPlaneTest {
   }
 
   @AfterAll
-  public static void teardown() {
+  public static void teardown(final Vertx vertx) {
 
     // TODO figure out why shutdown times out Vertx context even with timeout increased.
     // kafkaCluster.shutdown();
+
+    vertx.undeploy(consumerDeployerVerticle.deploymentID());
+    vertx.undeploy(receiverVerticle.deploymentID());
 
     if (!dataDir.delete()) {
       dataDir.deleteOnExit();
@@ -283,16 +286,15 @@ public class DataPlaneTest {
 
     final var consumerConfigs = new Properties();
     consumerConfigs.put(BOOTSTRAP_SERVERS_CONFIG, format("localhost:%d", KAFKA_PORT));
-    consumerConfigs.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-    consumerConfigs.put(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class);
+    consumerConfigs.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    consumerConfigs.put(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
 
     final var producerConfigs = producerConfigs();
 
     final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
       consumerRecordOffsetStrategyFactory,
       consumerConfigs,
-      WebClient.create(vertx),
-      vertx,
+      new WebClientOptions(),
       producerConfigs
     );
 
@@ -312,10 +314,10 @@ public class DataPlaneTest {
     final Vertx vertx,
     final VertxTestContext context) throws InterruptedException {
 
-    final var handler = new RequestMapper<>(
+    final Function<Vertx, RequestMapper<String, CloudEvent>> handlerFactory = v -> new RequestMapper<>(
       producerConfigs(),
-      new CloudEventRequestToRecordMapper(),
-      properties -> KafkaProducer.create(vertx, properties),
+      new CloudEventRequestToRecordMapper(v),
+      properties -> KafkaProducer.create(v, properties),
       mock(Counter.class),
       mock(Counter.class)
     );
@@ -323,7 +325,7 @@ public class DataPlaneTest {
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(INGRESS_PORT);
 
-    final var verticle = new ReceiverVerticle(httpServerOptions, handler);
+    final var verticle = new ReceiverVerticle(httpServerOptions, handlerFactory);
 
     final CountDownLatch latch = new CountDownLatch(1);
     vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));
@@ -334,8 +336,8 @@ public class DataPlaneTest {
 
   private static Properties producerConfigs() {
     final var configs = new Properties();
-    configs.put(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    configs.put(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
+    configs.put(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+    configs.put(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
     return configs;
   }
 

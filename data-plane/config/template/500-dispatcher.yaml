@@ -53,11 +53,20 @@ spec:
             - mountPath: /etc/logging
               name: kafka-broker-config-logging
               readOnly: true
+            - mountPath: /etc/tracing
+              name: config-tracing
+              readOnly: true
           ports:
             - containerPort: 9090
               name: http-metrics
               protocol: TCP
           env:
+            - name: SERVICE_NAME
+              value: "kafka-broker-dispatcher"
+            - name: SERVICE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: PRODUCER_CONFIG_FILE_PATH
               value: /etc/config/config-kafka-broker-producer.properties
             - name: CONSUMER_CONFIG_FILE_PATH
@@ -78,6 +87,8 @@ spec:
               value: "9090"
             - name: METRICS_PUBLISH_QUANTILES
               value: "false"
+            - name: CONFIG_TRACING_PATH
+              value: "/etc/tracing"
           command:
             - "java"
           # TODO add JVM arguments
@@ -123,4 +134,7 @@ spec:
         - name: kafka-broker-config-logging
           configMap:
             name: kafka-config-logging
+        - name: config-tracing
+          configMap:
+            name: config-tracing
       restartPolicy: Always

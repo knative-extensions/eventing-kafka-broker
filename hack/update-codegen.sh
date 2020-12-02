@@ -28,6 +28,10 @@ fi
 
 source $(dirname $0)/../vendor/knative.dev/hack/library.sh
 
+# Compute _example hash for all configmaps.
+echo "Generating checksums for configmap _example keys"
+${REPO_ROOT_DIR}/hack/update-checksums.sh
+
 CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dirname $0)/../vendor/k8s.io/code-generator 2>/dev/null || echo ../../../k8s.io/code-generator)}
 
 KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dirname $0)/../vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}

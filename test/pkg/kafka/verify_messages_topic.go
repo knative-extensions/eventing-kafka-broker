@@ -62,8 +62,9 @@ func VerifyMessagesInTopic(
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:  namespacedName.Name,
-							Image: pkgtest.ImagePath(kafkaConsumerImage),
+							Name:            namespacedName.Name,
+							Image:           pkgtest.ImagePath(kafkaConsumerImage),
+							ImagePullPolicy: corev1.PullIfNotPresent,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "BOOTSTRAP_SERVERS",

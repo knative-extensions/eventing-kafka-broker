@@ -20,21 +20,22 @@ require (
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392 // indirect
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b // indirect
 	google.golang.org/protobuf v1.25.0
-	k8s.io/api v0.18.8
-	k8s.io/apiextensions-apiserver v0.18.4
+	k8s.io/api v0.18.12
+	k8s.io/apiextensions-apiserver v0.18.12
 	k8s.io/apimachinery v0.19.2
-	k8s.io/apiserver v0.18.8
+	k8s.io/apiserver v0.18.12
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
-	knative.dev/eventing v0.18.1-0.20201029043934-af98d5579864
-	knative.dev/hack v0.0.0-20201028205534-fe80f1c8af68
-	knative.dev/pkg v0.0.0-20201029122234-6d905b3f84a6
+	knative.dev/eventing v0.19.1-0.20201130190736-241af67e1844
+	knative.dev/hack v0.0.0-20201125230335-c46a6498e9ed
+	knative.dev/pkg v0.0.0-20201130192436-e5346d90e980
 )
 
 replace (
-	k8s.io/api => k8s.io/api v0.18.8
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.18.8
-	k8s.io/apimachinery => k8s.io/apimachinery v0.18.8
-	k8s.io/client-go => k8s.io/client-go v0.18.8
-	k8s.io/code-generator => k8s.io/code-generator v0.18.8
+	k8s.io/api => k8s.io/api v0.18.12
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.18.12
+	k8s.io/apimachinery => k8s.io/apimachinery v0.18.12
+	k8s.io/client-go => k8s.io/client-go v0.18.12
+	k8s.io/code-generator => k8s.io/code-generator v0.18.12
+	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
 )

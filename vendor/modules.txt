@@ -118,7 +118,7 @@ github.com/eapache/queue
 # github.com/emicklei/go-restful v2.9.5+incompatible
 github.com/emicklei/go-restful
 github.com/emicklei/go-restful/log
-# github.com/evanphx/json-patch v4.5.0+incompatible
+# github.com/evanphx/json-patch v4.9.0+incompatible
 github.com/evanphx/json-patch
 # github.com/ghodss/yaml v1.0.0
 github.com/ghodss/yaml
@@ -671,7 +671,7 @@ honnef.co/go/tools/staticcheck
 honnef.co/go/tools/stylecheck
 honnef.co/go/tools/unused
 honnef.co/go/tools/version
-# k8s.io/api v0.18.8 => k8s.io/api v0.18.8
+# k8s.io/api v0.18.12 => k8s.io/api v0.18.12
 ## explicit
 k8s.io/api/admission/v1
 k8s.io/api/admissionregistration/v1
@@ -714,7 +714,7 @@ k8s.io/api/settings/v1alpha1
 k8s.io/api/storage/v1
 k8s.io/api/storage/v1alpha1
 k8s.io/api/storage/v1beta1
-# k8s.io/apiextensions-apiserver v0.18.4 => k8s.io/apiextensions-apiserver v0.18.8
+# k8s.io/apiextensions-apiserver v0.18.12 => k8s.io/apiextensions-apiserver v0.18.12
 ## explicit
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
@@ -728,7 +728,7 @@ k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextension
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1/fake
 k8s.io/apiextensions-apiserver/pkg/client/listers/apiextensions/v1
 k8s.io/apiextensions-apiserver/pkg/client/listers/apiextensions/v1beta1
-# k8s.io/apimachinery v0.19.2 => k8s.io/apimachinery v0.18.8
+# k8s.io/apimachinery v0.19.2 => k8s.io/apimachinery v0.18.12
 ## explicit
 k8s.io/apimachinery/pkg/api/equality
 k8s.io/apimachinery/pkg/api/errors
@@ -777,10 +777,10 @@ k8s.io/apimachinery/pkg/version
 k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/third_party/forked/golang/json
 k8s.io/apimachinery/third_party/forked/golang/reflect
-# k8s.io/apiserver v0.18.8
+# k8s.io/apiserver v0.18.12
 ## explicit
 k8s.io/apiserver/pkg/storage/names
-# k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible => k8s.io/client-go v0.18.8
+# k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible => k8s.io/client-go v0.18.12
 ## explicit
 k8s.io/client-go/discovery
 k8s.io/client-go/discovery/fake
@@ -995,7 +995,7 @@ k8s.io/client-go/util/jsonpath
 k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/retry
 k8s.io/client-go/util/workqueue
-# k8s.io/code-generator v0.18.8 => k8s.io/code-generator v0.18.8
+# k8s.io/code-generator v0.18.12 => k8s.io/code-generator v0.18.12
 k8s.io/code-generator
 k8s.io/code-generator/cmd/client-gen
 k8s.io/code-generator/cmd/client-gen/args
@@ -1044,7 +1044,7 @@ k8s.io/gengo/types
 k8s.io/klog
 # k8s.io/klog/v2 v2.0.0
 k8s.io/klog/v2
-# k8s.io/kube-openapi v0.0.0-20200410145947-bcb3869e6f29
+# k8s.io/kube-openapi v0.0.0-20200410145947-bcb3869e6f29 => k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
 k8s.io/kube-openapi/cmd/openapi-gen/args
 k8s.io/kube-openapi/pkg/common
 k8s.io/kube-openapi/pkg/generators
@@ -1057,7 +1057,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.18.1-0.20201029043934-af98d5579864
+# knative.dev/eventing v0.19.1-0.20201130190736-241af67e1844
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/configs
@@ -1081,6 +1081,7 @@ knative.dev/eventing/pkg/apis/sources/v1
 knative.dev/eventing/pkg/apis/sources/v1alpha1
 knative.dev/eventing/pkg/apis/sources/v1alpha2
 knative.dev/eventing/pkg/apis/sources/v1beta1
+knative.dev/eventing/pkg/apis/sources/v1beta2
 knative.dev/eventing/pkg/client/clientset/versioned
 knative.dev/eventing/pkg/client/clientset/versioned/fake
 knative.dev/eventing/pkg/client/clientset/versioned/scheme
@@ -1106,6 +1107,8 @@ knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1alpha2
 knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1alpha2/fake
 knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1beta1
 knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1beta1/fake
+knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1beta2
+knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1beta2/fake
 knative.dev/eventing/pkg/client/informers/externalversions
 knative.dev/eventing/pkg/client/informers/externalversions/configs
 knative.dev/eventing/pkg/client/informers/externalversions/configs/v1alpha1
@@ -1124,6 +1127,7 @@ knative.dev/eventing/pkg/client/informers/externalversions/sources/v1
 knative.dev/eventing/pkg/client/informers/externalversions/sources/v1alpha1
 knative.dev/eventing/pkg/client/informers/externalversions/sources/v1alpha2
 knative.dev/eventing/pkg/client/informers/externalversions/sources/v1beta1
+knative.dev/eventing/pkg/client/informers/externalversions/sources/v1beta2
 knative.dev/eventing/pkg/client/injection/client
 knative.dev/eventing/pkg/client/injection/client/fake
 knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker
@@ -1147,8 +1151,8 @@ knative.dev/eventing/pkg/client/listers/sources/v1
 knative.dev/eventing/pkg/client/listers/sources/v1alpha1
 knative.dev/eventing/pkg/client/listers/sources/v1alpha2
 knative.dev/eventing/pkg/client/listers/sources/v1beta1
+knative.dev/eventing/pkg/client/listers/sources/v1beta2
 knative.dev/eventing/pkg/kncloudevents
-knative.dev/eventing/pkg/logconfig
 knative.dev/eventing/pkg/reconciler/sugar
 knative.dev/eventing/pkg/reconciler/testing
 knative.dev/eventing/pkg/reconciler/testing/v1
@@ -1164,8 +1168,9 @@ knative.dev/eventing/test/lib/dropevents/dropeventsfirst
 knative.dev/eventing/test/lib/duck
 knative.dev/eventing/test/lib/recordevents
 knative.dev/eventing/test/lib/recordevents/logger_vent
-knative.dev/eventing/test/lib/recordevents/observer
+knative.dev/eventing/test/lib/recordevents/receiver
 knative.dev/eventing/test/lib/recordevents/recorder_vent
+knative.dev/eventing/test/lib/recordevents/sender
 knative.dev/eventing/test/lib/resources
 knative.dev/eventing/test/lib/sender
 knative.dev/eventing/test/performance/infra
@@ -1181,10 +1186,10 @@ knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/request-sender
-# knative.dev/hack v0.0.0-20201028205534-fe80f1c8af68
+# knative.dev/hack v0.0.0-20201125230335-c46a6498e9ed
 ## explicit
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20201029122234-6d905b3f84a6
+# knative.dev/pkg v0.0.0-20201130192436-e5346d90e980
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1211,6 +1216,7 @@ knative.dev/pkg/codegen/cmd/injection-gen
 knative.dev/pkg/codegen/cmd/injection-gen/args
 knative.dev/pkg/codegen/cmd/injection-gen/generators
 knative.dev/pkg/configmap
+knative.dev/pkg/configmap/hash-gen
 knative.dev/pkg/controller
 knative.dev/pkg/hack
 knative.dev/pkg/hash
@@ -1274,8 +1280,9 @@ knative.dev/pkg/webhook/resourcesemantics/validation
 sigs.k8s.io/structured-merge-diff/v3/value
 # sigs.k8s.io/yaml v1.2.0
 sigs.k8s.io/yaml
-# k8s.io/api => k8s.io/api v0.18.8
-# k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.18.8
-# k8s.io/apimachinery => k8s.io/apimachinery v0.18.8
-# k8s.io/client-go => k8s.io/client-go v0.18.8
-# k8s.io/code-generator => k8s.io/code-generator v0.18.8
+# k8s.io/api => k8s.io/api v0.18.12
+# k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.18.12
+# k8s.io/apimachinery => k8s.io/apimachinery v0.18.12
+# k8s.io/client-go => k8s.io/client-go v0.18.12
+# k8s.io/code-generator => k8s.io/code-generator v0.18.12
+# k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6

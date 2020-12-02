@@ -43,8 +43,8 @@ readonly sink="${KNATIVE_KAFKA_SINK_RECEIVER:-knative-kafka-sink-receiver}"
 
 # The BASE_IMAGE must have system libraries (libc, zlib, etc) compatible with the JAVA_IMAGE because
 # Jlink generates a jdk linked to the same system libraries available on the base images.
-readonly BASE_IMAGE=gcr.io/distroless/java-debian10:base-nonroot    # Based on debian:buster
-readonly JAVA_IMAGE=docker.io/adoptopenjdk/openjdk14:debian         # Based on debian:buster
+readonly BASE_IMAGE=gcr.io/distroless/java-debian10:base-nonroot # Based on debian:buster
+readonly JAVA_IMAGE=docker.io/adoptopenjdk/openjdk14:debian      # Based on debian:buster
 
 readonly RECEIVER_JAR="receiver-1.0-SNAPSHOT.jar"
 readonly RECEIVER_DIRECTORY=receiver
@@ -145,9 +145,9 @@ function data_plane_build_push() {
 
   export KNATIVE_KAFKA_SINK_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${sink}":"${uuid}"
 
-  receiver_build_push || fail_test "failed to build receiver"
-  dispatcher_build_push || fail_test "failed to build dispatcher"
-  sink_build_push || fail_test "failed to build sink"
+  receiver_build_push || receiver_build_push || fail_test "failed to build receiver"
+  dispatcher_build_push || dispatcher_build_push || fail_test "failed to build dispatcher"
+  sink_build_push || sink_build_push || fail_test "failed to build sink"
 }
 
 function k8s() {
@@ -169,10 +169,23 @@ function k8s() {
 }
 
 function data_plane_unit_tests() {
+
+  java_ut || java_ut || fail_test "Data plane unit tests failed"
+
+  echo "Copy test reports in ${ARTIFACTS}"
+  docker cp "$(docker create --rm tests)":/reports "${ARTIFACTS}" || fail_test "Failed to copy test reports in ${ARTIFACTS}"
+
+  cd ${ARTIFACTS}/reports && find * -maxdepth 0 -exec mv {} ../junit_{} \; && cd - && rm -r ${ARTIFACTS}/reports
+
+  return $?
+}
+
+function java_ut() {
   docker build \
     --file ${DATA_PLANE_DIR}/docker/test/Dockerfile \
     --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
     --tag tests ${DATA_PLANE_DIR}
+
   return $?
 }
 

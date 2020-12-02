@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package dev.knative.eventing.kafka.broker.receiver;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -89,7 +88,7 @@ public class ReceiverVerticleTest {
 
     handler = new RequestMapper<>(
       new Properties(),
-      new CloudEventRequestToRecordMapper(),
+      new CloudEventRequestToRecordMapper(vertx),
       properties -> producer,
       badRequestCount,
       produceRequestCount
@@ -100,7 +99,7 @@ public class ReceiverVerticleTest {
     httpServerOptions.setHost("localhost");
     final var verticle = new ReceiverVerticle(
       httpServerOptions,
-      handler
+      v -> handler
     );
     vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));
   }
