@@ -81,33 +81,37 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
   }
 
   @Override
-  public Future<Void> onNewEgress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Egress egress) {
+  public Future<Void> onNewEgress(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
     try {
       AbstractVerticle verticle = consumerFactory.get(resource, egress);
+
+      logger.info("Deploying verticle onNewEgress {} {}",
+        keyValue("resource.uid", resource.getUid()),
+        keyValue("egress.uid", egress.getUid())
+      );
+
       return vertx.deployVerticle(verticle)
         .onSuccess(deploymentId -> {
           this.deployedDispatchers.put(egress.getUid(), deploymentId);
           logger.info("Verticle deployed {} {} {}",
-            keyValue("egress", egress),
-            keyValue("resource", resource),
+            keyValue("resource.uid", resource.getUid()),
+            keyValue("egress.uid", egress.getUid()),
             keyValue("deploymentId", deploymentId)
           );
         })
         .onFailure(cause -> {
           // this is a bad state we cannot start the verticle for consuming messages.
           logger.error("failed to start verticle {} {}",
-            keyValue("egress", egress),
-            keyValue("resource", resource),
+            keyValue("resource.uid", resource.getUid()),
+            keyValue("egress.uid", egress.getUid()),
             cause
           );
         })
         .mapEmpty();
     } catch (Exception e) {
       logger.error("potential control-plane bug: failed to get verticle {} {}",
-        keyValue("egress", egress),
-        keyValue("resource", resource),
+        keyValue("resource.uid", resource.getUid()),
+        keyValue("egress.uid", egress.getUid()),
         e
       );
       return Future.failedFuture(new IllegalStateException("Potential control-plane bug: failed to get verticle", e));
@@ -115,27 +119,36 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
   }
 
   @Override
-  public Future<Void> onUpdateEgress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Egress egress) {
+  public Future<Void> onUpdateEgress(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
+    logger.info("onUpdateEgress {} {}",
+      keyValue("resource.uid", resource.getUid()),
+      keyValue("egress.uid", egress.getUid())
+    );
+
     return onDeleteEgress(resource, egress)
       .compose(v -> onNewEgress(resource, egress));
   }
 
   @Override
-  public Future<Void> onDeleteEgress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Egress egress) {
-    return vertx.undeploy(this.deployedDispatchers.remove(egress.getUid()))
+  public Future<Void> onDeleteEgress(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
+    final var deploymentID = this.deployedDispatchers.remove(egress.getUid());
+    if (deploymentID == null) {
+      return Future.failedFuture(String.format(
+        "Verticle not found onDeleteEgress for resource resource.uid=%s egress.uid=%s",
+        resource.getUid(),
+        egress.getUid()
+      ));
+    }
+    return vertx.undeploy(deploymentID)
       .onSuccess(v -> logger.info(
         "Removed egress {} {}",
-        keyValue("egress", egress),
-        keyValue("resource", resource)
+        keyValue("resource.uid", resource.getUid()),
+        keyValue("egress.uid", egress.getUid())
       ))
       .onFailure(cause -> logger.error(
-        "failed to un-deploy verticle {} {}",
-        keyValue("egress", egress),
-        keyValue("resource", resource),
+        "Failed to un-deploy verticle {} {}",
+        keyValue("resource.uid", resource.getUid()),
+        keyValue("egress.uid", egress.getUid()),
         cause
       ));
   }

@@ -264,6 +264,56 @@ class ResourcesReconcilerImplTest {
       .run();
   }
 
+  @Test
+  public void test() {
+    new ResourceReconcilerTestRunner()
+      .enableEgressListener()
+      .reconcile(List.of(
+        baseResource("1-1234")
+          .addEgresses(egress("aaa"))
+          .addEgresses(egress("bbb"))
+          .addEgresses(egress("ccc"))
+          .build(),
+        baseResource("2-1234")
+          .addEgresses(egress("ddd"))
+          .addEgresses(egress("eee"))
+          .addEgresses(egress("fff"))
+          .build()
+      ))
+      .expect()
+      .newEgress("aaa")
+      .newEgress("bbb")
+      .newEgress("ccc")
+      .newEgress("ddd")
+      .newEgress("eee")
+      .newEgress("fff")
+      .then()
+      .reconcile(List.of(
+        baseResource("1-1234")
+          .addEgresses(egress("aaa"))
+          .addEgresses(egress("bbb"))
+          .addEgresses(
+            baseEgress("ccc")
+            .setConsumerGroup("123456")
+          )
+          .build(),
+        baseResource("2-1234")
+          .addEgresses(egress("eee"))
+          .build(),
+        baseResource("3-1234")
+          .addEgresses(egress("ggg"))
+          .build(),
+        baseResource("4-1234").build()
+      ))
+      .expect()
+      .deletedEgress("fff")
+      .deletedEgress("ddd")
+      .updatedEgress("ccc")
+      .newEgress("ggg")
+      .then()
+      .run();
+  }
+
   private Resource.Builder baseResource(String uid) {
     return Resource.newBuilder().setUid(uid).addTopics("hello.topic");
   }
@@ -275,5 +325,4 @@ class ResourcesReconcilerImplTest {
   private Egress egress(String uid) {
     return baseEgress(uid).build();
   }
-
 }

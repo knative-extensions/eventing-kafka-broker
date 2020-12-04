@@ -41,11 +41,13 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
   private final Map<String, DataPlaneContract.Egress> cachedEgresses;
 
   private ResourcesReconcilerImpl(
-    IngressReconcilerListener ingressReconcilerListener,
-    EgressReconcilerListener egressReconcilerListener) {
+    final IngressReconcilerListener ingressReconcilerListener,
+    final EgressReconcilerListener egressReconcilerListener) {
+
     if (ingressReconcilerListener == null && egressReconcilerListener == null) {
       throw new NullPointerException("You need to specify at least one listener");
     }
+
     this.ingressReconcilerListener = ingressReconcilerListener;
     this.egressReconcilerListener = egressReconcilerListener;
 
@@ -54,8 +56,8 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
   }
 
   @Override
-  public Future<Void> reconcile(
-    Collection<DataPlaneContract.Resource> newResources) {
+  public Future<Void> reconcile(final Collection<DataPlaneContract.Resource> newResources) {
+
     final Map<String, DataPlaneContract.Resource> newResourcesMap = new HashMap<>(
       newResources
         .stream()
@@ -200,6 +202,8 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     if (r1 == null || r2 == null) {
       return false;
     }
+
+
     return Objects.equals(r1.getUid(), r2.getUid())
       && Objects.equals(r1.getTopicsList(), r2.getTopicsList())
       && Objects.equals(r1.getBootstrapServers(), r2.getBootstrapServers())
@@ -228,6 +232,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
   }
 
   public static class Builder {
+
     private IngressReconcilerListener ingressReconcilerListener;
     private EgressReconcilerListener egressReconcilerListener;
 

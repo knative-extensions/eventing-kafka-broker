@@ -38,16 +38,15 @@ public class ResourcesReconcilerMessageHandlerTest {
     DataPlaneContract.Contract expected = CoreObjects.contract();
 
     ResourcesReconcilerMessageHandler.start(vertx.eventBus(), contract -> {
-      testContext.verify(() ->
-        assertThat(contract)
-          .isEqualTo(expected.getResourcesList())
+      testContext.verify(() -> {
+          assertThat(contract).isEqualTo(expected.getResourcesList());
+          testContext.completeNow();
+        }
       );
-      testContext.completeNow();
       return Future.succeededFuture();
     });
 
     ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
     publisher.accept(expected);
   }
-
 }
