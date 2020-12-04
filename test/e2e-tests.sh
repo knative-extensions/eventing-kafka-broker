@@ -40,10 +40,15 @@ wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing 
 
 header "Running tests"
 
-go_test_e2e -timeout=30m ./test/... || fail_test "Integration tests failed"
+failed=false
+go_test_e2e -timeout=30m ./test/... || failed=true
 
 if ! ${LOCAL_DEVELOPMENT}; then
-  go_test_e2e -tags=sacura -timeout=20m ./test/... || fail_test "Sacura tests failed"
+  go_test_e2e -tags=sacura -timeout=20m ./test/... || failed=true
+fi
+
+if [ $failed = true ]; then
+  fail_test "Integration tests failed"
 fi
 
 go_test_e2e -tags=deletecm ./test/... || fail_test "Integration tests failed"
