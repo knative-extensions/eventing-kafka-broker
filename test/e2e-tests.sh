@@ -23,7 +23,7 @@ if ! ${SKIP_INITIALIZE}; then
 fi
 
 if ! ${LOCAL_DEVELOPMENT}; then
-  scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
+  scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller kafka-broker-receiver kafka-broker-dispatcher kafka-sink-receiver
 fi
 
 if ! ${LOCAL_DEVELOPMENT}; then
