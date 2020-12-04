@@ -133,12 +133,14 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
   public Future<Void> onDeleteEgress(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
     final var deploymentID = this.deployedDispatchers.remove(egress.getUid());
     if (deploymentID == null) {
-      return Future.failedFuture(String.format(
-        "Verticle not found onDeleteEgress for resource resource.uid=%s egress.uid=%s",
-        resource.getUid(),
-        egress.getUid()
-      ));
+      logger.warn(
+        "Verticle not found onDeleteEgress for resource {} {}",
+        keyValue("resource.uid", resource.getUid()),
+        keyValue("egress.uid", egress.getUid())
+      );
+      return Future.succeededFuture();
     }
+
     return vertx.undeploy(deploymentID)
       .onSuccess(v -> logger.info(
         "Removed egress {} {}",
