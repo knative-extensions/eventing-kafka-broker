@@ -203,7 +203,6 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       return false;
     }
 
-
     return Objects.equals(r1.getUid(), r2.getUid())
       && Objects.equals(r1.getTopicsList(), r2.getTopicsList())
       && Objects.equals(r1.getBootstrapServers(), r2.getBootstrapServers())
