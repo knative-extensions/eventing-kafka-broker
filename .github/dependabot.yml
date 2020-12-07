@@ -5,8 +5,15 @@
 
 version: 2
 updates:
-  - package-ecosystem: "maven" # See documentation for possible values
-    directory: "/data-plane" # Location of package manifests
+  - package-ecosystem: "gomod"
+    vendor: true
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "master"
+
+  - package-ecosystem: "maven"
+    directory: "/data-plane"
     schedule:
       interval: "daily"
     assignees:
