@@ -41,11 +41,14 @@ public class ConsumerRecordHandlerTest {
       = (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class);
 
     final var consumerRecordHandler = new ConsumerRecordHandler<>(
-      record -> fail("subscriber send called"),
+      ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
       value -> false,
       receiver,
-      response -> Future.succeededFuture(),
-      record -> fail("DLQ send called")
+      new SinkResponseHandlerMock<>(
+        Future::succeededFuture,
+        response -> Future.succeededFuture()
+      ),
+      ConsumerRecordSender.create(Future.failedFuture("DLQ send called"), Future.succeededFuture())
     );
 
     final var record = record();
@@ -67,14 +70,26 @@ public class ConsumerRecordHandlerTest {
       = (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class);
 
     final var consumerRecordHandler = new ConsumerRecordHandler<>(
-      record -> {
-        sendCalled.set(true);
-        return Future.succeededFuture();
-      },
+      new ConsumerRecordSenderMock<>(
+        Future::succeededFuture,
+        record -> {
+          sendCalled.set(true);
+          return Future.succeededFuture();
+        }
+      ),
       value -> true,
       receiver,
-      response -> Future.succeededFuture(),
-      record -> fail("DLQ send called")
+      new SinkResponseHandlerMock<>(
+        Future::succeededFuture,
+        response -> Future.succeededFuture()
+      ),
+      new ConsumerRecordSenderMock<>(
+        Future::succeededFuture,
+        record -> {
+          fail("DLQ send called");
+          return Future.succeededFuture();
+        }
+      )
     );
     final var record = record();
     consumerRecordHandler.handle(record);
@@ -97,17 +112,26 @@ public class ConsumerRecordHandlerTest {
       = (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class);
 
     final var consumerRecordHandler = new ConsumerRecordHandler<>(
-      record -> {
-        subscriberSenderSendCalled.set(true);
-        return Future.failedFuture("");
-      },
+      new ConsumerRecordSenderMock<>(
+        Future::succeededFuture,
+        record -> {
+          subscriberSenderSendCalled.set(true);
+          return Future.failedFuture("");
+        }
+      ),
       value -> true,
       receiver,
-      response -> Future.succeededFuture(),
-      record -> {
-        DLQSenderSendCalled.set(true);
-        return Future.succeededFuture();
-      }
+      new SinkResponseHandlerMock<>(
+        Future::succeededFuture,
+        response -> Future.succeededFuture()
+      ),
+      new ConsumerRecordSenderMock<>(
+        Future::succeededFuture,
+        record -> {
+          DLQSenderSendCalled.set(true);
+          return Future.succeededFuture();
+        }
+      )
     );
     final var record = record();
     consumerRecordHandler.handle(record);
@@ -131,17 +155,26 @@ public class ConsumerRecordHandlerTest {
       = (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class);
 
     final var consumerRecordHandler = new ConsumerRecordHandler<>(
-      record -> {
-        subscriberSenderSendCalled.set(true);
-        return Future.failedFuture("");
-      },
+      new ConsumerRecordSenderMock<>(
+        Future::succeededFuture,
+        record -> {
+          subscriberSenderSendCalled.set(true);
+          return Future.failedFuture("");
+        }
+      ),
       value -> true,
       receiver,
-      response -> Future.succeededFuture(),
-      record -> {
-        DLQSenderSendCalled.set(true);
-        return Future.failedFuture("");
-      }
+      new SinkResponseHandlerMock<>(
+        Future::succeededFuture,
+        response -> Future.succeededFuture()
+      ),
+      new ConsumerRecordSenderMock<>(
+        Future::succeededFuture,
+        record -> {
+          DLQSenderSendCalled.set(true);
+          return Future.failedFuture("");
+        }
+      )
     );
     final var record = record();
     consumerRecordHandler.handle(record);
@@ -163,13 +196,19 @@ public class ConsumerRecordHandlerTest {
       = (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class);
 
     final var consumerRecordHandler = new ConsumerRecordHandler<>(
-      record -> {
-        subscriberSenderSendCalled.set(true);
-        return Future.failedFuture("");
-      },
+      new ConsumerRecordSenderMock<>(
+        Future::succeededFuture,
+        record -> {
+          subscriberSenderSendCalled.set(true);
+          return Future.failedFuture("");
+        }
+      ),
       value -> true,
       receiver,
-      response -> Future.succeededFuture()
+      new SinkResponseHandlerMock<>(
+        Future::succeededFuture,
+        response -> Future.succeededFuture()
+      )
     );
     final var record = record();
     consumerRecordHandler.handle(record);

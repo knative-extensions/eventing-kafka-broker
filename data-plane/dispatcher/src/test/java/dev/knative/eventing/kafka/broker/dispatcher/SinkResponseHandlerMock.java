@@ -16,10 +16,26 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import io.vertx.core.Future;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-public interface SinkResponseHandler<R> {
+public class SinkResponseHandlerMock<R> implements SinkResponseHandler<R> {
 
-  Future<Void> handle(final R response);
+  private final Supplier<Future<?>> onClose;
+  private final Function<R, Future<Void>> onSend;
 
-  Future<?> close();
+  public SinkResponseHandlerMock(final Supplier<Future<?>> onClose, final Function<R, Future<Void>> onSend) {
+    this.onClose = onClose;
+    this.onSend = onSend;
+  }
+
+  @Override
+  public Future<Void> handle(R response) {
+    return this.onSend.apply(response);
+  }
+
+  @Override
+  public Future<?> close() {
+    return this.onClose.get();
+  }
 }

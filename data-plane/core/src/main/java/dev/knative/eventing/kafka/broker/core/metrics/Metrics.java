@@ -18,6 +18,8 @@ package dev.knative.eventing.kafka.broker.core.metrics;
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.metrics.MetricsOptions;
 import io.vertx.micrometer.MetricsDomain;
@@ -62,11 +64,26 @@ public class Metrics {
     return BackendRegistries.getNow(METRICS_REGISTRY_NAME);
   }
 
-  public static <K, V> void register(final Consumer<K, V> consumer) {
-    new KafkaClientMetrics(consumer).bindTo(getRegistry());
+  public static <K, V> AutoCloseable register(final Consumer<K, V> consumer) {
+    final var clientMetrics = new KafkaClientMetrics(consumer);
+    clientMetrics.bindTo(getRegistry());
+    return clientMetrics;
   }
 
-  public static <K, V> void register(final Producer<K, V> producer) {
-    new KafkaClientMetrics(producer).bindTo(getRegistry());
+  public static <K, V> AutoCloseable register(final Producer<K, V> producer) {
+    final var clientMetrics = new KafkaClientMetrics(producer);
+    clientMetrics.bindTo(getRegistry());
+    return clientMetrics;
+  }
+
+  public static Future<?> close(final Vertx vertx, final AutoCloseable closeable) {
+    return vertx.executeBlocking(promise -> {
+      try {
+        closeable.close();
+        promise.complete();
+      } catch (Exception e) {
+        promise.fail(e);
+      }
+    });
   }
 }

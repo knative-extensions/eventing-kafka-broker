@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
@@ -96,7 +97,7 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
       sinkResponseHandler,
       // If there is no DLQ configured by default DLQ sender always fails, which means
       // implementors will receive failedToSendToDLQ if the subscriber sender fails.
-      record -> Future.failedFuture("No DLQ configured")
+      ConsumerRecordSender.create(Future.failedFuture("No DLQ configured"), Future.succeededFuture())
     );
   }
 
@@ -189,6 +190,14 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
       keyValue("headers", record.headers()),
       keyValue("offset", record.offset()),
       keyValue("event", record.value())
+    );
+  }
+
+  public Future<?> close() {
+    return CompositeFuture.all(
+      this.sinkResponseHandler.close(),
+      this.deadLetterQueueSender.close(),
+      this.subscriberSender.close()
     );
   }
 }

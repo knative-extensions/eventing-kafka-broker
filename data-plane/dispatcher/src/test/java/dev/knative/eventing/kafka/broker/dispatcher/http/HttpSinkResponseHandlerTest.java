@@ -16,11 +16,16 @@
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import io.cloudevents.CloudEvent;
 import io.cloudevents.core.provider.EventFormatProvider;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.kafka.CloudEventSerializer;
+import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -29,6 +34,8 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import org.apache.kafka.clients.producer.MockProducer;
@@ -43,6 +50,10 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 @Execution(ExecutionMode.CONCURRENT)
 @ExtendWith(VertxExtension.class)
 public class HttpSinkResponseHandlerTest {
+
+  static {
+    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+  }
 
   private static final String TOPIC = "t1";
 
@@ -162,5 +173,27 @@ public class HttpSinkResponseHandlerTest {
     Assertions.assertThat(producer.history())
       .containsExactlyInAnyOrder(new ProducerRecord<>(TOPIC, null, event));
     context.completeNow();
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void shouldCloseProducer(final Vertx vertx, final VertxTestContext context) {
+    final KafkaProducer<String, CloudEvent> producer = mock(KafkaProducer.class);
+    when(producer.close()).thenReturn(Future.succeededFuture());
+    final var mockProducer = new MockProducer<String, CloudEvent>();
+    when(producer.unwrap()).thenReturn(mockProducer);
+
+    final var sinkResponseHandler = new HttpSinkResponseHandler(
+      vertx,
+      "topic",
+      producer
+    );
+
+    sinkResponseHandler.close()
+      .onFailure(context::failNow)
+      .onSuccess(r -> context.verify(() -> {
+        verify(producer, times(1)).close();
+        context.completeNow();
+      }));
   }
 }
