@@ -191,7 +191,7 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *con
 
 func (r *Reconciler) UpdateDispatcherPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
 
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 
 		labelSelector := r.dispatcherSelector()
 		pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)
@@ -205,7 +205,7 @@ func (r *Reconciler) UpdateDispatcherPodsAnnotation(ctx context.Context, logger 
 
 func (r *Reconciler) UpdateReceiverPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
 
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 
 		labelSelector := r.receiverSelector()
 		pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)

@@ -52,13 +52,13 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		return r.reconcileKind(ctx, trigger)
 	})
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		return r.finalizeKind(ctx, trigger)
 	})
 }
