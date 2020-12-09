@@ -21,6 +21,7 @@ package e2e
 import (
 	"context"
 	"testing"
+	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	. "github.com/cloudevents/sdk-go/v2/test"
@@ -28,6 +29,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/pointer"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	testlib "knative.dev/eventing/test/lib"
@@ -43,7 +45,7 @@ import (
 	"knative.dev/eventing-kafka-broker/test/pkg/sink"
 )
 
-func TestDeleteBrokerCM(t *testing.T) {
+func TestDeleteBrokerConfigMap(t *testing.T) {
 
 	const (
 		triggerName = "trigger"
@@ -86,7 +88,7 @@ func TestDeleteBrokerCM(t *testing.T) {
 
 	client.WaitForAllTestResourcesReadyOrFail(ctx)
 
-	t.Logf("Sending events to %s/%s", client.Namespace, brokerName)
+	t.Logf("Sending event %s to %s/%s", eventId, client.Namespace, brokerName)
 
 	eventToSend := cloudevents.NewEvent()
 	eventToSend.SetID(eventId)
@@ -103,15 +105,25 @@ func TestDeleteBrokerCM(t *testing.T) {
 
 	eventTracker.AssertAtLeast(1, recordevents.MatchEvent(HasId(eventId)))
 
-	t.Logf("Deleting ConfigMap %s", configMapName)
+	t.Log("Deleting ConfigMap", configMapName)
 
 	err := client.Kube.CoreV1().ConfigMaps(system.Namespace()).Delete(ctx, configMapName, metav1.DeleteOptions{})
+	assert.Nil(t, err)
+
+	err = wait.Poll(time.Second, 10*time.Second, func() (done bool, err error) {
+
+		_, err = client.Kube.CoreV1().ConfigMaps(system.Namespace()).Get(ctx, configMapName, metav1.GetOptions{})
+
+		return err == nil, nil
+	})
 	assert.Nil(t, err)
 
 	client.WaitForAllTestResourcesReadyOrFail(ctx)
 
 	eventId = uuid.New().String()
 	eventToSend.SetID(eventId)
+
+	t.Logf("Sending event %s to %s/%s", eventId, client.Namespace, brokerName)
 
 	client.SendEventToAddressable(
 		ctx,
@@ -124,7 +136,7 @@ func TestDeleteBrokerCM(t *testing.T) {
 	eventTracker.AssertAtLeast(1, recordevents.MatchEvent(HasId(eventId)))
 }
 
-func TestDeleteSinkCM(t *testing.T) {
+func TestDeleteSinkConfigMap(t *testing.T) {
 
 	const (
 		configMapName = "kafka-sink-sinks"
@@ -161,11 +173,19 @@ func TestDeleteSinkCM(t *testing.T) {
 	ids := addressable.Send(t, kafkaSink)
 
 	// Read events from the topic.
-	verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, ids)
+	sink.Verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, ids)
 
-	t.Logf("Deleting ConfigMap %s", configMapName)
+	t.Log("Deleting ConfigMap", configMapName)
 
 	err = client.Kube.CoreV1().ConfigMaps(system.Namespace()).Delete(ctx, configMapName, metav1.DeleteOptions{})
+	assert.Nil(t, err)
+
+	err = wait.Poll(time.Second, 10*time.Second, func() (done bool, err error) {
+
+		_, err = client.Kube.CoreV1().ConfigMaps(system.Namespace()).Get(ctx, configMapName, metav1.GetOptions{})
+
+		return err == nil, nil
+	})
 	assert.Nil(t, err)
 
 	client.WaitForResourceReadyOrFail(kafkaSink.Name, &kafkaSink.TypeMeta)
@@ -174,5 +194,5 @@ func TestDeleteSinkCM(t *testing.T) {
 	ids = addressable.Send(t, kafkaSink)
 
 	// Read events from the topic.
-	verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, ids)
+	sink.Verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, ids)
 }
