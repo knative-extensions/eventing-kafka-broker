@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	. "github.com/cloudevents/sdk-go/v2/test"
-	"knative.dev/eventing/test/lib/sender"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
@@ -108,7 +107,6 @@ func TestBrokerTrigger(t *testing.T) {
 			brokerName,
 			testlib.BrokerTypeMeta,
 			nonMatchingEvent,
-			sender.EnableTracing(),
 		)
 
 		eventToSend := cloudevents.NewEvent()
@@ -126,7 +124,6 @@ func TestBrokerTrigger(t *testing.T) {
 			brokerName,
 			testlib.BrokerTypeMeta,
 			eventToSend,
-			sender.EnableTracing(),
 		)
 
 		eventTracker.AssertAtLeast(1, recordevents.MatchEvent(
