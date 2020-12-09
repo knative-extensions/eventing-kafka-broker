@@ -319,6 +319,7 @@ public class DataPlaneTest {
     final VertxTestContext context) throws InterruptedException {
 
     final Function<Vertx, RequestMapper<String, CloudEvent>> handlerFactory = v -> new RequestMapper<>(
+      vertx,
       producerConfigs(),
       new CloudEventRequestToRecordMapper(v),
       properties -> KafkaProducer.create(v, properties),

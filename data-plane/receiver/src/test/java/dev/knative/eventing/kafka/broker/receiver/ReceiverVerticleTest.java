@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
@@ -42,6 +43,8 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -71,6 +74,10 @@ public class ReceiverVerticleTest {
   private static Counter badRequestCount;
   private static Counter produceRequestCount;
 
+  static {
+    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+  }
+
   @BeforeEach
   public void setUp(final Vertx vertx, final VertxTestContext testContext) {
     ContractMessageCodec.register(vertx.eventBus());
@@ -87,6 +94,7 @@ public class ReceiverVerticleTest {
     produceRequestCount = new CumulativeCounter(mock(Id.class));
 
     handler = new RequestMapper<>(
+      vertx,
       new Properties(),
       new CloudEventRequestToRecordMapper(vertx),
       properties -> producer,

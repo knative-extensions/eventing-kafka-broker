@@ -105,13 +105,10 @@ public class Main {
       producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
 
       final Function<Vertx, RequestMapper<String, CloudEvent>> handlerFactory = v -> new RequestMapper<>(
+        v,
         producerConfigs,
         new CloudEventRequestToRecordMapper(vertx),
-        properties -> {
-          final KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(v, properties);
-          new KafkaClientMetrics(producer.unwrap()).bindTo(metricsRegistry);
-          return producer;
-        },
+        properties -> KafkaProducer.create(v, properties),
         badRequestCounter,
         produceEventsCounter
       );
