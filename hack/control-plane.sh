@@ -14,20 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+source $(pwd)/hack/label.sh
+
 readonly CONTROL_PLANE_DIR=control-plane
 readonly CONTROL_PLANE_CONFIG_DIR=${CONTROL_PLANE_DIR}/config
 readonly KAFKA_SINK_CONFIG_DIR=${CONTROL_PLANE_CONFIG_DIR}/sink
 
 readonly DATA_PLANE_LOGGING_CONFIG_DIR=data-plane/config
-
-# Update release labels if this is a tagged release
-if [[ -n "${TAG}" ]]; then
-  echo "Tagged release, updating release labels to eventing.knative.dev/release: \"${TAG}\""
-  LABEL_YAML_CMD=(sed -e "s|eventing.knative.dev/release: devel|eventing.knative.dev/release: \"${TAG}\"|")
-else
-  echo "Untagged release, will NOT update release labels"
-  LABEL_YAML_CMD=(cat)
-fi
 
 # Note: do not change this function name, it's used during releases.
 function control_plane_setup() {

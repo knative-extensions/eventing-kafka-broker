@@ -29,13 +29,12 @@ import (
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	eventingv1alpha1clientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/test/pkg/addressable"
-	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/pkg/sink"
-	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
-	pkgtesting.RunMultiple(t, func(t *testing.T) {
+	testingpkg.RunMultiple(t, func(t *testing.T) {
 
 		client := testlib.Setup(t, false)
 		defer testlib.TearDown(client)
@@ -49,7 +48,7 @@ func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
 			Topic:             "kafka-sink-" + client.Namespace,
 			NumPartitions:     pointer.Int32Ptr(10),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
-			BootstrapServers:  kafkatest.BootstrapServersArr,
+			BootstrapServers:  testingpkg.BootstrapServersArr,
 		}
 
 		createFunc := sink.CreatorV1Alpha1(clientSet, kss)
@@ -71,7 +70,7 @@ func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
 }
 
 func TestKafkaSinkV1Alpha1StructuredContentMode(t *testing.T) {
-	pkgtesting.RunMultiple(t, func(t *testing.T) {
+	testingpkg.RunMultiple(t, func(t *testing.T) {
 
 		client := testlib.Setup(t, false)
 		defer testlib.TearDown(client)
@@ -85,7 +84,7 @@ func TestKafkaSinkV1Alpha1StructuredContentMode(t *testing.T) {
 			Topic:             "kafka-sink-" + client.Namespace,
 			NumPartitions:     pointer.Int32Ptr(10),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
-			BootstrapServers:  kafkatest.BootstrapServersArr,
+			BootstrapServers:  testingpkg.BootstrapServersArr,
 			ContentMode:       pointer.StringPtr(eventingv1alpha1.ModeStructured),
 		}
 
@@ -108,7 +107,7 @@ func TestKafkaSinkV1Alpha1StructuredContentMode(t *testing.T) {
 }
 
 func TestKafkaSinkV1Alpha1BinaryContentMode(t *testing.T) {
-	pkgtesting.RunMultiple(t, func(t *testing.T) {
+	testingpkg.RunMultiple(t, func(t *testing.T) {
 
 		client := testlib.Setup(t, false)
 		defer testlib.TearDown(client)
@@ -122,7 +121,7 @@ func TestKafkaSinkV1Alpha1BinaryContentMode(t *testing.T) {
 			Topic:             "kafka-sink-" + client.Namespace,
 			NumPartitions:     pointer.Int32Ptr(10),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
-			BootstrapServers:  kafkatest.BootstrapServersArr,
+			BootstrapServers:  testingpkg.BootstrapServersArr,
 			ContentMode:       pointer.StringPtr(eventingv1alpha1.ModeBinary),
 		}
 

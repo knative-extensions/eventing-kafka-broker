@@ -20,6 +20,8 @@
 # - SKIP_PUSH (default: false) --> images will not be pushed to remote registry
 # - WITH_KIND (default: false) --> images will be loaded in KinD
 
+source $(pwd)/hack/label.sh
+
 readonly WITH_KIND=${WITH_KIND:-false}
 readonly SKIP_PUSH=${SKIP_PUSH:-false}
 readonly UUID=${UUID:-${TAG:-latest}}
@@ -51,15 +53,6 @@ readonly RECEIVER_DIRECTORY=receiver
 
 readonly DISPATCHER_JAR="dispatcher-1.0-SNAPSHOT.jar"
 readonly DISPATCHER_DIRECTORY=dispatcher
-
-# Update release labels if this is a tagged release
-if [[ -n "${TAG}" ]]; then
-  echo "Tagged release, updating release labels to eventing.knative.dev/release: \"${TAG}\""
-  LABEL_YAML_CMD=(sed -e "s|eventing.knative.dev/release: devel|eventing.knative.dev/release: \"${TAG}\"|")
-else
-  echo "Untagged release, will NOT update release labels"
-  LABEL_YAML_CMD=(cat)
-fi
 
 # Checks whether the given function exists.
 function function_exists() {
