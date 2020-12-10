@@ -47,24 +47,27 @@ import (
 
 func TestDeleteBrokerConfigMap(t *testing.T) {
 
-	const (
-		triggerName = "trigger"
-		brokerName  = "broker"
-		subscriber  = "subscriber"
-		senderName  = "sender"
-
-		configMapName = "kafka-broker-brokers-triggers"
-
-		eventType   = "type1"
-		eventSource = "source1"
-	)
-
-	eventId := uuid.New().String()
-
 	ctx := context.Background()
 
 	client := testlib.Setup(t, true)
 	defer testlib.TearDown(client)
+
+	const (
+		senderName  = "sender"
+		brokerName  = "broker"
+		triggerName = "trigger"
+		subscriber  = "subscriber"
+
+		configMapName = "kafka-broker-brokers-triggers"
+
+		eventType       = "type1"
+		eventSource     = "source1"
+		eventBody       = `{"msg":"e2e-eventtransformation-body"}`
+		extension1      = "ext1"
+		valueExtension1 = "value1"
+	)
+
+	eventId := uuid.New().String()
 
 	client.CreateBrokerV1OrFail(
 		brokerName,
@@ -80,7 +83,9 @@ func TestDeleteBrokerConfigMap(t *testing.T) {
 		func(trigger *eventing.Trigger) {
 			trigger.Spec.Filter = &eventing.TriggerFilter{
 				Attributes: map[string]string{
-					"source": eventSource,
+					"source":   eventSource,
+					extension1: valueExtension1,
+					"type":     "",
 				},
 			}
 		},
@@ -94,6 +99,10 @@ func TestDeleteBrokerConfigMap(t *testing.T) {
 	eventToSend.SetID(eventId)
 	eventToSend.SetType(eventType)
 	eventToSend.SetSource(eventSource)
+	eventToSend.SetExtension(extension1, valueExtension1)
+	if err := eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
+		t.Fatal("Cannot set the payload of the event:", err.Error())
+	}
 
 	client.SendEventToAddressable(
 		ctx,
@@ -103,7 +112,12 @@ func TestDeleteBrokerConfigMap(t *testing.T) {
 		eventToSend,
 	)
 
-	eventTracker.AssertAtLeast(1, recordevents.MatchEvent(HasId(eventId)))
+	eventTracker.AssertAtLeast(1, recordevents.MatchEvent(
+		HasId(eventId),
+		HasSource(eventSource),
+		HasType(eventType),
+		HasData([]byte(eventBody)),
+	))
 
 	t.Log("Deleting ConfigMap", configMapName)
 
@@ -121,9 +135,17 @@ func TestDeleteBrokerConfigMap(t *testing.T) {
 	client.WaitForAllTestResourcesReadyOrFail(ctx)
 
 	eventId = uuid.New().String()
-	eventToSend.SetID(eventId)
 
 	t.Logf("Sending event %s to %s/%s", eventId, client.Namespace, brokerName)
+
+	eventToSend = cloudevents.NewEvent()
+	eventToSend.SetID(eventId)
+	eventToSend.SetType(eventType)
+	eventToSend.SetSource(eventSource)
+	eventToSend.SetExtension(extension1, valueExtension1)
+	if err := eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
+		t.Fatal("Cannot set the payload of the event:", err.Error())
+	}
 
 	client.SendEventToAddressable(
 		ctx,
@@ -133,7 +155,13 @@ func TestDeleteBrokerConfigMap(t *testing.T) {
 		eventToSend,
 	)
 
-	eventTracker.AssertAtLeast(1, recordevents.MatchEvent(HasId(eventId)))
+	eventTracker.AssertAtLeast(1, recordevents.MatchEvent(
+		HasId(eventId),
+		HasSource(eventSource),
+		HasType(eventType),
+		HasData([]byte(eventBody)),
+	))
+
 }
 
 func TestDeleteSinkConfigMap(t *testing.T) {
