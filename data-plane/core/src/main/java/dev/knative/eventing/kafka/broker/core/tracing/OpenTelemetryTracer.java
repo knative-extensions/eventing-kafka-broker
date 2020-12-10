@@ -23,7 +23,7 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
-import io.opentelemetry.api.trace.propagation.HttpTraceContext;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.vertx.core.Context;
@@ -64,7 +64,7 @@ public class OpenTelemetryTracer implements VertxTracer<Span, Span> {
     }
 
     final var parentContext = current();
-    final var tracingContext = HttpTraceContext.getInstance().extract(parentContext, headers, getter);
+    final var tracingContext = W3CTraceContextPropagator.getInstance().extract(parentContext, headers, getter);
 
     // OpenTelemetry SDK's Context is immutable, therefore if the extracted context is the same as the parent context
     // there is no tracing data to propagate downstream and we can return null.
@@ -163,7 +163,7 @@ public class OpenTelemetryTracer implements VertxTracer<Span, Span> {
 
         tagExtractor.extractTo(request, span::setAttribute);
 
-        HttpTraceContext.getInstance().inject(current(), headers, setter);
+        W3CTraceContextPropagator.getInstance().inject(current(), headers, setter);
 
         return span;
       }
@@ -180,7 +180,7 @@ public class OpenTelemetryTracer implements VertxTracer<Span, Span> {
 
     tagExtractor.extractTo(request, span::setAttribute);
 
-    HttpTraceContext.getInstance().inject(tracingContext.with(span), headers, setter);
+    W3CTraceContextPropagator.getInstance().inject(tracingContext.with(span), headers, setter);
 
     logger.debug("{} {}",
       keyValue("span", span.getClass()),
