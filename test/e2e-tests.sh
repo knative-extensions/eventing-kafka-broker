@@ -46,4 +46,6 @@ if ! ${LOCAL_DEVELOPMENT}; then
   go_test_e2e -tags=sacura -timeout=20m ./test/... || fail_test "Sacura tests failed"
 fi
 
+go_test_e2e -tags=deletecm ./test/... || fail_test "Integration tests failed"
+
 success

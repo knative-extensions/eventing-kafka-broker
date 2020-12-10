@@ -133,6 +133,6 @@ func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
 		idsTrigger2 := addressable.Send(t, brokerAddressable, setTypeMutator("trigger2"))
 
 		// Read events from the topic.
-		verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, append(idsTrigger1, idsTrigger2...))
+		sink.Verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, append(idsTrigger1, idsTrigger2...))
 	})
 }

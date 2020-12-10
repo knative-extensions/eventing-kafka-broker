@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -52,6 +53,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 
 	logger := logging.FromContext(ctx).Desugar()
 
+	configmapInformer := configmapinformer.Get(ctx)
 	brokerInformer := brokerinformer.Get(ctx)
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
@@ -91,6 +93,22 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: kafka.BrokerClassFilter(),
 		Handler:    enqueueTriggers(logger, triggerLister, impl.Enqueue),
+	})
+
+	globalResync := func(_ interface{}) {
+		impl.GlobalResync(triggerInformer.Informer())
+	}
+
+	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
+		Handler: cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				globalResync(obj)
+			},
+			DeleteFunc: func(obj interface{}) {
+				globalResync(obj)
+			},
+		},
 	})
 
 	return impl

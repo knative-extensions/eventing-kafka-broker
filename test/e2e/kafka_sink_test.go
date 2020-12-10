@@ -19,7 +19,6 @@
 package e2e
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -67,7 +66,7 @@ func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
 		ids := addressable.Send(t, kafkaSink)
 
 		// Read events from the topic.
-		verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, ids)
+		sink.Verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, ids)
 	})
 }
 
@@ -104,7 +103,7 @@ func TestKafkaSinkV1Alpha1StructuredContentMode(t *testing.T) {
 		ids := addressable.Send(t, kafkaSink)
 
 		// Read events from the topic.
-		verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, ids)
+		sink.Verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, ids)
 	})
 }
 
@@ -141,25 +140,6 @@ func TestKafkaSinkV1Alpha1BinaryContentMode(t *testing.T) {
 		ids := addressable.Send(t, kafkaSink)
 
 		// Read events from the topic.
-		verify(t, client, eventingv1alpha1.ModeBinary, kss.Topic, ids)
+		sink.Verify(t, client, eventingv1alpha1.ModeBinary, kss.Topic, ids)
 	})
-}
-
-func verify(t *testing.T, client *testlib.Client, mode, topic string, ids []string) {
-
-	err := kafkatest.VerifyMessagesInTopic(
-		client.Kube,
-		client.Tracker,
-		types.NamespacedName{
-			Namespace: client.Namespace,
-			Name:      "verify-messages",
-		},
-		&kafkatest.ConsumerConfig{
-			BootstrapServers: kafkatest.BootstrapServers,
-			Topic:            topic,
-			IDS:              strings.Join(ids, ","),
-			ContentMode:      mode,
-		},
-	)
-	assert.Nil(t, err, "failed to verify messages in topic: %v - (see pod logs)", err)
 }

@@ -21,6 +21,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
+	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
@@ -41,6 +42,8 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 
 	logger := logging.FromContext(ctx)
 
+	configmapInformer := configmapinformer.Get(ctx)
+
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
@@ -51,7 +54,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 			SystemNamespace:             configs.SystemNamespace,
 			ReceiverLabel:               base.SinkReceiverLabel,
 		},
-		ConfigMapLister: configmapinformer.Get(ctx).Lister(),
+		ConfigMapLister: configmapInformer.Lister(),
 		ClusterAdmin:    sarama.NewClusterAdmin,
 		Configs:         configs,
 	}
@@ -69,6 +72,22 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 	sinkInformer := sinkinformer.Get(ctx)
 
 	sinkInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+
+	globalResync := func(_ interface{}) {
+		impl.GlobalResync(sinkInformer.Informer())
+	}
+
+	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
+		Handler: cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				globalResync(obj)
+			},
+			DeleteFunc: func(obj interface{}) {
+				globalResync(obj)
+			},
+		},
+	})
 
 	return impl
 }
