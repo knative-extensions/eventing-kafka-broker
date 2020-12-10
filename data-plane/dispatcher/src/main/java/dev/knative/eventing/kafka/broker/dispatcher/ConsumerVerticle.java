@@ -39,7 +39,7 @@ public final class ConsumerVerticle<K, V, R> extends AbstractVerticle {
   private static final Logger logger = LoggerFactory.getLogger(ConsumerVerticle.class);
 
   private KafkaConsumer<K, V> consumer;
-  private AutoCloseable consumerMetricsThread;
+  private AutoCloseable consumerMeterBinder;
   private ConsumerRecordHandler<K, V, R> handler;
 
   private final Set<String> topics;
@@ -73,7 +73,7 @@ public final class ConsumerVerticle<K, V, R> extends AbstractVerticle {
   @Override
   public void start(Promise<Void> startPromise) {
     this.consumer = consumerFactory.apply(vertx);
-    this.consumerMetricsThread = Metrics.register(this.consumer.unwrap());
+    this.consumerMeterBinder = Metrics.register(this.consumer.unwrap());
     this.handler = recordHandler.apply(vertx, this.consumer);
 
     consumer.handler(handler);
@@ -91,7 +91,7 @@ public final class ConsumerVerticle<K, V, R> extends AbstractVerticle {
     CompositeFuture.all(
       this.consumer.close(),
       this.handler.close(),
-      Metrics.close(vertx, consumerMetricsThread)
+      Metrics.close(vertx, consumerMeterBinder)
     )
       .onSuccess(r -> stopPromise.complete())
       .onFailure(stopPromise::fail);

@@ -17,9 +17,25 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import io.vertx.core.Future;
 
+/**
+ * SinkResponseHandler is responsible for reading the response and acting on it based on its content.
+ *
+ * @param <R> Response type.
+ */
 public interface SinkResponseHandler<R> {
 
+  /**
+   * Handler the response.
+   *
+   * @param response Response to handle.
+   * @return A succeeded or failed future.
+   */
   Future<Void> handle(final R response);
 
+  /**
+   * Close resources.
+   *
+   * @return A succeeded or failed future.
+   */
   Future<?> close();
 }

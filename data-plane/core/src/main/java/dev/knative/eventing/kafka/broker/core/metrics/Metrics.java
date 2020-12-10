@@ -37,8 +37,8 @@ public class Metrics {
   /**
    * Get metrics options from the given metrics configurations.
    *
-   * @param metricsConfigs metrics configurations.
-   * @return metrics options
+   * @param metricsConfigs Metrics configurations.
+   * @return Metrics options.
    */
   public static MetricsOptions getOptions(final BaseEnv metricsConfigs) {
     return new MicrometerMetricsOptions()
@@ -60,26 +60,52 @@ public class Metrics {
       );
   }
 
+  /**
+   * @return Global registry.
+   */
   public static MeterRegistry getRegistry() {
     return BackendRegistries.getNow(METRICS_REGISTRY_NAME);
   }
 
+  /**
+   * Register the given consumer to the global meter registry.
+   *
+   * @param consumer consumer to bind to the global registry.
+   * @param <K>      Record key type.
+   * @param <V>      Record value type.
+   * @return A meter binder to close once the consumer is closed.
+   */
   public static <K, V> AutoCloseable register(final Consumer<K, V> consumer) {
     final var clientMetrics = new KafkaClientMetrics(consumer);
     clientMetrics.bindTo(getRegistry());
     return clientMetrics;
   }
 
+  /**
+   * Register the given producer to the global meter registry.
+   *
+   * @param producer Consumer to bind to the global registry.
+   * @param <K>      Record key type.
+   * @param <V>      Record value type.
+   * @return A meter binder to close once the producer is closed.
+   */
   public static <K, V> AutoCloseable register(final Producer<K, V> producer) {
     final var clientMetrics = new KafkaClientMetrics(producer);
     clientMetrics.bindTo(getRegistry());
     return clientMetrics;
   }
 
-  public static Future<?> close(final Vertx vertx, final AutoCloseable closeable) {
+  /**
+   * Close the given meter binder.
+   *
+   * @param vertx       vertx instance.
+   * @param meterBinder meter binder to close.
+   * @return A succeeded or a failed future.
+   */
+  public static Future<?> close(final Vertx vertx, final AutoCloseable meterBinder) {
     return vertx.executeBlocking(promise -> {
       try {
-        closeable.close();
+        meterBinder.close();
         promise.complete();
       } catch (Exception e) {
         promise.fail(e);

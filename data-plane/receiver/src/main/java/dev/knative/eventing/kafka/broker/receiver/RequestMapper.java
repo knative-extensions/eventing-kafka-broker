@@ -58,13 +58,13 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
 
   // ingress uuid -> IngressInfo
   // This map is used to resolve the ingress info in the reconciler listener
-  private final Map<String, IngressInfo> ingressInfos;
+  private final Map<String, IngressInfo<K, V>> ingressInfos;
   // producerConfig -> producer
   // This map is used to count the references to the producer instantiated for each producerConfig
-  private final Map<Properties, ReferenceCounter<ProducerHolder>> producerReferences;
+  private final Map<Properties, ReferenceCounter<ProducerHolder<K, V>>> producerReferences;
   // path -> IngressInfo
   // We use this map on the hot path to directly resolve the producer from the path
-  private final Map<String, IngressInfo> pathMapper;
+  private final Map<String, IngressInfo<K, V>> pathMapper;
 
   private final Properties producerConfigs;
   private final RequestToRecordMapper<K, V> requestToRecordMapper;
@@ -171,11 +171,13 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     producerProps.setProperty(CloudEventSerializer.EVENT_FORMAT_CONFIG, JsonFormat.CONTENT_TYPE);
 
     // Get the rc and increment it
-    final ReferenceCounter<ProducerHolder> rc = this.producerReferences
-      .computeIfAbsent(producerProps, props -> new ReferenceCounter<>(new ProducerHolder(producerCreator.apply(props))));
+    final ReferenceCounter<ProducerHolder<K, V>> rc = this.producerReferences.computeIfAbsent(
+      producerProps,
+      props -> new ReferenceCounter<>(new ProducerHolder<>(producerCreator.apply(props)))
+    );
     rc.increment();
 
-    IngressInfo ingressInfo = new IngressInfo(
+    final var ingressInfo = new IngressInfo<>(
       rc.getValue().getProducer(),
       resource.getTopics(0),
       ingress.getPath(),
@@ -209,7 +211,7 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     if (rc.decrementAndCheck()) {
       // Nobody is referring to this producer anymore, clean it up and close it
       this.producerReferences.remove(ingressInfo.getProducerProperties());
-      return rc.getValue().close();
+      return rc.getValue().close(vertx);
     }
     return Future.succeededFuture();
   }
@@ -222,35 +224,35 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     };
   }
 
-  private class ProducerHolder {
+  private static class ProducerHolder<K, V> {
 
     private final KafkaProducer<K, V> producer;
-    private final AutoCloseable producerMetricsThread;
+    private final AutoCloseable producerMeterBinder;
 
     ProducerHolder(final KafkaProducer<K, V> producer) {
       this.producer = producer;
-      this.producerMetricsThread = Metrics.register(producer.unwrap());
+      this.producerMeterBinder = Metrics.register(producer.unwrap());
     }
 
     KafkaProducer<K, V> getProducer() {
       return producer;
     }
 
-    Future<Void> close() {
+    Future<Void> close(final Vertx vertx) {
       return producer.flush()
         .compose(
-          s -> closeNow(),
+          s -> closeNow(vertx),
           c -> {
             logger.error("Failed to flush producer", c);
-            return closeNow();
+            return closeNow(vertx);
           }
         );
     }
 
-    private Future<Void> closeNow() {
+    private Future<Void> closeNow(final Vertx vertx) {
       return CompositeFuture.all(
         producer.close(),
-        Metrics.close(vertx, this.producerMetricsThread)
+        Metrics.close(vertx, this.producerMeterBinder)
       ).mapEmpty();
     }
   }
@@ -263,7 +265,7 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     ReferenceCounter(final T value) {
       Objects.requireNonNull(value);
       this.value = value;
-
+      this.refs = 0;
     }
 
     T getValue() {
@@ -283,7 +285,7 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     }
   }
 
-  private class IngressInfo {
+  private static class IngressInfo<K, V> {
 
     private final KafkaProducer<K, V> producer;
     private final String topic;

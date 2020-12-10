@@ -39,7 +39,7 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
 
   private final String topic;
   private final KafkaProducer<String, CloudEvent> producer;
-  private final AutoCloseable producerMetricsThread;
+  private final AutoCloseable producerMeterBinder;
   private final Vertx vertx;
 
   /**
@@ -62,7 +62,7 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
     this.producer = producer;
     this.vertx = vertx;
 
-    this.producerMetricsThread = Metrics.register(this.producer.unwrap());
+    this.producerMeterBinder = Metrics.register(this.producer.unwrap());
   }
 
   /**
@@ -114,7 +114,7 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
   public Future<?> close() {
     return CompositeFuture.all(
       this.producer.close(),
-      Metrics.close(vertx, producerMetricsThread)
+      Metrics.close(vertx, producerMeterBinder)
     );
   }
 }
