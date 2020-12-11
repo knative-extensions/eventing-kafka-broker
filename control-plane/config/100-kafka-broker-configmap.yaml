@@ -19,6 +19,8 @@ kind: ConfigMap
 metadata:
   name: kafka-broker-config
   namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
 data:
   default.topic.partitions: "10"
   default.topic.replication.factor: "3"

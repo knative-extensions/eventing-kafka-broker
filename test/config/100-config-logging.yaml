@@ -19,6 +19,8 @@ kind: ConfigMap
 metadata:
   name: kafka-config-logging
   namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
 data:
   config.xml: |
     <configuration>
@@ -41,7 +43,7 @@ metadata:
   name: config-logging
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: devel
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
 data:

@@ -21,7 +21,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: devel
 spec:
   replicas: 1
   selector:
@@ -32,7 +32,7 @@ spec:
       name: kafka-sink-receiver
       labels:
         app: kafka-sink-receiver
-        eventing.knative.dev/release: devel
+        kafka.eventing.knative.dev/release: devel
     spec:
       securityContext:
         runAsNonRoot: true
@@ -146,6 +146,9 @@ kind: Service
 metadata:
   name: kafka-sink-ingress
   namespace: knative-eventing
+  labels:
+    app: kafka-sink-receiver
+    kafka.eventing.knative.dev/release: devel
 spec:
   selector:
     app: kafka-sink-receiver

@@ -16,8 +16,8 @@
 
 # Update release labels if this is a tagged release
 if [[ -n "${TAG}" ]]; then
-  echo "Tagged release, updating release labels to eventing.knative.dev/release: \"${TAG}\""
-  export LABEL_YAML_CMD=(sed -e "s|eventing.knative.dev/release: devel|eventing.knative.dev/release: \"${TAG}\"|")
+  echo "Tagged release, updating release labels to kafka.eventing.knative.dev/release: \"${TAG}\""
+  export LABEL_YAML_CMD=(sed -e "s|kafka.eventing.knative.dev/release: devel|kafka.eventing.knative.dev/release: \"${TAG}\"|")
 else
   echo "Untagged release, will NOT update release labels"
   export LABEL_YAML_CMD=(cat)
