@@ -14,22 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
-
-source $(dirname $0)/../../vendor/knative.dev/hack/e2e-tests.sh
-
-
-kubectl create namespace kafka --dry-run -o yaml | kubectl apply -f -
-
-sleep 5
-
-header "Applying Strimzi Cluster Operator file"
-cat $(dirname $0)/strimzi-cluster-operator.yaml | sed "s/cluster.local/${CLUSTER_SUFFIX}/g" | kubectl apply -n kafka -f -
-
-sleep 5
-
-kubectl -n kafka apply -f $(dirname $0)/kafka-ephemeral.yaml
-
-sleep 5
-
-wait_until_pods_running kafka || fail_test "Failed to start up a Kafka cluster"
+# Update release labels if this is a tagged release
+if [[ -n "${TAG}" ]]; then
+  echo "Tagged release, updating release labels to eventing.knative.dev/release: \"${TAG}\""
+  export LABEL_YAML_CMD=(sed -e "s|eventing.knative.dev/release: devel|eventing.knative.dev/release: \"${TAG}\"|")
+else
+  echo "Untagged release, will NOT update release labels"
+  export LABEL_YAML_CMD=(cat)
+fi

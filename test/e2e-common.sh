@@ -14,22 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# variables used:
-# - SKIP_INITIALIZE (default: false) - skip cluster creation
-
 source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
-source $(pwd)/test/data-plane/library.sh
-source $(pwd)/test/control-plane/library.sh
-
-SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
+source $(pwd)/hack/data-plane.sh
+source $(pwd)/hack/control-plane.sh
 
 readonly EVENTING_CONFIG="./config"
 
 # Vendored eventing test iamges.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
 
-readonly CHAOS_CONFIG="test/pkg/config/chaos/chaosduck.yaml"
-# Vendored pkg test iamges.
+readonly CHAOS_CONFIG="test/config/chaos/chaosduck.yaml"
+# Vendored pkg test images.
 readonly VENDOR_PKG_TEST_IMAGES="vendor/knative.dev/pkg/leaderelection/chaosduck"
 
 export EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT="eventing-kafka-controller.yaml"
@@ -117,7 +112,7 @@ function test_setup() {
   wait_until_pods_running knative-eventing || fail_test "Sink data plane did not come up"
 
   # Apply test configurations, and restart data plane components (we don't have hot reload)
-  ko apply -f ./test/pkg/config/ || fail_test "Failed to apply test configurations"
+  ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
 
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
@@ -142,14 +137,14 @@ function scale_controlplane() {
 }
 
 function apply_chaos() {
-  ko apply -f ./test/pkg/config/chaos || return $?
+  ko apply -f ./test/config/chaos || return $?
 }
 
 function apply_sacura() {
-  ko apply --strict -f ./test/pkg/config/sacura/0-namespace.yaml || return $?
-  ko apply --strict -f ./test/pkg/config/sacura/101-broker.yaml || return $?
+  ko apply --strict -f ./test/config/sacura/0-namespace.yaml || return $?
+  ko apply --strict -f ./test/config/sacura/101-broker.yaml || return $?
 
   kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || return $?
 
-  ko apply --strict -f ./test/pkg/config/sacura || return $?
+  ko apply --strict -f ./test/config/sacura || return $?
 }

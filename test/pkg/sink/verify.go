@@ -26,6 +26,7 @@ import (
 	testlib "knative.dev/eventing/test/lib"
 
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func Verify(t *testing.T, client *testlib.Client, mode, topic string, ids []string) {
@@ -38,7 +39,7 @@ func Verify(t *testing.T, client *testlib.Client, mode, topic string, ids []stri
 			Name:      names.SimpleNameGenerator.GenerateName("verify-messages"),
 		},
 		&kafkatest.ConsumerConfig{
-			BootstrapServers: kafkatest.BootstrapServers,
+			BootstrapServers: testingpkg.BootstrapServers,
 			Topic:            topic,
 			IDS:              strings.Join(ids, ","),
 			ContentMode:      mode,

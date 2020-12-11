@@ -24,6 +24,14 @@ import (
 const (
 	// Number of times to run a test function.
 	rerunTimes = 5
+
+	// Kafka bootstrap server.
+	BootstrapServers = "my-cluster-kafka-bootstrap.kafka:9092"
+)
+
+var (
+	// Kafka bootstrap server as array.
+	BootstrapServersArr = []string{BootstrapServers}
 )
 
 // RunMultiple run test function f `rerunTimes` times.

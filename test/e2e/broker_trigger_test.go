@@ -36,11 +36,11 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
-	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func TestBrokerTrigger(t *testing.T) {
-	pkgtesting.RunMultiple(t, func(t *testing.T) {
+	testingpkg.RunMultiple(t, func(t *testing.T) {
 
 		ctx := context.Background()
 
@@ -138,7 +138,7 @@ func TestBrokerTrigger(t *testing.T) {
 		))
 
 		config := &kafkatest.Config{
-			BootstrapServers:  kafkatest.BootstrapServers,
+			BootstrapServers:  testingpkg.BootstrapServers,
 			ReplicationFactor: defaultReplicationFactor,
 			NumPartitions:     defaultNumPartitions,
 			Topic:             kafka.Topic(broker.TopicPrefix, br),
@@ -158,7 +158,7 @@ func TestBrokerTrigger(t *testing.T) {
 }
 
 func TestBrokerWithConfig(t *testing.T) {
-	pkgtesting.RunMultiple(t, func(t *testing.T) {
+	testingpkg.RunMultiple(t, func(t *testing.T) {
 
 		ctx := context.Background()
 
@@ -187,7 +187,7 @@ func TestBrokerWithConfig(t *testing.T) {
 		cm := client.CreateConfigMapOrFail(configMapName, client.Namespace, map[string]string{
 			broker.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
 			broker.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
-			broker.BootstrapServersConfigMapKey:              kafkatest.BootstrapServers,
+			broker.BootstrapServersConfigMapKey:              testingpkg.BootstrapServers,
 		})
 
 		br := client.CreateBrokerV1OrFail(
@@ -249,7 +249,7 @@ func TestBrokerWithConfig(t *testing.T) {
 		t.Logf("Verify num partitions and replication factor")
 
 		config := &kafkatest.Config{
-			BootstrapServers:  kafkatest.BootstrapServers,
+			BootstrapServers:  testingpkg.BootstrapServers,
 			ReplicationFactor: replicationFactor,
 			NumPartitions:     numPartitions,
 			Topic:             kafka.Topic(broker.TopicPrefix, br),

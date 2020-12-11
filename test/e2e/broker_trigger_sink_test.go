@@ -35,9 +35,8 @@ import (
 	eventingv1alpha1clientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"knative.dev/eventing-kafka-broker/test/pkg/addressable"
-	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/pkg/sink"
-	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 /*
@@ -50,7 +49,7 @@ import (
                 +--------+
 */
 func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
-	pkgtesting.RunMultipleN(t, 10, func(t *testing.T) {
+	testingpkg.RunMultipleN(t, 10, func(t *testing.T) {
 
 		ctx := context.Background()
 
@@ -65,7 +64,7 @@ func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
 			Topic:             "kafka-sink-" + client.Namespace,
 			NumPartitions:     pointer.Int32Ptr(10),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
-			BootstrapServers:  kafkatest.BootstrapServersArr,
+			BootstrapServers:  testingpkg.BootstrapServersArr,
 		}
 
 		createFunc := sink.CreatorV1Alpha1(clientSet, kss)

@@ -41,8 +41,8 @@ import (
 	eventingv1alpha1clientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"knative.dev/eventing-kafka-broker/test/pkg/addressable"
-	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/pkg/sink"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func TestDeleteBrokerConfigMap(t *testing.T) {
@@ -184,7 +184,7 @@ func TestDeleteSinkConfigMap(t *testing.T) {
 		Topic:             "kafka-sink-" + client.Namespace,
 		NumPartitions:     pointer.Int32Ptr(10),
 		ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
-		BootstrapServers:  kafkatest.BootstrapServersArr,
+		BootstrapServers:  testingpkg.BootstrapServersArr,
 	}
 
 	createFunc := sink.CreatorV1Alpha1(clientSet, kss)
