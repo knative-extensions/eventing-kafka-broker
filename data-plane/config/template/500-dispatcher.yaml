@@ -21,7 +21,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-broker-dispatcher
-    eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: devel
 spec:
   replicas: 1
   selector:
@@ -32,7 +32,7 @@ spec:
       name: kafka-broker-dispatcher
       labels:
         app: kafka-broker-dispatcher
-        eventing.knative.dev/release: devel
+        kafka.eventing.knative.dev/release: devel
     spec:
       securityContext:
         runAsNonRoot: true
