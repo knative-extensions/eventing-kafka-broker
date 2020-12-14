@@ -56,15 +56,18 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.awaitility.Awaitility.await;
 
 @ExtendWith(VertxExtension.class)
 public class DataPlaneTest {
@@ -196,7 +199,9 @@ public class DataPlaneTest {
 
     //TODO(slinkydeveloper) for testing purpose, we need to implement a way to propagate results of reconciliation
     // Or should we use awaitability or similar?
-    Thread.sleep(10000);
+    try {
+      await().atLeast(10, TimeUnit.SECONDS).until(() -> false);
+    }catch(ConditionTimeoutException ex){}
 
     // start service
     vertx.createHttpServer()
