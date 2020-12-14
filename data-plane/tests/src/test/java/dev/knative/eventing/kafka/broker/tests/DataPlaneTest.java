@@ -27,6 +27,7 @@ import static org.mockito.Mockito.mock;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
@@ -51,6 +52,8 @@ import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -88,6 +91,7 @@ public class DataPlaneTest {
 
   static {
     assertThat(PATH_SERVICE_1).isNotEqualTo(PATH_SERVICE_2);
+    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
   }
 
   private static File dataDir;
@@ -315,6 +319,7 @@ public class DataPlaneTest {
     final VertxTestContext context) throws InterruptedException {
 
     final Function<Vertx, RequestMapper<String, CloudEvent>> handlerFactory = v -> new RequestMapper<>(
+      vertx,
       producerConfigs(),
       new CloudEventRequestToRecordMapper(v),
       properties -> KafkaProducer.create(v, properties),

@@ -18,7 +18,11 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-@FunctionalInterface
+/**
+ * @param <K> Consumer record key type.
+ * @param <V> Consumer record value type.
+ * @param <R> Send response type.
+ */
 public interface ConsumerRecordSender<K, V, R> {
 
   /**
@@ -28,4 +32,40 @@ public interface ConsumerRecordSender<K, V, R> {
    * @return a successful future or a failed future.
    */
   Future<R> send(KafkaConsumerRecord<K, V> record);
+
+  /**
+   * Close consumer record sender.
+   *
+   * @return a successful future or a failed future.
+   */
+  Future<?> close();
+
+
+  /**
+   * Create a ConsumerRecordSender from the given futures.
+   *
+   * @param closeFuture Future to return on close.
+   * @param sendFuture  Future to return on send.
+   * @param <K>         Consumer record key type.
+   * @param <V>         Consumer record value type.
+   * @param <R>         Send response type.
+   * @return A ConsumerRecordSender that returns a failed future on send.
+   */
+  static <K, V, R> ConsumerRecordSender<K, V, R> create(Future<R> sendFuture, Future<?> closeFuture) {
+    return new ConsumerRecordSender<>() {
+
+      private final Future<R> send = sendFuture;
+      private final Future<?> close = closeFuture;
+
+      @Override
+      public Future<R> send(KafkaConsumerRecord<K, V> record) {
+        return this.send;
+      }
+
+      @Override
+      public Future<?> close() {
+        return this.close;
+      }
+    };
+  }
 }

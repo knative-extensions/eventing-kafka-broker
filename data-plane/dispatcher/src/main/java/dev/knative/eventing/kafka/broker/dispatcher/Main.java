@@ -20,7 +20,7 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
-import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.tracing.OpenTelemetryVertxTracingFactory;
 import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
@@ -37,7 +37,6 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.tracing.TracingOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -59,7 +58,6 @@ public class Main {
   // Additionally, this naming convention implementation sanitizes metric names and tags of special characters that
   // are disallowed by the monitoring system.
   public static final String HTTP_EVENTS_SENT_COUNT = "http.events.sent"; // prometheus format --> http_events_sent_total
-  public static final String METRICS_REGISTRY_NAME = "metrics";
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
@@ -84,7 +82,7 @@ public class Main {
 
     final var vertx = Vertx.vertx(
       new VertxOptions()
-        .setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
+        .setMetricsOptions(Metrics.getOptions(env))
         .setTracingOptions(new TracingOptions()
           .setFactory(new OpenTelemetryVertxTracingFactory(OpenTelemetry.getGlobalTracer(Tracing.SERVICE_NAME)))
         )
@@ -94,7 +92,7 @@ public class Main {
 
       ContractMessageCodec.register(vertx.eventBus());
 
-      final var metricsRegistry = BackendRegistries.getNow(METRICS_REGISTRY_NAME);
+      final var metricsRegistry = Metrics.getRegistry();
       final var eventsSentCounter = metricsRegistry.counter(HTTP_EVENTS_SENT_COUNT);
 
       final var producerConfig = Configurations.getProperties(env.getProducerConfigFilePath());

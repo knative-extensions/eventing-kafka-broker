@@ -27,9 +27,6 @@ data:
       <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
       </appender>
-      <logger name="dev.knative" level="DEBUG">
-        <appender-ref ref="jsonConsoleAppender" />
-      </logger>
       <root level="INFO">
         <appender-ref ref="jsonConsoleAppender"/>
       </root>

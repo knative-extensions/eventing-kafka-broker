@@ -24,6 +24,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployerVerticle;
@@ -36,6 +37,8 @@ import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystems;
@@ -55,6 +58,10 @@ import org.slf4j.LoggerFactory;
 
 @ExtendWith(VertxExtension.class)
 public class UnorderedConsumerTest {
+
+  static {
+    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+  }
 
   private static final Logger logger = LoggerFactory.getLogger(UnorderedConsumerTest.class);
   private static final int NUM_SYSTEM_VERTICLES = 1;
