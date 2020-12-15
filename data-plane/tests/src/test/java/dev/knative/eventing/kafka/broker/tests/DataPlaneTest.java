@@ -205,7 +205,7 @@ public class DataPlaneTest {
 
     //TODO(slinkydeveloper) for testing purpose, we need to implement a way to propagate results of reconciliation
     // Or should we use awaitability or similar?
-      await().atLeast(10, TimeUnit.SECONDS).untilAsserted(() -> assertThat(vertx.deploymentIDs()).hasSize(resource.getEgressesCount()+ NUM_RESOURCES + NUM_SYSTEM_VERTICLES));
+      await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> assertThat(vertx.deploymentIDs()).hasSize(resource.getEgressesCount()+ NUM_RESOURCES + NUM_SYSTEM_VERTICLES));
 
     // start service
     vertx.createHttpServer()
