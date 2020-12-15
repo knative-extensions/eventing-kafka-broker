@@ -37,6 +37,16 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
+      # To avoid node becoming SPOF, spread our replicas to different nodes.
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: kafka-sink-receiver
+                topologyKey: kubernetes.io/hostname
+              weight: 100
       containers:
         - name: kafka-sink-receiver
           image: ${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}
