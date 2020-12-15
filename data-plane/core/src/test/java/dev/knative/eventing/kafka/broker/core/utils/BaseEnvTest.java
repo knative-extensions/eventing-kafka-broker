@@ -30,6 +30,7 @@ public class BaseEnvTest {
     case "METRICS_PATH" -> "/path";
     case "METRICS_PUBLISH_QUANTILES" -> "TRUE";
     case "CONFIG_TRACING_PATH" -> "/etc/tracing";
+    case "METRICS_JVM_ENABLED" -> "false";
     default -> throw new IllegalArgumentException("unknown " + s);
   };
 
@@ -65,5 +66,11 @@ public class BaseEnvTest {
   public void shouldNotPrintAddress() {
     final var metricsConfigs = new BaseEnv(provider);
     assertThat(metricsConfigs.toString()).doesNotContain("@");
+  }
+
+  @Test
+  public void shouldGetJvmMetricsEnabled() {
+    final var metricsConfigs = new BaseEnv(provider);
+    assertThat(metricsConfigs.isMetricsJvmEnabled()).isFalse();
   }
 }

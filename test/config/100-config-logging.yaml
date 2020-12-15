@@ -19,15 +19,14 @@ kind: ConfigMap
 metadata:
   name: kafka-config-logging
   namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
 data:
   config.xml: |
     <configuration>
       <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
       </appender>
-      <logger name="dev.knative" level="DEBUG">
-        <appender-ref ref="jsonConsoleAppender" />
-      </logger>
       <root level="INFO">
         <appender-ref ref="jsonConsoleAppender"/>
       </root>
@@ -41,7 +40,7 @@ metadata:
   name: config-logging
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: devel
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
 data:

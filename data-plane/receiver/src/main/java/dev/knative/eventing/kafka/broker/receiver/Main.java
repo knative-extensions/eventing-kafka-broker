@@ -20,7 +20,7 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
-import dev.knative.eventing.kafka.broker.core.metrics.MetricsOptionsProvider;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.tracing.OpenTelemetryVertxTracingFactory;
 import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
@@ -29,6 +29,7 @@ import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventSerializer;
+import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 import io.opentelemetry.api.OpenTelemetry;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -36,7 +37,6 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.tracing.TracingOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -60,7 +60,6 @@ public class Main {
   // are disallowed by the monitoring system.
   public static final String HTTP_REQUESTS_MALFORMED_COUNT = "http.requests.malformed"; // prometheus format --> http_requests_malformed_total
   public static final String HTTP_REQUESTS_PRODUCE_COUNT = "http.requests.produce";     // prometheus format --> http_requests_produce_total
-  public static final String METRICS_REGISTRY_NAME = "metrics";
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
@@ -87,7 +86,7 @@ public class Main {
 
     final var vertx = Vertx.vertx(
       new VertxOptions()
-        .setMetricsOptions(MetricsOptionsProvider.get(env, METRICS_REGISTRY_NAME))
+        .setMetricsOptions(Metrics.getOptions(env))
         .setTracingOptions(new TracingOptions()
           .setFactory(new OpenTelemetryVertxTracingFactory(OpenTelemetry.getGlobalTracer(Tracing.SERVICE_NAME)))
         )
@@ -97,7 +96,7 @@ public class Main {
 
       ContractMessageCodec.register(vertx.eventBus());
 
-      final var metricsRegistry = BackendRegistries.getNow(METRICS_REGISTRY_NAME);
+      final var metricsRegistry = Metrics.getRegistry();
 
       final var badRequestCounter = metricsRegistry.counter(HTTP_REQUESTS_MALFORMED_COUNT);
       final var produceEventsCounter = metricsRegistry.counter(HTTP_REQUESTS_PRODUCE_COUNT);
@@ -106,8 +105,9 @@ public class Main {
       producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
 
       final Function<Vertx, RequestMapper<String, CloudEvent>> handlerFactory = v -> new RequestMapper<>(
+        v,
         producerConfigs,
-        new CloudEventRequestToRecordMapper(v),
+        new CloudEventRequestToRecordMapper(vertx),
         properties -> KafkaProducer.create(v, properties),
         badRequestCounter,
         produceEventsCounter

@@ -1,4 +1,4 @@
----
+#!/usr/bin/env bash
 
 # Copyright 2020 The Knative Authors
 #
@@ -14,10 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: kafka-webhook-eventing
-  namespace: knative-eventing
-  labels:
-    kafka.eventing.knative.dev/release: devel
+# Update release labels if this is a tagged release
+if [[ -n "${TAG}" ]]; then
+  echo "Tagged release, updating release labels to kafka.eventing.knative.dev/release: \"${TAG}\""
+  export LABEL_YAML_CMD=(sed -e "s|kafka.eventing.knative.dev/release: devel|kafka.eventing.knative.dev/release: \"${TAG}\"|")
+else
+  echo "Untagged release, will NOT update release labels"
+  export LABEL_YAML_CMD=(cat)
+fi

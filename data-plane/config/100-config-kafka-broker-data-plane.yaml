@@ -19,6 +19,8 @@ kind: ConfigMap
 metadata:
   name: config-kafka-broker-data-plane
   namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
 data:
   config-kafka-broker-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
