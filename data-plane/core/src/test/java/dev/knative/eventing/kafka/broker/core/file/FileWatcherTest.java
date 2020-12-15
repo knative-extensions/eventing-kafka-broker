@@ -71,8 +71,6 @@ public class FileWatcherTest {
     final var thread1 = watch(fw);
     final var thread2 = watch(fw); // the second time is no-op
 
-    Thread.sleep(1000);
-
     write(file, broker1);
     waitFirst.await();
 
