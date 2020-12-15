@@ -126,9 +126,7 @@ public class UnorderedConsumerTest {
 
     write(file, contract);
 
-    try {
-      await().atMost(6, TimeUnit.SECONDS).untilAsserted(() -> assertThat(vertx.deploymentIDs()).hasSize(numEgresses + NUM_SYSTEM_VERTICLES));
-    }catch(ConditionTimeoutException ex){}
+    await().atMost(6, TimeUnit.SECONDS).untilAsserted(() -> assertThat(vertx.deploymentIDs()).hasSize(numEgresses + NUM_SYSTEM_VERTICLES));
 
     waitEvents.await();
 

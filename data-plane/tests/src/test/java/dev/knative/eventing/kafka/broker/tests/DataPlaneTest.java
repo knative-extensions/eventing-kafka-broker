@@ -83,6 +83,7 @@ public class DataPlaneTest {
   private static final int INGRESS_PORT = 12345;
   private static final int SERVICE_PORT = INGRESS_PORT + 1;
   private static final int NUM_SYSTEM_VERTICLES = 1;
+  private static final int NUM_RESOURCES = 1;
 
   private static final String TYPE_CE_1 = "type-ce-1";
   private static final String TYPE_CE_2 = "type-ce-2";
@@ -98,7 +99,6 @@ public class DataPlaneTest {
   private static KafkaCluster kafkaCluster;
   private static ConsumerDeployerVerticle consumerDeployerVerticle;
   private static ReceiverVerticle receiverVerticle;
-  private static int numResources;
 
   @BeforeAll
   public static void setUp(final Vertx vertx, final VertxTestContext context)
@@ -107,7 +107,6 @@ public class DataPlaneTest {
     ContractMessageCodec.register(vertx.eventBus());
     consumerDeployerVerticle = setUpDispatcher(vertx, context);
     receiverVerticle = setUpReceiver(vertx, context);
-    numResources=1;
     context.completeNow();
   }
 
@@ -202,10 +201,7 @@ public class DataPlaneTest {
 
     //TODO(slinkydeveloper) for testing purpose, we need to implement a way to propagate results of reconciliation
     // Or should we use awaitability or similar?
-    try {
-      await().atLeast(10, TimeUnit.SECONDS).untilAsserted(() -> assertThat(vertx.deploymentIDs()).hasSize(resource.getEgressesCount()+numResources + NUM_SYSTEM_VERTICLES));
-    }catch(ConditionTimeoutException ex){}
-
+      await().atLeast(10, TimeUnit.SECONDS).untilAsserted(() -> assertThat(vertx.deploymentIDs()).hasSize(resource.getEgressesCount()+ NUM_RESOURCES + NUM_SYSTEM_VERTICLES));
 
     // start service
     vertx.createHttpServer()
