@@ -22,6 +22,8 @@ import (
 	"sync"
 
 	"google.golang.org/protobuf/encoding/protojson"
+	"knative.dev/pkg/injection"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/google/go-cmp/cmp"
@@ -47,8 +49,9 @@ const (
 func WatchDataPlaneConfigMap(cm types.NamespacedName, format string) {
 
 	ctx := signals.NewContext()
-	cfg := sharedmain.ParseAndGetConfigOrDie()
 	ctx = sharedmain.WithHADisabled(ctx)
+
+	cfg := injection.ParseAndGetRESTConfigOrDie()
 
 	sharedmain.MainWithConfig(ctx, component, cfg, func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 
@@ -61,12 +64,9 @@ func WatchDataPlaneConfigMap(cm types.NamespacedName, format string) {
 
 		watcher.Watch(cm.Name, diffLogger.logDiff)
 
-		return controller.NewImpl(
-			ReconcileFunc(func(ctx context.Context, key string) error {
-				return nil
-			}),
-			logger.Sugar(),
-			component,
+		return controller.NewImplFull(
+			ReconcileFunc(func(ctx context.Context, key string) error { return nil }),
+			controller.ControllerOptions{WorkQueueName: component, Logger: logger.Sugar()},
 		)
 	})
 }

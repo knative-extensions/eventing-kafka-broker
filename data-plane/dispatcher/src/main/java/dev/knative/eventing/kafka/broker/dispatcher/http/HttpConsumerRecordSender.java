@@ -120,4 +120,11 @@ public final class HttpConsumerRecordSender implements ConsumerRecordSender<Stri
       );
     }
   }
+
+  @Override
+  public Future<?> close() {
+    this.circuitBreaker.close();
+    this.client.close();
+    return Future.succeededFuture();
+  }
 }

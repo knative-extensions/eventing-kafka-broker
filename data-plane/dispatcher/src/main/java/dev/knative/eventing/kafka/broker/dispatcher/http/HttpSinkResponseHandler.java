@@ -17,10 +17,12 @@ package dev.knative.eventing.kafka.broker.dispatcher.http;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.SinkResponseHandler;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -37,6 +39,7 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
 
   private final String topic;
   private final KafkaProducer<String, CloudEvent> producer;
+  private final AutoCloseable producerMeterBinder;
   private final Vertx vertx;
 
   /**
@@ -58,6 +61,8 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
     this.topic = topic;
     this.producer = producer;
     this.vertx = vertx;
+
+    this.producerMeterBinder = Metrics.register(this.producer.unwrap());
   }
 
   /**
@@ -103,5 +108,13 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
     // This checks whether there is something in the body or not, though binary events can contain only headers and they
     // are valid Cloud Events.
     return response == null || response.body() == null || response.body().length() <= 0;
+  }
+
+  @Override
+  public Future<?> close() {
+    return CompositeFuture.all(
+      this.producer.close(),
+      Metrics.close(vertx, producerMeterBinder)
+    );
   }
 }

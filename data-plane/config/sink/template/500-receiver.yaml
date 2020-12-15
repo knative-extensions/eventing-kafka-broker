@@ -21,7 +21,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: devel
 spec:
   replicas: 1
   selector:
@@ -32,7 +32,7 @@ spec:
       name: kafka-sink-receiver
       labels:
         app: kafka-sink-receiver
-        eventing.knative.dev/release: devel
+        kafka.eventing.knative.dev/release: devel
     spec:
       securityContext:
         runAsNonRoot: true
@@ -87,6 +87,8 @@ spec:
             - name: METRICS_PORT
               value: "9090"
             - name: METRICS_PUBLISH_QUANTILES
+              value: "false"
+            - name: METRICS_JVM_ENABLED
               value: "false"
             - name: CONFIG_TRACING_PATH
               value: "/etc/tracing"
@@ -146,6 +148,9 @@ kind: Service
 metadata:
   name: kafka-sink-ingress
   namespace: knative-eventing
+  labels:
+    app: kafka-sink-receiver
+    kafka.eventing.knative.dev/release: devel
 spec:
   selector:
     app: kafka-sink-receiver

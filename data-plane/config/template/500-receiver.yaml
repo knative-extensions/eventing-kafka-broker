@@ -21,7 +21,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-broker-receiver
-    eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: devel
 spec:
   replicas: 1
   selector:
@@ -32,7 +32,7 @@ spec:
       name: kafka-broker-receiver
       labels:
         app: kafka-broker-receiver
-        eventing.knative.dev/release: devel
+        kafka.eventing.knative.dev/release: devel
     spec:
       securityContext:
         runAsNonRoot: true
@@ -88,11 +88,12 @@ spec:
               value: "9090"
             - name: METRICS_PUBLISH_QUANTILES
               value: "false"
+            - name: METRICS_JVM_ENABLED
+              value: "false"
             - name: CONFIG_TRACING_PATH
               value: "/etc/tracing"
           command:
             - "java"
-          # TODO add JVM arguments
           args:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
@@ -147,6 +148,9 @@ kind: Service
 metadata:
   name: kafka-broker-ingress
   namespace: knative-eventing
+  labels:
+    app: kafka-broker-receiver
+    kafka.eventing.knative.dev/release: devel
 spec:
   selector:
     app: kafka-broker-receiver

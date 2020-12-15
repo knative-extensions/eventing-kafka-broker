@@ -18,16 +18,18 @@ metadata:
   name: kafka-webhook-eventing
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: devel
+    app: kafka-webhook-eventing
+    kafka.eventing.knative.dev/release: devel
 spec:
   replicas: 1
   selector:
-    matchLabels: &labels
+    matchLabels:
       app: kafka-webhook-eventing
-      role: kafka-webhook-eventing
   template:
     metadata:
-      labels: *labels
+      labels:
+        app: kafka-webhook-eventing
+        kafka.eventing.knative.dev/release: devel
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes.
       affinity:
@@ -107,15 +109,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    eventing.knative.dev/release: devel
-    role: kafka-webhook-eventing
   name: kafka-webhook-eventing
   namespace: knative-eventing
+  labels:
+    app: kafka-webhook-eventing
+    kafka.eventing.knative.dev/release: devel
 spec:
   ports:
     - name: https-webhook
       port: 443
       targetPort: 8443
   selector:
-    role: kafka-webhook-eventing
+    app: kafka-webhook-eventing
