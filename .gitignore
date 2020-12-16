@@ -1,16 +1,14 @@
-**/target
+data-plane/**/target
 
-**/dependency-reduced-pom.xml
-
-**/?
+data-plane/**/dependency-reduced-pom.xml
 
 
 ### STS ###
-**/.apt_generated
-**/.classpath
-**/.factorypath
-**/.project
-**/.settings
+data-plane/**/.apt_generated
+data-plane/**/.classpath
+data-plane/**/.factorypath
+data-plane/**/.project
+data-plane/**/.settings
 
 ### IntelliJ IDEA ###
 **/.idea
@@ -19,12 +17,12 @@
 **/*.ipr
 
 ### NetBeans ###
-**/nbproject/private/
-**/nbbuild/
-**/dist/
-**/nbdist/
-**/.nb-gradle/
-**/build/
+data-plane/**/nbproject/private/
+data-plane/**/nbbuild/
+data-plane/**/dist/
+data-plane/**/nbdist/
+data-plane/**/.nb-gradle/
+data-plane/**/build/
 
 ### VS Code ###
 **/.vscode/
@@ -34,4 +32,3 @@ eventing-kafka-controller.yaml
 eventing-kafka-broker.yaml
 eventing-kafka-sink.yaml
 
-!vendor/golang.org/
