@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,12 +28,13 @@ public class HeadersPropagatorSetterTest {
   public void shouldCallConsumerWhenCarrierIsNotNull() {
 
     final var nCalls = new AtomicInteger(0);
-    final BiConsumer<String, String> c = (k, v) -> {
-      nCalls.incrementAndGet();
+    final BiConsumer<String, String> c =
+        (k, v) -> {
+          nCalls.incrementAndGet();
 
-      assertThat(k).isEqualTo("k");
-      assertThat(v).isEqualTo("v");
-    };
+          assertThat(k).isEqualTo("k");
+          assertThat(v).isEqualTo("v");
+        };
 
     final var setter = new HeadersPropagatorSetter();
 

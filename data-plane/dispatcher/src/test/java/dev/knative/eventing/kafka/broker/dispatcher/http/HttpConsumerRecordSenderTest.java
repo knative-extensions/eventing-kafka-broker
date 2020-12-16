@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class HttpConsumerRecordSenderTest {
 
   @Test
-  public void shouldCloseCircuitBreakerAndWebClient(final Vertx vertx, final VertxTestContext context) {
+  public void shouldCloseCircuitBreakerAndWebClient(
+      final Vertx vertx, final VertxTestContext context) {
 
     final var circuitBreaker = mock(CircuitBreaker.class);
     when(circuitBreaker.close()).thenReturn(circuitBreaker);
@@ -41,19 +42,19 @@ public class HttpConsumerRecordSenderTest {
     final var webClient = mock(WebClient.class);
     doNothing().when(webClient).close();
 
-    final var consumerRecordSender = new HttpConsumerRecordSender(
-      vertx,
-      "http://localhost:12345",
-      circuitBreaker,
-      webClient
-    );
+    final var consumerRecordSender =
+        new HttpConsumerRecordSender(vertx, "http://localhost:12345", circuitBreaker, webClient);
 
-    consumerRecordSender.close()
-      .onFailure(context::failNow)
-      .onSuccess(r -> context.verify(() -> {
-        verify(circuitBreaker, times(1)).close();
-        verify(webClient, times(1)).close();
-        context.completeNow();
-      }));
+    consumerRecordSender
+        .close()
+        .onFailure(context::failNow)
+        .onSuccess(
+            r ->
+                context.verify(
+                    () -> {
+                      verify(circuitBreaker, times(1)).close();
+                      verify(webClient, times(1)).close();
+                      context.completeNow();
+                    }));
   }
 }

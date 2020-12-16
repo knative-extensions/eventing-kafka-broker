@@ -14,7 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-gofmt -s -w $(find -path './vendor' -prune -o -path './third_party' -prune -o -type f -name '*.go' -print)
-goimports -w $(find -name '*.go' | grep -v vendor | grep -v third_party)
+export FILES=( $(find -path './vendor' -prune -o -path './third_party' -prune -o -name '*.pb.go' -prune -o -type f -name '*.go' -print) )
+export GENFILES=( $(git ls-files | xargs git check-attr linguist-generated | grep 'true$' | cut -d: -f1) )
+for i in "${GENFILES[@]}"; do
+  FILES=(${FILES[@]//*$i*})
+done
+if (( ${#FILES[@]} > 0 )); then
+  goimports -w "${FILES[@]}"
+  gofmt -s -w  "${FILES[@]}"
+else
+  echo No Go files found.
+fi
 
 cd data-plane && ./hack/format.sh && cd - || exit 1

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,29 +28,37 @@ import org.slf4j.LoggerFactory;
 
 public class ResourcesReconcilerMessageHandler implements Handler<Message<Object>> {
 
-  private static final Logger logger = LoggerFactory.getLogger(ResourcesReconcilerMessageHandler.class);
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(ResourcesReconcilerMessageHandler.class);
 
-  public final static String ADDRESS = "resourcesreconciler.core";
+  public static final String ADDRESS = "resourcesreconciler.core";
 
   private final ResourcesReconciler resourcesReconciler;
 
-  public ResourcesReconcilerMessageHandler(
-    ResourcesReconciler resourcesReconciler) {
+  public ResourcesReconcilerMessageHandler(final ResourcesReconciler resourcesReconciler) {
     this.resourcesReconciler = resourcesReconciler;
   }
 
   @Override
-  public void handle(Message<Object> event) {
-    DataPlaneContract.Contract contract = (DataPlaneContract.Contract) event.body();
-    resourcesReconciler.reconcile(contract.getResourcesList())
-      .onSuccess(
-        v -> logger.info("reconciled contract generation {}", keyValue("contractGeneration", contract.getGeneration())))
-      .onFailure(cause -> logger
-        .error("failed to reconcile contract generation {}", keyValue("contractGeneration", contract.getGeneration()),
-          cause));
+  public void handle(final Message<Object> event) {
+    final DataPlaneContract.Contract contract = (DataPlaneContract.Contract) event.body();
+    resourcesReconciler
+        .reconcile(contract.getResourcesList())
+        .onSuccess(
+            v ->
+                LOGGER.info(
+                    "reconciled contract generation {}",
+                    keyValue("contractGeneration", contract.getGeneration())))
+        .onFailure(
+            cause ->
+                LOGGER.error(
+                    "failed to reconcile contract generation {}",
+                    keyValue("contractGeneration", contract.getGeneration()),
+                    cause));
   }
 
-  public static MessageConsumer<Object> start(EventBus eventBus, ResourcesReconciler reconciler) {
+  public static MessageConsumer<Object> start(
+      final EventBus eventBus, final ResourcesReconciler reconciler) {
     return eventBus.localConsumer(ADDRESS, new ResourcesReconcilerMessageHandler(reconciler));
   }
 }

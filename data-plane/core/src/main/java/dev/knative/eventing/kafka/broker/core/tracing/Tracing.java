@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,9 @@ import org.slf4j.LoggerFactory;
 
 public class Tracing {
 
-  public final static String SERVICE_NAME;
-  public final static String SERVICE_NAMESPACE;
-  public final static String TRACE_ID_KEY = "traceId";
+  public static final String SERVICE_NAME;
+  public static final String SERVICE_NAMESPACE;
+  public static final String TRACE_ID_KEY = "traceId";
 
   private static final String DEFAULT_SERVICE_NAME = "Knative";
 
@@ -43,61 +43,54 @@ public class Tracing {
     SERVICE_NAMESPACE = fromEnvOrDefault("SERVICE_NAMESPACE", DEFAULT_SERVICE_NAME);
   }
 
-  private static final Logger logger = LoggerFactory.getLogger(Tracing.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(Tracing.class);
 
-  private static final TracerSdkManagement tracerManagement = OpenTelemetrySdk.getGlobalTracerManagement();
+  private static final TracerSdkManagement GLOBAL_TRACER_MANAGEMENT =
+      OpenTelemetrySdk.getGlobalTracerManagement();
 
   public static void setup(final TracingConfig tracingConfig) {
 
-    logger.info(
-      "Registering tracing configurations {} {} {} {}",
-      keyValue("backend", tracingConfig.getBackend()),
-      keyValue("sampleRate", tracingConfig.getSamplingRate()),
-      keyValue("URL", tracingConfig.getURL()),
-      keyValue("loggingDebugEnabled", logger.isDebugEnabled())
-    );
+    LOGGER.info(
+        "Registering tracing configurations {} {} {} {}",
+        keyValue("backend", tracingConfig.getBackend()),
+        keyValue("sampleRate", tracingConfig.getSamplingRate()),
+        keyValue("URL", tracingConfig.getUrl()),
+        keyValue("loggingDebugEnabled", LOGGER.isDebugEnabled()));
 
-    tracerManagement.updateActiveTraceConfig(
-      TraceConfig.getDefault()
-        .toBuilder()
-        .setSampler(Sampler.traceIdRatioBased(tracingConfig.getSamplingRate()))
-        .build()
-    );
+    GLOBAL_TRACER_MANAGEMENT.updateActiveTraceConfig(
+        TraceConfig.getDefault().toBuilder()
+            .setSampler(Sampler.traceIdRatioBased(tracingConfig.getSamplingRate()))
+            .build());
 
     if (tracingConfig.getBackend().equals(Backend.ZIPKIN)) {
 
-      logger.debug("Add Zipkin processor");
+      LOGGER.debug("Add Zipkin processor");
 
-      tracerManagement.addSpanProcessor(
-        BatchSpanProcessor
-          .builder(zipkinExporter(tracingConfig))
-          .setExportOnlySampled(true)
-          .build()
-      );
+      GLOBAL_TRACER_MANAGEMENT.addSpanProcessor(
+          BatchSpanProcessor.builder(zipkinExporter(tracingConfig))
+              .setExportOnlySampled(true)
+              .build());
 
-    } else if (logger.isDebugEnabled()) {
+    } else if (LOGGER.isDebugEnabled()) {
 
-      logger.debug("Add Logging processor");
+      LOGGER.debug("Add Logging processor");
 
-      tracerManagement.addSpanProcessor(
-        SimpleSpanProcessor
-          .builder(new LoggingSpanExporter())
-          .setExportOnlySampled(true)
-          .build()
-      );
+      GLOBAL_TRACER_MANAGEMENT.addSpanProcessor(
+          SimpleSpanProcessor.builder(new LoggingSpanExporter())
+              .setExportOnlySampled(true)
+              .build());
     }
   }
 
   public static void shutdown() {
-    tracerManagement.shutdown();
+    GLOBAL_TRACER_MANAGEMENT.shutdown();
   }
 
-  private static SpanExporter zipkinExporter(TracingConfig tracingConfig) {
-    return ZipkinSpanExporter
-      .builder()
-      .setEndpoint(tracingConfig.getURL())
-      .setServiceName(SERVICE_NAME)
-      .build();
+  private static SpanExporter zipkinExporter(final TracingConfig tracingConfig) {
+    return ZipkinSpanExporter.builder()
+        .setEndpoint(tracingConfig.getUrl())
+        .setServiceName(SERVICE_NAME)
+        .build();
   }
 
   private static String fromEnvOrDefault(final String key, final String defaultValue) {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,25 +40,25 @@ public interface ConsumerRecordSender<K, V, R> {
    */
   Future<?> close();
 
-
   /**
    * Create a ConsumerRecordSender from the given futures.
    *
    * @param closeFuture Future to return on close.
-   * @param sendFuture  Future to return on send.
-   * @param <K>         Consumer record key type.
-   * @param <V>         Consumer record value type.
-   * @param <R>         Send response type.
+   * @param sendFuture Future to return on send.
+   * @param <K> Consumer record key type.
+   * @param <V> Consumer record value type.
+   * @param <R> Send response type.
    * @return A ConsumerRecordSender that returns a failed future on send.
    */
-  static <K, V, R> ConsumerRecordSender<K, V, R> create(Future<R> sendFuture, Future<?> closeFuture) {
+  static <K, V, R> ConsumerRecordSender<K, V, R> create(
+      Future<R> sendFuture, Future<?> closeFuture) {
     return new ConsumerRecordSender<>() {
 
       private final Future<R> send = sendFuture;
       private final Future<?> close = closeFuture;
 
       @Override
-      public Future<R> send(KafkaConsumerRecord<K, V> record) {
+      public Future<R> send(final KafkaConsumerRecord<K, V> record) {
         return this.send;
       }
 

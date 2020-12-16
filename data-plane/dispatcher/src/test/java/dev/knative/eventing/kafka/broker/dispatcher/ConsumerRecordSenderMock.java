@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,14 +26,14 @@ public class ConsumerRecordSenderMock<K, V, R> implements ConsumerRecordSender<K
   private final Function<KafkaConsumerRecord<K, V>, Future<R>> onSend;
 
   public ConsumerRecordSenderMock(
-    final Supplier<Future<?>> onClose,
-    final Function<KafkaConsumerRecord<K, V>, Future<R>> onSend) {
+      final Supplier<Future<?>> onClose,
+      final Function<KafkaConsumerRecord<K, V>, Future<R>> onSend) {
     this.onClose = onClose;
     this.onSend = onSend;
   }
 
   @Override
-  public Future<R> send(KafkaConsumerRecord<K, V> record) {
+  public Future<R> send(final KafkaConsumerRecord<K, V> record) {
     return this.onSend.apply(record);
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsumerRecord<K, V>> {
 
-  private static final Logger logger = LoggerFactory.getLogger(ConsumerRecordHandler.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerRecordHandler.class);
 
   private final Predicate<V> filter;
   private final ConsumerRecordSender<K, V, R> subscriberSender;
@@ -48,19 +48,19 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
   /**
    * All args constructor.
    *
-   * @param subscriberSender      sender to trigger subscriber
-   * @param filter                event filter
-   * @param receiver              hook receiver {@link ConsumerRecordOffsetStrategy}. It allows to plug in custom offset
-   *                              management depending on the success/failure during the algorithm.
-   * @param sinkResponseHandler   handler of the response from {@code subscriberSender}
+   * @param subscriberSender sender to trigger subscriber
+   * @param filter event filter
+   * @param receiver hook receiver {@link ConsumerRecordOffsetStrategy}. It allows to plug in custom
+   *     offset management depending on the success/failure during the algorithm.
+   * @param sinkResponseHandler handler of the response from {@code subscriberSender}
    * @param deadLetterQueueSender sender to DLQ
    */
   public ConsumerRecordHandler(
-    final ConsumerRecordSender<K, V, R> subscriberSender,
-    final Predicate<V> filter,
-    final ConsumerRecordOffsetStrategy<K, V> receiver,
-    final SinkResponseHandler<R> sinkResponseHandler,
-    final ConsumerRecordSender<K, V, R> deadLetterQueueSender) {
+      final ConsumerRecordSender<K, V, R> subscriberSender,
+      final Predicate<V> filter,
+      final ConsumerRecordOffsetStrategy<K, V> receiver,
+      final SinkResponseHandler<R> sinkResponseHandler,
+      final ConsumerRecordSender<K, V, R> deadLetterQueueSender) {
 
     Objects.requireNonNull(filter, "provide filter");
     Objects.requireNonNull(subscriberSender, "provide subscriberSender");
@@ -78,27 +78,27 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
   /**
    * Call this constructor when there is no DLQ configured on the broker.
    *
-   * @param subscriberSender    sender to trigger subscriber
-   * @param filter              event filter
-   * @param receiver            hook receiver {@link ConsumerRecordOffsetStrategy}. It allows to plug in custom offset
-   *                            management depending on the success/failure during the algorithm.
+   * @param subscriberSender sender to trigger subscriber
+   * @param filter event filter
+   * @param receiver hook receiver {@link ConsumerRecordOffsetStrategy}. It allows to plug in custom
+   *     offset management depending on the success/failure during the algorithm.
    * @param sinkResponseHandler handler of the response
    */
   public ConsumerRecordHandler(
-    final ConsumerRecordSender<K, V, R> subscriberSender,
-    final Predicate<V> filter,
-    final ConsumerRecordOffsetStrategy<K, V> receiver,
-    final SinkResponseHandler<R> sinkResponseHandler) {
+      final ConsumerRecordSender<K, V, R> subscriberSender,
+      final Predicate<V> filter,
+      final ConsumerRecordOffsetStrategy<K, V> receiver,
+      final SinkResponseHandler<R> sinkResponseHandler) {
 
     this(
-      subscriberSender,
-      filter,
-      receiver,
-      sinkResponseHandler,
-      // If there is no DLQ configured by default DLQ sender always fails, which means
-      // implementors will receive failedToSendToDLQ if the subscriber sender fails.
-      ConsumerRecordSender.create(Future.failedFuture("No DLQ configured"), Future.succeededFuture())
-    );
+        subscriberSender,
+        filter,
+        receiver,
+        sinkResponseHandler,
+        // If there is no DLQ configured by default DLQ sender always fails, which means
+        // implementors will receive failedToSendToDLQ if the subscriber sender fails.
+        ConsumerRecordSender.create(
+            Future.failedFuture("No DLQ configured"), Future.succeededFuture()));
   }
 
   /**
@@ -123,81 +123,90 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
   }
 
   private void send(final KafkaConsumerRecord<K, V> record) {
-    subscriberSender.send(record)
-      .onSuccess(response -> sinkResponseHandler.handle(response)
-        .onSuccess(ignored -> {
-          logDebug("Successfully send response to the broker", record);
-          receiver.successfullySentToSubscriber(record);
-        })
-        .onFailure(cause -> {
-          logError("Failed to handle response", record, cause);
-          sendToDLS(record);
-        }))
-      .onFailure(cause -> {
-        logError("Failed to send event to subscriber", record, cause);
-        sendToDLS(record);
-      });
+    subscriberSender
+        .send(record)
+        .onSuccess(
+            response ->
+                sinkResponseHandler
+                    .handle(response)
+                    .onSuccess(
+                        ignored -> {
+                          logDebug("Successfully send response to the broker", record);
+                          receiver.successfullySentToSubscriber(record);
+                        })
+                    .onFailure(
+                        cause -> {
+                          logError("Failed to handle response", record, cause);
+                          sendToDLS(record);
+                        }))
+        .onFailure(
+            cause -> {
+              logError("Failed to send event to subscriber", record, cause);
+              sendToDLS(record);
+            });
   }
 
-  private void sendToDLS(KafkaConsumerRecord<K, V> record) {
-    deadLetterQueueSender.send(record)
-      .onFailure(ex -> {
-        logError("Failed to send record to dead letter sink", record, ex);
-        receiver.failedToSendToDLQ(record, ex);
-      })
-      .onSuccess(response -> sinkResponseHandler.handle(response)
-        .onSuccess(ignored -> {
-          logDebug("Successfully send response to the broker", record);
-          receiver.successfullySentToDLQ(record);
-        })
-        .onFailure(cause -> {
-          logError("Failed to handle response", record, cause);
-          receiver.failedToSendToDLQ(record, cause);
-        }));
+  private void sendToDLS(final KafkaConsumerRecord<K, V> record) {
+    deadLetterQueueSender
+        .send(record)
+        .onFailure(
+            ex -> {
+              logError("Failed to send record to dead letter sink", record, ex);
+              receiver.failedToSendToDLQ(record, ex);
+            })
+        .onSuccess(
+            response ->
+                sinkResponseHandler
+                    .handle(response)
+                    .onSuccess(
+                        ignored -> {
+                          logDebug("Successfully send response to the broker", record);
+                          receiver.successfullySentToDLQ(record);
+                        })
+                    .onFailure(
+                        cause -> {
+                          logError("Failed to handle response", record, cause);
+                          receiver.failedToSendToDLQ(record, cause);
+                        }));
   }
 
   private static <K, V> void logError(
-    final String msg,
-    final KafkaConsumerRecord<K, V> record,
-    final Throwable cause) {
+      final String msg, final KafkaConsumerRecord<K, V> record, final Throwable cause) {
 
-    if (logger.isDebugEnabled()) {
-      logger.error(msg + " {} {} {} {} {}",
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.error(
+          msg + " {} {} {} {} {}",
+          keyValue("topic", record.topic()),
+          keyValue("partition", record.partition()),
+          keyValue("headers", record.headers()),
+          keyValue("offset", record.offset()),
+          keyValue("event", record.value()),
+          cause);
+    } else {
+      LOGGER.error(
+          msg + " {} {} {}",
+          keyValue("topic", record.topic()),
+          keyValue("partition", record.partition()),
+          keyValue("offset", record.offset()),
+          cause);
+    }
+  }
+
+  private static <K, V> void logDebug(final String msg, final KafkaConsumerRecord<K, V> record) {
+
+    LOGGER.debug(
+        msg + " {} {} {} {} {}",
         keyValue("topic", record.topic()),
         keyValue("partition", record.partition()),
         keyValue("headers", record.headers()),
         keyValue("offset", record.offset()),
-        keyValue("event", record.value()),
-        cause
-      );
-    } else {
-      logger.error(msg + " {} {} {}",
-        keyValue("topic", record.topic()),
-        keyValue("partition", record.partition()),
-        keyValue("offset", record.offset()),
-        cause
-      );
-    }
-  }
-
-  private static <K, V> void logDebug(
-    final String msg,
-    final KafkaConsumerRecord<K, V> record) {
-
-    logger.debug(msg + " {} {} {} {} {}",
-      keyValue("topic", record.topic()),
-      keyValue("partition", record.partition()),
-      keyValue("headers", record.headers()),
-      keyValue("offset", record.offset()),
-      keyValue("event", record.value())
-    );
+        keyValue("event", record.value()));
   }
 
   public Future<?> close() {
     return CompositeFuture.all(
-      this.sinkResponseHandler.close(),
-      this.deadLetterQueueSender.close(),
-      this.subscriberSender.close()
-    );
+        this.sinkResponseHandler.close(),
+        this.deadLetterQueueSender.close(),
+        this.subscriberSender.close());
   }
 }

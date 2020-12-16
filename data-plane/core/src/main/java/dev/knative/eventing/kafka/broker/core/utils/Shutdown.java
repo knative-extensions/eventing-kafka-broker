@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +28,15 @@ import org.slf4j.LoggerFactory;
 
 public class Shutdown {
 
-  private static final Logger logger = LoggerFactory.getLogger(Shutdown.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(Shutdown.class);
 
-  public static Runnable run(final Vertx vertx, final Closeable fw, final Consumer<Contract> publisher) {
+  public static Runnable run(
+      final Vertx vertx, final Closeable fw, final Consumer<Contract> publisher) {
     return () -> {
       try {
         fw.close();
       } catch (final IOException e) {
-        logger.error("Failed to close file watcher", e);
+        LOGGER.error("Failed to close file watcher", e);
       }
       publisher.accept(Contract.newBuilder().build());
       closeSync(vertx).run();
@@ -48,8 +49,8 @@ public class Shutdown {
       vertx.close(ignore -> wait.countDown());
       try {
         wait.await(2, TimeUnit.MINUTES);
-      } catch (InterruptedException e) {
-        logger.error("Timeout waiting for vertx close", e);
+      } catch (final InterruptedException e) {
+        LOGGER.error("Timeout waiting for vertx close", e);
       }
       Tracing.shutdown();
     };

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,9 @@ public interface IngressReconcilerListener {
 
   Future<Void> onNewIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
 
-  Future<Void> onUpdateIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
+  Future<Void> onUpdateIngress(
+      DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
 
-  Future<Void> onDeleteIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
-
+  Future<Void> onDeleteIngress(
+      DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
 }

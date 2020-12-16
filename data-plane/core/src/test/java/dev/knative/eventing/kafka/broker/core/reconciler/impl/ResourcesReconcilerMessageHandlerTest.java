@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,22 +32,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class ResourcesReconcilerMessageHandlerTest {
 
   @Test
-  public void publishAndReceiveContractTest(Vertx vertx, VertxTestContext testContext) {
+  public void publishAndReceiveContractTest(final Vertx vertx, final VertxTestContext testContext) {
     ContractMessageCodec.register(vertx.eventBus());
 
-    DataPlaneContract.Contract expected = CoreObjects.contract();
+    final DataPlaneContract.Contract expected = CoreObjects.contract();
 
-    ResourcesReconcilerMessageHandler.start(vertx.eventBus(), contract -> {
-      testContext.verify(() ->
-        assertThat(contract)
-          .isEqualTo(expected.getResourcesList())
-      );
-      testContext.completeNow();
-      return Future.succeededFuture();
-    });
+    ResourcesReconcilerMessageHandler.start(
+        vertx.eventBus(),
+        contract -> {
+          testContext.verify(() -> assertThat(contract).isEqualTo(expected.getResourcesList()));
+          testContext.completeNow();
+          return Future.succeededFuture();
+        });
 
-    ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
+    final ContractPublisher publisher =
+        new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
     publisher.accept(expected);
   }
-
 }

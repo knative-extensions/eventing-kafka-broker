@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,61 +47,61 @@ public class OpenTelemetryVertxTracingFactoryTest {
     final var f = new OpenTelemetryVertxTracingFactory(Tracer.getDefault());
     final var tracer = f.tracer(null);
 
-    final var span = tracer.receiveRequest(
-      vertx.getOrCreateContext(),
-      SpanKind.MESSAGING,
-      TracingPolicy.IGNORE,
-      null,
-      "",
-      Collections.emptyList(),
-      new TagExtractor<>() {
-      }
-    );
+    final var span =
+        tracer.receiveRequest(
+            vertx.getOrCreateContext(),
+            SpanKind.MESSAGING,
+            TracingPolicy.IGNORE,
+            null,
+            "",
+            Collections.emptyList(),
+            new TagExtractor<>() {});
 
     assertThat(span).isNull();
   }
 
   @Test
-  public void receiveRequestShouldNotReturnSpanIfPolicyIsPropagateAndPreviousContextIsNotPresent(final Vertx vertx) {
+  public void receiveRequestShouldNotReturnSpanIfPolicyIsPropagateAndPreviousContextIsNotPresent(
+      final Vertx vertx) {
 
     final var f = new OpenTelemetryVertxTracingFactory(Tracer.getDefault());
     final var tracer = f.tracer(null);
 
-    final var span = tracer.receiveRequest(
-      vertx.getOrCreateContext(),
-      SpanKind.MESSAGING,
-      TracingPolicy.PROPAGATE,
-      null,
-      "",
-      Collections.emptyList(),
-      new TagExtractor<>() {
-      }
-    );
+    final var span =
+        tracer.receiveRequest(
+            vertx.getOrCreateContext(),
+            SpanKind.MESSAGING,
+            TracingPolicy.PROPAGATE,
+            null,
+            "",
+            Collections.emptyList(),
+            new TagExtractor<>() {});
 
     assertThat(span).isNull();
   }
 
   @Test
-  public void receiveRequestShouldReturnSpanIfPolicyIsPropagateAndPreviousContextIsPresent(final Vertx vertx) {
+  public void receiveRequestShouldReturnSpanIfPolicyIsPropagateAndPreviousContextIsPresent(
+      final Vertx vertx) {
 
     final var f = new OpenTelemetryVertxTracingFactory(Tracer.getDefault());
     final var tracer = f.tracer(null);
 
-    final Iterable<Map.Entry<String, String>> headers = Collections.singletonList(
-      new SimpleImmutableEntry<>("traceparent", "00-83ebbd06a32c2eaa8d5bf4b060d7cbfa-140cd1a04ab7be4b-01")
-    );
+    final Iterable<Map.Entry<String, String>> headers =
+        Collections.singletonList(
+            new SimpleImmutableEntry<>(
+                "traceparent", "00-83ebbd06a32c2eaa8d5bf4b060d7cbfa-140cd1a04ab7be4b-01"));
 
     final var ctx = vertx.getOrCreateContext();
-    final var span = tracer.receiveRequest(
-      ctx,
-      SpanKind.MESSAGING,
-      TracingPolicy.PROPAGATE,
-      null,
-      "",
-      headers,
-      new TagExtractor<>() {
-      }
-    );
+    final var span =
+        tracer.receiveRequest(
+            ctx,
+            SpanKind.MESSAGING,
+            TracingPolicy.PROPAGATE,
+            null,
+            "",
+            headers,
+            new TagExtractor<>() {});
 
     assertThat(span).isNotNull();
 
@@ -119,13 +119,11 @@ public class OpenTelemetryVertxTracingFactoryTest {
     doNothing().when(span).end();
 
     tracer.sendResponse(
-      vertx.getOrCreateContext(),
-      mock(Serializable.class),
-      span,
-      mock(Exception.class),
-      new TagExtractor<>() {
-      }
-    );
+        vertx.getOrCreateContext(),
+        mock(Serializable.class),
+        span,
+        mock(Exception.class),
+        new TagExtractor<>() {});
 
     verify(span, times(1)).end();
   }
@@ -136,14 +134,15 @@ public class OpenTelemetryVertxTracingFactoryTest {
     final var f = new OpenTelemetryVertxTracingFactory(Tracer.getDefault());
     final var tracer = f.tracer(null);
 
-    assertThatNoException().isThrownBy(() -> tracer.sendResponse(
-      vertx.getOrCreateContext(),
-      mock(Serializable.class),
-      null,
-      mock(Exception.class),
-      new TagExtractor<>() {
-      }
-    ));
+    assertThatNoException()
+        .isThrownBy(
+            () ->
+                tracer.sendResponse(
+                    vertx.getOrCreateContext(),
+                    mock(Serializable.class),
+                    null,
+                    mock(Exception.class),
+                    new TagExtractor<>() {}));
   }
 
   @Test
@@ -155,17 +154,15 @@ public class OpenTelemetryVertxTracingFactoryTest {
     final var ctx = vertx.getOrCreateContext();
     ctx.putLocal(ACTIVE_CONTEXT, Context.current());
 
-    final var span = tracer.sendRequest(
-      ctx,
-      SpanKind.MESSAGING,
-      TracingPolicy.PROPAGATE,
-      null,
-      "",
-      (k, v) -> {
-      },
-      new TagExtractor<>() {
-      }
-    );
+    final var span =
+        tracer.sendRequest(
+            ctx,
+            SpanKind.MESSAGING,
+            TracingPolicy.PROPAGATE,
+            null,
+            "",
+            (k, v) -> {},
+            new TagExtractor<>() {});
 
     assertThat(span).isNull();
   }
@@ -179,45 +176,42 @@ public class OpenTelemetryVertxTracingFactoryTest {
     final var ctx = vertx.getOrCreateContext();
     ctx.putLocal(ACTIVE_CONTEXT, Context.current());
 
-    final var span = tracer.sendRequest(
-      ctx,
-      SpanKind.MESSAGING,
-      TracingPolicy.IGNORE,
-      mock(Serializable.class),
-      "",
-      (k, v) -> {
-      },
-      new TagExtractor<>() {
-      }
-    );
+    final var span =
+        tracer.sendRequest(
+            ctx,
+            SpanKind.MESSAGING,
+            TracingPolicy.IGNORE,
+            mock(Serializable.class),
+            "",
+            (k, v) -> {},
+            new TagExtractor<>() {});
 
     assertThat(span).isNull();
   }
 
-
   @Test
-  public void sendRequestShouldNotReturnSpanIfPolicyIsPropagateAndPreviousContextIsNotPresent(final Vertx vertx) {
+  public void sendRequestShouldNotReturnSpanIfPolicyIsPropagateAndPreviousContextIsNotPresent(
+      final Vertx vertx) {
 
     final var f = new OpenTelemetryVertxTracingFactory(Tracer.getDefault());
     final var tracer = f.tracer(null);
 
-    final var span = tracer.sendRequest(
-      vertx.getOrCreateContext(),
-      SpanKind.MESSAGING,
-      TracingPolicy.PROPAGATE,
-      null,
-      "",
-      (k, v) -> {
-      },
-      new TagExtractor<>() {
-      }
-    );
+    final var span =
+        tracer.sendRequest(
+            vertx.getOrCreateContext(),
+            SpanKind.MESSAGING,
+            TracingPolicy.PROPAGATE,
+            null,
+            "",
+            (k, v) -> {},
+            new TagExtractor<>() {});
 
     assertThat(span).isNull();
   }
 
   @Test
-  public void sendRequestShouldReturnSpanIfPolicyIsPropagateAndPreviousContextIsPresent(final Vertx vertx) {
+  public void sendRequestShouldReturnSpanIfPolicyIsPropagateAndPreviousContextIsPresent(
+      final Vertx vertx) {
 
     final var f = new OpenTelemetryVertxTracingFactory(Tracer.getDefault());
     final var tracer = f.tracer(null);
@@ -225,40 +219,37 @@ public class OpenTelemetryVertxTracingFactoryTest {
     final var ctx = vertx.getOrCreateContext();
     ctx.putLocal(ACTIVE_CONTEXT, Context.current());
 
-    final var span = tracer.sendRequest(
-      ctx,
-      SpanKind.MESSAGING,
-      TracingPolicy.PROPAGATE,
-      mock(Serializable.class),
-      "",
-      (k, v) -> {
-      },
-      new TagExtractor<>() {
-      }
-    );
+    final var span =
+        tracer.sendRequest(
+            ctx,
+            SpanKind.MESSAGING,
+            TracingPolicy.PROPAGATE,
+            mock(Serializable.class),
+            "",
+            (k, v) -> {},
+            new TagExtractor<>() {});
 
     assertThat(span).isNotNull();
   }
 
   @Test
-  public void sendRequestShouldReturnSpanIfPolicyIsAlwaysAndPreviousContextIsNotPresent(final Vertx vertx) {
+  public void sendRequestShouldReturnSpanIfPolicyIsAlwaysAndPreviousContextIsNotPresent(
+      final Vertx vertx) {
 
     final var f = new OpenTelemetryVertxTracingFactory(Tracer.getDefault());
     final var tracer = f.tracer(null);
 
     final var ctx = vertx.getOrCreateContext();
 
-    final var span = tracer.sendRequest(
-      ctx,
-      SpanKind.MESSAGING,
-      TracingPolicy.ALWAYS,
-      mock(Serializable.class),
-      "",
-      (k, v) -> {
-      },
-      new TagExtractor<>() {
-      }
-    );
+    final var span =
+        tracer.sendRequest(
+            ctx,
+            SpanKind.MESSAGING,
+            TracingPolicy.ALWAYS,
+            mock(Serializable.class),
+            "",
+            (k, v) -> {},
+            new TagExtractor<>() {});
 
     assertThat(span).isNotNull();
   }
@@ -273,13 +264,11 @@ public class OpenTelemetryVertxTracingFactoryTest {
     doNothing().when(span).end();
 
     tracer.receiveResponse(
-      vertx.getOrCreateContext(),
-      mock(Serializable.class),
-      span,
-      mock(Exception.class),
-      new TagExtractor<>() {
-      }
-    );
+        vertx.getOrCreateContext(),
+        mock(Serializable.class),
+        span,
+        mock(Exception.class),
+        new TagExtractor<>() {});
 
     verify(span, times(1)).end();
   }
@@ -290,13 +279,14 @@ public class OpenTelemetryVertxTracingFactoryTest {
     final var f = new OpenTelemetryVertxTracingFactory(Tracer.getDefault());
     final var tracer = f.tracer(null);
 
-    assertThatNoException().isThrownBy(() -> tracer.receiveResponse(
-      vertx.getOrCreateContext(),
-      mock(Serializable.class),
-      null,
-      mock(Exception.class),
-      new TagExtractor<>() {
-      }
-    ));
+    assertThatNoException()
+        .isThrownBy(
+            () ->
+                tracer.receiveResponse(
+                    vertx.getOrCreateContext(),
+                    mock(Serializable.class),
+                    null,
+                    mock(Exception.class),
+                    new TagExtractor<>() {}));
   }
 }

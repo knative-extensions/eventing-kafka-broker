@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class ConsumerVerticleTest {
 
   static {
-    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    BackendRegistries.setupBackend(
+        new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
   }
 
   @Test
@@ -57,31 +58,36 @@ public class ConsumerVerticleTest {
     final var consumer = new MockConsumer<>(OffsetResetStrategy.LATEST);
     final var topic = "topic1";
 
-    final var verticle = new ConsumerVerticle<>(
-      v -> KafkaConsumer.create(v, consumer),
-      Set.of(topic),
-      (a, b) -> new ConsumerRecordHandler<>(
-        ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
-        value -> false,
-        (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class),
-        new SinkResponseHandlerMock<>(
-          Future::succeededFuture,
-          response -> Future.succeededFuture()
-        ),
-        ConsumerRecordSender.create(Future.failedFuture("DLQ send called"), Future.succeededFuture())
-      )
-    );
+    final var verticle =
+        new ConsumerVerticle<>(
+            v -> KafkaConsumer.create(v, consumer),
+            Set.of(topic),
+            (a, b) ->
+                new ConsumerRecordHandler<>(
+                    ConsumerRecordSender.create(
+                        Future.failedFuture("subscriber send called"), Future.succeededFuture()),
+                    value -> false,
+                    (ConsumerRecordOffsetStrategy<Object, Object>)
+                        mock(ConsumerRecordOffsetStrategy.class),
+                    new SinkResponseHandlerMock<>(
+                        Future::succeededFuture, response -> Future.succeededFuture()),
+                    ConsumerRecordSender.create(
+                        Future.failedFuture("DLQ send called"), Future.succeededFuture())));
 
     final Promise<String> promise = Promise.promise();
     vertx.deployVerticle(verticle, promise);
 
-    promise.future()
-      .onSuccess(ignored -> context.verify(() -> {
-        assertThat(consumer.subscription()).containsExactlyInAnyOrder(topic);
-        assertThat(consumer.closed()).isFalse();
-        context.completeNow();
-      }))
-      .onFailure(Assertions::fail);
+    promise
+        .future()
+        .onSuccess(
+            ignored ->
+                context.verify(
+                    () -> {
+                      assertThat(consumer.subscription()).containsExactlyInAnyOrder(topic);
+                      assertThat(consumer.closed()).isFalse();
+                      context.completeNow();
+                    }))
+        .onFailure(Assertions::fail);
   }
 
   @Test
@@ -90,109 +96,118 @@ public class ConsumerVerticleTest {
     final var consumer = new MockConsumer<>(OffsetResetStrategy.LATEST);
     final var topic = "topic1";
 
-    final var verticle = new ConsumerVerticle<>(
-      v -> KafkaConsumer.create(v, consumer),
-      Set.of(topic),
-      (a, b) -> new ConsumerRecordHandler<>(
-        ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
-        value -> false,
-        (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class),
-        new SinkResponseHandlerMock<>(
-          Future::succeededFuture,
-          response -> Future.succeededFuture()
-        ),
-        ConsumerRecordSender.create(Future.failedFuture("DLQ send called"), Future.succeededFuture())
-      )
-    );
+    final var verticle =
+        new ConsumerVerticle<>(
+            v -> KafkaConsumer.create(v, consumer),
+            Set.of(topic),
+            (a, b) ->
+                new ConsumerRecordHandler<>(
+                    ConsumerRecordSender.create(
+                        Future.failedFuture("subscriber send called"), Future.succeededFuture()),
+                    value -> false,
+                    (ConsumerRecordOffsetStrategy<Object, Object>)
+                        mock(ConsumerRecordOffsetStrategy.class),
+                    new SinkResponseHandlerMock<>(
+                        Future::succeededFuture, response -> Future.succeededFuture()),
+                    ConsumerRecordSender.create(
+                        Future.failedFuture("DLQ send called"), Future.succeededFuture())));
 
     final Promise<String> deployPromise = Promise.promise();
     vertx.deployVerticle(verticle, deployPromise);
 
     final Promise<Void> undeployPromise = Promise.promise();
 
-    deployPromise.future()
-      .onSuccess(deploymentID -> vertx.undeploy(deploymentID, undeployPromise))
-      .onFailure(context::failNow);
+    deployPromise
+        .future()
+        .onSuccess(deploymentID -> vertx.undeploy(deploymentID, undeployPromise))
+        .onFailure(context::failNow);
 
-    undeployPromise.future()
-      .onSuccess(ignored -> {
-        assertThat(consumer.closed()).isTrue();
-        context.completeNow();
-      })
-      .onFailure(context::failNow);
+    undeployPromise
+        .future()
+        .onSuccess(
+            ignored -> {
+              assertThat(consumer.closed()).isTrue();
+              context.completeNow();
+            })
+        .onFailure(context::failNow);
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void shouldCloseEverything(final Vertx vertx, final VertxTestContext context) {
-    final var topics = new String[]{"a"};
+    final var topics = new String[] {"a"};
     final KafkaConsumer<Object, Object> consumer = mock(KafkaConsumer.class);
 
     when(consumer.close()).thenReturn(Future.succeededFuture());
-    when(consumer.subscribe((Set<String>) any(), any())).then(answer -> {
-      final Handler<AsyncResult<Void>> callback = answer.getArgument(1);
-      callback.handle(Future.succeededFuture());
-      return consumer;
-    });
+    when(consumer.subscribe((Set<String>) any(), any()))
+        .then(
+            answer -> {
+              final Handler<AsyncResult<Void>> callback = answer.getArgument(1);
+              callback.handle(Future.succeededFuture());
+              return consumer;
+            });
 
     final var mockConsumer = new MockConsumer<>(OffsetResetStrategy.LATEST);
     when(consumer.unwrap()).thenReturn(mockConsumer);
 
-    mockConsumer.schedulePollTask(() -> {
-      mockConsumer.unsubscribe();
+    mockConsumer.schedulePollTask(
+        () -> {
+          mockConsumer.unsubscribe();
 
-      mockConsumer.assign(Arrays.stream(topics)
-        .map(t -> new TopicPartition(t, 0))
-        .collect(Collectors.toSet())
-      );
-    });
+          mockConsumer.assign(
+              Arrays.stream(topics).map(t -> new TopicPartition(t, 0)).collect(Collectors.toSet()));
+        });
 
     final var consumerRecordSenderClosed = new AtomicBoolean(false);
     final var dlsSenderClosed = new AtomicBoolean(false);
     final var sinkClosed = new AtomicBoolean(false);
 
-    final var verticle = new ConsumerVerticle<>(
-      v -> consumer,
-      Arrays.stream(topics).collect(Collectors.toSet()),
-      (v, c) -> new ConsumerRecordHandler<>(
-        new ConsumerRecordSenderMock<>(
-          () -> {
-            consumerRecordSenderClosed.set(true);
-            return Future.succeededFuture();
-          },
-          record -> Future.succeededFuture()
-        ),
-        ce -> true,
-        (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class),
-        new SinkResponseHandlerMock<>(
-          () -> {
-            sinkClosed.set(true);
-            return Future.succeededFuture();
-          },
-          response -> Future.succeededFuture()
-        ),
-        new ConsumerRecordSenderMock<>(
-          () -> {
-            dlsSenderClosed.set(true);
-            return Future.succeededFuture();
-          },
-          record -> Future.succeededFuture()
-        )
-      )
-    );
+    final var verticle =
+        new ConsumerVerticle<>(
+            v -> consumer,
+            Arrays.stream(topics).collect(Collectors.toSet()),
+            (v, c) ->
+                new ConsumerRecordHandler<>(
+                    new ConsumerRecordSenderMock<>(
+                        () -> {
+                          consumerRecordSenderClosed.set(true);
+                          return Future.succeededFuture();
+                        },
+                        record -> Future.succeededFuture()),
+                    ce -> true,
+                    (ConsumerRecordOffsetStrategy<Object, Object>)
+                        mock(ConsumerRecordOffsetStrategy.class),
+                    new SinkResponseHandlerMock<>(
+                        () -> {
+                          sinkClosed.set(true);
+                          return Future.succeededFuture();
+                        },
+                        response -> Future.succeededFuture()),
+                    new ConsumerRecordSenderMock<>(
+                        () -> {
+                          dlsSenderClosed.set(true);
+                          return Future.succeededFuture();
+                        },
+                        record -> Future.succeededFuture())));
 
-    vertx.deployVerticle(verticle)
-      .onFailure(context::failNow)
-      .onSuccess(r -> vertx.undeploy(r)
+    vertx
+        .deployVerticle(verticle)
         .onFailure(context::failNow)
-        .onSuccess(ignored -> context.verify(() -> {
-          assertThat(consumerRecordSenderClosed.get()).isTrue();
-          assertThat(sinkClosed.get()).isTrue();
-          assertThat(dlsSenderClosed.get()).isTrue();
-          verify(consumer, times(1)).close();
+        .onSuccess(
+            r ->
+                vertx
+                    .undeploy(r)
+                    .onFailure(context::failNow)
+                    .onSuccess(
+                        ignored ->
+                            context.verify(
+                                () -> {
+                                  assertThat(consumerRecordSenderClosed.get()).isTrue();
+                                  assertThat(sinkClosed.get()).isTrue();
+                                  assertThat(dlsSenderClosed.get()).isTrue();
+                                  verify(consumer, times(1)).close();
 
-          context.completeNow();
-        }))
-      );
+                                  context.completeNow();
+                                })));
   }
 }

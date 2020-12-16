@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,12 +30,13 @@ public class DispatcherEnv extends BaseEnv {
   private final String webClientConfigFilePath;
   private final int egressesInitialCapacity;
 
-  public DispatcherEnv(Function<String, String> envProvider) {
+  public DispatcherEnv(final Function<String, String> envProvider) {
     super(envProvider);
 
     this.consumerConfigFilePath = requireNonNull(envProvider.apply(CONSUMER_CONFIG_FILE_PATH));
     this.webClientConfigFilePath = requireNonNull(envProvider.apply(WEBCLIENT_CONFIG_FILE_PATH));
-    this.egressesInitialCapacity = Integer.parseInt(requireNonNull(envProvider.apply(EGRESSES_INITIAL_CAPACITY)));
+    this.egressesInitialCapacity =
+        Integer.parseInt(requireNonNull(envProvider.apply(EGRESSES_INITIAL_CAPACITY)));
   }
 
   public String getConsumerConfigFilePath() {
@@ -52,10 +53,16 @@ public class DispatcherEnv extends BaseEnv {
 
   @Override
   public String toString() {
-    return "DispatcherEnv{" +
-      "consumerConfigFilePath='" + consumerConfigFilePath + '\'' +
-      ", webClientConfigFilePath='" + webClientConfigFilePath + '\'' +
-      ", egressesInitialCapacity=" + egressesInitialCapacity +
-      "} " + super.toString();
+    return "DispatcherEnv{"
+        + "consumerConfigFilePath='"
+        + consumerConfigFilePath
+        + '\''
+        + ", webClientConfigFilePath='"
+        + webClientConfigFilePath
+        + '\''
+        + ", egressesInitialCapacity="
+        + egressesInitialCapacity
+        + "} "
+        + super.toString();
   }
 }

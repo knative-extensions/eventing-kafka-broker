@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZE
 import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
@@ -59,18 +60,15 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import static org.awaitility.Awaitility.await;
 
 @ExtendWith(VertxExtension.class)
 public class DataPlaneTest {
@@ -96,7 +94,8 @@ public class DataPlaneTest {
 
   static {
     assertThat(PATH_SERVICE_1).isNotEqualTo(PATH_SERVICE_2);
-    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    BackendRegistries.setupBackend(
+        new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
   }
 
   private static File dataDir;
@@ -106,7 +105,7 @@ public class DataPlaneTest {
 
   @BeforeAll
   public static void setUp(final Vertx vertx, final VertxTestContext context)
-    throws IOException, InterruptedException {
+      throws IOException, InterruptedException {
     setUpKafkaCluster();
     ContractMessageCodec.register(vertx.eventBus());
     consumerDeployerVerticle = setUpDispatcher(vertx, context);
@@ -147,114 +146,134 @@ public class DataPlaneTest {
     final var checkpoints = context.checkpoint(3);
 
     // event sent by the source to the Broker (see 1 in diagram)
-    final var expectedRequestEvent = CloudEventBuilder.v1()
-      .withId(UUID.randomUUID().toString())
-      .withDataSchema(URI.create("/api/data-schema-ce-1"))
-      .withSource(URI.create("/api/rossi"))
-      .withSubject("subject-ce-1")
-      .withData("data-ce-1".getBytes())
-      .withType(TYPE_CE_1)
-      .build();
+    final var expectedRequestEvent =
+        CloudEventBuilder.v1()
+            .withId(UUID.randomUUID().toString())
+            .withDataSchema(URI.create("/api/data-schema-ce-1"))
+            .withSource(URI.create("/api/rossi"))
+            .withSubject("subject-ce-1")
+            .withData("data-ce-1".getBytes())
+            .withType(TYPE_CE_1)
+            .build();
 
     // event sent in the response by the Callable service (see 2 in diagram)
-    final var expectedResponseEvent = CloudEventBuilder.v03()
-      .withId(UUID.randomUUID().toString())
-      .withDataSchema(URI.create("/api/data-schema-ce-2"))
-      .withSubject("subject-ce-2")
-      .withSource(URI.create("/api/rossi"))
-      .withData("data-ce-2".getBytes())
-      .withType(TYPE_CE_2)
-      .build();
+    final var expectedResponseEvent =
+        CloudEventBuilder.v03()
+            .withId(UUID.randomUUID().toString())
+            .withDataSchema(URI.create("/api/data-schema-ce-2"))
+            .withSubject("subject-ce-2")
+            .withSource(URI.create("/api/rossi"))
+            .withData("data-ce-2".getBytes())
+            .withType(TYPE_CE_2)
+            .build();
 
-    final var resource = DataPlaneContract.Resource.newBuilder()
-      .addTopics(TOPIC)
-      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath(format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME)))
-      .setBootstrapServers(bootstrapServers())
-      .setUid(UUID.randomUUID().toString())
-      .addEgresses(
-        DataPlaneContract.Egress.newBuilder()
-          .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_1))
-          .setFilter(DataPlaneContract.Filter.newBuilder()
-            .putAttributes(CloudEventV1.TYPE, TYPE_CE_1))
-          .setConsumerGroup(UUID.randomUUID().toString())
-          .build()
-      )
-      .addEgresses(
-        DataPlaneContract.Egress.newBuilder()
-          .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
-          .setFilter(DataPlaneContract.Filter.newBuilder()
-            .putAttributes(CloudEventV1.TYPE, TYPE_CE_2))
-          .setConsumerGroup(UUID.randomUUID().toString())
-          .build()
-      )
-      .addEgresses(
-        // the destination of the following trigger should never be reached because events
-        // don't pass filters.
-        DataPlaneContract.Egress.newBuilder()
-          .setConsumerGroup(UUID.randomUUID().toString())
-          .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_3))
-          .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(
-            CloudEventV1.SOURCE,
-            UUID.randomUUID().toString()
-          )).build()
-      )
-      .build();
+    final var resource =
+        DataPlaneContract.Resource.newBuilder()
+            .addTopics(TOPIC)
+            .setIngress(
+                DataPlaneContract.Ingress.newBuilder()
+                    .setPath(format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME)))
+            .setBootstrapServers(bootstrapServers())
+            .setUid(UUID.randomUUID().toString())
+            .addEgresses(
+                DataPlaneContract.Egress.newBuilder()
+                    .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_1))
+                    .setFilter(
+                        DataPlaneContract.Filter.newBuilder()
+                            .putAttributes(CloudEventV1.TYPE, TYPE_CE_1))
+                    .setConsumerGroup(UUID.randomUUID().toString())
+                    .build())
+            .addEgresses(
+                DataPlaneContract.Egress.newBuilder()
+                    .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
+                    .setFilter(
+                        DataPlaneContract.Filter.newBuilder()
+                            .putAttributes(CloudEventV1.TYPE, TYPE_CE_2))
+                    .setConsumerGroup(UUID.randomUUID().toString())
+                    .build())
+            .addEgresses(
+                // the destination of the following trigger should never be reached because events
+                // don't pass filters.
+                DataPlaneContract.Egress.newBuilder()
+                    .setConsumerGroup(UUID.randomUUID().toString())
+                    .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_3))
+                    .setFilter(
+                        DataPlaneContract.Filter.newBuilder()
+                            .putAttributes(CloudEventV1.SOURCE, UUID.randomUUID().toString()))
+                    .build())
+            .build();
 
     new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS)
-      .accept(DataPlaneContract.Contract.newBuilder().addResources(resource).build());
+        .accept(DataPlaneContract.Contract.newBuilder().addResources(resource).build());
 
-      await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> assertThat(vertx.deploymentIDs()).hasSize(resource.getEgressesCount()+ NUM_RESOURCES + NUM_SYSTEM_VERTICLES));
+    await()
+        .atMost(10, TimeUnit.SECONDS)
+        .untilAsserted(
+            () ->
+                assertThat(vertx.deploymentIDs())
+                    .hasSize(resource.getEgressesCount() + NUM_RESOURCES + NUM_SYSTEM_VERTICLES));
 
     // start service
-    vertx.createHttpServer()
-      .exceptionHandler(context::failNow)
-      .requestHandler(request -> VertxMessageFactory
-        .createReader(request)
-        .map(MessageReader::toEvent)
+    vertx
+        .createHttpServer()
+        .exceptionHandler(context::failNow)
+        .requestHandler(
+            request ->
+                VertxMessageFactory.createReader(request)
+                    .map(MessageReader::toEvent)
+                    .onFailure(context::failNow)
+                    .onSuccess(
+                        event -> {
+
+                          // service 1 receives event sent by the HTTPClient
+                          if (request.path().equals(PATH_SERVICE_1)) {
+                            context.verify(
+                                () -> {
+                                  assertThat(event).isEqualTo(expectedRequestEvent);
+                                  checkpoints.flag(); // 2
+                                });
+
+                            // write event to the response, the event will be handled by service 2
+                            VertxMessageFactory.createWriter(request.response())
+                                .writeBinary(expectedResponseEvent);
+                          }
+
+                          // service 2 receives event in the response
+                          if (request.path().equals(PATH_SERVICE_2)) {
+                            context.verify(
+                                () -> {
+                                  assertThat(event).isEqualTo(expectedResponseEvent);
+                                  checkpoints.flag(); // 3
+                                });
+                          }
+
+                          if (request.path().equals(PATH_SERVICE_3)) {
+                            context.failNow(
+                                new IllegalStateException(
+                                    PATH_SERVICE_3 + " should never be reached"));
+                          }
+                        }))
+        .listen(SERVICE_PORT, "localhost")
         .onFailure(context::failNow)
-        .onSuccess(event -> {
-
-          // service 1 receives event sent by the HTTPClient
-          if (request.path().equals(PATH_SERVICE_1)) {
-            context.verify(() -> {
-              assertThat(event).isEqualTo(expectedRequestEvent);
-              checkpoints.flag(); // 2
+        .onSuccess(
+            ignored -> {
+              // send event to the Broker receiver
+              VertxMessageFactory.createWriter(
+                      WebClient.create(vertx)
+                          .post(
+                              INGRESS_PORT,
+                              "localhost",
+                              format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME)))
+                  .writeBinary(expectedRequestEvent)
+                  .onFailure(context::failNow)
+                  .onSuccess(
+                      response ->
+                          context.verify(
+                              () -> {
+                                assertThat(response.statusCode()).isEqualTo(202);
+                                checkpoints.flag(); // 1
+                              }));
             });
-
-            // write event to the response, the event will be handled by service 2
-            VertxMessageFactory.createWriter(request.response())
-              .writeBinary(expectedResponseEvent);
-          }
-
-          // service 2 receives event in the response
-          if (request.path().equals(PATH_SERVICE_2)) {
-            context.verify(() -> {
-              assertThat(event).isEqualTo(expectedResponseEvent);
-              checkpoints.flag(); // 3
-            });
-          }
-
-          if (request.path().equals(PATH_SERVICE_3)) {
-            context.failNow(new IllegalStateException(
-              PATH_SERVICE_3 + " should never be reached"
-            ));
-          }
-        }))
-      .listen(SERVICE_PORT, "localhost")
-      .onFailure(context::failNow)
-      .onSuccess(ignored -> {
-        // send event to the Broker receiver
-        VertxMessageFactory.createWriter(
-          WebClient.create(vertx)
-            .post(INGRESS_PORT, "localhost", format("/%s/%s", BROKER_NAMESPACE, BROKER_NAME))
-        ).writeBinary(expectedRequestEvent)
-          .onFailure(context::failNow)
-          .onSuccess(response -> context.verify(() -> {
-            assertThat(response.statusCode())
-              .isEqualTo(202);
-            checkpoints.flag(); // 1
-          }));
-      });
   }
 
   @AfterAll
@@ -275,21 +294,23 @@ public class DataPlaneTest {
 
     dataDir = File.createTempFile("kafka", "kafka");
 
-    kafkaCluster = new KafkaCluster()
-      .withPorts(ZK_PORT, KAFKA_PORT)
-      .deleteDataPriorToStartup(true)
-      .addBrokers(NUM_BROKERS)
-      .usingDirectory(dataDir)
-      .startup();
+    kafkaCluster =
+        new KafkaCluster()
+            .withPorts(ZK_PORT, KAFKA_PORT)
+            .deleteDataPriorToStartup(true)
+            .addBrokers(NUM_BROKERS)
+            .usingDirectory(dataDir)
+            .startup();
 
     kafkaCluster.createTopic(TOPIC, NUM_PARTITIONS, REPLICATION_FACTOR);
   }
 
-  private static ConsumerDeployerVerticle setUpDispatcher(final Vertx vertx, final VertxTestContext context)
-    throws InterruptedException {
+  private static ConsumerDeployerVerticle setUpDispatcher(
+      final Vertx vertx, final VertxTestContext context) throws InterruptedException {
 
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-      consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class));
+        consumerRecordOffsetStrategyFactory =
+            ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class));
 
     final var consumerConfigs = new Properties();
     consumerConfigs.put(BOOTSTRAP_SERVERS_CONFIG, format("localhost:%d", KAFKA_PORT));
@@ -298,17 +319,14 @@ public class DataPlaneTest {
 
     final var producerConfigs = producerConfigs();
 
-    final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
-      consumerRecordOffsetStrategyFactory,
-      consumerConfigs,
-      new WebClientOptions(),
-      producerConfigs
-    );
+    final var consumerVerticleFactory =
+        new HttpConsumerVerticleFactory(
+            consumerRecordOffsetStrategyFactory,
+            consumerConfigs,
+            new WebClientOptions(),
+            producerConfigs);
 
-    final var verticle = new ConsumerDeployerVerticle(
-      consumerVerticleFactory,
-      10
-    );
+    final var verticle = new ConsumerDeployerVerticle(consumerVerticleFactory, 10);
 
     final CountDownLatch latch = new CountDownLatch(1);
     vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));
@@ -317,18 +335,18 @@ public class DataPlaneTest {
     return verticle;
   }
 
-  private static ReceiverVerticle setUpReceiver(
-    final Vertx vertx,
-    final VertxTestContext context) throws InterruptedException {
+  private static ReceiverVerticle setUpReceiver(final Vertx vertx, final VertxTestContext context)
+      throws InterruptedException {
 
-    final Function<Vertx, RequestMapper<String, CloudEvent>> handlerFactory = v -> new RequestMapper<>(
-      vertx,
-      producerConfigs(),
-      new CloudEventRequestToRecordMapper(v),
-      properties -> KafkaProducer.create(v, properties),
-      mock(Counter.class),
-      mock(Counter.class)
-    );
+    final Function<Vertx, RequestMapper<String, CloudEvent>> handlerFactory =
+        v ->
+            new RequestMapper<>(
+                vertx,
+                producerConfigs(),
+                new CloudEventRequestToRecordMapper(v),
+                properties -> KafkaProducer.create(v, properties),
+                mock(Counter.class),
+                mock(Counter.class));
 
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(INGRESS_PORT);

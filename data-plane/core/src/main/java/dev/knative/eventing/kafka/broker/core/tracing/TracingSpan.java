@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,13 @@ import io.vertx.core.Vertx;
 
 public class TracingSpan {
 
-  static String ACTIVE_CONTEXT = "tracing.context";
-  static String ACTIVE_SPAN = "tracing.span";
+  static final String ACTIVE_CONTEXT = "tracing.context";
+  static final String ACTIVE_SPAN = "tracing.span";
 
-  public static final AttributeKey<String> MESSAGING_MESSAGE_SOURCE = stringKey("messaging.message_source");
-  public static final AttributeKey<String> MESSAGING_MESSAGE_TYPE = stringKey("messaging.message_type");
+  public static final AttributeKey<String> MESSAGING_MESSAGE_SOURCE =
+      stringKey("messaging.message_source");
+  public static final AttributeKey<String> MESSAGING_MESSAGE_TYPE =
+      stringKey("messaging.message_type");
 
   public static void decorateCurrent(final Vertx vertx, final CloudEvent event) {
 

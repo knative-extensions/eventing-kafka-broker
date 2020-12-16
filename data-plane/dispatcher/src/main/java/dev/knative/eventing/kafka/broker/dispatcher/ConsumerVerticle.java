@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class ConsumerVerticle<K, V, R> extends AbstractVerticle {
 
-  private static final Logger logger = LoggerFactory.getLogger(ConsumerVerticle.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerVerticle.class);
 
   private KafkaConsumer<K, V> consumer;
   private AutoCloseable consumerMeterBinder;
@@ -44,19 +44,21 @@ public final class ConsumerVerticle<K, V, R> extends AbstractVerticle {
 
   private final Set<String> topics;
   private final Function<Vertx, KafkaConsumer<K, V>> consumerFactory;
-  private final BiFunction<Vertx, KafkaConsumer<K, V>, ConsumerRecordHandler<K, V, R>> recordHandler;
+  private final BiFunction<Vertx, KafkaConsumer<K, V>, ConsumerRecordHandler<K, V, R>>
+      recordHandler;
 
   /**
    * All args constructor.
    *
-   * @param consumerFactory      Kafka consumer.
-   * @param topics               topic to consume.
+   * @param consumerFactory Kafka consumer.
+   * @param topics topic to consume.
    * @param recordHandlerFactory record handler factory.
    */
   public ConsumerVerticle(
-    final Function<Vertx, KafkaConsumer<K, V>> consumerFactory,
-    final Set<String> topics,
-    final BiFunction<Vertx, KafkaConsumer<K, V>, ConsumerRecordHandler<K, V, R>> recordHandlerFactory) {
+      final Function<Vertx, KafkaConsumer<K, V>> consumerFactory,
+      final Set<String> topics,
+      final BiFunction<Vertx, KafkaConsumer<K, V>, ConsumerRecordHandler<K, V, R>>
+          recordHandlerFactory) {
 
     Objects.requireNonNull(consumerFactory, "provide consumerFactory");
     Objects.requireNonNull(topics, "provide topic");
@@ -67,11 +69,9 @@ public final class ConsumerVerticle<K, V, R> extends AbstractVerticle {
     this.consumerFactory = consumerFactory;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
-  public void start(Promise<Void> startPromise) {
+  public void start(final Promise<Void> startPromise) {
     this.consumer = consumerFactory.apply(vertx);
     this.consumerMeterBinder = Metrics.register(this.consumer.unwrap());
     this.handler = recordHandler.apply(vertx, this.consumer);
@@ -81,19 +81,14 @@ public final class ConsumerVerticle<K, V, R> extends AbstractVerticle {
     consumer.subscribe(topics, startPromise);
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
-  public void stop(Promise<Void> stopPromise) {
-    logger.info("Stopping consumer");
+  public void stop(final Promise<Void> stopPromise) {
+    LOGGER.info("Stopping consumer");
 
     CompositeFuture.all(
-      this.consumer.close(),
-      this.handler.close(),
-      Metrics.close(vertx, consumerMeterBinder)
-    )
-      .onSuccess(r -> stopPromise.complete())
-      .onFailure(stopPromise::fail);
+            this.consumer.close(), this.handler.close(), Metrics.close(vertx, consumerMeterBinder))
+        .onSuccess(r -> stopPromise.complete())
+        .onFailure(stopPromise::fail);
   }
 }

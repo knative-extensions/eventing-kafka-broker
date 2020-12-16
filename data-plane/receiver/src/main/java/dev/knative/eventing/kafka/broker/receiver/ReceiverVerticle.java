@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,20 +37,22 @@ public class ReceiverVerticle extends AbstractVerticle {
   private HttpServer server;
   private MessageConsumer<Object> messageConsumer;
   private final Function<Vertx, RequestMapper<String, CloudEvent>> requestHandlerFactory;
-  private final Function<Handler<HttpServerRequest>, Handler<HttpServerRequest>>[] handlerDecoratorFactories;
+  private final Function<Handler<HttpServerRequest>, Handler<HttpServerRequest>>[]
+      handlerDecoratorFactories;
 
   /**
    * Create a new HttpVerticle.
    *
-   * @param httpServerOptions         server options.
-   * @param requestHandlerFactory     request handler factory.
+   * @param httpServerOptions server options.
+   * @param requestHandlerFactory request handler factory.
    * @param handlerDecoratorFactories request handler decorators functions
    */
   @SafeVarargs
   public ReceiverVerticle(
-    final HttpServerOptions httpServerOptions,
-    final Function<Vertx, RequestMapper<String, CloudEvent>> requestHandlerFactory,
-    final Function<Handler<HttpServerRequest>, Handler<HttpServerRequest>>... handlerDecoratorFactories) {
+      final HttpServerOptions httpServerOptions,
+      final Function<Vertx, RequestMapper<String, CloudEvent>> requestHandlerFactory,
+      final Function<Handler<HttpServerRequest>, Handler<HttpServerRequest>>...
+          handlerDecoratorFactories) {
     Objects.requireNonNull(httpServerOptions, "provide http server options");
     Objects.requireNonNull(requestHandlerFactory, "provide request handler");
 
@@ -63,13 +65,10 @@ public class ReceiverVerticle extends AbstractVerticle {
   public void start(final Promise<Void> startPromise) {
     final var requestMapper = this.requestHandlerFactory.apply(vertx);
 
-    this.messageConsumer = ResourcesReconcilerMessageHandler.start(
-      vertx.eventBus(),
-      ResourcesReconcilerImpl
-        .builder()
-        .watchIngress(requestMapper)
-        .build()
-    );
+    this.messageConsumer =
+        ResourcesReconcilerMessageHandler.start(
+            vertx.eventBus(),
+            ResourcesReconcilerImpl.builder().watchIngress(requestMapper).build());
     this.server = vertx.createHttpServer(httpServerOptions);
 
     Handler<HttpServerRequest> requestHandler = requestMapper;
@@ -77,20 +76,18 @@ public class ReceiverVerticle extends AbstractVerticle {
       requestHandler = handlerDecoratorFactory.apply(requestHandler);
     }
 
-    this.server.requestHandler(requestHandler)
-      .exceptionHandler(startPromise::tryFail)
-      .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
-      .<Void>mapEmpty()
-      .onComplete(startPromise);
+    this.server
+        .requestHandler(requestHandler)
+        .exceptionHandler(startPromise::tryFail)
+        .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
+        .<Void>mapEmpty()
+        .onComplete(startPromise);
   }
 
   @Override
-  public void stop(Promise<Void> stopPromise) {
-    CompositeFuture.all(
-      server.close().mapEmpty(),
-      messageConsumer.unregister()
-    )
-      .<Void>mapEmpty()
-      .onComplete(stopPromise);
+  public void stop(final Promise<Void> stopPromise) {
+    CompositeFuture.all(server.close().mapEmpty(), messageConsumer.unregister())
+        .<Void>mapEmpty()
+        .onComplete(stopPromise);
   }
 }

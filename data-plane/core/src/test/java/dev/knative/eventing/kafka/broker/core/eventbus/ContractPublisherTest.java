@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.core.eventbus;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -30,22 +29,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class ContractPublisherTest {
 
   @Test
-  public void publishTest(Vertx vertx, VertxTestContext testContext) {
+  public void publishTest(final Vertx vertx, final VertxTestContext testContext) {
     ContractMessageCodec.register(vertx.eventBus());
 
-    String address = "aaa";
-    DataPlaneContract.Contract expected = CoreObjects.contract();
+    final String address = "aaa";
+    final DataPlaneContract.Contract expected = CoreObjects.contract();
 
-    vertx.eventBus().localConsumer(address).handler(message -> {
-      testContext.verify(() ->
-        assertThat(message.body())
-          .isEqualTo(expected)
-      );
-      testContext.completeNow();
-    });
+    vertx
+        .eventBus()
+        .localConsumer(address)
+        .handler(
+            message -> {
+              testContext.verify(() -> assertThat(message.body()).isEqualTo(expected));
+              testContext.completeNow();
+            });
 
-    ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), address);
+    final ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), address);
     publisher.accept(expected);
   }
-
 }

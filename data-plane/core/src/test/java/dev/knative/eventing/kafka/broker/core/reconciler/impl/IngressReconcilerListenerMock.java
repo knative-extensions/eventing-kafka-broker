@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,7 @@ public class IngressReconcilerListenerMock implements IngressReconcilerListener 
 
   @Override
   public Future<Void> onNewIngress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Ingress ingress) {
+      final DataPlaneContract.Resource resource, final DataPlaneContract.Ingress ingress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(ingress);
     this.newIngresses.add(resource.getUid());
@@ -46,8 +45,7 @@ public class IngressReconcilerListenerMock implements IngressReconcilerListener 
 
   @Override
   public Future<Void> onUpdateIngress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Ingress ingress) {
+      final DataPlaneContract.Resource resource, final DataPlaneContract.Ingress ingress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(ingress);
     this.updatedIngresses.add(resource.getUid());
@@ -56,8 +54,7 @@ public class IngressReconcilerListenerMock implements IngressReconcilerListener 
 
   @Override
   public Future<Void> onDeleteIngress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Ingress ingress) {
+      final DataPlaneContract.Resource resource, final DataPlaneContract.Ingress ingress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(ingress);
     this.deletedIngresses.add(resource.getUid());

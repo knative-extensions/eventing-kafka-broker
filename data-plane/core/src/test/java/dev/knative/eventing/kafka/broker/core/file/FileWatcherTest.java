@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,33 +40,26 @@ public class FileWatcherTest {
   public void shouldReceiveUpdatesOnUpdate() throws IOException, InterruptedException {
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
-    final var broker1 = DataPlaneContract.Contract.newBuilder()
-      .addResources(resource1())
-      .build();
+    final var broker1 = DataPlaneContract.Contract.newBuilder().addResources(resource1()).build();
 
-    final var broker2 = DataPlaneContract.Contract.newBuilder()
-      .addResources(resource2())
-      .build();
+    final var broker2 = DataPlaneContract.Contract.newBuilder().addResources(resource2()).build();
 
     final var isFirst = new AtomicBoolean(true);
     final var waitFirst = new CountDownLatch(1);
     final var waitSecond = new CountDownLatch(1);
-    final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {
+    final Consumer<DataPlaneContract.Contract> brokersConsumer =
+        broker -> {
+          if (isFirst.getAndSet(false)) {
+            assertThat(broker).isEqualTo(broker1);
+            waitFirst.countDown();
+          } else {
+            assertThat(broker).isEqualTo(broker2);
+            waitSecond.countDown();
+          }
+        };
 
-      if (isFirst.getAndSet(false)) {
-        assertThat(broker).isEqualTo(broker1);
-        waitFirst.countDown();
-      } else {
-        assertThat(broker).isEqualTo(broker2);
-        waitSecond.countDown();
-      }
-    };
-
-    final var fw = new FileWatcher(
-      FileSystems.getDefault().newWatchService(),
-      brokersConsumer,
-      file
-    );
+    final var fw =
+        new FileWatcher(FileSystems.getDefault().newWatchService(), brokersConsumer, file);
 
     final var thread1 = watch(fw);
     final var thread2 = watch(fw); // the second time is no-op
@@ -84,26 +77,22 @@ public class FileWatcherTest {
   @Test
   @Timeout(value = 5)
   public void shouldReadFileWhenStartWatchingWithoutUpdates()
-    throws IOException, InterruptedException {
+      throws IOException, InterruptedException {
 
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
-    final var broker1 = DataPlaneContract.Contract.newBuilder()
-      .addResources(resource1())
-      .build();
+    final var broker1 = DataPlaneContract.Contract.newBuilder().addResources(resource1()).build();
     write(file, broker1);
 
     final var waitBroker = new CountDownLatch(1);
-    final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {
-      assertThat(broker).isEqualTo(broker1);
-      waitBroker.countDown();
-    };
+    final Consumer<DataPlaneContract.Contract> brokersConsumer =
+        broker -> {
+          assertThat(broker).isEqualTo(broker1);
+          waitBroker.countDown();
+        };
 
-    final var fw = new FileWatcher(
-      FileSystems.getDefault().newWatchService(),
-      brokersConsumer,
-      file
-    );
+    final var fw =
+        new FileWatcher(FileSystems.getDefault().newWatchService(), brokersConsumer, file);
 
     final var thread = watch(fw);
 
@@ -112,18 +101,21 @@ public class FileWatcherTest {
     thread.interrupt();
   }
 
-  private Thread watch(FileWatcher fw) {
-    final var thread = new Thread(() -> {
-      try {
-        fw.watch();
-      } catch (IOException | InterruptedException ignored) {
-      }
-    });
+  private Thread watch(final FileWatcher fw) {
+    final var thread =
+        new Thread(
+            () -> {
+              try {
+                fw.watch();
+              } catch (IOException | InterruptedException ignored) {
+              }
+            });
     thread.start();
     return thread;
   }
 
-  public static void write(File file, DataPlaneContract.Contract contract) throws IOException {
+  public static void write(final File file, final DataPlaneContract.Contract contract)
+      throws IOException {
     final var f = new File(file.toString());
     try (final var out = new FileWriter(f)) {
       JsonFormat.printer().appendTo(contract, out);

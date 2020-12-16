@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,7 @@ public class EgressReconcilerListenerMock implements EgressReconcilerListener {
 
   @Override
   public Future<Void> onNewEgress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Egress egress) {
+      final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(egress);
     this.newEgresses.add(egress.getUid());
@@ -46,8 +45,7 @@ public class EgressReconcilerListenerMock implements EgressReconcilerListener {
 
   @Override
   public Future<Void> onUpdateEgress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Egress egress) {
+      final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(egress);
     this.updatedEgresses.add(egress.getUid());
@@ -56,8 +54,7 @@ public class EgressReconcilerListenerMock implements EgressReconcilerListener {
 
   @Override
   public Future<Void> onDeleteEgress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Egress egress) {
+      final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(egress);
     this.deletedEgresses.add(egress.getUid());

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,9 @@ public interface RequestToRecordMapper<K, V> {
    * Map the given HTTP request to a Kafka record.
    *
    * @param request http request.
-   * @param topic   topic to send the event
+   * @param topic topic to send the event
    * @return kafka record (record can be null).
    */
   Future<KafkaProducerRecord<K, V>> recordFromRequest(
-    final HttpServerRequest request,
-    final String topic
-  );
+      final HttpServerRequest request, final String topic);
 }

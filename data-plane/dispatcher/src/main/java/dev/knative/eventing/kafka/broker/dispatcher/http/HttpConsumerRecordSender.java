@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,10 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class HttpConsumerRecordSender implements ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> {
+public final class HttpConsumerRecordSender
+    implements ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> {
 
-  private static final Logger logger = LoggerFactory.getLogger(HttpConsumerRecordSender.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(HttpConsumerRecordSender.class);
 
   private final WebClient client;
   private final String subscriberURI;
@@ -47,16 +48,16 @@ public final class HttpConsumerRecordSender implements ConsumerRecordSender<Stri
   /**
    * All args constructor.
    *
-   * @param vertx          vertx instance
-   * @param subscriberURI  subscriber URI
+   * @param vertx vertx instance
+   * @param subscriberURI subscriber URI
    * @param circuitBreaker circuit breaker
-   * @param client         http client.
+   * @param client http client.
    */
   public HttpConsumerRecordSender(
-    final Vertx vertx,
-    final String subscriberURI,
-    final CircuitBreaker circuitBreaker,
-    final WebClient client) {
+      final Vertx vertx,
+      final String subscriberURI,
+      final CircuitBreaker circuitBreaker,
+      final WebClient client) {
 
     Objects.requireNonNull(vertx, "provide vertx");
     Objects.requireNonNull(client, "provide client");
@@ -77,47 +78,53 @@ public final class HttpConsumerRecordSender implements ConsumerRecordSender<Stri
 
     TracingSpan.decorateCurrent(vertx, record.value());
 
-    return circuitBreaker.execute(breaker -> {
-      try {
-        send(record, breaker);
-      } catch (CloudEventRWException e) {
-        logger.error("failed to write event to the request {}", keyValue("subscriberURI", subscriberURI), e);
-        breaker.tryFail(e);
-      }
-    });
+    return circuitBreaker.execute(
+        breaker -> {
+          try {
+            send(record, breaker);
+          } catch (final CloudEventRWException e) {
+            LOGGER.error(
+                "failed to write event to the request {}",
+                keyValue("subscriberURI", subscriberURI),
+                e);
+            breaker.tryFail(e);
+          }
+        });
   }
 
-  private void send(final KafkaConsumerRecord<String, CloudEvent> record, final Promise<HttpResponse<Buffer>> breaker) {
-    VertxMessageFactory
-      .createWriter(client.postAbs(subscriberURI))
-      .writeBinary(record.value())
-      .onFailure(breaker::tryFail)
-      .onSuccess(response -> {
+  private void send(
+      final KafkaConsumerRecord<String, CloudEvent> record,
+      final Promise<HttpResponse<Buffer>> breaker) {
+    VertxMessageFactory.createWriter(client.postAbs(subscriberURI))
+        .writeBinary(record.value())
+        .onFailure(breaker::tryFail)
+        .onSuccess(
+            response -> {
+              if (response.statusCode() >= 300 || response.statusCode() < 200) {
+                logError(record, response);
+                // TODO determine which status codes are retryable
+                //  (channels -> https://github.com/knative/eventing/issues/2411)
+                breaker.tryFail("response status code is not 2xx - got: " + response.statusCode());
+                return;
+              }
 
-        if (response.statusCode() >= 300 || response.statusCode() < 200) {
-          logError(record, response);
-          // TODO determine which status codes are retryable
-          //  (channels -> https://github.com/knative/eventing/issues/2411)
-          breaker.tryFail("response status code is not 2xx - got: " + response.statusCode());
-          return;
-        }
-
-        breaker.tryComplete(response);
-      });
+              breaker.tryComplete(response);
+            });
   }
 
-  private void logError(final KafkaConsumerRecord<String, CloudEvent> record, final HttpResponse<Buffer> response) {
-    if (logger.isDebugEnabled()) {
-      logger.error("failed to send event to subscriber {} {} {}",
-        keyValue("subscriberURI", subscriberURI),
-        keyValue("statusCode", response.statusCode()),
-        keyValue("event", record.value())
-      );
+  private void logError(
+      final KafkaConsumerRecord<String, CloudEvent> record, final HttpResponse<Buffer> response) {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.error(
+          "failed to send event to subscriber {} {} {}",
+          keyValue("subscriberURI", subscriberURI),
+          keyValue("statusCode", response.statusCode()),
+          keyValue("event", record.value()));
     } else {
-      logger.error("failed to send event to subscriber {} {}",
-        keyValue("subscriberURI", subscriberURI),
-        keyValue("statusCode", response.statusCode())
-      );
+      LOGGER.error(
+          "failed to send event to subscriber {} {}",
+          keyValue("subscriberURI", subscriberURI),
+          keyValue("statusCode", response.statusCode()));
     }
   }
 

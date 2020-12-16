@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,10 +29,10 @@ public class HeadersPropagatorGetterTest {
 
     final var getter = new HeadersPropagatorGetter();
 
-    final var keys = getter.keys(Arrays.asList(
-      new SimpleImmutableEntry<>("a", "1"),
-      new SimpleImmutableEntry<>("b", "1")
-    ));
+    final var keys =
+        getter.keys(
+            Arrays.asList(
+                new SimpleImmutableEntry<>("a", "1"), new SimpleImmutableEntry<>("b", "1")));
 
     assertThat(keys).containsAll(Arrays.asList("a", "b"));
   }
@@ -42,10 +42,8 @@ public class HeadersPropagatorGetterTest {
 
     final var getter = new HeadersPropagatorGetter();
 
-    final Iterable<Map.Entry<String, String>> carrier = Arrays.asList(
-      new SimpleImmutableEntry<>("a", "1"),
-      new SimpleImmutableEntry<>("b", "1")
-    );
+    final Iterable<Map.Entry<String, String>> carrier =
+        Arrays.asList(new SimpleImmutableEntry<>("a", "1"), new SimpleImmutableEntry<>("b", "1"));
 
     final var get = getter.get(carrier, "c");
 
@@ -57,10 +55,8 @@ public class HeadersPropagatorGetterTest {
 
     final var getter = new HeadersPropagatorGetter();
 
-    final Iterable<Map.Entry<String, String>> carrier = Arrays.asList(
-      new SimpleImmutableEntry<>("a", "1"),
-      new SimpleImmutableEntry<>("b", "2")
-    );
+    final Iterable<Map.Entry<String, String>> carrier =
+        Arrays.asList(new SimpleImmutableEntry<>("a", "1"), new SimpleImmutableEntry<>("b", "2"));
 
     final var get = getter.get(carrier, "A");
 

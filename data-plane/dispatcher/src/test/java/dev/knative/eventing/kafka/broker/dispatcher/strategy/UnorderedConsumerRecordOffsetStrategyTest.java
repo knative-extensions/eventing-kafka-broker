@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,14 +61,16 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
 
   @Test
   public void shouldCommitSuccessfullyOnSuccessfullySentToSubscriber() {
-    shouldCommit((kafkaConsumerRecord, unorderedConsumerOffsetManager)
-      -> unorderedConsumerOffsetManager.successfullySentToSubscriber(kafkaConsumerRecord));
+    shouldCommit(
+        (kafkaConsumerRecord, unorderedConsumerOffsetManager) ->
+            unorderedConsumerOffsetManager.successfullySentToSubscriber(kafkaConsumerRecord));
   }
 
   @Test
   public void shouldCommitSuccessfullyOnSuccessfullySentToDLQ() {
-    shouldCommit((kafkaConsumerRecord, unorderedConsumerOffsetManager)
-      -> unorderedConsumerOffsetManager.successfullySentToDLQ(kafkaConsumerRecord));
+    shouldCommit(
+        (kafkaConsumerRecord, unorderedConsumerOffsetManager) ->
+            unorderedConsumerOffsetManager.successfullySentToDLQ(kafkaConsumerRecord));
   }
 
   @Test
@@ -77,7 +79,8 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
     final KafkaConsumer<Object, Object> consumer = mock(KafkaConsumer.class);
     final Counter eventsSentCounter = mock(Counter.class);
 
-    new UnorderedConsumerRecordOffsetStrategy<>(consumer, eventsSentCounter).failedToSendToDLQ(null, null);
+    new UnorderedConsumerRecordOffsetStrategy<>(consumer, eventsSentCounter)
+        .failedToSendToDLQ(null, null);
 
     shouldNeverCommit(consumer);
     shouldNeverPause(consumer);
@@ -86,13 +89,15 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
 
   @Test
   public void ShouldCommitSuccessfullyOnRecordDiscarded() {
-    shouldCommit((kafkaConsumerRecord, unorderedConsumerOffsetManager) ->
-      unorderedConsumerOffsetManager.recordDiscarded(kafkaConsumerRecord));
+    shouldCommit(
+        (kafkaConsumerRecord, unorderedConsumerOffsetManager) ->
+            unorderedConsumerOffsetManager.recordDiscarded(kafkaConsumerRecord));
   }
 
   @SuppressWarnings("unchecked")
   private static <K, V> void shouldCommit(
-    final BiConsumer<KafkaConsumerRecord<K, V>, UnorderedConsumerRecordOffsetStrategy<K, V>> rConsumer) {
+      final BiConsumer<KafkaConsumerRecord<K, V>, UnorderedConsumerRecordOffsetStrategy<K, V>>
+          rConsumer) {
 
     final var topic = "topic-42";
     final var partition = 42;
@@ -105,36 +110,38 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
     mockConsumer.assign(partitions);
 
     final KafkaConsumer<K, V> consumer = (KafkaConsumer<K, V>) Mockito.mock(KafkaConsumer.class);
-    doAnswer(invocation -> {
+    doAnswer(
+            invocation -> {
+              final Map<
+                      io.vertx.kafka.client.common.TopicPartition,
+                      io.vertx.kafka.client.consumer.OffsetAndMetadata>
+                  topicsPartitions = invocation.getArgument(0);
 
-      final Map<io.vertx.kafka.client.common.TopicPartition, io.vertx.kafka.client.consumer.OffsetAndMetadata>
-        topicsPartitions = invocation
-        .getArgument(0);
+              final var tp = topicsPartitions.entrySet().iterator().next();
 
-      final var tp = topicsPartitions.entrySet().iterator().next();
+              mockConsumer.commitSync(
+                  Map.of(
+                      new TopicPartition(tp.getKey().getTopic(), tp.getKey().getPartition()),
+                      new OffsetAndMetadata(
+                          tp.getValue().getOffset(), tp.getValue().getMetadata())));
 
-      mockConsumer.commitSync(Map.of(
-        new TopicPartition(tp.getKey().getTopic(), tp.getKey().getPartition()),
-        new OffsetAndMetadata(tp.getValue().getOffset(), tp.getValue().getMetadata())
-      ));
-
-      return Future.succeededFuture();
-    }).when(consumer).commit(
-      (Map<io.vertx.kafka.client.common.TopicPartition, io.vertx.kafka.client.consumer.OffsetAndMetadata>) any());
+              return Future.succeededFuture();
+            })
+        .when(consumer)
+        .commit(
+            (Map<
+                    io.vertx.kafka.client.common.TopicPartition,
+                    io.vertx.kafka.client.consumer.OffsetAndMetadata>)
+                any());
 
     final Counter eventsSentCounter = new CumulativeCounter(mock(Id.class));
 
-    final var offsetManager = new UnorderedConsumerRecordOffsetStrategy<>(consumer, eventsSentCounter);
+    final var offsetManager =
+        new UnorderedConsumerRecordOffsetStrategy<>(consumer, eventsSentCounter);
 
-    final var record = new KafkaConsumerRecordImpl<>(
-      new ConsumerRecord<K, V>(
-        topic,
-        partition,
-        offset,
-        null,
-        null
-      )
-    );
+    final var record =
+        new KafkaConsumerRecordImpl<>(
+            new ConsumerRecord<K, V>(topic, partition, offset, null, null));
 
     rConsumer.accept(record, offsetManager);
 

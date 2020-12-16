@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,16 +22,17 @@ import org.junit.jupiter.api.Test;
 
 public class ConfigurationsTest {
 
-  private final static String FILE_NAME = "configurations.properties";
-  private final static String IDLE_TIMEOUT_KEY = "idleTimeout";
-  private final static String HANDLE_100_CONTINUE_AUTOMATICALLY_KEY = "handle100ContinueAutomatically";
+  private static final String FILE_NAME = "configurations.properties";
+  private static final String IDLE_TIMEOUT_KEY = "idleTimeout";
+  private static final String HANDLE_100_CONTINUE_AUTOMATICALLY_KEY =
+      "handle100ContinueAutomatically";
 
   @Test
   public void shouldGetPropertiesFromFilePath() {
 
-    final var config = Configurations.getProperties(Objects.requireNonNull(
-      getClass().getClassLoader().getResource(FILE_NAME)
-    ).getFile());
+    final var config =
+        Configurations.getProperties(
+            Objects.requireNonNull(getClass().getClassLoader().getResource(FILE_NAME)).getFile());
 
     final var idleTimeout = config.get(IDLE_TIMEOUT_KEY);
     final var handle100ContinueAutomatically = config.get(HANDLE_100_CONTINUE_AUTOMATICALLY_KEY);
@@ -43,12 +44,13 @@ public class ConfigurationsTest {
   @Test
   public void shouldGetPropertiesFromFilePathAsJsonObject() {
 
-    final var config = Configurations.getPropertiesAsJson(Objects.requireNonNull(
-      getClass().getClassLoader().getResource(FILE_NAME)
-    ).getFile());
+    final var config =
+        Configurations.getPropertiesAsJson(
+            Objects.requireNonNull(getClass().getClassLoader().getResource(FILE_NAME)).getFile());
 
     final var idleTimeout = config.getInteger(IDLE_TIMEOUT_KEY);
-    final var handle100ContinueAutomatically = config.getBoolean(HANDLE_100_CONTINUE_AUTOMATICALLY_KEY);
+    final var handle100ContinueAutomatically =
+        config.getBoolean(HANDLE_100_CONTINUE_AUTOMATICALLY_KEY);
 
     Assertions.assertThat(idleTimeout).isEqualTo(42);
     Assertions.assertThat(handle100ContinueAutomatically).isTrue();
@@ -57,9 +59,9 @@ public class ConfigurationsTest {
   @Test
   public void shouldSetHttpServerOptions() {
 
-    final var config = Configurations.getPropertiesAsJson(Objects.requireNonNull(
-      getClass().getClassLoader().getResource(FILE_NAME)
-    ).getFile());
+    final var config =
+        Configurations.getPropertiesAsJson(
+            Objects.requireNonNull(getClass().getClassLoader().getResource(FILE_NAME)).getFile());
 
     final var httpServerOptions = new HttpServerOptions(config);
 

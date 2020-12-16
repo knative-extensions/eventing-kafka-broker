@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,15 +24,12 @@ class CollectionsUtilsTest {
 
   @Test
   void diff() {
-    Set<String> oldSet = Set.of("aaa", "bbb", "ccc");
-    Set<String> newSet = Set.of("ccc", "ddd", "eee");
+    final Set<String> oldSet = Set.of("aaa", "bbb", "ccc");
+    final Set<String> newSet = Set.of("ccc", "ddd", "eee");
 
     final CollectionsUtils.DiffResult<String> diff = CollectionsUtils.diff(oldSet, newSet);
-    assertThat(diff.getAdded())
-      .containsExactlyInAnyOrder("ddd", "eee");
-    assertThat(diff.getIntersection())
-      .containsExactlyInAnyOrder("ccc");
-    assertThat(diff.getRemoved())
-      .containsExactlyInAnyOrder("aaa", "bbb");
+    assertThat(diff.getAdded()).containsExactlyInAnyOrder("ddd", "eee");
+    assertThat(diff.getIntersection()).containsExactlyInAnyOrder("ccc");
+    assertThat(diff.getRemoved()).containsExactlyInAnyOrder("aaa", "bbb");
   }
 }

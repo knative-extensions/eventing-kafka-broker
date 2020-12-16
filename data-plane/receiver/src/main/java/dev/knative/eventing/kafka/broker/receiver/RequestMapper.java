@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,8 +44,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to Kafka through the Kafka
- * producer and terminating requests with the appropriate status code.
+ * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to
+ * Kafka through the Kafka producer and terminating requests with the appropriate status code.
  */
 public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressReconcilerListener {
 
@@ -54,7 +54,7 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
   public static final int RECORD_PRODUCED = ACCEPTED.code();
   public static final int RESOURCE_NOT_FOUND = NOT_FOUND.code();
 
-  private static final Logger logger = LoggerFactory.getLogger(RequestMapper.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(RequestMapper.class);
 
   // ingress uuid -> IngressInfo
   // This map is used to resolve the ingress info in the reconciler listener
@@ -76,19 +76,19 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
   /**
    * Create a new Request handler.
    *
-   * @param producerConfigs       common producers configurations
+   * @param producerConfigs common producers configurations
    * @param requestToRecordMapper request to record mapper
-   * @param producerCreator       creates a producer
-   * @param badRequestCounter     count bad request responses
-   * @param produceEventsCounter  count events sent to Kafka
+   * @param producerCreator creates a producer
+   * @param badRequestCounter count bad request responses
+   * @param produceEventsCounter count events sent to Kafka
    */
   public RequestMapper(
-    final Vertx vertx,
-    final Properties producerConfigs,
-    final RequestToRecordMapper<K, V> requestToRecordMapper,
-    final Function<Properties, KafkaProducer<K, V>> producerCreator,
-    final Counter badRequestCounter,
-    final Counter produceEventsCounter) {
+      final Vertx vertx,
+      final Properties producerConfigs,
+      final RequestToRecordMapper<K, V> requestToRecordMapper,
+      final Function<Properties, KafkaProducer<K, V>> producerCreator,
+      final Counter badRequestCounter,
+      final Counter produceEventsCounter) {
 
     Objects.requireNonNull(vertx, "provide vertx");
     Objects.requireNonNull(producerConfigs, "provide producerConfigs");
@@ -113,76 +113,77 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     if (ingressInfo == null) {
       request.response().setStatusCode(RESOURCE_NOT_FOUND).end();
 
-      logger.warn("resource not found {} {}",
-        keyValue("resources", pathMapper.keySet()),
-        keyValue("path", request.path())
-      );
+      LOGGER.warn(
+          "resource not found {} {}",
+          keyValue("resources", pathMapper.keySet()),
+          keyValue("path", request.path()));
 
       return;
     }
 
     requestToRecordMapper
-      .recordFromRequest(request, ingressInfo.getTopic())
-      .onSuccess(record -> ingressInfo.getProducer().send(record)
-        .onSuccess(metadata -> {
-          request.response().setStatusCode(RECORD_PRODUCED).end();
-          produceEventsCounter.increment();
+        .recordFromRequest(request, ingressInfo.getTopic())
+        .onSuccess(
+            record ->
+                ingressInfo
+                    .getProducer()
+                    .send(record)
+                    .onSuccess(
+                        metadata -> {
+                          request.response().setStatusCode(RECORD_PRODUCED).end();
+                          produceEventsCounter.increment();
 
-          logger.debug("Record produced {} {} {} {} {} {}",
-            keyValue("topic", record.topic()),
-            keyValue("partition", metadata.getPartition()),
-            keyValue("offset", metadata.getOffset()),
-            keyValue("value", record.value()),
-            keyValue("headers", record.headers()),
-            keyValue("path", request.path())
-          );
-        })
-        .onFailure(cause -> {
-          request.response().setStatusCode(FAILED_TO_PRODUCE).end();
+                          LOGGER.debug(
+                              "Record produced {} {} {} {} {} {}",
+                              keyValue("topic", record.topic()),
+                              keyValue("partition", metadata.getPartition()),
+                              keyValue("offset", metadata.getOffset()),
+                              keyValue("value", record.value()),
+                              keyValue("headers", record.headers()),
+                              keyValue("path", request.path()));
+                        })
+                    .onFailure(
+                        cause -> {
+                          request.response().setStatusCode(FAILED_TO_PRODUCE).end();
 
-          logger.error("Failed to send record {} {}",
-            keyValue("topic", record.topic()),
-            keyValue("path", request.path()),
-            cause
-          );
-        })
-      )
-      .onFailure(cause -> {
-        request.response().setStatusCode(MAPPER_FAILED).end();
-        badRequestCounter.increment();
+                          LOGGER.error(
+                              "Failed to send record {} {}",
+                              keyValue("topic", record.topic()),
+                              keyValue("path", request.path()),
+                              cause);
+                        }))
+        .onFailure(
+            cause -> {
+              request.response().setStatusCode(MAPPER_FAILED).end();
+              badRequestCounter.increment();
 
-        logger.warn("Failed to send record {}",
-          keyValue("path", request.path()),
-          cause
-        );
-      });
+              LOGGER.warn("Failed to send record {}", keyValue("path", request.path()), cause);
+            });
   }
 
   @Override
   public Future<Void> onNewIngress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Ingress ingress) {
+      final DataPlaneContract.Resource resource, final DataPlaneContract.Ingress ingress) {
     // Compute the properties
     final var producerProps = (Properties) this.producerConfigs.clone();
-    producerProps.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
+    producerProps.setProperty(
+        ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
     if (ingress.getContentMode() != DataPlaneContract.ContentMode.UNRECOGNIZED) {
-      producerProps.setProperty(CloudEventSerializer.ENCODING_CONFIG, encoding(ingress.getContentMode()));
+      producerProps.setProperty(
+          CloudEventSerializer.ENCODING_CONFIG, encoding(ingress.getContentMode()));
     }
     producerProps.setProperty(CloudEventSerializer.EVENT_FORMAT_CONFIG, JsonFormat.CONTENT_TYPE);
 
     // Get the rc and increment it
-    final ReferenceCounter<ProducerHolder<K, V>> rc = this.producerReferences.computeIfAbsent(
-      producerProps,
-      props -> new ReferenceCounter<>(new ProducerHolder<>(producerCreator.apply(props)))
-    );
+    final ReferenceCounter<ProducerHolder<K, V>> rc =
+        this.producerReferences.computeIfAbsent(
+            producerProps,
+            props -> new ReferenceCounter<>(new ProducerHolder<>(producerCreator.apply(props))));
     rc.increment();
 
-    final var ingressInfo = new IngressInfo<>(
-      rc.getValue().getProducer(),
-      resource.getTopics(0),
-      ingress.getPath(),
-      producerProps
-    );
+    final var ingressInfo =
+        new IngressInfo<>(
+            rc.getValue().getProducer(), resource.getTopics(0), ingress.getPath(), producerProps);
 
     this.pathMapper.put(ingress.getPath(), ingressInfo);
     this.ingressInfos.put(resource.getUid(), ingressInfo);
@@ -192,16 +193,13 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
 
   @Override
   public Future<Void> onUpdateIngress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Ingress ingress) {
-    return onDeleteIngress(resource, ingress)
-      .compose(v -> onNewIngress(resource, ingress));
+      final DataPlaneContract.Resource resource, final DataPlaneContract.Ingress ingress) {
+    return onDeleteIngress(resource, ingress).compose(v -> onNewIngress(resource, ingress));
   }
 
   @Override
   public Future<Void> onDeleteIngress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Ingress ingress) {
+      final DataPlaneContract.Resource resource, final DataPlaneContract.Ingress ingress) {
     // Remove ingress info from the maps
     final var ingressInfo = this.ingressInfos.remove(resource.getUid());
     this.pathMapper.remove(ingressInfo.getPath());
@@ -217,11 +215,14 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
   }
 
   private static String encoding(final DataPlaneContract.ContentMode contentMode) {
-    return switch (contentMode) {
-      case BINARY -> Encoding.BINARY.toString();
-      case STRUCTURED -> Encoding.STRUCTURED.toString();
-      default -> throw new IllegalArgumentException("unknown content mode: " + contentMode);
-    };
+    switch (contentMode) {
+      case BINARY:
+        return Encoding.BINARY.toString();
+      case STRUCTURED:
+        return Encoding.STRUCTURED.toString();
+      default:
+        throw new IllegalArgumentException("unknown content mode: " + contentMode);
+    }
   }
 
   private static class ProducerHolder<K, V> {
@@ -239,21 +240,19 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     }
 
     Future<Void> close(final Vertx vertx) {
-      return producer.flush()
-        .compose(
-          s -> closeNow(vertx),
-          c -> {
-            logger.error("Failed to flush producer", c);
-            return closeNow(vertx);
-          }
-        );
+      return producer
+          .flush()
+          .compose(
+              s -> closeNow(vertx),
+              c -> {
+                LOGGER.error("Failed to flush producer", c);
+                return closeNow(vertx);
+              });
     }
 
     private Future<Void> closeNow(final Vertx vertx) {
-      return CompositeFuture.all(
-        producer.close(),
-        Metrics.close(vertx, this.producerMeterBinder)
-      ).mapEmpty();
+      return CompositeFuture.all(producer.close(), Metrics.close(vertx, this.producerMeterBinder))
+          .mapEmpty();
     }
   }
 
@@ -276,9 +275,7 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
       this.refs++;
     }
 
-    /**
-     * @return true if the count is 0, hence nobody is referring anymore to this value
-     */
+    /** @return true if the count is 0, hence nobody is referring anymore to this value */
     boolean decrementAndCheck() {
       this.refs--;
       return this.refs == 0;
@@ -292,8 +289,11 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     private final String path;
     private final Properties producerProperties;
 
-    IngressInfo(final KafkaProducer<K, V> producer, final String topic, final String path,
-      final Properties producerProperties) {
+    IngressInfo(
+        final KafkaProducer<K, V> producer,
+        final String topic,
+        final String path,
+        final Properties producerProperties) {
       this.producer = producer;
       this.topic = topic;
       this.path = path;

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ package dev.knative.eventing.kafka.broker.dispatcher.http;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
+import static org.apache.kafka.clients.producer.ProducerConfig.INTERCEPTOR_CLASSES_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
-import static org.apache.kafka.clients.producer.ProducerConfig.INTERCEPTOR_CLASSES_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mock;
@@ -50,7 +50,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class HttpConsumerVerticleFactoryTest {
 
   static {
-    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    BackendRegistries.setupBackend(
+        new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
   }
 
   @Test
@@ -58,40 +59,46 @@ public class HttpConsumerVerticleFactoryTest {
 
     final var consumerProperties = new Properties();
     consumerProperties.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
-    consumerProperties.setProperty(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-    consumerProperties.setProperty(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
+    consumerProperties.setProperty(
+        KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    consumerProperties.setProperty(
+        VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
 
     final var producerConfigs = new Properties();
     producerConfigs.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
     producerConfigs.setProperty(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-    producerConfigs.setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
-    producerConfigs.setProperty(INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
+    producerConfigs.setProperty(
+        VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
+    producerConfigs.setProperty(
+        INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
-    final var verticleFactory = new HttpConsumerVerticleFactory(
-      ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class)),
-      consumerProperties,
-      new WebClientOptions(),
-      producerConfigs
-    );
+    final var verticleFactory =
+        new HttpConsumerVerticleFactory(
+            ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class)),
+            consumerProperties,
+            new WebClientOptions(),
+            producerConfigs);
 
-    final var egress = DataPlaneContract.Egress.newBuilder()
-      .setConsumerGroup("1234")
-      .setUid("1234")
-      .setDestination("http://localhost:43256")
-      .setReplyToOriginalTopic(Empty.newBuilder().build())
-      .build();
-    final var resource = DataPlaneContract.Resource.newBuilder()
-      .setUid("123456")
-      .setBootstrapServers("0.0.0.0:9092")
-      .addTopics("t1")
-      .setEgressConfig(DataPlaneContract.EgressConfig.newBuilder()
-        .setBackoffDelay(1000)
-        .setBackoffPolicy(BackoffPolicy.Exponential)
-        .setRetry(10)
-        .setDeadLetter("http://localhost:43257")
-      )
-      .addEgresses(egress)
-      .build();
+    final var egress =
+        DataPlaneContract.Egress.newBuilder()
+            .setConsumerGroup("1234")
+            .setUid("1234")
+            .setDestination("http://localhost:43256")
+            .setReplyToOriginalTopic(Empty.newBuilder().build())
+            .build();
+    final var resource =
+        DataPlaneContract.Resource.newBuilder()
+            .setUid("123456")
+            .setBootstrapServers("0.0.0.0:9092")
+            .addTopics("t1")
+            .setEgressConfig(
+                DataPlaneContract.EgressConfig.newBuilder()
+                    .setBackoffDelay(1000)
+                    .setBackoffPolicy(BackoffPolicy.Exponential)
+                    .setRetry(10)
+                    .setDeadLetter("http://localhost:43257"))
+            .addEgresses(egress)
+            .build();
 
     assertDoesNotThrow(() -> verticleFactory.get(resource, egress));
   }
@@ -101,34 +108,40 @@ public class HttpConsumerVerticleFactoryTest {
 
     final var consumerProperties = new Properties();
     consumerProperties.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
-    consumerProperties.setProperty(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-    consumerProperties.setProperty(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
+    consumerProperties.setProperty(
+        KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    consumerProperties.setProperty(
+        VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
 
     final var producerConfigs = new Properties();
     producerConfigs.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
     producerConfigs.setProperty(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-    producerConfigs.setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
-    producerConfigs.setProperty(INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
+    producerConfigs.setProperty(
+        VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
+    producerConfigs.setProperty(
+        INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
-    final var verticleFactory = new HttpConsumerVerticleFactory(
-      ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class)),
-      consumerProperties,
-      new WebClientOptions(),
-      producerConfigs
-    );
+    final var verticleFactory =
+        new HttpConsumerVerticleFactory(
+            ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class)),
+            consumerProperties,
+            new WebClientOptions(),
+            producerConfigs);
 
-    final var egress = DataPlaneContract.Egress.newBuilder()
-      .setConsumerGroup("1234")
-      .setUid("1234")
-      .setDestination("http://localhost:43256")
-      .setReplyToOriginalTopic(Empty.newBuilder().build())
-      .build();
-    final var resource = DataPlaneContract.Resource.newBuilder()
-      .setUid("123456")
-      .setBootstrapServers("0.0.0.0:9092")
-      .addTopics("t1")
-      .addEgresses(egress)
-      .build();
+    final var egress =
+        DataPlaneContract.Egress.newBuilder()
+            .setConsumerGroup("1234")
+            .setUid("1234")
+            .setDestination("http://localhost:43256")
+            .setReplyToOriginalTopic(Empty.newBuilder().build())
+            .build();
+    final var resource =
+        DataPlaneContract.Resource.newBuilder()
+            .setUid("123456")
+            .setBootstrapServers("0.0.0.0:9092")
+            .addTopics("t1")
+            .addEgresses(egress)
+            .build();
 
     assertDoesNotThrow(() -> verticleFactory.get(resource, egress));
   }
@@ -136,11 +149,13 @@ public class HttpConsumerVerticleFactoryTest {
   @Test
   public void linearBackoffPolicy() {
 
-    final var policy = HttpConsumerVerticleFactory.computeRetryPolicy(EgressConfig.newBuilder()
-      .setRetry(10)
-      .setBackoffPolicy(BackoffPolicy.Linear)
-      .setBackoffDelay(100)
-      .build());
+    final var policy =
+        HttpConsumerVerticleFactory.computeRetryPolicy(
+            EgressConfig.newBuilder()
+                .setRetry(10)
+                .setBackoffPolicy(BackoffPolicy.Linear)
+                .setBackoffDelay(100)
+                .build());
 
     final var delay = policy.apply(5);
 
@@ -150,11 +165,13 @@ public class HttpConsumerVerticleFactoryTest {
   @Test
   public void exponentialBackoffPolicy() {
 
-    final var policy = HttpConsumerVerticleFactory.computeRetryPolicy(EgressConfig.newBuilder()
-      .setRetry(10)
-      .setBackoffPolicy(BackoffPolicy.Exponential)
-      .setBackoffDelay(100)
-      .build());
+    final var policy =
+        HttpConsumerVerticleFactory.computeRetryPolicy(
+            EgressConfig.newBuilder()
+                .setRetry(10)
+                .setBackoffPolicy(BackoffPolicy.Exponential)
+                .setBackoffDelay(100)
+                .build());
 
     final var delay = policy.apply(5);
 
@@ -164,11 +181,13 @@ public class HttpConsumerVerticleFactoryTest {
   @Test
   public void exponentialBackoffPolicyByDefault() {
 
-    final var policy = HttpConsumerVerticleFactory.computeRetryPolicy(EgressConfig.newBuilder()
-      .setRetry(10)
-      .setBackoffPolicy(BackoffPolicy.Exponential)
-      .setBackoffDelay(100)
-      .build());
+    final var policy =
+        HttpConsumerVerticleFactory.computeRetryPolicy(
+            EgressConfig.newBuilder()
+                .setRetry(10)
+                .setBackoffPolicy(BackoffPolicy.Exponential)
+                .setBackoffDelay(100)
+                .build());
 
     final var delay = policy.apply(5);
 

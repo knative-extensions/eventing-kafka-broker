@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,23 +52,19 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 public class HttpSinkResponseHandlerTest {
 
   static {
-    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    BackendRegistries.setupBackend(
+        new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
   }
 
   private static final String TOPIC = "t1";
 
   @Test
-  public void shouldSucceedOnUnknownEncodingAndEmptyResponse(final Vertx vertx, final VertxTestContext context) {
-    final var producer = new MockProducer<>(
-      true,
-      new StringSerializer(),
-      new CloudEventSerializer()
-    );
-    final var handler = new HttpSinkResponseHandler(
-      vertx,
-      TOPIC,
-      KafkaProducer.create(vertx, producer)
-    );
+  public void shouldSucceedOnUnknownEncodingAndEmptyResponse(
+      final Vertx vertx, final VertxTestContext context) {
+    final var producer =
+        new MockProducer<>(true, new StringSerializer(), new CloudEventSerializer());
+    final var handler =
+        new HttpSinkResponseHandler(vertx, TOPIC, KafkaProducer.create(vertx, producer));
 
     // Empty response
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
@@ -76,23 +72,16 @@ public class HttpSinkResponseHandlerTest {
     when(response.body()).thenReturn(Buffer.buffer());
     when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap());
 
-    context
-      .assertComplete(handler.handle(response))
-      .onSuccess(v -> context.completeNow());
+    context.assertComplete(handler.handle(response)).onSuccess(v -> context.completeNow());
   }
 
   @Test
-  public void shouldSucceedOnUnknownEncodingAndNullResponseBody(final Vertx vertx, final VertxTestContext context) {
-    final var producer = new MockProducer<>(
-      true,
-      new StringSerializer(),
-      new CloudEventSerializer()
-    );
-    final var handler = new HttpSinkResponseHandler(
-      vertx,
-      TOPIC,
-      KafkaProducer.create(vertx, producer)
-    );
+  public void shouldSucceedOnUnknownEncodingAndNullResponseBody(
+      final Vertx vertx, final VertxTestContext context) {
+    final var producer =
+        new MockProducer<>(true, new StringSerializer(), new CloudEventSerializer());
+    final var handler =
+        new HttpSinkResponseHandler(vertx, TOPIC, KafkaProducer.create(vertx, producer));
 
     // Empty response
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
@@ -100,78 +89,65 @@ public class HttpSinkResponseHandlerTest {
     when(response.body()).thenReturn(null);
     when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap());
 
-    context
-      .assertComplete(handler.handle(response))
-      .onSuccess(v -> context.completeNow());
+    context.assertComplete(handler.handle(response)).onSuccess(v -> context.completeNow());
   }
 
-
   @Test
-  public void shouldFailOnUnknownEncodingAndNonEmptyResponse(final Vertx vertx, final VertxTestContext context) {
+  public void shouldFailOnUnknownEncodingAndNonEmptyResponse(
+      final Vertx vertx, final VertxTestContext context) {
 
-    final var producer = new MockProducer<>(
-      true,
-      new StringSerializer(),
-      new CloudEventSerializer()
-    );
-    final var handler = new HttpSinkResponseHandler(
-      vertx,
-      TOPIC,
-      KafkaProducer.create(vertx, producer)
-    );
+    final var producer =
+        new MockProducer<>(true, new StringSerializer(), new CloudEventSerializer());
+    final var handler =
+        new HttpSinkResponseHandler(vertx, TOPIC, KafkaProducer.create(vertx, producer));
 
     // Empty response
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
     when(response.statusCode()).thenReturn(202);
-    when(response.body()).thenReturn(Buffer.buffer(new byte[]{'a'}));
+    when(response.body()).thenReturn(Buffer.buffer(new byte[] {'a'}));
     when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap());
 
     context
-      .assertFailure(handler.handle(response))
-      .onSuccess(s -> context.failNow(new Exception("expected failed future")))
-      .onFailure(v -> context.completeNow());
+        .assertFailure(handler.handle(response))
+        .onSuccess(s -> context.failNow(new Exception("expected failed future")))
+        .onFailure(v -> context.completeNow());
   }
 
   @Test
   public void shouldSendRecord(final Vertx vertx, final VertxTestContext context)
-    throws InterruptedException {
-    final var producer = new MockProducer<>(
-      true,
-      new StringSerializer(),
-      new CloudEventSerializer()
-    );
-    final var handler = new HttpSinkResponseHandler(
-      vertx,
-      TOPIC,
-      KafkaProducer.create(vertx, producer)
-    );
+      throws InterruptedException {
+    final var producer =
+        new MockProducer<>(true, new StringSerializer(), new CloudEventSerializer());
+    final var handler =
+        new HttpSinkResponseHandler(vertx, TOPIC, KafkaProducer.create(vertx, producer));
 
-    final var event = new CloudEventBuilder()
-      .withId("1234")
-      .withSource(URI.create("/api"))
-      .withSubject("subject")
-      .withType("type")
-      .build();
+    final var event =
+        new CloudEventBuilder()
+            .withId("1234")
+            .withSource(URI.create("/api"))
+            .withSubject("subject")
+            .withType("type")
+            .build();
 
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
-    when(response.body()).thenReturn(Buffer.buffer(
-      EventFormatProvider.getInstance()
-        .resolveFormat("application/cloudevents+json")
-        .serialize(event)
-    ));
-    when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap()
-      .set(HttpHeaders.CONTENT_TYPE, "application/cloudevents+json")
-    );
+    when(response.body())
+        .thenReturn(
+            Buffer.buffer(
+                EventFormatProvider.getInstance()
+                    .resolveFormat("application/cloudevents+json")
+                    .serialize(event)));
+    when(response.headers())
+        .thenReturn(
+            MultiMap.caseInsensitiveMultiMap()
+                .set(HttpHeaders.CONTENT_TYPE, "application/cloudevents+json"));
 
     final var wait = new CountDownLatch(1);
-    handler.handle(response)
-      .onSuccess(ignored -> wait.countDown())
-      .onFailure(context::failNow);
+    handler.handle(response).onSuccess(ignored -> wait.countDown()).onFailure(context::failNow);
 
     wait.await();
 
     Assertions.assertThat(producer.history())
-      .containsExactlyInAnyOrder(new ProducerRecord<>(TOPIC, null, event));
+        .containsExactlyInAnyOrder(new ProducerRecord<>(TOPIC, null, event));
     context.completeNow();
   }
 
@@ -183,17 +159,17 @@ public class HttpSinkResponseHandlerTest {
     final var mockProducer = new MockProducer<String, CloudEvent>();
     when(producer.unwrap()).thenReturn(mockProducer);
 
-    final var sinkResponseHandler = new HttpSinkResponseHandler(
-      vertx,
-      "topic",
-      producer
-    );
+    final var sinkResponseHandler = new HttpSinkResponseHandler(vertx, "topic", producer);
 
-    sinkResponseHandler.close()
-      .onFailure(context::failNow)
-      .onSuccess(r -> context.verify(() -> {
-        verify(producer, times(1)).close();
-        context.completeNow();
-      }));
+    sinkResponseHandler
+        .close()
+        .onFailure(context::failNow)
+        .onSuccess(
+            r ->
+                context.verify(
+                    () -> {
+                      verify(producer, times(1)).close();
+                      context.completeNow();
+                    }));
   }
 }

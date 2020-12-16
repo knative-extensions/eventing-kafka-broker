@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,27 +42,27 @@ public class Metrics {
    */
   public static MetricsOptions getOptions(final BaseEnv metricsConfigs) {
     return new MicrometerMetricsOptions()
-      .setEnabled(true)
-      .addDisabledMetricsCategory(MetricsDomain.EVENT_BUS)
-      .addDisabledMetricsCategory(MetricsDomain.DATAGRAM_SOCKET)
-      // NAMED_POOL allocates a lot, so disable it.
-      // See https://github.com/vert-x3/vertx-micrometer-metrics/blob/0646e66de120366c622a7240676d63cb69965ec5/src/main/java/io/vertx/micrometer/impl/meters/Gauges.java#L56-L69
-      .addDisabledMetricsCategory(MetricsDomain.NAMED_POOLS)
-      .setMetricsNaming(MetricsNaming.v4Names())
-      .setRegistryName(METRICS_REGISTRY_NAME)
-      .setJvmMetricsEnabled(metricsConfigs.isMetricsJvmEnabled())
-      .setPrometheusOptions(new VertxPrometheusOptions()
-        .setEmbeddedServerOptions(new HttpServerOptions().setPort(metricsConfigs.getMetricsPort()))
-        .setEmbeddedServerEndpoint(metricsConfigs.getMetricsPath())
-        .setPublishQuantiles(metricsConfigs.isPublishQuantilesEnabled())
-        .setStartEmbeddedServer(true)
         .setEnabled(true)
-      );
+        .addDisabledMetricsCategory(MetricsDomain.EVENT_BUS)
+        .addDisabledMetricsCategory(MetricsDomain.DATAGRAM_SOCKET)
+        // NAMED_POOL allocates a lot, so disable it.
+        // See
+        // https://github.com/vert-x3/vertx-micrometer-metrics/blob/0646e66de120366c622a7240676d63cb69965ec5/src/main/java/io/vertx/micrometer/impl/meters/Gauges.java#L56-L69
+        .addDisabledMetricsCategory(MetricsDomain.NAMED_POOLS)
+        .setMetricsNaming(MetricsNaming.v4Names())
+        .setRegistryName(METRICS_REGISTRY_NAME)
+        .setJvmMetricsEnabled(metricsConfigs.isMetricsJvmEnabled())
+        .setPrometheusOptions(
+            new VertxPrometheusOptions()
+                .setEmbeddedServerOptions(
+                    new HttpServerOptions().setPort(metricsConfigs.getMetricsPort()))
+                .setEmbeddedServerEndpoint(metricsConfigs.getMetricsPath())
+                .setPublishQuantiles(metricsConfigs.isPublishQuantilesEnabled())
+                .setStartEmbeddedServer(true)
+                .setEnabled(true));
   }
 
-  /**
-   * @return Global registry.
-   */
+  /** @return Global registry. */
   public static MeterRegistry getRegistry() {
     return BackendRegistries.getNow(METRICS_REGISTRY_NAME);
   }
@@ -71,8 +71,8 @@ public class Metrics {
    * Register the given consumer to the global meter registry.
    *
    * @param consumer consumer to bind to the global registry.
-   * @param <K>      Record key type.
-   * @param <V>      Record value type.
+   * @param <K> Record key type.
+   * @param <V> Record value type.
    * @return A meter binder to close once the consumer is closed.
    */
   public static <K, V> AutoCloseable register(final Consumer<K, V> consumer) {
@@ -85,8 +85,8 @@ public class Metrics {
    * Register the given producer to the global meter registry.
    *
    * @param producer Consumer to bind to the global registry.
-   * @param <K>      Record key type.
-   * @param <V>      Record value type.
+   * @param <K> Record key type.
+   * @param <V> Record value type.
    * @return A meter binder to close once the producer is closed.
    */
   public static <K, V> AutoCloseable register(final Producer<K, V> producer) {
@@ -98,18 +98,19 @@ public class Metrics {
   /**
    * Close the given meter binder.
    *
-   * @param vertx       vertx instance.
+   * @param vertx vertx instance.
    * @param meterBinder meter binder to close.
    * @return A succeeded or a failed future.
    */
   public static Future<?> close(final Vertx vertx, final AutoCloseable meterBinder) {
-    return vertx.executeBlocking(promise -> {
-      try {
-        meterBinder.close();
-        promise.complete();
-      } catch (Exception e) {
-        promise.fail(e);
-      }
-    });
+    return vertx.executeBlocking(
+        promise -> {
+          try {
+            meterBinder.close();
+            promise.complete();
+          } catch (final Exception e) {
+            promise.fail(e);
+          }
+        });
   }
 }

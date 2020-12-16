@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,8 @@ import org.slf4j.LoggerFactory;
 
 public class CloudEventRequestToRecordMapper implements RequestToRecordMapper<String, CloudEvent> {
 
-  private static final Logger logger = LoggerFactory.getLogger(CloudEventRequestToRecordMapper.class);
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(CloudEventRequestToRecordMapper.class);
 
   private final Vertx vertx;
 
@@ -41,31 +42,32 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper<St
 
   @Override
   public Future<KafkaProducerRecord<String, CloudEvent>> recordFromRequest(
-    final HttpServerRequest request,
-    final String topic) {
+      final HttpServerRequest request, final String topic) {
 
     return VertxMessageFactory.createReader(request)
-      .map(MessageReader::toEvent)
-      .map(event -> {
-        if (event == null) {
-          throw new IllegalArgumentException("event cannot be null");
-        }
+        .map(MessageReader::toEvent)
+        .map(
+            event -> {
+              if (event == null) {
+                throw new IllegalArgumentException("event cannot be null");
+              }
 
-        if (logger.isDebugEnabled()) {
-          final var span = TracingSpan.getCurrent(vertx);
-          if (span != null) {
-            logger.debug("received event {} {}",
-              keyValue("event", event),
-              keyValue(Tracing.TRACE_ID_KEY, span.getSpanContext().getTraceIdAsHexString())
-            );
-          } else {
-            logger.debug("received event {}", keyValue("event", event));
-          }
-        }
+              if (LOGGER.isDebugEnabled()) {
+                final var span = TracingSpan.getCurrent(vertx);
+                if (span != null) {
+                  LOGGER.debug(
+                      "received event {} {}",
+                      keyValue("event", event),
+                      keyValue(
+                          Tracing.TRACE_ID_KEY, span.getSpanContext().getTraceIdAsHexString()));
+                } else {
+                  LOGGER.debug("received event {}", keyValue("event", event));
+                }
+              }
 
-        TracingSpan.decorateCurrent(vertx, event);
+              TracingSpan.decorateCurrent(vertx, event);
 
-        return KafkaProducerRecord.create(topic, event);
-      });
+              return KafkaProducerRecord.create(topic, event);
+            });
   }
 }

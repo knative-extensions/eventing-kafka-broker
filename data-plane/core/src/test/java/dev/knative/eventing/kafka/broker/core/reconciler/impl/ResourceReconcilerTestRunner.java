@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,38 +38,39 @@ public class ResourceReconcilerTestRunner {
     private final Set<String> updatedEgresses = new HashSet<>();
     private final Set<String> deletedEgresses = new HashSet<>();
 
-    public ReconcileStep(Collection<DataPlaneContract.Resource> resources,
-                         ResourceReconcilerTestRunner runner) {
+    public ReconcileStep(
+        final Collection<DataPlaneContract.Resource> resources,
+        final ResourceReconcilerTestRunner runner) {
       this.resources = resources;
       this.runner = runner;
     }
 
-    public ReconcileStep newIngress(String uid) {
+    public ReconcileStep newIngress(final String uid) {
       this.newIngresses.add(uid);
       return this;
     }
 
-    public ReconcileStep updatedIngress(String uid) {
+    public ReconcileStep updatedIngress(final String uid) {
       this.updatedIngresses.add(uid);
       return this;
     }
 
-    public ReconcileStep deletedIngress(String uid) {
+    public ReconcileStep deletedIngress(final String uid) {
       this.deletedIngresses.add(uid);
       return this;
     }
 
-    public ReconcileStep newEgress(String uid) {
+    public ReconcileStep newEgress(final String uid) {
       this.newEgresses.add(uid);
       return this;
     }
 
-    public ReconcileStep updatedEgress(String uid) {
+    public ReconcileStep updatedEgress(final String uid) {
       this.updatedEgresses.add(uid);
       return this;
     }
 
-    public ReconcileStep deletedEgress(String uid) {
+    public ReconcileStep deletedEgress(final String uid) {
       this.deletedEgresses.add(uid);
       return this;
     }
@@ -83,7 +84,8 @@ public class ResourceReconcilerTestRunner {
   private boolean enableIngressListener = false;
   private boolean enableEgressListener = false;
 
-  public ResourceReconcilerTestRunner reconcile(Collection<DataPlaneContract.Resource> resources) {
+  public ResourceReconcilerTestRunner reconcile(
+      final Collection<DataPlaneContract.Resource> resources) {
     final var step = new ReconcileStep(resources, this);
     this.reconcileSteps.add(step);
     return this;
@@ -107,8 +109,7 @@ public class ResourceReconcilerTestRunner {
     final var ingressListener = enableIngressListener ? new IngressReconcilerListenerMock() : null;
     final var egressListener = enableEgressListener ? new EgressReconcilerListenerMock() : null;
 
-    final var reconcilerBuilder = ResourcesReconcilerImpl
-      .builder();
+    final var reconcilerBuilder = ResourcesReconcilerImpl.builder();
 
     if (ingressListener != null) {
       reconcilerBuilder.watchIngress(ingressListener);
@@ -125,14 +126,14 @@ public class ResourceReconcilerTestRunner {
 
       if (ingressListener != null) {
         assertThat(ingressListener.getNewIngresses())
-          .as("New ingresses at step " + i)
-          .containsExactlyInAnyOrderElementsOf(step.newIngresses);
+            .as("New ingresses at step " + i)
+            .containsExactlyInAnyOrderElementsOf(step.newIngresses);
         assertThat(ingressListener.getUpdatedIngresses())
-          .as("Updated ingresses at step " + i)
-          .containsExactlyInAnyOrderElementsOf(step.updatedIngresses);
+            .as("Updated ingresses at step " + i)
+            .containsExactlyInAnyOrderElementsOf(step.updatedIngresses);
         assertThat(ingressListener.getDeletedIngresses())
-          .as("Deleted ingresses at step " + i)
-          .containsExactlyInAnyOrderElementsOf(step.deletedIngresses);
+            .as("Deleted ingresses at step " + i)
+            .containsExactlyInAnyOrderElementsOf(step.deletedIngresses);
 
         ingressListener.getNewIngresses().clear();
         ingressListener.getUpdatedIngresses().clear();
@@ -141,14 +142,14 @@ public class ResourceReconcilerTestRunner {
 
       if (egressListener != null) {
         assertThat(egressListener.getNewEgresses())
-          .as("New egresses at step " + i)
-          .containsExactlyInAnyOrderElementsOf(step.newEgresses);
+            .as("New egresses at step " + i)
+            .containsExactlyInAnyOrderElementsOf(step.newEgresses);
         assertThat(egressListener.getUpdatedEgresses())
-          .as("Updated egresses at step " + i)
-          .containsExactlyInAnyOrderElementsOf(step.updatedEgresses);
+            .as("Updated egresses at step " + i)
+            .containsExactlyInAnyOrderElementsOf(step.updatedEgresses);
         assertThat(egressListener.getDeletedEgresses())
-          .as("Deleted egresses at step " + i)
-          .containsExactlyInAnyOrderElementsOf(step.deletedEgresses);
+            .as("Deleted egresses at step " + i)
+            .containsExactlyInAnyOrderElementsOf(step.deletedEgresses);
 
         egressListener.getNewEgresses().clear();
         egressListener.getUpdatedEgresses().clear();
@@ -156,5 +157,4 @@ public class ResourceReconcilerTestRunner {
       }
     }
   }
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,14 @@ import io.vertx.kafka.client.consumer.KafkaConsumer;
 @FunctionalInterface
 public interface ConsumerRecordOffsetStrategyFactory<K, V> {
 
-  ConsumerRecordOffsetStrategy<K, V> get(final KafkaConsumer<K, V> consumer,
-                                         final DataPlaneContract.Resource resource,
-                                         final DataPlaneContract.Egress egress);
+  ConsumerRecordOffsetStrategy<K, V> get(
+      final KafkaConsumer<K, V> consumer,
+      final DataPlaneContract.Resource resource,
+      final DataPlaneContract.Egress egress);
 
-  static <K, V> ConsumerRecordOffsetStrategyFactory<K, V> unordered(final Counter eventsSentCounter) {
-    return (consumer, broker, trigger) -> new UnorderedConsumerRecordOffsetStrategy<>(consumer, eventsSentCounter);
+  static <K, V> ConsumerRecordOffsetStrategyFactory<K, V> unordered(
+      final Counter eventsSentCounter) {
+    return (consumer, broker, trigger) ->
+        new UnorderedConsumerRecordOffsetStrategy<>(consumer, eventsSentCounter);
   }
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,26 +48,26 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
   private List<ConsumerRecord<String, CloudEvent>> records;
 
   public ConsumerVerticleFactoryMock(
-    final Properties consumerConfigs,
-    final Properties producerConfigs,
-    final ConsumerRecordOffsetStrategyFactory<String, CloudEvent> consumerRecordOffsetStrategyFactory) {
+      final Properties consumerConfigs,
+      final Properties producerConfigs,
+      final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
+          consumerRecordOffsetStrategyFactory) {
 
-    super(consumerRecordOffsetStrategyFactory, consumerConfigs, new WebClientOptions(), producerConfigs);
+    super(
+        consumerRecordOffsetStrategyFactory,
+        consumerConfigs,
+        new WebClientOptions(),
+        producerConfigs);
     mockProducer = new ConcurrentHashMap<>();
     mockConsumer = new ConcurrentHashMap<>();
   }
 
   @Override
   protected KafkaProducer<String, CloudEvent> createProducer(
-    final Vertx vertx,
-    final Resource resource,
-    final Egress egress) {
+      final Vertx vertx, final Resource resource, final Egress egress) {
 
-    final var producer = new MockProducer<>(
-      true,
-      new StringSerializer(),
-      new CloudEventSerializer()
-    );
+    final var producer =
+        new MockProducer<>(true, new StringSerializer(), new CloudEventSerializer());
 
     mockProducer.put(egress.getConsumerGroup(), producer);
 
@@ -76,34 +76,33 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
 
   @Override
   protected Function<Vertx, KafkaConsumer<String, CloudEvent>> createConsumerFactory(
-    final DataPlaneContract.Resource resource,
-    final DataPlaneContract.Egress egress) {
+      final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
     return vertx -> {
-
       final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
 
       mockConsumer.put(egress.getConsumerGroup(), consumer);
 
-      consumer.schedulePollTask(() -> {
-        consumer.unsubscribe();
+      consumer.schedulePollTask(
+          () -> {
+            consumer.unsubscribe();
 
-        consumer.assign(records.stream()
-          .map(r -> new TopicPartition(resource.getTopics(0), r.partition()))
-          .collect(Collectors.toList()));
+            consumer.assign(
+                records.stream()
+                    .map(r -> new TopicPartition(resource.getTopics(0), r.partition()))
+                    .collect(Collectors.toList()));
 
-        for (final var record : records) {
-          consumer.addRecord(new ConsumerRecord<>(
-            resource.getTopics(0),
-            record.partition(),
-            record.offset(),
-            record.key(),
-            record.value()
-          ));
-          consumer.updateEndOffsets(Map.of(
-            new TopicPartition(resource.getTopics(0), record.partition()), 0L
-          ));
-        }
-      });
+            for (final var record : records) {
+              consumer.addRecord(
+                  new ConsumerRecord<>(
+                      resource.getTopics(0),
+                      record.partition(),
+                      record.offset(),
+                      record.key(),
+                      record.value()));
+              consumer.updateEndOffsets(
+                  Map.of(new TopicPartition(resource.getTopics(0), record.partition()), 0L));
+            }
+          });
 
       return KafkaConsumer.create(vertx, consumer);
     };

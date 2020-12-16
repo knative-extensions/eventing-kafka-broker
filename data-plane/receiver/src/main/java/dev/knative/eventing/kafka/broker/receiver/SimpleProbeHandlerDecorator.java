@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,14 +35,14 @@ public class SimpleProbeHandlerDecorator implements Handler<HttpServerRequest> {
   /**
    * All args constructor for creating a new SimpleProbeHandlerDecorator.
    *
-   * @param livenessPath  request path at which respond to liveness checks.
+   * @param livenessPath request path at which respond to liveness checks.
    * @param readinessPath request path at which respond to readiness checks.
-   * @param handler       next handler
+   * @param handler next handler
    */
   public SimpleProbeHandlerDecorator(
-    final String livenessPath,
-    final String readinessPath,
-    final Handler<HttpServerRequest> handler) {
+      final String livenessPath,
+      final String readinessPath,
+      final Handler<HttpServerRequest> handler) {
     this.livenessPath = livenessPath;
     this.readinessPath = readinessPath;
     this.handler = handler;
@@ -60,6 +60,6 @@ public class SimpleProbeHandlerDecorator implements Handler<HttpServerRequest> {
 
   private boolean isProbeRequest(final HttpServerRequest request) {
     return request.method().equals(HttpMethod.GET)
-      && (request.path().equals(livenessPath) || request.path().equals(readinessPath));
+        && (request.path().equals(livenessPath) || request.path().equals(readinessPath));
   }
 }

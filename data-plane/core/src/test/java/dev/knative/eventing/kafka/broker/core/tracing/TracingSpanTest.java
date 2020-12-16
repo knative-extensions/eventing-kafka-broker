@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,16 +50,18 @@ public class TracingSpanTest {
 
     final var wait = new CountDownLatch(1);
 
-    ctx.runOnContext(ignored -> {
+    ctx.runOnContext(
+        ignored -> {
+          TracingSpan.decorateCurrent(
+              vertx,
+              CloudEventBuilder.v1()
+                  .withSource(URI.create("/hello"))
+                  .withType("type")
+                  .withId(UUID.randomUUID().toString())
+                  .build());
 
-      TracingSpan.decorateCurrent(vertx, CloudEventBuilder.v1()
-        .withSource(URI.create("/hello"))
-        .withType("type")
-        .withId(UUID.randomUUID().toString())
-        .build());
-
-      wait.countDown();
-    });
+          wait.countDown();
+        });
 
     wait.await(1, TimeUnit.SECONDS);
 
@@ -67,19 +69,20 @@ public class TracingSpanTest {
   }
 
   @Test
-  public void shouldReturnCurrentSpan(final Vertx vertx, final VertxTestContext context) throws InterruptedException {
+  public void shouldReturnCurrentSpan(final Vertx vertx, final VertxTestContext context)
+      throws InterruptedException {
 
     final var ctx = vertx.getOrCreateContext();
     final var currentSpan = mock(Span.class);
     ctx.putLocal(TracingSpan.ACTIVE_SPAN, currentSpan);
 
-    ctx.runOnContext(ignored -> {
+    ctx.runOnContext(
+        ignored -> {
+          final var span = TracingSpan.getCurrent(vertx);
 
-      final var span = TracingSpan.getCurrent(vertx);
+          assertThat(span).isSameAs(span);
 
-      assertThat(span).isSameAs(span);
-
-      context.completeNow();
-    });
+          context.completeNow();
+        });
   }
 }

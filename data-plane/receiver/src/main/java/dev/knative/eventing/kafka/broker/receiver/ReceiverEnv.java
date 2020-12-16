@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,11 +61,19 @@ class ReceiverEnv extends BaseEnv {
 
   @Override
   public String toString() {
-    return "ReceiverEnv{" +
-      "ingressPort=" + ingressPort +
-      ", livenessProbePath='" + livenessProbePath + '\'' +
-      ", readinessProbePath='" + readinessProbePath + '\'' +
-      ", httpServerConfigFilePath='" + httpServerConfigFilePath + '\'' +
-      "} " + super.toString();
+    return "ReceiverEnv{"
+        + "ingressPort="
+        + ingressPort
+        + ", livenessProbePath='"
+        + livenessProbePath
+        + '\''
+        + ", readinessProbePath='"
+        + readinessProbePath
+        + '\''
+        + ", httpServerConfigFilePath='"
+        + httpServerConfigFilePath
+        + '\''
+        + "} "
+        + super.toString();
   }
 }

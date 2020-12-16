@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,13 +51,14 @@ public class ProbeHandlerTest {
     this.webClient = WebClient.create(vertx);
 
     this.server = vertx.createHttpServer(httpServerOptions);
-    this.server.requestHandler(new SimpleProbeHandlerDecorator(
-        LIVENESS_PATH,
-        READINESS_PATH,
-        r -> r.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end()
-      ))
-      .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
-      .onComplete(context.succeedingThenComplete());
+    this.server
+        .requestHandler(
+            new SimpleProbeHandlerDecorator(
+                LIVENESS_PATH,
+                READINESS_PATH,
+                r -> r.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end()))
+        .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
+        .onComplete(context.succeedingThenComplete());
   }
 
   @AfterEach
@@ -82,16 +83,17 @@ public class ProbeHandlerTest {
   }
 
   private void mustReceiveStatusCodeOnPath(
-    final VertxTestContext context,
-    final int expectedStatusCode,
-    final String path) {
-    webClient.get(PORT, "localhost", path)
-      .send()
-      .onSuccess(response -> context.verify(() -> {
-        assertThat(response.statusCode())
-          .isEqualTo(expectedStatusCode);
-        context.completeNow();
-      }))
-      .onFailure(context::failNow);
+      final VertxTestContext context, final int expectedStatusCode, final String path) {
+    webClient
+        .get(PORT, "localhost", path)
+        .send()
+        .onSuccess(
+            response ->
+                context.verify(
+                    () -> {
+                      assertThat(response.statusCode()).isEqualTo(expectedStatusCode);
+                      context.completeNow();
+                    }))
+        .onFailure(context::failNow);
   }
 }

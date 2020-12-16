@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,8 @@ public class ReceiverVerticleTest {
   private static Counter produceRequestCount;
 
   static {
-    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    BackendRegistries.setupBackend(
+        new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
   }
 
   @BeforeEach
@@ -83,32 +84,26 @@ public class ReceiverVerticleTest {
     ContractMessageCodec.register(vertx.eventBus());
 
     webClient = WebClient.create(vertx);
-    ReceiverVerticleTest.mockProducer = new MockProducer<>(
-      true,
-      new StringSerializer(),
-      new CloudEventSerializer()
-    );
-    KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, mockProducer);
+    ReceiverVerticleTest.mockProducer =
+        new MockProducer<>(true, new StringSerializer(), new CloudEventSerializer());
+    final KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, mockProducer);
 
     badRequestCount = new CumulativeCounter(mock(Id.class));
     produceRequestCount = new CumulativeCounter(mock(Id.class));
 
-    handler = new RequestMapper<>(
-      vertx,
-      new Properties(),
-      new CloudEventRequestToRecordMapper(vertx),
-      properties -> producer,
-      badRequestCount,
-      produceRequestCount
-    );
+    handler =
+        new RequestMapper<>(
+            vertx,
+            new Properties(),
+            new CloudEventRequestToRecordMapper(vertx),
+            properties -> producer,
+            badRequestCount,
+            produceRequestCount);
 
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(PORT);
     httpServerOptions.setHost("localhost");
-    final var verticle = new ReceiverVerticle(
-      httpServerOptions,
-      v -> handler
-    );
+    final var verticle = new ReceiverVerticle(httpServerOptions, v -> handler);
     vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));
   }
 
@@ -123,31 +118,39 @@ public class ReceiverVerticleTest {
   }
 
   @ParameterizedTest
-  @MethodSource({"getValidNonValidEvents"})
+  @MethodSource("getValidNonValidEvents")
   public void shouldProduceMessagesReceivedConcurrently(
-    final TestCase tc,
-    final Vertx vertx,
-    final VertxTestContext context) throws InterruptedException {
+      final TestCase tc, final Vertx vertx, final VertxTestContext context)
+      throws InterruptedException {
 
     final var checkpoints = context.checkpoint(1);
     final var countDown = new CountDownLatch(1);
 
     new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS)
-      .accept(tc.getContract());
+        .accept(tc.getContract());
 
-    tc.requestSender.apply(webClient.post(PORT, "localhost", tc.path))
-      .onFailure(context::failNow)
-      .onSuccess(response -> vertx.setTimer(1000, ignored -> context.verify(() -> {
-        assertThat(response.statusCode())
-          .as("verify path: " + tc.path)
-          .isEqualTo(tc.responseStatusCode);
+    tc.requestSender
+        .apply(webClient.post(PORT, "localhost", tc.path))
+        .onFailure(context::failNow)
+        .onSuccess(
+            response ->
+                vertx.setTimer(
+                    1000,
+                    ignored ->
+                        context.verify(
+                            () -> {
+                              assertThat(response.statusCode())
+                                  .as("verify path: " + tc.path)
+                                  .isEqualTo(tc.responseStatusCode);
 
-        assertThat((double) tc.badRequestCount).isEqualTo(badRequestCount.count());
-        assertThat((double) tc.produceEventCount).isEqualTo(produceRequestCount.count());
+                              assertThat((double) tc.badRequestCount)
+                                  .isEqualTo(badRequestCount.count());
+                              assertThat((double) tc.produceEventCount)
+                                  .isEqualTo(produceRequestCount.count());
 
-        checkpoints.flag();
-        countDown.countDown();
-      })));
+                              checkpoints.flag();
+                              countDown.countDown();
+                            })));
 
     countDown.await(TIMEOUT, TimeUnit.SECONDS);
 
@@ -156,171 +159,173 @@ public class ReceiverVerticleTest {
     }
   }
 
+  // CHECKSTYLE:OFF // method too long
   private static List<TestCase> getValidNonValidEvents() {
     return Arrays.asList(
-      new TestCase(
-        null,
-        "/broker-ns/broker-name1",
-        ceRequestSender(new CloudEventBuilder()
-          .withSubject("subject")
-          .withSource(URI.create("/hello"))
-          .withType("type")
-          .withId("1234")
-          .build()),
-        RequestMapper.RESOURCE_NOT_FOUND,
-        DataPlaneContract.Resource.newBuilder()
-          .setUid("1")
-          .addTopics("topic")
-          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
-          .build()
-      ),
-      new TestCase(
-        null,
-        "/broker-ns/broker-name/hello",
-        ceRequestSender(new CloudEventBuilder()
-          .withSubject("subject")
-          .withSource(URI.create("/hello"))
-          .withType("type")
-          .withId("1234")
-          .build()),
-        RequestMapper.RESOURCE_NOT_FOUND,
-        DataPlaneContract.Resource.newBuilder()
-          .setUid("1")
-          .addTopics("topic")
-          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-name/hello"))
-          .build()
-      ),
-      new TestCase(
-        null,
-        "/broker-ns/h/hello",
-        ceRequestSender(new CloudEventBuilder()
-          .withSubject("subject")
-          .withSource(URI.create("/hello"))
-          .withType("type")
-          .withId("1234")
-          .build()),
-        RequestMapper.RESOURCE_NOT_FOUND,
-        DataPlaneContract.Resource.newBuilder()
-          .setUid("1")
-          .addTopics("topic")
-          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/h/hello"))
-          .build()
-      ),
-      new TestCase(
-        new ProducerRecord<>(
-          "topic-name-1",
-          null,
-          new io.cloudevents.core.v03.CloudEventBuilder()
-            .withSubject("subject")
-            .withSource(URI.create("/hello"))
-            .withType("type")
-            .withId("1234")
-            .build()
-        ),
-        "/broker-ns/broker-name1",
-        ceRequestSender(new io.cloudevents.core.v03.CloudEventBuilder()
-          .withSubject("subject")
-          .withSource(URI.create("/hello"))
-          .withType("type")
-          .withId("1234")
-          .build()),
-        RequestMapper.RECORD_PRODUCED,
-        DataPlaneContract.Resource.newBuilder()
-          .setUid("1")
-          .addTopics("topic-name-1")
-          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name1"))
-          .build()
-      ),
-      new TestCase(
-        null,
-        "/broker-ns/broker-name",
-        request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
-        RequestMapper.MAPPER_FAILED,
-        DataPlaneContract.Resource.newBuilder()
-          .setUid("1")
-          .addTopics("topic")
-          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
-          .build()
-      ),
-      new TestCase(
-        null,
-        "/broker-ns/broker-name/hello",
-        request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
-        RequestMapper.RESOURCE_NOT_FOUND,
-        DataPlaneContract.Resource.newBuilder()
-          .setUid("1")
-          .addTopics("topic")
-          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
-          .build()
-      ),
-      new TestCase(
-        null,
-        "/broker-ns/broker-name3",
-        request -> {
-          final var objectMapper = new ObjectMapper();
-          final var objectNode = objectMapper.createObjectNode();
-          objectNode.set("hello", new FloatNode(1.24f));
-          objectNode.set("data", objectMapper.createObjectNode());
-          request.headers().set("Content-Type", "application/json");
-          return request.sendBuffer(Buffer.buffer(objectNode.toString()));
-        },
-        RequestMapper.MAPPER_FAILED,
-        DataPlaneContract.Resource.newBuilder()
-          .setUid("1")
-          .addTopics("topic")
-          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name3"))
-          .build()
-      ),
-      new TestCase(
-        null,
-        "/broker-ns/broker-name4",
-        request -> {
-          final var objectMapper = new ObjectMapper();
-          final var objectNode = objectMapper.createObjectNode();
-          objectNode.set("specversion", new TextNode("1.0"));
-          objectNode.set("type", new TextNode("my-type"));
-          objectNode.set("source", new TextNode("my-source"));
-          objectNode.set("data", objectMapper.createObjectNode());
-          request.headers().set("Content-Type", "application/json");
-          return request.sendBuffer(Buffer.buffer(objectNode.toString()));
-        },
-        RequestMapper.MAPPER_FAILED,
-        DataPlaneContract.Resource.newBuilder()
-          .setUid("1")
-          .addTopics("topic")
-          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name4"))
-          .build()
-      ),
-      new TestCase(
-        new ProducerRecord<>(
-          "topic-name-42",
-          null,
-          new io.cloudevents.core.v1.CloudEventBuilder()
-            .withSubject("subject")
-            .withSource(URI.create("/hello"))
-            .withType("type")
-            .withId("1234")
-            .build()
-        ),
-        "/broker-ns/broker-name5",
-        ceRequestSender(new io.cloudevents.core.v1.CloudEventBuilder()
-          .withSubject("subject")
-          .withSource(URI.create("/hello"))
-          .withType("type")
-          .withId("1234")
-          .build()),
-        RequestMapper.RECORD_PRODUCED,
-        DataPlaneContract.Resource.newBuilder()
-          .setUid("1")
-          .addTopics("topic-name-42")
-          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name5"))
-          .build()
-      )
-    );
+        new TestCase(
+            null,
+            "/broker-ns/broker-name1",
+            ceRequestSender(
+                new CloudEventBuilder()
+                    .withSubject("subject")
+                    .withSource(URI.create("/hello"))
+                    .withType("type")
+                    .withId("1234")
+                    .build()),
+            RequestMapper.RESOURCE_NOT_FOUND,
+            DataPlaneContract.Resource.newBuilder()
+                .setUid("1")
+                .addTopics("topic")
+                .setIngress(
+                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
+                .build()),
+        new TestCase(
+            null,
+            "/broker-ns/broker-name/hello",
+            ceRequestSender(
+                new CloudEventBuilder()
+                    .withSubject("subject")
+                    .withSource(URI.create("/hello"))
+                    .withType("type")
+                    .withId("1234")
+                    .build()),
+            RequestMapper.RESOURCE_NOT_FOUND,
+            DataPlaneContract.Resource.newBuilder()
+                .setUid("1")
+                .addTopics("topic")
+                .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-name/hello"))
+                .build()),
+        new TestCase(
+            null,
+            "/broker-ns/h/hello",
+            ceRequestSender(
+                new CloudEventBuilder()
+                    .withSubject("subject")
+                    .withSource(URI.create("/hello"))
+                    .withType("type")
+                    .withId("1234")
+                    .build()),
+            RequestMapper.RESOURCE_NOT_FOUND,
+            DataPlaneContract.Resource.newBuilder()
+                .setUid("1")
+                .addTopics("topic")
+                .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/h/hello"))
+                .build()),
+        new TestCase(
+            new ProducerRecord<>(
+                "topic-name-1",
+                null,
+                new io.cloudevents.core.v03.CloudEventBuilder()
+                    .withSubject("subject")
+                    .withSource(URI.create("/hello"))
+                    .withType("type")
+                    .withId("1234")
+                    .build()),
+            "/broker-ns/broker-name1",
+            ceRequestSender(
+                new io.cloudevents.core.v03.CloudEventBuilder()
+                    .withSubject("subject")
+                    .withSource(URI.create("/hello"))
+                    .withType("type")
+                    .withId("1234")
+                    .build()),
+            RequestMapper.RECORD_PRODUCED,
+            DataPlaneContract.Resource.newBuilder()
+                .setUid("1")
+                .addTopics("topic-name-1")
+                .setIngress(
+                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name1"))
+                .build()),
+        new TestCase(
+            null,
+            "/broker-ns/broker-name",
+            request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
+            RequestMapper.MAPPER_FAILED,
+            DataPlaneContract.Resource.newBuilder()
+                .setUid("1")
+                .addTopics("topic")
+                .setIngress(
+                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
+                .build()),
+        new TestCase(
+            null,
+            "/broker-ns/broker-name/hello",
+            request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
+            RequestMapper.RESOURCE_NOT_FOUND,
+            DataPlaneContract.Resource.newBuilder()
+                .setUid("1")
+                .addTopics("topic")
+                .setIngress(
+                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
+                .build()),
+        new TestCase(
+            null,
+            "/broker-ns/broker-name3",
+            request -> {
+              final var objectMapper = new ObjectMapper();
+              final var objectNode = objectMapper.createObjectNode();
+              objectNode.set("hello", new FloatNode(1.24f));
+              objectNode.set("data", objectMapper.createObjectNode());
+              request.headers().set("Content-Type", "application/json");
+              return request.sendBuffer(Buffer.buffer(objectNode.toString()));
+            },
+            RequestMapper.MAPPER_FAILED,
+            DataPlaneContract.Resource.newBuilder()
+                .setUid("1")
+                .addTopics("topic")
+                .setIngress(
+                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name3"))
+                .build()),
+        new TestCase(
+            null,
+            "/broker-ns/broker-name4",
+            request -> {
+              final var objectMapper = new ObjectMapper();
+              final var objectNode = objectMapper.createObjectNode();
+              objectNode.set("specversion", new TextNode("1.0"));
+              objectNode.set("type", new TextNode("my-type"));
+              objectNode.set("source", new TextNode("my-source"));
+              objectNode.set("data", objectMapper.createObjectNode());
+              request.headers().set("Content-Type", "application/json");
+              return request.sendBuffer(Buffer.buffer(objectNode.toString()));
+            },
+            RequestMapper.MAPPER_FAILED,
+            DataPlaneContract.Resource.newBuilder()
+                .setUid("1")
+                .addTopics("topic")
+                .setIngress(
+                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name4"))
+                .build()),
+        new TestCase(
+            new ProducerRecord<>(
+                "topic-name-42",
+                null,
+                new io.cloudevents.core.v1.CloudEventBuilder()
+                    .withSubject("subject")
+                    .withSource(URI.create("/hello"))
+                    .withType("type")
+                    .withId("1234")
+                    .build()),
+            "/broker-ns/broker-name5",
+            ceRequestSender(
+                new io.cloudevents.core.v1.CloudEventBuilder()
+                    .withSubject("subject")
+                    .withSource(URI.create("/hello"))
+                    .withType("type")
+                    .withId("1234")
+                    .build()),
+            RequestMapper.RECORD_PRODUCED,
+            DataPlaneContract.Resource.newBuilder()
+                .setUid("1")
+                .addTopics("topic-name-42")
+                .setIngress(
+                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name5"))
+                .build()));
   }
+  // CHECKSTYLE:ON // method too long
 
   private static Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> ceRequestSender(
-    final CloudEvent event) {
+      final CloudEvent event) {
     return request -> VertxMessageFactory.createWriter(request).writeBinary(event);
   }
 
@@ -335,11 +340,11 @@ public class ReceiverVerticleTest {
     final int produceEventCount;
 
     TestCase(
-      final ProducerRecord<String, CloudEvent> record,
-      final String path,
-      final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender,
-      final int responseStatusCode,
-      final DataPlaneContract.Resource resource) {
+        final ProducerRecord<String, CloudEvent> record,
+        final String path,
+        final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender,
+        final int responseStatusCode,
+        final DataPlaneContract.Resource resource) {
 
       this.path = path;
       this.requestSender = requestSender;
@@ -360,9 +365,7 @@ public class ReceiverVerticleTest {
     }
 
     DataPlaneContract.Contract getContract() {
-      return DataPlaneContract.Contract.newBuilder()
-        .addResources(this.resource)
-        .build();
+      return DataPlaneContract.Contract.newBuilder().addResources(this.resource).build();
     }
   }
 }

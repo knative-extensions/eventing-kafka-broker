@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,22 +33,36 @@ class ReceiverEnvTest {
 
   @Test
   public void create() {
-    final var env = new ReceiverEnv(
-      key -> switch (key) {
-        case ReceiverEnv.INGRESS_PORT -> PORT;
-        case ReceiverEnv.LIVENESS_PROBE_PATH -> LIVENESS_PATH;
-        case ReceiverEnv.READINESS_PROBE_PATH -> READINESS_PATH;
-        case ReceiverEnv.HTTPSERVER_CONFIG_FILE_PATH -> HTTPSERVER_CONFIG_FILE_PATH;
-        case BaseEnv.PRODUCER_CONFIG_FILE_PATH -> PRODUCER_CONFIG_PATH;
-        case BaseEnv.DATA_PLANE_CONFIG_FILE_PATH -> DATA_PLANE_CONFIG_FILE_PATH;
-        case BaseEnv.METRICS_PORT -> "9092";
-        case BaseEnv.METRICS_PATH -> "/path";
-        case BaseEnv.METRICS_PUBLISH_QUANTILES -> "TRUE";
-        case BaseEnv.CONFIG_TRACING_PATH -> TRACING_CONFIG_PATH;
-        case BaseEnv.METRICS_JVM_ENABLED -> METRICS_JVM_ENABLED;
-        default -> throw new IllegalArgumentException(key);
-      }
-    );
+    final var env =
+        new ReceiverEnv(
+            key -> {
+              switch (key) {
+                case ReceiverEnv.INGRESS_PORT:
+                  return PORT;
+                case ReceiverEnv.LIVENESS_PROBE_PATH:
+                  return LIVENESS_PATH;
+                case ReceiverEnv.READINESS_PROBE_PATH:
+                  return READINESS_PATH;
+                case ReceiverEnv.HTTPSERVER_CONFIG_FILE_PATH:
+                  return HTTPSERVER_CONFIG_FILE_PATH;
+                case BaseEnv.PRODUCER_CONFIG_FILE_PATH:
+                  return PRODUCER_CONFIG_PATH;
+                case BaseEnv.DATA_PLANE_CONFIG_FILE_PATH:
+                  return DATA_PLANE_CONFIG_FILE_PATH;
+                case BaseEnv.METRICS_PORT:
+                  return "9092";
+                case BaseEnv.METRICS_PATH:
+                  return "/path";
+                case BaseEnv.METRICS_PUBLISH_QUANTILES:
+                  return "TRUE";
+                case BaseEnv.CONFIG_TRACING_PATH:
+                  return TRACING_CONFIG_PATH;
+                case BaseEnv.METRICS_JVM_ENABLED:
+                  return METRICS_JVM_ENABLED;
+                default:
+                  throw new IllegalArgumentException(key);
+              }
+            });
 
     assertThat(env.getIngressPort()).isEqualTo(Integer.parseInt(PORT));
     assertThat(env.getLivenessProbePath()).isEqualTo(LIVENESS_PATH);

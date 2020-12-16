@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,25 +21,23 @@ import io.vertx.core.eventbus.EventBus;
 import java.util.function.Consumer;
 
 /**
- * This object publishes all consumed contracts to the event bus.
- * This class requires the codec {@link ContractMessageCodec} registered in the provided event bus.
+ * This object publishes all consumed contracts to the event bus. This class requires the codec
+ * {@link ContractMessageCodec} registered in the provided event bus.
  */
 public class ContractPublisher implements Consumer<DataPlaneContract.Contract> {
 
-  private final static DeliveryOptions DELIVERY_OPTIONS = new DeliveryOptions()
-    .setLocalOnly(true);
+  private static final DeliveryOptions DELIVERY_OPTIONS = new DeliveryOptions().setLocalOnly(true);
 
   private final EventBus eventBus;
   private final String address;
 
-  public ContractPublisher(EventBus eventBus, String address) {
+  public ContractPublisher(final EventBus eventBus, final String address) {
     this.eventBus = eventBus;
     this.address = address;
   }
 
   @Override
-  public void accept(DataPlaneContract.Contract contract) {
+  public void accept(final DataPlaneContract.Contract contract) {
     eventBus.publish(address, contract, DELIVERY_OPTIONS);
   }
-
 }

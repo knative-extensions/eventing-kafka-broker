@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ public class TracingConfigTest {
 
     assertThat(config.getBackend()).isEqualTo(Backend.ZIPKIN);
     assertThat(config.getSamplingRate()).isEqualTo(0.1F);
-    assertThat(config.getURL()).isEqualTo("http://localhost:9241/v2/api/spans/");
+    assertThat(config.getUrl()).isEqualTo("http://localhost:9241/v2/api/spans/");
   }
 
   @Test
@@ -103,7 +103,8 @@ public class TracingConfigTest {
   }
 
   private static void write(final Path root, final String name, final String s) throws IOException {
-    try (final var f = Files.newOutputStream(Path.of(root.toAbsolutePath().toString() + name), CREATE, APPEND)) {
+    try (final var f =
+        Files.newOutputStream(Path.of(root.toAbsolutePath().toString() + name), CREATE, APPEND)) {
       f.write(s.getBytes());
     }
   }

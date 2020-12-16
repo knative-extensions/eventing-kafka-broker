@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,12 +58,14 @@ public class ShutdownTest {
   private Vertx mockVertxClose() {
     final var vertx = mock(Vertx.class);
 
-    doAnswer(invocation -> {
-      final Handler<AsyncResult<Void>> callback = invocation.getArgument(0);
-      callback.handle(Future.succeededFuture());
-      return null;
-    })
-      .when(vertx).close(any());
+    doAnswer(
+            invocation -> {
+              final Handler<AsyncResult<Void>> callback = invocation.getArgument(0);
+              callback.handle(Future.succeededFuture());
+              return null;
+            })
+        .when(vertx)
+        .close(any());
 
     return vertx;
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,13 +24,14 @@ public class SinkResponseHandlerMock<R> implements SinkResponseHandler<R> {
   private final Supplier<Future<?>> onClose;
   private final Function<R, Future<Void>> onSend;
 
-  public SinkResponseHandlerMock(final Supplier<Future<?>> onClose, final Function<R, Future<Void>> onSend) {
+  public SinkResponseHandlerMock(
+      final Supplier<Future<?>> onClose, final Function<R, Future<Void>> onSend) {
     this.onClose = onClose;
     this.onSend = onSend;
   }
 
   @Override
-  public Future<Void> handle(R response) {
+  public Future<Void> handle(final R response) {
     return this.onSend.apply(response);
   }
 

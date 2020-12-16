@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,15 +25,18 @@ import org.slf4j.LoggerFactory;
 
 public class HeadersPropagatorSetter implements Setter<BiConsumer<String, String>> {
 
-  private static final Logger logger = LoggerFactory.getLogger(HeadersPropagatorSetter.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(HeadersPropagatorSetter.class);
 
   @Override
-  public void set(final BiConsumer<String, String> carrier, @Nonnull final String key, @Nonnull final String value) {
+  public void set(
+      final BiConsumer<String, String> carrier,
+      @Nonnull final String key,
+      @Nonnull final String value) {
     if (carrier == null) {
       return;
     }
 
-    logger.debug("Set {} {}", keyValue("key", key), keyValue("value", value));
+    LOGGER.debug("Set {} {}", keyValue("key", key), keyValue("value", value));
 
     carrier.accept(key, value);
   }

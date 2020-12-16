@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,7 @@ package dev.knative.eventing.kafka.broker.core.filter;
 import io.cloudevents.CloudEvent;
 import java.util.function.Predicate;
 
-/**
- * Filter interface abstract the filtering logic of broker.
- */
+/** Filter interface abstract the filtering logic of broker. */
 @FunctionalInterface
 public interface Filter extends Predicate<CloudEvent> {
 

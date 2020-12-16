@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventSerializer;
-import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 import io.opentelemetry.api.OpenTelemetry;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -51,17 +50,23 @@ import org.slf4j.LoggerFactory;
 
 public class Main {
 
-  // Micrometer employs a naming convention that separates lowercase words with a '.' (dot) character.
-  // Different monitoring systems have different recommendations regarding naming convention, and some naming
+  // Micrometer employs a naming convention that separates lowercase words with a '.' (dot)
+  // character.
+  // Different monitoring systems have different recommendations regarding naming convention, and
+  // some naming
   // conventions may be incompatible for one system and not another.
-  // Each Micrometer implementation for a monitoring system comes with a naming convention that transforms lowercase
+  // Each Micrometer implementation for a monitoring system comes with a naming convention that
+  // transforms lowercase
   // dot notation names to the monitoring system’s recommended naming convention.
-  // Additionally, this naming convention implementation sanitizes metric names and tags of special characters that
+  // Additionally, this naming convention implementation sanitizes metric names and tags of special
+  // characters that
   // are disallowed by the monitoring system.
-  public static final String HTTP_REQUESTS_MALFORMED_COUNT = "http.requests.malformed"; // prometheus format --> http_requests_malformed_total
-  public static final String HTTP_REQUESTS_PRODUCE_COUNT = "http.requests.produce";     // prometheus format --> http_requests_produce_total
+  public static final String HTTP_REQUESTS_MALFORMED_COUNT =
+      "http.requests.malformed"; // prometheus format --> http_requests_malformed_total
+  public static final String HTTP_REQUESTS_PRODUCE_COUNT =
+      "http.requests.produce"; // prometheus format --> http_requests_produce_total
 
-  private static final Logger logger = LoggerFactory.getLogger(Main.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
   /**
    * Start receiver.
@@ -82,15 +87,17 @@ public class Main {
 
     final var producerConfigs = Configurations.getProperties(env.getProducerConfigFilePath());
 
-    logger.info("Starting Receiver {}", keyValue("env", env));
+    LOGGER.info("Starting Receiver {}", keyValue("env", env));
 
-    final var vertx = Vertx.vertx(
-      new VertxOptions()
-        .setMetricsOptions(Metrics.getOptions(env))
-        .setTracingOptions(new TracingOptions()
-          .setFactory(new OpenTelemetryVertxTracingFactory(OpenTelemetry.getGlobalTracer(Tracing.SERVICE_NAME)))
-        )
-    );
+    final var vertx =
+        Vertx.vertx(
+            new VertxOptions()
+                .setMetricsOptions(Metrics.getOptions(env))
+                .setTracingOptions(
+                    new TracingOptions()
+                        .setFactory(
+                            new OpenTelemetryVertxTracingFactory(
+                                OpenTelemetry.getGlobalTracer(Tracing.SERVICE_NAME)))));
 
     try {
 
@@ -104,47 +111,50 @@ public class Main {
       producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
       producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
 
-      final Function<Vertx, RequestMapper<String, CloudEvent>> handlerFactory = v -> new RequestMapper<>(
-        v,
-        producerConfigs,
-        new CloudEventRequestToRecordMapper(vertx),
-        properties -> KafkaProducer.create(v, properties),
-        badRequestCounter,
-        produceEventsCounter
-      );
+      final Function<Vertx, RequestMapper<String, CloudEvent>> handlerFactory =
+          v ->
+              new RequestMapper<>(
+                  v,
+                  producerConfigs,
+                  new CloudEventRequestToRecordMapper(vertx),
+                  properties -> KafkaProducer.create(v, properties),
+                  badRequestCounter,
+                  produceEventsCounter);
 
-      final var httpServerOptions = new HttpServerOptions(
-        Configurations.getPropertiesAsJson(env.getHttpServerConfigFilePath())
-      );
+      final var httpServerOptions =
+          new HttpServerOptions(
+              Configurations.getPropertiesAsJson(env.getHttpServerConfigFilePath()));
       httpServerOptions.setPort(env.getIngressPort());
       httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
-      final var verticle = new ReceiverVerticle(
-        httpServerOptions,
-        handlerFactory,
-        h -> new SimpleProbeHandlerDecorator(
-          env.getLivenessProbePath(),
-          env.getReadinessProbePath(),
-          h
-        )
-      );
+      final var verticle =
+          new ReceiverVerticle(
+              httpServerOptions,
+              handlerFactory,
+              h ->
+                  new SimpleProbeHandlerDecorator(
+                      env.getLivenessProbePath(), env.getReadinessProbePath(), h));
 
       final var waitVerticle = new CountDownLatch(1);
-      vertx.deployVerticle(verticle)
-        .onSuccess(v -> {
-          logger.info("Receiver started");
-          waitVerticle.countDown();
-        })
-        .onFailure(t -> {
-          // This is a catastrophic failure, close the application
-          logger.error("Consumer deployer not started", t);
-          vertx.close(v -> System.exit(1));
-        });
+      vertx
+          .deployVerticle(verticle)
+          .onSuccess(
+              v -> {
+                LOGGER.info("Receiver started");
+                waitVerticle.countDown();
+              })
+          .onFailure(
+              t -> {
+                // This is a catastrophic failure, close the application
+                LOGGER.error("Consumer deployer not started", t);
+                vertx.close(v -> System.exit(1));
+              });
       waitVerticle.await(5, TimeUnit.SECONDS);
 
-      final var publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
+      final var publisher =
+          new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
       final var fs = FileSystems.getDefault().newWatchService();
-      var fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
+      final var fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
 
       // Gracefully clean up resources.
       Runtime.getRuntime().addShutdownHook(new Thread(Shutdown.run(vertx, fw, publisher)));
@@ -152,7 +162,7 @@ public class Main {
       fw.watch(); // block forever
 
     } catch (final Exception ex) {
-      logger.error("Failed during filesystem watch", ex);
+      LOGGER.error("Failed during filesystem watch", ex);
 
       Shutdown.closeSync(vertx).run();
     }

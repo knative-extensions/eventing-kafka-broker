@@ -36,10 +36,10 @@
   -->
   <suppress
     checks="ClassDataAbstractionCoupling"
-    files="(Main|HttpConsumerVerticleFactory|ConsumerVerticleFactoryMock|DataPlaneTest|ReceiverVerticleTest|UnorderedConsumerTest).java"
+    files="(Main|HttpConsumerVerticleFactory|ConsumerVerticleFactoryMock|DataPlaneTest|ReceiverVerticleTest|UnorderedConsumerTest|HttpSinkResponseHandlerTest|ConsumerVerticleTest|RequestMapperTest).java"
   />
   <suppress
     checks="ClassFanOutComplexity"
-    files="(HttpConsumerVerticleFactory|ReceiverVerticleTest|DataPlaneTest).java"
+    files="(HttpConsumerVerticleFactory|ReceiverVerticleTest|DataPlaneTest|RequestMapperTest).java"
   />
 </suppressions>

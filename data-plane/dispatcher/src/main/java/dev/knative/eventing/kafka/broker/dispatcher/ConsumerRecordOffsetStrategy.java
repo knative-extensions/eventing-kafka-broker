@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ public interface ConsumerRecordOffsetStrategy<K, V> {
    * The given record cannot be delivered to dead letter queue.
    *
    * @param record record undeliverable to dead letter queue.
-   * @param ex     exception occurred.
+   * @param ex exception occurred.
    */
   void failedToSendToDLQ(KafkaConsumerRecord<K, V> record, Throwable ex);
 

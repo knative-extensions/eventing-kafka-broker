@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class MetricsTest {
 
   static {
-    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    BackendRegistries.setupBackend(
+        new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
   }
 
   @Test
@@ -43,24 +44,26 @@ public class MetricsTest {
   }
 
   @Test
-  public void shouldRegisterAndCloseProducerMetricsThread(final Vertx vertx, final VertxTestContext context) {
+  public void shouldRegisterAndCloseProducerMetricsThread(
+      final Vertx vertx, final VertxTestContext context) {
     final var producer = new MockProducer<>();
 
     final var meterBinder = Metrics.register(producer);
 
     Metrics.close(vertx, meterBinder)
-      .onFailure(context::failNow)
-      .onSuccess(r -> context.completeNow());
+        .onFailure(context::failNow)
+        .onSuccess(r -> context.completeNow());
   }
 
   @Test
-  public void shouldRegisterAndCloseConsumerMetricsThread(final Vertx vertx, final VertxTestContext context) {
+  public void shouldRegisterAndCloseConsumerMetricsThread(
+      final Vertx vertx, final VertxTestContext context) {
     final var consumer = new MockConsumer<>(OffsetResetStrategy.LATEST);
 
     final var meterBinder = Metrics.register(consumer);
 
     Metrics.close(vertx, meterBinder)
-      .onFailure(context::failNow)
-      .onSuccess(r -> context.completeNow());
+        .onFailure(context::failNow)
+        .onSuccess(r -> context.completeNow());
   }
 }

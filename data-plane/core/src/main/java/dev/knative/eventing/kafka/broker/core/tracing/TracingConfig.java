@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,20 +25,17 @@ import java.nio.file.Path;
 public final class TracingConfig {
 
   private final Backend backend;
-  private final String URL;
+  private final String url;
   private final float samplingRate;
 
   private TracingConfig(final Backend backend, final String url, final float samplingRate) {
     if (!backend.equals(Backend.UNKNOWN) && !URI.create(url).isAbsolute()) {
-      throw new IllegalArgumentException(String.format(
-        "Backend is %s but the endpoint isn't an absolute URI: %s",
-        backend,
-        url
-      ));
+      throw new IllegalArgumentException(
+          String.format("Backend is %s but the endpoint isn't an absolute URI: %s", backend, url));
     }
 
     this.backend = backend;
-    this.URL = url;
+    this.url = url;
     this.samplingRate = Math.min(1, Math.max(samplingRate, 0));
   }
 
@@ -46,9 +43,7 @@ public final class TracingConfig {
 
     final var backendPath = backendPath(path);
     if (!Files.exists(backendPath)) {
-      return TracingConfig.builder()
-        .setBackend(Backend.UNKNOWN)
-        .createTracingConfig();
+      return TracingConfig.builder().setBackend(Backend.UNKNOWN).createTracingConfig();
     }
 
     var sampleRate = 0F;
@@ -60,8 +55,7 @@ public final class TracingConfig {
     }
 
     if (backend.equals(Backend.UNKNOWN)) {
-      return TracingConfig.builder()
-        .createTracingConfig();
+      return TracingConfig.builder().createTracingConfig();
     }
 
     final var sampleRatePath = sampleRatePath(path);
@@ -81,10 +75,10 @@ public final class TracingConfig {
     }
 
     return builder()
-      .setBackend(backend)
-      .setSamplingRate(sampleRate)
-      .setUrl(endpoint)
-      .createTracingConfig();
+        .setBackend(backend)
+        .setSamplingRate(sampleRate)
+        .setUrl(endpoint)
+        .createTracingConfig();
   }
 
   public static Builder builder() {
@@ -96,10 +90,12 @@ public final class TracingConfig {
     UNKNOWN;
 
     public static Backend from(final String s) {
-      return switch (s.trim().toLowerCase()) {
-        case "zipkin" -> ZIPKIN;
-        default -> UNKNOWN;
-      };
+      switch (s.trim().toLowerCase()) {
+        case "zipkin":
+          return ZIPKIN;
+        default:
+          return UNKNOWN;
+      }
     }
   }
 
@@ -122,7 +118,7 @@ public final class TracingConfig {
       return Float.valueOf(s);
     }
 
-    private static String trim(InputStream in) throws IOException {
+    private static String trim(final InputStream in) throws IOException {
       return new String(in.readAllBytes()).trim();
     }
   }
@@ -133,17 +129,17 @@ public final class TracingConfig {
     private String url;
     private float samplingRate;
 
-    Builder setBackend(Backend backend) {
+    Builder setBackend(final Backend backend) {
       this.backend = backend;
       return this;
     }
 
-    Builder setUrl(String url) {
+    Builder setUrl(final String url) {
       this.url = url;
       return this;
     }
 
-    Builder setSamplingRate(float samplingRate) {
+    Builder setSamplingRate(final float samplingRate) {
       this.samplingRate = samplingRate;
       return this;
     }
@@ -155,15 +151,14 @@ public final class TracingConfig {
 
       return new TracingConfig(backend, url, samplingRate);
     }
-
   }
 
   Backend getBackend() {
     return backend;
   }
 
-  String getURL() {
-    return URL;
+  String getUrl() {
+    return url;
   }
 
   float getSamplingRate() {
@@ -187,10 +182,14 @@ public final class TracingConfig {
 
   @Override
   public String toString() {
-    return "TracingConfig{" +
-      "backend=" + backend +
-      ", URL='" + URL + '\'' +
-      ", samplingRate=" + samplingRate +
-      '}';
+    return "TracingConfig{"
+        + "backend="
+        + backend
+        + ", URL='"
+        + url
+        + '\''
+        + ", samplingRate="
+        + samplingRate
+        + '}';
   }
 }

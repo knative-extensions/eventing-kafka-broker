@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,11 +29,11 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
-  ConsumerRecordOffsetStrategy<K, V> {
+public final class UnorderedConsumerRecordOffsetStrategy<K, V>
+    implements ConsumerRecordOffsetStrategy<K, V> {
 
-  private static final Logger logger = LoggerFactory
-    .getLogger(UnorderedConsumerRecordOffsetStrategy.class);
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(UnorderedConsumerRecordOffsetStrategy.class);
 
   private final KafkaConsumer<K, V> consumer;
   private final Counter eventsSentCounter;
@@ -41,10 +41,11 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
   /**
    * All args constructor.
    *
-   * @param consumer          Kafka consumer.
+   * @param consumer Kafka consumer.
    * @param eventsSentCounter events sent counter
    */
-  public UnorderedConsumerRecordOffsetStrategy(final KafkaConsumer<K, V> consumer, final Counter eventsSentCounter) {
+  public UnorderedConsumerRecordOffsetStrategy(
+      final KafkaConsumer<K, V> consumer, final Counter eventsSentCounter) {
     Objects.requireNonNull(consumer, "provide consumer");
     Objects.requireNonNull(eventsSentCounter, "provide eventsSentCounter");
 
@@ -52,70 +53,61 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
     this.eventsSentCounter = eventsSentCounter;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public void recordReceived(final KafkaConsumerRecord<K, V> record) {
     // un-ordered processing doesn't require pause/resume lifecycle.
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public void successfullySentToSubscriber(final KafkaConsumerRecord<K, V> record) {
     // TODO evaluate if it's worth committing offsets at specified intervals per partition.
     // commit each record
     commit(record)
-      .onSuccess(ignored -> {
-        eventsSentCounter.increment();
-        logger.debug(
-          "committed {} {} {}",
-          keyValue("topic", record.topic()),
-          keyValue("partition", record.partition()),
-          keyValue("offset", record.offset())
-        );
-      })
-      .onFailure(cause -> logger.error(
-        "failed to commit {} {} {}",
-        keyValue("topic", record.topic()),
-        keyValue("partition", record.partition()),
-        keyValue("offset", record.offset()),
-        cause
-      ));
+        .onSuccess(
+            ignored -> {
+              eventsSentCounter.increment();
+              LOGGER.debug(
+                  "committed {} {} {}",
+                  keyValue("topic", record.topic()),
+                  keyValue("partition", record.partition()),
+                  keyValue("offset", record.offset()));
+            })
+        .onFailure(
+            cause ->
+                LOGGER.error(
+                    "failed to commit {} {} {}",
+                    keyValue("topic", record.topic()),
+                    keyValue("partition", record.partition()),
+                    keyValue("offset", record.offset()),
+                    cause));
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public void successfullySentToDLQ(final KafkaConsumerRecord<K, V> record) {
     successfullySentToSubscriber(record);
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public void failedToSendToDLQ(final KafkaConsumerRecord<K, V> record, final Throwable ex) {
     // do not commit
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public void recordDiscarded(final KafkaConsumerRecord<K, V> record) {
     successfullySentToSubscriber(record);
   }
 
   private Future<Map<TopicPartition, OffsetAndMetadata>> commit(
-    final KafkaConsumerRecord<K, V> record) {
-    logger.debug("committing record {}", record);
-    return consumer.commit(Map.of(
-      new TopicPartition(record.topic(), record.partition()),
-      new OffsetAndMetadata(record.offset() + 1, ""))
-    );
+      final KafkaConsumerRecord<K, V> record) {
+    LOGGER.debug("committing record {}", record);
+    return consumer.commit(
+        Map.of(
+            new TopicPartition(record.topic(), record.partition()),
+            new OffsetAndMetadata(record.offset() + 1, "")));
   }
 }

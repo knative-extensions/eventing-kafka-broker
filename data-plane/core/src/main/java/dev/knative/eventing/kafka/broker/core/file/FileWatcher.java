@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,12 +37,10 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * FileWatcher is the class responsible for watching a given file and reports update.
- */
+/** FileWatcher is the class responsible for watching a given file and reports update. */
 public class FileWatcher implements Closeable, AutoCloseable {
 
-  private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(FileWatcher.class);
 
   private final Consumer<DataPlaneContract.Contract> contractConsumer;
 
@@ -53,16 +51,16 @@ public class FileWatcher implements Closeable, AutoCloseable {
   /**
    * All args constructor.
    *
-   * @param watcher          watch service
+   * @param watcher watch service
    * @param contractConsumer updates receiver.
-   * @param file             file to watch
+   * @param file file to watch
    * @throws IOException watch service cannot be registered.
    */
   public FileWatcher(
-    final WatchService watcher,
-    final Consumer<DataPlaneContract.Contract> contractConsumer,
-    final File file)
-    throws IOException {
+      final WatchService watcher,
+      final Consumer<DataPlaneContract.Contract> contractConsumer,
+      final File file)
+      throws IOException {
 
     Objects.requireNonNull(contractConsumer, "provide consumer");
     Objects.requireNonNull(file, "provide file");
@@ -73,19 +71,18 @@ public class FileWatcher implements Closeable, AutoCloseable {
 
     this.contractConsumer = contractConsumer;
     toWatch = file.getAbsoluteFile();
-    logger.info("start watching {}", toWatch);
-
-    Path toWatchParentPath = file.getParentFile().toPath();
+    LOGGER.info("start watching {}", toWatch);
 
     this.watcher = watcher;
 
+    final Path toWatchParentPath = file.getParentFile().toPath();
     toWatchParentPath.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
   }
 
   /**
    * Start watching.
    *
-   * @throws IOException          see {@link BufferedInputStream#readAllBytes()}.
+   * @throws IOException see {@link BufferedInputStream#readAllBytes()}.
    * @throws InterruptedException see {@link WatchService#take()}
    */
   public void watch() throws IOException, InterruptedException {
@@ -98,11 +95,11 @@ public class FileWatcher implements Closeable, AutoCloseable {
 
       // Note: take() blocks
       final var key = watcher.take();
-      logger.info("contract updates");
+      LOGGER.info("contract updates");
 
       // this should be rare but it can actually happen so check watch key validity
       if (!key.isValid()) {
-        logger.warn("invalid key");
+        LOGGER.warn("invalid key");
         continue;
       }
 
@@ -117,7 +114,6 @@ public class FileWatcher implements Closeable, AutoCloseable {
           shouldUpdate = true;
           break;
         }
-
       }
 
       if (shouldUpdate) {
@@ -133,9 +129,8 @@ public class FileWatcher implements Closeable, AutoCloseable {
     if (closed) {
       return;
     }
-    try (
-      final var fileReader = new FileReader(toWatch);
-      final var bufferedReader = new BufferedReader(fileReader)) {
+    try (final var fileReader = new FileReader(toWatch);
+        final var bufferedReader = new BufferedReader(fileReader)) {
       parseFromJson(bufferedReader);
     }
   }
@@ -149,7 +144,7 @@ public class FileWatcher implements Closeable, AutoCloseable {
       contractConsumer.accept(contract.build());
 
     } catch (final InvalidProtocolBufferException ex) {
-      logger.warn("failed to parse from JSON", ex);
+      LOGGER.warn("failed to parse from JSON", ex);
     }
   }
 

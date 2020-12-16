@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,10 +41,11 @@ public class BaseEnv {
 
   private final String configTracingPath;
 
-  public BaseEnv(Function<String, String> envProvider) {
+  public BaseEnv(final Function<String, String> envProvider) {
     this.metricsPath = requireNonNull(envProvider.apply(METRICS_PATH));
     this.metricsPort = Integer.parseInt(requireNonNull(envProvider.apply(METRICS_PORT)));
-    this.metricsPublishQuantiles = Boolean.parseBoolean(envProvider.apply(METRICS_PUBLISH_QUANTILES));
+    this.metricsPublishQuantiles =
+        Boolean.parseBoolean(envProvider.apply(METRICS_PUBLISH_QUANTILES));
     this.metricsJvmEnabled = Boolean.parseBoolean(envProvider.apply(METRICS_JVM_ENABLED));
     this.producerConfigFilePath = requireNonNull(envProvider.apply(PRODUCER_CONFIG_FILE_PATH));
     this.dataPlaneConfigFilePath = requireNonNull(envProvider.apply(DATA_PLANE_CONFIG_FILE_PATH));
@@ -81,12 +82,20 @@ public class BaseEnv {
 
   @Override
   public String toString() {
-    return "BaseEnv{" +
-      "producerConfigFilePath='" + producerConfigFilePath + '\'' +
-      ", dataPlaneConfigFilePath='" + dataPlaneConfigFilePath + '\'' +
-      ", metricsPort=" + metricsPort +
-      ", metricsPath='" + metricsPath + '\'' +
-      ", metricsPublishQuantiles=" + metricsPublishQuantiles +
-      '}';
+    return "BaseEnv{"
+        + "producerConfigFilePath='"
+        + producerConfigFilePath
+        + '\''
+        + ", dataPlaneConfigFilePath='"
+        + dataPlaneConfigFilePath
+        + '\''
+        + ", metricsPort="
+        + metricsPort
+        + ", metricsPath='"
+        + metricsPath
+        + '\''
+        + ", metricsPublishQuantiles="
+        + metricsPublishQuantiles
+        + '}';
   }
 }

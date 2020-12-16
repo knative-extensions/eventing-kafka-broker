@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,9 @@ import org.slf4j.LoggerFactory;
 
 public class Configurations {
 
-  private static final Logger logger = LoggerFactory.getLogger(Configurations.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(Configurations.class);
 
-  /**
-   * Retrieve a properties file. Note: this method is blocking
-   */
+  /** Retrieve a properties file. Note: this method is blocking */
   public static Properties getProperties(final String path) {
     if (path == null) {
       return new Properties();
@@ -40,16 +38,14 @@ public class Configurations {
     final var props = new Properties();
     try (final var configReader = new FileReader(path)) {
       props.load(configReader);
-    } catch (IOException e) {
-      logger.error("failed to load configurations from file {}", keyValue("path", path), e);
+    } catch (final IOException e) {
+      LOGGER.error("failed to load configurations from file {}", keyValue("path", path), e);
     }
 
     return props;
   }
 
-  /**
-   * Retrieve a properties file and translates it to json. Note: this method is blocking
-   */
+  /** Retrieve a properties file and translates it to json. Note: this method is blocking */
   public static JsonObject getPropertiesAsJson(final String path) {
     final var props = getProperties(path);
 
@@ -58,15 +54,15 @@ public class Configurations {
     return json;
   }
 
-  private static Object convert(String value) {
+  private static Object convert(final String value) {
     Objects.requireNonNull(value);
 
-    Boolean bool = asBoolean(value);
+    final Boolean bool = asBoolean(value);
     if (bool != null) {
       return bool;
     }
 
-    Double integer = asNumber(value);
+    final Double integer = asNumber(value);
     if (integer != null) {
       return integer;
     }
@@ -74,15 +70,15 @@ public class Configurations {
     return value;
   }
 
-  private static Double asNumber(String s) {
+  private static Double asNumber(final String s) {
     try {
       return Double.parseDouble(s);
-    } catch (NumberFormatException nfe) {
+    } catch (final NumberFormatException nfe) {
       return null;
     }
   }
 
-  private static Boolean asBoolean(String s) {
+  private static Boolean asBoolean(final String s) {
     if (s.equalsIgnoreCase("true")) {
       return Boolean.TRUE;
     } else if (s.equalsIgnoreCase("false")) {

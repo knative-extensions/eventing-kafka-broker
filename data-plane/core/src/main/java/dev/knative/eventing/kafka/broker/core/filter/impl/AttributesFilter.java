@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,17 +34,18 @@ public class AttributesFilter implements Filter {
 
   private static final String DEFAULT_STRING = "";
 
-  static final Map<String, Function<CloudEvent, String>> attributesMapper = Map.of(
-    CloudEventV1.SPECVERSION, event -> event.getSpecVersion().toString(),
-    CloudEventV1.ID, CloudEvent::getId,
-    CloudEventV1.TYPE, CloudEvent::getType,
-    CloudEventV1.SOURCE, event -> event.getSource().toString(),
-    CloudEventV1.DATACONTENTTYPE, CloudEvent::getDataContentType,
-    CloudEventV1.DATASCHEMA, event -> getOrDefault(event.getDataSchema(), URI::toString),
-    CloudEventV03.SCHEMAURL, event -> getOrDefault(event.getDataSchema(), URI::toString),
-    CloudEventV1.SUBJECT, CloudEvent::getSubject,
-    CloudEventV1.TIME, event -> getOrDefault(event.getTime(), time -> time.format(ISO_INSTANT))
-  );
+  static final Map<String, Function<CloudEvent, String>> ATTRIBUTES_MAPPER =
+      Map.of(
+          CloudEventV1.SPECVERSION, event -> event.getSpecVersion().toString(),
+          CloudEventV1.ID, CloudEvent::getId,
+          CloudEventV1.TYPE, CloudEvent::getType,
+          CloudEventV1.SOURCE, event -> event.getSource().toString(),
+          CloudEventV1.DATACONTENTTYPE, CloudEvent::getDataContentType,
+          CloudEventV1.DATASCHEMA, event -> getOrDefault(event.getDataSchema(), URI::toString),
+          CloudEventV03.SCHEMAURL, event -> getOrDefault(event.getDataSchema(), URI::toString),
+          CloudEventV1.SUBJECT, CloudEvent::getSubject,
+          CloudEventV1.TIME,
+              event -> getOrDefault(event.getTime(), time -> time.format(ISO_INSTANT)));
 
   // the key represents the function to turn an event into a string value.
   // the value represents the value to match.
@@ -58,28 +59,32 @@ public class AttributesFilter implements Filter {
    * @param attributes attributes to match to pass filter.
    */
   public AttributesFilter(final Map<String, String> attributes) {
-    this.attributes = attributes.entrySet().stream()
-      .filter(entry -> isNotEmpty(entry.getValue()))
-      .map(entry -> new SimpleImmutableEntry<>(
-        attributesMapper.getOrDefault(
-          entry.getKey(),
-          event -> {
-            try {
-              return getOrDefault(event.getAttribute(entry.getKey()), Object::toString);
-            } catch (Exception ex) {
-              return getOrDefault(event.getExtension(entry.getKey()), Object::toString);
-            }
-          }
-        ),
-        entry.getValue()
-      ))
-      .collect(Collectors.toUnmodifiableList());
+    this.attributes =
+        attributes.entrySet().stream()
+            .filter(entry -> isNotEmpty(entry.getValue()))
+            .map(
+                entry ->
+                    new SimpleImmutableEntry<>(
+                        ATTRIBUTES_MAPPER.getOrDefault(
+                            entry.getKey(),
+                            event -> {
+                              try {
+                                return getOrDefault(
+                                    event.getAttribute(entry.getKey()), Object::toString);
+                              } catch (final Exception ex) {
+                                return getOrDefault(
+                                    event.getExtension(entry.getKey()), Object::toString);
+                              }
+                            }),
+                        entry.getValue()))
+            .collect(Collectors.toUnmodifiableList());
   }
 
   /**
-   * Attributes filters events by exact match on event context attributes. Each key in the map is compared with the
-   * equivalent key in the event context. An event passes the filter if all values are equal to the specified values.
-   * Nested context attributes are not supported as keys. Only string values are supported.
+   * Attributes filters events by exact match on event context attributes. Each key in the map is
+   * compared with the equivalent key in the event context. An event passes the filter if all values
+   * are equal to the specified values. Nested context attributes are not supported as keys. Only
+   * string values are supported.
    *
    * @param event event to match
    * @return true if event matches attributes, otherwise false.
@@ -97,8 +102,7 @@ public class AttributesFilter implements Filter {
   }
 
   private static <T> String getOrDefault(
-    @Nullable final T s,
-    final Function<T, String> stringProvider) {
+      @Nullable final T s, final Function<T, String> stringProvider) {
 
     if (s == null) {
       return DEFAULT_STRING;

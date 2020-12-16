@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,26 +22,24 @@ import io.vertx.core.eventbus.MessageCodec;
 
 /**
  * This is a noop codec to send the contract on the event bus (works only in local environments)
- * <p>
- * https://github.com/eclipse-vertx/vert.x/issues/3375
+ *
+ * <p>https://github.com/eclipse-vertx/vert.x/issues/3375
  */
 public final class ContractMessageCodec
-  implements MessageCodec<DataPlaneContract.Contract, DataPlaneContract.Contract> {
+    implements MessageCodec<DataPlaneContract.Contract, DataPlaneContract.Contract> {
 
   @Override
-  public void encodeToWire(Buffer buffer,
-                           DataPlaneContract.Contract contract) {
+  public void encodeToWire(final Buffer buffer, final DataPlaneContract.Contract contract) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public DataPlaneContract.Contract decodeFromWire(int i, Buffer buffer) {
+  public DataPlaneContract.Contract decodeFromWire(final int i, final Buffer buffer) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public DataPlaneContract.Contract transform(
-    DataPlaneContract.Contract contract) {
+  public DataPlaneContract.Contract transform(final DataPlaneContract.Contract contract) {
     return contract;
   }
 
@@ -55,7 +53,7 @@ public final class ContractMessageCodec
     return -1;
   }
 
-  public static void register(EventBus eventBus) {
+  public static void register(final EventBus eventBus) {
     eventBus.registerDefaultCodec(DataPlaneContract.Contract.class, new ContractMessageCodec());
   }
 }
