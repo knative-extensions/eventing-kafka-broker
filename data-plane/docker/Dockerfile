@@ -28,7 +28,7 @@ WORKDIR /build
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y binutils
 
 COPY pom.xml .
-COPY .editorconfig .
+COPY checkstyle/ checkstyle/
 COPY core/pom.xml core/pom.xml
 COPY receiver/pom.xml receiver/pom.xml
 COPY dispatcher/pom.xml dispatcher/pom.xml
