@@ -53,7 +53,7 @@ jobs:
 
       - if: steps.codecov-enabled.outputs.files_exists == 'true'
         name: Java Test
-        run: mvn verify --file data-plane/pom.xml --no-transfer-progress
+        run: cd data-plane && ./mvnw verify --no-transfer-progress
 
       - if: steps.codecov-enabled.outputs.files_exists == 'true'
         name: Codecov
