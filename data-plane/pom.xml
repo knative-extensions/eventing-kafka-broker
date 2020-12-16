@@ -125,7 +125,7 @@
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
         <configuration>
-          <configLocation>${user.dir}/checkstyle/checkstyle.xml</configLocation>
+          <configLocation>${basedir}/checkstyle/checkstyle.xml</configLocation>
           <consoleOutput>true</consoleOutput>
           <encoding>UTF-8</encoding>
           <failOnViolation>true</failOnViolation>
@@ -135,8 +135,8 @@
           <includeTestSourceDirectory>true</includeTestSourceDirectory>
           <linkXRef>false</linkXRef>
           <propertyExpansion>
-            headerFile=${user.dir}/checkstyle/header
-            suppressionsLocation=${user.dir}/checkstyle/suppressions.xml
+            headerFile=${basedir}/checkstyle/header
+            suppressionsLocation=${basedir}/checkstyle/suppressions.xml
           </propertyExpansion>
           <violationSeverity>error</violationSeverity>
         </configuration>
