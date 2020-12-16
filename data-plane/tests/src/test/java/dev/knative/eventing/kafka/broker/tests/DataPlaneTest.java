@@ -59,15 +59,18 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.awaitility.Awaitility.await;
 
 @ExtendWith(VertxExtension.class)
 public class DataPlaneTest {
@@ -82,6 +85,8 @@ public class DataPlaneTest {
   private static final int REPLICATION_FACTOR = 1;
   private static final int INGRESS_PORT = 12345;
   private static final int SERVICE_PORT = INGRESS_PORT + 1;
+  private static final int NUM_SYSTEM_VERTICLES = 1;
+  private static final int NUM_RESOURCES = 1;
 
   private static final String TYPE_CE_1 = "type-ce-1";
   private static final String TYPE_CE_2 = "type-ce-2";
@@ -198,9 +203,7 @@ public class DataPlaneTest {
     new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS)
       .accept(DataPlaneContract.Contract.newBuilder().addResources(resource).build());
 
-    //TODO(slinkydeveloper) for testing purpose, we need to implement a way to propagate results of reconciliation
-    // Or should we use awaitability or similar?
-    Thread.sleep(10000);
+      await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> assertThat(vertx.deploymentIDs()).hasSize(resource.getEgressesCount()+ NUM_RESOURCES + NUM_SYSTEM_VERTICLES));
 
     // start service
     vertx.createHttpServer()

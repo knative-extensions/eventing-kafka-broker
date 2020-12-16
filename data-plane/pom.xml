@@ -52,6 +52,7 @@
     <ch.qos.logback.version>1.2.3</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>6.5</net.logstash.logback.encoder.version>
     <assertj.version>3.18.1</assertj.version>
+    <awaitility.version>4.0.3</awaitility.version>
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
     <mokito.junit.jupiter.version>3.6.28</mokito.junit.jupiter.version>
   </properties>
@@ -223,6 +224,12 @@
         <groupId>org.assertj</groupId>
         <artifactId>assertj-core</artifactId>
         <version>${assertj.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <version>${awaitility.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
