@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-
-    Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+    Copyright 2020 The Knative Authors
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -14,243 +13,17 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-
-  <groupId>dev.knative.eventing.kafka.broker</groupId>
   <artifactId>data-plane</artifactId>
-  <packaging>pom</packaging>
-  <version>1.0-SNAPSHOT</version>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <java.version>14</java.version>
-
-    <!-- Maven plugins -->
-    <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
-    <maven.surefire.plugin.version>3.0.0-M5</maven.surefire.plugin.version>
-    <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
-    <maven.editorconfig.plugin.version>0.1.1</maven.editorconfig.plugin.version>
-    <maven.jacoco.plugin.version>0.8.6</maven.jacoco.plugin.version>
-    <maven.enforcer.plugin.version>3.0.0-M3</maven.enforcer.plugin.version>
-    <maven.license.plugin.version>2.0.0</maven.license.plugin.version>
-
-    <mycila.license.plugin.version>4.0.rc2</mycila.license.plugin.version>
-
-    <!-- dependencies version -->
-    <vertx.version>4.0.0</vertx.version>
-    <cloudevents.sdk.version>2.0.0.RC2</cloudevents.sdk.version>
-    <micrometer.version>1.6.2</micrometer.version>
-    <opentelemetry.version>0.12.0</opentelemetry.version>
-    <jackson.version>2.12.0</jackson.version>
-    <protobuf.version>3.14.0</protobuf.version>
-    <slf4j.version>1.7.30</slf4j.version>
-    <ch.qos.logback.version>1.2.3</ch.qos.logback.version>
-    <net.logstash.logback.encoder.version>6.5</net.logstash.logback.encoder.version>
-    <assertj.version>3.18.1</assertj.version>
-    <awaitility.version>4.0.3</awaitility.version>
-    <junit.jupiter.version>5.7.0</junit.jupiter.version>
-    <mokito.junit.jupiter.version>3.6.28</mokito.junit.jupiter.version>
-  </properties>
-
-  <modules>
-    <module>contract</module>
-    <module>core</module>
-    <module>receiver</module>
-    <module>dispatcher</module>
-    <module>tests</module>
-  </modules>
-
-  <repositories>
-    <repository>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-      <id>sonatype</id>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-
-  <dependencyManagement>
-    <dependencies>
-      <!-- Vertx -->
-      <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-stack-depchain</artifactId>
-        <version>${vertx.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <!-- Micrometer -->
-      <dependency>
-        <groupId>io.micrometer</groupId>
-        <artifactId>micrometer-bom</artifactId>
-        <version>${micrometer.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>io.opentelemetry</groupId>
-        <artifactId>opentelemetry-bom</artifactId>
-        <version>${opentelemetry.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <!-- Jackson -->
-      <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-bom</artifactId>
-        <version>${jackson.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <!-- Logback -->
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>${slf4j.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>ch.qos.logback</groupId>
-        <artifactId>logback-core</artifactId>
-        <version>${ch.qos.logback.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>ch.qos.logback</groupId>
-        <artifactId>logback-classic</artifactId>
-        <version>${ch.qos.logback.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.logstash.logback</groupId>
-        <artifactId>logstash-logback-encoder</artifactId>
-        <version>${net.logstash.logback.encoder.version}</version>
-      </dependency>
-
-      <!-- CloudEvents SDK -->
-      <dependency>
-        <groupId>io.cloudevents</groupId>
-        <artifactId>cloudevents-http-vertx</artifactId>
-        <version>${cloudevents.sdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-core</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-web-client</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>io.cloudevents</groupId>
-        <artifactId>cloudevents-kafka</artifactId>
-        <version>${cloudevents.sdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>io.cloudevents</groupId>
-        <artifactId>cloudevents-json-jackson</artifactId>
-        <version>${cloudevents.sdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <!-- Protobuf -->
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java</artifactId>
-        <version>${protobuf.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java-util</artifactId>
-        <version>${protobuf.version}</version>
-      </dependency>
-
-      <!-- Testing -->
-      <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-junit5</artifactId>
-        <version>${vertx.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter</artifactId>
-        <version>${junit.jupiter.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-junit-jupiter</artifactId>
-        <version>${mokito.junit.jupiter.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.assertj</groupId>
-        <artifactId>assertj-core</artifactId>
-        <version>${assertj.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.awaitility</groupId>
-        <artifactId>awaitility</artifactId>
-        <version>${awaitility.version}</version>
-        <scope>test</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <build>
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.ec4j.maven</groupId>
           <artifactId>editorconfig-maven-plugin</artifactId>
-          <version>${maven.editorconfig.plugin.version}</version>
-          <executions>
-            <execution>
-              <id>check</id>
-              <phase>verify</phase>
-              <goals>
-                <goal>check</goal>
-              </goals>
-            </execution>
-          </executions>
           <configuration>
             <excludes>
               <exclude>.dockerignore</exclude>
@@ -258,39 +31,44 @@
               <exclude>.mvn/***</exclude>
             </excludes>
           </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <id>check</id>
+              <phase>verify</phase>
+            </execution>
+          </executions>
+          <groupId>org.ec4j.maven</groupId>
+          <version>${maven.editorconfig.plugin.version}</version>
         </plugin>
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>${maven.surefire.plugin.version}</version>
           <configuration>
             <!-- This is required for the jacoco maven plugin -->
             <argLine>${argLine}</argLine>
           </configuration>
+          <groupId>org.apache.maven.plugins</groupId>
+          <version>${maven.surefire.plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
 
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven.compiler.plugin.version}</version>
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>
         </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>${maven.compiler.plugin.version}</version>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>${maven.enforcer.plugin.version}</version>
         <executions>
           <execution>
-            <id>enforce-maven</id>
-            <goals>
-              <goal>enforce</goal>
-            </goals>
             <configuration>
               <rules>
                 <dependencyConvergence/>
@@ -300,13 +78,17 @@
                 </requireReleaseDeps>
               </rules>
             </configuration>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <id>enforce-maven</id>
           </execution>
         </executions>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>${maven.enforcer.plugin.version}</version>
       </plugin>
       <plugin>
-        <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>${maven.jacoco.plugin.version}</version>
         <executions>
           <execution>
             <goals>
@@ -314,71 +96,279 @@
             </goals>
           </execution>
         </executions>
+        <groupId>org.jacoco</groupId>
+        <version>${maven.jacoco.plugin.version}</version>
       </plugin>
       <!-- Aggregate third party licenses in THIRD-PARTY.txt -->
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
         <artifactId>license-maven-plugin</artifactId>
-        <version>${maven.license.plugin.version}</version>
         <executions>
           <execution>
-            <id>aggregate-download-licenses</id>
             <goals>
               <goal>aggregate-download-licenses</goal>
             </goals>
+            <id>aggregate-download-licenses</id>
           </execution>
           <execution>
-            <id>aggregate-add-third-party</id>
-            <goals>
-              <goal>aggregate-add-third-party</goal>
-            </goals>
             <configuration>
               <outputDirectory>${maven.multiModuleProjectDirectory}</outputDirectory>
             </configuration>
+            <goals>
+              <goal>aggregate-add-third-party</goal>
+            </goals>
+            <id>aggregate-add-third-party</id>
           </execution>
         </executions>
+        <groupId>org.codehaus.mojo</groupId>
+        <version>${maven.license.plugin.version}</version>
       </plugin>
-      <!--
-      Use this Plugin for headers due to https://github.com/mojohaus/license-maven-plugin/issues/112 and bad format.
-
-      To add header to all files run: `./mvnw com.mycila:license-maven-plugin:format`
-
-      -->
       <plugin>
-        <groupId>com.mycila</groupId>
-        <artifactId>license-maven-plugin</artifactId>
-        <version>${mycila.license.plugin.version}</version>
+        <artifactId>maven-checkstyle-plugin</artifactId>
         <configuration>
-          <licenseSets>
-            <licenseSet>
-              <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
-              <excludes>
-                <exclude>**/README</exclude>
-                <exclude>src/test/resources/**</exclude>
-                <exclude>src/main/resources/**</exclude>
-                <exclude>**/*.yaml</exclude>
-                <exclude>**/*.yml</exclude>
-                <exclude>**/*.txt</exclude>
-                <exclude>**/DataPlaneContract.java</exclude>
-              </excludes>
-            </licenseSet>
-          </licenseSets>
-          <properties>
-            <owner>Knative Authors</owner>
-            <email>knative-dev@googlegroups.com</email>
-            <project.inceptionYear>2018</project.inceptionYear>
-          </properties>
+          <configLocation>${user.dir}/checkstyle/checkstyle.xml</configLocation>
+          <consoleOutput>true</consoleOutput>
+          <encoding>UTF-8</encoding>
+          <failOnViolation>true</failOnViolation>
+          <failsOnError>true</failsOnError>
+          <includeResources>true</includeResources>
+          <includeTestResources>true</includeTestResources>
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
+          <linkXRef>false</linkXRef>
+          <propertyExpansion>
+            headerFile=${user.dir}/checkstyle/header
+            suppressionsLocation=${user.dir}/checkstyle/suppressions.xml
+          </propertyExpansion>
+          <violationSeverity>error</violationSeverity>
         </configuration>
         <executions>
           <execution>
-            <id>check-license</id>
             <goals>
               <goal>check</goal>
+              <goal>checkstyle</goal>
+              <goal>checkstyle-aggregate</goal>
             </goals>
+            <id>validate</id>
             <phase>verify</phase>
           </execution>
         </executions>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>${maven.checkstyle.plugin.version}</version>
       </plugin>
     </plugins>
   </build>
+  <dependencyManagement>
+    <dependencies>
+      <!-- Vertx -->
+      <dependency>
+        <artifactId>vertx-stack-depchain</artifactId>
+        <groupId>io.vertx</groupId>
+        <scope>import</scope>
+        <type>pom</type>
+        <version>${vertx.version}</version>
+      </dependency>
+
+      <!-- Micrometer -->
+      <dependency>
+        <artifactId>micrometer-bom</artifactId>
+        <groupId>io.micrometer</groupId>
+        <scope>import</scope>
+        <type>pom</type>
+        <version>${micrometer.version}</version>
+      </dependency>
+
+      <dependency>
+        <artifactId>opentelemetry-bom</artifactId>
+        <groupId>io.opentelemetry</groupId>
+        <scope>import</scope>
+        <type>pom</type>
+        <version>${opentelemetry.version}</version>
+      </dependency>
+
+      <!-- Jackson -->
+      <dependency>
+        <artifactId>jackson-bom</artifactId>
+        <groupId>com.fasterxml.jackson</groupId>
+        <scope>import</scope>
+        <type>pom</type>
+        <version>${jackson.version}</version>
+      </dependency>
+
+      <!-- Logback -->
+      <dependency>
+        <artifactId>slf4j-api</artifactId>
+        <groupId>org.slf4j</groupId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>logback-core</artifactId>
+        <groupId>ch.qos.logback</groupId>
+        <version>${ch.qos.logback.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>logback-classic</artifactId>
+        <groupId>ch.qos.logback</groupId>
+        <version>${ch.qos.logback.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>logstash-logback-encoder</artifactId>
+        <groupId>net.logstash.logback</groupId>
+        <version>${net.logstash.logback.encoder.version}</version>
+      </dependency>
+
+      <!-- CloudEvents SDK -->
+      <dependency>
+        <artifactId>cloudevents-http-vertx</artifactId>
+        <exclusions>
+          <exclusion>
+            <artifactId>vertx-core</artifactId>
+            <groupId>io.vertx</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>vertx-web-client</artifactId>
+            <groupId>io.vertx</groupId>
+          </exclusion>
+        </exclusions>
+        <groupId>io.cloudevents</groupId>
+        <version>${cloudevents.sdk.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>cloudevents-kafka</artifactId>
+        <exclusions>
+          <exclusion>
+            <artifactId>kafka-clients</artifactId>
+            <groupId>org.apache.kafka</groupId>
+          </exclusion>
+        </exclusions>
+        <groupId>io.cloudevents</groupId>
+        <version>${cloudevents.sdk.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>cloudevents-json-jackson</artifactId>
+        <exclusions>
+          <exclusion>
+            <artifactId>jackson-databind</artifactId>
+            <groupId>com.fasterxml.jackson.core</groupId>
+          </exclusion>
+        </exclusions>
+        <groupId>io.cloudevents</groupId>
+        <version>${cloudevents.sdk.version}</version>
+      </dependency>
+
+      <!-- Protobuf -->
+      <dependency>
+        <artifactId>protobuf-java</artifactId>
+        <groupId>com.google.protobuf</groupId>
+        <version>${protobuf.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>protobuf-java-util</artifactId>
+        <groupId>com.google.protobuf</groupId>
+        <version>${protobuf.version}</version>
+      </dependency>
+
+      <!-- Testing -->
+      <dependency>
+        <artifactId>vertx-junit5</artifactId>
+        <exclusions>
+          <exclusion>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>junit-jupiter-params</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+          </exclusion>
+        </exclusions>
+        <groupId>io.vertx</groupId>
+        <version>${vertx.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>junit-jupiter</artifactId>
+        <groupId>org.junit.jupiter</groupId>
+        <version>${junit.jupiter.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>mockito-junit-jupiter</artifactId>
+        <exclusions>
+          <exclusion>
+            <artifactId>junit-jupiter-api</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+          </exclusion>
+        </exclusions>
+        <groupId>org.mockito</groupId>
+        <version>${mokito.junit.jupiter.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>assertj-core</artifactId>
+        <groupId>org.assertj</groupId>
+        <scope>test</scope>
+        <version>${assertj.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <version>${awaitility.version}</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <groupId>dev.knative.eventing.kafka.broker</groupId>
+  <modelVersion>4.0.0</modelVersion>
+
+  <modules>
+    <module>contract</module>
+    <module>core</module>
+    <module>receiver</module>
+    <module>dispatcher</module>
+    <module>tests</module>
+  </modules>
+
+  <packaging>pom</packaging>
+
+  <properties>
+    <assertj.version>3.18.1</assertj.version>
+    <ch.qos.logback.version>1.2.3</ch.qos.logback.version>
+
+    <!-- Maven plugins -->
+    <cloudevents.sdk.version>2.0.0.RC1</cloudevents.sdk.version>
+    <jackson.version>2.12.0</jackson.version>
+    <java.version>14</java.version>
+    <junit.jupiter.version>5.7.0</junit.jupiter.version>
+    <maven.checkstyle.plugin.version>3.1.1</maven.checkstyle.plugin.version>
+    <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
+    <maven.editorconfig.plugin.version>0.1.1</maven.editorconfig.plugin.version>
+    <maven.enforcer.plugin.version>3.0.0-M3</maven.enforcer.plugin.version>
+
+    <maven.jacoco.plugin.version>0.8.6</maven.jacoco.plugin.version>
+
+    <!-- dependencies version -->
+    <maven.license.plugin.version>2.0.0</maven.license.plugin.version>
+    <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
+    <maven.surefire.plugin.version>3.0.0-M5</maven.surefire.plugin.version>
+    <micrometer.version>1.6.2</micrometer.version>
+    <mokito.junit.jupiter.version>3.6.28</mokito.junit.jupiter.version>
+    <mycila.license.plugin.version>4.0.rc2</mycila.license.plugin.version>
+    <net.logstash.logback.encoder.version>6.5</net.logstash.logback.encoder.version>
+    <opentelemetry.version>0.12.0</opentelemetry.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <protobuf.version>3.14.0</protobuf.version>
+    <slf4j.version>1.7.30</slf4j.version>
+    <vertx.version>4.0.0</vertx.version>
+    <awaitility.version>4.0.3</awaitility.version>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>sonatype</id>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </repository>
+  </repositories>
+
+  <version>1.0-SNAPSHOT</version>
 </project>

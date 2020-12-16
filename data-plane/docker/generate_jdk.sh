@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-# Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+# Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +15,8 @@
 # limitations under the License.
 #
 
-
-if [ $# -eq 0 ]
-  then
-    echo "No arguments supplied, You must provide the jar"
+if [ $# -eq 0 ]; then
+  echo "No arguments supplied, You must provide the jar"
 fi
 
 echo "Computing mods for $1"
@@ -32,4 +30,3 @@ MODS="$MODS,jdk.naming.dns"
 
 echo "Patched modules shipped with the generated jdk = '$MODS'"
 jlink --verbose --no-header-files --no-man-pages --compress=2 --strip-debug --add-modules "$MODS" --output /app/jdk
-

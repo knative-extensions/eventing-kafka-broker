@@ -1,4 +1,5 @@
-#
+#!/usr/bin/env bash
+
 # Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,5 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-idleTimeout=0
+
+gofmt -s -w $(find -path './vendor' -prune -o -path './third_party' -prune -o -type f -name '*.go' -print)
+goimports -w $(find -name '*.go' | grep -v vendor | grep -v third_party)
+
+cd data-plane && ./hack/format.sh && cd - || exit 1

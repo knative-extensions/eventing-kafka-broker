@@ -1,5 +1,7 @@
+#!/usr/bin/env bash
+
 #
-# Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+# Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,15 +16,10 @@
 # limitations under the License.
 #
 
-root = true
+formatter="https://github.com/google/google-java-format/releases/download/google-java-format-1.9/google-java-format-1.9-all-deps.jar"
 
-[*]
-charset = utf-8
-indent_style = space
-indent_size = 2
-trim_trailing_whitespace = true
-end_of_line = lf
-insert_final_newline = true
-max_line_length = 120
+wget -O - ${formatter} >formatter.jar
 
+find . -name '*.java' -not -path './.mvn/*' -not -path './contract/*' -exec java -jar formatter.jar -r {} \;
 
+rm formatter.jar
