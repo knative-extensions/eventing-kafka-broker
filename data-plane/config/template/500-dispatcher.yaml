@@ -23,7 +23,6 @@ metadata:
     app: kafka-broker-dispatcher
     kafka.eventing.knative.dev/release: devel
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: kafka-broker-dispatcher
