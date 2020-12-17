@@ -90,8 +90,8 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
         .onSuccess(deploymentId -> {
           this.deployedDispatchers.put(egress.getUid(), deploymentId);
           logger.info("Verticle deployed {} {} {}",
-            keyValue("egress", egress),
-            keyValue("resource", resource),
+            keyValue("egress.uid", egress.getUid()),
+            keyValue("resource.uid", resource.getUid()),
             keyValue("deploymentId", deploymentId)
           );
         })
@@ -106,8 +106,8 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
         .mapEmpty();
     } catch (Exception e) {
       logger.error("potential control-plane bug: failed to get verticle {} {}",
-        keyValue("egress", egress),
-        keyValue("resource", resource),
+        keyValue("egress.uid", egress.getUid()),
+        keyValue("resource.uid", resource.getUid()),
         e
       );
       return Future.failedFuture(new IllegalStateException("Potential control-plane bug: failed to get verticle", e));
@@ -129,13 +129,13 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
     return vertx.undeploy(this.deployedDispatchers.remove(egress.getUid()))
       .onSuccess(v -> logger.info(
         "Removed egress {} {}",
-        keyValue("egress", egress),
-        keyValue("resource", resource)
+        keyValue("egress.uid", egress.getUid()),
+        keyValue("resource.uid", resource.getUid())
       ))
       .onFailure(cause -> logger.error(
         "failed to un-deploy verticle {} {}",
-        keyValue("egress", egress),
-        keyValue("resource", resource),
+        keyValue("egress.uid", egress.getUid()),
+        keyValue("resource.uid", resource.getUid()),
         cause
       ));
   }
