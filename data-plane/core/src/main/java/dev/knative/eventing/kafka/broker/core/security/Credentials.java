@@ -20,28 +20,6 @@ import org.apache.kafka.common.security.auth.SecurityProtocol;
 
 import javax.annotation.Nullable;
 
-/**
- * Credentials validation:
- * <blockquote><pre>{@code
- * - security.protocol=PLAINTEXT
- * - security.protocol=SSL
- *   - truststore is not empty
- *   - keystore is not empty
- * - security.protocol=SASL_PLAINTEXT
- *   - SASL mechanism is valid (SCRAM-SHA-256 or SCRAM-SHA-512)
- *   - SASL username is not empty
- *   - SASL password is not empty
- * - security.protocol=SASL_SSL
- *   - truststore is not empty
- *   - keystore is not empty
- *   - SASL mechanism is valid (SCRAM-SHA-256 or SCRAM-SHA-512)
- *   - SASL username is not empty
- *   - SASL password is not empty
- * }</pre></blockquote>
- * <p>
- * Since our components are multi tenant in case SSL is configured
- * client authentication is required even though is optional for Kafka.
- */
 public interface Credentials {
 
   /**
@@ -88,11 +66,6 @@ public interface Credentials {
 
   /**
    * Client key: security.protocol
-   * Possible values:
-   * - PLAINTEXT
-   * - SSL
-   * - SASL_PLAINTEXT
-   * - SASL_SSL
    *
    * @return Security protocol or null if not specified.
    */
@@ -101,9 +74,6 @@ public interface Credentials {
 
   /**
    * Client key: sasl.mechanism
-   * Possible values:
-   * - SCRAM-SHA-256
-   * - SCRAM-SHA-512
    *
    * @return SASL mechanism or null if not specified.
    */
@@ -111,6 +81,7 @@ public interface Credentials {
   String SASLMechanism();
 
   /**
+   * Client config:
    * sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
    * username="alice" \
    * password="alice-secret";
@@ -122,6 +93,7 @@ public interface Credentials {
   String SASLUsername();
 
   /**
+   * Client config:
    * sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
    * username="alice" \
    * password="alice-secret";

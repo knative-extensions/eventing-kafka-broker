@@ -17,8 +17,6 @@
 package dev.knative.eventing.kafka.broker.core.security;
 
 import io.fabric8.kubernetes.api.model.Secret;
-import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 
 import javax.annotation.Nullable;
@@ -31,11 +29,11 @@ class KubernetesCredentials implements Credentials {
   static final String USER_STORE_KEY = "user.p12";
   static final String USER_STORE_PASSWORD_KEY = "user.password";
 
-  static final String USERNAME_KEY = "username";
+  static final String USERNAME_KEY = "user";
   static final String PASSWORD_KEY = "password";
 
-  static final String SECURITY_PROTOCOL = CommonClientConfigs.SECURITY_PROTOCOL_CONFIG;
-  static final String SASL_MECHANISM = SaslConfigs.SASL_MECHANISM;
+  static final String SECURITY_PROTOCOL = "protocol";
+  static final String SASL_MECHANISM = "sasl.mechanism";
 
   private final Secret secret;
   private final String truststorePath;
