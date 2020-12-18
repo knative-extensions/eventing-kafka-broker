@@ -311,8 +311,6 @@ github.com/spf13/pflag
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# github.com/tsenart/vegeta v12.7.1-0.20190725001342-b5f4fca92137+incompatible
-github.com/tsenart/vegeta/lib
 # github.com/tsenart/vegeta/v12 v12.8.4
 github.com/tsenart/vegeta/v12/lib
 # go.opencensus.io v0.22.5
@@ -1054,7 +1052,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.19.1-0.20201216183558-f3468d1c9954
+# knative.dev/eventing v0.19.1-0.20201217221202-9643baffd747
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/configs
@@ -1186,7 +1184,7 @@ knative.dev/eventing/test/test_images/request-sender
 # knative.dev/hack v0.0.0-20201214230143-4ed1ecb8db24
 ## explicit
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20201217014702-b0c121fb667f
+# knative.dev/pkg v0.0.0-20201217152402-7226f4f447a8
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
