@@ -23,7 +23,6 @@ metadata:
     app: kafka-sink-receiver
     kafka.eventing.knative.dev/release: devel
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: kafka-sink-receiver

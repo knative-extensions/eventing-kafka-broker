@@ -21,7 +21,6 @@ metadata:
     app: kafka-webhook-eventing
     kafka.eventing.knative.dev/release: devel
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: kafka-webhook-eventing
