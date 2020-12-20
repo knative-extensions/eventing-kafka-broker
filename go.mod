@@ -13,7 +13,9 @@ require (
 	github.com/pierdipi/sacura v0.0.0-20201003135834-e90e3a725ff9
 	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.6.1
+	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
 	go.uber.org/zap v1.16.0
+	golang.org/x/crypto v0.0.0-20201217014255-9d1352758620
 	google.golang.org/protobuf v1.25.0
 	k8s.io/api v0.18.12
 	k8s.io/apiextensions-apiserver v0.18.12
