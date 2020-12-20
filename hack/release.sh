@@ -19,8 +19,8 @@ set -o nounset
 set -o pipefail
 
 source $(dirname $0)/../vendor/knative.dev/hack/release.sh
-source $(dirname $0)/../test/data-plane/library.sh
-source $(dirname $0)/../test/control-plane/library.sh
+source $(dirname $0)/data-plane.sh
+source $(dirname $0)/control-plane.sh
 
 export EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT="eventing-kafka-controller.yaml"
 export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
