@@ -1184,7 +1184,7 @@ knative.dev/eventing/test/test_images/request-sender
 # knative.dev/hack v0.0.0-20201214230143-4ed1ecb8db24
 ## explicit
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20201217152402-7226f4f447a8
+# knative.dev/pkg v0.0.0-20201218185703-e41409af6cff
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
