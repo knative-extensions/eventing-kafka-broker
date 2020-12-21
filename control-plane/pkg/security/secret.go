@@ -153,9 +153,13 @@ func saslConfig(protocol string, data map[string][]byte) ConfigOption {
 func sslConfig(protocol string, data map[string][]byte) ConfigOption {
 	return func(config *sarama.Config) error {
 
-		keystoreCerts, err := tlsCertsFromStore(data, protocol, /* what */ "keystore", keystoreKey, keystorePasswordKey)
-		if err != nil {
-			return err
+		var certificates []tls.Certificate
+		if protocol == protocolSSL {
+			keystoreCerts, err := tlsCertsFromStore(data, protocol, /* what */ "keystore", keystoreKey, keystorePasswordKey)
+			if err != nil {
+				return err
+			}
+			certificates = keystoreCerts
 		}
 		truststoreCerts, err := x509CertsFromStore(data, protocol, /* what */ "truststore", truststoreKey, truststorePasswordKey)
 		if err != nil {
@@ -169,7 +173,7 @@ func sslConfig(protocol string, data map[string][]byte) ConfigOption {
 
 		config.Net.TLS.Enable = true
 		config.Net.TLS.Config = &tls.Config{
-			Certificates: keystoreCerts,
+			Certificates: certificates,
 			RootCAs:      certPool,
 		}
 

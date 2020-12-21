@@ -215,7 +215,7 @@ func TestSASLPLainSSL(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
-	assert.Greater(t, len(config.Net.TLS.Config.Certificates), 0)
+	assert.Equal(t, len(config.Net.TLS.Config.Certificates), 0)
 	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
 	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
 	assert.True(t, config.Net.SASL.Enable)
@@ -254,7 +254,7 @@ func TestSASLSCRAM256SSL(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
-	assert.Greater(t, len(config.Net.TLS.Config.Certificates), 0)
+	assert.Equal(t, len(config.Net.TLS.Config.Certificates), 0)
 	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
 	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
 	assert.True(t, config.Net.SASL.Enable)
@@ -293,7 +293,7 @@ func TestSASLSCRAM512SSL(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
-	assert.Greater(t, len(config.Net.TLS.Config.Certificates), 0)
+	assert.Equal(t, len(config.Net.TLS.Config.Certificates), 0)
 	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
 	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
 	assert.True(t, config.Net.SASL.Enable)

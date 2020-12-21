@@ -21,23 +21,29 @@ spec:
     version: 2.6.0
     replicas: 3
     listeners:
+      # PLAINTEXT
       - name: plain
         port: 9092
         type: internal
         tls: false
+      # SSL
       - name: tls
         port: 9093
         type: internal
         tls: true
         authentication:
           type: tls
+      # protocol=SASL_PLAINTEXT
+      # sasl.mechanism=SCRAM-SHA-512
       - name: saslplain
         port: 9094
         type: internal
         tls: false
         authentication:
           type: scram-sha-512
-      - name: saslscram
+      # protocol=SASL_SSL
+      # sasl.mechanism=SCRAM-SHA-512
+      - name: saslssl
         port: 9095
         type: internal
         tls: true
