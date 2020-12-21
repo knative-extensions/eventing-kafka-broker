@@ -23,7 +23,7 @@ require (
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
 	knative.dev/eventing v0.19.1-0.20201217221202-9643baffd747
 	knative.dev/hack v0.0.0-20201214230143-4ed1ecb8db24
-	knative.dev/pkg v0.0.0-20201217152402-7226f4f447a8
+	knative.dev/pkg v0.0.0-20201218185703-e41409af6cff
 )
 
 replace (
