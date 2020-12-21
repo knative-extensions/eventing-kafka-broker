@@ -60,6 +60,15 @@ rules:
       - patch
       - watch
 
+  - apiGroups:
+      - "*"
+    resources:
+      - secrets
+    verbs:
+      - list
+      - get
+      - watch
+
   # Eventing resources and statuses we care about
   - apiGroups:
       - "eventing.knative.dev"

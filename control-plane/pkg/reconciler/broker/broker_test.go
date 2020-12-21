@@ -1704,6 +1704,9 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 		}
 		reconciler.SetBootstrapServers(bootstrapServers)
 
+		reconciler.ConfigMapTracker = &FakeTracker{}
+		reconciler.SecretTracker = &FakeTracker{}
+
 		r := brokerreconciler.NewReconciler(
 			ctx,
 			logging.FromContext(ctx),

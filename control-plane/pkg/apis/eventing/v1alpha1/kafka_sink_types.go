@@ -91,6 +91,21 @@ type KafkaSinkSpec struct {
 	//
 	// +optional
 	ContentMode *string `json:"contentMode,omitempty"`
+
+	// Auth configurations.
+	Auth *Auth `json:"auth,omitempty"`
+}
+
+type Auth struct {
+
+	// Secret reference for SASL and SSL configurations.
+	Ref *SecretReference `json:"ref,omitempty"`
+}
+
+type SecretReference struct {
+
+	// Secret name.
+	Name string `json:"name"`
 }
 
 // KafkaSinkStatus represents the current state of the KafkaSink.

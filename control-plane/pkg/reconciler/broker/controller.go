@@ -31,11 +31,13 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/tracker"
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
+	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -61,6 +63,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
 			PodLister:                   podinformer.Get(ctx).Lister(),
+			SecretLister:                secretinformer.Get(ctx).Lister(),
 			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
 			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
@@ -117,6 +120,19 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			DeleteFunc: func(obj interface{}) {
 				globalResync(obj)
 			},
+		},
+	})
+
+	reconciler.SecretTracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
+
+	reconciler.ConfigMapTracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
+	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.ConfigMapTracker.OnChanged))
+
+	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: kafka.BrokerClassFilter(),
+		Handler: cache.ResourceEventHandlerFuncs{
+			DeleteFunc: reconciler.OnDeleteObserver,
 		},
 	})
 

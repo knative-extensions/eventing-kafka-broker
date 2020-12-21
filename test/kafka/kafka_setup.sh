@@ -29,6 +29,7 @@ cat $(dirname $0)/strimzi-cluster-operator.yaml | sed "s/cluster.local/${CLUSTER
 sleep 5
 
 kubectl -n kafka apply -f $(dirname $0)/kafka-ephemeral.yaml
+kubectl apply -n kafka -f $(dirname $0)/user-tls.yaml
 
 sleep 5
 

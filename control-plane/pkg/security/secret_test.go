@@ -27,7 +27,7 @@ import (
 func TestNoProtocol(t *testing.T) {
 	config := sarama.NewConfig()
 
-	err := Options(config, SecretData(map[string][]byte{}))
+	err := options(config, secretData(map[string][]byte{}))
 
 	assert.NotNil(t, err)
 }
@@ -38,7 +38,7 @@ func TestUnsupportedProtocol(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := Options(config, SecretData(secret))
+	err := options(config, secretData(secret))
 
 	assert.NotNil(t, err)
 }
@@ -49,7 +49,7 @@ func TestPlaintext(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := Options(config, SecretData(secret))
+	err := options(config, secretData(secret))
 
 	assert.Nil(t, err)
 }
@@ -63,7 +63,7 @@ func TestSASLPlain(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := Options(config, SecretData(secret))
+	err := options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.SASL.Enable)
@@ -82,7 +82,7 @@ func TestSASLPlainLSCRAM256(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := Options(config, SecretData(secret))
+	err := options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.SASL.Enable)
@@ -102,7 +102,7 @@ func TestSASLPlainLSCRAM512(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := Options(config, SecretData(secret))
+	err := options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.SASL.Enable)
@@ -122,7 +122,7 @@ func TestSASLPlainSCRAM513(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := Options(config, SecretData(secret))
+	err := options(config, secretData(secret))
 
 	assert.NotNil(t, err)
 }
@@ -136,7 +136,7 @@ func TestSASLPlainLSCRAM512NoUser(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := Options(config, SecretData(secret))
+	err := options(config, secretData(secret))
 
 	assert.NotNil(t, err)
 }
@@ -150,7 +150,7 @@ func TestSASLPlainLSCRAM512NoPassword(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := Options(config, SecretData(secret))
+	err := options(config, secretData(secret))
 
 	assert.NotNil(t, err)
 }
@@ -177,7 +177,7 @@ func TestSSL(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err = Options(config, SecretData(secret))
+	err = options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
@@ -211,7 +211,7 @@ func TestSASLPLainSSL(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err = Options(config, SecretData(secret))
+	err = options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
@@ -250,7 +250,7 @@ func TestSASLSCRAM256SSL(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err = Options(config, SecretData(secret))
+	err = options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
@@ -289,7 +289,7 @@ func TestSASLSCRAM512SSL(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err = Options(config, SecretData(secret))
+	err = options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)

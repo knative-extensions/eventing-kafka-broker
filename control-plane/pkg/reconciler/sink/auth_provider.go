@@ -14,33 +14,23 @@
  * limitations under the License.
  */
 
-package log
+package sink
 
 import (
-	"context"
-	"log"
-
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/pkg/logging"
+	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 )
 
-func Logger(ctx context.Context, action string, object metav1.Object) *zap.Logger {
-
-	return logging.FromContext(ctx).Desugar().With(
-		zap.String(
-			"action",
-			action,
-		),
-		zap.String(
-			"uuid",
-			string(object.GetUID()),
-		),
-	)
+type SecretLocator struct {
+	*eventing.KafkaSink
 }
 
-func Sarama(logger *zap.Logger) *log.Logger {
-	sl, _ := zap.NewStdLogAt(logger.With(zap.String("name", "sarama")), zapcore.DebugLevel)
-	return sl
+func (ks *SecretLocator) SecretName() (string, bool, error) {
+	if ks.Spec.Auth == nil || ks.Spec.Auth.Ref == nil {
+		return "", false, nil
+	}
+	return ks.Spec.Auth.Ref.Name, true, nil
+}
+
+func (ks *SecretLocator) SecretNamespace() (string, bool, error) {
+	return ks.Namespace, true, nil
 }

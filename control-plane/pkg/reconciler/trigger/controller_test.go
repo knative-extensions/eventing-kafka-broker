@@ -31,6 +31,7 @@ import (
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 )

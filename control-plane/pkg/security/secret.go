@@ -17,9 +17,9 @@
 package security
 
 import (
-	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 
 	"github.com/Shopify/sarama"
@@ -50,9 +50,16 @@ const (
 	saslScramSha512 = "SCRAM-SHA-512"
 )
 
+var supportedProtocols = fmt.Sprintf("%v", []string{
+	protocolPlaintext,
+	protocolSASLPlaintext,
+	protocolSSL,
+	protocolSASLSSL,
+})
+
 type ConfigOption func(config *sarama.Config) error
 
-func Options(config *sarama.Config, options ...ConfigOption) error {
+func options(config *sarama.Config, options ...ConfigOption) error {
 	for _, opt := range options {
 		if err := opt(config); err != nil {
 			return err
@@ -61,12 +68,12 @@ func Options(config *sarama.Config, options ...ConfigOption) error {
 	return nil
 }
 
-func SecretData(data map[string][]byte) ConfigOption {
+func secretData(data map[string][]byte) ConfigOption {
 	return func(config *sarama.Config) error {
 
 		protocolBytes, ok := data[protocolKey]
 		if !ok {
-			return fmt.Errorf("protocol required (key: %s)", protocolKey)
+			return fmt.Errorf("protocol required (key: %s) supported protocols: %s", protocolKey, supportedProtocols)
 		}
 
 		protocol := string(protocolBytes)
@@ -75,25 +82,25 @@ func SecretData(data map[string][]byte) ConfigOption {
 		}
 
 		if protocol == protocolSASLPlaintext {
-			return Options(config,
+			return options(config,
 				saslConfig(protocol, data),
 			)
 		}
 
 		if protocol == protocolSSL {
-			return Options(config,
+			return options(config,
 				sslConfig(protocol, data),
 			)
 		}
 
 		if protocol == protocolSASLSSL {
-			return Options(config,
+			return options(config,
 				saslConfig(protocol, data),
 				sslConfig(protocol, data),
 			)
 		}
 
-		return fmt.Errorf("protocol %s unsupported (key: %s)", protocol, protocolKey)
+		return fmt.Errorf("protocol %s unsupported (key: %s), supported protocols: %s", protocol, protocolKey, supportedProtocols)
 	}
 }
 
@@ -146,11 +153,11 @@ func saslConfig(protocol string, data map[string][]byte) ConfigOption {
 func sslConfig(protocol string, data map[string][]byte) ConfigOption {
 	return func(config *sarama.Config) error {
 
-		privateKeys, keystoreCert, err := tlsCertFromStore(data, protocol, "keystore", keystoreKey, keystorePasswordKey)
+		keystoreCerts, err := tlsCertsFromStore(data, protocol, /* what */ "keystore", keystoreKey, keystorePasswordKey)
 		if err != nil {
 			return err
 		}
-		truststoreCerts, err := x509CertsFromStore(data, protocol, "truststore", truststoreKey, truststorePasswordKey)
+		truststoreCerts, err := x509CertsFromStore(data, protocol, /* what */ "truststore", truststoreKey, truststorePasswordKey)
 		if err != nil {
 			return err
 		}
@@ -160,17 +167,9 @@ func sslConfig(protocol string, data map[string][]byte) ConfigOption {
 			certPool.AddCert(cert)
 		}
 
-		certs := make([]tls.Certificate, 0, len(keystoreCert))
-		for i := range keystoreCert {
-			certs = append(certs, tls.Certificate{
-				PrivateKey: privateKeys[i],
-				Leaf:       keystoreCert[i],
-			})
-		}
-
 		config.Net.TLS.Enable = true
 		config.Net.TLS.Config = &tls.Config{
-			Certificates: certs,
+			Certificates: keystoreCerts,
 			RootCAs:      certPool,
 		}
 
@@ -178,43 +177,31 @@ func sslConfig(protocol string, data map[string][]byte) ConfigOption {
 	}
 }
 
-func tlsCertFromStore(data map[string][]byte, protocol, what, storeKey, storePasswordKey string) ([]*rsa.PrivateKey, []*x509.Certificate, error) {
+func tlsCertsFromStore(data map[string][]byte, protocol, what, storeKey, storePasswordKey string) ([]tls.Certificate, error) {
 
 	store, ok := data[storeKey]
 	if !ok || len(store) == 0 {
-		return nil, nil, fmt.Errorf("[protocol %s] %s archive required (key: %s)", protocol, what, storeKey)
+		return nil, fmt.Errorf("[protocol %s] %s archive required (key: %s)", protocol, what, storeKey)
 	}
 	storePassword, ok := data[storePasswordKey]
 	if !ok {
-		return nil, nil, fmt.Errorf("[protocol %s] %s password required (key: %s)", protocol, what, storePasswordKey)
+		return nil, fmt.Errorf("[protocol %s] %s password required (key: %s)", protocol, what, storePasswordKey)
 	}
 
 	blocks, err := pkcs12.ToPEM(store, string(storePassword))
 	if err != nil {
-		return nil, nil, conversionError(protocol, what, fmt.Errorf("failed to convert store to PEM: %w", err))
+		return nil, conversionError(protocol, what, fmt.Errorf("failed to convert store to PEM: %w", err))
 	}
 
-	var privateKeys []*rsa.PrivateKey
-	var certificates []*x509.Certificate
+	var pemData []byte
 	for _, b := range blocks {
-		if b.Type == "CERTIFICATE" {
-			certs, err := x509.ParseCertificates(b.Bytes)
-			if err != nil {
-				return nil, nil, conversionError(protocol, what, fmt.Errorf("failed to parse certificates: %w", err))
-			}
-			certificates = append(certificates, certs...)
-
-		} else if b.Type == "PRIVATE KEY" {
-			privateKey, err := x509.ParsePKCS1PrivateKey(b.Bytes)
-			if err != nil {
-				return nil, nil, conversionError(protocol, what, fmt.Errorf("failed to parse PKCS1 private key: %w", err))
-			}
-			privateKeys = append(privateKeys, privateKey)
-		}
-
+		pemData = append(pemData, pem.EncodeToMemory(b)...)
 	}
 
-	return privateKeys, certificates, nil
+	// then use PEM data for tls to construct tls certificate:
+	cert, err := tls.X509KeyPair(pemData, pemData)
+
+	return []tls.Certificate{cert}, nil
 }
 
 func x509CertsFromStore(data map[string][]byte, protocol, what, storeKey, storePasswordKey string) ([]*x509.Certificate, error) {
@@ -228,7 +215,7 @@ func x509CertsFromStore(data map[string][]byte, protocol, what, storeKey, storeP
 		return nil, fmt.Errorf("[protocol %s] %s password required (key: %s)", protocol, what, storePasswordKey)
 	}
 
-	/* privateKey */ certs, err := truststorepkcs12.DecodeTrustStore(store, string(storePassword))
+	certs, err := truststorepkcs12.DecodeTrustStore(store, string(storePassword))
 	if err != nil {
 		return nil, conversionError(protocol, what, fmt.Errorf("pkcs12.Decode: %w", err))
 	}

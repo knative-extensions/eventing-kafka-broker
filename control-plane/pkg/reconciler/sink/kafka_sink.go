@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"math"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corelisters "k8s.io/client-go/listers/core/v1"
@@ -32,11 +30,13 @@ import (
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/log"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 const (
@@ -82,13 +82,22 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		ks.GetStatus().Annotations = make(map[string]string, 1)
 	}
 
+	securityOption, secret, err := security.NewOptionFromSecret(ctx, &SecretLocator{KafkaSink: ks}, r.SecretProviderFunc())
+	if err != nil {
+		return fmt.Errorf("failed to create auth option: %w", err)
+	}
+
+	if err := r.TrackSecret(secret, ks); err != nil {
+		return fmt.Errorf("failed to track secret: %w", err)
+	}
+
 	if ks.Spec.NumPartitions != nil && ks.Spec.ReplicationFactor != nil {
 
 		ks.GetStatus().Annotations[base.TopicOwnerAnnotation] = ControllerTopicOwner
 
 		topicConfig := topicConfigFromSinkSpec(&ks.Spec)
 
-		topic, err := r.ClusterAdmin.CreateTopic(logger, ks.Spec.Topic, topicConfig)
+		topic, err := r.ClusterAdmin.CreateTopic(logger, ks.Spec.Topic, topicConfig, securityOption)
 		if err != nil {
 			return statusConditionManager.FailedToCreateTopic(topic, err)
 		}
@@ -98,7 +107,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 		ks.GetStatus().Annotations[base.TopicOwnerAnnotation] = ExternalTopicOwner
 
-		isPresentAndValid, err := r.ClusterAdmin.IsTopicPresentAndValid(ks.Spec.Topic, ks.Spec.BootstrapServers)
+		isPresentAndValid, err := r.ClusterAdmin.IsTopicPresentAndValid(ks.Spec.Topic, ks.Spec.BootstrapServers, securityOption)
 		if err != nil {
 			return statusConditionManager.TopicNotPresentOrInvalidErr(err)
 		}
@@ -224,7 +233,11 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	}
 
 	if ks.GetStatus().Annotations[base.TopicOwnerAnnotation] == ControllerTopicOwner {
-		topic, err := r.ClusterAdmin.DeleteTopic(ks.Spec.Topic, ks.Spec.BootstrapServers)
+		securityOption, _, err := security.NewOptionFromSecret(ctx, &SecretLocator{KafkaSink: ks}, r.SecretProviderFunc())
+		if err != nil {
+			return fmt.Errorf("failed to create security (auth) option: %w", err)
+		}
+		topic, err := r.ClusterAdmin.DeleteTopic(ks.Spec.Topic, ks.Spec.BootstrapServers, securityOption)
 		if err != nil {
 			return err
 		}
