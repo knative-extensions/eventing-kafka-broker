@@ -53,10 +53,19 @@ type ConfigProvider func(secretName string, client *testlib.Client) map[string]s
 
 func BrokerAuthBecomeReady(t *testing.T, secretProvider SecretProvider, configProvider ConfigProvider) {
 
+	ctx := context.Background()
+
 	const (
-		broker     = "broker"
-		configMap  = "config-broker"
-		secretName = "broker-auth"
+		brokerName  = "broker"
+		triggerName = "trigger"
+		subscriber  = "subscriber"
+		configMap   = "config-broker"
+		secretName  = "broker-auth"
+
+		eventType   = "type1"
+		eventSource = "source1"
+		eventBody   = `{"msg":"e2e-auth-body"}`
+		senderName  = "sender"
 	)
 
 	client := testlib.Setup(t, true)
@@ -69,7 +78,7 @@ func BrokerAuthBecomeReady(t *testing.T, secretProvider SecretProvider, configPr
 	)
 
 	client.CreateBrokerV1OrFail(
-		broker,
+		brokerName,
 		resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
 		resources.WithConfigForBrokerV1(&duckv1.KReference{
 			APIVersion: "v1",
@@ -81,7 +90,7 @@ func BrokerAuthBecomeReady(t *testing.T, secretProvider SecretProvider, configPr
 
 	// secret doesn't exist, so broker won't become ready.
 	time.Sleep(time.Second * 30)
-	br, err := client.Eventing.EventingV1().Brokers(client.Namespace).Get(context.Background(), broker, metav1.GetOptions{})
+	br, err := client.Eventing.EventingV1().Brokers(client.Namespace).Get(ctx, brokerName, metav1.GetOptions{})
 	assert.Nil(t, err)
 	assert.False(t, br.Status.IsReady(), "secret %s/%s doesn't exist, so broker must no be ready", client.Namespace, secretName)
 
@@ -95,12 +104,12 @@ func BrokerAuthBecomeReady(t *testing.T, secretProvider SecretProvider, configPr
 		Data: secretData,
 	}
 
-	secret, err = client.Kube.CoreV1().Secrets(client.Namespace).Create(context.Background(), secret, metav1.CreateOptions{})
+	secret, err = client.Kube.CoreV1().Secrets(client.Namespace).Create(ctx, secret, metav1.CreateOptions{})
 	assert.Nil(t, err)
 
 	// Trigger a reconciliation by updating the referenced ConfigMap in broker.spec.config.
 	err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		config, err := client.Kube.CoreV1().ConfigMaps(client.Namespace).Get(context.Background(), configMap, metav1.GetOptions{})
+		config, err := client.Kube.CoreV1().ConfigMaps(client.Namespace).Get(ctx, configMap, metav1.GetOptions{})
 		if err != nil {
 			return nil
 		}
@@ -110,12 +119,56 @@ func BrokerAuthBecomeReady(t *testing.T, secretProvider SecretProvider, configPr
 		}
 		config.Labels["test.eventing.knative.dev/updated"] = names.SimpleNameGenerator.GenerateName("now")
 
-		config, err = client.Kube.CoreV1().ConfigMaps(client.Namespace).Update(context.Background(), config, metav1.UpdateOptions{})
+		config, err = client.Kube.CoreV1().ConfigMaps(client.Namespace).Update(ctx, config, metav1.UpdateOptions{})
 		return err
 	})
 	assert.Nil(t, err)
 
-	client.WaitForResourceReadyOrFail(broker, testlib.BrokerTypeMeta)
+	client.WaitForResourceReadyOrFail(brokerName, testlib.BrokerTypeMeta)
+
+	// eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber, recordevents.AddTracing())
+	//
+	// client.CreateTriggerV1OrFail(
+	// 	triggerName,
+	// 	resources.WithBrokerV1(brokerName),
+	// 	resources.WithSubscriberServiceRefForTriggerV1(subscriber),
+	// )
+	//
+	// client.WaitForAllTestResourcesReadyOrFail(ctx)
+	//
+	// id := uuid.New().String()
+	// eventToSend := cloudevents.NewEvent()
+	// eventToSend.SetID(id)
+	// eventToSend.SetType(eventType)
+	// eventToSend.SetSource(eventSource)
+	// err = eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody))
+	// assert.Nil(t, err)
+	//
+	// // uri, err := client.GetAddressableURI(brokerName, testlib.BrokerTypeMeta)
+	// // assert.Nil(t, err)
+	// // recordevents.DeployEventSenderOrFail(
+	// // 	ctx,
+	// // 	client,
+	// // 	senderName+"matching",
+	// // 	uri,
+	// // 	recordevents.AddTracing(),
+	// // )
+	//
+	// client.SendEventToAddressable(
+	// 	ctx,
+	// 	senderName,
+	// 	brokerName,
+	// 	testlib.BrokerTypeMeta,
+	// 	eventToSend,
+	// 	sender.EnableTracing(),
+	// )
+	//
+	// eventTracker.AssertAtLeast(1, recordevents.MatchEvent(
+	// 	HasId(id),
+	// 	HasSource(eventSource),
+	// 	HasType(eventType),
+	// 	HasData([]byte(eventBody)),
+	// ))
 }
 
 func TestBrokerAuthBecomeReadyPlaintext(t *testing.T) {
@@ -150,11 +203,10 @@ func TestBrokerAuthBecomeReadySsl(t *testing.T) {
 			assert.Nil(t, err)
 
 			return map[string][]byte{
-				"protocol":      []byte("SSL"),
-				"ca.p12":        caSecret.Data["ca.p12"],
-				"ca.password":   caSecret.Data["ca.password"],
-				"user.p12":      tlsUserSecret.Data["user.p12"],
-				"user.password": tlsUserSecret.Data["user.password"],
+				"protocol": []byte("SSL"),
+				"ca.crt":   caSecret.Data["ca.crt"],
+				"user.crt": tlsUserSecret.Data["user.crt"],
+				"user.key": tlsUserSecret.Data["user.key"],
 			}
 		},
 		func(secretName string, client *testlib.Client) map[string]string {
@@ -209,8 +261,7 @@ func TestBrokerAuthBecomeReadySslSaslScram512(t *testing.T) {
 			return map[string][]byte{
 				"protocol":       []byte("SASL_SSL"),
 				"sasl.mechanism": []byte("SCRAM-SHA-512"),
-				"ca.p12":         caSecret.Data["ca.p12"],
-				"ca.password":    caSecret.Data["ca.password"],
+				"ca.crt":         caSecret.Data["ca.crt"],
 				"user":           []byte(saslUserSecretName),
 				"password":       saslUserSecret.Data["password"],
 			}

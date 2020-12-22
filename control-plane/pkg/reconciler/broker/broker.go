@@ -153,7 +153,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	)
 
 	// Get resource configuration.
-	brokerResource, err := r.getBrokerResource(ctx, topic, broker, topicConfig)
+	brokerResource, err := r.getBrokerResource(ctx, topic, broker, secret, topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToGetConfig(err)
 	}
@@ -339,7 +339,7 @@ func (r *Reconciler) defaultConfig() (*kafka.TopicConfig, error) {
 	}, nil
 }
 
-func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, config *kafka.TopicConfig) (*contract.Resource, error) {
+func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
 	res := &contract.Resource{
 		Uid:    string(broker.UID),
 		Topics: []string{topic},
@@ -349,6 +349,17 @@ func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker
 			},
 		},
 		BootstrapServers: config.GetBootstrapServers(),
+	}
+
+	if secret != nil {
+		res.Auth = &contract.Resource_AuthSecret{
+			AuthSecret: &contract.Reference{
+				Uuid:      string(secret.UID),
+				Namespace: secret.Namespace,
+				Name:      secret.Name,
+				Version:   secret.ResourceVersion,
+			},
+		}
 	}
 
 	delivery := broker.Spec.Delivery

@@ -89,11 +89,17 @@ message Ingress {
 // Object reference.
 message Reference {
 
+  // Object id.
+  string uuid = 1;
+
   // Object namespace.
-  string namespace = 1;
+  string namespace = 2;
 
   // Object name.
-  string name = 2;
+  string name = 3;
+
+  // Object version.
+  string version = 4;
 }
 
 message Resource {
@@ -121,7 +127,7 @@ message Resource {
 
   oneof Auth {
     // No auth configured.
-    google.protobuf.Empty absent = 7;
+    google.protobuf.Empty absentAuth = 7;
 
     // Secret reference.
     //
@@ -167,7 +173,7 @@ message Resource {
     //       - user
     //       - password
     //       - sasl.mechanism
-    Reference secret = 8;
+    Reference authSecret = 8;
   }
 }
 

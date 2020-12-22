@@ -156,28 +156,17 @@ func TestSASLPlainLSCRAM512NoPassword(t *testing.T) {
 }
 
 func TestSSL(t *testing.T) {
-	cap12, err := ioutil.ReadFile("testdata/ca.p12")
-	assert.Nil(t, err)
-
-	caPassword, err := ioutil.ReadFile("testdata/ca.password")
-	assert.Nil(t, err)
-
-	userp12, err := ioutil.ReadFile("testdata/user.p12")
-	assert.Nil(t, err)
-
-	userPassword, err := ioutil.ReadFile("testdata/user.password")
-	assert.Nil(t, err)
+	ca, userKey, userCert := loadCerts(t)
 
 	secret := map[string][]byte{
-		"protocol":      []byte("SSL"),
-		"user.p12":      userp12,
-		"user.password": userPassword,
-		"ca.p12":        cap12,
-		"ca.password":   caPassword,
+		"protocol": []byte("SSL"),
+		"user.key": userKey,
+		"user.crt": userCert,
+		"ca.crt":   ca,
 	}
 	config := sarama.NewConfig()
 
-	err = options(config, secretData(secret))
+	err := options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
@@ -187,31 +176,20 @@ func TestSSL(t *testing.T) {
 }
 
 func TestSASLPLainSSL(t *testing.T) {
-	cap12, err := ioutil.ReadFile("testdata/ca.p12")
-	assert.Nil(t, err)
-
-	caPassword, err := ioutil.ReadFile("testdata/ca.password")
-	assert.Nil(t, err)
-
-	userp12, err := ioutil.ReadFile("testdata/user.p12")
-	assert.Nil(t, err)
-
-	userPassword, err := ioutil.ReadFile("testdata/user.password")
-	assert.Nil(t, err)
+	ca, userKey, userCert := loadCerts(t)
 
 	secret := map[string][]byte{
 		"protocol":       []byte("SASL_SSL"),
 		"sasl.mechanism": []byte("PLAIN"),
-		"user.p12":       userp12,
-		"user.password":  userPassword,
-		"ca.p12":         cap12,
-		"ca.password":    caPassword,
+		"user.key":       userKey,
+		"user.crt":       userCert,
+		"ca.crt":         ca,
 		"user":           []byte("my-user-name"),
 		"password":       []byte("my-user-password"),
 	}
 	config := sarama.NewConfig()
 
-	err = options(config, secretData(secret))
+	err := options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
@@ -226,31 +204,20 @@ func TestSASLPLainSSL(t *testing.T) {
 }
 
 func TestSASLSCRAM256SSL(t *testing.T) {
-	cap12, err := ioutil.ReadFile("testdata/ca.p12")
-	assert.Nil(t, err)
-
-	caPassword, err := ioutil.ReadFile("testdata/ca.password")
-	assert.Nil(t, err)
-
-	userp12, err := ioutil.ReadFile("testdata/user.p12")
-	assert.Nil(t, err)
-
-	userPassword, err := ioutil.ReadFile("testdata/user.password")
-	assert.Nil(t, err)
+	ca, userKey, userCert := loadCerts(t)
 
 	secret := map[string][]byte{
 		"protocol":       []byte("SASL_SSL"),
 		"sasl.mechanism": []byte("SCRAM-SHA-256"),
-		"user.p12":       userp12,
-		"user.password":  userPassword,
-		"ca.p12":         cap12,
-		"ca.password":    caPassword,
+		"ca.crt":         ca,
+		"user.crt":       userCert,
+		"user.key":       userKey,
 		"user":           []byte("my-user-name"),
 		"password":       []byte("my-user-password"),
 	}
 	config := sarama.NewConfig()
 
-	err = options(config, secretData(secret))
+	err := options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
@@ -265,31 +232,20 @@ func TestSASLSCRAM256SSL(t *testing.T) {
 }
 
 func TestSASLSCRAM512SSL(t *testing.T) {
-	cap12, err := ioutil.ReadFile("testdata/ca.p12")
-	assert.Nil(t, err)
-
-	caPassword, err := ioutil.ReadFile("testdata/ca.password")
-	assert.Nil(t, err)
-
-	userp12, err := ioutil.ReadFile("testdata/user.p12")
-	assert.Nil(t, err)
-
-	userPassword, err := ioutil.ReadFile("testdata/user.password")
-	assert.Nil(t, err)
+	ca, userKey, userCert := loadCerts(t)
 
 	secret := map[string][]byte{
 		"protocol":       []byte("SASL_SSL"),
 		"sasl.mechanism": []byte("SCRAM-SHA-512"),
-		"user.p12":       userp12,
-		"user.password":  userPassword,
-		"ca.p12":         cap12,
-		"ca.password":    caPassword,
+		"ca.crt":         ca,
+		"user.crt":       userCert,
+		"user.key":       userKey,
 		"user":           []byte("my-user-name"),
 		"password":       []byte("my-user-password"),
 	}
 	config := sarama.NewConfig()
 
-	err = options(config, secretData(secret))
+	err := options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
@@ -301,4 +257,17 @@ func TestSASLSCRAM512SSL(t *testing.T) {
 	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeSCRAMSHA512), config.Net.SASL.Mechanism)
 	assert.Equal(t, "my-user-name", config.Net.SASL.User)
 	assert.Equal(t, "my-user-password", config.Net.SASL.Password)
+}
+
+func loadCerts(t *testing.T) (ca, userKey, userCert []byte) {
+	ca, err := ioutil.ReadFile("testdata/ca.crt")
+	assert.Nil(t, err)
+
+	userKey, err = ioutil.ReadFile("testdata/user.key")
+	assert.Nil(t, err)
+
+	userCert, err = ioutil.ReadFile("testdata/user.crt")
+	assert.Nil(t, err)
+
+	return ca, userKey, userCert
 }
