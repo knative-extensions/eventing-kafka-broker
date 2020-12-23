@@ -23,13 +23,18 @@ import (
 	"testing"
 	"time"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	. "github.com/cloudevents/sdk-go/v2/test"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/util/retry"
 	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
+	"knative.dev/eventing/test/lib/sender"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
@@ -126,49 +131,49 @@ func BrokerAuthBecomeReady(t *testing.T, secretProvider SecretProvider, configPr
 
 	client.WaitForResourceReadyOrFail(brokerName, testlib.BrokerTypeMeta)
 
-	// eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber, recordevents.AddTracing())
-	//
-	// client.CreateTriggerV1OrFail(
-	// 	triggerName,
-	// 	resources.WithBrokerV1(brokerName),
-	// 	resources.WithSubscriberServiceRefForTriggerV1(subscriber),
-	// )
-	//
-	// client.WaitForAllTestResourcesReadyOrFail(ctx)
-	//
-	// id := uuid.New().String()
-	// eventToSend := cloudevents.NewEvent()
-	// eventToSend.SetID(id)
-	// eventToSend.SetType(eventType)
-	// eventToSend.SetSource(eventSource)
-	// err = eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody))
+	eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber, recordevents.AddTracing())
+
+	client.CreateTriggerV1OrFail(
+		triggerName,
+		resources.WithBrokerV1(brokerName),
+		resources.WithSubscriberServiceRefForTriggerV1(subscriber),
+	)
+
+	client.WaitForAllTestResourcesReadyOrFail(ctx)
+
+	id := uuid.New().String()
+	eventToSend := cloudevents.NewEvent()
+	eventToSend.SetID(id)
+	eventToSend.SetType(eventType)
+	eventToSend.SetSource(eventSource)
+	err = eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody))
+	assert.Nil(t, err)
+
+	// uri, err := client.GetAddressableURI(brokerName, testlib.BrokerTypeMeta)
 	// assert.Nil(t, err)
-	//
-	// // uri, err := client.GetAddressableURI(brokerName, testlib.BrokerTypeMeta)
-	// // assert.Nil(t, err)
-	// // recordevents.DeployEventSenderOrFail(
-	// // 	ctx,
-	// // 	client,
-	// // 	senderName+"matching",
-	// // 	uri,
-	// // 	recordevents.AddTracing(),
-	// // )
-	//
-	// client.SendEventToAddressable(
+	// recordevents.DeployEventSenderOrFail(
 	// 	ctx,
-	// 	senderName,
-	// 	brokerName,
-	// 	testlib.BrokerTypeMeta,
-	// 	eventToSend,
-	// 	sender.EnableTracing(),
+	// 	client,
+	// 	senderName+"matching",
+	// 	uri,
+	// 	recordevents.AddTracing(),
 	// )
-	//
-	// eventTracker.AssertAtLeast(1, recordevents.MatchEvent(
-	// 	HasId(id),
-	// 	HasSource(eventSource),
-	// 	HasType(eventType),
-	// 	HasData([]byte(eventBody)),
-	// ))
+
+	client.SendEventToAddressable(
+		ctx,
+		senderName,
+		brokerName,
+		testlib.BrokerTypeMeta,
+		eventToSend,
+		sender.EnableTracing(),
+	)
+
+	eventTracker.AssertAtLeast(1, recordevents.MatchEvent(
+		HasId(id),
+		HasSource(eventSource),
+		HasType(eventType),
+		HasData([]byte(eventBody)),
+	))
 }
 
 func TestBrokerAuthBecomeReadyPlaintext(t *testing.T) {
