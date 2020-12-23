@@ -27,7 +27,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.migrationsupport.rules.EnableRuleMigrationSupport;
 
+import java.util.AbstractMap;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -47,21 +51,24 @@ public class KubernetesAuthProviderTest {
     data.put(KubernetesCredentials.SECURITY_PROTOCOL, SecurityProtocol.SASL_SSL.name);
     data.put(KubernetesCredentials.SASL_MECHANISM, "SCRAM-SHA-512");
 
-    data.put(KubernetesCredentials.USER_STORE_KEY, "my-user-store");
-    data.put(KubernetesCredentials.USER_STORE_PASSWORD_KEY, "my-user-store-password");
+    data.put(KubernetesCredentials.USER_CERTIFICATE_KEY, "my-user-cert");
+    data.put(KubernetesCredentials.USER_KEY_KEY, "my-user-key");
 
     data.put(KubernetesCredentials.USERNAME_KEY, "my-username");
     data.put(KubernetesCredentials.PASSWORD_KEY, "my-user-password");
 
-    data.put(KubernetesCredentials.CA_STORE_KEY, "my-ca-store-content");
-    data.put(KubernetesCredentials.CA_STORE_PASSWORD_KEY, "my-ca-store-password");
+    data.put(KubernetesCredentials.CA_CERTIFICATE_KEY, "my-ca-certificate");
 
     final var secret = new SecretBuilder()
       .withNewMetadata()
       .withName("my-secret-name")
       .withNamespace("my-secret-namespace")
       .endMetadata()
-      .withData(data)
+      .withData(
+        data.entrySet().stream()
+          .map(e -> new AbstractMap.SimpleImmutableEntry<>(e.getKey(), Base64.getEncoder().encodeToString(e.getValue().getBytes())))
+          .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+      )
       .build();
 
     client.secrets().inNamespace("my-secret-namespace").create(secret);
@@ -78,11 +85,9 @@ public class KubernetesAuthProviderTest {
           assertThat(credentials.SASLMechanism()).isEqualTo(data.get(KubernetesCredentials.SASL_MECHANISM));
           assertThat(credentials.securityProtocol()).isEqualTo(SecurityProtocol.forName(data.get(KubernetesCredentials.SECURITY_PROTOCOL)));
 
-          assertThat(credentials.keystore()).isEqualTo(data.get(KubernetesCredentials.USER_STORE_KEY));
-          assertThat(credentials.keystorePassword()).isEqualTo(data.get(KubernetesCredentials.USER_STORE_PASSWORD_KEY));
+          assertThat(credentials.userCertificate()).isEqualTo(data.get(KubernetesCredentials.USER_CERTIFICATE_KEY));
 
-          assertThat(credentials.truststore()).isEqualTo(data.get(KubernetesCredentials.CA_STORE_KEY));
-          assertThat(credentials.truststorePassword()).isEqualTo(data.get(KubernetesCredentials.CA_STORE_PASSWORD_KEY));
+          assertThat(credentials.caCertificates()).isEqualTo(data.get(KubernetesCredentials.CA_CERTIFICATE_KEY));
 
           context.completeNow();
         }));
@@ -115,7 +120,11 @@ public class KubernetesAuthProviderTest {
       .withName("my-secret-name-invalid")
       .withNamespace("my-secret-namespace")
       .endMetadata()
-      .withData(data)
+      .withData(
+        data.entrySet().stream()
+          .map(e -> new AbstractMap.SimpleImmutableEntry<>(e.getKey(), Base64.getEncoder().encodeToString(e.getValue().getBytes())))
+          .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+      )
       .build();
 
     server.getClient().secrets().inNamespace("my-secret-namespace").create(secret);

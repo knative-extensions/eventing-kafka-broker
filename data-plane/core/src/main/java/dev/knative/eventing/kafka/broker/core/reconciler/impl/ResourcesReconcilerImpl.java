@@ -22,6 +22,7 @@ import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.core.utils.CollectionsUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -204,6 +205,8 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       && Objects.equals(r1.getTopicsList(), r2.getTopicsList())
       && Objects.equals(r1.getBootstrapServers(), r2.getBootstrapServers())
       && Objects.equals(r1.getIngress(), r2.getIngress())
+      && Objects.equals(r1.hasAbsentAuth(), r2.hasAbsentAuth())
+      && Objects.equals(r1.getAuthSecret(), r2.getAuthSecret())
       // In the case of ingress reconcile, do we really care about this one?
       && Objects.equals(r1.getEgressConfig(), r2.getEgressConfig());
   }

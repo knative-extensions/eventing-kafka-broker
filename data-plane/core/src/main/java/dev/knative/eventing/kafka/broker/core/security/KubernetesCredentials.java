@@ -18,16 +18,22 @@ package dev.knative.eventing.kafka.broker.core.security;
 
 import io.fabric8.kubernetes.api.model.Secret;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.util.Base64;
+
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 class KubernetesCredentials implements Credentials {
 
-  static final String CA_STORE_KEY = "ca.p12";
-  static final String CA_STORE_PASSWORD_KEY = "ca.password";
+  private final static Logger logger = LoggerFactory.getLogger(KubernetesCredentials.class);
 
-  static final String USER_STORE_KEY = "user.p12";
-  static final String USER_STORE_PASSWORD_KEY = "user.password";
+  static final String CA_CERTIFICATE_KEY = "ca.crt";
+
+  static final String USER_CERTIFICATE_KEY = "user.crt";
+  static final String USER_KEY_KEY = "user.key";
 
   static final String USERNAME_KEY = "user";
   static final String PASSWORD_KEY = "password";
@@ -36,84 +42,138 @@ class KubernetesCredentials implements Credentials {
   static final String SASL_MECHANISM = "sasl.mechanism";
 
   private final Secret secret;
-  private final String truststorePath;
-  private final String keystorePath;
+
+  private String caCertificates;
+  private String userCertificate;
+  private String userKey;
+  private SecurityProtocol securityProtocol;
+  private String SASLMechanism;
+  private String SASLUsername;
+  private String SASLPassword;
 
   KubernetesCredentials(final Secret secret) {
     this.secret = secret;
-    final var dir = String.format("/%s/%s", secret.getMetadata().getNamespace(), secret.getMetadata().getName());
-    this.truststorePath = Stores.truststorePath(dir);
-    this.keystorePath = Stores.keystorePath(dir);
   }
 
   @Override
   @Nullable
-  public String truststore() {
-    return secret.getData().get(CA_STORE_KEY);
+  public String caCertificates() {
+    if (secret == null || secret.getData() == null) {
+      return null;
+    }
+    if (caCertificates == null) {
+      final var truststore = secret.getData().get(CA_CERTIFICATE_KEY);
+      if (truststore == null) {
+        return null;
+      }
+      this.caCertificates = new String(Base64.getDecoder().decode(truststore));
+    }
+    return this.caCertificates;
   }
 
   @Override
   @Nullable
-  public String truststorePassword() {
-    return secret.getData().get(CA_STORE_PASSWORD_KEY);
+  public String userCertificate() {
+    if (secret == null || secret.getData() == null) {
+      return null;
+    }
+    if (userCertificate == null) {
+      final var keystore = secret.getData().get(USER_CERTIFICATE_KEY);
+      if (keystore == null) {
+        return null;
+      }
+      this.userCertificate = new String(Base64.getDecoder().decode(keystore));
+    }
+    return userCertificate;
   }
 
   @Override
   @Nullable
-  public String truststorePath() {
-    return this.truststorePath;
+  public String userKey() {
+    if (secret == null || secret.getData() == null) {
+      return null;
+    }
+    if (userKey == null) {
+      final var userKey = secret.getData().get(USER_KEY_KEY);
+      if (userKey == null) {
+        return null;
+      }
+      this.userKey = new String(Base64.getDecoder().decode(userKey));
+    }
+    return userKey;
   }
 
-  @Override
-  @Nullable
-  public String keystore() {
-    return secret.getData().get(USER_STORE_KEY);
-  }
-
-  @Override
-  @Nullable
-  public String keystorePassword() {
-    return secret.getData().get(USER_STORE_PASSWORD_KEY);
-  }
-
-  @Override
-  public String keystorePath() {
-    return this.keystorePath;
-  }
 
   @Override
   @Nullable
   public SecurityProtocol securityProtocol() {
-    final var protocol = secret.getData().get(SECURITY_PROTOCOL);
-    if (!SecurityProtocol.names().contains(protocol)) {
+    if (secret == null || secret.getData() == null) {
       return null;
     }
-    return SecurityProtocol.forName(protocol);
+    if (securityProtocol == null) {
+      final var protocolStr = secret.getData().get(SECURITY_PROTOCOL);
+      if (protocolStr == null) {
+        return null;
+      }
+      final var protocol = new String(Base64.getDecoder().decode(protocolStr));
+      if (!SecurityProtocol.names().contains(protocol)) {
+        logger.debug("Security protocol {}", keyValue(SECURITY_PROTOCOL, protocol));
+        return null;
+      }
+      this.securityProtocol = SecurityProtocol.forName(protocol);
+    }
+    return this.securityProtocol;
   }
 
   @Override
   @Nullable
   public String SASLMechanism() {
-    final var mechanism = secret.getData().get(SASL_MECHANISM);
-    if (mechanism == null) {
+    if (secret == null || secret.getData() == null) {
       return null;
     }
-    return switch (mechanism) {
-      case "SCRAM-SHA-256" -> "SCRAM-SHA-256";
-      case "SCRAM-SHA-512" -> "SCRAM-SHA-512";
-      default -> null;
-    };
+    if (SASLMechanism == null) {
+      final var SASLMechanism = secret.getData().get(SASL_MECHANISM);
+      if (SASLMechanism == null) {
+        return null;
+      }
+      this.SASLMechanism = switch (new String(Base64.getDecoder().decode(SASLMechanism))) {
+        case "SCRAM-SHA-256" -> "SCRAM-SHA-256";
+        case "SCRAM-SHA-512" -> "SCRAM-SHA-512";
+        default -> null;
+      };
+    }
+    return this.SASLMechanism;
   }
 
   @Override
   @Nullable
   public String SASLUsername() {
-    return secret.getData().get(USERNAME_KEY);
+    if (secret == null || secret.getData() == null) {
+      return null;
+    }
+    if (SASLUsername == null) {
+      final var SASLUsername = secret.getData().get(USERNAME_KEY);
+      if (SASLUsername == null) {
+        return null;
+      }
+      this.SASLUsername = new String(Base64.getDecoder().decode(SASLUsername));
+    }
+    return this.SASLUsername;
   }
 
   @Override
   @Nullable
   public String SASLPassword() {
-    return secret.getData().get(PASSWORD_KEY);
+    if (secret == null || secret.getData() == null) {
+      return null;
+    }
+    if (SASLPassword == null) {
+      final var SASLPassword = secret.getData().get(PASSWORD_KEY);
+      if (SASLPassword == null) {
+        return null;
+      }
+      this.SASLPassword = new String(Base64.getDecoder().decode(SASLPassword));
+    }
+    return this.SASLPassword;
   }
 }

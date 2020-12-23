@@ -15,13 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -33,16 +26,24 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.util.Arrays;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class ConsumerVerticleTest {
@@ -58,7 +59,7 @@ public class ConsumerVerticleTest {
     final var topic = "topic1";
 
     final var verticle = new ConsumerVerticle<>(
-      v -> KafkaConsumer.create(v, consumer),
+      v -> Future.succeededFuture(KafkaConsumer.create(v, consumer)),
       Set.of(topic),
       (a, b) -> new ConsumerRecordHandler<>(
         ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
@@ -91,7 +92,7 @@ public class ConsumerVerticleTest {
     final var topic = "topic1";
 
     final var verticle = new ConsumerVerticle<>(
-      v -> KafkaConsumer.create(v, consumer),
+      v -> Future.succeededFuture(KafkaConsumer.create(v, consumer)),
       Set.of(topic),
       (a, b) -> new ConsumerRecordHandler<>(
         ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
@@ -152,7 +153,7 @@ public class ConsumerVerticleTest {
     final var sinkClosed = new AtomicBoolean(false);
 
     final var verticle = new ConsumerVerticle<>(
-      v -> consumer,
+      v -> Future.succeededFuture(consumer),
       Arrays.stream(topics).collect(Collectors.toSet()),
       (v, c) -> new ConsumerRecordHandler<>(
         new ConsumerRecordSenderMock<>(

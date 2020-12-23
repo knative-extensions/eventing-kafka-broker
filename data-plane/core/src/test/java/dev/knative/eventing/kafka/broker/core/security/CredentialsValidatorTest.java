@@ -35,76 +35,69 @@ public class CredentialsValidatorTest {
   }
 
   @Test
-  public void securityProtocol_SSL_valid() {
+  public void securityProtocolSslValid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
+    when(credential.userCertificate()).thenReturn("abc");
+    when(credential.userKey()).thenReturn("key");
+    when(credential.caCertificates()).thenReturn("xyz");
 
     assertThat(CredentialsValidator.validate(credential)).isNull();
   }
 
   @Test
-  public void securityProtocol_SSL_invalid_NoKeystore() {
+  public void securityProtocolSslInvalidNoUserCert() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
-    when(credential.keystore()).thenReturn("   ");
-    when(credential.truststore()).thenReturn("xyz");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
+    when(credential.userCertificate()).thenReturn("   ");
+    when(credential.userKey()).thenReturn("my-key");
+    when(credential.caCertificates()).thenReturn("xyz");
 
     assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
   }
 
   @Test
-  public void securityProtocol_SSL_invalid_NoTruststore() {
+  public void securityProtocolSslInvalidNoUserKey() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
-    when(credential.keystore()).thenReturn("xyz");
-    when(credential.truststore()).thenReturn("   ");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
+    when(credential.userCertificate()).thenReturn("xyz");
+    when(credential.userKey()).thenReturn("  ");
+    when(credential.caCertificates()).thenReturn("my-cert");
 
     assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
   }
 
   @Test
-  public void securityProtocol_SSL_NoTruststorePassword_invalid() {
+  public void securityProtocolSslInvalidNoCACert() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("   ");
+    when(credential.userCertificate()).thenReturn("xyz");
+    when(credential.userKey()).thenReturn("my-key");
+    when(credential.caCertificates()).thenReturn("   ");
 
     assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
   }
 
   @Test
-  public void securityProtocol_SSL_NoKeystorePassword_invalid() {
-    final var credential = mock(Credentials.class);
-
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
-    when(credential.keystorePassword()).thenReturn("  ");
-    when(credential.truststorePassword()).thenReturn("qwerty");
-
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
+  public void securityProtocolSaslPlaintextScramSha256Valid() {
+    securityProtocolSaslPlaintextScramValid("SCRAM-SHA-256");
   }
 
   @Test
-  public void securityProtocol_SASL_PLAINTEXT_SCRAM_SHA_256_valid() {
+  public void securityProtocolSaslPlaintextScramSha512Valid() {
+    securityProtocolSaslPlaintextScramValid("SCRAM-SHA-512");
+  }
+
+  private static void securityProtocolSaslPlaintextScramValid(final String mechanism) {
+
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-256");
+    when(credential.SASLMechanism()).thenReturn(mechanism);
     when(credential.SASLUsername()).thenReturn("aaa");
     when(credential.SASLPassword()).thenReturn("bbb");
 
@@ -112,19 +105,7 @@ public class CredentialsValidatorTest {
   }
 
   @Test
-  public void securityProtocol_SASL_PLAINTEXT_SCRAM_SHA_512_valid() {
-    final var credential = mock(Credentials.class);
-
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
-    when(credential.SASLUsername()).thenReturn("aaa");
-    when(credential.SASLPassword()).thenReturn("bbb");
-
-    assertThat(CredentialsValidator.validate(credential)).isNull();
-  }
-
-  @Test
-  public void securityProtocol_SASL_PLAINTEXT_SCRAM_SHA_513_invalid() {
+  public void securityProtocolSaslPlaintextScramSha513InValid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
@@ -136,7 +117,7 @@ public class CredentialsValidatorTest {
   }
 
   @Test
-  public void securityProtocol_SASL_PLAINTEXT_SCRAM_SHA_512_NoUsername_invalid() {
+  public void securityProtocolSaslPLAINTEXT_ScramSha51NoUsernameInValid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
@@ -148,7 +129,7 @@ public class CredentialsValidatorTest {
   }
 
   @Test
-  public void securityProtocol_SASL_PLAINTEXT_SCRAM_SHA_512_NoPassword_invalid() {
+  public void securityProtocolSaslPLAINTEXT_ScramSha51NoPasswordInValid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
@@ -160,247 +141,141 @@ public class CredentialsValidatorTest {
   }
 
   @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_256_valid() {
+  public void securityProtocolSaslSslScramSha256Valid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
+    when(credential.caCertificates()).thenReturn("xyz");
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-256");
     when(credential.SASLUsername()).thenReturn("aaa");
     when(credential.SASLPassword()).thenReturn("bbb");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
 
     assertThat(CredentialsValidator.validate(credential)).isNull();
   }
 
   @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_512_NoKeystorePassword_invalid() {
+  public void securityProtocolSaslSslScramSha513InValid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
-    when(credential.SASLUsername()).thenReturn("aaa");
-    when(credential.SASLPassword()).thenReturn("bbb");
-    when(credential.keystorePassword()).thenReturn("   ");
-    when(credential.truststorePassword()).thenReturn("qwerty");
-
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
-
-  @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_512_NoTruststorePassword_invalid() {
-    final var credential = mock(Credentials.class);
-
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
-    when(credential.SASLUsername()).thenReturn("aaa");
-    when(credential.SASLPassword()).thenReturn("bbb");
-    when(credential.keystorePassword()).thenReturn("qwerty");
-    when(credential.truststorePassword()).thenReturn("   ");
-
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
-
-  @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_513_invalid() {
-    final var credential = mock(Credentials.class);
-
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
+    when(credential.caCertificates()).thenReturn("xyz");
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-513");
     when(credential.SASLUsername()).thenReturn("aaa");
     when(credential.SASLPassword()).thenReturn("bbb");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
 
     assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
   }
 
   @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_512_NoUsername_invalid() {
+  public void securityProtocolSaslSslScramSha51NoUsernameInValid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
+    when(credential.userCertificate()).thenReturn("abc");
+    when(credential.caCertificates()).thenReturn("xyz");
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
     when(credential.SASLUsername()).thenReturn("  ");
     when(credential.SASLPassword()).thenReturn("bbb");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
 
     assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
   }
 
   @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_512_NoPassword_invalid() {
+  public void securityProtocolSaslSslScramSha51NoPasswordInValid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
+    when(credential.userCertificate()).thenReturn("abc");
+    when(credential.caCertificates()).thenReturn("xyz");
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
     when(credential.SASLUsername()).thenReturn("bbb");
     when(credential.SASLPassword()).thenReturn("  ");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
 
     assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
   }
 
   @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_512_NoTruststore_invalid() {
+  public void securityProtocolSaslSslScramSha51NoTruststoreInValid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("   ");
+    when(credential.userCertificate()).thenReturn("abc");
+    when(credential.caCertificates()).thenReturn("   ");
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
     when(credential.SASLUsername()).thenReturn("bbb");
     when(credential.SASLPassword()).thenReturn("ccc");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
 
     assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
   }
 
   @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_512_NoKeystore_invalid() {
+  public void securityProtocolSaslSslScramSha51Valid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("  ");
-    when(credential.truststore()).thenReturn("xyz");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
-    when(credential.SASLUsername()).thenReturn("bbb");
-    when(credential.SASLPassword()).thenReturn("ccc");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
-
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
-
-  @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_512_valid() {
-    final var credential = mock(Credentials.class);
-
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
+    when(credential.userCertificate()).thenReturn("abc");
+    when(credential.caCertificates()).thenReturn("xyz");
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
     when(credential.SASLUsername()).thenReturn("aaa");
     when(credential.SASLPassword()).thenReturn("bbb");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
 
     assertThat(CredentialsValidator.validate(credential)).isNull();
   }
 
   @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_256_NoKeystorePassword_invalid() {
+  public void securityProtocolSaslSslScramSha256NoUsernameInValid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-256");
-    when(credential.SASLUsername()).thenReturn("aaa");
-    when(credential.SASLPassword()).thenReturn("bbb");
-    when(credential.keystorePassword()).thenReturn("   ");
-    when(credential.truststorePassword()).thenReturn("qwerty");
-
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
-
-  @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_256_NoTruststorePassword_invalid() {
-    final var credential = mock(Credentials.class);
-
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-256");
-    when(credential.SASLUsername()).thenReturn("aaa");
-    when(credential.SASLPassword()).thenReturn("bbb");
-    when(credential.keystorePassword()).thenReturn("qwerty");
-    when(credential.truststorePassword()).thenReturn("   ");
-
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
-
-  @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_256_NoUsername_invalid() {
-    final var credential = mock(Credentials.class);
-
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
+    when(credential.userCertificate()).thenReturn("abc");
+    when(credential.caCertificates()).thenReturn("xyz");
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-256");
     when(credential.SASLUsername()).thenReturn("  ");
     when(credential.SASLPassword()).thenReturn("bbb");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
 
     assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
   }
 
   @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_256_NoPassword_invalid() {
+  public void securityProtocolSaslSslScramSha256NoPasswordInValid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("xyz");
+    when(credential.caCertificates()).thenReturn("xyz");
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
     when(credential.SASLUsername()).thenReturn("bbb");
     when(credential.SASLPassword()).thenReturn("  ");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
 
     assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
   }
 
   @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_256_NoTruststore_invalid() {
+  public void securityProtocolSaslSslScramSha256NoTruststoreInValid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("abc");
-    when(credential.truststore()).thenReturn("   ");
+    when(credential.caCertificates()).thenReturn("   ");
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
     when(credential.SASLUsername()).thenReturn("bbb");
     when(credential.SASLPassword()).thenReturn("ccc");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
 
     assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
   }
 
   @Test
-  public void securityProtocol_SASL_SSL_SCRAM_SHA_256_NoKeystore_invalid() {
+  public void securityProtocolSaslSslScramSha256NoCACertInValid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.keystore()).thenReturn("  ");
-    when(credential.truststore()).thenReturn("xyz");
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
     when(credential.SASLUsername()).thenReturn("bbb");
     when(credential.SASLPassword()).thenReturn("ccc");
-    when(credential.keystorePassword()).thenReturn("qwe");
-    when(credential.truststorePassword()).thenReturn("qwerty");
 
     assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
   }
 
   @Test
-  public void securityProtocol_null_invalid() {
+  public void securityProtocol_nullInValid() {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(null);

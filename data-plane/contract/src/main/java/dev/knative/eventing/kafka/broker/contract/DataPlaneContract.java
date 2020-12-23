@@ -4883,10 +4883,30 @@ public final class DataPlaneContract {
 
     /**
      * <pre>
+     * Object id.
+     * </pre>
+     *
+     * <code>string uuid = 1;</code>
+     * @return The uuid.
+     */
+    java.lang.String getUuid();
+    /**
+     * <pre>
+     * Object id.
+     * </pre>
+     *
+     * <code>string uuid = 1;</code>
+     * @return The bytes for uuid.
+     */
+    com.google.protobuf.ByteString
+        getUuidBytes();
+
+    /**
+     * <pre>
      * Object namespace.
      * </pre>
      *
-     * <code>string namespace = 1;</code>
+     * <code>string namespace = 2;</code>
      * @return The namespace.
      */
     java.lang.String getNamespace();
@@ -4895,7 +4915,7 @@ public final class DataPlaneContract {
      * Object namespace.
      * </pre>
      *
-     * <code>string namespace = 1;</code>
+     * <code>string namespace = 2;</code>
      * @return The bytes for namespace.
      */
     com.google.protobuf.ByteString
@@ -4906,7 +4926,7 @@ public final class DataPlaneContract {
      * Object name.
      * </pre>
      *
-     * <code>string name = 2;</code>
+     * <code>string name = 3;</code>
      * @return The name.
      */
     java.lang.String getName();
@@ -4915,11 +4935,31 @@ public final class DataPlaneContract {
      * Object name.
      * </pre>
      *
-     * <code>string name = 2;</code>
+     * <code>string name = 3;</code>
      * @return The bytes for name.
      */
     com.google.protobuf.ByteString
         getNameBytes();
+
+    /**
+     * <pre>
+     * Object version.
+     * </pre>
+     *
+     * <code>string version = 4;</code>
+     * @return The version.
+     */
+    java.lang.String getVersion();
+    /**
+     * <pre>
+     * Object version.
+     * </pre>
+     *
+     * <code>string version = 4;</code>
+     * @return The bytes for version.
+     */
+    com.google.protobuf.ByteString
+        getVersionBytes();
   }
   /**
    * <pre>
@@ -4938,8 +4978,10 @@ public final class DataPlaneContract {
       super(builder);
     }
     private Reference() {
+      uuid_ = "";
       namespace_ = "";
       name_ = "";
+      version_ = "";
     }
 
     @java.lang.Override
@@ -4975,13 +5017,25 @@ public final class DataPlaneContract {
             case 10: {
               java.lang.String s = input.readStringRequireUtf8();
 
-              namespace_ = s;
+              uuid_ = s;
               break;
             }
             case 18: {
               java.lang.String s = input.readStringRequireUtf8();
 
+              namespace_ = s;
+              break;
+            }
+            case 26: {
+              java.lang.String s = input.readStringRequireUtf8();
+
               name_ = s;
+              break;
+            }
+            case 34: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              version_ = s;
               break;
             }
             default: {
@@ -5016,14 +5070,60 @@ public final class DataPlaneContract {
               dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder.class);
     }
 
-    public static final int NAMESPACE_FIELD_NUMBER = 1;
+    public static final int UUID_FIELD_NUMBER = 1;
+    private volatile java.lang.Object uuid_;
+    /**
+     * <pre>
+     * Object id.
+     * </pre>
+     *
+     * <code>string uuid = 1;</code>
+     * @return The uuid.
+     */
+    @java.lang.Override
+    public java.lang.String getUuid() {
+      java.lang.Object ref = uuid_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        uuid_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Object id.
+     * </pre>
+     *
+     * <code>string uuid = 1;</code>
+     * @return The bytes for uuid.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getUuidBytes() {
+      java.lang.Object ref = uuid_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        uuid_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int NAMESPACE_FIELD_NUMBER = 2;
     private volatile java.lang.Object namespace_;
     /**
      * <pre>
      * Object namespace.
      * </pre>
      *
-     * <code>string namespace = 1;</code>
+     * <code>string namespace = 2;</code>
      * @return The namespace.
      */
     @java.lang.Override
@@ -5044,7 +5144,7 @@ public final class DataPlaneContract {
      * Object namespace.
      * </pre>
      *
-     * <code>string namespace = 1;</code>
+     * <code>string namespace = 2;</code>
      * @return The bytes for namespace.
      */
     @java.lang.Override
@@ -5062,14 +5162,14 @@ public final class DataPlaneContract {
       }
     }
 
-    public static final int NAME_FIELD_NUMBER = 2;
+    public static final int NAME_FIELD_NUMBER = 3;
     private volatile java.lang.Object name_;
     /**
      * <pre>
      * Object name.
      * </pre>
      *
-     * <code>string name = 2;</code>
+     * <code>string name = 3;</code>
      * @return The name.
      */
     @java.lang.Override
@@ -5090,7 +5190,7 @@ public final class DataPlaneContract {
      * Object name.
      * </pre>
      *
-     * <code>string name = 2;</code>
+     * <code>string name = 3;</code>
      * @return The bytes for name.
      */
     @java.lang.Override
@@ -5102,6 +5202,52 @@ public final class DataPlaneContract {
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         name_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int VERSION_FIELD_NUMBER = 4;
+    private volatile java.lang.Object version_;
+    /**
+     * <pre>
+     * Object version.
+     * </pre>
+     *
+     * <code>string version = 4;</code>
+     * @return The version.
+     */
+    @java.lang.Override
+    public java.lang.String getVersion() {
+      java.lang.Object ref = version_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        version_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Object version.
+     * </pre>
+     *
+     * <code>string version = 4;</code>
+     * @return The bytes for version.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getVersionBytes() {
+      java.lang.Object ref = version_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        version_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
@@ -5122,11 +5268,17 @@ public final class DataPlaneContract {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      if (!getUuidBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, uuid_);
+      }
       if (!getNamespaceBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, namespace_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, namespace_);
       }
       if (!getNameBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, name_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, name_);
+      }
+      if (!getVersionBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, version_);
       }
       unknownFields.writeTo(output);
     }
@@ -5137,11 +5289,17 @@ public final class DataPlaneContract {
       if (size != -1) return size;
 
       size = 0;
+      if (!getUuidBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, uuid_);
+      }
       if (!getNamespaceBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, namespace_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, namespace_);
       }
       if (!getNameBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, name_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, name_);
+      }
+      if (!getVersionBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, version_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5158,10 +5316,14 @@ public final class DataPlaneContract {
       }
       dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) obj;
 
+      if (!getUuid()
+          .equals(other.getUuid())) return false;
       if (!getNamespace()
           .equals(other.getNamespace())) return false;
       if (!getName()
           .equals(other.getName())) return false;
+      if (!getVersion()
+          .equals(other.getVersion())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -5173,10 +5335,14 @@ public final class DataPlaneContract {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + UUID_FIELD_NUMBER;
+      hash = (53 * hash) + getUuid().hashCode();
       hash = (37 * hash) + NAMESPACE_FIELD_NUMBER;
       hash = (53 * hash) + getNamespace().hashCode();
       hash = (37 * hash) + NAME_FIELD_NUMBER;
       hash = (53 * hash) + getName().hashCode();
+      hash = (37 * hash) + VERSION_FIELD_NUMBER;
+      hash = (53 * hash) + getVersion().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -5314,9 +5480,13 @@ public final class DataPlaneContract {
       @java.lang.Override
       public Builder clear() {
         super.clear();
+        uuid_ = "";
+
         namespace_ = "";
 
         name_ = "";
+
+        version_ = "";
 
         return this;
       }
@@ -5344,8 +5514,10 @@ public final class DataPlaneContract {
       @java.lang.Override
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference buildPartial() {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference(this);
+        result.uuid_ = uuid_;
         result.namespace_ = namespace_;
         result.name_ = name_;
+        result.version_ = version_;
         onBuilt();
         return result;
       }
@@ -5394,12 +5566,20 @@ public final class DataPlaneContract {
 
       public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference other) {
         if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance()) return this;
+        if (!other.getUuid().isEmpty()) {
+          uuid_ = other.uuid_;
+          onChanged();
+        }
         if (!other.getNamespace().isEmpty()) {
           namespace_ = other.namespace_;
           onChanged();
         }
         if (!other.getName().isEmpty()) {
           name_ = other.name_;
+          onChanged();
+        }
+        if (!other.getVersion().isEmpty()) {
+          version_ = other.version_;
           onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
@@ -5431,13 +5611,109 @@ public final class DataPlaneContract {
         return this;
       }
 
+      private java.lang.Object uuid_ = "";
+      /**
+       * <pre>
+       * Object id.
+       * </pre>
+       *
+       * <code>string uuid = 1;</code>
+       * @return The uuid.
+       */
+      public java.lang.String getUuid() {
+        java.lang.Object ref = uuid_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          uuid_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Object id.
+       * </pre>
+       *
+       * <code>string uuid = 1;</code>
+       * @return The bytes for uuid.
+       */
+      public com.google.protobuf.ByteString
+          getUuidBytes() {
+        java.lang.Object ref = uuid_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          uuid_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Object id.
+       * </pre>
+       *
+       * <code>string uuid = 1;</code>
+       * @param value The uuid to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUuid(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        uuid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Object id.
+       * </pre>
+       *
+       * <code>string uuid = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearUuid() {
+        
+        uuid_ = getDefaultInstance().getUuid();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Object id.
+       * </pre>
+       *
+       * <code>string uuid = 1;</code>
+       * @param value The bytes for uuid to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUuidBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        uuid_ = value;
+        onChanged();
+        return this;
+      }
+
       private java.lang.Object namespace_ = "";
       /**
        * <pre>
        * Object namespace.
        * </pre>
        *
-       * <code>string namespace = 1;</code>
+       * <code>string namespace = 2;</code>
        * @return The namespace.
        */
       public java.lang.String getNamespace() {
@@ -5457,7 +5733,7 @@ public final class DataPlaneContract {
        * Object namespace.
        * </pre>
        *
-       * <code>string namespace = 1;</code>
+       * <code>string namespace = 2;</code>
        * @return The bytes for namespace.
        */
       public com.google.protobuf.ByteString
@@ -5478,7 +5754,7 @@ public final class DataPlaneContract {
        * Object namespace.
        * </pre>
        *
-       * <code>string namespace = 1;</code>
+       * <code>string namespace = 2;</code>
        * @param value The namespace to set.
        * @return This builder for chaining.
        */
@@ -5497,7 +5773,7 @@ public final class DataPlaneContract {
        * Object namespace.
        * </pre>
        *
-       * <code>string namespace = 1;</code>
+       * <code>string namespace = 2;</code>
        * @return This builder for chaining.
        */
       public Builder clearNamespace() {
@@ -5511,7 +5787,7 @@ public final class DataPlaneContract {
        * Object namespace.
        * </pre>
        *
-       * <code>string namespace = 1;</code>
+       * <code>string namespace = 2;</code>
        * @param value The bytes for namespace to set.
        * @return This builder for chaining.
        */
@@ -5533,7 +5809,7 @@ public final class DataPlaneContract {
        * Object name.
        * </pre>
        *
-       * <code>string name = 2;</code>
+       * <code>string name = 3;</code>
        * @return The name.
        */
       public java.lang.String getName() {
@@ -5553,7 +5829,7 @@ public final class DataPlaneContract {
        * Object name.
        * </pre>
        *
-       * <code>string name = 2;</code>
+       * <code>string name = 3;</code>
        * @return The bytes for name.
        */
       public com.google.protobuf.ByteString
@@ -5574,7 +5850,7 @@ public final class DataPlaneContract {
        * Object name.
        * </pre>
        *
-       * <code>string name = 2;</code>
+       * <code>string name = 3;</code>
        * @param value The name to set.
        * @return This builder for chaining.
        */
@@ -5593,7 +5869,7 @@ public final class DataPlaneContract {
        * Object name.
        * </pre>
        *
-       * <code>string name = 2;</code>
+       * <code>string name = 3;</code>
        * @return This builder for chaining.
        */
       public Builder clearName() {
@@ -5607,7 +5883,7 @@ public final class DataPlaneContract {
        * Object name.
        * </pre>
        *
-       * <code>string name = 2;</code>
+       * <code>string name = 3;</code>
        * @param value The bytes for name to set.
        * @return This builder for chaining.
        */
@@ -5619,6 +5895,102 @@ public final class DataPlaneContract {
   checkByteStringIsUtf8(value);
         
         name_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object version_ = "";
+      /**
+       * <pre>
+       * Object version.
+       * </pre>
+       *
+       * <code>string version = 4;</code>
+       * @return The version.
+       */
+      public java.lang.String getVersion() {
+        java.lang.Object ref = version_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          version_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Object version.
+       * </pre>
+       *
+       * <code>string version = 4;</code>
+       * @return The bytes for version.
+       */
+      public com.google.protobuf.ByteString
+          getVersionBytes() {
+        java.lang.Object ref = version_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          version_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Object version.
+       * </pre>
+       *
+       * <code>string version = 4;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
+       */
+      public Builder setVersion(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        version_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Object version.
+       * </pre>
+       *
+       * <code>string version = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearVersion() {
+        
+        version_ = getDefaultInstance().getVersion();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Object version.
+       * </pre>
+       *
+       * <code>string version = 4;</code>
+       * @param value The bytes for version to set.
+       * @return This builder for chaining.
+       */
+      public Builder setVersionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        version_ = value;
         onChanged();
         return this;
       }
@@ -5875,27 +6247,27 @@ public final class DataPlaneContract {
      * No auth configured.
      * </pre>
      *
-     * <code>.google.protobuf.Empty absent = 7;</code>
-     * @return Whether the absent field is set.
+     * <code>.google.protobuf.Empty absentAuth = 7;</code>
+     * @return Whether the absentAuth field is set.
      */
-    boolean hasAbsent();
+    boolean hasAbsentAuth();
     /**
      * <pre>
      * No auth configured.
      * </pre>
      *
-     * <code>.google.protobuf.Empty absent = 7;</code>
-     * @return The absent.
+     * <code>.google.protobuf.Empty absentAuth = 7;</code>
+     * @return The absentAuth.
      */
-    com.google.protobuf.Empty getAbsent();
+    com.google.protobuf.Empty getAbsentAuth();
     /**
      * <pre>
      * No auth configured.
      * </pre>
      *
-     * <code>.google.protobuf.Empty absent = 7;</code>
+     * <code>.google.protobuf.Empty absentAuth = 7;</code>
      */
-    com.google.protobuf.EmptyOrBuilder getAbsentOrBuilder();
+    com.google.protobuf.EmptyOrBuilder getAbsentAuthOrBuilder();
 
     /**
      * <pre>
@@ -5940,15 +6312,12 @@ public final class DataPlaneContract {
      *       - user
      *       - password
      *       - sasl.mechanism
-     * Since our components are multi tenant when SSL is configured,
-     * client authentication is required even though is optional for
-     * Apache Kafka.
      * </pre>
      *
-     * <code>.Reference secret = 8;</code>
-     * @return Whether the secret field is set.
+     * <code>.Reference authSecret = 8;</code>
+     * @return Whether the authSecret field is set.
      */
-    boolean hasSecret();
+    boolean hasAuthSecret();
     /**
      * <pre>
      * Secret reference.
@@ -5992,15 +6361,12 @@ public final class DataPlaneContract {
      *       - user
      *       - password
      *       - sasl.mechanism
-     * Since our components are multi tenant when SSL is configured,
-     * client authentication is required even though is optional for
-     * Apache Kafka.
      * </pre>
      *
-     * <code>.Reference secret = 8;</code>
-     * @return The secret.
+     * <code>.Reference authSecret = 8;</code>
+     * @return The authSecret.
      */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getSecret();
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getAuthSecret();
     /**
      * <pre>
      * Secret reference.
@@ -6044,14 +6410,11 @@ public final class DataPlaneContract {
      *       - user
      *       - password
      *       - sasl.mechanism
-     * Since our components are multi tenant when SSL is configured,
-     * client authentication is required even though is optional for
-     * Apache Kafka.
      * </pre>
      *
-     * <code>.Reference secret = 8;</code>
+     * <code>.Reference authSecret = 8;</code>
      */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getSecretOrBuilder();
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getAuthSecretOrBuilder();
 
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.AuthCase getAuthCase();
   }
@@ -6232,8 +6595,8 @@ public final class DataPlaneContract {
     public enum AuthCase
         implements com.google.protobuf.Internal.EnumLite,
             com.google.protobuf.AbstractMessage.InternalOneOfEnum {
-      ABSENT(7),
-      SECRET(8),
+      ABSENTAUTH(7),
+      AUTHSECRET(8),
       AUTH_NOT_SET(0);
       private final int value;
       private AuthCase(int value) {
@@ -6251,8 +6614,8 @@ public final class DataPlaneContract {
 
       public static AuthCase forNumber(int value) {
         switch (value) {
-          case 7: return ABSENT;
-          case 8: return SECRET;
+          case 7: return ABSENTAUTH;
+          case 8: return AUTHSECRET;
           case 0: return AUTH_NOT_SET;
           default: return null;
         }
@@ -6559,17 +6922,17 @@ public final class DataPlaneContract {
       return egresses_.get(index);
     }
 
-    public static final int ABSENT_FIELD_NUMBER = 7;
+    public static final int ABSENTAUTH_FIELD_NUMBER = 7;
     /**
      * <pre>
      * No auth configured.
      * </pre>
      *
-     * <code>.google.protobuf.Empty absent = 7;</code>
-     * @return Whether the absent field is set.
+     * <code>.google.protobuf.Empty absentAuth = 7;</code>
+     * @return Whether the absentAuth field is set.
      */
     @java.lang.Override
-    public boolean hasAbsent() {
+    public boolean hasAbsentAuth() {
       return authCase_ == 7;
     }
     /**
@@ -6577,11 +6940,11 @@ public final class DataPlaneContract {
      * No auth configured.
      * </pre>
      *
-     * <code>.google.protobuf.Empty absent = 7;</code>
-     * @return The absent.
+     * <code>.google.protobuf.Empty absentAuth = 7;</code>
+     * @return The absentAuth.
      */
     @java.lang.Override
-    public com.google.protobuf.Empty getAbsent() {
+    public com.google.protobuf.Empty getAbsentAuth() {
       if (authCase_ == 7) {
          return (com.google.protobuf.Empty) auth_;
       }
@@ -6592,17 +6955,17 @@ public final class DataPlaneContract {
      * No auth configured.
      * </pre>
      *
-     * <code>.google.protobuf.Empty absent = 7;</code>
+     * <code>.google.protobuf.Empty absentAuth = 7;</code>
      */
     @java.lang.Override
-    public com.google.protobuf.EmptyOrBuilder getAbsentOrBuilder() {
+    public com.google.protobuf.EmptyOrBuilder getAbsentAuthOrBuilder() {
       if (authCase_ == 7) {
          return (com.google.protobuf.Empty) auth_;
       }
       return com.google.protobuf.Empty.getDefaultInstance();
     }
 
-    public static final int SECRET_FIELD_NUMBER = 8;
+    public static final int AUTHSECRET_FIELD_NUMBER = 8;
     /**
      * <pre>
      * Secret reference.
@@ -6646,16 +7009,13 @@ public final class DataPlaneContract {
      *       - user
      *       - password
      *       - sasl.mechanism
-     * Since our components are multi tenant when SSL is configured,
-     * client authentication is required even though is optional for
-     * Apache Kafka.
      * </pre>
      *
-     * <code>.Reference secret = 8;</code>
-     * @return Whether the secret field is set.
+     * <code>.Reference authSecret = 8;</code>
+     * @return Whether the authSecret field is set.
      */
     @java.lang.Override
-    public boolean hasSecret() {
+    public boolean hasAuthSecret() {
       return authCase_ == 8;
     }
     /**
@@ -6701,16 +7061,13 @@ public final class DataPlaneContract {
      *       - user
      *       - password
      *       - sasl.mechanism
-     * Since our components are multi tenant when SSL is configured,
-     * client authentication is required even though is optional for
-     * Apache Kafka.
      * </pre>
      *
-     * <code>.Reference secret = 8;</code>
-     * @return The secret.
+     * <code>.Reference authSecret = 8;</code>
+     * @return The authSecret.
      */
     @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getSecret() {
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getAuthSecret() {
       if (authCase_ == 8) {
          return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_;
       }
@@ -6759,15 +7116,12 @@ public final class DataPlaneContract {
      *       - user
      *       - password
      *       - sasl.mechanism
-     * Since our components are multi tenant when SSL is configured,
-     * client authentication is required even though is optional for
-     * Apache Kafka.
      * </pre>
      *
-     * <code>.Reference secret = 8;</code>
+     * <code>.Reference authSecret = 8;</code>
      */
     @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getSecretOrBuilder() {
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getAuthSecretOrBuilder() {
       if (authCase_ == 8) {
          return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_;
       }
@@ -6891,12 +7245,12 @@ public final class DataPlaneContract {
       if (!getAuthCase().equals(other.getAuthCase())) return false;
       switch (authCase_) {
         case 7:
-          if (!getAbsent()
-              .equals(other.getAbsent())) return false;
+          if (!getAbsentAuth()
+              .equals(other.getAbsentAuth())) return false;
           break;
         case 8:
-          if (!getSecret()
-              .equals(other.getSecret())) return false;
+          if (!getAuthSecret()
+              .equals(other.getAuthSecret())) return false;
           break;
         case 0:
         default:
@@ -6934,12 +7288,12 @@ public final class DataPlaneContract {
       }
       switch (authCase_) {
         case 7:
-          hash = (37 * hash) + ABSENT_FIELD_NUMBER;
-          hash = (53 * hash) + getAbsent().hashCode();
+          hash = (37 * hash) + ABSENTAUTH_FIELD_NUMBER;
+          hash = (53 * hash) + getAbsentAuth().hashCode();
           break;
         case 8:
-          hash = (37 * hash) + SECRET_FIELD_NUMBER;
-          hash = (53 * hash) + getSecret().hashCode();
+          hash = (37 * hash) + AUTHSECRET_FIELD_NUMBER;
+          hash = (53 * hash) + getAuthSecret().hashCode();
           break;
         case 0:
         default:
@@ -7158,17 +7512,17 @@ public final class DataPlaneContract {
           result.egresses_ = egressesBuilder_.build();
         }
         if (authCase_ == 7) {
-          if (absentBuilder_ == null) {
+          if (absentAuthBuilder_ == null) {
             result.auth_ = auth_;
           } else {
-            result.auth_ = absentBuilder_.build();
+            result.auth_ = absentAuthBuilder_.build();
           }
         }
         if (authCase_ == 8) {
-          if (secretBuilder_ == null) {
+          if (authSecretBuilder_ == null) {
             result.auth_ = auth_;
           } else {
-            result.auth_ = secretBuilder_.build();
+            result.auth_ = authSecretBuilder_.build();
           }
         }
         result.authCase_ = authCase_;
@@ -7271,12 +7625,12 @@ public final class DataPlaneContract {
           }
         }
         switch (other.getAuthCase()) {
-          case ABSENT: {
-            mergeAbsent(other.getAbsent());
+          case ABSENTAUTH: {
+            mergeAbsentAuth(other.getAbsentAuth());
             break;
           }
-          case SECRET: {
-            mergeSecret(other.getSecret());
+          case AUTHSECRET: {
+            mergeAuthSecret(other.getAuthSecret());
             break;
           }
           case AUTH_NOT_SET: {
@@ -8317,17 +8671,17 @@ public final class DataPlaneContract {
       }
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.google.protobuf.Empty, com.google.protobuf.Empty.Builder, com.google.protobuf.EmptyOrBuilder> absentBuilder_;
+          com.google.protobuf.Empty, com.google.protobuf.Empty.Builder, com.google.protobuf.EmptyOrBuilder> absentAuthBuilder_;
       /**
        * <pre>
        * No auth configured.
        * </pre>
        *
-       * <code>.google.protobuf.Empty absent = 7;</code>
-       * @return Whether the absent field is set.
+       * <code>.google.protobuf.Empty absentAuth = 7;</code>
+       * @return Whether the absentAuth field is set.
        */
       @java.lang.Override
-      public boolean hasAbsent() {
+      public boolean hasAbsentAuth() {
         return authCase_ == 7;
       }
       /**
@@ -8335,19 +8689,19 @@ public final class DataPlaneContract {
        * No auth configured.
        * </pre>
        *
-       * <code>.google.protobuf.Empty absent = 7;</code>
-       * @return The absent.
+       * <code>.google.protobuf.Empty absentAuth = 7;</code>
+       * @return The absentAuth.
        */
       @java.lang.Override
-      public com.google.protobuf.Empty getAbsent() {
-        if (absentBuilder_ == null) {
+      public com.google.protobuf.Empty getAbsentAuth() {
+        if (absentAuthBuilder_ == null) {
           if (authCase_ == 7) {
             return (com.google.protobuf.Empty) auth_;
           }
           return com.google.protobuf.Empty.getDefaultInstance();
         } else {
           if (authCase_ == 7) {
-            return absentBuilder_.getMessage();
+            return absentAuthBuilder_.getMessage();
           }
           return com.google.protobuf.Empty.getDefaultInstance();
         }
@@ -8357,17 +8711,17 @@ public final class DataPlaneContract {
        * No auth configured.
        * </pre>
        *
-       * <code>.google.protobuf.Empty absent = 7;</code>
+       * <code>.google.protobuf.Empty absentAuth = 7;</code>
        */
-      public Builder setAbsent(com.google.protobuf.Empty value) {
-        if (absentBuilder_ == null) {
+      public Builder setAbsentAuth(com.google.protobuf.Empty value) {
+        if (absentAuthBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
           auth_ = value;
           onChanged();
         } else {
-          absentBuilder_.setMessage(value);
+          absentAuthBuilder_.setMessage(value);
         }
         authCase_ = 7;
         return this;
@@ -8377,15 +8731,15 @@ public final class DataPlaneContract {
        * No auth configured.
        * </pre>
        *
-       * <code>.google.protobuf.Empty absent = 7;</code>
+       * <code>.google.protobuf.Empty absentAuth = 7;</code>
        */
-      public Builder setAbsent(
+      public Builder setAbsentAuth(
           com.google.protobuf.Empty.Builder builderForValue) {
-        if (absentBuilder_ == null) {
+        if (absentAuthBuilder_ == null) {
           auth_ = builderForValue.build();
           onChanged();
         } else {
-          absentBuilder_.setMessage(builderForValue.build());
+          absentAuthBuilder_.setMessage(builderForValue.build());
         }
         authCase_ = 7;
         return this;
@@ -8395,10 +8749,10 @@ public final class DataPlaneContract {
        * No auth configured.
        * </pre>
        *
-       * <code>.google.protobuf.Empty absent = 7;</code>
+       * <code>.google.protobuf.Empty absentAuth = 7;</code>
        */
-      public Builder mergeAbsent(com.google.protobuf.Empty value) {
-        if (absentBuilder_ == null) {
+      public Builder mergeAbsentAuth(com.google.protobuf.Empty value) {
+        if (absentAuthBuilder_ == null) {
           if (authCase_ == 7 &&
               auth_ != com.google.protobuf.Empty.getDefaultInstance()) {
             auth_ = com.google.protobuf.Empty.newBuilder((com.google.protobuf.Empty) auth_)
@@ -8409,9 +8763,9 @@ public final class DataPlaneContract {
           onChanged();
         } else {
           if (authCase_ == 7) {
-            absentBuilder_.mergeFrom(value);
+            absentAuthBuilder_.mergeFrom(value);
           }
-          absentBuilder_.setMessage(value);
+          absentAuthBuilder_.setMessage(value);
         }
         authCase_ = 7;
         return this;
@@ -8421,10 +8775,10 @@ public final class DataPlaneContract {
        * No auth configured.
        * </pre>
        *
-       * <code>.google.protobuf.Empty absent = 7;</code>
+       * <code>.google.protobuf.Empty absentAuth = 7;</code>
        */
-      public Builder clearAbsent() {
-        if (absentBuilder_ == null) {
+      public Builder clearAbsentAuth() {
+        if (absentAuthBuilder_ == null) {
           if (authCase_ == 7) {
             authCase_ = 0;
             auth_ = null;
@@ -8435,7 +8789,7 @@ public final class DataPlaneContract {
             authCase_ = 0;
             auth_ = null;
           }
-          absentBuilder_.clear();
+          absentAuthBuilder_.clear();
         }
         return this;
       }
@@ -8444,22 +8798,22 @@ public final class DataPlaneContract {
        * No auth configured.
        * </pre>
        *
-       * <code>.google.protobuf.Empty absent = 7;</code>
+       * <code>.google.protobuf.Empty absentAuth = 7;</code>
        */
-      public com.google.protobuf.Empty.Builder getAbsentBuilder() {
-        return getAbsentFieldBuilder().getBuilder();
+      public com.google.protobuf.Empty.Builder getAbsentAuthBuilder() {
+        return getAbsentAuthFieldBuilder().getBuilder();
       }
       /**
        * <pre>
        * No auth configured.
        * </pre>
        *
-       * <code>.google.protobuf.Empty absent = 7;</code>
+       * <code>.google.protobuf.Empty absentAuth = 7;</code>
        */
       @java.lang.Override
-      public com.google.protobuf.EmptyOrBuilder getAbsentOrBuilder() {
-        if ((authCase_ == 7) && (absentBuilder_ != null)) {
-          return absentBuilder_.getMessageOrBuilder();
+      public com.google.protobuf.EmptyOrBuilder getAbsentAuthOrBuilder() {
+        if ((authCase_ == 7) && (absentAuthBuilder_ != null)) {
+          return absentAuthBuilder_.getMessageOrBuilder();
         } else {
           if (authCase_ == 7) {
             return (com.google.protobuf.Empty) auth_;
@@ -8472,16 +8826,16 @@ public final class DataPlaneContract {
        * No auth configured.
        * </pre>
        *
-       * <code>.google.protobuf.Empty absent = 7;</code>
+       * <code>.google.protobuf.Empty absentAuth = 7;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           com.google.protobuf.Empty, com.google.protobuf.Empty.Builder, com.google.protobuf.EmptyOrBuilder> 
-          getAbsentFieldBuilder() {
-        if (absentBuilder_ == null) {
+          getAbsentAuthFieldBuilder() {
+        if (absentAuthBuilder_ == null) {
           if (!(authCase_ == 7)) {
             auth_ = com.google.protobuf.Empty.getDefaultInstance();
           }
-          absentBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+          absentAuthBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
               com.google.protobuf.Empty, com.google.protobuf.Empty.Builder, com.google.protobuf.EmptyOrBuilder>(
                   (com.google.protobuf.Empty) auth_,
                   getParentForChildren(),
@@ -8490,11 +8844,11 @@ public final class DataPlaneContract {
         }
         authCase_ = 7;
         onChanged();;
-        return absentBuilder_;
+        return absentAuthBuilder_;
       }
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> secretBuilder_;
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> authSecretBuilder_;
       /**
        * <pre>
        * Secret reference.
@@ -8538,16 +8892,13 @@ public final class DataPlaneContract {
        *       - user
        *       - password
        *       - sasl.mechanism
-       * Since our components are multi tenant when SSL is configured,
-       * client authentication is required even though is optional for
-       * Apache Kafka.
        * </pre>
        *
-       * <code>.Reference secret = 8;</code>
-       * @return Whether the secret field is set.
+       * <code>.Reference authSecret = 8;</code>
+       * @return Whether the authSecret field is set.
        */
       @java.lang.Override
-      public boolean hasSecret() {
+      public boolean hasAuthSecret() {
         return authCase_ == 8;
       }
       /**
@@ -8593,24 +8944,21 @@ public final class DataPlaneContract {
        *       - user
        *       - password
        *       - sasl.mechanism
-       * Since our components are multi tenant when SSL is configured,
-       * client authentication is required even though is optional for
-       * Apache Kafka.
        * </pre>
        *
-       * <code>.Reference secret = 8;</code>
-       * @return The secret.
+       * <code>.Reference authSecret = 8;</code>
+       * @return The authSecret.
        */
       @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getSecret() {
-        if (secretBuilder_ == null) {
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getAuthSecret() {
+        if (authSecretBuilder_ == null) {
           if (authCase_ == 8) {
             return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_;
           }
           return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance();
         } else {
           if (authCase_ == 8) {
-            return secretBuilder_.getMessage();
+            return authSecretBuilder_.getMessage();
           }
           return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance();
         }
@@ -8658,22 +9006,19 @@ public final class DataPlaneContract {
        *       - user
        *       - password
        *       - sasl.mechanism
-       * Since our components are multi tenant when SSL is configured,
-       * client authentication is required even though is optional for
-       * Apache Kafka.
        * </pre>
        *
-       * <code>.Reference secret = 8;</code>
+       * <code>.Reference authSecret = 8;</code>
        */
-      public Builder setSecret(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
-        if (secretBuilder_ == null) {
+      public Builder setAuthSecret(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
+        if (authSecretBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
           auth_ = value;
           onChanged();
         } else {
-          secretBuilder_.setMessage(value);
+          authSecretBuilder_.setMessage(value);
         }
         authCase_ = 8;
         return this;
@@ -8721,20 +9066,17 @@ public final class DataPlaneContract {
        *       - user
        *       - password
        *       - sasl.mechanism
-       * Since our components are multi tenant when SSL is configured,
-       * client authentication is required even though is optional for
-       * Apache Kafka.
        * </pre>
        *
-       * <code>.Reference secret = 8;</code>
+       * <code>.Reference authSecret = 8;</code>
        */
-      public Builder setSecret(
+      public Builder setAuthSecret(
           dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder builderForValue) {
-        if (secretBuilder_ == null) {
+        if (authSecretBuilder_ == null) {
           auth_ = builderForValue.build();
           onChanged();
         } else {
-          secretBuilder_.setMessage(builderForValue.build());
+          authSecretBuilder_.setMessage(builderForValue.build());
         }
         authCase_ = 8;
         return this;
@@ -8782,15 +9124,12 @@ public final class DataPlaneContract {
        *       - user
        *       - password
        *       - sasl.mechanism
-       * Since our components are multi tenant when SSL is configured,
-       * client authentication is required even though is optional for
-       * Apache Kafka.
        * </pre>
        *
-       * <code>.Reference secret = 8;</code>
+       * <code>.Reference authSecret = 8;</code>
        */
-      public Builder mergeSecret(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
-        if (secretBuilder_ == null) {
+      public Builder mergeAuthSecret(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
+        if (authSecretBuilder_ == null) {
           if (authCase_ == 8 &&
               auth_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance()) {
             auth_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_)
@@ -8801,9 +9140,9 @@ public final class DataPlaneContract {
           onChanged();
         } else {
           if (authCase_ == 8) {
-            secretBuilder_.mergeFrom(value);
+            authSecretBuilder_.mergeFrom(value);
           }
-          secretBuilder_.setMessage(value);
+          authSecretBuilder_.setMessage(value);
         }
         authCase_ = 8;
         return this;
@@ -8851,15 +9190,12 @@ public final class DataPlaneContract {
        *       - user
        *       - password
        *       - sasl.mechanism
-       * Since our components are multi tenant when SSL is configured,
-       * client authentication is required even though is optional for
-       * Apache Kafka.
        * </pre>
        *
-       * <code>.Reference secret = 8;</code>
+       * <code>.Reference authSecret = 8;</code>
        */
-      public Builder clearSecret() {
-        if (secretBuilder_ == null) {
+      public Builder clearAuthSecret() {
+        if (authSecretBuilder_ == null) {
           if (authCase_ == 8) {
             authCase_ = 0;
             auth_ = null;
@@ -8870,7 +9206,7 @@ public final class DataPlaneContract {
             authCase_ = 0;
             auth_ = null;
           }
-          secretBuilder_.clear();
+          authSecretBuilder_.clear();
         }
         return this;
       }
@@ -8917,15 +9253,12 @@ public final class DataPlaneContract {
        *       - user
        *       - password
        *       - sasl.mechanism
-       * Since our components are multi tenant when SSL is configured,
-       * client authentication is required even though is optional for
-       * Apache Kafka.
        * </pre>
        *
-       * <code>.Reference secret = 8;</code>
+       * <code>.Reference authSecret = 8;</code>
        */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder getSecretBuilder() {
-        return getSecretFieldBuilder().getBuilder();
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder getAuthSecretBuilder() {
+        return getAuthSecretFieldBuilder().getBuilder();
       }
       /**
        * <pre>
@@ -8970,17 +9303,14 @@ public final class DataPlaneContract {
        *       - user
        *       - password
        *       - sasl.mechanism
-       * Since our components are multi tenant when SSL is configured,
-       * client authentication is required even though is optional for
-       * Apache Kafka.
        * </pre>
        *
-       * <code>.Reference secret = 8;</code>
+       * <code>.Reference authSecret = 8;</code>
        */
       @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getSecretOrBuilder() {
-        if ((authCase_ == 8) && (secretBuilder_ != null)) {
-          return secretBuilder_.getMessageOrBuilder();
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getAuthSecretOrBuilder() {
+        if ((authCase_ == 8) && (authSecretBuilder_ != null)) {
+          return authSecretBuilder_.getMessageOrBuilder();
         } else {
           if (authCase_ == 8) {
             return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_;
@@ -9031,21 +9361,18 @@ public final class DataPlaneContract {
        *       - user
        *       - password
        *       - sasl.mechanism
-       * Since our components are multi tenant when SSL is configured,
-       * client authentication is required even though is optional for
-       * Apache Kafka.
        * </pre>
        *
-       * <code>.Reference secret = 8;</code>
+       * <code>.Reference authSecret = 8;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> 
-          getSecretFieldBuilder() {
-        if (secretBuilder_ == null) {
+          getAuthSecretFieldBuilder() {
+        if (authSecretBuilder_ == null) {
           if (!(authCase_ == 8)) {
             auth_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance();
           }
-          secretBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+          authSecretBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
               dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder>(
                   (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_,
                   getParentForChildren(),
@@ -9054,7 +9381,7 @@ public final class DataPlaneContract {
         }
         authCase_ = 8;
         onChanged();;
-        return secretBuilder_;
+        return authSecretBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -10060,21 +10387,22 @@ public final class DataPlaneContract {
       "tyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001" +
       "(\tB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n\013conten" +
       "tMode\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH" +
-      "\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\",\n\tRefe" +
-      "rence\022\021\n\tnamespace\030\001 \001(\t\022\014\n\004name\030\002 \001(\t\"\354" +
-      "\001\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t" +
-      "\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 " +
-      "\001(\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.Eg" +
-      "ressConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022(\n" +
-      "\006absent\030\007 \001(\0132\026.google.protobuf.EmptyH\000\022" +
-      "\034\n\006secret\030\010 \001(\0132\n.ReferenceH\000B\006\n\004Auth\"<\n" +
-      "\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresourc" +
-      "es\030\002 \003(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013" +
-      "Exponential\020\000\022\n\n\006Linear\020\001*)\n\013ContentMode" +
-      "\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knat" +
-      "ive.eventing.kafka.broker.contractB\021Data" +
-      "PlaneContractZ\032control-plane/pkg/contrac" +
-      "tb\006proto3"
+      "\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"K\n\tRefe" +
+      "rence\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014" +
+      "\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"\364\001\n\010Resour" +
+      "ce\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020boots" +
+      "trapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ing" +
+      "ress\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfi" +
+      "g\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022,\n\nabsentAu" +
+      "th\030\007 \001(\0132\026.google.protobuf.EmptyH\000\022 \n\nau" +
+      "thSecret\030\010 \001(\0132\n.ReferenceH\000B\006\n\004Auth\"<\n\010" +
+      "Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresource" +
+      "s\030\002 \003(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013E" +
+      "xponential\020\000\022\n\n\006Linear\020\001*)\n\013ContentMode\022" +
+      "\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knati" +
+      "ve.eventing.kafka.broker.contractB\021DataP" +
+      "laneContractZ\032control-plane/pkg/contract" +
+      "b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -10116,13 +10444,13 @@ public final class DataPlaneContract {
     internal_static_Reference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Reference_descriptor,
-        new java.lang.String[] { "Namespace", "Name", });
+        new java.lang.String[] { "Uuid", "Namespace", "Name", "Version", });
     internal_static_Resource_descriptor =
       getDescriptor().getMessageTypes().get(5);
     internal_static_Resource_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Resource_descriptor,
-        new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", "Absent", "Secret", "Auth", });
+        new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", "AbsentAuth", "AuthSecret", "Auth", });
     internal_static_Contract_descriptor =
       getDescriptor().getMessageTypes().get(6);
     internal_static_Contract_fieldAccessorTable = new

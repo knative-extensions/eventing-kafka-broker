@@ -15,16 +15,11 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.provider.EventFormatProvider;
 import io.cloudevents.core.v1.CloudEventBuilder;
-import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -36,8 +31,6 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-import java.net.URI;
-import java.util.concurrent.CountDownLatch;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -46,6 +39,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+
+import java.net.URI;
+import java.util.concurrent.CountDownLatch;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @Execution(ExecutionMode.CONCURRENT)
 @ExtendWith(VertxExtension.class)
@@ -62,7 +63,7 @@ public class HttpSinkResponseHandlerTest {
     final var producer = new MockProducer<>(
       true,
       new StringSerializer(),
-      new CloudEventSerializer()
+      new CloudEventSerializerMock()
     );
     final var handler = new HttpSinkResponseHandler(
       vertx,
@@ -86,7 +87,7 @@ public class HttpSinkResponseHandlerTest {
     final var producer = new MockProducer<>(
       true,
       new StringSerializer(),
-      new CloudEventSerializer()
+      new CloudEventSerializerMock()
     );
     final var handler = new HttpSinkResponseHandler(
       vertx,
@@ -112,7 +113,7 @@ public class HttpSinkResponseHandlerTest {
     final var producer = new MockProducer<>(
       true,
       new StringSerializer(),
-      new CloudEventSerializer()
+      new CloudEventSerializerMock()
     );
     final var handler = new HttpSinkResponseHandler(
       vertx,
@@ -138,7 +139,7 @@ public class HttpSinkResponseHandlerTest {
     final var producer = new MockProducer<>(
       true,
       new StringSerializer(),
-      new CloudEventSerializer()
+      new CloudEventSerializerMock()
     );
     final var handler = new HttpSinkResponseHandler(
       vertx,

@@ -16,28 +16,31 @@
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress;
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource;
+import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventSerializer;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringSerializer;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static org.mockito.Mockito.mock;
 
 public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
 
@@ -52,7 +55,7 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
     final Properties producerConfigs,
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent> consumerRecordOffsetStrategyFactory) {
 
-    super(consumerRecordOffsetStrategyFactory, consumerConfigs, new WebClientOptions(), producerConfigs);
+    super(consumerRecordOffsetStrategyFactory, consumerConfigs, new WebClientOptions(), producerConfigs, mock(AuthProvider.class));
     mockProducer = new ConcurrentHashMap<>();
     mockConsumer = new ConcurrentHashMap<>();
   }
@@ -60,8 +63,7 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
   @Override
   protected KafkaProducer<String, CloudEvent> createProducer(
     final Vertx vertx,
-    final Resource resource,
-    final Egress egress) {
+    final Map<String, String> producerConfigs) {
 
     final var producer = new MockProducer<>(
       true,
@@ -69,20 +71,17 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
       new CloudEventSerializer()
     );
 
-    mockProducer.put(egress.getConsumerGroup(), producer);
-
     return KafkaProducer.create(vertx, producer);
   }
 
   @Override
-  protected Function<Vertx, KafkaConsumer<String, CloudEvent>> createConsumerFactory(
+  protected Function<Vertx, Future<KafkaConsumer<String, CloudEvent>>> createConsumerFactory(
+    final Map<String, Object> consumerConfigs,
     final DataPlaneContract.Resource resource,
-    final DataPlaneContract.Egress egress) {
+    final Function<Map<String, Object>, Future<Void>> consumerConfigsDecorator) {
     return vertx -> {
 
       final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
-
-      mockConsumer.put(egress.getConsumerGroup(), consumer);
 
       consumer.schedulePollTask(() -> {
         consumer.unsubscribe();
@@ -105,7 +104,7 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
         }
       });
 
-      return KafkaConsumer.create(vertx, consumer);
+      return Future.succeededFuture(KafkaConsumer.create(vertx, consumer));
     };
   }
 

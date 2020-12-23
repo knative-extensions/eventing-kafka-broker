@@ -56,6 +56,7 @@
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
     <mokito.junit.jupiter.version>3.7.7</mokito.junit.jupiter.version>
     <fabric8.kubernetes.version>5.0.0-alpha-3</fabric8.kubernetes.version>
+    <kafka.version>2.7.0</kafka.version>
   </properties>
 
   <modules>
@@ -88,6 +89,12 @@
         <version>${vertx.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-clients</artifactId>
+        <version>${kafka.version}</version>
       </dependency>
 
       <!-- Micrometer -->

@@ -23,46 +23,22 @@ import javax.annotation.Nullable;
 public interface Credentials {
 
   /**
-   * @return truststore content.
+   * @return CA certificate.
    */
   @Nullable
-  String truststore();
+  String caCertificates();
 
   /**
-   * Client key: ssl.truststore.password
-   *
-   * @return truststore password.
+   * @return user certificate.
    */
   @Nullable
-  String truststorePassword();
+  String userCertificate();
 
   /**
-   * @return truststore path.
+   * @return user key.
    */
   @Nullable
-  String truststorePath();
-
-  /**
-   * @return keystore content.
-   */
-  @Nullable
-  String keystore();
-
-  /**
-   * Client keys:
-   * - ssl.keystore.password
-   * - ssl.key.password
-   *
-   * @return keystore password.
-   */
-  @Nullable
-  String keystorePassword();
-
-  /**
-   * @return keystore path.
-   */
-  @Nullable
-  String keystorePath();
+  String userKey();
 
   /**
    * Client key: security.protocol
