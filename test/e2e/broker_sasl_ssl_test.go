@@ -38,6 +38,7 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 const (
@@ -58,122 +59,115 @@ type ConfigProvider func(secretName string, client *testlib.Client) map[string]s
 
 func BrokerAuthBecomeReady(t *testing.T, secretProvider SecretProvider, configProvider ConfigProvider) {
 
-	ctx := context.Background()
+	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
-	const (
-		brokerName  = "broker"
-		triggerName = "trigger"
-		subscriber  = "subscriber"
-		configMap   = "config-broker"
-		secretName  = "broker-auth"
+		ctx := context.Background()
 
-		eventType   = "type1"
-		eventSource = "source1"
-		eventBody   = `{"msg":"e2e-auth-body"}`
-		senderName  = "sender"
-	)
+		const (
+			brokerName  = "broker"
+			triggerName = "trigger"
+			subscriber  = "subscriber"
+			configMap   = "config-broker"
+			secretName  = "broker-auth"
 
-	client := testlib.Setup(t, true)
-	defer testlib.TearDown(client)
+			eventType   = "type1"
+			eventSource = "source1"
+			eventBody   = `{"msg":"e2e-auth-body"}`
+			senderName  = "sender"
+		)
 
-	client.CreateConfigMapOrFail(
-		configMap,
-		client.Namespace,
-		configProvider(secretName, client),
-	)
+		client := testlib.Setup(t, true)
+		defer testlib.TearDown(client)
 
-	client.CreateBrokerV1OrFail(
-		brokerName,
-		resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
-		resources.WithConfigForBrokerV1(&duckv1.KReference{
-			APIVersion: "v1",
-			Kind:       "ConfigMap",
-			Namespace:  client.Namespace,
-			Name:       configMap,
-		}),
-	)
+		client.CreateConfigMapOrFail(
+			configMap,
+			client.Namespace,
+			configProvider(secretName, client),
+		)
 
-	// secret doesn't exist, so broker won't become ready.
-	time.Sleep(time.Second * 30)
-	br, err := client.Eventing.EventingV1().Brokers(client.Namespace).Get(ctx, brokerName, metav1.GetOptions{})
-	assert.Nil(t, err)
-	assert.False(t, br.Status.IsReady(), "secret %s/%s doesn't exist, so broker must no be ready", client.Namespace, secretName)
+		client.CreateBrokerV1OrFail(
+			brokerName,
+			resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
+			resources.WithConfigForBrokerV1(&duckv1.KReference{
+				APIVersion: "v1",
+				Kind:       "ConfigMap",
+				Namespace:  client.Namespace,
+				Name:       configMap,
+			}),
+		)
 
-	secretData := secretProvider(secretName, client)
+		// secret doesn't exist, so broker won't become ready.
+		time.Sleep(time.Second * 30)
+		br, err := client.Eventing.EventingV1().Brokers(client.Namespace).Get(ctx, brokerName, metav1.GetOptions{})
+		assert.Nil(t, err)
+		assert.False(t, br.Status.IsReady(), "secret %s/%s doesn't exist, so broker must no be ready", client.Namespace, secretName)
 
-	secret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: client.Namespace,
-			Name:      secretName,
-		},
-		Data: secretData,
-	}
+		secretData := secretProvider(secretName, client)
 
-	secret, err = client.Kube.CoreV1().Secrets(client.Namespace).Create(ctx, secret, metav1.CreateOptions{})
-	assert.Nil(t, err)
-
-	// Trigger a reconciliation by updating the referenced ConfigMap in broker.spec.config.
-	err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		config, err := client.Kube.CoreV1().ConfigMaps(client.Namespace).Get(ctx, configMap, metav1.GetOptions{})
-		if err != nil {
-			return nil
+		secret := &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: client.Namespace,
+				Name:      secretName,
+			},
+			Data: secretData,
 		}
 
-		if config.Labels == nil {
-			config.Labels = make(map[string]string, 1)
-		}
-		config.Labels["test.eventing.knative.dev/updated"] = names.SimpleNameGenerator.GenerateName("now")
+		secret, err = client.Kube.CoreV1().Secrets(client.Namespace).Create(ctx, secret, metav1.CreateOptions{})
+		assert.Nil(t, err)
 
-		config, err = client.Kube.CoreV1().ConfigMaps(client.Namespace).Update(ctx, config, metav1.UpdateOptions{})
-		return err
+		// Trigger a reconciliation by updating the referenced ConfigMap in broker.spec.config.
+		err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+			config, err := client.Kube.CoreV1().ConfigMaps(client.Namespace).Get(ctx, configMap, metav1.GetOptions{})
+			if err != nil {
+				return nil
+			}
+
+			if config.Labels == nil {
+				config.Labels = make(map[string]string, 1)
+			}
+			config.Labels["test.eventing.knative.dev/updated"] = names.SimpleNameGenerator.GenerateName("now")
+
+			config, err = client.Kube.CoreV1().ConfigMaps(client.Namespace).Update(ctx, config, metav1.UpdateOptions{})
+			return err
+		})
+		assert.Nil(t, err)
+
+		client.WaitForResourceReadyOrFail(brokerName, testlib.BrokerTypeMeta)
+
+		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber, recordevents.AddTracing())
+
+		client.CreateTriggerV1OrFail(
+			triggerName,
+			resources.WithBrokerV1(brokerName),
+			resources.WithSubscriberServiceRefForTriggerV1(subscriber),
+		)
+
+		client.WaitForAllTestResourcesReadyOrFail(ctx)
+
+		id := uuid.New().String()
+		eventToSend := cloudevents.NewEvent()
+		eventToSend.SetID(id)
+		eventToSend.SetType(eventType)
+		eventToSend.SetSource(eventSource)
+		err = eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody))
+		assert.Nil(t, err)
+
+		client.SendEventToAddressable(
+			ctx,
+			senderName,
+			brokerName,
+			testlib.BrokerTypeMeta,
+			eventToSend,
+			sender.EnableTracing(),
+		)
+
+		eventTracker.AssertAtLeast(1, recordevents.MatchEvent(
+			HasId(id),
+			HasSource(eventSource),
+			HasType(eventType),
+			HasData([]byte(eventBody)),
+		))
 	})
-	assert.Nil(t, err)
-
-	client.WaitForResourceReadyOrFail(brokerName, testlib.BrokerTypeMeta)
-
-	eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber, recordevents.AddTracing())
-
-	client.CreateTriggerV1OrFail(
-		triggerName,
-		resources.WithBrokerV1(brokerName),
-		resources.WithSubscriberServiceRefForTriggerV1(subscriber),
-	)
-
-	client.WaitForAllTestResourcesReadyOrFail(ctx)
-
-	id := uuid.New().String()
-	eventToSend := cloudevents.NewEvent()
-	eventToSend.SetID(id)
-	eventToSend.SetType(eventType)
-	eventToSend.SetSource(eventSource)
-	err = eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody))
-	assert.Nil(t, err)
-
-	// uri, err := client.GetAddressableURI(brokerName, testlib.BrokerTypeMeta)
-	// assert.Nil(t, err)
-	// recordevents.DeployEventSenderOrFail(
-	// 	ctx,
-	// 	client,
-	// 	senderName+"matching",
-	// 	uri,
-	// 	recordevents.AddTracing(),
-	// )
-
-	client.SendEventToAddressable(
-		ctx,
-		senderName,
-		brokerName,
-		testlib.BrokerTypeMeta,
-		eventToSend,
-		sender.EnableTracing(),
-	)
-
-	eventTracker.AssertAtLeast(1, recordevents.MatchEvent(
-		HasId(id),
-		HasSource(eventSource),
-		HasType(eventType),
-		HasData([]byte(eventBody)),
-	))
 }
 
 func TestBrokerAuthBecomeReadyPlaintext(t *testing.T) {
