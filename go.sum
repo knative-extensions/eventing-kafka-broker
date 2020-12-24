@@ -1226,8 +1226,8 @@ k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6/go.mod h1:GRQhZsXIAJ1xR0C
 k8s.io/utils v0.0.0-20200324210504-a9aa75ae1b89/go.mod h1:sZAwmy6armz5eXlNoLmJcl4F1QuKu7sr+mFQ0byX7Ew=
 k8s.io/utils v0.0.0-20200603063816-c1c6865ac451 h1:v8ud2Up6QK1lNOKFgiIVrZdMg7MpmSnvtrOieolJKoE=
 k8s.io/utils v0.0.0-20200603063816-c1c6865ac451/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
-knative.dev/eventing v0.19.1-0.20201222225404-b482c5fad781 h1:DQWHvmBSZwUu75o6JYsTbYE6zAVcKidqxaHbvIVu/3k=
-knative.dev/eventing v0.19.1-0.20201222225404-b482c5fad781/go.mod h1:TllNkxV7rozwMG8Ri/O5+VJ/s6NyU0CNNIs5eLNVgR0=
+knative.dev/eventing v0.19.1-0.20201223213404-15fbdb810ffb h1:2TSAhI4eCLcOC+eVgZpEu8smSCmgBK6h0MJsAwq6JqA=
+knative.dev/eventing v0.19.1-0.20201223213404-15fbdb810ffb/go.mod h1:TllNkxV7rozwMG8Ri/O5+VJ/s6NyU0CNNIs5eLNVgR0=
 knative.dev/hack v0.0.0-20201112185459-01a34c573bd8 h1:RNbZsAjhswBPtl4C5C5gEFX5/GfWIOZQxfYD9DhkHdY=
 knative.dev/hack v0.0.0-20201112185459-01a34c573bd8/go.mod h1:PHt8x8yX5Z9pPquBEfIj0X66f8iWkWfR0S/sarACJrI=
 knative.dev/hack v0.0.0-20201118155651-b31d3bb6bff9 h1:OgYL1cATsWTS6kztSOuQqhmYfcn6ZdpPAQQ6TKCx00I=
@@ -1237,8 +1237,8 @@ knative.dev/hack v0.0.0-20201214230143-4ed1ecb8db24/go.mod h1:PHt8x8yX5Z9pPquBEf
 knative.dev/pkg v0.0.0-20201117221452-0fccc54273ed h1:4LNEFhvD2Ya4WgCD3SC1WGXz81bjEvQgbcpe5XACI3I=
 knative.dev/pkg v0.0.0-20201117221452-0fccc54273ed/go.mod h1:nxlh3CUvx6WBPr1WKD96AHxFZPD2UKRDo9RUp8ILTyQ=
 knative.dev/pkg v0.0.0-20201222215804-e2d6b4f84573/go.mod h1:hckgW978SdzPA2H5EDvRPY8xsnPuDZLJLbPf8Jte7Q0=
-knative.dev/pkg v0.0.0-20201223002104-9d0775512af8 h1:0UaGaAn57/Egp7cfD/Cq6tNYr2QYyGZ8KSzC46CxYq4=
-knative.dev/pkg v0.0.0-20201223002104-9d0775512af8/go.mod h1:hckgW978SdzPA2H5EDvRPY8xsnPuDZLJLbPf8Jte7Q0=
+knative.dev/pkg v0.0.0-20201224020404-d191e5e0e49d h1:CbhdhNqHSUNadAJgjGwTU49gSKBzsyNRKdFOtvP+b/w=
+knative.dev/pkg v0.0.0-20201224020404-d191e5e0e49d/go.mod h1:hckgW978SdzPA2H5EDvRPY8xsnPuDZLJLbPf8Jte7Q0=
 knative.dev/reconciler-test v0.0.0-20201124190335-83a44efcdfef/go.mod h1:YSs1y1rgnjs8w39/drLIOQbWvZUQwqApvd+EizO8UsA=
 modernc.org/cc v1.0.0/go.mod h1:1Sk4//wdnYJiUIxnW8ddKpaOJCF37yAdqYnkxUpaYxw=
 modernc.org/golex v1.0.0/go.mod h1:b/QX9oBD/LhixY6NDh+IdGv17hgB+51fET1i2kPSmvk=
