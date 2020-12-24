@@ -74,7 +74,7 @@ func NewOptionFromSecret(ctx context.Context, config SecretLocator, secretProvid
 }
 
 // DefaultSecretProviderFunc is a secret provider that uses the local cache for getting the secret and when the secret
-// is not found, using the kube client to actually check if the secret doesn't actually exist.
+// is not found it uses the kube client check if the secret doesn't actually exist.
 func DefaultSecretProviderFunc(lister corelisters.SecretLister, kc kubernetes.Interface) SecretProviderFunc {
 	return func(ctx context.Context, namespace, name string) (*corev1.Secret, error) {
 		secret, err := lister.Secrets(namespace).Get(name)
