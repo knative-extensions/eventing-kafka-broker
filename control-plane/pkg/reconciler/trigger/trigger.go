@@ -252,40 +252,34 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	if err != nil {
 		return statusConditionManager.failedToResolveTriggerConfig(err)
 	}
-
 	statusConditionManager.subscriberResolved()
 
-	if triggerIndex == coreconfig.NoEgress {
-		ct.Resources[brokerIndex].Egresses = append(
-			ct.Resources[brokerIndex].Egresses,
-			triggerConfig,
-		)
-	} else {
-		ct.Resources[brokerIndex].Egresses[triggerIndex] = triggerConfig
-	}
+	changed := coreconfig.AddOrUpdateEgressConfig(ct, brokerIndex, triggerConfig, triggerIndex)
 
 	// Increment volumeGeneration
 	ct.Generation = incrementGeneration(ct.Generation)
 
-	// Update the configuration map with the new dataPlaneConfig data.
-	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-		trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
-		return err
-	}
+	if changed == coreconfig.EgressChanged {
+		// Update the configuration map with the new dataPlaneConfig data.
+		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
+			trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
+			return err
+		}
 
-	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
-		// ready. So, log out the error and move on to the next step.
-		logger.Warn(
-			"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-			zap.Error(err),
-		)
+		// Update volume generation annotation of dispatcher pods
+		if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+			// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
+			// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
+			// ready. So, log out the error and move on to the next step.
+			logger.Warn(
+				"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
+				zap.Error(err),
+			)
 
-		statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
-	} else {
-		logger.Debug("Updated dispatcher pod annotation")
+			statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
+		} else {
+			logger.Debug("Updated dispatcher pod annotation")
+		}
 	}
 
 	logger.Debug("Contract config map updated")

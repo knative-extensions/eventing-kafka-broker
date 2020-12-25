@@ -19,6 +19,9 @@ package config
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -87,6 +90,130 @@ func TestFindEgress(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := FindEgress(tt.args.egresses, tt.args.egress); got != tt.want {
 				t.Errorf("FindEgress() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAddOrUpdateEgressConfig(t *testing.T) {
+	tests := []struct {
+		name        string
+		givenCt     *contract.Contract
+		brokerIndex int
+		egress      *contract.Egress
+		egressIndex int
+		changed     int
+		wantCt      *contract.Contract
+	}{
+		{
+			name: "Egress found - changed",
+			givenCt: &contract.Contract{
+				Generation: 0,
+				Resources: []*contract.Resource{
+					{
+						Egresses: []*contract.Egress{
+							{
+								Uid: "xyz",
+							},
+						},
+					},
+				},
+			},
+			brokerIndex: 0,
+			egress: &contract.Egress{
+				Uid: "abc",
+			},
+			egressIndex: 0,
+			wantCt: &contract.Contract{
+				Generation: 0,
+				Resources: []*contract.Resource{
+					{
+						Egresses: []*contract.Egress{
+							{
+								Uid: "abc",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Egress found - unchanged",
+			givenCt: &contract.Contract{
+				Generation: 0,
+				Resources: []*contract.Resource{
+					{
+						Egresses: []*contract.Egress{
+							{
+								Uid: "abc",
+							},
+						},
+					},
+				},
+			},
+			brokerIndex: 0,
+			egress: &contract.Egress{
+				Uid: "abc",
+			},
+			egressIndex: 0,
+			wantCt: &contract.Contract{
+				Generation: 0,
+				Resources: []*contract.Resource{
+					{
+						Egresses: []*contract.Egress{
+							{
+								Uid: "abc",
+							},
+						},
+					},
+				},
+			},
+			changed: EgressUnchanged,
+		},
+		{
+			name: "Egress not found",
+			givenCt: &contract.Contract{
+				Generation: 0,
+				Resources: []*contract.Resource{
+					{
+						Egresses: []*contract.Egress{
+							{
+								Uid: "abc",
+							},
+						},
+					},
+				},
+			},
+			brokerIndex: 0,
+			egress: &contract.Egress{
+				Uid: "abc",
+			},
+			egressIndex: NoEgress,
+			wantCt: &contract.Contract{
+				Generation: 0,
+				Resources: []*contract.Resource{
+					{
+						Egresses: []*contract.Egress{
+							{
+								Uid: "abc",
+							},
+							{
+								Uid: "abc",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AddOrUpdateEgressConfig(tt.givenCt, tt.brokerIndex, tt.egress, tt.egressIndex); got != tt.changed {
+				t.Errorf("AddOrUpdateEgressConfig() = %v, want %v", got, tt.changed)
+			}
+
+			if diff := cmp.Diff(tt.wantCt, tt.givenCt, protocmp.Transform()); diff != "" {
+				t.Errorf("(-want, +got) %s", diff)
 			}
 		})
 	}

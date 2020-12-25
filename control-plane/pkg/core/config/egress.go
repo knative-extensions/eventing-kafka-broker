@@ -17,7 +17,9 @@
 package config
 
 import (
+	"google.golang.org/protobuf/proto"
 	"k8s.io/apimachinery/pkg/types"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 )
 
@@ -35,4 +37,30 @@ func FindEgress(egresses []*contract.Egress, egress types.UID) int {
 	}
 
 	return NoEgress
+}
+
+const (
+	EgressChanged = iota
+	EgressUnchanged
+)
+
+// AddOrUpdateEgressConfig adds or updates the given egress to the given contract at the specified indexes.
+func AddOrUpdateEgressConfig(ct *contract.Contract, brokerIndex int, egress *contract.Egress, egressIndex int) int {
+
+	if egressIndex != NoEgress {
+		prev := ct.Resources[brokerIndex].Egresses[egressIndex]
+		ct.Resources[brokerIndex].Egresses[egressIndex] = egress
+
+		if proto.Equal(prev, egress) {
+			return EgressUnchanged
+		}
+		return EgressChanged
+	}
+
+	ct.Resources[brokerIndex].Egresses = append(
+		ct.Resources[brokerIndex].Egresses,
+		egress,
+	)
+
+	return EgressChanged
 }
