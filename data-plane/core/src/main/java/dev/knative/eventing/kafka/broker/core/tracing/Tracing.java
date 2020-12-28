@@ -15,13 +15,11 @@
  */
 package dev.knative.eventing.kafka.broker.core.tracing;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.Backend;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.trace.TracerSdkManagement;
+import io.opentelemetry.sdk.trace.SdkTracerManagement;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
@@ -29,6 +27,8 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 public class Tracing {
 
@@ -45,7 +45,7 @@ public class Tracing {
 
   private static final Logger logger = LoggerFactory.getLogger(Tracing.class);
 
-  private static final TracerSdkManagement tracerManagement = OpenTelemetrySdk.getGlobalTracerManagement();
+  private static final SdkTracerManagement tracerManagement = OpenTelemetrySdk.getGlobalTracerManagement();
 
   public static void setup(final TracingConfig tracingConfig) {
 
