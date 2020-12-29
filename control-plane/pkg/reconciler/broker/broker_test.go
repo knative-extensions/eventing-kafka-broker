@@ -1363,6 +1363,53 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
+		{
+			Name: "Reconciled normal - unchanged",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithDelivery(),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							BootstrapServers: bootstrapServers,
+							EgressConfig:     &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
+						},
+					},
+					Generation: 1,
+				}, &configs),
+				NewService(),
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithDelivery(),
+						reconcilertesting.WithInitBrokerConditions,
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerDataPlaneAvailable,
+						BrokerTopicReady,
+						BrokerConfigParsed,
+						BrokerAddressable(&configs),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
+		},
 	}
 
 	for i := range table {

@@ -635,6 +635,60 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				},
 			},
 		},
+		{
+			Name: "Reconciled normal - unchanged",
+			Objects: []runtime.Object{
+				NewSink(
+					SinkControllerOwnsTopic,
+					BootstrapServers(bootstrapServersArr),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:  []string{"my-existing-topic-a"},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
+						},
+						{
+							Uid:    "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
+							Topics: []string{"my-existing-topic-b"},
+						},
+						{
+							Uid:              SinkUUID,
+							Topics:           []string{SinkTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+				}, &configs),
+				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						SinkControllerOwnsTopic,
+						InitSinkConditions,
+						SinkDataPlaneAvailable,
+						SinkConfigParsed,
+						BootstrapServers(bootstrapServersArr),
+						SinkConfigMapUpdatedReady(&configs.Env),
+						SinkTopicReady,
+						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						SinkAddressable(&configs.Env),
+					),
+				},
+			},
+		},
 	}
 
 	for i := range table {

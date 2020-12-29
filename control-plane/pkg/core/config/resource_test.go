@@ -21,6 +21,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/testing/protocmp"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/google/go-cmp/cmp"
@@ -85,6 +86,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 		newResource  *contract.Resource
 		index        int
 		wantContract *contract.Contract
+		changed      int
 	}{
 		{
 			name: "resource not found - add resource",
@@ -277,13 +279,100 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 				Generation: 1,
 			},
 		},
+		{
+			name: "resource found - update resource - unchanged",
+			haveContract: &contract.Contract{
+				Resources: []*contract.Resource{
+					{
+						Uid:    "1",
+						Topics: []string{"topic-name-1"},
+						Egresses: []*contract.Egress{
+							{
+								Filter: &contract.Filter{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+								},
+								Destination:   "http://localhost:8080",
+								ConsumerGroup: "egress-1",
+								Uid:           "egress-1",
+							},
+						},
+						BootstrapServers: "broker:9092",
+						Ingress: &contract.Ingress{
+							IngressType: &contract.Ingress_Path{
+								Path: "/broker-ns/broker-name",
+							},
+							ContentMode: contract.ContentMode_STRUCTURED,
+						},
+					},
+				},
+				Generation: 1,
+			},
+			newResource: &contract.Resource{
+				Uid:    "1",
+				Topics: []string{"topic-name-1"},
+				Egresses: []*contract.Egress{
+					{
+						Filter: &contract.Filter{
+							Attributes: map[string]string{
+								"source": "source1",
+							},
+						},
+						Destination:   "http://localhost:8080",
+						ConsumerGroup: "egress-1",
+						Uid:           "egress-1",
+					},
+				},
+				BootstrapServers: "broker:9092",
+				Ingress: &contract.Ingress{
+					IngressType: &contract.Ingress_Path{
+						Path: "/broker-ns/broker-name",
+					},
+					ContentMode: contract.ContentMode_STRUCTURED,
+				},
+			},
+			index:   0,
+			changed: ResourceUnchanged,
+			wantContract: &contract.Contract{
+				Resources: []*contract.Resource{
+					{
+						Uid:    "1",
+						Topics: []string{"topic-name-1"},
+						Egresses: []*contract.Egress{
+							{
+								Filter: &contract.Filter{
+									Attributes: map[string]string{
+										"source": "source1",
+									},
+								},
+								Destination:   "http://localhost:8080",
+								ConsumerGroup: "egress-1",
+								Uid:           "egress-1",
+							},
+						},
+						BootstrapServers: "broker:9092",
+						Ingress: &contract.Ingress{
+							IngressType: &contract.Ingress_Path{
+								Path: "/broker-ns/broker-name",
+							},
+							ContentMode: contract.ContentMode_STRUCTURED,
+						},
+					},
+				},
+				Generation: 1,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AddOrUpdateResourceConfig(tt.haveContract, tt.newResource, tt.index, zap.NewNop())
+			changed := AddOrUpdateResourceConfig(tt.haveContract, tt.newResource, tt.index, zap.NewNop())
 
 			if diff := cmp.Diff(tt.wantContract, tt.haveContract, protocmp.Transform()); diff != "" {
 				t.Errorf("(-want, +got) %s", diff)
+			}
+			if changed != tt.changed {
+				t.Errorf("Changed want %d got %d", tt.changed, changed)
 			}
 		})
 	}

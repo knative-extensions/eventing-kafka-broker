@@ -507,31 +507,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
 			},
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
-					Resources: []*contract.Resource{
-						{
-							Uid:     BrokerUUID,
-							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
-							Egresses: []*contract.Egress{
-								{
-									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
-									Uid:           TriggerUUID,
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"type": "type1",
-									}},
-								},
-							},
-						},
-					},
-					Generation: 1,
-				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: newTrigger(
@@ -980,6 +956,9 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
 								},
 								{
 									Destination:   "http://example.com/3",

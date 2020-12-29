@@ -147,31 +147,35 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	sinkIndex := coreconfig.FindResource(ct, ks.UID)
 	// Update contract data with the new sink configuration.
-	coreconfig.AddOrUpdateResourceConfig(ct, sinkConfig, sinkIndex, logger)
+	changed := coreconfig.AddOrUpdateResourceConfig(ct, sinkConfig, sinkIndex, logger)
 
 	// Increment volumeGeneration
 	ct.Generation = incrementGeneration(ct.Generation)
 
-	// Update the configuration map with the new contract data.
-	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-		logger.Error("failed to update data plane config map", zap.Error(
-			statusConditionManager.FailedToUpdateConfigMap(err),
-		))
-		return err
+	if changed == coreconfig.ResourceChanged {
+		// Update the configuration map with the new contract data.
+		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
+			logger.Error("failed to update data plane config map", zap.Error(
+				statusConditionManager.FailedToUpdateConfigMap(err),
+			))
+			return err
+		}
 	}
 	statusConditionManager.ConfigMapUpdated()
 
 	logger.Debug("Config map updated")
 
-	// After #37 we reject events to a non-existing Sink, which means that we cannot consider a Sink Ready if all
-	// receivers haven't got the Sink, so update failures to receiver pods is a hard failure.
+	if changed == coreconfig.ResourceChanged {
+		// After #37 we reject events to a non-existing Sink, which means that we cannot consider a Sink Ready if all
+		// receivers haven't got the Sink, so update failures to receiver pods is a hard failure.
 
-	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		return err
+		// Update volume generation annotation of receiver pods
+		if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+			return err
+		}
+
+		logger.Debug("Updated receiver pod annotation")
 	}
-
-	logger.Debug("Updated receiver pod annotation")
 
 	return statusConditionManager.Reconciled()
 }
