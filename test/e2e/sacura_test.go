@@ -38,7 +38,7 @@ const (
 	app       = "sacura"
 	namespace = "sacura"
 
-	pollTimeout  = 10 * time.Minute
+	pollTimeout  = 30 * time.Minute
 	pollInterval = 10 * time.Second
 )
 
