@@ -3,6 +3,7 @@
 # variables used:
 # - SKIP_INITIALIZE (default: false) - skip cluster creation.
 # - LOCAL_DEVELOPMENT (default: false) - skip heavy workloads installation like load and chaos generators.
+export LOCAL_DEVELOPMENT=true
 
 readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
 readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
