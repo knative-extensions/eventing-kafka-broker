@@ -20,7 +20,7 @@ source $(pwd)/hack/control-plane.sh
 
 readonly EVENTING_CONFIG="./config"
 
-# Vendored eventing test iamges.
+# Vendored eventing test images.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
 
 readonly CHAOS_CONFIG="test/config/chaos/chaosduck.yaml"
@@ -147,4 +147,13 @@ function apply_sacura() {
   kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || return $?
 
   ko apply --strict -f ./test/config/sacura || return $?
+}
+
+function export_logs_continuously() {
+
+  mkdir -p "$ARTIFACTS/${SYSTEM_NAMESPACE}"
+
+  for deployment in "$@"; do
+    kubectl logs -n ${SYSTEM_NAMESPACE} -f -l=app="$deployment" >"$ARTIFACTS/${SYSTEM_NAMESPACE}/$deployment" 2>&1 &
+  done
 }
