@@ -139,3 +139,6 @@ spec:
           configMap:
             name: config-tracing
       restartPolicy: Always
+      dnsConfig:
+        options:
+          - name: single-request-reopen
