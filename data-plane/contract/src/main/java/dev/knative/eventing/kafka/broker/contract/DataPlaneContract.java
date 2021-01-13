@@ -6272,46 +6272,34 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Secret reference.
-     * Secret format (YAML like):
+     * Secret format:
      *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-     *   ca.p12: &lt;CA pkcs12 archive&gt;
-     *   ca.password: &lt;CA pkcs12 archive password&gt;
+     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
      *   ca.crt: &lt;CA PEM certificate&gt;
-     *   user.p12: &lt;User pkcs12 archive&gt;
-     *   user.password: &lt;User pkcs12 archive password&gt;
      *   user.crt: &lt;User PEM certificate&gt;
      *   user.key: &lt;User PEM key&gt;
-     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
      *   user: &lt;SASL username&gt;
      *   password: &lt;SASL password&gt;
      * Validation:
      *   - protocol=PLAINTEXT
      *   - protocol=SSL
      *     - required:
-     *       - ca.p12
-     *       - ca.password
      *       - ca.crt
-     *       - user.p12
-     *       - user.password
      *       - user.crt
      *       - user.key
      *   - protocol=SASL_PLAINTEXT
      *     - required:
+     *       - sasl.mechanism
      *       - user
      *       - password
-     *       - sasl.mechanism
      *   - protocol=SASL_SSL
      *     - required:
-     *       - ca.p12
-     *       - ca.password
+     *       - sasl.mechanism
      *       - ca.crt
-     *       - user.p12
-     *       - user.password
      *       - user.crt
      *       - user.key
      *       - user
      *       - password
-     *       - sasl.mechanism
      * </pre>
      *
      * <code>.Reference authSecret = 8;</code>
@@ -6321,46 +6309,34 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Secret reference.
-     * Secret format (YAML like):
+     * Secret format:
      *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-     *   ca.p12: &lt;CA pkcs12 archive&gt;
-     *   ca.password: &lt;CA pkcs12 archive password&gt;
+     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
      *   ca.crt: &lt;CA PEM certificate&gt;
-     *   user.p12: &lt;User pkcs12 archive&gt;
-     *   user.password: &lt;User pkcs12 archive password&gt;
      *   user.crt: &lt;User PEM certificate&gt;
      *   user.key: &lt;User PEM key&gt;
-     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
      *   user: &lt;SASL username&gt;
      *   password: &lt;SASL password&gt;
      * Validation:
      *   - protocol=PLAINTEXT
      *   - protocol=SSL
      *     - required:
-     *       - ca.p12
-     *       - ca.password
      *       - ca.crt
-     *       - user.p12
-     *       - user.password
      *       - user.crt
      *       - user.key
      *   - protocol=SASL_PLAINTEXT
      *     - required:
+     *       - sasl.mechanism
      *       - user
      *       - password
-     *       - sasl.mechanism
      *   - protocol=SASL_SSL
      *     - required:
-     *       - ca.p12
-     *       - ca.password
+     *       - sasl.mechanism
      *       - ca.crt
-     *       - user.p12
-     *       - user.password
      *       - user.crt
      *       - user.key
      *       - user
      *       - password
-     *       - sasl.mechanism
      * </pre>
      *
      * <code>.Reference authSecret = 8;</code>
@@ -6370,46 +6346,34 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Secret reference.
-     * Secret format (YAML like):
+     * Secret format:
      *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-     *   ca.p12: &lt;CA pkcs12 archive&gt;
-     *   ca.password: &lt;CA pkcs12 archive password&gt;
+     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
      *   ca.crt: &lt;CA PEM certificate&gt;
-     *   user.p12: &lt;User pkcs12 archive&gt;
-     *   user.password: &lt;User pkcs12 archive password&gt;
      *   user.crt: &lt;User PEM certificate&gt;
      *   user.key: &lt;User PEM key&gt;
-     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
      *   user: &lt;SASL username&gt;
      *   password: &lt;SASL password&gt;
      * Validation:
      *   - protocol=PLAINTEXT
      *   - protocol=SSL
      *     - required:
-     *       - ca.p12
-     *       - ca.password
      *       - ca.crt
-     *       - user.p12
-     *       - user.password
      *       - user.crt
      *       - user.key
      *   - protocol=SASL_PLAINTEXT
      *     - required:
+     *       - sasl.mechanism
      *       - user
      *       - password
-     *       - sasl.mechanism
      *   - protocol=SASL_SSL
      *     - required:
-     *       - ca.p12
-     *       - ca.password
+     *       - sasl.mechanism
      *       - ca.crt
-     *       - user.p12
-     *       - user.password
      *       - user.crt
      *       - user.key
      *       - user
      *       - password
-     *       - sasl.mechanism
      * </pre>
      *
      * <code>.Reference authSecret = 8;</code>
@@ -6969,46 +6933,34 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Secret reference.
-     * Secret format (YAML like):
+     * Secret format:
      *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-     *   ca.p12: &lt;CA pkcs12 archive&gt;
-     *   ca.password: &lt;CA pkcs12 archive password&gt;
+     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
      *   ca.crt: &lt;CA PEM certificate&gt;
-     *   user.p12: &lt;User pkcs12 archive&gt;
-     *   user.password: &lt;User pkcs12 archive password&gt;
      *   user.crt: &lt;User PEM certificate&gt;
      *   user.key: &lt;User PEM key&gt;
-     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
      *   user: &lt;SASL username&gt;
      *   password: &lt;SASL password&gt;
      * Validation:
      *   - protocol=PLAINTEXT
      *   - protocol=SSL
      *     - required:
-     *       - ca.p12
-     *       - ca.password
      *       - ca.crt
-     *       - user.p12
-     *       - user.password
      *       - user.crt
      *       - user.key
      *   - protocol=SASL_PLAINTEXT
      *     - required:
+     *       - sasl.mechanism
      *       - user
      *       - password
-     *       - sasl.mechanism
      *   - protocol=SASL_SSL
      *     - required:
-     *       - ca.p12
-     *       - ca.password
+     *       - sasl.mechanism
      *       - ca.crt
-     *       - user.p12
-     *       - user.password
      *       - user.crt
      *       - user.key
      *       - user
      *       - password
-     *       - sasl.mechanism
      * </pre>
      *
      * <code>.Reference authSecret = 8;</code>
@@ -7021,46 +6973,34 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Secret reference.
-     * Secret format (YAML like):
+     * Secret format:
      *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-     *   ca.p12: &lt;CA pkcs12 archive&gt;
-     *   ca.password: &lt;CA pkcs12 archive password&gt;
+     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
      *   ca.crt: &lt;CA PEM certificate&gt;
-     *   user.p12: &lt;User pkcs12 archive&gt;
-     *   user.password: &lt;User pkcs12 archive password&gt;
      *   user.crt: &lt;User PEM certificate&gt;
      *   user.key: &lt;User PEM key&gt;
-     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
      *   user: &lt;SASL username&gt;
      *   password: &lt;SASL password&gt;
      * Validation:
      *   - protocol=PLAINTEXT
      *   - protocol=SSL
      *     - required:
-     *       - ca.p12
-     *       - ca.password
      *       - ca.crt
-     *       - user.p12
-     *       - user.password
      *       - user.crt
      *       - user.key
      *   - protocol=SASL_PLAINTEXT
      *     - required:
+     *       - sasl.mechanism
      *       - user
      *       - password
-     *       - sasl.mechanism
      *   - protocol=SASL_SSL
      *     - required:
-     *       - ca.p12
-     *       - ca.password
+     *       - sasl.mechanism
      *       - ca.crt
-     *       - user.p12
-     *       - user.password
      *       - user.crt
      *       - user.key
      *       - user
      *       - password
-     *       - sasl.mechanism
      * </pre>
      *
      * <code>.Reference authSecret = 8;</code>
@@ -7076,46 +7016,34 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Secret reference.
-     * Secret format (YAML like):
+     * Secret format:
      *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-     *   ca.p12: &lt;CA pkcs12 archive&gt;
-     *   ca.password: &lt;CA pkcs12 archive password&gt;
+     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
      *   ca.crt: &lt;CA PEM certificate&gt;
-     *   user.p12: &lt;User pkcs12 archive&gt;
-     *   user.password: &lt;User pkcs12 archive password&gt;
      *   user.crt: &lt;User PEM certificate&gt;
      *   user.key: &lt;User PEM key&gt;
-     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
      *   user: &lt;SASL username&gt;
      *   password: &lt;SASL password&gt;
      * Validation:
      *   - protocol=PLAINTEXT
      *   - protocol=SSL
      *     - required:
-     *       - ca.p12
-     *       - ca.password
      *       - ca.crt
-     *       - user.p12
-     *       - user.password
      *       - user.crt
      *       - user.key
      *   - protocol=SASL_PLAINTEXT
      *     - required:
+     *       - sasl.mechanism
      *       - user
      *       - password
-     *       - sasl.mechanism
      *   - protocol=SASL_SSL
      *     - required:
-     *       - ca.p12
-     *       - ca.password
+     *       - sasl.mechanism
      *       - ca.crt
-     *       - user.p12
-     *       - user.password
      *       - user.crt
      *       - user.key
      *       - user
      *       - password
-     *       - sasl.mechanism
      * </pre>
      *
      * <code>.Reference authSecret = 8;</code>
@@ -8852,46 +8780,34 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Secret reference.
-       * Secret format (YAML like):
+       * Secret format:
        *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-       *   ca.p12: &lt;CA pkcs12 archive&gt;
-       *   ca.password: &lt;CA pkcs12 archive password&gt;
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   ca.crt: &lt;CA PEM certificate&gt;
-       *   user.p12: &lt;User pkcs12 archive&gt;
-       *   user.password: &lt;User pkcs12 archive password&gt;
        *   user.crt: &lt;User PEM certificate&gt;
        *   user.key: &lt;User PEM key&gt;
-       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   user: &lt;SASL username&gt;
        *   password: &lt;SASL password&gt;
        * Validation:
        *   - protocol=PLAINTEXT
        *   - protocol=SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *   - protocol=SASL_PLAINTEXT
        *     - required:
+       *       - sasl.mechanism
        *       - user
        *       - password
-       *       - sasl.mechanism
        *   - protocol=SASL_SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
+       *       - sasl.mechanism
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *       - user
        *       - password
-       *       - sasl.mechanism
        * </pre>
        *
        * <code>.Reference authSecret = 8;</code>
@@ -8904,46 +8820,34 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Secret reference.
-       * Secret format (YAML like):
+       * Secret format:
        *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-       *   ca.p12: &lt;CA pkcs12 archive&gt;
-       *   ca.password: &lt;CA pkcs12 archive password&gt;
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   ca.crt: &lt;CA PEM certificate&gt;
-       *   user.p12: &lt;User pkcs12 archive&gt;
-       *   user.password: &lt;User pkcs12 archive password&gt;
        *   user.crt: &lt;User PEM certificate&gt;
        *   user.key: &lt;User PEM key&gt;
-       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   user: &lt;SASL username&gt;
        *   password: &lt;SASL password&gt;
        * Validation:
        *   - protocol=PLAINTEXT
        *   - protocol=SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *   - protocol=SASL_PLAINTEXT
        *     - required:
+       *       - sasl.mechanism
        *       - user
        *       - password
-       *       - sasl.mechanism
        *   - protocol=SASL_SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
+       *       - sasl.mechanism
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *       - user
        *       - password
-       *       - sasl.mechanism
        * </pre>
        *
        * <code>.Reference authSecret = 8;</code>
@@ -8966,46 +8870,34 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Secret reference.
-       * Secret format (YAML like):
+       * Secret format:
        *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-       *   ca.p12: &lt;CA pkcs12 archive&gt;
-       *   ca.password: &lt;CA pkcs12 archive password&gt;
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   ca.crt: &lt;CA PEM certificate&gt;
-       *   user.p12: &lt;User pkcs12 archive&gt;
-       *   user.password: &lt;User pkcs12 archive password&gt;
        *   user.crt: &lt;User PEM certificate&gt;
        *   user.key: &lt;User PEM key&gt;
-       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   user: &lt;SASL username&gt;
        *   password: &lt;SASL password&gt;
        * Validation:
        *   - protocol=PLAINTEXT
        *   - protocol=SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *   - protocol=SASL_PLAINTEXT
        *     - required:
+       *       - sasl.mechanism
        *       - user
        *       - password
-       *       - sasl.mechanism
        *   - protocol=SASL_SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
+       *       - sasl.mechanism
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *       - user
        *       - password
-       *       - sasl.mechanism
        * </pre>
        *
        * <code>.Reference authSecret = 8;</code>
@@ -9026,46 +8918,34 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Secret reference.
-       * Secret format (YAML like):
+       * Secret format:
        *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-       *   ca.p12: &lt;CA pkcs12 archive&gt;
-       *   ca.password: &lt;CA pkcs12 archive password&gt;
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   ca.crt: &lt;CA PEM certificate&gt;
-       *   user.p12: &lt;User pkcs12 archive&gt;
-       *   user.password: &lt;User pkcs12 archive password&gt;
        *   user.crt: &lt;User PEM certificate&gt;
        *   user.key: &lt;User PEM key&gt;
-       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   user: &lt;SASL username&gt;
        *   password: &lt;SASL password&gt;
        * Validation:
        *   - protocol=PLAINTEXT
        *   - protocol=SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *   - protocol=SASL_PLAINTEXT
        *     - required:
+       *       - sasl.mechanism
        *       - user
        *       - password
-       *       - sasl.mechanism
        *   - protocol=SASL_SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
+       *       - sasl.mechanism
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *       - user
        *       - password
-       *       - sasl.mechanism
        * </pre>
        *
        * <code>.Reference authSecret = 8;</code>
@@ -9084,46 +8964,34 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Secret reference.
-       * Secret format (YAML like):
+       * Secret format:
        *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-       *   ca.p12: &lt;CA pkcs12 archive&gt;
-       *   ca.password: &lt;CA pkcs12 archive password&gt;
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   ca.crt: &lt;CA PEM certificate&gt;
-       *   user.p12: &lt;User pkcs12 archive&gt;
-       *   user.password: &lt;User pkcs12 archive password&gt;
        *   user.crt: &lt;User PEM certificate&gt;
        *   user.key: &lt;User PEM key&gt;
-       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   user: &lt;SASL username&gt;
        *   password: &lt;SASL password&gt;
        * Validation:
        *   - protocol=PLAINTEXT
        *   - protocol=SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *   - protocol=SASL_PLAINTEXT
        *     - required:
+       *       - sasl.mechanism
        *       - user
        *       - password
-       *       - sasl.mechanism
        *   - protocol=SASL_SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
+       *       - sasl.mechanism
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *       - user
        *       - password
-       *       - sasl.mechanism
        * </pre>
        *
        * <code>.Reference authSecret = 8;</code>
@@ -9150,46 +9018,34 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Secret reference.
-       * Secret format (YAML like):
+       * Secret format:
        *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-       *   ca.p12: &lt;CA pkcs12 archive&gt;
-       *   ca.password: &lt;CA pkcs12 archive password&gt;
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   ca.crt: &lt;CA PEM certificate&gt;
-       *   user.p12: &lt;User pkcs12 archive&gt;
-       *   user.password: &lt;User pkcs12 archive password&gt;
        *   user.crt: &lt;User PEM certificate&gt;
        *   user.key: &lt;User PEM key&gt;
-       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   user: &lt;SASL username&gt;
        *   password: &lt;SASL password&gt;
        * Validation:
        *   - protocol=PLAINTEXT
        *   - protocol=SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *   - protocol=SASL_PLAINTEXT
        *     - required:
+       *       - sasl.mechanism
        *       - user
        *       - password
-       *       - sasl.mechanism
        *   - protocol=SASL_SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
+       *       - sasl.mechanism
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *       - user
        *       - password
-       *       - sasl.mechanism
        * </pre>
        *
        * <code>.Reference authSecret = 8;</code>
@@ -9213,46 +9069,34 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Secret reference.
-       * Secret format (YAML like):
+       * Secret format:
        *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-       *   ca.p12: &lt;CA pkcs12 archive&gt;
-       *   ca.password: &lt;CA pkcs12 archive password&gt;
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   ca.crt: &lt;CA PEM certificate&gt;
-       *   user.p12: &lt;User pkcs12 archive&gt;
-       *   user.password: &lt;User pkcs12 archive password&gt;
        *   user.crt: &lt;User PEM certificate&gt;
        *   user.key: &lt;User PEM key&gt;
-       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   user: &lt;SASL username&gt;
        *   password: &lt;SASL password&gt;
        * Validation:
        *   - protocol=PLAINTEXT
        *   - protocol=SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *   - protocol=SASL_PLAINTEXT
        *     - required:
+       *       - sasl.mechanism
        *       - user
        *       - password
-       *       - sasl.mechanism
        *   - protocol=SASL_SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
+       *       - sasl.mechanism
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *       - user
        *       - password
-       *       - sasl.mechanism
        * </pre>
        *
        * <code>.Reference authSecret = 8;</code>
@@ -9263,46 +9107,34 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Secret reference.
-       * Secret format (YAML like):
+       * Secret format:
        *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-       *   ca.p12: &lt;CA pkcs12 archive&gt;
-       *   ca.password: &lt;CA pkcs12 archive password&gt;
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   ca.crt: &lt;CA PEM certificate&gt;
-       *   user.p12: &lt;User pkcs12 archive&gt;
-       *   user.password: &lt;User pkcs12 archive password&gt;
        *   user.crt: &lt;User PEM certificate&gt;
        *   user.key: &lt;User PEM key&gt;
-       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   user: &lt;SASL username&gt;
        *   password: &lt;SASL password&gt;
        * Validation:
        *   - protocol=PLAINTEXT
        *   - protocol=SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *   - protocol=SASL_PLAINTEXT
        *     - required:
+       *       - sasl.mechanism
        *       - user
        *       - password
-       *       - sasl.mechanism
        *   - protocol=SASL_SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
+       *       - sasl.mechanism
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *       - user
        *       - password
-       *       - sasl.mechanism
        * </pre>
        *
        * <code>.Reference authSecret = 8;</code>
@@ -9321,46 +9153,34 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Secret reference.
-       * Secret format (YAML like):
+       * Secret format:
        *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-       *   ca.p12: &lt;CA pkcs12 archive&gt;
-       *   ca.password: &lt;CA pkcs12 archive password&gt;
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   ca.crt: &lt;CA PEM certificate&gt;
-       *   user.p12: &lt;User pkcs12 archive&gt;
-       *   user.password: &lt;User pkcs12 archive password&gt;
        *   user.crt: &lt;User PEM certificate&gt;
        *   user.key: &lt;User PEM key&gt;
-       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
        *   user: &lt;SASL username&gt;
        *   password: &lt;SASL password&gt;
        * Validation:
        *   - protocol=PLAINTEXT
        *   - protocol=SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *   - protocol=SASL_PLAINTEXT
        *     - required:
+       *       - sasl.mechanism
        *       - user
        *       - password
-       *       - sasl.mechanism
        *   - protocol=SASL_SSL
        *     - required:
-       *       - ca.p12
-       *       - ca.password
+       *       - sasl.mechanism
        *       - ca.crt
-       *       - user.p12
-       *       - user.password
        *       - user.crt
        *       - user.key
        *       - user
        *       - password
-       *       - sasl.mechanism
        * </pre>
        *
        * <code>.Reference authSecret = 8;</code>

@@ -675,17 +675,13 @@ type Resource_AbsentAuth struct {
 type Resource_AuthSecret struct {
 	// Secret reference.
 	//
-	// Secret format (YAML like):
+	// Secret format:
 	//
 	//   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-	//   ca.p12: <CA pkcs12 archive>
-	//   ca.password: <CA pkcs12 archive password>
+	//   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
 	//   ca.crt: <CA PEM certificate>
-	//   user.p12: <User pkcs12 archive>
-	//   user.password: <User pkcs12 archive password>
 	//   user.crt: <User PEM certificate>
 	//   user.key: <User PEM key>
-	//   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
 	//   user: <SASL username>
 	//   password: <SASL password>
 	//
@@ -693,30 +689,22 @@ type Resource_AuthSecret struct {
 	//   - protocol=PLAINTEXT
 	//   - protocol=SSL
 	//     - required:
-	//       - ca.p12
-	//       - ca.password
 	//       - ca.crt
-	//       - user.p12
-	//       - user.password
 	//       - user.crt
 	//       - user.key
 	//   - protocol=SASL_PLAINTEXT
 	//     - required:
+	//       - sasl.mechanism
 	//       - user
 	//       - password
-	//       - sasl.mechanism
 	//   - protocol=SASL_SSL
 	//     - required:
-	//       - ca.p12
-	//       - ca.password
+	//       - sasl.mechanism
 	//       - ca.crt
-	//       - user.p12
-	//       - user.password
 	//       - user.crt
 	//       - user.key
 	//       - user
 	//       - password
-	//       - sasl.mechanism
 	AuthSecret *Reference `protobuf:"bytes,8,opt,name=authSecret,proto3,oneof"`
 }
 

@@ -178,6 +178,8 @@ func sslConfig(protocol string, data map[string][]byte) ConfigOption {
 
 		config.Net.TLS.Enable = true
 		config.Net.TLS.Config = &tls.Config{
+			MinVersion:   tls.VersionTLS12,
+			MaxVersion:   tls.VersionTLS13,
 			Certificates: tlsCerts,
 			RootCAs:      certPool,
 		}

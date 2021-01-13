@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	AuthSecretNameKey = "auth.secret.ref.name"
+	AuthSecretNameKey = "auth.secret.ref.name" /* #nosec G101 */ /* Potential hardcoded credentials (gosec) */
 )
 
 // SecretLocator locates a secret in a cluster.

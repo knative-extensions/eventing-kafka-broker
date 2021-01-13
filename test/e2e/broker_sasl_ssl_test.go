@@ -112,7 +112,7 @@ func brokerAuth(t *testing.T, secretProvider SecretProvider, configProvider Conf
 			Data: secretData,
 		}
 
-		secret, err = client.Kube.CoreV1().Secrets(client.Namespace).Create(ctx, secret, metav1.CreateOptions{})
+		_, err = client.Kube.CoreV1().Secrets(client.Namespace).Create(ctx, secret, metav1.CreateOptions{})
 		assert.Nil(t, err)
 
 		// Trigger a reconciliation by updating the referenced ConfigMap in broker.spec.config.
@@ -127,7 +127,7 @@ func brokerAuth(t *testing.T, secretProvider SecretProvider, configProvider Conf
 			}
 			config.Labels["test.eventing.knative.dev/updated"] = names.SimpleNameGenerator.GenerateName("now")
 
-			config, err = client.Kube.CoreV1().ConfigMaps(client.Namespace).Update(ctx, config, metav1.UpdateOptions{})
+			_, err = client.Kube.CoreV1().ConfigMaps(client.Namespace).Update(ctx, config, metav1.UpdateOptions{})
 			return err
 		})
 		assert.Nil(t, err)

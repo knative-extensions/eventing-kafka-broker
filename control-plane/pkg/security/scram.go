@@ -26,10 +26,10 @@ import (
 )
 
 var (
-	// sha256HashGenerator hash generator function for SCRAM conversation
+	// sha256HashGenerator hash generator function for SCRAM conversation.
 	sha256HashGenerator scram.HashGeneratorFcn = func() hash.Hash { return sha256.New() }
 
-	// sha512HashGenerator hash generator function for SCRAM conversation
+	// sha512HashGenerator hash generator function for SCRAM conversation.
 	sha512HashGenerator scram.HashGeneratorFcn = func() hash.Hash { return sha512.New() }
 )
 
