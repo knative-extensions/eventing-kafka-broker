@@ -184,7 +184,7 @@ func TestBrokerAuthPlaintext(t *testing.T) {
 				"default.topic.replication.factor": "2",
 				"default.topic.partitions":         "2",
 				"bootstrap.servers":                kafkaListenerPlaintext,
-				"auth.secret.name":                 secretName,
+				"auth.secret.ref.name":             secretName,
 			}
 		},
 	)
@@ -213,7 +213,7 @@ func TestBrokerAuthSsl(t *testing.T) {
 				"default.topic.replication.factor": "2",
 				"default.topic.partitions":         "2",
 				"bootstrap.servers":                kafkaListenerSSL,
-				"auth.secret.name":                 secretName,
+				"auth.secret.ref.name":             secretName,
 			}
 		},
 	)
@@ -240,7 +240,7 @@ func TestBrokerAuthSaslPlaintextScram512(t *testing.T) {
 				"default.topic.replication.factor": "2",
 				"default.topic.partitions":         "2",
 				"bootstrap.servers":                kafkaListenerSASLPlaintext,
-				"auth.secret.name":                 secretName,
+				"auth.secret.ref.name":             secretName,
 			}
 		},
 	)
@@ -270,7 +270,7 @@ func TestBrokerAuthSslSaslScram512(t *testing.T) {
 				"default.topic.replication.factor": "2",
 				"default.topic.partitions":         "2",
 				"bootstrap.servers":                kafkaListenerSSLSASLSCRAM,
-				"auth.secret.name":                 secretName,
+				"auth.secret.ref.name":             secretName,
 			}
 		},
 	)

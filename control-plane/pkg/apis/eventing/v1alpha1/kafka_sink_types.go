@@ -97,13 +97,16 @@ type KafkaSinkSpec struct {
 }
 
 type Auth struct {
+	// Auth Secret
+	Secret *Secret `json:"secret,omitempty"`
+}
 
+type Secret struct {
 	// Secret reference for SASL and SSL configurations.
 	Ref *SecretReference `json:"ref,omitempty"`
 }
 
 type SecretReference struct {
-
 	// Secret name.
 	Name string `json:"name"`
 }

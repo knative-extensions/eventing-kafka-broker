@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	AuthSecretNameKey = "auth.secret.name"
+	AuthSecretNameKey = "auth.secret.ref.name"
 )
 
 // SecretLocator locates a secret in a cluster.

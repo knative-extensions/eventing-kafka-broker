@@ -25,10 +25,10 @@ type SecretLocator struct {
 }
 
 func (ks *SecretLocator) SecretName() (string, bool, error) {
-	if ks.Spec.Auth == nil || ks.Spec.Auth.Ref == nil {
+	if ks.Spec.Auth == nil || ks.Spec.Auth.Secret == nil || ks.Spec.Auth.Secret.Ref == nil {
 		return "", false, nil
 	}
-	return ks.Spec.Auth.Ref.Name, true, nil
+	return ks.Spec.Auth.Secret.Ref.Name, true, nil
 }
 
 func (ks *SecretLocator) SecretNamespace() (string, bool, error) {
