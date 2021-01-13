@@ -57,7 +57,7 @@ type SecretProvider func(name string, client *testlib.Client) map[string][]byte
 
 type ConfigProvider func(secretName string, client *testlib.Client) map[string]string
 
-func BrokerAuthBecomeReady(t *testing.T, secretProvider SecretProvider, configProvider ConfigProvider) {
+func brokerAuth(t *testing.T, secretProvider SecretProvider, configProvider ConfigProvider) {
 
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
@@ -170,9 +170,9 @@ func BrokerAuthBecomeReady(t *testing.T, secretProvider SecretProvider, configPr
 	})
 }
 
-func TestBrokerAuthBecomeReadyPlaintext(t *testing.T) {
+func TestBrokerAuthPlaintext(t *testing.T) {
 
-	BrokerAuthBecomeReady(
+	brokerAuth(
 		t,
 		func(name string, client *testlib.Client) map[string][]byte {
 			return map[string][]byte{
@@ -190,9 +190,9 @@ func TestBrokerAuthBecomeReadyPlaintext(t *testing.T) {
 	)
 }
 
-func TestBrokerAuthBecomeReadySsl(t *testing.T) {
+func TestBrokerAuthSsl(t *testing.T) {
 
-	BrokerAuthBecomeReady(
+	brokerAuth(
 		t,
 		func(name string, client *testlib.Client) map[string][]byte {
 			caSecret, err := client.Kube.CoreV1().Secrets(kafkaNamespace).Get(context.Background(), caSecretName, metav1.GetOptions{})
@@ -219,9 +219,9 @@ func TestBrokerAuthBecomeReadySsl(t *testing.T) {
 	)
 }
 
-func TestBrokerAuthBecomeReadySaslPlaintextScram512(t *testing.T) {
+func TestBrokerAuthSaslPlaintextScram512(t *testing.T) {
 
-	BrokerAuthBecomeReady(
+	brokerAuth(
 		t,
 		func(name string, client *testlib.Client) map[string][]byte {
 
@@ -246,9 +246,9 @@ func TestBrokerAuthBecomeReadySaslPlaintextScram512(t *testing.T) {
 	)
 }
 
-func TestBrokerAuthBecomeReadySslSaslScram512(t *testing.T) {
+func TestBrokerAuthSslSaslScram512(t *testing.T) {
 
-	BrokerAuthBecomeReady(
+	brokerAuth(
 		t,
 		func(name string, client *testlib.Client) map[string][]byte {
 			caSecret, err := client.Kube.CoreV1().Secrets(kafkaNamespace).Get(context.Background(), caSecretName, metav1.GetOptions{})
