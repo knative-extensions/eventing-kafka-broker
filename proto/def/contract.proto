@@ -86,7 +86,7 @@ message Ingress {
   }
 }
 
-// Object reference.
+// Kubernetes resource reference.
 message Reference {
 
   // Object id.
