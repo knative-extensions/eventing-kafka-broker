@@ -128,6 +128,19 @@ func TestKafkaSink_Validate(t *testing.T) {
 			want: apis.ErrInvalidValue("-10", "spec.replicationFactor"),
 		},
 		{
+			name: "invalid secret name",
+			ks: &KafkaSink{
+				Spec: KafkaSinkSpec{
+					Topic:            "topic-name-1",
+					BootstrapServers: []string{"broker-1:9092"},
+					ContentMode:      pointer.StringPtr(ModeStructured),
+					Auth:             &Auth{Secret: &Secret{Ref: &SecretReference{}}},
+				},
+			},
+			ctx:  context.Background(),
+			want: apis.ErrInvalidValue("", "spec.auth.secret.ref.name"),
+		},
+		{
 			name: "immutable replication factor",
 			ks: &KafkaSink{
 				Spec: KafkaSinkSpec{
