@@ -151,7 +151,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			Objects: []runtime.Object{
 				NewSink(
 					SinkControllerOwnsTopic,
-					SinkAuthSecretRef(NewSSLSecret(SinkNamespace, "secret-1")),
+					SinkAuthSecretRef("secret-1"),
 				),
 				NewSSLSecret(SinkNamespace, "secret-1"),
 				NewConfigMap(&configs, nil),
@@ -196,7 +196,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				{
 					Object: NewSink(
 						SinkControllerOwnsTopic,
-						SinkAuthSecretRef(NewSSLSecret(SinkNamespace, "secret-1")),
+						SinkAuthSecretRef("secret-1"),
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,

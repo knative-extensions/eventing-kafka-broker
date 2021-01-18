@@ -38,23 +38,12 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	. "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
-
-const (
-	kafkaNamespace     = "kafka"
-	tlsUserSecretName  = "my-tls-user"
-	saslUserSecretName = "my-sasl-user"
-	caSecretName       = "my-cluster-cluster-ca-cert"
-)
-
-type SecretProvider func(name string, client *testlib.Client) map[string][]byte
-
-type ConfigProvider func(secretName string, client *testlib.Client) map[string]string
 
 func brokerAuth(t *testing.T, secretProvider SecretProvider, configProvider ConfigProvider) {
 
-	testingpkg.RunMultiple(t, func(t *testing.T) {
+	RunMultiple(t, func(t *testing.T) {
 
 		ctx := context.Background()
 
@@ -97,7 +86,7 @@ func brokerAuth(t *testing.T, secretProvider SecretProvider, configProvider Conf
 		assert.Nil(t, err)
 		assert.False(t, br.Status.IsReady(), "secret %s/%s doesn't exist, so broker must no be ready", client.Namespace, secretName)
 
-		secretData := secretProvider(secretName, client)
+		secretData := secretProvider(t, client)
 
 		secret := &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -169,16 +158,12 @@ func TestBrokerAuthPlaintext(t *testing.T) {
 
 	brokerAuth(
 		t,
-		func(name string, client *testlib.Client) map[string][]byte {
-			return map[string][]byte{
-				"protocol": []byte("PLAINTEXT"),
-			}
-		},
+		Plaintext,
 		func(secretName string, client *testlib.Client) map[string]string {
 			return map[string]string{
 				"default.topic.replication.factor": "2",
 				"default.topic.partitions":         "2",
-				"bootstrap.servers":                testingpkg.BootstrapServersPlaintext,
+				"bootstrap.servers":                BootstrapServersPlaintext,
 				"auth.secret.ref.name":             secretName,
 			}
 		},
@@ -189,25 +174,12 @@ func TestBrokerAuthSsl(t *testing.T) {
 
 	brokerAuth(
 		t,
-		func(name string, client *testlib.Client) map[string][]byte {
-			caSecret, err := client.Kube.CoreV1().Secrets(kafkaNamespace).Get(context.Background(), caSecretName, metav1.GetOptions{})
-			assert.Nil(t, err)
-
-			tlsUserSecret, err := client.Kube.CoreV1().Secrets(kafkaNamespace).Get(context.Background(), tlsUserSecretName, metav1.GetOptions{})
-			assert.Nil(t, err)
-
-			return map[string][]byte{
-				"protocol": []byte("SSL"),
-				"ca.crt":   caSecret.Data["ca.crt"],
-				"user.crt": tlsUserSecret.Data["user.crt"],
-				"user.key": tlsUserSecret.Data["user.key"],
-			}
-		},
+		Ssl,
 		func(secretName string, client *testlib.Client) map[string]string {
 			return map[string]string{
 				"default.topic.replication.factor": "2",
 				"default.topic.partitions":         "2",
-				"bootstrap.servers":                testingpkg.BootstrapServersSsl,
+				"bootstrap.servers":                BootstrapServersSsl,
 				"auth.secret.ref.name":             secretName,
 			}
 		},
@@ -218,23 +190,12 @@ func TestBrokerAuthSaslPlaintextScram512(t *testing.T) {
 
 	brokerAuth(
 		t,
-		func(name string, client *testlib.Client) map[string][]byte {
-
-			saslUserSecret, err := client.Kube.CoreV1().Secrets(kafkaNamespace).Get(context.Background(), saslUserSecretName, metav1.GetOptions{})
-			assert.Nil(t, err)
-
-			return map[string][]byte{
-				"protocol":       []byte("SASL_PLAINTEXT"),
-				"sasl.mechanism": []byte("SCRAM-SHA-512"),
-				"user":           []byte(saslUserSecretName),
-				"password":       saslUserSecret.Data["password"],
-			}
-		},
+		SaslPlaintextScram512,
 		func(secretName string, client *testlib.Client) map[string]string {
 			return map[string]string{
 				"default.topic.replication.factor": "2",
 				"default.topic.partitions":         "2",
-				"bootstrap.servers":                testingpkg.BootstrapServersSaslPlaintext,
+				"bootstrap.servers":                BootstrapServersSaslPlaintext,
 				"auth.secret.ref.name":             secretName,
 			}
 		},
@@ -245,26 +206,12 @@ func TestBrokerAuthSslSaslScram512(t *testing.T) {
 
 	brokerAuth(
 		t,
-		func(name string, client *testlib.Client) map[string][]byte {
-			caSecret, err := client.Kube.CoreV1().Secrets(kafkaNamespace).Get(context.Background(), caSecretName, metav1.GetOptions{})
-			assert.Nil(t, err)
-
-			saslUserSecret, err := client.Kube.CoreV1().Secrets(kafkaNamespace).Get(context.Background(), saslUserSecretName, metav1.GetOptions{})
-			assert.Nil(t, err)
-
-			return map[string][]byte{
-				"protocol":       []byte("SASL_SSL"),
-				"sasl.mechanism": []byte("SCRAM-SHA-512"),
-				"ca.crt":         caSecret.Data["ca.crt"],
-				"user":           []byte(saslUserSecretName),
-				"password":       saslUserSecret.Data["password"],
-			}
-		},
+		SslSaslScram512,
 		func(secretName string, client *testlib.Client) map[string]string {
 			return map[string]string{
 				"default.topic.replication.factor": "2",
 				"default.topic.partitions":         "2",
-				"bootstrap.servers":                testingpkg.BootstrapServersSslSaslScram,
+				"bootstrap.servers":                BootstrapServersSslSaslScram,
 				"auth.secret.ref.name":             secretName,
 			}
 		},

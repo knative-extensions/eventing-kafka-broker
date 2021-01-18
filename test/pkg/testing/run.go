@@ -30,6 +30,11 @@ const (
 	BootstrapServersSsl           = "my-cluster-kafka-bootstrap.kafka:9093"
 	BootstrapServersSaslPlaintext = "my-cluster-kafka-bootstrap.kafka:9094"
 	BootstrapServersSslSaslScram  = "my-cluster-kafka-bootstrap.kafka:9095"
+
+	KafkaClusterNamespace = "kafka"
+	TlsUserSecretName     = "my-tls-user"
+	SaslUserSecretName    = "my-sasl-user"
+	CaSecretName          = "my-cluster-cluster-ca-cert"
 )
 
 var (

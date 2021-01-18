@@ -177,12 +177,12 @@ func SinkControllerDontOwnTopic(sink *eventing.KafkaSink) {
 	sink.GetStatus().Annotations[base.TopicOwnerAnnotation] = sinkreconciler.ExternalTopicOwner
 }
 
-func SinkAuthSecretRef(s *corev1.Secret) func(sink *eventing.KafkaSink) {
+func SinkAuthSecretRef(name string) func(sink *eventing.KafkaSink) {
 	return func(sink *eventing.KafkaSink) {
 		sink.Spec.Auth = &eventing.Auth{
 			Secret: &eventing.Secret{
 				Ref: &eventing.SecretReference{
-					Name: s.Name,
+					Name: name,
 				},
 			},
 		}
