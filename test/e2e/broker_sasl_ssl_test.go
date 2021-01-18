@@ -38,7 +38,7 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
-	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 const (
@@ -46,11 +46,6 @@ const (
 	tlsUserSecretName  = "my-tls-user"
 	saslUserSecretName = "my-sasl-user"
 	caSecretName       = "my-cluster-cluster-ca-cert"
-
-	kafkaListenerPlaintext     = "my-cluster-kafka-bootstrap.kafka:9092"
-	kafkaListenerSSL           = "my-cluster-kafka-bootstrap.kafka:9093"
-	kafkaListenerSASLPlaintext = "my-cluster-kafka-bootstrap.kafka:9094"
-	kafkaListenerSSLSASLSCRAM  = "my-cluster-kafka-bootstrap.kafka:9095"
 )
 
 type SecretProvider func(name string, client *testlib.Client) map[string][]byte
@@ -59,7 +54,7 @@ type ConfigProvider func(secretName string, client *testlib.Client) map[string]s
 
 func brokerAuth(t *testing.T, secretProvider SecretProvider, configProvider ConfigProvider) {
 
-	pkgtesting.RunMultiple(t, func(t *testing.T) {
+	testingpkg.RunMultiple(t, func(t *testing.T) {
 
 		ctx := context.Background()
 
@@ -183,7 +178,7 @@ func TestBrokerAuthPlaintext(t *testing.T) {
 			return map[string]string{
 				"default.topic.replication.factor": "2",
 				"default.topic.partitions":         "2",
-				"bootstrap.servers":                kafkaListenerPlaintext,
+				"bootstrap.servers":                testingpkg.BootstrapServersPlaintext,
 				"auth.secret.ref.name":             secretName,
 			}
 		},
@@ -212,7 +207,7 @@ func TestBrokerAuthSsl(t *testing.T) {
 			return map[string]string{
 				"default.topic.replication.factor": "2",
 				"default.topic.partitions":         "2",
-				"bootstrap.servers":                kafkaListenerSSL,
+				"bootstrap.servers":                testingpkg.BootstrapServersSsl,
 				"auth.secret.ref.name":             secretName,
 			}
 		},
@@ -239,7 +234,7 @@ func TestBrokerAuthSaslPlaintextScram512(t *testing.T) {
 			return map[string]string{
 				"default.topic.replication.factor": "2",
 				"default.topic.partitions":         "2",
-				"bootstrap.servers":                kafkaListenerSASLPlaintext,
+				"bootstrap.servers":                testingpkg.BootstrapServersSaslPlaintext,
 				"auth.secret.ref.name":             secretName,
 			}
 		},
@@ -269,7 +264,7 @@ func TestBrokerAuthSslSaslScram512(t *testing.T) {
 			return map[string]string{
 				"default.topic.replication.factor": "2",
 				"default.topic.partitions":         "2",
-				"bootstrap.servers":                kafkaListenerSSLSASLSCRAM,
+				"bootstrap.servers":                testingpkg.BootstrapServersSslSaslScram,
 				"auth.secret.ref.name":             secretName,
 			}
 		},

@@ -26,12 +26,18 @@ const (
 	rerunTimes = 5
 
 	// Kafka bootstrap server.
-	BootstrapServers = "my-cluster-kafka-bootstrap.kafka:9092"
+	BootstrapServersPlaintext     = "my-cluster-kafka-bootstrap.kafka:9092"
+	BootstrapServersSsl           = "my-cluster-kafka-bootstrap.kafka:9093"
+	BootstrapServersSaslPlaintext = "my-cluster-kafka-bootstrap.kafka:9094"
+	BootstrapServersSslSaslScram  = "my-cluster-kafka-bootstrap.kafka:9095"
 )
 
 var (
 	// Kafka bootstrap server as array.
-	BootstrapServersArr = []string{BootstrapServers}
+	BootstrapServersPlaintextArr     = []string{BootstrapServersPlaintext}
+	BootstrapServersSslArr           = []string{BootstrapServersSsl}
+	BootstrapServersSaslPlaintextArr = []string{BootstrapServersSaslPlaintext}
+	BootstrapServersSslSaslScramArr  = []string{BootstrapServersSslSaslScram}
 )
 
 // RunMultiple run test function f `rerunTimes` times.

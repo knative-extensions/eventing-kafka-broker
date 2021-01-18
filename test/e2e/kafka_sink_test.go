@@ -48,7 +48,7 @@ func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
 			Topic:             "kafka-sink-" + client.Namespace,
 			NumPartitions:     pointer.Int32Ptr(10),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
-			BootstrapServers:  testingpkg.BootstrapServersArr,
+			BootstrapServers:  testingpkg.BootstrapServersPlaintextArr,
 		}
 
 		createFunc := sink.CreatorV1Alpha1(clientSet, kss)
@@ -84,7 +84,7 @@ func TestKafkaSinkV1Alpha1StructuredContentMode(t *testing.T) {
 			Topic:             "kafka-sink-" + client.Namespace,
 			NumPartitions:     pointer.Int32Ptr(10),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
-			BootstrapServers:  testingpkg.BootstrapServersArr,
+			BootstrapServers:  testingpkg.BootstrapServersPlaintextArr,
 			ContentMode:       pointer.StringPtr(eventingv1alpha1.ModeStructured),
 		}
 
@@ -121,7 +121,7 @@ func TestKafkaSinkV1Alpha1BinaryContentMode(t *testing.T) {
 			Topic:             "kafka-sink-" + client.Namespace,
 			NumPartitions:     pointer.Int32Ptr(10),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
-			BootstrapServers:  testingpkg.BootstrapServersArr,
+			BootstrapServers:  testingpkg.BootstrapServersPlaintextArr,
 			ContentMode:       pointer.StringPtr(eventingv1alpha1.ModeBinary),
 		}
 

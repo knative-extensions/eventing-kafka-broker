@@ -64,7 +64,7 @@ func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
 			Topic:             "kafka-sink-" + client.Namespace,
 			NumPartitions:     pointer.Int32Ptr(10),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
-			BootstrapServers:  testingpkg.BootstrapServersArr,
+			BootstrapServers:  testingpkg.BootstrapServersPlaintextArr,
 		}
 
 		createFunc := sink.CreatorV1Alpha1(clientSet, kss)
