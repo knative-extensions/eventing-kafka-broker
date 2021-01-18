@@ -18,10 +18,8 @@ package log
 
 import (
 	"context"
-	"log"
 
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/logging"
 )
@@ -38,9 +36,4 @@ func Logger(ctx context.Context, action string, object metav1.Object) *zap.Logge
 			string(object.GetUID()),
 		),
 	)
-}
-
-func Sarama(logger *zap.Logger) *log.Logger {
-	sl, _ := zap.NewStdLogAt(logger.With(zap.String("name", "sarama")), zapcore.DebugLevel)
-	return sl
 }
