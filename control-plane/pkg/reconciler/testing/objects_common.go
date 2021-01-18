@@ -109,13 +109,13 @@ func ConfigMapUpdate(configs *Configs, contract *contract.Contract) clientgotest
 	)
 }
 
-func NewSSLSecret(name string) *corev1.Secret {
+func NewSSLSecret(ns, name string) *corev1.Secret {
 
 	ca, userKey, userCert := loadCerts()
 
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace:       ConfigMapNamespace,
+			Namespace:       ns,
 			Name:            name,
 			ResourceVersion: SecretResourceVersion,
 			UID:             SecretUUID,

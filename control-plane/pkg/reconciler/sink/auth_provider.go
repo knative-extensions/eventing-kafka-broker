@@ -25,7 +25,7 @@ type SecretLocator struct {
 }
 
 func (ks *SecretLocator) SecretName() (string, bool, error) {
-	if ks.Spec.Auth == nil || ks.Spec.Auth.Secret == nil || ks.Spec.Auth.Secret.Ref == nil {
+	if !ks.Spec.HasAuthConfig() {
 		return "", false, nil
 	}
 	return ks.Spec.Auth.Secret.Ref.Name, true, nil

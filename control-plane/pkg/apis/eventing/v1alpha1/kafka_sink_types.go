@@ -147,3 +147,7 @@ func (ks *KafkaSink) GetUntypedSpec() interface{} {
 func (ks *KafkaSink) GetStatus() *duckv1.Status {
 	return &ks.Status.Status
 }
+
+func (kss KafkaSinkSpec) HasAuthConfig() bool {
+	return kss.Auth != nil && kss.Auth.Secret != nil && kss.Auth.Secret.Ref != nil
+}

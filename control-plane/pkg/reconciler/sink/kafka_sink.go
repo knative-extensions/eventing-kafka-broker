@@ -152,6 +152,16 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		},
 		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
 	}
+	if ks.Spec.HasAuthConfig() {
+		sinkConfig.Auth = &contract.Resource_AuthSecret{
+			AuthSecret: &contract.Reference{
+				Uuid:      string(secret.UID),
+				Namespace: secret.Namespace,
+				Name:      secret.Name,
+				Version:   secret.ResourceVersion,
+			},
+		}
+	}
 	statusConditionManager.ConfigResolved()
 
 	sinkIndex := coreconfig.FindResource(ct, ks.UID)

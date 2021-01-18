@@ -884,7 +884,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerAuthConfig("secret-1"),
 					))),
 				),
-				NewSSLSecret("secret-1"),
+				NewSSLSecret(ConfigMapNamespace, "secret-1"),
 				BrokerConfig(bootstrapServers, 20, 5, BrokerAuthConfig("secret-1")),
 				NewConfigMap(&configs, nil),
 				NewService(),
