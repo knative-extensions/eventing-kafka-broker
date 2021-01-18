@@ -18,16 +18,12 @@ package dev.knative.eventing.kafka.broker.core.security;
 
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 class CredentialsValidator {
 
   private CredentialsValidator() {
   }
 
-  @Nullable
-  static String validate(@Nonnull final Credentials credentials) {
+  static String validate(final Credentials credentials) {
 
     final var securityProtocol = credentials.securityProtocol();
     if (securityProtocol == null) {

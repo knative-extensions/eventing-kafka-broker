@@ -56,7 +56,6 @@ class KubernetesCredentials implements Credentials {
   }
 
   @Override
-  @Nullable
   public String caCertificates() {
     if (secret == null || secret.getData() == null) {
       return null;
@@ -72,7 +71,6 @@ class KubernetesCredentials implements Credentials {
   }
 
   @Override
-  @Nullable
   public String userCertificate() {
     if (secret == null || secret.getData() == null) {
       return null;
@@ -88,7 +86,6 @@ class KubernetesCredentials implements Credentials {
   }
 
   @Override
-  @Nullable
   public String userKey() {
     if (secret == null || secret.getData() == null) {
       return null;
@@ -105,7 +102,6 @@ class KubernetesCredentials implements Credentials {
 
 
   @Override
-  @Nullable
   public SecurityProtocol securityProtocol() {
     if (secret == null || secret.getData() == null) {
       return null;
@@ -126,7 +122,6 @@ class KubernetesCredentials implements Credentials {
   }
 
   @Override
-  @Nullable
   public String SASLMechanism() {
     if (secret == null || secret.getData() == null) {
       return null;
@@ -146,7 +141,6 @@ class KubernetesCredentials implements Credentials {
   }
 
   @Override
-  @Nullable
   public String SASLUsername() {
     if (secret == null || secret.getData() == null) {
       return null;
@@ -162,7 +156,6 @@ class KubernetesCredentials implements Credentials {
   }
 
   @Override
-  @Nullable
   public String SASLPassword() {
     if (secret == null || secret.getData() == null) {
       return null;

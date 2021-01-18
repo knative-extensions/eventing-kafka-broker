@@ -18,26 +18,21 @@ package dev.knative.eventing.kafka.broker.core.security;
 
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 
-import javax.annotation.Nullable;
-
 public interface Credentials {
 
   /**
    * @return CA certificate.
    */
-  @Nullable
   String caCertificates();
 
   /**
    * @return user certificate.
    */
-  @Nullable
   String userCertificate();
 
   /**
    * @return user key.
    */
-  @Nullable
   String userKey();
 
   /**
@@ -45,7 +40,6 @@ public interface Credentials {
    *
    * @return Security protocol or null if not specified.
    */
-  @Nullable
   SecurityProtocol securityProtocol();
 
   /**
@@ -53,7 +47,6 @@ public interface Credentials {
    *
    * @return SASL mechanism or null if not specified.
    */
-  @Nullable
   String SASLMechanism();
 
   /**
@@ -65,7 +58,6 @@ public interface Credentials {
    * @return username.
    * @see <a href="https://kafka.apache.org/documentation/#security_sasl_scram">SASL Scram</a>
    */
-  @Nullable
   String SASLUsername();
 
   /**
@@ -77,6 +69,5 @@ public interface Credentials {
    * @return password.
    * @see <a href="https://kafka.apache.org/documentation/#security_sasl_scram">SASL Scram</a>
    */
-  @Nullable
   String SASLPassword();
 }
