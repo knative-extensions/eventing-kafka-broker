@@ -21,6 +21,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
@@ -93,7 +94,15 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 	})
 
 	reconciler.SecretTracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
-	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
+		// Call the tracker's OnChanged method, but we've seen the objects
+		// coming through this path missing TypeMeta, so ensure it is properly
+		// populated.
+		controller.EnsureTypeMeta(
+			reconciler.SecretTracker.OnChanged,
+			corev1.SchemeGroupVersion.WithKind("Secret"),
+		),
+	))
 
 	sinkInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: reconciler.OnDeleteObserver,

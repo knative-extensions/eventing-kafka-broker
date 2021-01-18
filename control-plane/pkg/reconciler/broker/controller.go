@@ -23,6 +23,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
@@ -127,7 +128,15 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
 
 	reconciler.ConfigMapTracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
-	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.ConfigMapTracker.OnChanged))
+	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
+		// Call the tracker's OnChanged method, but we've seen the objects
+		// coming through this path missing TypeMeta, so ensure it is properly
+		// populated.
+		controller.EnsureTypeMeta(
+			reconciler.ConfigMapTracker.OnChanged,
+			corev1.SchemeGroupVersion.WithKind("ConfigMap"),
+		),
+	))
 
 	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: kafka.BrokerClassFilter(),
