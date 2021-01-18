@@ -465,7 +465,7 @@ func (*Ingress_Path) isIngress_IngressType() {}
 
 func (*Ingress_Host) isIngress_IngressType() {}
 
-// Object reference.
+// Kubernetes resource reference.
 type Reference struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

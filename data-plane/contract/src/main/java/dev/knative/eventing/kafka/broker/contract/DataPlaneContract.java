@@ -4963,7 +4963,7 @@ public final class DataPlaneContract {
   }
   /**
    * <pre>
-   * Object reference.
+   * Kubernetes resource reference.
    * </pre>
    *
    * Protobuf type {@code Reference}
@@ -5440,7 +5440,7 @@ public final class DataPlaneContract {
     }
     /**
      * <pre>
-     * Object reference.
+     * Kubernetes resource reference.
      * </pre>
      *
      * Protobuf type {@code Reference}
