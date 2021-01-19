@@ -48,9 +48,8 @@ func (x *xdgScramClient) Begin(userName, password, authzID string) (err error) {
 	return nil
 }
 
-func (x *xdgScramClient) Step(challenge string) (response string, err error) {
-	response, err = x.ClientConversation.Step(challenge)
-	return
+func (x *xdgScramClient) Step(challenge string) (string, error) {
+	return x.ClientConversation.Step(challenge)
 }
 
 func (x *xdgScramClient) Done() bool {
