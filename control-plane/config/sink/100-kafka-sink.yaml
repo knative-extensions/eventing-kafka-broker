@@ -83,12 +83,12 @@ spec:
                     - binary
                   default: structured
             status:
-              description: 'Status represents the current state of the Broker. This data may be out of date.'
+              description: 'Status represents the current state of the KafkaSink. This data may be out of date.'
               type: object
               properties:
                 address:
                   description: 'Kafka Sink is Addressable. It exposes the endpoint as an
-                      URI to get events delivered into the Broker mesh.'
+                      URI to get events delivered to a Kafka topic.'
                   type: object
                   properties:
                     url:
