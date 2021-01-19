@@ -86,17 +86,21 @@ spec:
                   description: 'Auth configurations'
                   type: object
                   properties:
-                    ref:
-                      # TODO add format in description (?)
-                      description: |
-                        Secret reference.
+                    secret:
+                      description: 'Auth secret'
                       type: object
-                      required:
-                        - name
                       properties:
-                        name:
-                          description: 'Secret name'
-                          type: string
+                        ref:
+                          # TODO add format in description (?)
+                          description: |
+                            Secret reference.
+                          type: object
+                          required:
+                            - name
+                          properties:
+                            name:
+                              description: 'Secret name'
+                              type: string
             status:
               description: 'Status represents the current state of the Broker. This data may be out of date.'
               type: object

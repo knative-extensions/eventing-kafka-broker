@@ -76,6 +76,10 @@ func testKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func(ks
 
 		ctx := context.Background()
 
+		const (
+			kafkaSinkName = "kafka-sink"
+		)
+
 		client := testlib.Setup(t, false)
 		defer testlib.TearDown(client)
 
@@ -95,6 +99,8 @@ func testKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func(ks
 			require.Nil(t, opt(&kss))
 		}
 
+		t.Log(kss)
+
 		if sp != nil {
 			secretData := sp(t, client)
 			secret := &corev1.Secret{
@@ -104,17 +110,22 @@ func testKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func(ks
 				},
 				Data: secretData,
 			}
-			_, err = client.Kube.CoreV1().Secrets(client.Namespace).Create(ctx, secret, metav1.CreateOptions{})
+			secret, err = client.Kube.CoreV1().Secrets(client.Namespace).Create(ctx, secret, metav1.CreateOptions{})
 			require.Nil(t, err)
+			client.Tracker.Add(corev1.GroupName, "v1", "Secret", secret.Namespace, secret.Name)
 		}
 
 		createFunc := sink.CreatorV1Alpha1(clientSet, kss)
 
 		kafkaSink, err := createFunc(types.NamespacedName{
 			Namespace: client.Namespace,
-			Name:      "kafka-sink",
+			Name:      kafkaSinkName,
 		})
 		require.Nil(t, err)
+
+		ks, err := clientSet.KafkaSinks(client.Namespace).Get(ctx, kafkaSinkName, metav1.GetOptions{})
+		require.Nil(t, err)
+		client.Tracker.AddObj(ks)
 
 		client.WaitForResourceReadyOrFail(kafkaSink.Name, &kafkaSink.TypeMeta)
 

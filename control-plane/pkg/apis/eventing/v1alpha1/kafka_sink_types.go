@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/kmeta"
 )
 
 const (
@@ -60,6 +61,7 @@ var _ apis.Defaultable = (*KafkaSink)(nil)
 var _ runtime.Object = (*KafkaSink)(nil)
 var _ duckv1.KRShaped = (*KafkaSink)(nil)
 var _ apis.Convertible = (*KafkaSink)(nil)
+var _ kmeta.OwnerRefable = (*KafkaSink)(nil)
 
 // KafkaSinkSpec defines the desired state of the Kafka Sink.
 type KafkaSinkSpec struct {
