@@ -20,15 +20,17 @@ import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class is responsible for managing the consumer lifecycle.
@@ -85,12 +87,22 @@ public final class ConsumerVerticle extends AbstractVerticle {
           .onSuccess(h -> {
             this.handler = h;
             this.consumer.handler(this.handler);
-            this.consumer.exceptionHandler(startPromise::tryFail);
+            consumer.exceptionHandler(this.exceptionHandler(startPromise));
             this.consumer.subscribe(this.topics, startPromise);
           })
           .onFailure(startPromise::tryFail);
       })
       .onFailure(startPromise::fail);
+  }
+
+  private Handler<Throwable> exceptionHandler(final Promise<Void> startPromise) {
+    return cause -> {
+      // TODO Add context (consumer group, resource id, etc)
+      // TODO Send message on event bus
+      logger.error("Consumer exception", cause);
+      startPromise.tryFail(cause);
+      this.context.exceptionHandler().handle(cause);
+    };
   }
 
   /**
