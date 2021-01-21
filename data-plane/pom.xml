@@ -57,6 +57,7 @@
     <mokito.junit.jupiter.version>3.7.7</mokito.junit.jupiter.version>
     <fabric8.kubernetes.version>5.0.0-alpha-3</fabric8.kubernetes.version>
     <kafka.version>2.7.0</kafka.version>
+    <debezium.version>1.4.0.Final</debezium.version>
   </properties>
 
   <modules>
@@ -89,6 +90,12 @@
         <version>${vertx.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -119,12 +126,24 @@
         <groupId>io.fabric8</groupId>
         <artifactId>kubernetes-client</artifactId>
         <version>${fabric8.kubernetes.version}</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>okhttp</artifactId>
+            <groupId>com.squareup.okhttp3</groupId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.fabric8</groupId>
         <artifactId>kubernetes-server-mock</artifactId>
         <version>${fabric8.kubernetes.version}</version>
         <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <artifactId>okhttp</artifactId>
+            <groupId>com.squareup.okhttp3</groupId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <!-- Jackson -->
@@ -260,6 +279,30 @@
         <groupId>org.awaitility</groupId>
         <artifactId>awaitility</artifactId>
         <version>${awaitility.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <!--
+        For testing Kafka integrations, Debezium has nice utilities to create Kafka clusters
+        programmatically.
+      -->
+      <dependency>
+        <groupId>io.debezium</groupId>
+        <artifactId>debezium-core</artifactId>
+        <version>${debezium.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.debezium</groupId>
+        <artifactId>debezium-core</artifactId>
+        <version>${debezium.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka_2.12</artifactId>
+        <version>${kafka.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
