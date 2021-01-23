@@ -46,7 +46,7 @@ readonly sink="${KNATIVE_KAFKA_SINK_RECEIVER:-knative-kafka-sink-receiver}"
 # The BASE_IMAGE must have system libraries (libc, zlib, etc) compatible with the JAVA_IMAGE because
 # Jlink generates a jdk linked to the same system libraries available on the base images.
 readonly BASE_IMAGE=gcr.io/distroless/java-debian10:base-nonroot # Based on debian:buster
-readonly JAVA_IMAGE=docker.io/adoptopenjdk/openjdk14:debian      # Based on debian:buster
+readonly JAVA_IMAGE=docker.io/adoptopenjdk/openjdk15:debian      # Based on debian:buster
 
 readonly RECEIVER_JAR="receiver-1.0-SNAPSHOT.jar"
 readonly RECEIVER_DIRECTORY=receiver
