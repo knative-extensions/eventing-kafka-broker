@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
+import dev.knative.eventing.kafka.broker.core.security.Credentials;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
@@ -61,24 +62,27 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
   }
 
   @Override
-  protected KafkaProducer<String, CloudEvent> createProducer(
-    final Vertx vertx,
-    final Map<String, String> producerConfigs) {
+  protected Function<Vertx, Future<KafkaProducer<String, CloudEvent>>> createProducerFactory(
+    final Map<String, String> producerConfigs,
+    final DataPlaneContract.Resource resource,
+    final Future<Credentials> credentialsFuture) {
 
-    final var producer = new MockProducer<>(
-      true,
-      new StringSerializer(),
-      new CloudEventSerializer()
-    );
+    return vertx -> {
+      final var producer = new MockProducer<>(
+        true,
+        new StringSerializer(),
+        new CloudEventSerializer()
+      );
 
-    return KafkaProducer.create(vertx, producer);
+      return Future.succeededFuture(KafkaProducer.create(vertx, producer));
+    };
   }
 
   @Override
   protected Function<Vertx, Future<KafkaConsumer<String, CloudEvent>>> createConsumerFactory(
     final Map<String, Object> consumerConfigs,
     final DataPlaneContract.Resource resource,
-    final Function<Map<String, Object>, Future<Void>> consumerConfigsDecorator) {
+    final Future<Credentials> credentialsFuture) {
     return vertx -> {
 
       final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);

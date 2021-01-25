@@ -30,24 +30,25 @@ import java.util.function.BiConsumer;
 
 public class KafkaClientsAuth {
 
-  public static Future<Void> configure(final Credentials credentials, final Properties properties) {
-    return clientsProperties(properties::setProperty, credentials);
+  public static Future<Properties> updateConfigsFromProps(final Credentials credentials,
+                                                          final Properties properties) {
+    return clientsProperties(properties::setProperty, credentials)
+      .map(r -> properties);
   }
 
-  public static Future<Void> configure(final Credentials credentials,
-                                       final Map<String, Object> consumerConfigs,
-                                       final Map<String, String> producerConfigs) {
-    return clientsProperties(
-      (k, v) -> {
-        producerConfigs.put(k, v);
-        consumerConfigs.put(k, v);
-      },
-      credentials
-    );
+  public static Future<Map<String, String>> updateProducerConfigs(final Credentials credentials,
+                                                                  final Map<String, String> configs) {
+    return clientsProperties(configs::put, credentials)
+      .map(r -> configs);
+  }
+
+  public static Future<Map<String, Object>> updateConsumerConfigs(final Credentials credentials,
+                                                                  final Map<String, Object> configs) {
+    return clientsProperties(configs::put, credentials)
+      .map(r -> configs);
   }
 
   private static Future<Void> clientsProperties(final BiConsumer<String, String> propertiesSetter, final Credentials credentials) {
-
     final var protocol = credentials.securityProtocol();
     if (protocol == null) {
       return Future.succeededFuture();

@@ -20,7 +20,9 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.core.filter.impl.AttributesFilter;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
+import dev.knative.eventing.kafka.broker.core.security.Credentials;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
+import dev.knative.eventing.kafka.broker.core.security.PlaintextCredentials;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
@@ -120,21 +122,24 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
     producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
-    Function<Map<String, Object>, Future<Void>> clientConfigsDecorator = null;
-    if (resource.hasAuthSecret()) {
-      clientConfigsDecorator = (consumerProps) -> authProvider.getCredentials(resource.getAuthSecret().getNamespace(), resource.getAuthSecret().getName())
-        .compose(c -> KafkaClientsAuth.configure(c, consumerProps, producerConfigs));
-    }
+    final Future<Credentials> credentialsFuture = resource.hasAuthSecret() ?
+      authProvider.getCredentials(resource.getAuthSecret().getNamespace(), resource.getAuthSecret().getName())
+      : Future.succeededFuture(new PlaintextCredentials());
 
     final Function<Vertx, Future<KafkaConsumer<String, CloudEvent>>> consumerFactory = createConsumerFactory(
       consumerConfigs,
       resource,
-      clientConfigsDecorator
+      credentialsFuture
     );
 
-    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, ConsumerRecordHandler<String, CloudEvent, HttpResponse<Buffer>>> recordHandlerFactory = (vertx, consumer) -> {
+    final Function<Vertx, Future<KafkaProducer<String, CloudEvent>>> producerFactory = createProducerFactory(
+      producerConfigs,
+      resource,
+      credentialsFuture
+    );
 
-      final var producer = createProducer(vertx, producerConfigs);
+    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<ConsumerRecordHandler<String, CloudEvent, HttpResponse<Buffer>>>> recordHandlerFactory = (vertx, consumer) -> {
+
       final var circuitBreakerOptions = createCircuitBreakerOptions(resource);
       final var egressConfig = resource.getEgressConfig();
 
@@ -149,13 +154,14 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
         ? NO_DLQ_SENDER
         : createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), circuitBreakerOptions, egressConfig);
 
-      return new ConsumerRecordHandler<>(
-        egressSubscriberSender,
-        egress.hasFilter() ? new AttributesFilter(egress.getFilter().getAttributesMap()) : Filter.noop(),
-        this.consumerRecordOffsetStrategyFactory.get(consumer, resource, egress),
-        new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer),
-        egressDeadLetterSender
-      );
+      return producerFactory.apply(vertx)
+        .map(producer -> new ConsumerRecordHandler<>(
+          egressSubscriberSender,
+          egress.hasFilter() ? new AttributesFilter(egress.getFilter().getAttributesMap()) : Filter.noop(),
+          this.consumerRecordOffsetStrategyFactory.get(consumer, resource, egress),
+          new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer),
+          egressDeadLetterSender
+        ));
     };
 
     return new ConsumerVerticle<>(consumerFactory, new HashSet<>(resource.getTopicsList()), recordHandlerFactory);
@@ -164,17 +170,11 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
   protected Function<Vertx, Future<KafkaConsumer<String, CloudEvent>>> createConsumerFactory(
     final Map<String, Object> consumerConfigs,
     final DataPlaneContract.Resource resource,
-    final Function<Map<String, Object>, Future<Void>> consumerConfigsDecorator) {
-
-    return vertx -> {
-
-      if (consumerConfigsDecorator != null) {
-        return consumerConfigsDecorator.apply(consumerConfigs)
-          .map(r -> createConsumer(vertx, consumerConfigs));
-      }
-
-      return Future.succeededFuture(createConsumer(vertx, consumerConfigs));
-    };
+    final Future<Credentials> credentialsFuture) {
+    return vertx -> credentialsFuture
+      .compose(credentials -> KafkaClientsAuth.updateConsumerConfigs(credentials, consumerConfigs))
+      // Note: Do not use consumerConfigs as parameter, use configs (return value)
+      .map(configs -> createConsumer(vertx, configs));
   }
 
   private static KafkaConsumer<String, CloudEvent> createConsumer(final Vertx vertx,
@@ -186,10 +186,14 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     return KafkaConsumer.create(vertx, opt);
   }
 
-  protected KafkaProducer<String, CloudEvent> createProducer(
-    final Vertx vertx,
-    final Map<String, String> producerConfigs) {
-    return KafkaProducer.create(vertx, producerConfigs);
+  protected Function<Vertx, Future<KafkaProducer<String, CloudEvent>>> createProducerFactory(
+    final Map<String, String> producerConfigs,
+    final DataPlaneContract.Resource resource,
+    final Future<Credentials> credentialsFuture) {
+    return vertx -> credentialsFuture
+      .compose(credentials -> KafkaClientsAuth.updateProducerConfigs(credentials, producerConfigs))
+      // Note: Do not use producerConfigs as parameter, use configs (return value)
+      .map(configs -> KafkaProducer.create(vertx, configs));
   }
 
   private ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> createConsumerRecordSender(

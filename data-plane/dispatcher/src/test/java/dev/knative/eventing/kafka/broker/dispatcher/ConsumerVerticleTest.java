@@ -61,7 +61,7 @@ public class ConsumerVerticleTest {
     final var verticle = new ConsumerVerticle<>(
       v -> Future.succeededFuture(KafkaConsumer.create(v, consumer)),
       Set.of(topic),
-      (a, b) -> new ConsumerRecordHandler<>(
+      (a, b) -> Future.succeededFuture(new ConsumerRecordHandler<>(
         ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
         value -> false,
         (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class),
@@ -70,7 +70,7 @@ public class ConsumerVerticleTest {
           response -> Future.succeededFuture()
         ),
         ConsumerRecordSender.create(Future.failedFuture("DLQ send called"), Future.succeededFuture())
-      )
+      ))
     );
 
     final Promise<String> promise = Promise.promise();
@@ -94,7 +94,7 @@ public class ConsumerVerticleTest {
     final var verticle = new ConsumerVerticle<>(
       v -> Future.succeededFuture(KafkaConsumer.create(v, consumer)),
       Set.of(topic),
-      (a, b) -> new ConsumerRecordHandler<>(
+      (a, b) -> Future.succeededFuture(new ConsumerRecordHandler<>(
         ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
         value -> false,
         (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class),
@@ -103,7 +103,7 @@ public class ConsumerVerticleTest {
           response -> Future.succeededFuture()
         ),
         ConsumerRecordSender.create(Future.failedFuture("DLQ send called"), Future.succeededFuture())
-      )
+      ))
     );
 
     final Promise<String> deployPromise = Promise.promise();
@@ -155,7 +155,7 @@ public class ConsumerVerticleTest {
     final var verticle = new ConsumerVerticle<>(
       v -> Future.succeededFuture(consumer),
       Arrays.stream(topics).collect(Collectors.toSet()),
-      (v, c) -> new ConsumerRecordHandler<>(
+      (v, c) -> Future.succeededFuture(new ConsumerRecordHandler<>(
         new ConsumerRecordSenderMock<>(
           () -> {
             consumerRecordSenderClosed.set(true);
@@ -179,7 +179,7 @@ public class ConsumerVerticleTest {
           },
           record -> Future.succeededFuture()
         )
-      )
+      ))
     );
 
     vertx.deployVerticle(verticle)

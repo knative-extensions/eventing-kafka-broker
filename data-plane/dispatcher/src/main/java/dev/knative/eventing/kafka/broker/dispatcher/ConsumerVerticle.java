@@ -46,7 +46,7 @@ public final class ConsumerVerticle<K, V, R> extends AbstractVerticle {
 
   private final Set<String> topics;
   private final Function<Vertx, Future<KafkaConsumer<K, V>>> consumerFactory;
-  private final BiFunction<Vertx, KafkaConsumer<K, V>, ConsumerRecordHandler<K, V, R>> recordHandler;
+  private final BiFunction<Vertx, KafkaConsumer<K, V>, Future<ConsumerRecordHandler<K, V, R>>> recordHandlerFactory;
 
   /**
    * All args constructor.
@@ -58,14 +58,14 @@ public final class ConsumerVerticle<K, V, R> extends AbstractVerticle {
   public ConsumerVerticle(
     final Function<Vertx, Future<KafkaConsumer<K, V>>> consumerFactory,
     final Set<String> topics,
-    final BiFunction<Vertx, KafkaConsumer<K, V>, ConsumerRecordHandler<K, V, R>> recordHandlerFactory) {
+    final BiFunction<Vertx, KafkaConsumer<K, V>, Future<ConsumerRecordHandler<K, V, R>>> recordHandlerFactory) {
 
     Objects.requireNonNull(consumerFactory, "provide consumerFactory");
     Objects.requireNonNull(topics, "provide topic");
     Objects.requireNonNull(recordHandlerFactory, "provide recordHandlerFactory");
 
     this.topics = topics;
-    this.recordHandler = recordHandlerFactory;
+    this.recordHandlerFactory = recordHandlerFactory;
     this.consumerFactory = consumerFactory;
   }
 
@@ -83,11 +83,14 @@ public final class ConsumerVerticle<K, V, R> extends AbstractVerticle {
 
         this.consumer = consumer;
         this.consumerMeterBinder = Metrics.register(this.consumer.unwrap());
-        this.handler = recordHandler.apply(vertx, this.consumer);
-
-        this.consumer.handler(handler);
-        this.consumer.exceptionHandler(startPromise::tryFail);
-        this.consumer.subscribe(topics, startPromise);
+        recordHandlerFactory.apply(vertx, this.consumer)
+          .onSuccess(h -> {
+            this.handler = h;
+            this.consumer.handler(this.handler);
+            this.consumer.exceptionHandler(startPromise::tryFail);
+            this.consumer.subscribe(this.topics, startPromise);
+          })
+          .onFailure(startPromise::tryFail);
       })
       .onFailure(startPromise::fail);
   }

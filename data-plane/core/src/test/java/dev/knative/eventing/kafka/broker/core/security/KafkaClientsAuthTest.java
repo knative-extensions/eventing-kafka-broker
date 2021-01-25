@@ -60,7 +60,7 @@ public class KafkaClientsAuthTest {
     when(credentials.SASLUsername()).thenReturn("aaa");
     when(credentials.SASLPassword()).thenReturn("bbb");
 
-    assertThat(KafkaClientsAuth.configure(credentials, props).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.updateConfigsFromProps(credentials, props).succeeded()).isTrue();
 
     final var expected = new Properties();
     expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_SSL.name());
@@ -77,7 +77,8 @@ public class KafkaClientsAuthTest {
     final var producerConfigs = new HashMap<String, String>();
     final var consumerConfigs = new HashMap<String, Object>();
 
-    assertThat(KafkaClientsAuth.configure(credentials, consumerConfigs, producerConfigs).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.updateProducerConfigs(credentials, producerConfigs).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.updateConsumerConfigs(credentials, consumerConfigs).succeeded()).isTrue();
 
     assertThat(producerConfigs).isEqualTo(expected);
     assertThat(consumerConfigs).isEqualTo(expected);
@@ -93,7 +94,7 @@ public class KafkaClientsAuthTest {
     when(credentials.userKey()).thenReturn("key");
     when(credentials.caCertificates()).thenReturn("xyz");
 
-    assertThat(KafkaClientsAuth.configure(credentials, props).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.updateConfigsFromProps(credentials, props).succeeded()).isTrue();
 
     final var expected = new Properties();
     expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SSL.name());
@@ -108,7 +109,8 @@ public class KafkaClientsAuthTest {
     final var producerConfigs = new HashMap<String, String>();
     final var consumerConfigs = new HashMap<String, Object>();
 
-    assertThat(KafkaClientsAuth.configure(credentials, consumerConfigs, producerConfigs).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.updateProducerConfigs(credentials, producerConfigs).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.updateConsumerConfigs(credentials, consumerConfigs).succeeded()).isTrue();
 
     assertThat(producerConfigs).isEqualTo(expected);
     assertThat(consumerConfigs).isEqualTo(expected);
@@ -131,7 +133,7 @@ public class KafkaClientsAuthTest {
     final var credentials = mock(Credentials.class);
     when(credentials.securityProtocol()).thenReturn(SecurityProtocol.PLAINTEXT);
 
-    assertThat(KafkaClientsAuth.configure(credentials, props).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.updateConfigsFromProps(credentials, props).succeeded()).isTrue();
 
     final var expected = new Properties();
     expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.PLAINTEXT.name());
@@ -141,7 +143,8 @@ public class KafkaClientsAuthTest {
     final var producerConfigs = new HashMap<String, String>();
     final var consumerConfigs = new HashMap<String, Object>();
 
-    assertThat(KafkaClientsAuth.configure(credentials, consumerConfigs, producerConfigs).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.updateProducerConfigs(credentials, producerConfigs).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.updateConsumerConfigs(credentials, consumerConfigs).succeeded()).isTrue();
 
     assertThat(producerConfigs).isEqualTo(expected);
     assertThat(consumerConfigs).isEqualTo(expected);
@@ -156,7 +159,7 @@ public class KafkaClientsAuthTest {
     when(credentials.SASLUsername()).thenReturn("aaa");
     when(credentials.SASLPassword()).thenReturn("bbb");
 
-    assertThat(KafkaClientsAuth.configure(credentials, props).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.updateConfigsFromProps(credentials, props).succeeded()).isTrue();
 
     final var expected = new Properties();
 
@@ -172,7 +175,8 @@ public class KafkaClientsAuthTest {
     final var producerConfigs = new HashMap<String, String>();
     final var consumerConfigs = new HashMap<String, Object>();
 
-    assertThat(KafkaClientsAuth.configure(credentials, consumerConfigs, producerConfigs).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.updateProducerConfigs(credentials, producerConfigs).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.updateConsumerConfigs(credentials, consumerConfigs).succeeded()).isTrue();
 
     assertThat(producerConfigs).isEqualTo(expected);
     assertThat(consumerConfigs).isEqualTo(expected);

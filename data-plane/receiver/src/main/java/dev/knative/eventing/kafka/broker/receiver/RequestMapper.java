@@ -163,8 +163,8 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     final var producerProps = (Properties) this.producerConfigs.clone();
     if (resource.hasAuthSecret()) {
       return authProvider.getCredentials(resource.getAuthSecret().getNamespace(), resource.getAuthSecret().getName())
-        .compose(credentials -> KafkaClientsAuth.configure(credentials, producerProps))
-        .compose(r -> onNewIngress(resource, ingress, producerProps));
+        .compose(credentials -> KafkaClientsAuth.updateConfigsFromProps(credentials, producerProps))
+        .compose(configs -> onNewIngress(resource, ingress, configs));
     }
     return onNewIngress(resource, ingress, producerProps);
   }
