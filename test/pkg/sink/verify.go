@@ -39,7 +39,7 @@ func Verify(t *testing.T, client *testlib.Client, mode, topic string, ids []stri
 			Name:      names.SimpleNameGenerator.GenerateName("verify-messages"),
 		},
 		&kafkatest.ConsumerConfig{
-			BootstrapServers: testingpkg.BootstrapServers,
+			BootstrapServers: testingpkg.BootstrapServersPlaintext,
 			Topic:            topic,
 			IDS:              strings.Join(ids, ","),
 			ContentMode:      mode,

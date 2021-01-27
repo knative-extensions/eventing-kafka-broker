@@ -15,15 +15,17 @@
  */
 package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import org.junit.jupiter.api.Test;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
 import static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress;
 import static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter;
 import static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import java.util.Collections;
-import java.util.List;
-import org.junit.jupiter.api.Test;
 
 class ResourcesReconcilerImplTest {
 
@@ -109,6 +111,48 @@ class ResourcesReconcilerImplTest {
       .reconcile(List.of(
         baseResource("1-1234")
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello/world"))
+          .build()
+      ))
+      .expect()
+      .updatedIngress("1-1234")
+      .then()
+      .run();
+  }
+
+  @Test
+  void reconcileIngressAndAddAuthConfigAtSecondStepAndUpdateAuthConfigAtThirdStep() {
+    final var uuid = UUID.randomUUID().toString();
+    new ResourceReconcilerTestRunner()
+      .enableIngressListener()
+      .reconcile(List.of(
+        baseResource("1-1234")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
+          .build()
+      ))
+      .expect()
+      .newIngress("1-1234")
+      .then()
+      .reconcile(List.of(
+        baseResource("1-1234")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello/world"))
+          .setAuthSecret(DataPlaneContract.Reference.newBuilder()
+            .setName("n1")
+            .setNamespace("ns1")
+            .setUuid(uuid)
+            .setVersion("1"))
+          .build()
+      ))
+      .expect()
+      .updatedIngress("1-1234")
+      .then()
+      .reconcile(List.of(
+        baseResource("1-1234")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
+          .setAuthSecret(DataPlaneContract.Reference.newBuilder()
+            .setName("n1")
+            .setNamespace("ns1")
+            .setUuid(uuid)
+            .setVersion("2"))
           .build()
       ))
       .expect()
@@ -226,6 +270,60 @@ class ResourcesReconcilerImplTest {
       .then()
       .reconcile(List.of(
         baseResource("1-1234")
+          .addEgresses(egress("aaa"))
+          .addEgresses(egress("bbb"))
+          .addEgresses(egress("ccc"))
+          .build()
+      ))
+      .expect()
+      .updatedEgress("aaa")
+      .updatedEgress("bbb")
+      .updatedEgress("ccc")
+      .then()
+      .run();
+  }
+
+  @Test
+  void reconcileEgressModifyingAuthConfig() {
+    final var uuid = UUID.randomUUID().toString();
+    new ResourceReconcilerTestRunner()
+      .enableEgressListener()
+      .reconcile(List.of(
+        baseResource("1-1234")
+          .addEgresses(egress("aaa"))
+          .addEgresses(egress("bbb"))
+          .addEgresses(egress("ccc"))
+          .build()
+      ))
+      .expect()
+      .newEgress("aaa")
+      .newEgress("bbb")
+      .newEgress("ccc")
+      .then()
+      .reconcile(List.of(
+        baseResource("1-1234")
+          .setAuthSecret(DataPlaneContract.Reference.newBuilder()
+            .setName("n1")
+            .setNamespace("ns1")
+            .setUuid(uuid)
+            .setVersion("1"))
+          .addEgresses(egress("aaa"))
+          .addEgresses(egress("bbb"))
+          .addEgresses(egress("ccc"))
+          .build()
+      ))
+      .expect()
+      .updatedEgress("aaa")
+      .updatedEgress("bbb")
+      .updatedEgress("ccc")
+      .then()
+      .reconcile(List.of(
+        baseResource("1-1234")
+          .setAuthSecret(DataPlaneContract.Reference.newBuilder()
+            .setName("n1")
+            .setNamespace("ns1")
+            .setUuid(uuid)
+            .setVersion("2"))
           .addEgresses(egress("aaa"))
           .addEgresses(egress("bbb"))
           .addEgresses(egress("ccc"))

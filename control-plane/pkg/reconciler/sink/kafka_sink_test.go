@@ -147,6 +147,69 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			},
 		},
 		{
+			Name: "Reconciled normal - with auth config",
+			Objects: []runtime.Object{
+				NewSink(
+					SinkControllerOwnsTopic,
+					SinkAuthSecretRef("secret-1"),
+				),
+				NewSSLSecret(SinkNamespace, "secret-1"),
+				NewConfigMap(&configs, nil),
+				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              SinkUUID,
+							Topics:           []string{SinkTopic()},
+							BootstrapServers: bootstrapServers,
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
+							Auth: &contract.Resource_AuthSecret{
+								AuthSecret: &contract.Reference{
+									Uuid:      SecretUUID,
+									Namespace: SinkNamespace,
+									Name:      "secret-1",
+									Version:   SecretResourceVersion,
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						SinkControllerOwnsTopic,
+						SinkAuthSecretRef("secret-1"),
+						InitSinkConditions,
+						SinkDataPlaneAvailable,
+						SinkConfigParsed,
+						BootstrapServers(bootstrapServersArr),
+						SinkConfigMapUpdatedReady(&configs.Env),
+						SinkTopicReady,
+						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						SinkAddressable(&configs.Env),
+					),
+				},
+			},
+		},
+		{
 			Name: "Reconciled normal - no topic owner",
 			Objects: []runtime.Object{
 				NewSink(
@@ -961,6 +1024,7 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
 				PodLister:                   listers.GetPodLister(),
+				SecretLister:                listers.GetSecretLister(),
 				DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
 				DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
@@ -982,6 +1046,8 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 			},
 			Configs: &configs.Env,
 		}
+
+		reconciler.SecretTracker = &FakeTracker{}
 
 		return sinkreconciler.NewReconciler(
 			ctx,

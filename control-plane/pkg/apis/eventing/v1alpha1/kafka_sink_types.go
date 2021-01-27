@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/kmeta"
 )
 
 const (
@@ -60,6 +61,7 @@ var _ apis.Defaultable = (*KafkaSink)(nil)
 var _ runtime.Object = (*KafkaSink)(nil)
 var _ duckv1.KRShaped = (*KafkaSink)(nil)
 var _ apis.Convertible = (*KafkaSink)(nil)
+var _ kmeta.OwnerRefable = (*KafkaSink)(nil)
 
 // KafkaSinkSpec defines the desired state of the Kafka Sink.
 type KafkaSinkSpec struct {
@@ -91,6 +93,24 @@ type KafkaSinkSpec struct {
 	//
 	// +optional
 	ContentMode *string `json:"contentMode,omitempty"`
+
+	// Auth configurations.
+	Auth *Auth `json:"auth,omitempty"`
+}
+
+type Auth struct {
+	// Auth Secret
+	Secret *Secret `json:"secret,omitempty"`
+}
+
+type Secret struct {
+	// Secret reference for SASL and SSL configurations.
+	Ref *SecretReference `json:"ref,omitempty"`
+}
+
+type SecretReference struct {
+	// Secret name.
+	Name string `json:"name"`
 }
 
 // KafkaSinkStatus represents the current state of the KafkaSink.
@@ -128,4 +148,8 @@ func (ks *KafkaSink) GetUntypedSpec() interface{} {
 // GetStatus retrieves the status of the Kafka Sink. Implements the KRShaped interface.
 func (ks *KafkaSink) GetStatus() *duckv1.Status {
 	return &ks.Status.Status
+}
+
+func (kss KafkaSinkSpec) HasAuthConfig() bool {
+	return kss.Auth != nil && kss.Auth.Secret != nil && kss.Auth.Secret.Ref != nil
 }

@@ -15,16 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
@@ -43,6 +33,10 @@ import io.vertx.kafka.client.producer.RecordMetadata;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+import org.apache.kafka.clients.producer.MockProducer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -51,9 +45,16 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-import org.apache.kafka.clients.producer.MockProducer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.InstanceOfAssertFactories.map;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class RequestMapperTest {
@@ -106,6 +107,7 @@ public class RequestMapperTest {
 
     final var handler = new RequestMapper<>(
       mock(Vertx.class),
+      null,
       new Properties(),
       mapper,
       properties -> producer,
@@ -149,6 +151,7 @@ public class RequestMapperTest {
 
     final var handler = new RequestMapper<Object, Object>(
       vertx,
+      null,
       new Properties(),
       mapper,
       properties -> producer,
@@ -417,6 +420,7 @@ public class RequestMapperTest {
 
     final var handler = new RequestMapper<Object, Object>(
       vertx,
+      null,
       new Properties(),
       (request, topic) -> Future.succeededFuture(),
       properties -> {

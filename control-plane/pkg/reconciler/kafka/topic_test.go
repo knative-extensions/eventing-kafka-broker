@@ -11,6 +11,7 @@ import (
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 func TestCreateTopic(t *testing.T) {
@@ -295,7 +296,7 @@ func TestCreateTopicTopicAlreadyExists(t *testing.T) {
 		return ca, nil
 	}
 
-	topicRet, err := f.CreateTopic(zap.NewNop(), topic, &TopicConfig{})
+	topicRet, err := f.CreateTopic(zap.NewNop(), topic, &TopicConfig{}, security.NoOp)
 
 	assert.Equal(t, topicRet, topic, "expected topic %s go %s", topic, topicRet)
 	assert.Nil(t, err, "expected nil error on topic already exists")
@@ -316,7 +317,7 @@ func TestNewClusterAdminFuncDeleteTopicCloseClusterAdmin(t *testing.T) {
 		return ca, nil
 	})
 
-	got, err := f.DeleteTopic("topic-name-1", []string{})
+	got, err := f.DeleteTopic("topic-name-1", []string{}, security.NoOp)
 	if err != nil {
 		t.Errorf("DeleteTopic() error = %v, wantErr %v", err, false)
 		return
@@ -401,7 +402,7 @@ func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.f.IsTopicPresentAndValid(tt.args.topic, tt.args.bootstrapServers)
+			got, err := tt.f.IsTopicPresentAndValid(tt.args.topic, tt.args.bootstrapServers, security.NoOp)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("IsTopicPresentAndValid() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -431,7 +432,7 @@ func TestNewClusterAdminFuncIsTopicPresentCloseClusterAdmin(t *testing.T) {
 		return ca, nil
 	})
 
-	got, err := f.IsTopicPresentAndValid("topic-name-1", []string{})
+	got, err := f.IsTopicPresentAndValid("topic-name-1", []string{}, security.NoOp)
 
 	assert.Nil(t, err, "IsTopicPresentAndValid() error = %v, wantErr %v", err, false)
 	assert.True(t, got, "IsTopicPresentAndValid() got = %v, want %v", got, true)

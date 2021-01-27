@@ -62,6 +62,10 @@ func (kss *KafkaSinkSpec) Validate(ctx context.Context) *apis.FieldError {
 		errs = errs.Also(apis.ErrInvalidValue(*kss.NumPartitions, "numPartitions"))
 	}
 
+	if kss.HasAuthConfig() && kss.Auth.Secret.Ref.Name == "" {
+		errs = errs.Also(apis.ErrInvalidValue("", "auth.secret.ref.name"))
+	}
+
 	return errs
 }
 

@@ -877,6 +877,86 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 		},
 		{
+			Name: "Reconciled normal - with auth config",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithBrokerConfig(KReference(BrokerConfig(bootstrapServers, 20, 5,
+						BrokerAuthConfig("secret-1"),
+					))),
+				),
+				NewSSLSecret(ConfigMapNamespace, "secret-1"),
+				BrokerConfig(bootstrapServers, 20, 5, BrokerAuthConfig("secret-1")),
+				NewConfigMap(&configs, nil),
+				NewService(),
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							BootstrapServers: bootstrapServers,
+							Auth: &contract.Resource_AuthSecret{
+								AuthSecret: &contract.Reference{
+									Uuid:      SecretUUID,
+									Namespace: ConfigMapNamespace,
+									Name:      "secret-1",
+									Version:   SecretResourceVersion,
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithBrokerConfig(KReference(BrokerConfig(bootstrapServers, 20, 5,
+							BrokerAuthConfig("secret-1"),
+						))),
+						reconcilertesting.WithInitBrokerConditions,
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerDataPlaneAvailable,
+						BrokerConfigParsed,
+						BrokerTopicReady,
+						BrokerAddressable(&configs),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+				ExpectedTopicDetail: sarama.TopicDetail{
+					NumPartitions:     20,
+					ReplicationFactor: 5,
+				},
+			},
+		},
+		{
 			Name: "Failed to parse broker config - not found",
 			Objects: []runtime.Object{
 				NewBroker(
@@ -1681,6 +1761,7 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
 				PodLister:                   listers.GetPodLister(),
+				SecretLister:                listers.GetSecretLister(),
 				DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
 				DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
@@ -1703,6 +1784,9 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 			Configs: configs,
 		}
 		reconciler.SetBootstrapServers(bootstrapServers)
+
+		reconciler.ConfigMapTracker = &FakeTracker{}
+		reconciler.SecretTracker = &FakeTracker{}
 
 		r := brokerreconciler.NewReconciler(
 			ctx,

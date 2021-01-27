@@ -15,15 +15,11 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
-import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
+import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
+import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
 import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
@@ -34,14 +30,21 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 /**
  * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to Kafka through the Kafka
@@ -72,18 +75,11 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
   private final Counter badRequestCounter;
   private final Counter produceEventsCounter;
   private final Vertx vertx;
+  private final AuthProvider authProvider;
 
-  /**
-   * Create a new Request handler.
-   *
-   * @param producerConfigs       common producers configurations
-   * @param requestToRecordMapper request to record mapper
-   * @param producerCreator       creates a producer
-   * @param badRequestCounter     count bad request responses
-   * @param produceEventsCounter  count events sent to Kafka
-   */
   public RequestMapper(
     final Vertx vertx,
+    final AuthProvider authProvider,
     final Properties producerConfigs,
     final RequestToRecordMapper<K, V> requestToRecordMapper,
     final Function<Properties, KafkaProducer<K, V>> producerCreator,
@@ -96,6 +92,7 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     Objects.requireNonNull(producerCreator, "provide producerCreator");
 
     this.vertx = vertx;
+    this.authProvider = authProvider;
     this.producerConfigs = producerConfigs;
     this.requestToRecordMapper = requestToRecordMapper;
     this.producerCreator = producerCreator;
@@ -162,8 +159,20 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
   public Future<Void> onNewIngress(
     DataPlaneContract.Resource resource,
     DataPlaneContract.Ingress ingress) {
-    // Compute the properties
+
     final var producerProps = (Properties) this.producerConfigs.clone();
+    if (resource.hasAuthSecret()) {
+      return authProvider.getCredentials(resource.getAuthSecret().getNamespace(), resource.getAuthSecret().getName())
+        .compose(credentials -> KafkaClientsAuth.updateConfigsFromProps(credentials, producerProps))
+        .compose(configs -> onNewIngress(resource, ingress, configs));
+    }
+    return onNewIngress(resource, ingress, producerProps);
+  }
+
+  private Future<Void> onNewIngress(final DataPlaneContract.Resource resource,
+                                    final DataPlaneContract.Ingress ingress,
+                                    final Properties producerProps) {
+    // Compute the properties.
     producerProps.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
     if (ingress.getContentMode() != DataPlaneContract.ContentMode.UNRECOGNIZED) {
       producerProps.setProperty(CloudEventSerializer.ENCODING_CONFIG, encoding(ingress.getContentMode()));
@@ -293,7 +302,7 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     private final Properties producerProperties;
 
     IngressInfo(final KafkaProducer<K, V> producer, final String topic, final String path,
-      final Properties producerProperties) {
+                final Properties producerProperties) {
       this.producer = producer;
       this.topic = topic;
       this.path = path;

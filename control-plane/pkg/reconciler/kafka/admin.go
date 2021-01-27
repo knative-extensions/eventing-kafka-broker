@@ -20,6 +20,8 @@ import (
 	"fmt"
 
 	"github.com/Shopify/sarama"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 // NewClusterAdminFunc creates new sarama.ClusterAdmin.
@@ -36,14 +38,19 @@ func AdminConfig() *sarama.Config {
 // GetClusterAdmin creates a new sarama.ClusterAdmin.
 //
 // The caller is responsible for closing the sarama.ClusterAdmin.
-func GetClusterAdmin(adminFunc NewClusterAdminFunc, bootstrapServers []string) (sarama.ClusterAdmin, error) {
-	return GetClusterAdminFromConfig(adminFunc, AdminConfig(), bootstrapServers)
+func GetClusterAdmin(adminFunc NewClusterAdminFunc, bootstrapServers []string, secOptions security.ConfigOption) (sarama.ClusterAdmin, error) {
+	return GetClusterAdminFromConfig(adminFunc, AdminConfig(), bootstrapServers, secOptions)
 }
 
 // GetClusterAdminFromConfig creates a new sarama.ClusterAdmin.
 //
 // The caller is responsible for closing the sarama.ClusterAdmin.
-func GetClusterAdminFromConfig(adminFunc NewClusterAdminFunc, config *sarama.Config, bootstrapServers []string) (sarama.ClusterAdmin, error) {
+func GetClusterAdminFromConfig(adminFunc NewClusterAdminFunc, config *sarama.Config, bootstrapServers []string, secOptions security.ConfigOption) (sarama.ClusterAdmin, error) {
+
+	err := secOptions(config)
+	if err != nil {
+		return nil, err
+	}
 
 	kafkaClusterAdmin, err := adminFunc(bootstrapServers, config)
 	if err != nil {

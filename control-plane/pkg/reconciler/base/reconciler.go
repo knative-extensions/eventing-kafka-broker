@@ -20,11 +20,9 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-
-	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,6 +30,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
+	"knative.dev/pkg/tracker"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 const (
@@ -58,8 +60,12 @@ const (
 // Base reconciler for broker and trigger reconciler.
 // It contains common logic for both trigger and broker reconciler.
 type Reconciler struct {
-	KubeClient kubernetes.Interface
-	PodLister  corelisters.PodLister
+	KubeClient   kubernetes.Interface
+	PodLister    corelisters.PodLister
+	SecretLister corelisters.SecretLister
+
+	SecretTracker    tracker.Interface
+	ConfigMapTracker tracker.Interface
 
 	DataPlaneConfigMapNamespace string
 	DataPlaneConfigMapName      string
@@ -254,4 +260,45 @@ func (r *Reconciler) receiverSelector() labels.Selector {
 
 func (r *Reconciler) dispatcherSelector() labels.Selector {
 	return labels.SelectorFromSet(map[string]string{"app": r.DispatcherLabel})
+}
+
+func (r *Reconciler) SecretProviderFunc() security.SecretProviderFunc {
+	return security.DefaultSecretProviderFunc(r.SecretLister, r.KubeClient)
+}
+
+func (r *Reconciler) TrackSecret(secret *corev1.Secret, parent metav1.Object) error {
+	if secret == nil {
+		return nil
+	}
+	ref := tracker.Reference{
+		// Do not use cm.APIVersion and cm.Kind since they might be empty when they've been pulled from a lister.
+		APIVersion: "v1",
+		Kind:       "Secret",
+		Namespace:  secret.Namespace,
+		Name:       secret.Name,
+	}
+	return r.SecretTracker.TrackReference(ref, parent)
+}
+
+func (r *Reconciler) TrackConfigMap(cm *corev1.ConfigMap, parent metav1.Object) error {
+	if cm == nil {
+		return nil
+	}
+	ref := tracker.Reference{
+		// Do not use cm.APIVersion and cm.Kind since they might be empty when they've been pulled from a lister.
+		APIVersion: "v1",
+		Kind:       "ConfigMap",
+		Namespace:  cm.Namespace,
+		Name:       cm.Name,
+	}
+	return r.ConfigMapTracker.TrackReference(ref, parent)
+}
+
+func (r *Reconciler) OnDeleteObserver(obj interface{}) {
+	if r.ConfigMapTracker != nil {
+		r.ConfigMapTracker.OnDeletedObserver(obj)
+	}
+	if r.SecretTracker != nil {
+		r.SecretTracker.OnDeletedObserver(obj)
+	}
 }

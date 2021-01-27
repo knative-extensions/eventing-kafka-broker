@@ -86,6 +86,22 @@ message Ingress {
   }
 }
 
+// Kubernetes resource reference.
+message Reference {
+
+  // Object id.
+  string uuid = 1;
+
+  // Object namespace.
+  string namespace = 2;
+
+  // Object name.
+  string name = 3;
+
+  // Object version.
+  string version = 4;
+}
+
 message Resource {
   // Id of the resource
   // It's the same as the Kubernetes resource uid
@@ -108,6 +124,45 @@ message Resource {
 
   // Optional egresses for this topic
   repeated Egress egresses = 6;
+
+  oneof Auth {
+    // No auth configured.
+    google.protobuf.Empty absentAuth = 7;
+
+    // Secret reference.
+    //
+    // Secret format:
+    //
+    //   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+    //   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+    //   ca.crt: <CA PEM certificate>
+    //   user.crt: <User PEM certificate>
+    //   user.key: <User PEM key>
+    //   user: <SASL username>
+    //   password: <SASL password>
+    //
+    // Validation:
+    //   - protocol=PLAINTEXT
+    //   - protocol=SSL
+    //     - required:
+    //       - ca.crt
+    //       - user.crt
+    //       - user.key
+    //   - protocol=SASL_PLAINTEXT
+    //     - required:
+    //       - sasl.mechanism
+    //       - user
+    //       - password
+    //   - protocol=SASL_SSL
+    //     - required:
+    //       - sasl.mechanism
+    //       - ca.crt
+    //       - user.crt
+    //       - user.key
+    //       - user
+    //       - password
+    Reference authSecret = 8;
+  }
 }
 
 message Contract {

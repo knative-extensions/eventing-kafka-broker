@@ -92,6 +92,10 @@ func (l *Listers) GetPodLister() corelisters.PodLister {
 	return corelisters.NewPodLister(l.indexerFor(&corev1.Pod{}))
 }
 
+func (l *Listers) GetSecretLister() corelisters.SecretLister {
+	return corelisters.NewSecretLister(l.indexerFor(&corev1.Secret{}))
+}
+
 func (l *Listers) GetTriggerLister() eventinglisters.TriggerLister {
 	return eventinglisters.NewTriggerLister(l.indexerFor(&eventing.Trigger{}))
 }

@@ -17,7 +17,10 @@
 package testing
 
 import (
+	"io/ioutil"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -41,6 +44,9 @@ const (
 	ServiceURL       = "http://test-service.test-service-namespace.svc.cluster.local/"
 
 	TriggerUUID = "e7185016-5d98-4b54-84e8-3b1cd4acc6b5"
+
+	SecretResourceVersion = "1234"
+	SecretUUID            = "a7185016-5d98-4b54-84e8-3b1cd4acc6b6"
 )
 
 var (
@@ -101,4 +107,43 @@ func ConfigMapUpdate(configs *Configs, contract *contract.Contract) clientgotest
 		configs.DataPlaneConfigMapNamespace,
 		NewConfigMapFromContract(contract, configs),
 	)
+}
+
+func NewSSLSecret(ns, name string) *corev1.Secret {
+
+	ca, userKey, userCert := loadCerts()
+
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:       ns,
+			Name:            name,
+			ResourceVersion: SecretResourceVersion,
+			UID:             SecretUUID,
+		},
+		Data: map[string][]byte{
+			security.ProtocolKey:      []byte(security.ProtocolSSL),
+			security.CaCertificateKey: ca,
+			security.UserKey:          userKey,
+			security.UserCertificate:  userCert,
+		},
+	}
+}
+
+func loadCerts() (ca, userKey, userCert []byte) {
+	ca, err := ioutil.ReadFile("testdata/ca.crt")
+	if err != nil {
+		panic(err)
+	}
+
+	userKey, err = ioutil.ReadFile("testdata/user.key")
+	if err != nil {
+		panic(err)
+	}
+
+	userCert, err = ioutil.ReadFile("testdata/user.crt")
+	if err != nil {
+		panic(err)
+	}
+
+	return ca, userKey, userCert
 }

@@ -15,9 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.FloatNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -26,6 +23,7 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
+import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
@@ -45,13 +43,6 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -60,6 +51,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(VertxExtension.class)
 public class ReceiverVerticleTest {
@@ -86,7 +88,7 @@ public class ReceiverVerticleTest {
     ReceiverVerticleTest.mockProducer = new MockProducer<>(
       true,
       new StringSerializer(),
-      new CloudEventSerializer()
+      new CloudEventSerializerMock()
     );
     KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, mockProducer);
 
@@ -95,6 +97,7 @@ public class ReceiverVerticleTest {
 
     handler = new RequestMapper<>(
       vertx,
+      null,
       new Properties(),
       new CloudEventRequestToRecordMapper(vertx),
       properties -> producer,

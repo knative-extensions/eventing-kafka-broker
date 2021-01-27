@@ -23,8 +23,6 @@ import (
 	"strings"
 	"sync"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -37,11 +35,13 @@ import (
 	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/log"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 const (
@@ -95,15 +95,37 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 	statusConditionManager.DataPlaneAvailable()
 
-	topicConfig, err := r.topicConfig(logger, broker)
+	topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 	statusConditionManager.ConfigResolved()
 
+	if err := r.TrackConfigMap(brokerConfig, broker); err != nil {
+		return fmt.Errorf("failed to track broker config: %w", err)
+	}
+
 	logger.Debug("config resolved", zap.Any("config", topicConfig))
 
-	topic, err := r.ClusterAdmin.CreateTopic(logger, kafka.Topic(TopicPrefix, broker), topicConfig)
+	securityOption, secret, err := security.NewOptionFromSecret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig}, r.SecretProviderFunc())
+	if err != nil {
+		return fmt.Errorf("failed to create security (auth) option: %w", err)
+	}
+
+	if secret != nil {
+		logger.Debug("Secret reference",
+			zap.String("apiVersion", secret.APIVersion),
+			zap.String("name", secret.Name),
+			zap.String("namespace", secret.Namespace),
+			zap.String("kind", secret.Kind),
+		)
+	}
+
+	if err := r.TrackSecret(secret, broker); err != nil {
+		return fmt.Errorf("failed to track secret: %w", err)
+	}
+
+	topic, err := r.ClusterAdmin.CreateTopic(logger, kafka.Topic(TopicPrefix, broker), topicConfig, securityOption)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topic, err)
 	}
@@ -131,7 +153,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	)
 
 	// Get resource configuration.
-	brokerResource, err := r.getBrokerResource(ctx, topic, broker, topicConfig)
+	brokerResource, err := r.getBrokerResource(ctx, topic, broker, secret, topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToGetConfig(err)
 	}
@@ -240,13 +262,18 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		// eventually be seen by the dispatcher pod and resources will be deleted accordingly.
 	}
 
-	topicConfig, err := r.topicConfig(logger, broker)
+	topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
 	if err != nil {
 		return fmt.Errorf("failed to resolve broker config: %w", err)
 	}
 
-	bootstrapServers := topicConfig.BootstrapServers
-	topic, err := r.ClusterAdmin.DeleteTopic(kafka.Topic(TopicPrefix, broker), bootstrapServers)
+	authProvider := &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig}
+	securityOption, _, err := security.NewOptionFromSecret(ctx, authProvider, r.SecretProviderFunc())
+	if err != nil {
+		return fmt.Errorf("failed to create security (auth) option: %w", err)
+	}
+
+	topic, err := r.ClusterAdmin.DeleteTopic(kafka.Topic(TopicPrefix, broker), topicConfig.BootstrapServers, securityOption)
 	if err != nil {
 		return err
 	}
@@ -260,16 +287,17 @@ func incrementContractGeneration(generation uint64) uint64 {
 	return (generation + 1) % (math.MaxUint64 - 1)
 }
 
-func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, error) {
+func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, *corev1.ConfigMap, error) {
 
 	logger.Debug("broker config", zap.Any("broker.spec.config", broker.Spec.Config))
 
 	if broker.Spec.Config == nil {
-		return r.defaultConfig()
+		tc, err := r.defaultConfig()
+		return tc, nil, err
 	}
 
 	if strings.ToLower(broker.Spec.Config.Kind) != "configmap" { // TODO: is there any constant?
-		return nil, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind)
+		return nil, nil, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind)
 	}
 
 	namespace := broker.Spec.Config.Namespace
@@ -279,15 +307,15 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*
 	}
 	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(broker.Spec.Config.Name)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, err)
+		return nil, nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, err)
 	}
 
 	brokerConfig, err := configFromConfigMap(logger, cm)
 	if err != nil {
-		return nil, err
+		return nil, cm, err
 	}
 
-	return brokerConfig, nil
+	return brokerConfig, cm, nil
 }
 
 func (r *Reconciler) defaultTopicDetail() sarama.TopicDetail {
@@ -311,7 +339,7 @@ func (r *Reconciler) defaultConfig() (*kafka.TopicConfig, error) {
 	}, nil
 }
 
-func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, config *kafka.TopicConfig) (*contract.Resource, error) {
+func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
 	res := &contract.Resource{
 		Uid:    string(broker.UID),
 		Topics: []string{topic},
@@ -321,6 +349,17 @@ func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker
 			},
 		},
 		BootstrapServers: config.GetBootstrapServers(),
+	}
+
+	if secret != nil {
+		res.Auth = &contract.Resource_AuthSecret{
+			AuthSecret: &contract.Reference{
+				Uuid:      string(secret.UID),
+				Namespace: secret.Namespace,
+				Name:      secret.Name,
+				Version:   secret.ResourceVersion,
+			},
+		}
 	}
 
 	delivery := broker.Spec.Delivery

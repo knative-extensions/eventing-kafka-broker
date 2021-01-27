@@ -18,7 +18,6 @@ set -e
 
 source $(dirname $0)/../../vendor/knative.dev/hack/e2e-tests.sh
 
-
 kubectl create namespace kafka --dry-run -o yaml | kubectl apply -f -
 
 sleep 5
@@ -29,6 +28,8 @@ cat $(dirname $0)/strimzi-cluster-operator.yaml | sed "s/cluster.local/${CLUSTER
 sleep 5
 
 kubectl -n kafka apply -f $(dirname $0)/kafka-ephemeral.yaml
+kubectl apply -n kafka -f $(dirname $0)/user-tls.yaml
+kubectl apply -n kafka -f $(dirname $0)/user-sasl-scram-512.yaml
 
 sleep 5
 
