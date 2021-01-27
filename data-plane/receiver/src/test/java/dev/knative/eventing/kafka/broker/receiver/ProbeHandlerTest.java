@@ -52,10 +52,10 @@ public class ProbeHandlerTest {
 
     this.server = vertx.createHttpServer(httpServerOptions);
     this.server.requestHandler(new SimpleProbeHandlerDecorator(
-        LIVENESS_PATH,
-        READINESS_PATH,
-        r -> r.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end()
-      ))
+      LIVENESS_PATH,
+      READINESS_PATH,
+      r -> r.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end()
+    ))
       .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
       .onComplete(context.succeedingThenComplete());
   }

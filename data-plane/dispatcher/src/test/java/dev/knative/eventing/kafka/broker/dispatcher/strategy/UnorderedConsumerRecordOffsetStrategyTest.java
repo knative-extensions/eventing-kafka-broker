@@ -22,6 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Meter.Id;
 import io.micrometer.core.instrument.cumulative.CumulativeCounter;
@@ -52,7 +53,7 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
   public void recordReceived() {
     final KafkaConsumer<Object, Object> consumer = mock(KafkaConsumer.class);
     final Counter eventsSentCounter = mock(Counter.class);
-    new UnorderedConsumerRecordOffsetStrategy<>(consumer, eventsSentCounter).recordReceived(null);
+    new UnorderedConsumerRecordOffsetStrategy(consumer, eventsSentCounter).recordReceived(null);
 
     shouldNeverCommit(consumer);
     shouldNeverPause(consumer);
@@ -77,7 +78,7 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
     final KafkaConsumer<Object, Object> consumer = mock(KafkaConsumer.class);
     final Counter eventsSentCounter = mock(Counter.class);
 
-    new UnorderedConsumerRecordOffsetStrategy<>(consumer, eventsSentCounter).failedToSendToDLQ(null, null);
+    new UnorderedConsumerRecordOffsetStrategy(consumer, eventsSentCounter).failedToSendToDLQ(null, null);
 
     shouldNeverCommit(consumer);
     shouldNeverPause(consumer);
@@ -91,8 +92,8 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
   }
 
   @SuppressWarnings("unchecked")
-  private static <K, V> void shouldCommit(
-    final BiConsumer<KafkaConsumerRecord<K, V>, UnorderedConsumerRecordOffsetStrategy<K, V>> rConsumer) {
+  private static void shouldCommit(
+    final BiConsumer<KafkaConsumerRecord<String, CloudEvent>, UnorderedConsumerRecordOffsetStrategy> rConsumer) {
 
     final var topic = "topic-42";
     final var partition = 42;
@@ -101,10 +102,11 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
     final var topicPartition = new TopicPartition(topic, partition);
     partitions.add(topicPartition);
 
-    final var mockConsumer = new MockConsumer<K, V>(OffsetResetStrategy.LATEST);
+    final var mockConsumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
     mockConsumer.assign(partitions);
 
-    final KafkaConsumer<K, V> consumer = (KafkaConsumer<K, V>) Mockito.mock(KafkaConsumer.class);
+    final KafkaConsumer<String, CloudEvent> consumer =
+      (KafkaConsumer<String, CloudEvent>) Mockito.mock(KafkaConsumer.class);
     doAnswer(invocation -> {
 
       final Map<io.vertx.kafka.client.common.TopicPartition, io.vertx.kafka.client.consumer.OffsetAndMetadata>
@@ -124,10 +126,10 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
 
     final Counter eventsSentCounter = new CumulativeCounter(mock(Id.class));
 
-    final var offsetManager = new UnorderedConsumerRecordOffsetStrategy<>(consumer, eventsSentCounter);
+    final var offsetManager = new UnorderedConsumerRecordOffsetStrategy(consumer, eventsSentCounter);
 
     final var record = new KafkaConsumerRecordImpl<>(
-      new ConsumerRecord<K, V>(
+      new ConsumerRecord<String, CloudEvent>(
         topic,
         partition,
         offset,
@@ -147,7 +149,7 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
   }
 
   @SuppressWarnings("unchecked")
-  private static <K, V> void shouldNeverCommit(final KafkaConsumer<K, V> consumer) {
+  private static <String, CloudEvent> void shouldNeverCommit(final KafkaConsumer<String, CloudEvent> consumer) {
     verify(consumer, never()).commit();
     verify(consumer, never()).commit(any(Handler.class));
     verify(consumer, never()).commit(any(Map.class));
@@ -155,7 +157,7 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
   }
 
   @SuppressWarnings("unchecked")
-  private static <K, V> void shouldNeverPause(final KafkaConsumer<K, V> consumer) {
+  private static <String, CloudEvent> void shouldNeverPause(final KafkaConsumer<String, CloudEvent> consumer) {
     verify(consumer, never()).pause();
     verify(consumer, never()).pause(any(io.vertx.kafka.client.common.TopicPartition.class));
     verify(consumer, never()).pause(any(Set.class));

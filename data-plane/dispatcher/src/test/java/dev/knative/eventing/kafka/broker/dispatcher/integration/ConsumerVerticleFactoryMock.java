@@ -54,7 +54,7 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
   public ConsumerVerticleFactoryMock(
     final Properties consumerConfigs,
     final Properties producerConfigs,
-    final ConsumerRecordOffsetStrategyFactory<String, CloudEvent> consumerRecordOffsetStrategyFactory) {
+    final ConsumerRecordOffsetStrategyFactory consumerRecordOffsetStrategyFactory) {
 
     super(consumerRecordOffsetStrategyFactory, consumerConfigs, new WebClientOptions(), producerConfigs, mock(AuthProvider.class));
     mockProducer = new ConcurrentHashMap<>();

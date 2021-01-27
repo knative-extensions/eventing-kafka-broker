@@ -17,12 +17,13 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
+import dev.knative.eventing.kafka.broker.core.filter.Filter;
+import io.cloudevents.CloudEvent;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import java.util.Objects;
-import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,20 +31,17 @@ import org.slf4j.LoggerFactory;
  * ConsumerRecordHandler implements the core algorithm of the Dispatcher component (see {@link
  * ConsumerRecordHandler#handle(KafkaConsumerRecord)}).
  *
- * @param <K> type of records' key.
- * @param <V> type of records' value.
- * @param <R> type of the response of given senders.
  * @see ConsumerRecordHandler#handle(KafkaConsumerRecord)
  */
-public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsumerRecord<K, V>> {
+public final class ConsumerRecordHandler implements Handler<KafkaConsumerRecord<String, CloudEvent>> {
 
   private static final Logger logger = LoggerFactory.getLogger(ConsumerRecordHandler.class);
 
-  private final Predicate<V> filter;
-  private final ConsumerRecordSender<K, V, R> subscriberSender;
-  private final ConsumerRecordSender<K, V, R> deadLetterQueueSender;
-  private final ConsumerRecordOffsetStrategy<K, V> receiver;
-  private final SinkResponseHandler<R> sinkResponseHandler;
+  private final Filter filter;
+  private final ConsumerRecordSender subscriberSender;
+  private final ConsumerRecordSender deadLetterQueueSender;
+  private final ConsumerRecordOffsetStrategy receiver;
+  private final SinkResponseHandler sinkResponseHandler;
 
   /**
    * All args constructor.
@@ -56,11 +54,11 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
    * @param deadLetterQueueSender sender to DLQ
    */
   public ConsumerRecordHandler(
-    final ConsumerRecordSender<K, V, R> subscriberSender,
-    final Predicate<V> filter,
-    final ConsumerRecordOffsetStrategy<K, V> receiver,
-    final SinkResponseHandler<R> sinkResponseHandler,
-    final ConsumerRecordSender<K, V, R> deadLetterQueueSender) {
+    final ConsumerRecordSender subscriberSender,
+    final Filter filter,
+    final ConsumerRecordOffsetStrategy receiver,
+    final SinkResponseHandler sinkResponseHandler,
+    final ConsumerRecordSender deadLetterQueueSender) {
 
     Objects.requireNonNull(filter, "provide filter");
     Objects.requireNonNull(subscriberSender, "provide subscriberSender");
@@ -85,10 +83,10 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
    * @param sinkResponseHandler handler of the response
    */
   public ConsumerRecordHandler(
-    final ConsumerRecordSender<K, V, R> subscriberSender,
-    final Predicate<V> filter,
-    final ConsumerRecordOffsetStrategy<K, V> receiver,
-    final SinkResponseHandler<R> sinkResponseHandler) {
+    final ConsumerRecordSender subscriberSender,
+    final Filter filter,
+    final ConsumerRecordOffsetStrategy receiver,
+    final SinkResponseHandler sinkResponseHandler) {
 
     this(
       subscriberSender,
@@ -107,7 +105,7 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
    * @param record record to handle.
    */
   @Override
-  public void handle(final KafkaConsumerRecord<K, V> record) {
+  public void handle(final KafkaConsumerRecord<String, CloudEvent> record) {
 
     logDebug("Handling record", record);
 
@@ -122,7 +120,7 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
     }
   }
 
-  private void send(final KafkaConsumerRecord<K, V> record) {
+  private void send(final KafkaConsumerRecord<String, CloudEvent> record) {
     subscriberSender.send(record)
       .onSuccess(response -> sinkResponseHandler.handle(response)
         .onSuccess(ignored -> {
@@ -139,7 +137,7 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
       });
   }
 
-  private void sendToDLS(KafkaConsumerRecord<K, V> record) {
+  private void sendToDLS(KafkaConsumerRecord<String, CloudEvent> record) {
     deadLetterQueueSender.send(record)
       .onFailure(ex -> {
         logError("Failed to send record to dead letter sink", record, ex);
@@ -156,9 +154,9 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
         }));
   }
 
-  private static <K, V> void logError(
+  private static void logError(
     final String msg,
-    final KafkaConsumerRecord<K, V> record,
+    final KafkaConsumerRecord<String, CloudEvent> record,
     final Throwable cause) {
 
     if (logger.isDebugEnabled()) {
@@ -180,9 +178,9 @@ public final class ConsumerRecordHandler<K, V, R> implements Handler<KafkaConsum
     }
   }
 
-  private static <K, V> void logDebug(
+  private static void logDebug(
     final String msg,
-    final KafkaConsumerRecord<K, V> record) {
+    final KafkaConsumerRecord<String, CloudEvent> record) {
 
     logger.debug(msg + " {} {} {} {} {}",
       keyValue("topic", record.topic()),

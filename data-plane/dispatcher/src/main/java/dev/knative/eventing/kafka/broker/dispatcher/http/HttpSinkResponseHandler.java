@@ -33,7 +33,7 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpResponse<Buffer>> {
+public final class HttpSinkResponseHandler implements SinkResponseHandler {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpSinkResponseHandler.class);
 

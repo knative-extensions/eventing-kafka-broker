@@ -124,7 +124,7 @@ public class HttpSinkResponseHandlerTest {
     // Empty response
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
     when(response.statusCode()).thenReturn(202);
-    when(response.body()).thenReturn(Buffer.buffer(new byte[]{'a'}));
+    when(response.body()).thenReturn(Buffer.buffer(new byte[] {'a'}));
     when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap());
 
     context

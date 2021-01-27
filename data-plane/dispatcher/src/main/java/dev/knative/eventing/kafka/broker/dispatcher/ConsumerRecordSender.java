@@ -15,15 +15,14 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-/**
- * @param <K> Consumer record key type.
- * @param <V> Consumer record value type.
- * @param <R> Send response type.
- */
-public interface ConsumerRecordSender<K, V, R> {
+@FunctionalInterface
+public interface ConsumerRecordSender {
 
   /**
    * Send the given record. (the record passed the filter)
@@ -31,6 +30,7 @@ public interface ConsumerRecordSender<K, V, R> {
    * @param record record to send
    * @return a successful future or a failed future.
    */
+  Future<HttpResponse<Buffer>> send(KafkaConsumerRecord<String, CloudEvent> record);
   Future<R> send(KafkaConsumerRecord<K, V> record);
 
   /**

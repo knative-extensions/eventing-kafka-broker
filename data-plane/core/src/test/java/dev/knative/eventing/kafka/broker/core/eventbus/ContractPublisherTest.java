@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.core.eventbus;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;

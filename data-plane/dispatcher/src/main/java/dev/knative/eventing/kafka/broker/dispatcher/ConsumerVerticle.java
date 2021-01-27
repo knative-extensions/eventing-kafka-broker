@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import io.cloudevents.CloudEvent;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
@@ -31,22 +32,19 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
- * ConsumerVerticle is responsible for manging the consumer lifecycle.
- *
- * @param <K> record key type.
- * @param <V> record value type.
+ * This class is responsible for managing the consumer lifecycle.
  */
-public final class ConsumerVerticle<K, V, R> extends AbstractVerticle {
+public final class ConsumerVerticle extends AbstractVerticle {
 
   private static final Logger logger = LoggerFactory.getLogger(ConsumerVerticle.class);
 
-  private KafkaConsumer<K, V> consumer;
+  private KafkaConsumer<String, CloudEvent> consumer;
   private AutoCloseable consumerMeterBinder;
-  private ConsumerRecordHandler<K, V, R> handler;
+  private ConsumerRecordHandler handler;
 
   private final Set<String> topics;
-  private final Function<Vertx, Future<KafkaConsumer<K, V>>> consumerFactory;
-  private final BiFunction<Vertx, KafkaConsumer<K, V>, Future<ConsumerRecordHandler<K, V, R>>> recordHandlerFactory;
+  private final Function<Vertx, Future<KafkaConsumer<String, CloudEvent>>> consumerFactory;
+  private final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<ConsumerRecordHandler<K, V, R>>> recordHandlerFactory;
 
   /**
    * All args constructor.
