@@ -26,8 +26,10 @@ import (
 )
 
 // KafkaSinkLister helps list KafkaSinks.
+// All objects returned here must be treated as read-only.
 type KafkaSinkLister interface {
 	// List lists all KafkaSinks in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.KafkaSink, err error)
 	// KafkaSinks returns an object that can list and get KafkaSinks.
 	KafkaSinks(namespace string) KafkaSinkNamespaceLister
@@ -58,10 +60,13 @@ func (s *kafkaSinkLister) KafkaSinks(namespace string) KafkaSinkNamespaceLister 
 }
 
 // KafkaSinkNamespaceLister helps list and get KafkaSinks.
+// All objects returned here must be treated as read-only.
 type KafkaSinkNamespaceLister interface {
 	// List lists all KafkaSinks in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.KafkaSink, err error)
 	// Get retrieves the KafkaSink from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.KafkaSink, error)
 	KafkaSinkNamespaceListerExpansion
 }
