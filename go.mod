@@ -3,16 +3,13 @@ module knative.dev/eventing-kafka-broker
 go 1.14
 
 require (
-	github.com/DataDog/sketches-go v0.0.0-20190923095040-43f19ad77ff7 // indirect
 	github.com/Shopify/sarama v1.27.0
-	github.com/benbjohnson/clock v1.0.0 // indirect
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.2.0
 	github.com/cloudevents/sdk-go/v2 v2.3.1
 	github.com/golang/protobuf v1.4.3
 	github.com/google/go-cmp v0.5.4
 	github.com/google/uuid v1.1.2
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/opentracing/opentracing-go v1.1.1-0.20190913142402-a7454ce5950e // indirect
 	github.com/pierdipi/sacura v0.0.0-20201003135834-e90e3a725ff9
 	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.6.1
