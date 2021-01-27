@@ -1884,6 +1884,7 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
 				PodLister:                   listers.GetPodLister(),
+				SecretLister:                listers.GetSecretLister(),
 				DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
 				DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,

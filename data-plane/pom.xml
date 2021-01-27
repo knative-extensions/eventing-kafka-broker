@@ -17,8 +17,8 @@
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>dev.knative.eventing.kafka.broker</groupId>
@@ -55,6 +55,9 @@
     <awaitility.version>4.0.3</awaitility.version>
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
     <mokito.junit.jupiter.version>3.7.7</mokito.junit.jupiter.version>
+    <fabric8.kubernetes.version>5.0.0-alpha-3</fabric8.kubernetes.version>
+    <kafka.version>2.7.0</kafka.version>
+    <debezium.version>1.4.0.Final</debezium.version>
   </properties>
 
   <modules>
@@ -87,6 +90,18 @@
         <version>${vertx.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-clients</artifactId>
+        <version>${kafka.version}</version>
       </dependency>
 
       <!-- Micrometer -->
@@ -104,6 +119,31 @@
         <version>${opentelemetry.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+
+      <!-- Kubernetes -->
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>kubernetes-client</artifactId>
+        <version>${fabric8.kubernetes.version}</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>okhttp</artifactId>
+            <groupId>com.squareup.okhttp3</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>kubernetes-server-mock</artifactId>
+        <version>${fabric8.kubernetes.version}</version>
+        <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <artifactId>okhttp</artifactId>
+            <groupId>com.squareup.okhttp3</groupId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <!-- Jackson -->
@@ -193,6 +233,7 @@
         <groupId>io.vertx</groupId>
         <artifactId>vertx-junit5</artifactId>
         <version>${vertx.version}</version>
+        <scope>test</scope>
         <exclusions>
           <exclusion>
             <groupId>org.junit.jupiter</groupId>
@@ -208,11 +249,19 @@
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter</artifactId>
         <version>${junit.jupiter.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-migrationsupport</artifactId>
+        <version>${junit.jupiter.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-junit-jupiter</artifactId>
         <version>${mokito.junit.jupiter.version}</version>
+        <scope>test</scope>
         <exclusions>
           <exclusion>
             <groupId>org.junit.jupiter</groupId>
@@ -230,6 +279,30 @@
         <groupId>org.awaitility</groupId>
         <artifactId>awaitility</artifactId>
         <version>${awaitility.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <!--
+        For testing Kafka integrations, Debezium has nice utilities to create Kafka clusters
+        programmatically.
+      -->
+      <dependency>
+        <groupId>io.debezium</groupId>
+        <artifactId>debezium-core</artifactId>
+        <version>${debezium.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.debezium</groupId>
+        <artifactId>debezium-core</artifactId>
+        <version>${debezium.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka_2.12</artifactId>
+        <version>${kafka.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>

@@ -27,7 +27,7 @@ func (ks *KafkaSink) SetDefaults(ctx context.Context) {
 func (kss *KafkaSinkSpec) SetDefaults(ctx context.Context) {
 	defaultMode := ModeStructured
 
-	if kss.ContentMode == nil {
+	if kss.ContentMode == nil || *kss.ContentMode == "" {
 		kss.ContentMode = &defaultMode
 	}
 }

@@ -45,10 +45,12 @@ func configFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*kafka.Topic
 
 	if topicDetail.NumPartitions <= 0 || replicationFactor <= 0 || bootstrapServers == "" {
 		return nil, fmt.Errorf(
-			"invalid configuration - numPartitions: %d - replicationFactor: %d - bootstrapServers: %s",
+			"invalid configuration - numPartitions: %d - replicationFactor: %d - bootstrapServers: %s - ConfigMap data: %v",
 			topicDetail.NumPartitions,
 			replicationFactor,
-			bootstrapServers)
+			bootstrapServers,
+			cm.Data,
+		)
 	}
 
 	topicDetail.ReplicationFactor = int16(replicationFactor)

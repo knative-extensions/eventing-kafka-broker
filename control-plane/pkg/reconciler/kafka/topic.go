@@ -23,6 +23,8 @@ import (
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 // TopicConfig contains configurations for creating a topic.
@@ -89,9 +91,9 @@ func DeleteTopic(admin sarama.ClusterAdmin, topic string) (string, error) {
 	return topic, nil
 }
 
-func (f NewClusterAdminFunc) CreateTopic(logger *zap.Logger, topic string, config *TopicConfig) (string, error) {
+func (f NewClusterAdminFunc) CreateTopic(logger *zap.Logger, topic string, config *TopicConfig, secOptions security.ConfigOption) (string, error) {
 
-	kafkaClusterAdmin, err := GetClusterAdmin(f, config.BootstrapServers)
+	kafkaClusterAdmin, err := GetClusterAdmin(f, config.BootstrapServers, secOptions)
 	if err != nil {
 		return topic, err
 	}
@@ -100,9 +102,9 @@ func (f NewClusterAdminFunc) CreateTopic(logger *zap.Logger, topic string, confi
 	return CreateTopic(kafkaClusterAdmin, logger, topic, config)
 }
 
-func (f NewClusterAdminFunc) DeleteTopic(topic string, bootstrapServers []string) (string, error) {
+func (f NewClusterAdminFunc) DeleteTopic(topic string, bootstrapServers []string, secOptions security.ConfigOption) (string, error) {
 
-	kafkaClusterAdmin, err := GetClusterAdmin(f, bootstrapServers)
+	kafkaClusterAdmin, err := GetClusterAdmin(f, bootstrapServers, secOptions)
 	if err != nil {
 		return topic, err
 	}
@@ -111,9 +113,9 @@ func (f NewClusterAdminFunc) DeleteTopic(topic string, bootstrapServers []string
 	return DeleteTopic(kafkaClusterAdmin, topic)
 }
 
-func (f NewClusterAdminFunc) IsTopicPresentAndValid(topic string, bootstrapServers []string) (bool, error) {
+func (f NewClusterAdminFunc) IsTopicPresentAndValid(topic string, bootstrapServers []string, secOptions security.ConfigOption) (bool, error) {
 
-	kafkaClusterAdmin, err := GetClusterAdmin(f, bootstrapServers)
+	kafkaClusterAdmin, err := GetClusterAdmin(f, bootstrapServers, secOptions)
 	if err != nil {
 		return false, err
 	}

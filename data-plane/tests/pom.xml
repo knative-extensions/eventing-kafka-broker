@@ -28,11 +28,6 @@
 
   <artifactId>tests</artifactId>
 
-  <properties>
-    <debezium.version>1.4.0.Final</debezium.version>
-    <kafka.version>2.6.0</kafka.version>
-  </properties>
-
   <dependencies>
 
     <!-- These are added as runtime deps, so jacoco can see these -->
@@ -82,27 +77,20 @@
       <artifactId>mockito-junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
-    <!--
-      For testing Kafka integrations, Debezium has nice utilities to create Kafka clusters
-      programmatically.
-    -->
     <dependency>
       <groupId>io.debezium</groupId>
       <artifactId>debezium-core</artifactId>
-      <version>${debezium.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.debezium</groupId>
       <artifactId>debezium-core</artifactId>
-      <version>${debezium.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka_2.12</artifactId>
-      <version>${kafka.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

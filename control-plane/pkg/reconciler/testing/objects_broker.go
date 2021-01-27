@@ -35,6 +35,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 const (
@@ -111,8 +112,10 @@ func WithBrokerConfig(reference *duckv1.KReference) func(*eventing.Broker) {
 	}
 }
 
-func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int) *corev1.ConfigMap {
-	return &corev1.ConfigMap{
+type CMOption func(cm *corev1.ConfigMap)
+
+func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int, options ...CMOption) *corev1.ConfigMap {
+	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: ConfigMapNamespace,
 			Name:      ConfigMapName,
@@ -122,6 +125,19 @@ func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int)
 			DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
 			DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
 		},
+	}
+	for _, opt := range options {
+		opt(cm)
+	}
+	return cm
+}
+
+func BrokerAuthConfig(name string) CMOption {
+	return func(cm *corev1.ConfigMap) {
+		if cm.Data == nil {
+			cm.Data = make(map[string]string, 1)
+		}
+		cm.Data[security.AuthSecretNameKey] = name
 	}
 }
 

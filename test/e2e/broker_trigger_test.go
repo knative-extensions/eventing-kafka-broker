@@ -138,7 +138,7 @@ func TestBrokerTrigger(t *testing.T) {
 		))
 
 		config := &kafkatest.Config{
-			BootstrapServers:  testingpkg.BootstrapServers,
+			BootstrapServers:  testingpkg.BootstrapServersPlaintext,
 			ReplicationFactor: defaultReplicationFactor,
 			NumPartitions:     defaultNumPartitions,
 			Topic:             kafka.Topic(broker.TopicPrefix, br),
@@ -187,7 +187,7 @@ func TestBrokerWithConfig(t *testing.T) {
 		cm := client.CreateConfigMapOrFail(configMapName, client.Namespace, map[string]string{
 			broker.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
 			broker.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
-			broker.BootstrapServersConfigMapKey:              testingpkg.BootstrapServers,
+			broker.BootstrapServersConfigMapKey:              testingpkg.BootstrapServersPlaintext,
 		})
 
 		br := client.CreateBrokerV1OrFail(
@@ -249,7 +249,7 @@ func TestBrokerWithConfig(t *testing.T) {
 		t.Logf("Verify num partitions and replication factor")
 
 		config := &kafkatest.Config{
-			BootstrapServers:  testingpkg.BootstrapServers,
+			BootstrapServers:  testingpkg.BootstrapServersPlaintext,
 			ReplicationFactor: replicationFactor,
 			NumPartitions:     numPartitions,
 			Topic:             kafka.Topic(broker.TopicPrefix, br),

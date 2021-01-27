@@ -28,7 +28,7 @@ echo "Computed mods = '$MODS'"
 # Remove compiler, sql, management modules
 MODS=$(echo $MODS | tr , '\n' | sed '/^java.compiler/d' | sed -z 's/\n/,/g;s/,$/\n/')
 # Patch adding the dns
-MODS="$MODS,jdk.naming.dns"
+MODS="$MODS,jdk.naming.dns,jdk.crypto.ec"
 
 echo "Patched modules shipped with the generated jdk = '$MODS'"
 jlink --verbose --no-header-files --no-man-pages --compress=2 --strip-debug --add-modules "$MODS" --output /app/jdk

@@ -15,14 +15,14 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
-import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource;
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.core.filter.impl.AttributesFilter;
+import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
+import dev.knative.eventing.kafka.broker.core.security.Credentials;
+import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
+import dev.knative.eventing.kafka.broker.core.security.PlaintextCredentials;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
@@ -43,6 +43,9 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,8 +56,8 @@ import java.util.Properties;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
+
+import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
 
 public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
@@ -65,6 +68,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
   private final WebClientOptions webClientOptions;
   private final Map<String, String> producerConfigs;
   private final ConsumerRecordOffsetStrategyFactory<String, CloudEvent> consumerRecordOffsetStrategyFactory;
+  private final AuthProvider authProvider;
 
   /**
    * All args constructor.
@@ -73,12 +77,14 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
    * @param consumerConfigs                     base consumer configurations.
    * @param webClientOptions                    web client options.
    * @param producerConfigs                     base producer configurations.
+   * @param authProvider                        auth provider.
    */
   public HttpConsumerVerticleFactory(
     final ConsumerRecordOffsetStrategyFactory<String, CloudEvent> consumerRecordOffsetStrategyFactory,
     final Properties consumerConfigs,
     final WebClientOptions webClientOptions,
-    final Properties producerConfigs) {
+    final Properties producerConfigs,
+    final AuthProvider authProvider) {
 
     Objects.requireNonNull(consumerRecordOffsetStrategyFactory, "provide consumerRecordOffsetStrategyFactory");
     Objects.requireNonNull(consumerConfigs, "provide consumerConfigs");
@@ -95,6 +101,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
       .map(e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue().toString()))
       .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     this.webClientOptions = webClientOptions;
+    this.authProvider = authProvider;
   }
 
   /**
@@ -106,11 +113,33 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     Objects.requireNonNull(resource, "provide resource");
     Objects.requireNonNull(egress, "provide egress");
 
-    final Function<Vertx, KafkaConsumer<String, CloudEvent>> consumerFactory = createConsumerFactory(resource, egress);
+    // Consumer and producer configs are shared objects and they act as a prototype for each instance.
+    final var consumerConfigs = new HashMap<>(this.consumerConfigs);
+    consumerConfigs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
+    consumerConfigs.put(GROUP_ID_CONFIG, egress.getConsumerGroup());
 
-    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, ConsumerRecordHandler<String, CloudEvent, HttpResponse<Buffer>>> recordHandlerFactory = (vertx, consumer) -> {
+    final var producerConfigs = new HashMap<>(this.producerConfigs);
+    producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
+    producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
-      final var producer = createProducer(vertx, resource, egress);
+    final Future<Credentials> credentialsFuture = resource.hasAuthSecret() ?
+      authProvider.getCredentials(resource.getAuthSecret().getNamespace(), resource.getAuthSecret().getName())
+      : Future.succeededFuture(new PlaintextCredentials());
+
+    final Function<Vertx, Future<KafkaConsumer<String, CloudEvent>>> consumerFactory = createConsumerFactory(
+      consumerConfigs,
+      resource,
+      credentialsFuture
+    );
+
+    final Function<Vertx, Future<KafkaProducer<String, CloudEvent>>> producerFactory = createProducerFactory(
+      producerConfigs,
+      resource,
+      credentialsFuture
+    );
+
+    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<ConsumerRecordHandler<String, CloudEvent, HttpResponse<Buffer>>>> recordHandlerFactory = (vertx, consumer) -> {
+
       final var circuitBreakerOptions = createCircuitBreakerOptions(resource);
       final var egressConfig = resource.getEgressConfig();
 
@@ -125,48 +154,46 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
         ? NO_DLQ_SENDER
         : createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), circuitBreakerOptions, egressConfig);
 
-      return new ConsumerRecordHandler<>(
-        egressSubscriberSender,
-        egress.hasFilter() ? new AttributesFilter(egress.getFilter().getAttributesMap()) : Filter.noop(),
-        this.consumerRecordOffsetStrategyFactory.get(consumer, resource, egress),
-        new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer),
-        egressDeadLetterSender
-      );
+      return producerFactory.apply(vertx)
+        .map(producer -> new ConsumerRecordHandler<>(
+          egressSubscriberSender,
+          egress.hasFilter() ? new AttributesFilter(egress.getFilter().getAttributesMap()) : Filter.noop(),
+          this.consumerRecordOffsetStrategyFactory.get(consumer, resource, egress),
+          new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer),
+          egressDeadLetterSender
+        ));
     };
 
     return new ConsumerVerticle<>(consumerFactory, new HashSet<>(resource.getTopicsList()), recordHandlerFactory);
   }
 
-  protected Function<Vertx, KafkaConsumer<String, CloudEvent>> createConsumerFactory(
+  protected Function<Vertx, Future<KafkaConsumer<String, CloudEvent>>> createConsumerFactory(
+    final Map<String, Object> consumerConfigs,
     final DataPlaneContract.Resource resource,
-    final DataPlaneContract.Egress egress) {
+    final Future<Credentials> credentialsFuture) {
+    return vertx -> credentialsFuture
+      .compose(credentials -> KafkaClientsAuth.updateConsumerConfigs(credentials, consumerConfigs))
+      // Note: Do not use consumerConfigs as parameter, use configs (return value)
+      .map(configs -> createConsumer(vertx, configs));
+  }
 
-    // this.consumerConfigs is a shared object and it acts as a prototype for each consumer instance.
-    final var consumerConfigs = new HashMap<>(this.consumerConfigs);
-
-    consumerConfigs.put(GROUP_ID_CONFIG, egress.getConsumerGroup());
-    consumerConfigs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
-
+  private static KafkaConsumer<String, CloudEvent> createConsumer(final Vertx vertx,
+                                                                  final Map<String, Object> consumerConfigs) {
     final var opt = new KafkaClientOptions()
       .setConfig(consumerConfigs)
       .setTracingPolicy(TracingPolicy.PROPAGATE);
 
-    return vertx -> KafkaConsumer.create(vertx, opt);
+    return KafkaConsumer.create(vertx, opt);
   }
 
-  protected KafkaProducer<String, CloudEvent> createProducer(
-    final Vertx vertx,
-    final Resource resource,
-    final Egress egress) {
-
-    // producerConfigs is a shared object and it acts as a prototype for each producer instance.
-    final var producerConfigs = new HashMap<>(this.producerConfigs);
-
-    // TODO create a single producer per bootstrap servers.
-    producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
-    producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
-
-    return KafkaProducer.create(vertx, producerConfigs);
+  protected Function<Vertx, Future<KafkaProducer<String, CloudEvent>>> createProducerFactory(
+    final Map<String, String> producerConfigs,
+    final DataPlaneContract.Resource resource,
+    final Future<Credentials> credentialsFuture) {
+    return vertx -> credentialsFuture
+      .compose(credentials -> KafkaClientsAuth.updateProducerConfigs(credentials, producerConfigs))
+      // Note: Do not use producerConfigs as parameter, use configs (return value)
+      .map(configs -> KafkaProducer.create(vertx, configs));
   }
 
   private ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> createConsumerRecordSender(

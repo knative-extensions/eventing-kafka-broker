@@ -33,6 +33,7 @@ spec:
         app: kafka-broker-receiver
         kafka.eventing.knative.dev/release: devel
     spec:
+      serviceAccountName: knative-kafka-data-plane
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
@@ -101,6 +102,9 @@ spec:
               value: "false"
             - name: CONFIG_TRACING_PATH
               value: "/etc/tracing"
+            # https://github.com/fabric8io/kubernetes-client/issues/2212
+            - name: HTTP2_DISABLE
+              value: "true"
           command:
             - "java"
           args:
