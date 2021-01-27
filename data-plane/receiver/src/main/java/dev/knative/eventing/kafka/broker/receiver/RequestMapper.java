@@ -15,12 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
-import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
@@ -38,14 +32,21 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 /**
  * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to Kafka through the Kafka
@@ -160,7 +161,11 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
   public Future<Void> onNewIngress(
     DataPlaneContract.Resource resource,
     DataPlaneContract.Ingress ingress) {
+    if (this.ingressInfos.containsKey(resource.getUid())) {
+      return Future.succeededFuture();
+    }
 
+    // Compute the properties
     final var producerProps = (Properties) this.producerConfigs.clone();
     if (resource.hasAuthSecret()) {
       return authProvider.getCredentials(resource.getAuthSecret().getNamespace(), resource.getAuthSecret().getName())
@@ -181,10 +186,16 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
     producerProps.setProperty(CloudEventSerializer.EVENT_FORMAT_CONFIG, JsonFormat.CONTENT_TYPE);
 
     // Get the rc and increment it
-    final ReferenceCounter<ProducerHolder> rc = this.producerReferences.computeIfAbsent(
-      producerProps,
-      props -> new ReferenceCounter<>(new ProducerHolder(producerFactory.apply(props)))
-    );
+    if (!this.producerReferences.containsKey(producerProps)) {
+      try {
+        final var producer = producerFactory.apply(producerProps);
+        this.producerReferences.put(producerProps, new ReferenceCounter<>(new ProducerHolder(producer)));
+      } catch (final Exception ex) {
+        return Future.failedFuture(ex);
+      }
+    }
+
+    final ReferenceCounter<ProducerHolder> rc = this.producerReferences.get(producerProps);
     rc.increment();
 
     final var ingressInfo = new IngressInfo(
@@ -204,25 +215,37 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
   public Future<Void> onUpdateIngress(
     DataPlaneContract.Resource resource,
     DataPlaneContract.Ingress ingress) {
+    // TODO this update can produce errors when onDeleteIngress finishes and before onNewIngress creates mappings.
     return onDeleteIngress(resource, ingress)
       .compose(v -> onNewIngress(resource, ingress));
   }
 
   @Override
   public Future<Void> onDeleteIngress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Ingress ingress) {
-    // Remove ingress info from the maps
-    final var ingressInfo = this.ingressInfos.remove(resource.getUid());
-    this.pathMapper.remove(ingressInfo.getPath());
+    final DataPlaneContract.Resource resource,
+    final DataPlaneContract.Ingress ingress) {
+    if (!this.ingressInfos.containsKey(resource.getUid())) {
+      return Future.succeededFuture();
+    }
+
+    final var ingressInfo = this.ingressInfos.get(resource.getUid());
 
     // Get the rc
     final var rc = this.producerReferences.get(ingressInfo.getProducerProperties());
     if (rc.decrementAndCheck()) {
       // Nobody is referring to this producer anymore, clean it up and close it
       this.producerReferences.remove(ingressInfo.getProducerProperties());
-      return rc.getValue().close(vertx);
+      return rc.getValue().close(vertx)
+        .onSuccess(r -> {
+          // Remove ingress info from the maps
+          this.pathMapper.remove(ingressInfo.getPath());
+          this.ingressInfos.remove(resource.getUid());
+        });
     }
+    // Remove ingress info from the maps
+    this.pathMapper.remove(ingressInfo.getPath());
+    this.ingressInfos.remove(resource.getUid());
+
     return Future.succeededFuture();
   }
 

@@ -47,6 +47,15 @@ public class CollectionsUtils {
     public Set<T> getRemoved() {
       return removed;
     }
+
+    @Override
+    public String toString() {
+      return "DiffResult{" +
+        "added=" + added +
+        ", intersection=" + intersection +
+        ", removed=" + removed +
+        '}';
+    }
   }
 
   public static <T> DiffResult<T> diff(Set<T> oldSet, Set<T> newSet) {

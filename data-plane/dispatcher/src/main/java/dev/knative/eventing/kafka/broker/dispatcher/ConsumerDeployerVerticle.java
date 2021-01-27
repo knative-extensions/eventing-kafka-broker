@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
@@ -25,11 +23,14 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.MessageConsumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 /**
  * ResourcesManager manages Resource and Egress objects by instantiating and starting verticles based on resources
@@ -84,6 +85,11 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
   public Future<Void> onNewEgress(
     DataPlaneContract.Resource resource,
     DataPlaneContract.Egress egress) {
+    // TODO we should if the consumer is still running
+    if (this.deployedDispatchers.containsKey(egress.getUid())) {
+      return Future.succeededFuture();
+    }
+
     try {
       AbstractVerticle verticle = consumerFactory.get(resource, egress);
       return vertx.deployVerticle(verticle)
@@ -126,12 +132,19 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
   public Future<Void> onDeleteEgress(
     DataPlaneContract.Resource resource,
     DataPlaneContract.Egress egress) {
-    return vertx.undeploy(this.deployedDispatchers.remove(egress.getUid()))
-      .onSuccess(v -> logger.info(
-        "Removed egress {} {}",
-        keyValue("egress.uid", egress.getUid()),
-        keyValue("resource.uid", resource.getUid())
-      ))
+    if (!this.deployedDispatchers.containsKey(egress.getUid())) {
+      return Future.succeededFuture();
+    }
+
+    return vertx.undeploy(this.deployedDispatchers.get(egress.getUid()))
+      .onSuccess(v -> {
+        this.deployedDispatchers.remove(egress.getUid());
+        logger.info(
+          "Removed egress {} {}",
+          keyValue("egress.uid", egress.getUid()),
+          keyValue("resource.uid", resource.getUid())
+        );
+      })
       .onFailure(cause -> logger.error(
         "failed to un-deploy verticle {} {}",
         keyValue("egress.uid", egress.getUid()),

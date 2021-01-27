@@ -358,9 +358,8 @@ public class RequestMapperTest {
       .setUid("1")
       .addTopics("topic")
       .setBootstrapServers("kafka-1:9092,kafka-2:9092")
-      .setIngress(
-        DataPlaneContract.Ingress.newBuilder().setPath("/hello").setContentMode(DataPlaneContract.ContentMode.BINARY)
-          .build())
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello")
+        .setContentMode(DataPlaneContract.ContentMode.BINARY).build())
       .build();
 
     final var resource2 = DataPlaneContract.Resource.newBuilder()

@@ -15,14 +15,14 @@
  */
 package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import io.vertx.core.Future;
+
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ResourceReconcilerTestRunner {
 
@@ -31,15 +31,16 @@ public class ResourceReconcilerTestRunner {
     private final Collection<DataPlaneContract.Resource> resources;
     private final ResourceReconcilerTestRunner runner;
 
-    private final Set<String> newIngresses = new HashSet<>();
-    private final Set<String> updatedIngresses = new HashSet<>();
-    private final Set<String> deletedIngresses = new HashSet<>();
-    private final Set<String> newEgresses = new HashSet<>();
-    private final Set<String> updatedEgresses = new HashSet<>();
-    private final Set<String> deletedEgresses = new HashSet<>();
+    private final List<String> newIngresses = new ArrayList<>();
+    private final List<String> updatedIngresses = new ArrayList<>();
+    private final List<String> deletedIngresses = new ArrayList<>();
+    private final List<String> newEgresses = new ArrayList<>();
+    private final List<String> updatedEgresses = new ArrayList<>();
+    private final List<String> deletedEgresses = new ArrayList<>();
+    private Future<Void> future = Future.succeededFuture();
 
-    public ReconcileStep(Collection<DataPlaneContract.Resource> resources,
-                         ResourceReconcilerTestRunner runner) {
+    public ReconcileStep(final Collection<DataPlaneContract.Resource> resources,
+                         final ResourceReconcilerTestRunner runner) {
       this.resources = resources;
       this.runner = runner;
     }
@@ -74,14 +75,19 @@ public class ResourceReconcilerTestRunner {
       return this;
     }
 
+    public ReconcileStep returnsFuture(final Future<Void> f) {
+      this.future = f;
+      return this;
+    }
+
     public ResourceReconcilerTestRunner then() {
       return runner;
     }
   }
 
   private final List<ReconcileStep> reconcileSteps = new ArrayList<>();
-  private boolean enableIngressListener = false;
-  private boolean enableEgressListener = false;
+  private IngressReconcilerListenerMock ingressReconcilerListener;
+  private EgressReconcilerListenerMock egressReconcilerListener;
 
   public ResourceReconcilerTestRunner reconcile(Collection<DataPlaneContract.Resource> resources) {
     final var step = new ReconcileStep(resources, this);
@@ -93,19 +99,33 @@ public class ResourceReconcilerTestRunner {
     return this.reconcileSteps.get(this.reconcileSteps.size() - 1);
   }
 
+  public ResourceReconcilerTestRunner enableIngressListener(final IngressReconcilerListenerMock mock) {
+    assertThat(this.egressReconcilerListener)
+      .as("One of ingressListener or egressListener is expected, got both")
+      .isNull();
+    this.ingressReconcilerListener = mock;
+    return this;
+  }
+
   public ResourceReconcilerTestRunner enableIngressListener() {
-    this.enableIngressListener = true;
+    return enableIngressListener(new IngressReconcilerListenerMock());
+  }
+
+  public ResourceReconcilerTestRunner enableEgressListener(final EgressReconcilerListenerMock mock) {
+    assertThat(this.ingressReconcilerListener)
+      .as("One of ingressListener or egressListener is expected, got both")
+      .isNull();
+    this.egressReconcilerListener = mock;
     return this;
   }
 
   public ResourceReconcilerTestRunner enableEgressListener() {
-    this.enableEgressListener = true;
-    return this;
+    return enableEgressListener(new EgressReconcilerListenerMock());
   }
 
   public void run() {
-    final var ingressListener = enableIngressListener ? new IngressReconcilerListenerMock() : null;
-    final var egressListener = enableEgressListener ? new EgressReconcilerListenerMock() : null;
+    final var ingressListener = this.ingressReconcilerListener;
+    final var egressListener = this.egressReconcilerListener;
 
     final var reconcilerBuilder = ResourcesReconcilerImpl
       .builder();
@@ -121,7 +141,9 @@ public class ResourceReconcilerTestRunner {
 
     for (int i = 0; i < reconcileSteps.size(); i++) {
       final var step = reconcileSteps.get(i);
-      reconciler.reconcile(step.resources);
+      assertThat(reconciler.reconcile(step.resources).succeeded())
+        .as("Step " + i)
+        .isEqualTo(step.future.succeeded());
 
       if (ingressListener != null) {
         assertThat(ingressListener.getNewIngresses())
