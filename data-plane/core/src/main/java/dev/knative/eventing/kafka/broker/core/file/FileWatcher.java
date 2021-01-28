@@ -15,14 +15,12 @@
  */
 package dev.knative.eventing.kafka.broker.core.file;
 
-import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
-import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
-
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -34,8 +32,12 @@ import java.nio.file.Path;
 import java.nio.file.WatchService;
 import java.util.Objects;
 import java.util.function.Consumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 /**
  * FileWatcher is the class responsible for watching a given file and reports update.
@@ -49,6 +51,7 @@ public class FileWatcher implements Closeable, AutoCloseable {
   private final WatchService watcher;
   private final File toWatch;
   private volatile boolean closed;
+  private DataPlaneContract.Contract lastContract;
 
   /**
    * All args constructor.
@@ -80,6 +83,7 @@ public class FileWatcher implements Closeable, AutoCloseable {
     this.watcher = watcher;
 
     toWatchParentPath.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+    this.lastContract = DataPlaneContract.Contract.newBuilder().build();
   }
 
   /**
@@ -136,25 +140,36 @@ public class FileWatcher implements Closeable, AutoCloseable {
     try (
       final var fileReader = new FileReader(toWatch);
       final var bufferedReader = new BufferedReader(fileReader)) {
-      parseFromJson(bufferedReader);
+      final var contract = parseFromJson(bufferedReader);
+      final var previousLastContract = this.lastContract;
+      this.lastContract = contract;
+      if (contract == null || contract.equals(previousLastContract)) {
+        logger.debug("Contract unchanged {}",
+          keyValue("generation", contract == null ? "null" : contract.getGeneration())
+        );
+        return;
+      }
+      contractConsumer.accept(contract);
     }
   }
 
-  private void parseFromJson(final Reader content) throws IOException {
+  private DataPlaneContract.Contract parseFromJson(final Reader content) throws IOException {
     try {
 
       final var contract = DataPlaneContract.Contract.newBuilder();
       JsonFormat.parser().merge(content, contract);
 
-      contractConsumer.accept(contract.build());
+      return contract.build();
 
     } catch (final InvalidProtocolBufferException ex) {
-      logger.warn("failed to parse from JSON", ex);
+      logger.debug("failed to parse from JSON", ex);
     }
+    return null;
   }
 
   @Override
-  public void close() {
+  public void close() throws IOException {
     closed = true;
+    this.watcher.close();
   }
 }
