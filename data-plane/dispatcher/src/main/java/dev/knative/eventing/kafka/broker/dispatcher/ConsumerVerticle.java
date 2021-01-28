@@ -43,7 +43,8 @@ public final class ConsumerVerticle extends AbstractVerticle {
 
   private final Set<String> topics;
   private final Function<Vertx, Future<KafkaConsumer<String, CloudEvent>>> consumerFactory;
-  private final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<ConsumerRecordHandler>> recordHandlerFactory;
+  private final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<ConsumerRecordHandler>>
+    recordHandlerFactory;
 
   /**
    * All args constructor.

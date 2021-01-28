@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
+import static org.mockito.Mockito.mock;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.Credentials;
@@ -27,21 +29,18 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.MockConsumer;
-import org.apache.kafka.clients.consumer.OffsetResetStrategy;
-import org.apache.kafka.clients.producer.MockProducer;
-import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.serialization.StringSerializer;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static org.mockito.Mockito.mock;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.MockConsumer;
+import org.apache.kafka.clients.consumer.OffsetResetStrategy;
+import org.apache.kafka.clients.producer.MockProducer;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.StringSerializer;
 
 public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
 
@@ -56,7 +55,8 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
     final Properties producerConfigs,
     final ConsumerRecordOffsetStrategyFactory consumerRecordOffsetStrategyFactory) {
 
-    super(consumerRecordOffsetStrategyFactory, consumerConfigs, new WebClientOptions(), producerConfigs, mock(AuthProvider.class));
+    super(consumerRecordOffsetStrategyFactory, consumerConfigs, new WebClientOptions(), producerConfigs,
+      mock(AuthProvider.class));
     mockProducer = new ConcurrentHashMap<>();
     mockConsumer = new ConcurrentHashMap<>();
   }

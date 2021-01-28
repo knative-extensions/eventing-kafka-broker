@@ -201,7 +201,8 @@ public class DataPlaneTest {
     new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS)
       .accept(DataPlaneContract.Contract.newBuilder().addResources(resource).build());
 
-    await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> assertThat(vertx.deploymentIDs()).hasSize(resource.getEgressesCount() + NUM_RESOURCES + NUM_SYSTEM_VERTICLES));
+    await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> assertThat(vertx.deploymentIDs())
+      .hasSize(resource.getEgressesCount() + NUM_RESOURCES + NUM_SYSTEM_VERTICLES));
 
     // start service
     vertx.createHttpServer()

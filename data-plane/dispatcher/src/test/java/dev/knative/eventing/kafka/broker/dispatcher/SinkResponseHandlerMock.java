@@ -26,7 +26,8 @@ public class SinkResponseHandlerMock implements SinkResponseHandler {
   private final Supplier<Future<?>> onClose;
   private final Function<HttpResponse<Buffer>, Future<Void>> onSend;
 
-  public SinkResponseHandlerMock(final Supplier<Future<?>> onClose, final Function<HttpResponse<Buffer>, Future<Void>> onSend) {
+  public SinkResponseHandlerMock(final Supplier<Future<?>> onClose,
+                                 final Function<HttpResponse<Buffer>, Future<Void>> onSend) {
     this.onClose = onClose;
     this.onSend = onSend;
   }

@@ -126,7 +126,7 @@ public class ConsumerVerticleTest {
   @Test
   @SuppressWarnings("unchecked")
   public void shouldCloseEverything(final Vertx vertx, final VertxTestContext context) {
-    final var topics = new String[]{"a"};
+    final var topics = new String[] {"a"};
     final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
 
     when(consumer.close()).thenReturn(Future.succeededFuture());

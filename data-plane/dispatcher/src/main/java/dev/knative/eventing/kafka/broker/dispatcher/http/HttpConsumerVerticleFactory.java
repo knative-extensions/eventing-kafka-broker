@@ -135,31 +135,32 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
       credentialsFuture
     );
 
-    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<ConsumerRecordHandler>> recordHandlerFactory = (vertx, consumer) -> {
+    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<ConsumerRecordHandler>> recordHandlerFactory =
+      (vertx, consumer) -> {
 
-      final var circuitBreakerOptions = createCircuitBreakerOptions(resource);
-      final var egressConfig = resource.getEgressConfig();
+        final var circuitBreakerOptions = createCircuitBreakerOptions(resource);
+        final var egressConfig = resource.getEgressConfig();
 
-      final var egressSubscriberSender = createConsumerRecordSender(
-        vertx,
-        egress.getDestination(),
-        circuitBreakerOptions,
-        egressConfig
-      );
+        final var egressSubscriberSender = createConsumerRecordSender(
+          vertx,
+          egress.getDestination(),
+          circuitBreakerOptions,
+          egressConfig
+        );
 
-      final var egressDeadLetterSender = isDeadLetterSinkAbsent(egressConfig)
-        ? NO_DLQ_SENDER
-        : createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), circuitBreakerOptions, egressConfig);
+        final var egressDeadLetterSender = isDeadLetterSinkAbsent(egressConfig)
+          ? NO_DLQ_SENDER
+          : createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), circuitBreakerOptions, egressConfig);
 
-      return producerFactory.apply(vertx)
-        .map(producer -> new ConsumerRecordHandler(
-          egressSubscriberSender,
-          egress.hasFilter() ? new AttributesFilter(egress.getFilter().getAttributesMap()) : Filter.noop(),
-          this.consumerRecordOffsetStrategyFactory.get(consumer, resource, egress),
-          new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer),
-          egressDeadLetterSender
-        ));
-    };
+        return producerFactory.apply(vertx)
+          .map(producer -> new ConsumerRecordHandler(
+            egressSubscriberSender,
+            egress.hasFilter() ? new AttributesFilter(egress.getFilter().getAttributesMap()) : Filter.noop(),
+            this.consumerRecordOffsetStrategyFactory.get(consumer, resource, egress),
+            new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer),
+            egressDeadLetterSender
+          ));
+      };
 
     return new ConsumerVerticle(consumerFactory, new HashSet<>(resource.getTopicsList()), recordHandlerFactory);
   }

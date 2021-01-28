@@ -57,7 +57,8 @@ public class Main {
   // dot notation names to the monitoring system’s recommended naming convention.
   // Additionally, this naming convention implementation sanitizes metric names and tags of special characters that
   // are disallowed by the monitoring system.
-  public static final String HTTP_EVENTS_SENT_COUNT = "http.events.sent"; // prometheus format --> http_events_sent_total
+  public static final String HTTP_EVENTS_SENT_COUNT = "http.events.sent";
+    // prometheus format --> http_events_sent_total
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
