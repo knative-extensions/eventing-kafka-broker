@@ -15,11 +15,19 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
+import dev.knative.eventing.kafka.broker.core.utils.ReferenceCounter;
+import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
@@ -30,27 +38,20 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
-
-import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
-import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to Kafka through the Kafka
  * producer and terminating requests with the appropriate status code.
  */
-public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressReconcilerListener {
+public class RequestMapper implements Handler<HttpServerRequest>, IngressReconcilerListener {
 
   public static final int MAPPER_FAILED = BAD_REQUEST.code();
   public static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
@@ -61,17 +62,17 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
 
   // ingress uuid -> IngressInfo
   // This map is used to resolve the ingress info in the reconciler listener
-  private final Map<String, IngressInfo<K, V>> ingressInfos;
+  private final Map<String, IngressInfo> ingressInfos;
   // producerConfig -> producer
   // This map is used to count the references to the producer instantiated for each producerConfig
-  private final Map<Properties, ReferenceCounter<ProducerHolder<K, V>>> producerReferences;
+  private final Map<Properties, ReferenceCounter<ProducerHolder>> producerReferences;
   // path -> IngressInfo
   // We use this map on the hot path to directly resolve the producer from the path
-  private final Map<String, IngressInfo<K, V>> pathMapper;
+  private final Map<String, IngressInfo> pathMapper;
 
   private final Properties producerConfigs;
-  private final RequestToRecordMapper<K, V> requestToRecordMapper;
-  private final Function<Properties, KafkaProducer<K, V>> producerCreator;
+  private final RequestToRecordMapper requestToRecordMapper;
+  private final Function<Properties, KafkaProducer<String, CloudEvent>> producerFactory;
   private final Counter badRequestCounter;
   private final Counter produceEventsCounter;
   private final Vertx vertx;
@@ -81,21 +82,21 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     final Vertx vertx,
     final AuthProvider authProvider,
     final Properties producerConfigs,
-    final RequestToRecordMapper<K, V> requestToRecordMapper,
-    final Function<Properties, KafkaProducer<K, V>> producerCreator,
+    final RequestToRecordMapper requestToRecordMapper,
+    final Function<Properties, KafkaProducer<String, CloudEvent>> producerFactory,
     final Counter badRequestCounter,
     final Counter produceEventsCounter) {
 
     Objects.requireNonNull(vertx, "provide vertx");
     Objects.requireNonNull(producerConfigs, "provide producerConfigs");
     Objects.requireNonNull(requestToRecordMapper, "provide a mapper");
-    Objects.requireNonNull(producerCreator, "provide producerCreator");
+    Objects.requireNonNull(producerFactory, "provide producerCreator");
 
     this.vertx = vertx;
     this.authProvider = authProvider;
     this.producerConfigs = producerConfigs;
     this.requestToRecordMapper = requestToRecordMapper;
-    this.producerCreator = producerCreator;
+    this.producerFactory = producerFactory;
     this.badRequestCounter = badRequestCounter;
     this.produceEventsCounter = produceEventsCounter;
 
@@ -180,13 +181,13 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     producerProps.setProperty(CloudEventSerializer.EVENT_FORMAT_CONFIG, JsonFormat.CONTENT_TYPE);
 
     // Get the rc and increment it
-    final ReferenceCounter<ProducerHolder<K, V>> rc = this.producerReferences.computeIfAbsent(
+    final ReferenceCounter<ProducerHolder> rc = this.producerReferences.computeIfAbsent(
       producerProps,
-      props -> new ReferenceCounter<>(new ProducerHolder<>(producerCreator.apply(props)))
+      props -> new ReferenceCounter<>(new ProducerHolder(producerFactory.apply(props)))
     );
     rc.increment();
 
-    final var ingressInfo = new IngressInfo<>(
+    final var ingressInfo = new IngressInfo(
       rc.getValue().getProducer(),
       resource.getTopics(0),
       ingress.getPath(),
@@ -233,17 +234,17 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     };
   }
 
-  private static class ProducerHolder<K, V> {
+  private static class ProducerHolder {
 
-    private final KafkaProducer<K, V> producer;
+    private final KafkaProducer<String, CloudEvent> producer;
     private final AutoCloseable producerMeterBinder;
 
-    ProducerHolder(final KafkaProducer<K, V> producer) {
+    ProducerHolder(final KafkaProducer<String, CloudEvent> producer) {
       this.producer = producer;
       this.producerMeterBinder = Metrics.register(producer.unwrap());
     }
 
-    KafkaProducer<K, V> getProducer() {
+    KafkaProducer<String, CloudEvent> getProducer() {
       return producer;
     }
 
@@ -266,42 +267,14 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
     }
   }
 
-  private static class ReferenceCounter<T> {
+  private static class IngressInfo {
 
-    private final T value;
-    private int refs;
-
-    ReferenceCounter(final T value) {
-      Objects.requireNonNull(value);
-      this.value = value;
-      this.refs = 0;
-    }
-
-    T getValue() {
-      return value;
-    }
-
-    void increment() {
-      this.refs++;
-    }
-
-    /**
-     * @return true if the count is 0, hence nobody is referring anymore to this value
-     */
-    boolean decrementAndCheck() {
-      this.refs--;
-      return this.refs == 0;
-    }
-  }
-
-  private static class IngressInfo<K, V> {
-
-    private final KafkaProducer<K, V> producer;
+    private final KafkaProducer<String, CloudEvent> producer;
     private final String topic;
     private final String path;
     private final Properties producerProperties;
 
-    IngressInfo(final KafkaProducer<K, V> producer, final String topic, final String path,
+    IngressInfo(final KafkaProducer<String, CloudEvent> producer, final String topic, final String path,
                 final Properties producerProperties) {
       this.producer = producer;
       this.topic = topic;
@@ -309,7 +282,7 @@ public class RequestMapper<K, V> implements Handler<HttpServerRequest>, IngressR
       this.producerProperties = producerProperties;
     }
 
-    KafkaProducer<K, V> getProducer() {
+    KafkaProducer<String, CloudEvent> getProducer() {
       return producer;
     }
 

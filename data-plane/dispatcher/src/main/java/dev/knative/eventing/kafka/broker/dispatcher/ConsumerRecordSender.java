@@ -21,7 +21,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-@FunctionalInterface
 public interface ConsumerRecordSender {
 
   /**
@@ -31,7 +30,6 @@ public interface ConsumerRecordSender {
    * @return a successful future or a failed future.
    */
   Future<HttpResponse<Buffer>> send(KafkaConsumerRecord<String, CloudEvent> record);
-  Future<R> send(KafkaConsumerRecord<K, V> record);
 
   /**
    * Close consumer record sender.
@@ -40,25 +38,21 @@ public interface ConsumerRecordSender {
    */
   Future<?> close();
 
-
   /**
    * Create a ConsumerRecordSender from the given futures.
    *
    * @param closeFuture Future to return on close.
    * @param sendFuture  Future to return on send.
-   * @param <K>         Consumer record key type.
-   * @param <V>         Consumer record value type.
-   * @param <R>         Send response type.
    * @return A ConsumerRecordSender that returns a failed future on send.
    */
-  static <K, V, R> ConsumerRecordSender<K, V, R> create(Future<R> sendFuture, Future<?> closeFuture) {
-    return new ConsumerRecordSender<>() {
+  static ConsumerRecordSender create(Future<HttpResponse<Buffer>> sendFuture, Future<?> closeFuture) {
+    return new ConsumerRecordSender() {
 
-      private final Future<R> send = sendFuture;
+      private final Future<HttpResponse<Buffer>> send = sendFuture;
       private final Future<?> close = closeFuture;
 
       @Override
-      public Future<R> send(KafkaConsumerRecord<K, V> record) {
+      public Future<HttpResponse<Buffer>> send(KafkaConsumerRecord<String, CloudEvent> record) {
         return this.send;
       }
 

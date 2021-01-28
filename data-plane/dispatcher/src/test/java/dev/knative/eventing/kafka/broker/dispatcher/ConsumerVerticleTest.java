@@ -15,7 +15,15 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import io.cloudevents.CloudEvent;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -26,24 +34,16 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import java.util.Arrays;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class ConsumerVerticleTest {
@@ -55,17 +55,17 @@ public class ConsumerVerticleTest {
   @Test
   @SuppressWarnings("unchecked")
   public void subscribedToTopic(final Vertx vertx, final VertxTestContext context) {
-    final var consumer = new MockConsumer<>(OffsetResetStrategy.LATEST);
+    final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
     final var topic = "topic1";
 
-    final var verticle = new ConsumerVerticle<>(
+    final var verticle = new ConsumerVerticle(
       v -> Future.succeededFuture(KafkaConsumer.create(v, consumer)),
       Set.of(topic),
-      (a, b) -> Future.succeededFuture(new ConsumerRecordHandler<>(
+      (a, b) -> Future.succeededFuture(new ConsumerRecordHandler(
         ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
         value -> false,
-        (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class),
-        new SinkResponseHandlerMock<>(
+        mock(ConsumerRecordOffsetStrategy.class),
+        new SinkResponseHandlerMock(
           Future::succeededFuture,
           response -> Future.succeededFuture()
         ),
@@ -88,17 +88,17 @@ public class ConsumerVerticleTest {
   @Test
   @SuppressWarnings("unchecked")
   public void stop(final Vertx vertx, final VertxTestContext context) {
-    final var consumer = new MockConsumer<>(OffsetResetStrategy.LATEST);
+    final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
     final var topic = "topic1";
 
-    final var verticle = new ConsumerVerticle<>(
+    final var verticle = new ConsumerVerticle(
       v -> Future.succeededFuture(KafkaConsumer.create(v, consumer)),
       Set.of(topic),
-      (a, b) -> Future.succeededFuture(new ConsumerRecordHandler<>(
+      (a, b) -> Future.succeededFuture(new ConsumerRecordHandler(
         ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
         value -> false,
-        (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class),
-        new SinkResponseHandlerMock<>(
+        mock(ConsumerRecordOffsetStrategy.class),
+        new SinkResponseHandlerMock(
           Future::succeededFuture,
           response -> Future.succeededFuture()
         ),
@@ -127,7 +127,7 @@ public class ConsumerVerticleTest {
   @SuppressWarnings("unchecked")
   public void shouldCloseEverything(final Vertx vertx, final VertxTestContext context) {
     final var topics = new String[]{"a"};
-    final KafkaConsumer<Object, Object> consumer = mock(KafkaConsumer.class);
+    final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
 
     when(consumer.close()).thenReturn(Future.succeededFuture());
     when(consumer.subscribe((Set<String>) any(), any())).then(answer -> {
@@ -136,7 +136,7 @@ public class ConsumerVerticleTest {
       return consumer;
     });
 
-    final var mockConsumer = new MockConsumer<>(OffsetResetStrategy.LATEST);
+    final var mockConsumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
     when(consumer.unwrap()).thenReturn(mockConsumer);
 
     mockConsumer.schedulePollTask(() -> {
@@ -152,11 +152,11 @@ public class ConsumerVerticleTest {
     final var dlsSenderClosed = new AtomicBoolean(false);
     final var sinkClosed = new AtomicBoolean(false);
 
-    final var verticle = new ConsumerVerticle<>(
+    final var verticle = new ConsumerVerticle(
       v -> Future.succeededFuture(consumer),
       Arrays.stream(topics).collect(Collectors.toSet()),
-      (v, c) -> Future.succeededFuture(new ConsumerRecordHandler<>(
-        new ConsumerRecordSenderMock<>(
+      (v, c) -> Future.succeededFuture(new ConsumerRecordHandler(
+        new ConsumerRecordSenderMock(
           () -> {
             consumerRecordSenderClosed.set(true);
             return Future.succeededFuture();
@@ -164,15 +164,15 @@ public class ConsumerVerticleTest {
           record -> Future.succeededFuture()
         ),
         ce -> true,
-        (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class),
-        new SinkResponseHandlerMock<>(
+        mock(ConsumerRecordOffsetStrategy.class),
+        new SinkResponseHandlerMock(
           () -> {
             sinkClosed.set(true);
             return Future.succeededFuture();
           },
           response -> Future.succeededFuture()
         ),
-        new ConsumerRecordSenderMock<>(
+        new ConsumerRecordSenderMock(
           () -> {
             dlsSenderClosed.set(true);
             return Future.succeededFuture();

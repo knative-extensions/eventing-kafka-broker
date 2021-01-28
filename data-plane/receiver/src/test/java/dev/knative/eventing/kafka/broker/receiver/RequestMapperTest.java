@@ -15,10 +15,22 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.InstanceOfAssertFactories.map;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
+import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
+import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -33,10 +45,6 @@ import io.vertx.kafka.client.producer.RecordMetadata;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-import org.apache.kafka.clients.producer.MockProducer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -45,16 +53,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.apache.kafka.clients.producer.MockProducer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
 public class RequestMapperTest {
@@ -75,17 +76,16 @@ public class RequestMapperTest {
     shouldSendRecord(true, RequestMapper.FAILED_TO_PRODUCE);
   }
 
-  @SuppressWarnings("unchecked")
   private static void shouldSendRecord(boolean failedToSend, int statusCode)
     throws InterruptedException {
     final var record = new KafkaProducerRecordImpl<>(
-      "topic", "key", "value", 10
+      "topic", "key", CoreObjects.event(), 10
     );
 
-    final RequestToRecordMapper<String, String> mapper
+    final RequestToRecordMapper mapper
       = (request, topic) -> Future.succeededFuture(record);
 
-    final KafkaProducer<String, String> producer = mockProducer();
+    final KafkaProducer<String, CloudEvent> producer = mockProducer();
 
     when(producer.send(any())).thenAnswer(invocationOnMock -> {
       if (failedToSend) {
@@ -105,7 +105,7 @@ public class RequestMapperTest {
     final HttpServerRequest request = mockHttpServerRequest(resource);
     final var response = mockResponse(request, statusCode);
 
-    final var handler = new RequestMapper<>(
+    final var handler = new RequestMapper(
       mock(Vertx.class),
       null,
       new Properties(),
@@ -132,11 +132,10 @@ public class RequestMapperTest {
   }
 
   @Test
-  @SuppressWarnings({"unchecked"})
   public void shouldReturnBadRequestIfNoRecordCanBeCreated(final Vertx vertx) throws InterruptedException {
     final var producer = mockProducer();
 
-    final RequestToRecordMapper<Object, Object> mapper
+    final RequestToRecordMapper mapper
       = (request, topic) -> Future.failedFuture("");
 
     final var resource = DataPlaneContract.Resource.newBuilder()
@@ -149,7 +148,7 @@ public class RequestMapperTest {
     final HttpServerRequest request = mockHttpServerRequest(resource);
     final var response = mockResponse(request, RequestMapper.MAPPER_FAILED);
 
-    final var handler = new RequestMapper<Object, Object>(
+    final var handler = new RequestMapper(
       vertx,
       null,
       new Properties(),
@@ -413,12 +412,12 @@ public class RequestMapperTest {
   private void testRequestMapper(
     final Vertx vertx,
     final VertxTestContext context,
-    final Map.Entry<List<DataPlaneContract.Resource>, BiConsumer<Integer, RequestMapper<Object, Object>>>... invocations) {
+    final Map.Entry<List<DataPlaneContract.Resource>, BiConsumer<Integer, RequestMapper>>... invocations) {
     final var checkpoint = context.checkpoint(invocations.length);
 
     final var producerFactoryInvocations = new AtomicInteger(0);
 
-    final var handler = new RequestMapper<Object, Object>(
+    final var handler = new RequestMapper(
       vertx,
       null,
       new Properties(),
@@ -435,7 +434,7 @@ public class RequestMapperTest {
       .build();
 
     Future<Void> fut = Future.succeededFuture();
-    for (Map.Entry<List<DataPlaneContract.Resource>, BiConsumer<Integer, RequestMapper<Object, Object>>> entry : invocations) {
+    for (Map.Entry<List<DataPlaneContract.Resource>, BiConsumer<Integer, RequestMapper>> entry : invocations) {
       fut = fut.compose(v -> reconciler.reconcile(entry.getKey()))
         .onSuccess(i -> context.verify(() -> {
           entry.getValue().accept(producerFactoryInvocations.get(), handler);
@@ -445,12 +444,12 @@ public class RequestMapperTest {
     }
   }
 
-  @SuppressWarnings("rawtypes")
-  private static KafkaProducer mockProducer() {
-    var producer = mock(KafkaProducer.class);
+  @SuppressWarnings("unchecked")
+  private static KafkaProducer<String, CloudEvent> mockProducer() {
+    KafkaProducer<String, CloudEvent> producer = mock(KafkaProducer.class);
     when(producer.flush()).thenReturn(Future.succeededFuture());
     when(producer.close()).thenReturn(Future.succeededFuture());
-    when(producer.unwrap()).thenReturn(new MockProducer());
+    when(producer.unwrap()).thenReturn(new MockProducer<>());
     return producer;
   }
 

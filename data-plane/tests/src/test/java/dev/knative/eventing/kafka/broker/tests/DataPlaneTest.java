@@ -15,6 +15,16 @@
  */
 package dev.knative.eventing.kafka.broker.tests;
 
+import static java.lang.String.format;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
+import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
+import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.mock;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
@@ -27,7 +37,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFac
 import dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.ReceiverVerticle;
 import dev.knative.eventing.kafka.broker.receiver.RequestMapper;
-import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventV1;
@@ -46,13 +55,6 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -61,16 +63,12 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-
-import static java.lang.String.format;
-import static org.apache.kafka.clients.consumer.ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG;
-import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
-import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
-import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
-import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.mockito.Mockito.mock;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
 public class DataPlaneTest {
@@ -288,7 +286,7 @@ public class DataPlaneTest {
   private static ConsumerDeployerVerticle setUpDispatcher(final Vertx vertx, final VertxTestContext context)
     throws InterruptedException {
 
-    final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
+    final ConsumerRecordOffsetStrategyFactory
       consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class));
 
     final var consumerConfigs = new Properties();
@@ -321,7 +319,7 @@ public class DataPlaneTest {
     final Vertx vertx,
     final VertxTestContext context) throws InterruptedException {
 
-    final Function<Vertx, RequestMapper<String, CloudEvent>> handlerFactory = v -> new RequestMapper<>(
+    final Function<Vertx, RequestMapper> handlerFactory = v -> new RequestMapper(
       vertx,
       null,
       producerConfigs(),

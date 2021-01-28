@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
@@ -27,7 +29,6 @@ import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
-import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.opentelemetry.api.OpenTelemetry;
@@ -36,19 +37,16 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.tracing.TracingOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClientOptions;
-import net.logstash.logback.encoder.LogstashEncoder;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import net.logstash.logback.encoder.LogstashEncoder;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
 
@@ -109,8 +107,8 @@ public class Main {
         keyValue("webClientConfig", webClientConfig)
       );
 
-      final ConsumerRecordOffsetStrategyFactory<String, CloudEvent>
-        consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered(eventsSentCounter);
+      final ConsumerRecordOffsetStrategyFactory consumerRecordOffsetStrategyFactory =
+        ConsumerRecordOffsetStrategyFactory.unordered(eventsSentCounter);
 
       final var clientOptions = new WebClientOptions(webClientConfig);
       clientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
