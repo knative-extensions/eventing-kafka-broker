@@ -185,30 +185,29 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
     }
     producerProps.setProperty(CloudEventSerializer.EVENT_FORMAT_CONFIG, JsonFormat.CONTENT_TYPE);
 
-    // Get the rc and increment it
-    if (!this.producerReferences.containsKey(producerProps)) {
-      try {
+    try {
+      // Get the rc and increment it
+      final ReferenceCounter<ProducerHolder> rc = this.producerReferences.computeIfAbsent(producerProps, props -> {
         final var producer = producerFactory.apply(producerProps);
-        this.producerReferences.put(producerProps, new ReferenceCounter<>(new ProducerHolder(producer)));
-      } catch (final Exception ex) {
-        return Future.failedFuture(ex);
-      }
+        return new ReferenceCounter<>(new ProducerHolder(producer));
+      });
+      rc.increment();
+
+      final var ingressInfo = new IngressInfo(
+        rc.getValue().getProducer(),
+        resource.getTopics(0),
+        ingress.getPath(),
+        producerProps
+      );
+
+      this.pathMapper.put(ingress.getPath(), ingressInfo);
+      this.ingressInfos.put(resource.getUid(), ingressInfo);
+
+      return Future.succeededFuture();
+
+    } catch (final Exception ex) {
+      return Future.failedFuture(ex);
     }
-
-    final ReferenceCounter<ProducerHolder> rc = this.producerReferences.get(producerProps);
-    rc.increment();
-
-    final var ingressInfo = new IngressInfo(
-      rc.getValue().getProducer(),
-      resource.getTopics(0),
-      ingress.getPath(),
-      producerProps
-    );
-
-    this.pathMapper.put(ingress.getPath(), ingressInfo);
-    this.ingressInfos.put(resource.getUid(), ingressInfo);
-
-    return Future.succeededFuture();
   }
 
   @Override
