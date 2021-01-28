@@ -22,7 +22,6 @@ import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.core.utils.CollectionsUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +34,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 public class ResourcesReconcilerImpl implements ResourcesReconciler {
 
@@ -84,7 +85,6 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     final List<Future> futures = new ArrayList<>(egresses.size() + this.cachedEgresses.size());
 
     final var diff = CollectionsUtils.diff(this.cachedEgresses.keySet(), egresses.keySet());
-
     logger.debug("Reconcile egress diff {}", diff);
 
     diff.getRemoved().forEach(uid -> {
@@ -97,6 +97,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
           // If we succeed to delete the egress we can remove it from the cache.
           .onSuccess(r -> egresses.remove(uid))
           .onSuccess(r -> this.cachedEgresses.remove(uid))
+          .onFailure(cause -> logFailure("Failed to reconcile [onDeleteEgress] egress", egress, cause))
       );
     });
 
@@ -110,6 +111,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
           // If we fail to create the egress we can't put it in the cache.
           .onFailure(r -> egresses.remove(uid))
           .onSuccess(r -> this.cachedEgresses.put(egress.getUid(), new SimpleImmutableEntry<>(egress, resource)))
+          .onFailure(cause -> logFailure("Failed to reconcile [onNewEgress] egress ", egress, cause))
       );
     });
 
@@ -121,7 +123,11 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       final var oldResource = this.cachedResources.get(newResource.getUid());
 
       if (resourceEquals(newResource, oldResource) && egressEquals(newEgress, this.cachedEgresses.get(uid).getKey())) {
-        // Nothing changed.
+        logger.debug("Nothing changed for egress {} {} {}",
+          keyValue("id", newEgress.getUid()),
+          keyValue("consumerGroup", newEgress.getConsumerGroup()),
+          keyValue("destination", newEgress.getDestination())
+        );
         return;
       }
 
@@ -130,6 +136,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
           // If we fail to update the egress we can't put it in the cache.
           .onFailure(r -> egresses.remove(uid))
           .onSuccess(r -> this.cachedEgresses.put(newEgress.getUid(), new SimpleImmutableEntry<>(newEgress, newResource)))
+          .onFailure(cause -> logFailure("Failed to reconcile [onUpdateEgress] egress ", newEgress, cause))
       );
     });
 
@@ -156,12 +163,14 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     final List<Future> futures = new ArrayList<>(newResourcesMap.size() + this.cachedResources.size());
 
     final var diff = CollectionsUtils.diff(this.cachedResources.keySet(), newResourcesMap.keySet());
+    logger.debug("Reconcile egress diff {}", diff);
 
     diff.getRemoved().stream()
       .map(this.cachedResources::get)
       .forEach(r -> futures.add(
         this.ingressReconcilerListener.onDeleteIngress(r, r.getIngress())
           .onSuccess(v -> this.cachedResources.remove(r.getUid()))
+          .onFailure(cause -> logFailure("Failed to reconcile [onDeleteIngress] ingress", r, cause))
       ));
 
     diff.getAdded().stream()
@@ -170,6 +179,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       .forEach(r -> futures.add(
         this.ingressReconcilerListener.onNewIngress(r, r.getIngress())
           .onSuccess(v -> this.cachedResources.put(r.getUid(), r))
+          .onFailure(cause -> logFailure("Failed to reconcile [onNewIngress] ingress", r, cause))
       ));
 
     diff.getIntersection().forEach(uid -> {
@@ -183,6 +193,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
         futures.add(
           this.ingressReconcilerListener.onDeleteIngress(oldResource, oldResource.getIngress())
             .onSuccess(r -> this.cachedResources.remove(uid))
+            .onFailure(cause -> logFailure("Failed to reconcile [onDeleteIngress] ingress", oldResource, cause))
         );
         return;
       }
@@ -190,6 +201,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       futures.add(
         this.ingressReconcilerListener.onUpdateIngress(newResource, newResource.getIngress())
           .onSuccess(r -> this.cachedResources.put(uid, newResource))
+          .onFailure(cause -> logFailure("Failed to reconcile [onUpdateIngress] ingress", newResource, cause))
       );
     });
 
@@ -257,5 +269,21 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     public ResourcesReconcilerImpl build() {
       return new ResourcesReconcilerImpl(ingressReconcilerListener, egressReconcilerListener);
     }
+  }
+
+  private static void logFailure(final String msg, final DataPlaneContract.Egress egress, final Throwable cause) {
+    logger.error(msg + " {} {} {}",
+      keyValue("id", egress.getUid()),
+      keyValue("consumerGroup", egress.getConsumerGroup()),
+      keyValue("destination", egress.getDestination()),
+      cause);
+  }
+
+  private static void logFailure(final String msg, final DataPlaneContract.Resource resource, final Throwable cause) {
+    logger.error(msg + " {} {} {}",
+      keyValue("id", resource.getUid()),
+      keyValue("ingress.path", resource.getIngress().getPath()),
+      keyValue("topics", resource.getTopicsList()),
+      cause);
   }
 }
