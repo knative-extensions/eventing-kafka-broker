@@ -17,18 +17,19 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.dispatcher.strategy.UnorderedConsumerRecordOffsetStrategy;
+import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 
 @FunctionalInterface
-public interface ConsumerRecordOffsetStrategyFactory<K, V> {
+public interface ConsumerRecordOffsetStrategyFactory {
 
-  ConsumerRecordOffsetStrategy<K, V> get(final KafkaConsumer<K, V> consumer,
-                                         final DataPlaneContract.Resource resource,
-                                         final DataPlaneContract.Egress egress);
+  ConsumerRecordOffsetStrategy get(final KafkaConsumer<String, CloudEvent> consumer,
+                                   final DataPlaneContract.Resource resource,
+                                   final DataPlaneContract.Egress egress);
 
-  static <K, V> ConsumerRecordOffsetStrategyFactory<K, V> unordered(final Counter eventsSentCounter) {
-    return (consumer, broker, trigger) -> new UnorderedConsumerRecordOffsetStrategy<>(consumer, eventsSentCounter);
+  static ConsumerRecordOffsetStrategyFactory unordered(final Counter eventsSentCounter) {
+    return (consumer, broker, trigger) -> new UnorderedConsumerRecordOffsetStrategy(consumer, eventsSentCounter);
   }
 
 }

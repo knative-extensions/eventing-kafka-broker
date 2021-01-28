@@ -17,7 +17,6 @@ package dev.knative.eventing.kafka.broker.receiver;
 
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
-import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Handler;
@@ -36,7 +35,7 @@ public class ReceiverVerticle extends AbstractVerticle {
 
   private HttpServer server;
   private MessageConsumer<Object> messageConsumer;
-  private final Function<Vertx, RequestMapper<String, CloudEvent>> requestHandlerFactory;
+  private final Function<Vertx, RequestMapper> requestHandlerFactory;
   private final Function<Handler<HttpServerRequest>, Handler<HttpServerRequest>>[] handlerDecoratorFactories;
 
   /**
@@ -49,7 +48,7 @@ public class ReceiverVerticle extends AbstractVerticle {
   @SafeVarargs
   public ReceiverVerticle(
     final HttpServerOptions httpServerOptions,
-    final Function<Vertx, RequestMapper<String, CloudEvent>> requestHandlerFactory,
+    final Function<Vertx, RequestMapper> requestHandlerFactory,
     final Function<Handler<HttpServerRequest>, Handler<HttpServerRequest>>... handlerDecoratorFactories) {
     Objects.requireNonNull(httpServerOptions, "provide http server options");
     Objects.requireNonNull(requestHandlerFactory, "provide request handler");

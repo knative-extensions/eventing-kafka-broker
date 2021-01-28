@@ -29,7 +29,7 @@ import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CloudEventRequestToRecordMapper implements RequestToRecordMapper<String, CloudEvent> {
+public class CloudEventRequestToRecordMapper implements RequestToRecordMapper {
 
   private static final Logger logger = LoggerFactory.getLogger(CloudEventRequestToRecordMapper.class);
 

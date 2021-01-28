@@ -26,6 +26,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
+import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
+import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -40,17 +42,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class ConsumerRecordHandlerTest {
 
   @Test
-  @SuppressWarnings("unchecked")
   public void shouldNotSendToSubscriberNorToDLQIfValueDoesntMatch() {
 
-    final ConsumerRecordOffsetStrategy<Object, Object> receiver
-      = (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class);
+    final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
 
-    final var consumerRecordHandler = new ConsumerRecordHandler<>(
+    final var consumerRecordHandler = new ConsumerRecordHandler(
       ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
       value -> false,
       receiver,
-      new SinkResponseHandlerMock<>(
+      new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
       ),
@@ -68,15 +68,13 @@ public class ConsumerRecordHandlerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void shouldSendOnlyToSubscriberIfValueMatches() {
 
     final var sendCalled = new AtomicBoolean(false);
-    final ConsumerRecordOffsetStrategy<Object, Object> receiver
-      = (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class);
+    final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
 
-    final var consumerRecordHandler = new ConsumerRecordHandler<>(
-      new ConsumerRecordSenderMock<>(
+    final var consumerRecordHandler = new ConsumerRecordHandler(
+      new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
           sendCalled.set(true);
@@ -85,11 +83,11 @@ public class ConsumerRecordHandlerTest {
       ),
       value -> true,
       receiver,
-      new SinkResponseHandlerMock<>(
+      new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
       ),
-      new ConsumerRecordSenderMock<>(
+      new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
           fail("DLQ send called");
@@ -109,16 +107,14 @@ public class ConsumerRecordHandlerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void shouldSendToDLQIfValueMatchesAndSubscriberSenderFails() {
 
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
     final var DLQSenderSendCalled = new AtomicBoolean(false);
-    final ConsumerRecordOffsetStrategy<Object, Object> receiver
-      = (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class);
+    final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
 
-    final var consumerRecordHandler = new ConsumerRecordHandler<>(
-      new ConsumerRecordSenderMock<>(
+    final var consumerRecordHandler = new ConsumerRecordHandler(
+      new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
           subscriberSenderSendCalled.set(true);
@@ -127,11 +123,11 @@ public class ConsumerRecordHandlerTest {
       ),
       value -> true,
       receiver,
-      new SinkResponseHandlerMock<>(
+      new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
       ),
-      new ConsumerRecordSenderMock<>(
+      new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
           DLQSenderSendCalled.set(true);
@@ -152,16 +148,14 @@ public class ConsumerRecordHandlerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void shouldCallFailedToSendToDLQIfValueMatchesAndSubscriberAndDLQSenderFail() {
 
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
     final var DLQSenderSendCalled = new AtomicBoolean(false);
-    final ConsumerRecordOffsetStrategy<Object, Object> receiver
-      = (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class);
+    final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
 
-    final var consumerRecordHandler = new ConsumerRecordHandler<>(
-      new ConsumerRecordSenderMock<>(
+    final var consumerRecordHandler = new ConsumerRecordHandler(
+      new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
           subscriberSenderSendCalled.set(true);
@@ -170,11 +164,11 @@ public class ConsumerRecordHandlerTest {
       ),
       value -> true,
       receiver,
-      new SinkResponseHandlerMock<>(
+      new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
       ),
-      new ConsumerRecordSenderMock<>(
+      new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
           DLQSenderSendCalled.set(true);
@@ -195,14 +189,12 @@ public class ConsumerRecordHandlerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void shouldCallFailedToSendToDLQIfValueMatchesAndSubscriberSenderFailsAndNoDLQSender() {
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
-    final ConsumerRecordOffsetStrategy<Object, Object> receiver
-      = (ConsumerRecordOffsetStrategy<Object, Object>) mock(ConsumerRecordOffsetStrategy.class);
+    final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
 
-    final var consumerRecordHandler = new ConsumerRecordHandler<>(
-      new ConsumerRecordSenderMock<>(
+    final var consumerRecordHandler = new ConsumerRecordHandler(
+      new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
           subscriberSenderSendCalled.set(true);
@@ -211,7 +203,7 @@ public class ConsumerRecordHandlerTest {
       ),
       value -> true,
       receiver,
-      new SinkResponseHandlerMock<>(
+      new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
       )
@@ -228,7 +220,6 @@ public class ConsumerRecordHandlerTest {
   }
 
   @Test
-  @SuppressWarnings("rawtypes")
   public void shouldCloseSinkResponseHandlerSubscriberSenderAndDLSSender(final VertxTestContext context) {
 
     final var subscriberSender = mock(ConsumerRecordSender.class);
@@ -240,7 +231,7 @@ public class ConsumerRecordHandlerTest {
     final var deadLetterSender = mock(ConsumerRecordSender.class);
     when(deadLetterSender.close()).thenReturn(Future.succeededFuture());
 
-    final ConsumerRecordHandler<?, ?, ?> consumerRecordHandler = new ConsumerRecordHandler<>(
+    final ConsumerRecordHandler consumerRecordHandler = new ConsumerRecordHandler(
       subscriberSender,
       Filter.noop(),
       mock(ConsumerRecordOffsetStrategy.class),
@@ -258,7 +249,7 @@ public class ConsumerRecordHandlerTest {
       }));
   }
 
-  private static KafkaConsumerRecord<Object, Object> record() {
-    return new KafkaConsumerRecordImpl<>(new ConsumerRecord<>("", 0, 0L, "", ""));
+  private static KafkaConsumerRecord<String, CloudEvent> record() {
+    return new KafkaConsumerRecordImpl<>(new ConsumerRecord<>("", 0, 0L, "", CoreObjects.event()));
   }
 }

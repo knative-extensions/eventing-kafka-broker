@@ -15,15 +15,13 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-/**
- * @param <K> Consumer record key type.
- * @param <V> Consumer record value type.
- * @param <R> Send response type.
- */
-public interface ConsumerRecordSender<K, V, R> {
+public interface ConsumerRecordSender {
 
   /**
    * Send the given record. (the record passed the filter)
@@ -31,7 +29,7 @@ public interface ConsumerRecordSender<K, V, R> {
    * @param record record to send
    * @return a successful future or a failed future.
    */
-  Future<R> send(KafkaConsumerRecord<K, V> record);
+  Future<HttpResponse<Buffer>> send(KafkaConsumerRecord<String, CloudEvent> record);
 
   /**
    * Close consumer record sender.
@@ -40,25 +38,21 @@ public interface ConsumerRecordSender<K, V, R> {
    */
   Future<?> close();
 
-
   /**
    * Create a ConsumerRecordSender from the given futures.
    *
    * @param closeFuture Future to return on close.
    * @param sendFuture  Future to return on send.
-   * @param <K>         Consumer record key type.
-   * @param <V>         Consumer record value type.
-   * @param <R>         Send response type.
    * @return A ConsumerRecordSender that returns a failed future on send.
    */
-  static <K, V, R> ConsumerRecordSender<K, V, R> create(Future<R> sendFuture, Future<?> closeFuture) {
-    return new ConsumerRecordSender<>() {
+  static ConsumerRecordSender create(Future<HttpResponse<Buffer>> sendFuture, Future<?> closeFuture) {
+    return new ConsumerRecordSender() {
 
-      private final Future<R> send = sendFuture;
+      private final Future<HttpResponse<Buffer>> send = sendFuture;
       private final Future<?> close = closeFuture;
 
       @Override
-      public Future<R> send(KafkaConsumerRecord<K, V> record) {
+      public Future<HttpResponse<Buffer>> send(KafkaConsumerRecord<String, CloudEvent> record) {
         return this.send;
       }
 

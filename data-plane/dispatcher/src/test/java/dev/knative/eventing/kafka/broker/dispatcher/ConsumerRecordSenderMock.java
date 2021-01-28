@@ -15,25 +15,28 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class ConsumerRecordSenderMock<K, V, R> implements ConsumerRecordSender<K, V, R> {
+public class ConsumerRecordSenderMock implements ConsumerRecordSender {
 
   private final Supplier<Future<?>> onClose;
-  private final Function<KafkaConsumerRecord<K, V>, Future<R>> onSend;
+  private final Function<KafkaConsumerRecord<String, CloudEvent>, Future<HttpResponse<Buffer>>> onSend;
 
   public ConsumerRecordSenderMock(
     final Supplier<Future<?>> onClose,
-    final Function<KafkaConsumerRecord<K, V>, Future<R>> onSend) {
+    final Function<KafkaConsumerRecord<String, CloudEvent>, Future<HttpResponse<Buffer>>> onSend) {
     this.onClose = onClose;
     this.onSend = onSend;
   }
 
   @Override
-  public Future<R> send(KafkaConsumerRecord<K, V> record) {
+  public Future<HttpResponse<Buffer>> send(KafkaConsumerRecord<String, CloudEvent> record) {
     return this.onSend.apply(record);
   }
 
