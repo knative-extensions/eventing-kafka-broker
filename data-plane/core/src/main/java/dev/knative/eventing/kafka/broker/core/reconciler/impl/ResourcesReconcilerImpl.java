@@ -163,7 +163,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     final List<Future> futures = new ArrayList<>(newResourcesMap.size() + this.cachedResources.size());
 
     final var diff = CollectionsUtils.diff(this.cachedResources.keySet(), newResourcesMap.keySet());
-    logger.debug("Reconcile egress diff {}", diff);
+    logger.debug("Reconcile ingress diff {}", diff);
 
     diff.getRemoved().stream()
       .map(this.cachedResources::get)
