@@ -51,7 +51,7 @@ public class FileWatcher implements Closeable, AutoCloseable {
   private final WatchService watcher;
   private final File toWatch;
   private volatile boolean closed;
-  private DataPlaneContract.Contract lastContract;
+  private long lastContract;
 
   /**
    * All args constructor.
@@ -83,7 +83,7 @@ public class FileWatcher implements Closeable, AutoCloseable {
     this.watcher = watcher;
 
     toWatchParentPath.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
-    this.lastContract = DataPlaneContract.Contract.newBuilder().build();
+    this.lastContract = -1;
   }
 
   /**
@@ -141,11 +141,16 @@ public class FileWatcher implements Closeable, AutoCloseable {
       final var fileReader = new FileReader(toWatch);
       final var bufferedReader = new BufferedReader(fileReader)) {
       final var contract = parseFromJson(bufferedReader);
+      if (contract == null) {
+        return;
+      }
+      // The check, which is based only on the generation number, works because the control plane doesn't update the
+      // file if nothing changes.
       final var previousLastContract = this.lastContract;
-      this.lastContract = contract;
-      if (contract == null || contract.equals(previousLastContract)) {
+      this.lastContract = contract.getGeneration();
+      if (contract.getGeneration() == previousLastContract) {
         logger.debug("Contract unchanged {}",
-          keyValue("generation", contract == null ? "null" : contract.getGeneration())
+          keyValue("generation", contract.getGeneration())
         );
         return;
       }
