@@ -57,10 +57,15 @@ public class Main {
   // dot notation names to the monitoring system’s recommended naming convention.
   // Additionally, this naming convention implementation sanitizes metric names and tags of special characters that
   // are disallowed by the monitoring system.
+  /**
+   * In prometheus format --> http_requests_malformed_total
+   */
   public static final String HTTP_REQUESTS_MALFORMED_COUNT = "http.requests.malformed";
-    // prometheus format --> http_requests_malformed_total
+
+  /**
+   * In prometheus format --> http_requests_produce_total
+   */
   public static final String HTTP_REQUESTS_PRODUCE_COUNT = "http.requests.produce";
-    // prometheus format --> http_requests_produce_total
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
