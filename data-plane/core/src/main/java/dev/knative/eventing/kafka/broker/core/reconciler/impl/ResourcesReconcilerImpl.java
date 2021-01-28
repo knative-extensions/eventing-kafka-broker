@@ -140,8 +140,9 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       );
     });
 
-    return CompositeFuture.all(futures)
-      .onSuccess(r -> {
+    // CompositeFuture.join waits for all futures to complete before calling handlers.
+    return CompositeFuture.join(futures)
+      .onComplete(r -> {
         this.cachedResources.clear();
         egresses.values()
           .forEach(entry -> {
