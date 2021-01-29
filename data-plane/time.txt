@@ -1,0 +1,14 @@
+Parallel 1 Thread per CPU (-T 1C):
+real1m9.123s
+user3m41.059s
+sys0m8.803s
+
+Parallel 1 Thread per CPU (-T 8C):
+real	1m6.957s
+user	3m22.052s
+sys	0m8.320s
+
+Default:
+real1m25.052s
+user3m17.029s
+sys0m7.829s

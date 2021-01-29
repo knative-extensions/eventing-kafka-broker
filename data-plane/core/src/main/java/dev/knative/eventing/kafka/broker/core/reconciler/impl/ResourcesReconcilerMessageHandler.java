@@ -15,16 +15,19 @@
  */
 package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 public class ResourcesReconcilerMessageHandler implements Handler<Message<Object>> {
 
@@ -32,25 +35,44 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
 
   public final static String ADDRESS = "resourcesreconciler.core";
 
+  private final Vertx vertx;
   private final ResourcesReconciler resourcesReconciler;
+  private final AtomicBoolean scheduled;
+  private final AtomicBoolean reconciling;
+  private final AtomicReference<DataPlaneContract.Contract> last;
 
-  public ResourcesReconcilerMessageHandler(
-    ResourcesReconciler resourcesReconciler) {
+  public ResourcesReconcilerMessageHandler(final Vertx vertx, final ResourcesReconciler resourcesReconciler) {
+    this.vertx = vertx;
     this.resourcesReconciler = resourcesReconciler;
+    reconciling = new AtomicBoolean();
+    scheduled = new AtomicBoolean();
+    last = new AtomicReference<>();
   }
 
   @Override
   public void handle(Message<Object> event) {
     DataPlaneContract.Contract contract = (DataPlaneContract.Contract) event.body();
-    resourcesReconciler.reconcile(contract.getResourcesList())
-      .onSuccess(
-        v -> logger.info("reconciled contract generation {}", keyValue("contractGeneration", contract.getGeneration())))
-      .onFailure(cause -> logger
-        .error("failed to reconcile contract generation {}", keyValue("contractGeneration", contract.getGeneration()),
-          cause));
+    last.set(contract);
+    reconcileLast();
   }
 
-  public static MessageConsumer<Object> start(EventBus eventBus, ResourcesReconciler reconciler) {
-    return eventBus.localConsumer(ADDRESS, new ResourcesReconcilerMessageHandler(reconciler));
+  private void reconcileLast() {
+    if (reconciling.compareAndSet(false, true)) {
+      final var contract = last.get();
+      resourcesReconciler.reconcile(contract.getResourcesList())
+        .onComplete(r -> reconciling.set(false))
+        .onSuccess(v -> logger.info("reconciled contract generation {}", keyValue("contractGeneration", contract.getGeneration())))
+        .onFailure(cause -> logger.error("failed to reconcile contract generation {}", keyValue("contractGeneration", contract.getGeneration()), cause));
+    } else if (scheduled.compareAndSet(false, true)) {
+      // We can't wait, so schedule a reconcile.
+      vertx.setTimer(500, h -> {
+        scheduled.set(false);
+        reconcileLast();
+      });
+    }
+  }
+
+  public static MessageConsumer<Object> start(final Vertx vertx, ResourcesReconciler reconciler) {
+    return vertx.eventBus().localConsumer(ADDRESS, new ResourcesReconcilerMessageHandler(vertx, reconciler));
   }
 }

@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.core.eventbus;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
+
 import java.util.function.Consumer;
 
 /**
@@ -41,7 +42,7 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, 
   public void accept(DataPlaneContract.Contract contract) {
     eventBus.publish(address, contract, DELIVERY_OPTIONS);
   }
-
+ 
   @Override
   public void close() throws Exception {
     this.accept(DataPlaneContract.Contract.newBuilder().build());

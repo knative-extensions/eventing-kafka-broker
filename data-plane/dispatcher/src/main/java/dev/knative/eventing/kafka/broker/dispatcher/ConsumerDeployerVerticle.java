@@ -68,7 +68,7 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
   @Override
   public void start() {
     this.messageConsumer = ResourcesReconcilerMessageHandler.start(
-      vertx.eventBus(),
+      vertx,
       ResourcesReconcilerImpl
         .builder()
         .watchEgress(this)
