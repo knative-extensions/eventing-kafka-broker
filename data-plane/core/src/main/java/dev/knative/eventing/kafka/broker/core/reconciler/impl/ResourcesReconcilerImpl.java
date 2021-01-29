@@ -206,7 +206,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       );
     });
 
-    return CompositeFuture.all(futures).mapEmpty();
+    return CompositeFuture.join(futures).mapEmpty();
   }
 
   private boolean isReconcilingIngress() {
