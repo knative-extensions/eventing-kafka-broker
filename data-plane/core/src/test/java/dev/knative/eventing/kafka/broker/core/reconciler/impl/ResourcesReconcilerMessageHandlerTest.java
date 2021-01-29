@@ -37,7 +37,7 @@ public class ResourcesReconcilerMessageHandlerTest {
 
     DataPlaneContract.Contract expected = CoreObjects.contract();
 
-    ResourcesReconcilerMessageHandler.start(vertx.eventBus(), contract -> {
+    ResourcesReconcilerMessageHandler.start(vertx, contract -> {
       testContext.verify(() ->
         assertThat(contract)
           .isEqualTo(expected.getResourcesList())

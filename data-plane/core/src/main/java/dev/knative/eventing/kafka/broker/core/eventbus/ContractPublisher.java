@@ -41,5 +41,4 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract> {
   public void accept(DataPlaneContract.Contract contract) {
     eventBus.publish(address, contract, DELIVERY_OPTIONS);
   }
-
 }

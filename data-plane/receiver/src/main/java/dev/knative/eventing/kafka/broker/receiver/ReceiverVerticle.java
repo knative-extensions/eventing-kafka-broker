@@ -26,6 +26,7 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
+
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -63,7 +64,7 @@ public class ReceiverVerticle extends AbstractVerticle {
     final var requestMapper = this.requestHandlerFactory.apply(vertx);
 
     this.messageConsumer = ResourcesReconcilerMessageHandler.start(
-      vertx.eventBus(),
+      vertx,
       ResourcesReconcilerImpl
         .builder()
         .watchIngress(requestMapper)
