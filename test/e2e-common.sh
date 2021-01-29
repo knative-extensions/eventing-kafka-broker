@@ -69,6 +69,8 @@ function knative_eventing() {
     kubectl apply -f ${KNATIVE_EVENTING_RELEASE}
   fi
 
+  kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
+
   # Publish test images.
   echo ">> Publishing test images from eventing"
   # We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
