@@ -1067,7 +1067,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.20.1-0.20210130010931-b20c96b4df51
+# knative.dev/eventing v0.20.1-0.20210201132532-321a8399379c
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/configs
