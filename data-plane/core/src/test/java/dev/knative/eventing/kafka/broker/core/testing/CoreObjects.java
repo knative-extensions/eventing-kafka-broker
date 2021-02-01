@@ -16,7 +16,10 @@
 package dev.knative.eventing.kafka.broker.core.testing;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import io.cloudevents.CloudEvent;
+import io.cloudevents.core.builder.CloudEventBuilder;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 
@@ -118,4 +121,13 @@ public final class CoreObjects {
       .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
       .build();
   }
+
+  public static CloudEvent event() {
+    return CloudEventBuilder.v1()
+      .withId("abc")
+      .withSource(URI.create("http://localhost"))
+      .withType("test")
+      .build();
+  }
+
 }

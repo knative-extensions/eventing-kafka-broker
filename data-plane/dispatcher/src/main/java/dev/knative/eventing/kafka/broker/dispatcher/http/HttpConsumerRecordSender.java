@@ -35,7 +35,7 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class HttpConsumerRecordSender implements ConsumerRecordSender<String, CloudEvent, HttpResponse<Buffer>> {
+public final class HttpConsumerRecordSender implements ConsumerRecordSender {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpConsumerRecordSender.class);
 

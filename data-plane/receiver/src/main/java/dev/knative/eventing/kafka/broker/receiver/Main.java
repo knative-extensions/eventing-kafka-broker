@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
@@ -26,7 +28,6 @@ import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
-import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.opentelemetry.api.OpenTelemetry;
 import io.vertx.core.Vertx;
@@ -35,20 +36,17 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.tracing.TracingOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import net.logstash.logback.encoder.LogstashEncoder;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import net.logstash.logback.encoder.LogstashEncoder;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
 
@@ -59,8 +57,15 @@ public class Main {
   // dot notation names to the monitoring system’s recommended naming convention.
   // Additionally, this naming convention implementation sanitizes metric names and tags of special characters that
   // are disallowed by the monitoring system.
-  public static final String HTTP_REQUESTS_MALFORMED_COUNT = "http.requests.malformed"; // prometheus format --> http_requests_malformed_total
-  public static final String HTTP_REQUESTS_PRODUCE_COUNT = "http.requests.produce";     // prometheus format --> http_requests_produce_total
+  /**
+   * In prometheus format --> http_requests_malformed_total
+   */
+  public static final String HTTP_REQUESTS_MALFORMED_COUNT = "http.requests.malformed";
+
+  /**
+   * In prometheus format --> http_requests_produce_total
+   */
+  public static final String HTTP_REQUESTS_PRODUCE_COUNT = "http.requests.produce";
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
@@ -105,7 +110,7 @@ public class Main {
       producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
       producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
 
-      final Function<Vertx, RequestMapper<String, CloudEvent>> handlerFactory = v -> new RequestMapper<>(
+      final Function<Vertx, RequestMapper> handlerFactory = v -> new RequestMapper(
         v,
         AuthProvider.kubernetes(),
         producerConfigs,

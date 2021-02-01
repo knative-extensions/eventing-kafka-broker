@@ -17,7 +17,6 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.vertx.core.AbstractVerticle;
-
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -32,5 +31,6 @@ public interface ConsumerVerticleFactory {
    * @param egress trigger data.
    * @return a new consumer verticle.
    */
-  AbstractVerticle get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) throws ExecutionException, InterruptedException;
+  AbstractVerticle get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress)
+    throws ExecutionException, InterruptedException;
 }

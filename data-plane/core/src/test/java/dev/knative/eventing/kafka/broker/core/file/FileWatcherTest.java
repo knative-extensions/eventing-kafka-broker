@@ -56,7 +56,7 @@ public class FileWatcherTest {
       if (isFirst.getAndSet(false)) {
         assertThat(broker).isEqualTo(broker1);
         waitFirst.countDown();
-      } else {
+      } else if (!broker.equals(broker1)) {
         assertThat(broker).isEqualTo(broker2);
         waitSecond.countDown();
       }

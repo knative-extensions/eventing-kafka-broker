@@ -29,13 +29,12 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
-  ConsumerRecordOffsetStrategy<K, V> {
+public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerRecordOffsetStrategy {
 
   private static final Logger logger = LoggerFactory
     .getLogger(UnorderedConsumerRecordOffsetStrategy.class);
 
-  private final KafkaConsumer<K, V> consumer;
+  private final KafkaConsumer<?, ?> consumer;
   private final Counter eventsSentCounter;
 
   /**
@@ -44,7 +43,7 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
    * @param consumer          Kafka consumer.
    * @param eventsSentCounter events sent counter
    */
-  public UnorderedConsumerRecordOffsetStrategy(final KafkaConsumer<K, V> consumer, final Counter eventsSentCounter) {
+  public UnorderedConsumerRecordOffsetStrategy(final KafkaConsumer<?, ?> consumer, final Counter eventsSentCounter) {
     Objects.requireNonNull(consumer, "provide consumer");
     Objects.requireNonNull(eventsSentCounter, "provide eventsSentCounter");
 
@@ -56,7 +55,7 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
    * {@inheritDoc}
    */
   @Override
-  public void recordReceived(final KafkaConsumerRecord<K, V> record) {
+  public void recordReceived(final KafkaConsumerRecord<?, ?> record) {
     // un-ordered processing doesn't require pause/resume lifecycle.
   }
 
@@ -64,7 +63,7 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
    * {@inheritDoc}
    */
   @Override
-  public void successfullySentToSubscriber(final KafkaConsumerRecord<K, V> record) {
+  public void successfullySentToSubscriber(final KafkaConsumerRecord<?, ?> record) {
     // TODO evaluate if it's worth committing offsets at specified intervals per partition.
     // commit each record
     commit(record)
@@ -90,7 +89,7 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
    * {@inheritDoc}
    */
   @Override
-  public void successfullySentToDLQ(final KafkaConsumerRecord<K, V> record) {
+  public void successfullySentToDLQ(final KafkaConsumerRecord<?, ?> record) {
     successfullySentToSubscriber(record);
   }
 
@@ -98,7 +97,7 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
    * {@inheritDoc}
    */
   @Override
-  public void failedToSendToDLQ(final KafkaConsumerRecord<K, V> record, final Throwable ex) {
+  public void failedToSendToDLQ(final KafkaConsumerRecord<?, ?> record, final Throwable ex) {
     // do not commit
   }
 
@@ -106,12 +105,12 @@ public final class UnorderedConsumerRecordOffsetStrategy<K, V> implements
    * {@inheritDoc}
    */
   @Override
-  public void recordDiscarded(final KafkaConsumerRecord<K, V> record) {
+  public void recordDiscarded(final KafkaConsumerRecord<?, ?> record) {
     successfullySentToSubscriber(record);
   }
 
   private Future<Map<TopicPartition, OffsetAndMetadata>> commit(
-    final KafkaConsumerRecord<K, V> record) {
+    final KafkaConsumerRecord<?, ?> record) {
     logger.debug("committing record {}", record);
     return consumer.commit(Map.of(
       new TopicPartition(record.topic(), record.partition()),
