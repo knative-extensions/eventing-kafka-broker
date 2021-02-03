@@ -79,7 +79,7 @@ public class Main {
 
     final var env = new DispatcherEnv(System::getenv);
 
-    SdkTracerProvider sdkTracerProvider = Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
+    final SdkTracerProvider sdkTracerProvider = Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
 
     logger.info("Starting Dispatcher {}", keyValue("env", env));
 

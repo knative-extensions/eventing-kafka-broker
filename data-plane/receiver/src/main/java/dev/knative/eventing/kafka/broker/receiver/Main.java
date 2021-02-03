@@ -77,7 +77,7 @@ public class Main {
   public static void main(final String[] args) throws IOException {
     final var env = new ReceiverEnv(System::getenv);
 
-    SdkTracerProvider sdkTracerProvider = Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
+    final SdkTracerProvider sdkTracerProvider = Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
 
     // HACK HACK HACK
     // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
