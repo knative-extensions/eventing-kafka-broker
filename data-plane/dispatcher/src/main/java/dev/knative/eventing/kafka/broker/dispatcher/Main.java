@@ -31,7 +31,7 @@ import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.tracing.TracingOptions;
@@ -79,7 +79,7 @@ public class Main {
 
     final var env = new DispatcherEnv(System::getenv);
 
-    Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
+    SdkTracerProvider sdkTracerProvider = Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
 
     logger.info("Starting Dispatcher {}", keyValue("env", env));
 
@@ -87,7 +87,7 @@ public class Main {
       new VertxOptions()
         .setMetricsOptions(Metrics.getOptions(env))
         .setTracingOptions(new TracingOptions()
-          .setFactory(new OpenTelemetryVertxTracingFactory(OpenTelemetry.getGlobalTracer(Tracing.SERVICE_NAME)))
+          .setFactory(new OpenTelemetryVertxTracingFactory(sdkTracerProvider.get(Tracing.SERVICE_NAME)))
         )
     );
 
@@ -155,6 +155,7 @@ public class Main {
       logger.error("Failed during filesystem watch", ex);
 
       Shutdown.closeSync(vertx).run();
+      sdkTracerProvider.close();
     }
   }
 }

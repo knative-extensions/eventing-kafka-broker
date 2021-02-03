@@ -29,8 +29,6 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +47,7 @@ public class Tracing {
 
   private static final Logger logger = LoggerFactory.getLogger(Tracing.class);
 
-  private static final AtomicReference<SdkTracerProvider> trackerProvider = new AtomicReference<>();
-
-  public static void setup(final TracingConfig tracingConfig) {
+  public static SdkTracerProvider setup(final TracingConfig tracingConfig) {
     logger.info(
       "Registering tracing configurations {} {} {} {}",
       keyValue("backend", tracingConfig.getBackend()),
@@ -84,12 +80,7 @@ public class Tracing {
       );
     }
 
-    trackerProvider.set(tracerProviderBuilder.build());
-  }
-
-  public static void shutdown() {
-    Optional.ofNullable(trackerProvider.get())
-      .ifPresent(SdkTracerProvider::close);
+    return tracerProviderBuilder.build();
   }
 
   private static SpanExporter zipkinExporter(TracingConfig tracingConfig) {
