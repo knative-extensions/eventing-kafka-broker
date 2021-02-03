@@ -22,10 +22,11 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.vertx.core.Context;
 import io.vertx.core.spi.tracing.SpanKind;
 import io.vertx.core.spi.tracing.TagExtractor;
@@ -75,8 +76,8 @@ public class OpenTelemetryTracer implements VertxTracer<Span, Span> {
     final var span = tracer.spanBuilder(operation)
       .setParent(tracingContext)
       .setSpanKind(SpanKind.RPC.equals(kind) ? Kind.SERVER : Kind.CONSUMER)
-      .setAttribute(SemanticAttributes.SERVICE_NAME, Tracing.SERVICE_NAME)
-      .setAttribute(SemanticAttributes.SERVICE_NAMESPACE, Tracing.SERVICE_NAMESPACE)
+      .setAttribute(ResourceAttributes.SERVICE_NAME, Tracing.SERVICE_NAME)
+      .setAttribute(ResourceAttributes.SERVICE_NAMESPACE, Tracing.SERVICE_NAMESPACE)
       .startSpan();
 
     logger.debug("{} {} {} {}",
