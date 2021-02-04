@@ -109,6 +109,7 @@ public final class ConsumerRecordHandler implements Handler<KafkaConsumerRecord<
 
     logDebug("Handling record", record);
 
+    // TODO Maybe translate all this dispatching logic to a cool FSM
     receiver.recordReceived(record);
 
     if (filter.test(record.value())) {

@@ -46,13 +46,16 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -69,7 +72,7 @@ public class UnorderedConsumerTest {
   private static final int NUM_SYSTEM_VERTICLES = 1;
 
   @Test
-  public void testUnorderedConsumer(final Vertx vertx, final VertxTestContext context)
+  public void testUnorderedConsumer(final Vertx vertx)
     throws IOException, InterruptedException, ExecutionException {
     ContractMessageCodec.register(vertx.eventBus());
 
@@ -112,7 +115,7 @@ public class UnorderedConsumerTest {
       .sum();
 
     final var waitEvents = new CountDownLatch(numEgresses * consumerRecords.size());
-    startServer(vertx, context, event, waitEvents);
+    startServer(vertx, new VertxTestContext(), event, waitEvents);
 
     final var file = Files.createTempFile("fw-", "-fw").toFile();
     final var fileWatcher = new FileWatcher(
@@ -163,11 +166,18 @@ public class UnorderedConsumerTest {
         assertThat(history.stream().map(ProducerRecord::value)).containsExactlyInAnyOrder(events);
         assertThat(history.stream().map(ProducerRecord::key)).containsAnyElementsOf(partitionKeys);
       }
+      for (final var consumer : consumers.values()) {
+        var key = new TopicPartition("", 0);
+
+        assertThat(consumer.committed(Set.of(key)))
+          .extractingByKey(key)
+          .extracting(OffsetAndMetadata::offset)
+          .isEqualTo(2L);
+      }
     });
 
     fileWatcher.close();
     executorService.shutdown();
-    context.completeNow();
   }
 
   private static void startServer(
@@ -176,7 +186,6 @@ public class UnorderedConsumerTest {
     final CloudEvent event,
     final CountDownLatch waitEvents) throws InterruptedException {
 
-    final var serverStarted = new CountDownLatch(1);
     final var destinationURL = CoreObjects.DESTINATION_URL;
     vertx.createHttpServer()
       .exceptionHandler(context::failNow)
@@ -203,9 +212,9 @@ public class UnorderedConsumerTest {
       .listen(
         destinationURL.getPort(),
         destinationURL.getHost(),
-        context.succeeding(h -> serverStarted.countDown())
+        context.succeedingThenComplete()
       );
 
-    serverStarted.await();
+    context.awaitCompletion(10, TimeUnit.SECONDS);
   }
 }
