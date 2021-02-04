@@ -24,7 +24,7 @@ import java.util.function.Consumer;
  * This object publishes all consumed contracts to the event bus.
  * This class requires the codec {@link ContractMessageCodec} registered in the provided event bus.
  */
-public class ContractPublisher implements Consumer<DataPlaneContract.Contract> {
+public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, AutoCloseable {
 
   private final static DeliveryOptions DELIVERY_OPTIONS = new DeliveryOptions()
     .setLocalOnly(true);
@@ -42,4 +42,8 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract> {
     eventBus.publish(address, contract, DELIVERY_OPTIONS);
   }
 
+  @Override
+  public void close() throws Exception {
+    this.accept(DataPlaneContract.Contract.newBuilder().build());
+  }
 }

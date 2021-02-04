@@ -20,7 +20,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import io.cloudevents.CloudEvent;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.vertx.core.Vertx;
 
 public class TracingSpan {

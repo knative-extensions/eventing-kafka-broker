@@ -15,20 +15,22 @@
  */
 package dev.knative.eventing.kafka.broker.core.tracing;
 
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.Backend;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.trace.SdkTracerManagement;
-import io.opentelemetry.sdk.trace.config.TraceConfig;
+import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
+import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 public class Tracing {
 
@@ -45,10 +47,7 @@ public class Tracing {
 
   private static final Logger logger = LoggerFactory.getLogger(Tracing.class);
 
-  private static final SdkTracerManagement tracerManagement = OpenTelemetrySdk.getGlobalTracerManagement();
-
-  public static void setup(final TracingConfig tracingConfig) {
-
+  public static SdkTracerProvider setup(final TracingConfig tracingConfig) {
     logger.info(
       "Registering tracing configurations {} {} {} {}",
       keyValue("backend", tracingConfig.getBackend()),
@@ -57,46 +56,37 @@ public class Tracing {
       keyValue("loggingDebugEnabled", logger.isDebugEnabled())
     );
 
-    tracerManagement.updateActiveTraceConfig(
-      TraceConfig.getDefault()
-        .toBuilder()
-        .setSampler(Sampler.traceIdRatioBased(tracingConfig.getSamplingRate()))
-        .build()
+    SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
+
+    tracerProviderBuilder.setResource(
+      Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, SERVICE_NAME))
+    );
+    tracerProviderBuilder.setSampler(
+      Sampler.traceIdRatioBased(tracingConfig.getSamplingRate())
     );
 
     if (tracingConfig.getBackend().equals(Backend.ZIPKIN)) {
-
       logger.debug("Add Zipkin processor");
-
-      tracerManagement.addSpanProcessor(
+      tracerProviderBuilder.addSpanProcessor(
         BatchSpanProcessor
           .builder(zipkinExporter(tracingConfig))
-          .setExportOnlySampled(true)
           .build()
       );
 
     } else if (logger.isDebugEnabled()) {
-
       logger.debug("Add Logging processor");
-
-      tracerManagement.addSpanProcessor(
-        SimpleSpanProcessor
-          .builder(new LoggingSpanExporter())
-          .setExportOnlySampled(true)
-          .build()
+      tracerProviderBuilder.addSpanProcessor(
+        SimpleSpanProcessor.create(new LoggingSpanExporter())
       );
     }
-  }
 
-  public static void shutdown() {
-    tracerManagement.shutdown();
+    return tracerProviderBuilder.build();
   }
 
   private static SpanExporter zipkinExporter(TracingConfig tracingConfig) {
     return ZipkinSpanExporter
       .builder()
       .setEndpoint(tracingConfig.getURL())
-      .setServiceName(SERVICE_NAME)
       .build();
   }
 
