@@ -17,6 +17,7 @@
 package config
 
 import (
+	"math"
 	"testing"
 
 	"k8s.io/utils/pointer"
@@ -164,6 +165,45 @@ func TestBackoffDelayFromString(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("BackoffDelayFromISO8601String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIncrementContractGeneration(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		generation uint64
+		expected   uint64
+	}{
+		{
+			name:       "min",
+			generation: 0,
+			expected:   1,
+		},
+		{
+			name:       "max",
+			generation: math.MaxUint64 - 2,
+			expected:   0,
+		},
+		{
+			name:       "random",
+			generation: 42,
+			expected:   43,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			ct := &contract.Contract{
+				Generation: tt.generation,
+			}
+			IncrementContractGeneration(ct)
+
+			if ct.Generation != tt.expected {
+				t.Errorf("Got %d expected %d", ct.Generation, tt.expected)
 			}
 		})
 	}

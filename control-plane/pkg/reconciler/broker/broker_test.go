@@ -1533,7 +1533,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &contract.Contract{
 					Resources:  []*contract.Resource{},
-					Generation: 1,
+					Generation: 2,
 				}),
 			},
 			OtherTestData: map[string]interface{}{
@@ -1561,7 +1561,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &contract.Contract{
-					Generation: 1,
+					Generation: 2,
 				}),
 			},
 			OtherTestData: map[string]interface{}{
@@ -1595,7 +1595,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&configs, &contract.Contract{
-					Generation: 1,
+					Generation: 2,
 				}),
 			},
 			OtherTestData: map[string]interface{}{
@@ -1652,7 +1652,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 					},
-					Generation: 5,
+					Generation: 6,
 				}),
 			},
 			OtherTestData: map[string]interface{}{
@@ -1689,7 +1689,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 							EgressConfig: &contract.EgressConfig{DeadLetter: "http://www.my-sink.com"},
 						},
 					},
-					Generation: 5,
+					Generation: 6,
 				}),
 			},
 			OtherTestData: map[string]interface{}{

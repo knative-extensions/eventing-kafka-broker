@@ -19,7 +19,6 @@ package sink
 import (
 	"context"
 	"fmt"
-	"math"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -168,8 +167,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	// Update contract data with the new sink configuration.
 	changed := coreconfig.AddOrUpdateResourceConfig(ct, sinkConfig, sinkIndex, logger)
 
-	// Increment volumeGeneration
-	ct.Generation = incrementGeneration(ct.Generation)
+	coreconfig.IncrementContractGeneration(ct)
 
 	if changed == coreconfig.ResourceChanged {
 		// Update the configuration map with the new contract data.
@@ -234,6 +232,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 
 		logger.Debug("Sink deleted", zap.Int("index", sinkIndex))
 
+		coreconfig.IncrementContractGeneration(ct)
+
 		// Update the configuration map with the new contract data.
 		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
 			return err
@@ -255,10 +255,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	}
 
 	return nil
-}
-
-func incrementGeneration(generation uint64) uint64 {
-	return (generation + 1) % (math.MaxUint64 - 1)
 }
 
 func topicConfigFromSinkSpec(kss *eventing.KafkaSinkSpec) *kafka.TopicConfig {
