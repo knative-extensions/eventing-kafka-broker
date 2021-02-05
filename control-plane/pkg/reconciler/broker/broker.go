@@ -19,7 +19,6 @@ package broker
 import (
 	"context"
 	"fmt"
-	"math"
 	"strings"
 	"sync"
 
@@ -164,8 +163,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger.Debug("Change detector", zap.Int("changed", changed))
 
-	// Increment volumeGeneration
-	ct.Generation = incrementContractGeneration(ct.Generation)
+	coreconfig.IncrementContractGeneration(ct)
 
 	if changed == coreconfig.ResourceChanged {
 		// Update the configuration map with the new contract data.
@@ -251,6 +249,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 		logger.Debug("Broker deleted", zap.Int("index", brokerIndex))
 
+		coreconfig.IncrementContractGeneration(ct)
+
 		// Update the configuration map with the new contract data.
 		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
 			return err
@@ -281,10 +281,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	logger.Debug("Topic deleted", zap.String("topic", topic))
 
 	return nil
-}
-
-func incrementContractGeneration(generation uint64) uint64 {
-	return (generation + 1) % (math.MaxUint64 - 1)
 }
 
 func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, *corev1.ConfigMap, error) {

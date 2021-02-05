@@ -19,7 +19,6 @@ package trigger
 import (
 	"context"
 	"fmt"
-	"math"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
@@ -119,7 +118,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	ct.Resources[brokerIndex].Egresses = deleteTrigger(egresses, triggerIndex)
 
 	// Increment volume generation
-	ct.Generation = incrementGeneration(ct.Generation)
+	coreconfig.IncrementContractGeneration(ct)
 
 	// Update data plane config map.
 	err = r.UpdateDataPlaneConfigMap(ctx, ct, dataPlaneConfigMap)
@@ -256,8 +255,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 	changed := coreconfig.AddOrUpdateEgressConfig(ct, brokerIndex, triggerConfig, triggerIndex)
 
-	// Increment volumeGeneration
-	ct.Generation = incrementGeneration(ct.Generation)
+	coreconfig.IncrementContractGeneration(ct)
 
 	if changed == coreconfig.EgressChanged {
 		// Update the configuration map with the new dataPlaneConfig data.
@@ -290,8 +288,4 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 func isOurBroker(broker *eventing.Broker) (bool, string) {
 	brokerClass := broker.GetAnnotations()[eventing.BrokerClassAnnotationKey]
 	return brokerClass == kafka.BrokerClass, brokerClass
-}
-
-func incrementGeneration(generation uint64) uint64 {
-	return (generation + 1) % (math.MaxUint64 - 1)
 }

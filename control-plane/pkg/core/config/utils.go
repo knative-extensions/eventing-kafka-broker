@@ -80,3 +80,8 @@ func BackoffDelayFromISO8601String(backoffDelay *string, defaultDelay uint64) (u
 
 	return uint64(math.Abs(float64(ms.Milliseconds()))), nil
 }
+
+// Increment contract.Contract.Generation.
+func IncrementContractGeneration(ct *contract.Contract) {
+	ct.Generation = (ct.Generation + 1) % (math.MaxUint64 - 1)
+}
