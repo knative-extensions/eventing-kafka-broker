@@ -17,11 +17,22 @@
 package config
 
 import (
+	"context"
 	"math"
+	"reflect"
 	"testing"
+	"time"
 
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
-	duck "knative.dev/eventing/pkg/apis/duck/v1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
+	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
+	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
@@ -62,12 +73,12 @@ func TestContentModeFromString(t *testing.T) {
 }
 
 func TestBackoffPolicyFromString(t *testing.T) {
-	linerar := duck.BackoffPolicyLinear
-	exponential := duck.BackoffPolicyExponential
-	wrong := duck.BackoffPolicyType("default")
+	linerar := eventingduck.BackoffPolicyLinear
+	exponential := eventingduck.BackoffPolicyExponential
+	wrong := eventingduck.BackoffPolicyType("default")
 	tests := []struct {
 		name          string
-		backoffPolicy *duck.BackoffPolicyType
+		backoffPolicy *eventingduck.BackoffPolicyType
 		want          contract.BackoffPolicy
 	}{
 		{
@@ -204,6 +215,117 @@ func TestIncrementContractGeneration(t *testing.T) {
 
 			if ct.Generation != tt.expected {
 				t.Errorf("Got %d expected %d", ct.Generation, tt.expected)
+			}
+		})
+	}
+}
+
+func TestEgressConfigFromDelivery(t *testing.T) {
+	ctx := context.Background()
+	ctx, _ = fakedynamicclient.With(ctx, runtime.NewScheme())
+	ctx = addressable.WithDuck(ctx)
+
+	var (
+		url = &apis.URL{
+			Scheme: "http",
+			Host:   "localhost",
+			Path:   "/path",
+		}
+
+		exponential = eventingduck.BackoffPolicyExponential
+	)
+
+	tests := []struct {
+		name                  string
+		ctx                   context.Context
+		resolver              *resolver.URIResolver
+		parent                v1.Object
+		delivery              *eventingduck.DeliverySpec
+		defaultBackoffDelayMs uint64
+		want                  *contract.EgressConfig
+		wantErr               bool
+	}{
+		{
+			name:                  "nil delivery",
+			ctx:                   ctx,
+			resolver:              resolver.NewURIResolver(ctx, func(name types.NamespacedName) {}),
+			parent:                &eventing.KafkaSink{},
+			delivery:              nil,
+			defaultBackoffDelayMs: 0,
+			want:                  nil,
+			wantErr:               false,
+		},
+		{
+			name:                  "nil retry and nil dls",
+			ctx:                   ctx,
+			resolver:              resolver.NewURIResolver(ctx, func(name types.NamespacedName) {}),
+			parent:                &eventing.KafkaSink{},
+			delivery:              &eventingduck.DeliverySpec{},
+			defaultBackoffDelayMs: 0,
+			want:                  nil,
+			wantErr:               false,
+		},
+		{
+			name:     "full delivery",
+			ctx:      ctx,
+			resolver: resolver.NewURIResolver(ctx, func(name types.NamespacedName) {}),
+			parent:   &eventing.KafkaSink{},
+			delivery: &eventingduck.DeliverySpec{
+				DeadLetterSink: &duckv1.Destination{URI: url},
+				Retry:          pointer.Int32Ptr(3),
+				BackoffPolicy:  &exponential,
+				BackoffDelay:   pointer.StringPtr("PT1S"),
+			},
+			defaultBackoffDelayMs: 0,
+			want: &contract.EgressConfig{
+				DeadLetter:    url.String(),
+				Retry:         3,
+				BackoffPolicy: contract.BackoffPolicy_Exponential,
+				BackoffDelay:  uint64(time.Second.Milliseconds()),
+			},
+			wantErr: false,
+		},
+		{
+			name:     "only dls",
+			ctx:      ctx,
+			resolver: resolver.NewURIResolver(ctx, func(name types.NamespacedName) {}),
+			parent:   &eventing.KafkaSink{},
+			delivery: &eventingduck.DeliverySpec{
+				DeadLetterSink: &duckv1.Destination{URI: url},
+			},
+			defaultBackoffDelayMs: 0,
+			want: &contract.EgressConfig{
+				DeadLetter: url.String(),
+			},
+			wantErr: false,
+		},
+		{
+			name:     "only retry - use default backoff delay",
+			ctx:      ctx,
+			resolver: resolver.NewURIResolver(ctx, func(name types.NamespacedName) {}),
+			parent:   &eventing.KafkaSink{},
+			delivery: &eventingduck.DeliverySpec{
+				Retry:         pointer.Int32Ptr(3),
+				BackoffPolicy: &exponential,
+			},
+			defaultBackoffDelayMs: 100,
+			want: &contract.EgressConfig{
+				Retry:         3,
+				BackoffPolicy: contract.BackoffPolicy_Exponential,
+				BackoffDelay:  100,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := EgressConfigFromDelivery(tt.ctx, tt.resolver, tt.parent, tt.delivery, tt.defaultBackoffDelayMs)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("EgressConfigFromDelivery() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("EgressConfigFromDelivery() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -20,8 +20,13 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"google.golang.org/protobuf/testing/protocmp"
+	"k8s.io/utils/pointer"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/google/go-cmp/cmp"
@@ -60,6 +65,14 @@ var (
 		"FinalizerUpdate",
 		fmt.Sprintf(`Updated %q finalizers`, triggerName),
 	)
+
+	url = &apis.URL{
+		Scheme: "http",
+		Host:   "localhost",
+		Path:   "/path",
+	}
+
+	exponential = eventingduck.BackoffPolicyExponential
 )
 
 func TestTriggerReconciler(t *testing.T) {
@@ -130,6 +143,74 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - Trigger delivery",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(withDelivery),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+						},
+					},
+				}, &configs),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									EgressConfig: &contract.EgressConfig{
+										DeadLetter:    url.String(),
+										Retry:         3,
+										BackoffPolicy: contract.BackoffPolicy_Exponential,
+										BackoffDelay:  uint64(time.Second.Milliseconds()),
+									},
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						withDelivery,
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
@@ -1168,6 +1249,15 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 	}
 
 	useTable(t, table, &configs)
+}
+
+func withDelivery(trigger *eventing.Trigger) {
+	trigger.Spec.Delivery = &eventingduck.DeliverySpec{
+		DeadLetterSink: &duckv1.Destination{URI: url},
+		Retry:          pointer.Int32Ptr(3),
+		BackoffPolicy:  &exponential,
+		BackoffDelay:   pointer.StringPtr("PT1S"),
+	}
 }
 
 func TestTriggerFinalizer(t *testing.T) {
