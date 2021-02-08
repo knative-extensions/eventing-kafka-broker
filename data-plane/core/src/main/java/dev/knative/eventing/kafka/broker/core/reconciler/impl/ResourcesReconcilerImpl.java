@@ -140,7 +140,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       );
     });
 
-    // CompositeFuture.join waits for all futures to complete before calling handlers.
+    // We want to complete the future, once all futures are complete, so use join.
     return CompositeFuture.join(futures)
       .onComplete(r -> {
         this.cachedResources.clear();
@@ -206,6 +206,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       );
     });
 
+    // We want to complete the future, once all futures are complete, so use join.
     return CompositeFuture.join(futures).mapEmpty();
   }
 
