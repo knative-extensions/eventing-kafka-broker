@@ -19,16 +19,21 @@ import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategy;
 import io.micrometer.core.instrument.Counter;
-import io.vertx.core.Future;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.OffsetAndMetadata;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This class implements the offset strategy that makes sure that, even unordered, the offset commit is ordered.
+ */
 public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerRecordOffsetStrategy {
 
   private static final Logger logger = LoggerFactory
@@ -36,6 +41,13 @@ public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerReco
 
   private final KafkaConsumer<?, ?> consumer;
   private final Counter eventsSentCounter;
+
+  // This map contains the last acked message for every known TopicPartition
+  private final Map<TopicPartition, Long> lastAckedPerPartition;
+  // This map contains the set of messages waiting to be acked for every known TopicPartition
+  // The algorithm will commit the offset "o = set.last() + 1" when:
+  //   set.first() == lastAckedOffset + 1 && set.last() - set.first() == set.size() - 1
+  private final Map<TopicPartition, SortedSet<Long>> pendingAcksPerPartition;
 
   /**
    * All args constructor.
@@ -49,6 +61,8 @@ public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerReco
 
     this.consumer = consumer;
     this.eventsSentCounter = eventsSentCounter;
+    this.lastAckedPerPartition = new HashMap<>();
+    this.pendingAcksPerPartition = new HashMap<>();
   }
 
   /**
@@ -57,6 +71,11 @@ public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerReco
   @Override
   public void recordReceived(final KafkaConsumerRecord<?, ?> record) {
     // un-ordered processing doesn't require pause/resume lifecycle.
+
+    // Because recordReceived is guaranteed to be called in order,
+    // we use it to set the last seen acked offset.
+    // TODO If this assumption doesn't work, use this.consumer.committed(new TopicPartition(record.topic(), record.partition()))
+    this.lastAckedPerPartition.putIfAbsent(new TopicPartition(record.topic(), record.partition()), record.offset() - 1);
   }
 
   /**
@@ -64,25 +83,7 @@ public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerReco
    */
   @Override
   public void successfullySentToSubscriber(final KafkaConsumerRecord<?, ?> record) {
-    // TODO evaluate if it's worth committing offsets at specified intervals per partition.
-    // commit each record
-    commit(record)
-      .onSuccess(ignored -> {
-        eventsSentCounter.increment();
-        logger.debug(
-          "committed {} {} {}",
-          keyValue("topic", record.topic()),
-          keyValue("partition", record.partition()),
-          keyValue("offset", record.offset())
-        );
-      })
-      .onFailure(cause -> logger.error(
-        "failed to commit {} {} {}",
-        keyValue("topic", record.topic()),
-        keyValue("partition", record.partition()),
-        keyValue("offset", record.offset()),
-        cause
-      ));
+    commit(record);
   }
 
   /**
@@ -90,7 +91,7 @@ public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerReco
    */
   @Override
   public void successfullySentToDLQ(final KafkaConsumerRecord<?, ?> record) {
-    successfullySentToSubscriber(record);
+    commit(record);
   }
 
   /**
@@ -98,7 +99,7 @@ public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerReco
    */
   @Override
   public void failedToSendToDLQ(final KafkaConsumerRecord<?, ?> record, final Throwable ex) {
-    // do not commit
+    mutateStateAndCheckAck(new TopicPartition(record.topic(), record.partition()), record.offset());
   }
 
   /**
@@ -106,15 +107,57 @@ public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerReco
    */
   @Override
   public void recordDiscarded(final KafkaConsumerRecord<?, ?> record) {
-    successfullySentToSubscriber(record);
+    mutateStateAndCheckAck(new TopicPartition(record.topic(), record.partition()), record.offset());
   }
 
-  private Future<Map<TopicPartition, OffsetAndMetadata>> commit(
-    final KafkaConsumerRecord<?, ?> record) {
-    logger.debug("committing record {}", record);
-    return consumer.commit(Map.of(
-      new TopicPartition(record.topic(), record.partition()),
-      new OffsetAndMetadata(record.offset() + 1, ""))
-    );
+  /**
+   * @return null if it shouldn't ack, otherwise the offset to ack - 1.
+   */
+  private Long mutateStateAndCheckAck(TopicPartition topicPartition, long offset) {
+    long lastAckedOffset = this.lastAckedPerPartition.get(topicPartition); // This is always non null
+    SortedSet<Long> partitionPendingAcks =
+      this.pendingAcksPerPartition.computeIfAbsent(topicPartition, v -> new TreeSet<>());
+    partitionPendingAcks.add(offset);
+
+    // Return the ack to commit if:
+    // * last acked offset is the same of the first pending ack in the set
+    // * the set contains every element in its range of values
+    return (partitionPendingAcks.first() == lastAckedOffset + 1 &&
+      partitionPendingAcks.last() - partitionPendingAcks.first() == partitionPendingAcks.size() - 1) ?
+      partitionPendingAcks.last() : null;
   }
+
+  private void commit(final KafkaConsumerRecord<?, ?> record) {
+    TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
+    Long toAck = mutateStateAndCheckAck(topicPartition, record.offset());
+    if (toAck != null) {
+      // Reset the state
+      this.lastAckedPerPartition.put(topicPartition, toAck);
+      SortedSet<Long> messagesImGoingToAck = this.pendingAcksPerPartition.remove(topicPartition);
+
+      // Execute the actual commit
+      consumer.commit(Map.of(
+        topicPartition,
+        new OffsetAndMetadata(toAck + 1, ""))
+      ).onSuccess(ignored -> {
+        eventsSentCounter.increment(messagesImGoingToAck.size());
+        logger.debug(
+          "committed {} {} {}",
+          keyValue("topic", record.topic()),
+          keyValue("partition", record.partition()),
+          keyValue("offset", toAck + 1)
+        );
+      })
+        .onFailure(cause -> {
+          logger.error(
+            "failed to commit {} {} {}",
+            keyValue("topic", record.topic()),
+            keyValue("partition", record.partition()),
+            keyValue("offset", toAck + 1),
+            cause
+          );
+        });
+    }
+  }
+
 }

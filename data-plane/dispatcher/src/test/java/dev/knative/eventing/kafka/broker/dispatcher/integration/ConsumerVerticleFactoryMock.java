@@ -23,7 +23,6 @@ import dev.knative.eventing.kafka.broker.core.security.Credentials;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
-import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -68,10 +67,10 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
     final Future<Credentials> credentialsFuture) {
 
     return vertx -> {
-      final var producer = new MockProducer<>(
+      final var producer = new MockProducer<String, CloudEvent>(
         true,
         new StringSerializer(),
-        new CloudEventSerializer()
+        (topic, data) -> new byte[0] // No need to use the real one, since it doesn't support headers
       );
 
       return Future.succeededFuture(KafkaProducer.create(vertx, producer));
