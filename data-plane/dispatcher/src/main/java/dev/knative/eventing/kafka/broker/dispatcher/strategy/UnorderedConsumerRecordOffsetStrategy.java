@@ -150,8 +150,8 @@ public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerReco
       })
         .onFailure(cause -> {
           // If the commit failed, there are 2 situations:
-          // * Nobody tried to commit again, so let's just restore the state
           // * Somebody committed with an offset greater than this one, so we just discard the error
+          // * Nobody tried to commit again, so let's restore the state
           if (!(this.lastAckedPerPartition.get(topicPartition) > toAck)) {
             this.lastAckedPerPartition.put(topicPartition, lastAckedBeforeThisOne);
             this.pendingAcksPerPartition.compute(topicPartition, (k, actual) -> {
