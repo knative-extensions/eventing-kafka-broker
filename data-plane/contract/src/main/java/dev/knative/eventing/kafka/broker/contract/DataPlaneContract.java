@@ -2186,6 +2186,36 @@ public final class DataPlaneContract {
     com.google.protobuf.ByteString
         getUidBytes();
 
+    /**
+     * <pre>
+     * Egress configuration.
+     * It overrides Resource's EgressConfig.
+     * </pre>
+     *
+     * <code>.EgressConfig egressConfig = 7;</code>
+     * @return Whether the egressConfig field is set.
+     */
+    boolean hasEgressConfig();
+    /**
+     * <pre>
+     * Egress configuration.
+     * It overrides Resource's EgressConfig.
+     * </pre>
+     *
+     * <code>.EgressConfig egressConfig = 7;</code>
+     * @return The egressConfig.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig getEgressConfig();
+    /**
+     * <pre>
+     * Egress configuration.
+     * It overrides Resource's EgressConfig.
+     * </pre>
+     *
+     * <code>.EgressConfig egressConfig = 7;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder getEgressConfigOrBuilder();
+
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.ReplyStrategyCase getReplyStrategyCase();
   }
   /**
@@ -2285,6 +2315,19 @@ public final class DataPlaneContract {
               java.lang.String s = input.readStringRequireUtf8();
 
               uid_ = s;
+              break;
+            }
+            case 58: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder subBuilder = null;
+              if (egressConfig_ != null) {
+                subBuilder = egressConfig_.toBuilder();
+              }
+              egressConfig_ = input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(egressConfig_);
+                egressConfig_ = subBuilder.buildPartial();
+              }
+
               break;
             }
             default: {
@@ -2622,6 +2665,47 @@ public final class DataPlaneContract {
       }
     }
 
+    public static final int EGRESSCONFIG_FIELD_NUMBER = 7;
+    private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig egressConfig_;
+    /**
+     * <pre>
+     * Egress configuration.
+     * It overrides Resource's EgressConfig.
+     * </pre>
+     *
+     * <code>.EgressConfig egressConfig = 7;</code>
+     * @return Whether the egressConfig field is set.
+     */
+    @java.lang.Override
+    public boolean hasEgressConfig() {
+      return egressConfig_ != null;
+    }
+    /**
+     * <pre>
+     * Egress configuration.
+     * It overrides Resource's EgressConfig.
+     * </pre>
+     *
+     * <code>.EgressConfig egressConfig = 7;</code>
+     * @return The egressConfig.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig getEgressConfig() {
+      return egressConfig_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.getDefaultInstance() : egressConfig_;
+    }
+    /**
+     * <pre>
+     * Egress configuration.
+     * It overrides Resource's EgressConfig.
+     * </pre>
+     *
+     * <code>.EgressConfig egressConfig = 7;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder getEgressConfigOrBuilder() {
+      return getEgressConfig();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2654,6 +2738,9 @@ public final class DataPlaneContract {
       if (!getUidBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 6, uid_);
       }
+      if (egressConfig_ != null) {
+        output.writeMessage(7, getEgressConfig());
+      }
       unknownFields.writeTo(output);
     }
 
@@ -2683,6 +2770,10 @@ public final class DataPlaneContract {
       if (!getUidBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, uid_);
       }
+      if (egressConfig_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(7, getEgressConfig());
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -2709,6 +2800,11 @@ public final class DataPlaneContract {
       }
       if (!getUid()
           .equals(other.getUid())) return false;
+      if (hasEgressConfig() != other.hasEgressConfig()) return false;
+      if (hasEgressConfig()) {
+        if (!getEgressConfig()
+            .equals(other.getEgressConfig())) return false;
+      }
       if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
       switch (replyStrategyCase_) {
         case 3:
@@ -2743,6 +2839,10 @@ public final class DataPlaneContract {
       }
       hash = (37 * hash) + UID_FIELD_NUMBER;
       hash = (53 * hash) + getUid().hashCode();
+      if (hasEgressConfig()) {
+        hash = (37 * hash) + EGRESSCONFIG_FIELD_NUMBER;
+        hash = (53 * hash) + getEgressConfig().hashCode();
+      }
       switch (replyStrategyCase_) {
         case 3:
           hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
@@ -2900,6 +3000,12 @@ public final class DataPlaneContract {
         }
         uid_ = "";
 
+        if (egressConfigBuilder_ == null) {
+          egressConfig_ = null;
+        } else {
+          egressConfig_ = null;
+          egressConfigBuilder_ = null;
+        }
         replyStrategyCase_ = 0;
         replyStrategy_ = null;
         return this;
@@ -2946,6 +3052,11 @@ public final class DataPlaneContract {
           result.filter_ = filterBuilder_.build();
         }
         result.uid_ = uid_;
+        if (egressConfigBuilder_ == null) {
+          result.egressConfig_ = egressConfig_;
+        } else {
+          result.egressConfig_ = egressConfigBuilder_.build();
+        }
         result.replyStrategyCase_ = replyStrategyCase_;
         onBuilt();
         return result;
@@ -3009,6 +3120,9 @@ public final class DataPlaneContract {
         if (!other.getUid().isEmpty()) {
           uid_ = other.uid_;
           onChanged();
+        }
+        if (other.hasEgressConfig()) {
+          mergeEgressConfig(other.getEgressConfig());
         }
         switch (other.getReplyStrategyCase()) {
           case REPLYURL: {
@@ -3765,6 +3879,170 @@ public final class DataPlaneContract {
         uid_ = value;
         onChanged();
         return this;
+      }
+
+      private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig egressConfig_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder> egressConfigBuilder_;
+      /**
+       * <pre>
+       * Egress configuration.
+       * It overrides Resource's EgressConfig.
+       * </pre>
+       *
+       * <code>.EgressConfig egressConfig = 7;</code>
+       * @return Whether the egressConfig field is set.
+       */
+      public boolean hasEgressConfig() {
+        return egressConfigBuilder_ != null || egressConfig_ != null;
+      }
+      /**
+       * <pre>
+       * Egress configuration.
+       * It overrides Resource's EgressConfig.
+       * </pre>
+       *
+       * <code>.EgressConfig egressConfig = 7;</code>
+       * @return The egressConfig.
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig getEgressConfig() {
+        if (egressConfigBuilder_ == null) {
+          return egressConfig_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.getDefaultInstance() : egressConfig_;
+        } else {
+          return egressConfigBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Egress configuration.
+       * It overrides Resource's EgressConfig.
+       * </pre>
+       *
+       * <code>.EgressConfig egressConfig = 7;</code>
+       */
+      public Builder setEgressConfig(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig value) {
+        if (egressConfigBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          egressConfig_ = value;
+          onChanged();
+        } else {
+          egressConfigBuilder_.setMessage(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Egress configuration.
+       * It overrides Resource's EgressConfig.
+       * </pre>
+       *
+       * <code>.EgressConfig egressConfig = 7;</code>
+       */
+      public Builder setEgressConfig(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder builderForValue) {
+        if (egressConfigBuilder_ == null) {
+          egressConfig_ = builderForValue.build();
+          onChanged();
+        } else {
+          egressConfigBuilder_.setMessage(builderForValue.build());
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Egress configuration.
+       * It overrides Resource's EgressConfig.
+       * </pre>
+       *
+       * <code>.EgressConfig egressConfig = 7;</code>
+       */
+      public Builder mergeEgressConfig(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig value) {
+        if (egressConfigBuilder_ == null) {
+          if (egressConfig_ != null) {
+            egressConfig_ =
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.newBuilder(egressConfig_).mergeFrom(value).buildPartial();
+          } else {
+            egressConfig_ = value;
+          }
+          onChanged();
+        } else {
+          egressConfigBuilder_.mergeFrom(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Egress configuration.
+       * It overrides Resource's EgressConfig.
+       * </pre>
+       *
+       * <code>.EgressConfig egressConfig = 7;</code>
+       */
+      public Builder clearEgressConfig() {
+        if (egressConfigBuilder_ == null) {
+          egressConfig_ = null;
+          onChanged();
+        } else {
+          egressConfig_ = null;
+          egressConfigBuilder_ = null;
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Egress configuration.
+       * It overrides Resource's EgressConfig.
+       * </pre>
+       *
+       * <code>.EgressConfig egressConfig = 7;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder getEgressConfigBuilder() {
+        
+        onChanged();
+        return getEgressConfigFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Egress configuration.
+       * It overrides Resource's EgressConfig.
+       * </pre>
+       *
+       * <code>.EgressConfig egressConfig = 7;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder getEgressConfigOrBuilder() {
+        if (egressConfigBuilder_ != null) {
+          return egressConfigBuilder_.getMessageOrBuilder();
+        } else {
+          return egressConfig_ == null ?
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.getDefaultInstance() : egressConfig_;
+        }
+      }
+      /**
+       * <pre>
+       * Egress configuration.
+       * It overrides Resource's EgressConfig.
+       * </pre>
+       *
+       * <code>.EgressConfig egressConfig = 7;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder> 
+          getEgressConfigFieldBuilder() {
+        if (egressConfigBuilder_ == null) {
+          egressConfigBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder>(
+                  getEgressConfig(),
+                  getParentForChildren(),
+                  isClean());
+          egressConfig_ = null;
+        }
+        return egressConfigBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -10200,29 +10478,30 @@ public final class DataPlaneContract {
       "utesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028" +
       "\001\"n\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\r\n" +
       "\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.Ba" +
-      "ckoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\"\267\001\n\006Eg" +
+      "ckoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\"\334\001\n\006Eg" +
       "ress\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n\013destinati" +
       "on\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\0226\n\024replyToO" +
       "riginalTopic\030\004 \001(\0132\026.google.protobuf.Emp" +
       "tyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001" +
-      "(\tB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n\013conten" +
-      "tMode\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH" +
-      "\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"K\n\tRefe" +
-      "rence\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014" +
-      "\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"\364\001\n\010Resour" +
-      "ce\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020boots" +
-      "trapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ing" +
-      "ress\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfi" +
-      "g\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022,\n\nabsentAu" +
-      "th\030\007 \001(\0132\026.google.protobuf.EmptyH\000\022 \n\nau" +
-      "thSecret\030\010 \001(\0132\n.ReferenceH\000B\006\n\004Auth\"<\n\010" +
-      "Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresource" +
-      "s\030\002 \003(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013E" +
-      "xponential\020\000\022\n\n\006Linear\020\001*)\n\013ContentMode\022" +
-      "\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knati" +
-      "ve.eventing.kafka.broker.contractB\021DataP" +
-      "laneContractZ\032control-plane/pkg/contract" +
-      "b\006proto3"
+      "(\t\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConfigB" +
+      "\017\n\rreplyStrategy\"[\n\007Ingress\022!\n\013contentMo" +
+      "de\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH\000\022\016" +
+      "\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"K\n\tReferen" +
+      "ce\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004n" +
+      "ame\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"\364\001\n\010Resource\022" +
+      "\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstra" +
+      "pServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingres" +
+      "s\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig\022\031" +
+      "\n\010egresses\030\006 \003(\0132\007.Egress\022,\n\nabsentAuth\030" +
+      "\007 \001(\0132\026.google.protobuf.EmptyH\000\022 \n\nauthS" +
+      "ecret\030\010 \001(\0132\n.ReferenceH\000B\006\n\004Auth\"<\n\010Con" +
+      "tract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002" +
+      " \003(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Expo" +
+      "nential\020\000\022\n\n\006Linear\020\001*)\n\013ContentMode\022\n\n\006" +
+      "BINARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knative." +
+      "eventing.kafka.broker.contractB\021DataPlan" +
+      "eContractZ\032control-plane/pkg/contractb\006p" +
+      "roto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -10252,7 +10531,7 @@ public final class DataPlaneContract {
     internal_static_Egress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Egress_descriptor,
-        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "Filter", "Uid", "ReplyStrategy", });
+        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "Filter", "Uid", "EgressConfig", "ReplyStrategy", });
     internal_static_Ingress_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_Ingress_fieldAccessorTable = new
