@@ -47,15 +47,16 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
 
   @Override
   public void handle(Message<Object> event) {
-    DataPlaneContract.Contract contract = (DataPlaneContract.Contract) event.body();
-    last.set(contract);
-
-    logger.info("Set new contract {}", keyValue("contractGeneration", contract.getGeneration()));
-
-    reconcileLast();
+    reconcileLast((DataPlaneContract.Contract) event.body());
   }
 
-  private void reconcileLast() {
+  private void reconcileLast(final DataPlaneContract.Contract newContract) {
+
+    if (newContract != null) {
+      last.set(newContract);
+
+      logger.info("Set new contract {}", keyValue("contractGeneration", newContract.getGeneration()));
+    }
 
     // Our reconciler is on the same verticle of the handler, therefore they use both the same thread.
     // However, if the reconciler makes an async request or executes a blocking operation, a new contract message to
@@ -85,7 +86,7 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
           // During a reconcile a new contract might have been set.
           // If that's the case, reconcile it.
           if (last.get().getGeneration() != contract.getGeneration()) {
-            reconcileLast();
+            reconcileLast(null);
           }
         });
     }
