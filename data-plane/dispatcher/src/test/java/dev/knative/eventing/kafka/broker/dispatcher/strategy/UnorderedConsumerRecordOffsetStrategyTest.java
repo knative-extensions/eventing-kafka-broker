@@ -178,13 +178,25 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
   }
 
   @Test
-  public void ShouldCommitSuccessfullyOnRecordDiscarded() {
+  public void shouldCommitSuccessfullyWithRecordDiscardedInTheMiddle() {
     assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
       var rec = record("aaa", 0, 0);
       offsetStrategy.recordReceived(rec);
       offsetStrategy.recordDiscarded(rec);
+      offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 1));
     })
-      .containsEntry(new TopicPartition("aaa", 0), 1L);
+      .containsEntry(new TopicPartition("aaa", 0), 2L);
+  }
+
+  @Test
+  public void shouldCommitSuccessfullyWithRecordFailedToDLQInTheMiddle() {
+    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+      var rec = record("aaa", 0, 0);
+      offsetStrategy.recordReceived(rec);
+      offsetStrategy.failedToSendToDLQ(rec, new IllegalStateException());
+      offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 1));
+    })
+      .containsEntry(new TopicPartition("aaa", 0), 2L);
   }
 
   @Test
@@ -205,7 +217,10 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
     final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
     final Counter eventsSentCounter = mock(Counter.class);
 
-    new UnorderedConsumerRecordOffsetStrategy(consumer, eventsSentCounter).failedToSendToDLQ(null, null);
+    UnorderedConsumerRecordOffsetStrategy strategy =
+      new UnorderedConsumerRecordOffsetStrategy(consumer, eventsSentCounter);
+    strategy.recordReceived(record("aaa", 0, 0));
+    strategy.failedToSendToDLQ(record("aaa", 0, 0), null);
 
     shouldNeverCommit(consumer);
     shouldNeverPause(consumer);

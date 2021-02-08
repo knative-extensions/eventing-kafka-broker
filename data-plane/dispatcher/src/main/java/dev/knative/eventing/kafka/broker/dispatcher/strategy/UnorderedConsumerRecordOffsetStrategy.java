@@ -94,7 +94,7 @@ public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerReco
    */
   @Override
   public void failedToSendToDLQ(final KafkaConsumerRecord<?, ?> record, final Throwable ex) {
-    // TODO what do we do with that?
+    mutateStateAndCheckAck(new TopicPartition(record.topic(), record.partition()), record.offset());
   }
 
   /**
@@ -102,10 +102,13 @@ public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerReco
    */
   @Override
   public void recordDiscarded(final KafkaConsumerRecord<?, ?> record) {
-    commit(record);
+    mutateStateAndCheckAck(new TopicPartition(record.topic(), record.partition()), record.offset());
   }
 
-  private Long shouldAck(TopicPartition topicPartition, long offset) {
+  /**
+   * @return null if it shouldn't ack, otherwise the offset to ack - 1.
+   */
+  private Long mutateStateAndCheckAck(TopicPartition topicPartition, long offset) {
     long lastAckedOffset = this.lastAckedMap.get(topicPartition); // This is always non null
     SortedSet<Long> toAckSet = this.pendingAcksMap.computeIfAbsent(topicPartition, v -> new TreeSet<>());
     toAckSet.add(offset);
@@ -116,7 +119,7 @@ public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerReco
 
   private void commit(final KafkaConsumerRecord<?, ?> record) {
     TopicPartition key = new TopicPartition(record.topic(), record.partition());
-    Long shouldAck = shouldAck(key, record.offset());
+    Long shouldAck = mutateStateAndCheckAck(key, record.offset());
     if (shouldAck != null) {
       // Reset the state
       long lastAckedBeforeThisOne = this.lastAckedMap.put(key, shouldAck);
