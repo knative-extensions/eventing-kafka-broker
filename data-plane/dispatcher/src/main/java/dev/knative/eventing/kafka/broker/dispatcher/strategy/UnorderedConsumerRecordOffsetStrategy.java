@@ -132,7 +132,7 @@ public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerReco
     Long toAck = mutateStateAndCheckAck(topicPartition, record.offset());
     if (toAck != null) {
       // Reset the state
-      long lastAckedBeforeThisOne = this.lastAckedPerPartition.put(topicPartition, toAck);
+      this.lastAckedPerPartition.put(topicPartition, toAck);
       SortedSet<Long> messagesImGoingToAck = this.pendingAcksPerPartition.remove(topicPartition);
 
       // Execute the actual commit
@@ -149,19 +149,6 @@ public final class UnorderedConsumerRecordOffsetStrategy implements ConsumerReco
         );
       })
         .onFailure(cause -> {
-          // If the commit failed, there are 2 situations:
-          // * Somebody committed with an offset greater than this one, so we just discard the error
-          // * Nobody tried to commit again, so let's restore the state
-          if (!(this.lastAckedPerPartition.get(topicPartition) > toAck)) {
-            this.lastAckedPerPartition.put(topicPartition, lastAckedBeforeThisOne);
-            this.pendingAcksPerPartition.compute(topicPartition, (k, actual) -> {
-              if (actual != null) {
-                actual.addAll(messagesImGoingToAck);
-                return actual;
-              }
-              return messagesImGoingToAck;
-            });
-          }
           logger.error(
             "failed to commit {} {} {}",
             keyValue("topic", record.topic()),
