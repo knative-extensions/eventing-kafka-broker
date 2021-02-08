@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 # variables used:
 # - SKIP_INITIALIZE (default: false) - skip cluster creation.
 # - LOCAL_DEVELOPMENT (default: false) - skip heavy workloads installation like load and chaos generators.

@@ -38,7 +38,23 @@ export SYSTEM_NAMESPACE="knative-eventing"
 export CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}
 
 function knative_setup() {
-  knative_eventing "apply --strict"
+  knative_eventing &
+  local pid_knative_eventing=$!
+
+  publish_test_images &
+  local pid_publish_test_images=$!
+
+  kafka &
+  local pid_kafka=$!
+
+  eventing_kafka_broker_setup &
+  local pid_eventing_kafka_broker_setup=$!
+
+  wait $pid_knative_eventing &&
+    wait $pid_publish_test_images &&
+    wait $pid_kafka &&
+    wait $pid_eventing_kafka_broker_setup
+
   return $?
 }
 
@@ -51,7 +67,7 @@ function knative_teardown() {
     popd || fail_test "Failed to set up Eventing"
   else
     echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
-    kubectl delete --ignore-not-found -f ${KNATIVE_EVENTING_RELEASE}
+    kubectl delete --ignore-not-found -f "${KNATIVE_EVENTING_RELEASE}"
   fi
 }
 
@@ -66,12 +82,14 @@ function knative_eventing() {
     popd || fail_test "Failed to set up Eventing"
   else
     echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
-    kubectl apply -f ${KNATIVE_EVENTING_RELEASE}
+    kubectl apply -f "${KNATIVE_EVENTING_RELEASE}"
   fi
 
   kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
+}
 
-  # Publish test images.
+function publish_test_images() {
+
   echo ">> Publishing test images from eventing"
   # We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
   # path has to be a GOPATH.
@@ -88,11 +106,18 @@ function knative_eventing() {
   sed -i 's@knative.dev/eventing-kafka-broker/vendor/knative.dev/pkg/leaderelection/chaosduck@knative.dev/pkg/leaderelection/chaosduck@g' "${CHAOS_CONFIG}"
 
   ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
+}
 
+function kafka() {
   ./test/kafka/kafka_setup.sh || fail_test "Failed to set up Kafka cluster"
+  return $?
 }
 
 function test_setup() {
+  return 0
+}
+
+function eventing_kafka_broker_setup() {
 
   [ -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" ] && rm "${EVENTING_KAFKA_BROKER_ARTIFACT}"
