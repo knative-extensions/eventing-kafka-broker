@@ -29,18 +29,18 @@ import org.slf4j.LoggerFactory;
 
 /**
  * ConsumerRecordHandler implements the core algorithm of the Dispatcher component (see {@link
- * ConsumerRecordHandler#handle(KafkaConsumerRecord)}).
+ * DispatcherRecordHandler#handle(KafkaConsumerRecord)}).
  *
- * @see ConsumerRecordHandler#handle(KafkaConsumerRecord)
+ * @see DispatcherRecordHandler#handle(KafkaConsumerRecord)
  */
-public final class ConsumerRecordHandler implements Handler<KafkaConsumerRecord<String, CloudEvent>> {
+public final class DispatcherRecordHandler implements Handler<KafkaConsumerRecord<String, CloudEvent>> {
 
-  private static final Logger logger = LoggerFactory.getLogger(ConsumerRecordHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(DispatcherRecordHandler.class);
 
   private final Filter filter;
   private final ConsumerRecordSender subscriberSender;
   private final ConsumerRecordSender deadLetterQueueSender;
-  private final ConsumerRecordOffsetStrategy receiver;
+  private final ConsumerRecordOffsetStrategy offsetStrategy;
   private final SinkResponseHandler sinkResponseHandler;
 
   /**
@@ -48,27 +48,27 @@ public final class ConsumerRecordHandler implements Handler<KafkaConsumerRecord<
    *
    * @param subscriberSender      sender to trigger subscriber
    * @param filter                event filter
-   * @param receiver              hook receiver {@link ConsumerRecordOffsetStrategy}. It allows to plug in custom offset
+   * @param offsetStrategy        hook receiver {@link ConsumerRecordOffsetStrategy}. It allows to plug in custom offset
    *                              management depending on the success/failure during the algorithm.
    * @param sinkResponseHandler   handler of the response from {@code subscriberSender}
    * @param deadLetterQueueSender sender to DLQ
    */
-  public ConsumerRecordHandler(
+  public DispatcherRecordHandler(
     final ConsumerRecordSender subscriberSender,
     final Filter filter,
-    final ConsumerRecordOffsetStrategy receiver,
+    final ConsumerRecordOffsetStrategy offsetStrategy,
     final SinkResponseHandler sinkResponseHandler,
     final ConsumerRecordSender deadLetterQueueSender) {
 
     Objects.requireNonNull(filter, "provide filter");
     Objects.requireNonNull(subscriberSender, "provide subscriberSender");
     Objects.requireNonNull(deadLetterQueueSender, "provide deadLetterQueueSender");
-    Objects.requireNonNull(receiver, "provider receiver");
-    Objects.requireNonNull(sinkResponseHandler, "provider sinkResponseHandler");
+    Objects.requireNonNull(offsetStrategy, "provide offsetStrategy");
+    Objects.requireNonNull(sinkResponseHandler, "provide sinkResponseHandler");
 
     this.subscriberSender = subscriberSender;
     this.filter = filter;
-    this.receiver = receiver;
+    this.offsetStrategy = offsetStrategy;
     this.deadLetterQueueSender = deadLetterQueueSender;
     this.sinkResponseHandler = sinkResponseHandler;
   }
@@ -78,20 +78,19 @@ public final class ConsumerRecordHandler implements Handler<KafkaConsumerRecord<
    *
    * @param subscriberSender    sender to trigger subscriber
    * @param filter              event filter
-   * @param receiver            hook receiver {@link ConsumerRecordOffsetStrategy}. It allows to plug in custom offset
+   * @param offsetStrategy            hook receiver {@link ConsumerRecordOffsetStrategy}. It allows to plug in custom offset
    *                            management depending on the success/failure during the algorithm.
    * @param sinkResponseHandler handler of the response
    */
-  public ConsumerRecordHandler(
+  public DispatcherRecordHandler(
     final ConsumerRecordSender subscriberSender,
     final Filter filter,
-    final ConsumerRecordOffsetStrategy receiver,
+    final ConsumerRecordOffsetStrategy offsetStrategy,
     final SinkResponseHandler sinkResponseHandler) {
-
     this(
       subscriberSender,
       filter,
-      receiver,
+      offsetStrategy,
       sinkResponseHandler,
       // If there is no DLQ configured by default DLQ sender always fails, which means
       // implementors will receive failedToSendToDLQ if the subscriber sender fails.
@@ -109,15 +108,14 @@ public final class ConsumerRecordHandler implements Handler<KafkaConsumerRecord<
 
     logDebug("Handling record", record);
 
-    // TODO Maybe translate all this dispatching logic to a cool FSM
-    receiver.recordReceived(record);
+    offsetStrategy.recordReceived(record);
 
     if (filter.test(record.value())) {
       logDebug("Record match filtering", record);
       send(record);
     } else {
       logDebug("Record doesn't match filtering", record);
-      receiver.recordDiscarded(record);
+      offsetStrategy.recordDiscarded(record);
     }
   }
 
@@ -126,7 +124,7 @@ public final class ConsumerRecordHandler implements Handler<KafkaConsumerRecord<
       .onSuccess(response -> sinkResponseHandler.handle(response)
         .onSuccess(ignored -> {
           logDebug("Successfully send response to the broker", record);
-          receiver.successfullySentToSubscriber(record);
+          offsetStrategy.successfullySentToSubscriber(record);
         })
         .onFailure(cause -> {
           logError("Failed to handle response", record, cause);
@@ -142,16 +140,16 @@ public final class ConsumerRecordHandler implements Handler<KafkaConsumerRecord<
     deadLetterQueueSender.send(record)
       .onFailure(ex -> {
         logError("Failed to send record to dead letter sink", record, ex);
-        receiver.failedToSendToDLQ(record, ex);
+        offsetStrategy.failedToSendToDLQ(record, ex);
       })
       .onSuccess(response -> sinkResponseHandler.handle(response)
         .onSuccess(ignored -> {
           logDebug("Successfully send response to the broker", record);
-          receiver.successfullySentToDLQ(record);
+          offsetStrategy.successfullySentToDLQ(record);
         })
         .onFailure(cause -> {
           logError("Failed to handle response", record, cause);
-          receiver.failedToSendToDLQ(record, cause);
+          offsetStrategy.failedToSendToDLQ(record, cause);
         }));
   }
 
@@ -198,5 +196,9 @@ public final class ConsumerRecordHandler implements Handler<KafkaConsumerRecord<
       this.deadLetterQueueSender.close(),
       this.subscriberSender.close()
     );
+  }
+
+  private enum DispatcherState {
+
   }
 }

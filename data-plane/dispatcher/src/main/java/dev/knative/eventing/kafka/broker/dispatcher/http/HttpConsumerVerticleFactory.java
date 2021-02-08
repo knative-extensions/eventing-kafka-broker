@@ -25,11 +25,11 @@ import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.Credentials;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
 import dev.knative.eventing.kafka.broker.core.security.PlaintextCredentials;
-import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.DispatcherRecordHandler;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.vertx.circuitbreaker.CircuitBreaker;
@@ -135,7 +135,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
       credentialsFuture
     );
 
-    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<ConsumerRecordHandler>> recordHandlerFactory =
+    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<DispatcherRecordHandler>> recordHandlerFactory =
       (vertx, consumer) -> {
 
         final var circuitBreakerOptions = createCircuitBreakerOptions(resource);
@@ -153,7 +153,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
           : createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), circuitBreakerOptions, egressConfig);
 
         return producerFactory.apply(vertx)
-          .map(producer -> new ConsumerRecordHandler(
+          .map(producer -> new DispatcherRecordHandler(
             egressSubscriberSender,
             egress.hasFilter() ? new AttributesFilter(egress.getFilter().getAttributesMap()) : Filter.noop(),
             this.consumerRecordOffsetStrategyFactory.get(consumer, resource, egress),

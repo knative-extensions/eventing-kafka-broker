@@ -61,7 +61,7 @@ public class ConsumerVerticleTest {
     final var verticle = new ConsumerVerticle(
       v -> Future.succeededFuture(KafkaConsumer.create(v, consumer)),
       Set.of(topic),
-      (a, b) -> Future.succeededFuture(new ConsumerRecordHandler(
+      (a, b) -> Future.succeededFuture(new DispatcherRecordHandler(
         ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
         value -> false,
         mock(ConsumerRecordOffsetStrategy.class),
@@ -94,7 +94,7 @@ public class ConsumerVerticleTest {
     final var verticle = new ConsumerVerticle(
       v -> Future.succeededFuture(KafkaConsumer.create(v, consumer)),
       Set.of(topic),
-      (a, b) -> Future.succeededFuture(new ConsumerRecordHandler(
+      (a, b) -> Future.succeededFuture(new DispatcherRecordHandler(
         ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
         value -> false,
         mock(ConsumerRecordOffsetStrategy.class),
@@ -155,7 +155,7 @@ public class ConsumerVerticleTest {
     final var verticle = new ConsumerVerticle(
       v -> Future.succeededFuture(consumer),
       Arrays.stream(topics).collect(Collectors.toSet()),
-      (v, c) -> Future.succeededFuture(new ConsumerRecordHandler(
+      (v, c) -> Future.succeededFuture(new DispatcherRecordHandler(
         new ConsumerRecordSenderMock(
           () -> {
             consumerRecordSenderClosed.set(true);

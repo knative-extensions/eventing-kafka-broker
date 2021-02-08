@@ -39,14 +39,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
-public class ConsumerRecordHandlerTest {
+public class DispatcherRecordHandlerTest {
 
   @Test
   public void shouldNotSendToSubscriberNorToDLQIfValueDoesntMatch() {
 
     final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
 
-    final var consumerRecordHandler = new ConsumerRecordHandler(
+    final var dispatcherHandler = new DispatcherRecordHandler(
       ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
       value -> false,
       receiver,
@@ -58,7 +58,7 @@ public class ConsumerRecordHandlerTest {
     );
 
     final var record = record();
-    consumerRecordHandler.handle(record);
+    dispatcherHandler.handle(record);
 
     verify(receiver, times(1)).recordReceived(record);
     verify(receiver, times(1)).recordDiscarded(record);
@@ -73,7 +73,7 @@ public class ConsumerRecordHandlerTest {
     final var sendCalled = new AtomicBoolean(false);
     final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
 
-    final var consumerRecordHandler = new ConsumerRecordHandler(
+    final var dispatcherHandler = new DispatcherRecordHandler(
       new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
@@ -96,7 +96,7 @@ public class ConsumerRecordHandlerTest {
       )
     );
     final var record = record();
-    consumerRecordHandler.handle(record);
+    dispatcherHandler.handle(record);
 
     assertTrue(sendCalled.get());
     verify(receiver, times(1)).recordReceived(record);
@@ -113,7 +113,7 @@ public class ConsumerRecordHandlerTest {
     final var DLQSenderSendCalled = new AtomicBoolean(false);
     final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
 
-    final var consumerRecordHandler = new ConsumerRecordHandler(
+    final var dispatcherHandler = new DispatcherRecordHandler(
       new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
@@ -136,7 +136,7 @@ public class ConsumerRecordHandlerTest {
       )
     );
     final var record = record();
-    consumerRecordHandler.handle(record);
+    dispatcherHandler.handle(record);
 
     assertTrue(subscriberSenderSendCalled.get());
     assertTrue(DLQSenderSendCalled.get());
@@ -154,7 +154,7 @@ public class ConsumerRecordHandlerTest {
     final var DLQSenderSendCalled = new AtomicBoolean(false);
     final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
 
-    final var consumerRecordHandler = new ConsumerRecordHandler(
+    final var dispatcherHandler = new DispatcherRecordHandler(
       new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
@@ -177,7 +177,7 @@ public class ConsumerRecordHandlerTest {
       )
     );
     final var record = record();
-    consumerRecordHandler.handle(record);
+    dispatcherHandler.handle(record);
 
     assertTrue(subscriberSenderSendCalled.get());
     assertTrue(DLQSenderSendCalled.get());
@@ -193,7 +193,7 @@ public class ConsumerRecordHandlerTest {
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
     final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
 
-    final var consumerRecordHandler = new ConsumerRecordHandler(
+    final var dispatcherHandler = new DispatcherRecordHandler(
       new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
@@ -209,7 +209,7 @@ public class ConsumerRecordHandlerTest {
       )
     );
     final var record = record();
-    consumerRecordHandler.handle(record);
+    dispatcherHandler.handle(record);
 
     assertTrue(subscriberSenderSendCalled.get());
     verify(receiver, times(1)).recordReceived(record);
@@ -231,7 +231,7 @@ public class ConsumerRecordHandlerTest {
     final var deadLetterSender = mock(ConsumerRecordSender.class);
     when(deadLetterSender.close()).thenReturn(Future.succeededFuture());
 
-    final ConsumerRecordHandler consumerRecordHandler = new ConsumerRecordHandler(
+    final DispatcherRecordHandler dispatcherRecordHandler = new DispatcherRecordHandler(
       subscriberSender,
       Filter.noop(),
       mock(ConsumerRecordOffsetStrategy.class),
@@ -239,7 +239,7 @@ public class ConsumerRecordHandlerTest {
       deadLetterSender
     );
 
-    consumerRecordHandler.close()
+    dispatcherRecordHandler.close()
       .onFailure(context::failNow)
       .onSuccess(r -> context.verify(() -> {
         verify(subscriberSender, times(1)).close();
