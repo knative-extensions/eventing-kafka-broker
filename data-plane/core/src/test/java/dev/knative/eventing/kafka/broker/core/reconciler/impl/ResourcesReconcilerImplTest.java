@@ -15,12 +15,14 @@
  */
 package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import io.vertx.core.Future;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 
 import static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress;
 import static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter;
@@ -186,6 +188,461 @@ class ResourcesReconcilerImplTest {
       .reconcile(Collections.emptyList())
       .expect()
       .deletedIngress("1-1234")
+      .then()
+      .run();
+  }
+
+  @Test
+  public void reconcileEgressMultipleResourcesMultipleSteps() {
+
+    final var resources1 = List.of(
+      baseResource("1")
+        .addEgresses(egress("1"))
+        .addEgresses(egress("2"))
+        .addEgresses(egress("3"))
+        .setBootstrapServers("b1,b2")
+        .build(),
+      baseResource("2")
+        .addEgresses(egress("4"))
+        .addEgresses(egress("5"))
+        .addEgresses(egress("6"))
+        .setBootstrapServers("b1,b2")
+        .build(),
+      baseResource("3")
+        .addEgresses(egress("7"))
+        .addEgresses(egress("8"))
+        .addEgresses(egress("9"))
+        .setBootstrapServers("b1,b2")
+        .build()
+    );
+
+    final var resources2 = List.of(
+      baseResource("1")
+        .addEgresses(egress("1"))
+        .addEgresses(baseEgress("2").setDestination("http://localhost:9091"))
+        .addEgresses(egress("3"))
+        .setBootstrapServers("b1,b2")
+        .build(),
+      baseResource("2")
+        .addEgresses(egress("4"))
+        .addEgresses(egress("5"))
+        .addEgresses(egress("6"))
+        .setBootstrapServers("b1,b2")
+        .build(),
+      baseResource("3")
+        .addEgresses(egress("7"))
+        .addEgresses(egress("8"))
+        .setBootstrapServers("b1,b2")
+        .build()
+    );
+
+    new ResourceReconcilerTestRunner()
+      .enableIngressListener()
+      .reconcile(resources1)
+      .expect()
+      .newEgress("1")
+      .newEgress("2")
+      .newEgress("3")
+      .newEgress("4")
+      .newEgress("5")
+      .newEgress("6")
+      .newEgress("7")
+      .newEgress("8")
+      .newEgress("9")
+      .then()
+      .reconcile(resources2)
+      .expect()
+      .updatedEgress("2")
+      .deletedEgress("9")
+      .then()
+      .reconcile(resources1)
+      .expect()
+      .updatedEgress("2")
+      .newEgress("9")
+      .then()
+      .reconcile(resources2)
+      .expect()
+      .updatedEgress("2")
+      .deletedEgress("9")
+      .then()
+      .reconcile(resources2)
+      .expect()
+      .then()
+      .reconcile(resources1)
+      .expect()
+      .updatedEgress("2")
+      .newEgress("9")
+      .then()
+      .reconcile(resources1)
+      .expect()
+      .updatedEgress("2")
+      .deletedEgress("9")
+      .then()
+      .run();
+  }
+
+  @Test
+  public void reconcileFailedOnNewEgress() {
+    new ResourceReconcilerTestRunner()
+      .enableEgressListener(new EgressReconcilerListenerMock(
+        Future.failedFuture(new RuntimeException()),
+        Future.succeededFuture(),
+        Future.succeededFuture()
+      ))
+      .reconcile(List.of(
+        baseResource("1")
+          .addEgresses(egress("1"))
+          .build()
+      ))
+      .expect()
+      .newEgress("1")
+      .returnsFuture(Future.failedFuture(new RuntimeException()))
+      .then()
+      .reconcile(List.of(
+        baseResource("1")
+          .addEgresses(egress("1"))
+          .addEgresses(egress("2"))
+          .build()
+      ))
+      .expect()
+      .newEgress("1")
+      .newEgress("2")
+      .returnsFuture(Future.failedFuture(new RuntimeException()))
+      .then()
+      .run();
+  }
+
+  @Test
+  public void reconcileFailedOnUpdateEgress() {
+    new ResourceReconcilerTestRunner()
+      .enableEgressListener(new EgressReconcilerListenerMock(
+        Future.succeededFuture(),
+        Future.failedFuture(new RuntimeException()),
+        Future.succeededFuture()
+      ))
+      .reconcile(List.of(
+        baseResource("1")
+          .addEgresses(egress("1"))
+          .build()
+      ))
+      .expect()
+      .newEgress("1")
+      .then()
+      .reconcile(List.of(
+        baseResource("1")
+          .addEgresses(baseEgress("1").setConsumerGroup("foo"))
+          .addEgresses(egress("2"))
+          .build()
+      ))
+      .expect()
+      .updatedEgress("1")
+      .newEgress("2")
+      .returnsFuture(Future.failedFuture(new RuntimeException()))
+      .then()
+      .reconcile(List.of(
+        baseResource("1")
+          .addEgresses(baseEgress("1").setConsumerGroup("foo"))
+          .addEgresses(egress("2"))
+          .build()
+      ))
+      .expect()
+      .updatedEgress("1")
+      .returnsFuture(Future.failedFuture(new RuntimeException()))
+      .then()
+      .run();
+  }
+
+  @Test
+  public void reconcileFailedOnDeleteEgress() {
+    new ResourceReconcilerTestRunner()
+      .enableEgressListener(new EgressReconcilerListenerMock(
+        Future.succeededFuture(),
+        Future.succeededFuture(),
+        Future.failedFuture(new RuntimeException())
+      ))
+      .reconcile(List.of(
+        baseResource("1")
+          .addEgresses(egress("1"))
+          .addEgresses(egress("2"))
+          .build()
+      ))
+      .expect()
+      .newEgress("1")
+      .newEgress("2")
+      .then()
+      .reconcile(List.of(
+        baseResource("1")
+          .addEgresses(baseEgress("1").setConsumerGroup("foo"))
+          .addEgresses(egress("3"))
+          .build()
+      ))
+      .expect()
+      .updatedEgress("1")
+      .deletedEgress("2")
+      .newEgress("3")
+      .returnsFuture(Future.failedFuture(new RuntimeException()))
+      .then()
+      .reconcile(List.of(
+        baseResource("1")
+          .addEgresses(baseEgress("1").setConsumerGroup("foo"))
+          .addEgresses(baseEgress("3").setDestination("http://localhost"))
+          .build()
+      ))
+      .expect()
+      .deletedEgress("2")
+      .updatedEgress("3")
+      .returnsFuture(Future.failedFuture(new RuntimeException()))
+      .then()
+      .run();
+  }
+
+  @Test
+  public void reconcileFailedOnUpdateIngress() {
+    new ResourceReconcilerTestRunner()
+      .enableIngressListener(new IngressReconcilerListenerMock(
+        Future.succeededFuture(),
+        Future.failedFuture(new RuntimeException()),
+        Future.succeededFuture()
+      ))
+      .reconcile(List.of(
+        baseResource("1")
+          .setIngress(DataPlaneContract.Ingress
+            .newBuilder()
+            .setContentMode(DataPlaneContract.ContentMode.STRUCTURED)
+            .setPath("/hello1/hello2")
+            .build())
+          .setBootstrapServers("b1,b2")
+          .build()
+      ))
+      .expect()
+      .newIngress("1")
+      .then()
+      .reconcile(List.of(
+        baseResource("1")
+          .setIngress(DataPlaneContract.Ingress
+            .newBuilder()
+            .setContentMode(DataPlaneContract.ContentMode.BINARY)
+            .setPath("/hello1/hello2")
+            .build())
+          .setBootstrapServers("b1,b2")
+          .build()
+      ))
+      .expect()
+      .updatedIngress("1")
+      .returnsFuture(Future.failedFuture(new RuntimeException()))
+      .then()
+      .reconcile(List.of(
+        baseResource("1")
+          .setIngress(DataPlaneContract.Ingress
+            .newBuilder()
+            .setContentMode(DataPlaneContract.ContentMode.BINARY)
+            .setPath("/hello1/hello2")
+            .build())
+          .setBootstrapServers("b1,b2")
+          .build()
+      ))
+      .expect()
+      .updatedIngress("1")
+      .returnsFuture(Future.failedFuture(new RuntimeException()))
+      .then()
+      .run();
+  }
+
+  @Test
+  public void reconcileFailedOnDeleteIngress() {
+    new ResourceReconcilerTestRunner()
+      .enableIngressListener(new IngressReconcilerListenerMock(
+        Future.succeededFuture(),
+        Future.succeededFuture(),
+        Future.failedFuture(new RuntimeException())
+      ))
+      .reconcile(List.of(
+        baseResource("1")
+          .setIngress(DataPlaneContract.Ingress
+            .newBuilder()
+            .setContentMode(DataPlaneContract.ContentMode.BINARY)
+            .setPath("/hello1/hello")
+            .build())
+          .setBootstrapServers("b1,b2")
+          .build()
+      ))
+      .expect()
+      .newIngress("1")
+      .then()
+      .reconcile(List.of())
+      .expect()
+      .deletedIngress("1")
+      .returnsFuture(Future.failedFuture(new RuntimeException()))
+      .then()
+      .reconcile(List.of())
+      .expect()
+      .deletedIngress("1")
+      .returnsFuture(Future.failedFuture(new RuntimeException()))
+      .then()
+      .run();
+  }
+
+  @Test
+  public void reconcileIngressMultipleResourcesMultipleSteps() {
+
+    final var resources1 = List.of(
+      baseResource("1")
+        .setIngress(DataPlaneContract.Ingress
+          .newBuilder()
+          .setContentMode(DataPlaneContract.ContentMode.STRUCTURED)
+          .setPath("/hello1/hello")
+          .build())
+        .setBootstrapServers("b1,b2")
+        .build(),
+      baseResource("2")
+        .setIngress(DataPlaneContract.Ingress
+          .newBuilder()
+          .setContentMode(DataPlaneContract.ContentMode.STRUCTURED)
+          .setPath("/hello2/hello")
+          .build())
+        .setBootstrapServers("b1,b2")
+        .build(),
+      baseResource("3")
+        .setIngress(DataPlaneContract.Ingress
+          .newBuilder()
+          .setContentMode(DataPlaneContract.ContentMode.STRUCTURED)
+          .setPath("/hello3/hello")
+          .build())
+        .setBootstrapServers("b1,b2")
+        .build()
+    );
+
+    final var resources2 = List.of(
+      baseResource("1")
+        .setIngress(DataPlaneContract.Ingress
+          .newBuilder()
+          .setContentMode(DataPlaneContract.ContentMode.BINARY)
+          .setPath("/hello/hello")
+          .build())
+        .setBootstrapServers("b1,b2")
+        .build(),
+      baseResource("2")
+        .setIngress(DataPlaneContract.Ingress
+          .newBuilder()
+          .setContentMode(DataPlaneContract.ContentMode.STRUCTURED)
+          .setPath("/hello2/hello")
+          .build())
+        .setBootstrapServers("b1,b2")
+        .build()
+    );
+
+    final var resources3 = List.of(
+      baseResource("1")
+        .setIngress(DataPlaneContract.Ingress
+          .newBuilder()
+          .setContentMode(DataPlaneContract.ContentMode.BINARY)
+          .setPath("/hello1/hello")
+          .build())
+        .setBootstrapServers("b1,b2")
+        .build(),
+      baseResource("2")
+        .setBootstrapServers("b1,b2")
+        .build()
+    );
+
+    new ResourceReconcilerTestRunner()
+      .enableIngressListener()
+      .reconcile(resources1)
+      .expect()
+      .newIngress("1")
+      .newIngress("2")
+      .newIngress("3")
+      .then()
+      .reconcile(resources2)
+      .expect()
+      .updatedIngress("1")
+      .deletedIngress("3")
+      .then()
+      .reconcile(resources1)
+      .expect()
+      .updatedIngress("1")
+      .newIngress("3")
+      .then()
+      .reconcile(resources2)
+      .expect()
+      .updatedIngress("1")
+      .deletedIngress("3")
+      .then()
+      .reconcile(resources3)
+      .expect()
+      .deletedIngress("2")
+      .updatedIngress("1")
+      .then()
+      .reconcile(resources2)
+      .expect()
+      .newIngress("2")
+      .updatedIngress("1")
+      .then()
+      .reconcile(resources1)
+      .expect()
+      .updatedIngress("1")
+      .newIngress("3")
+      .then()
+      .reconcile(resources1)
+      .expect()
+      .then()
+      .reconcile(resources3)
+      .expect()
+      .updatedIngress("1")
+      .deletedIngress("2")
+      .deletedIngress("3")
+      .then()
+      .run();
+  }
+
+  @Test
+  public void reconcileFailedOnNewIngress() {
+    new ResourceReconcilerTestRunner()
+      .enableIngressListener(new IngressReconcilerListenerMock(
+        Future.failedFuture(new RuntimeException()),
+        Future.succeededFuture(),
+        Future.succeededFuture()
+      ))
+      .reconcile(List.of(
+        baseResource("1")
+          .setIngress(DataPlaneContract.Ingress
+            .newBuilder()
+            .setContentMode(DataPlaneContract.ContentMode.BINARY)
+            .setPath("/hello1/hello")
+            .build())
+          .setBootstrapServers("b1,b2")
+          .build(),
+        baseResource("2")
+          .setBootstrapServers("b1,b2")
+          .build()
+      ))
+      .expect()
+      .newIngress("1")
+      .returnsFuture(Future.failedFuture(new RuntimeException()))
+      .then()
+      .reconcile(List.of(
+        baseResource("1")
+          .setIngress(DataPlaneContract.Ingress
+            .newBuilder()
+            .setContentMode(DataPlaneContract.ContentMode.BINARY)
+            .setPath("/hello1/hello")
+            .build())
+          .setBootstrapServers("b1,b2")
+          .build(),
+        baseResource("2")
+          .setBootstrapServers("b1,b2")
+          .setIngress(DataPlaneContract.Ingress
+            .newBuilder()
+            .setContentMode(DataPlaneContract.ContentMode.BINARY)
+            .setPath("/hello2/hello")
+            .build())
+          .setBootstrapServers("b1,b2")
+          .build()
+      ))
+      .expect()
+      .newIngress("1")
+      .newIngress("2")
+      .returnsFuture(Future.failedFuture(new RuntimeException()))
       .then()
       .run();
   }
@@ -373,5 +830,4 @@ class ResourcesReconcilerImplTest {
   private Egress egress(String uid) {
     return baseEgress(uid).build();
   }
-
 }

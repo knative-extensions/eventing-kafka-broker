@@ -103,8 +103,7 @@ public class DataPlaneTest {
   private static ReceiverVerticle receiverVerticle;
 
   @BeforeAll
-  public static void setUp(final Vertx vertx, final VertxTestContext context)
-    throws IOException, InterruptedException {
+  public static void setUp(final Vertx vertx, final VertxTestContext context) throws IOException, InterruptedException {
     setUpKafkaCluster();
     ContractMessageCodec.register(vertx.eventBus());
     consumerDeployerVerticle = setUpDispatcher(vertx, context);
@@ -171,6 +170,7 @@ public class DataPlaneTest {
       .setUid(UUID.randomUUID().toString())
       .addEgresses(
         DataPlaneContract.Egress.newBuilder()
+          .setUid(UUID.randomUUID().toString())
           .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_1))
           .setFilter(DataPlaneContract.Filter.newBuilder()
             .putAttributes(CloudEventV1.TYPE, TYPE_CE_1))
@@ -179,6 +179,7 @@ public class DataPlaneTest {
       )
       .addEgresses(
         DataPlaneContract.Egress.newBuilder()
+          .setUid(UUID.randomUUID().toString())
           .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_2))
           .setFilter(DataPlaneContract.Filter.newBuilder()
             .putAttributes(CloudEventV1.TYPE, TYPE_CE_2))
@@ -189,6 +190,7 @@ public class DataPlaneTest {
         // the destination of the following trigger should never be reached because events
         // don't pass filters.
         DataPlaneContract.Egress.newBuilder()
+          .setUid(UUID.randomUUID().toString())
           .setConsumerGroup(UUID.randomUUID().toString())
           .setDestination(format("http://localhost:%d%s", SERVICE_PORT, PATH_SERVICE_3))
           .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(

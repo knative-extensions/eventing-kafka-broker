@@ -15,12 +15,12 @@
  */
 package dev.knative.eventing.kafka.broker.core.file;
 
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.google.protobuf.util.JsonFormat;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -29,9 +29,10 @@ import java.nio.file.Files;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-import org.slf4j.LoggerFactory;
+
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FileWatcherTest {
 
@@ -42,10 +43,12 @@ public class FileWatcherTest {
 
     final var broker1 = DataPlaneContract.Contract.newBuilder()
       .addResources(resource1())
+      .setGeneration(1)
       .build();
 
     final var broker2 = DataPlaneContract.Contract.newBuilder()
       .addResources(resource2())
+      .setGeneration(2)
       .build();
 
     final var isFirst = new AtomicBoolean(true);

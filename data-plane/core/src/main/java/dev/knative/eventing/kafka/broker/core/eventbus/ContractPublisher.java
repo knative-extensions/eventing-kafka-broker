@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.core.eventbus;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
+
 import java.util.function.Consumer;
 
 /**
