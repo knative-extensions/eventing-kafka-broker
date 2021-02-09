@@ -24,10 +24,9 @@ fi
 
 if ! ${LOCAL_DEVELOPMENT}; then
   scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
-fi
-
-if ! ${LOCAL_DEVELOPMENT}; then
+  wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing didn't come up"
   apply_chaos || fail_test "Failed to apply chaos"
+  apply_sacura || fail_test "Failed to apply Sacura"
 fi
 
 header "Waiting Knative eventing to come up"
@@ -42,12 +41,11 @@ failed=false
 
 go_test_e2e -timeout=30m ./test/... || failed=true
 
-go_test_e2e -tags=deletecm ./test/... || failed=true
-
 if ! ${LOCAL_DEVELOPMENT}; then
-  apply_sacura || fail_test "Failed to apply Sacura"
-  go_test_e2e -tags=sacura -timeout=40m ./test/... || failed=true
+  go_test_e2e -tags=sacura -timeout=20m ./test/... || failed=true
 fi
+
+go_test_e2e -tags=deletecm ./test/... || failed=true
 
 if [ $failed = true ]; then
   fail_test "Integration tests failed"
