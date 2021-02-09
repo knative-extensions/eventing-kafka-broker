@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
@@ -239,7 +239,7 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 		name                  string
 		ctx                   context.Context
 		resolver              *resolver.URIResolver
-		parent                v1.Object
+		parent                metav1.Object
 		delivery              *eventingduck.DeliverySpec
 		defaultBackoffDelayMs uint64
 		want                  *contract.EgressConfig
