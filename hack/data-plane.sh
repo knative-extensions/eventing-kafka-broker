@@ -41,7 +41,6 @@ readonly KAFKA_SINK_RECEIVER_TEMPLATE_FILE=${KAFKA_SINK_DATA_PLANE_CONFIG_TEMPLA
 
 readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-knative-kafka-broker-receiver}"
 readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-knative-kafka-broker-dispatcher}"
-readonly sink="${KNATIVE_KAFKA_SINK_RECEIVER:-knative-kafka-sink-receiver}"
 
 # The BASE_IMAGE must have system libraries (libc, zlib, etc) compatible with the JAVA_IMAGE because
 # Jlink generates a jdk linked to the same system libraries available on the base images.
@@ -109,22 +108,6 @@ function dispatcher_build_push() {
   return $?
 }
 
-function sink_build_push() {
-  header "Building sink ..."
-
-  docker build \
-    -f ${DATA_PLANE_DIR}/docker/Dockerfile \
-    --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
-    --build-arg BASE_IMAGE=${BASE_IMAGE} \
-    --build-arg APP_JAR=${RECEIVER_JAR} \
-    --build-arg APP_DIR=${RECEIVER_DIRECTORY} \
-    -t "${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}" ${DATA_PLANE_DIR} &&
-    docker_push "${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}" &&
-    with_kind "${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}"
-
-  return $?
-}
-
 function data_plane_build_push() {
 
   local uuid=${UUID}
@@ -136,11 +119,10 @@ function data_plane_build_push() {
 
   export KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE="${KO_DOCKER_REPO}"/"${dispatcher}":"${uuid}"
 
-  export KNATIVE_KAFKA_SINK_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${sink}":"${uuid}"
+  export KNATIVE_KAFKA_SINK_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${receiver}":"${uuid}"
 
   receiver_build_push || receiver_build_push || fail_test "failed to build receiver"
   dispatcher_build_push || dispatcher_build_push || fail_test "failed to build dispatcher"
-  sink_build_push || sink_build_push || fail_test "failed to build sink"
 }
 
 function k8s() {
