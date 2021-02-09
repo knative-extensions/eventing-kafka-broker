@@ -39,7 +39,11 @@ export_logs_continuously "kafka-broker-dispatcher" "kafka-broker-receiver" "kafk
 
 failed=false
 
-go_test_e2e -timeout=50m ./test/... || failed=true
+go_test_e2e -timeout=30m ./test/... || failed=true
+
+if ! ${LOCAL_DEVELOPMENT}; then
+  go_test_e2e -tags=sacura -timeout=20m ./test/... || failed=true
+fi
 
 go_test_e2e -tags=deletecm ./test/... || failed=true
 

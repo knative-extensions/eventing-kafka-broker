@@ -1,4 +1,4 @@
-// +build e2e
+// +build sacura
 
 /*
  * Copyright 2020 The Knative Authors
