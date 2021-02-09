@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
 import io.cloudevents.CloudEvent;
@@ -25,11 +23,14 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 /**
  * This class implements the core algorithm of the Dispatcher (see {@link
@@ -79,29 +80,6 @@ public final class RecordDispatcher implements Handler<KafkaConsumerRecord<Strin
       sinkResponseHandler.close(),
       deadLetterQueueSender.close(),
       subscriberSender.close()
-    );
-  }
-
-  /**
-   * Call this constructor when there is no DLQ configured on the broker.
-   *
-   * @param subscriberSender    sender to trigger subscriber
-   * @param filter              event filter
-   * @param offsetManager       hook receiver {@link OffsetManager}. It allows to plug in custom offset
-   *                            management depending on the success/failure during the algorithm.
-   * @param sinkResponseHandler handler of the response
-   */
-  public RecordDispatcher(
-    final ConsumerRecordSender subscriberSender,
-    final Filter filter,
-    final OffsetManager offsetManager,
-    final SinkResponseHandler sinkResponseHandler) {
-    this(
-      filter, subscriberSender,
-      ConsumerRecordSender.create(Future.failedFuture("No DLQ configured"), Future.succeededFuture()),
-      sinkResponseHandler, offsetManager
-      // If there is no DLQ configured by default DLQ sender always fails, which means
-      // implementors will receive failedToSendToDLQ if the subscriber sender fails.
     );
   }
 
@@ -184,8 +162,10 @@ public final class RecordDispatcher implements Handler<KafkaConsumerRecord<Strin
       .onComplete(finalProm);
   }
 
-  private void onSubscriberFailure(final KafkaConsumerRecord<String, CloudEvent> record, final Throwable exception,
+  private void onSubscriberFailure(final KafkaConsumerRecord<String, CloudEvent> record,
+                                   final Throwable exception,
                                    final Promise<Void> finalProm) {
+    logError("Failed to send event to subscriber", record, exception);
     dlqSender.apply(record)
       .onSuccess(v -> onDLQSuccess(record, finalProm))
       .onFailure(ex -> onDLQFailure(record, ex, finalProm));
@@ -254,5 +234,4 @@ public final class RecordDispatcher implements Handler<KafkaConsumerRecord<Strin
   public Future<?> close() {
     return this.closer.get();
   }
-
 }

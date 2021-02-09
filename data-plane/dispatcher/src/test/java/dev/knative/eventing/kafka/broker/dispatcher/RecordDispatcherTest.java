@@ -15,16 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
@@ -34,10 +24,21 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class RecordDispatcherTest {
@@ -185,6 +186,7 @@ public class RecordDispatcherTest {
     final OffsetManager receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcher(
+      value -> true,
       new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
@@ -192,12 +194,12 @@ public class RecordDispatcherTest {
           return Future.failedFuture("");
         }
       ),
-      value -> true,
-      receiver,
+      ConsumerRecordSender.create(Future.failedFuture("No DLQ configured"), Future.succeededFuture()),
       new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
-      )
+      ),
+      receiver
     );
     final var record = record();
     dispatcherHandler.handle(record);
