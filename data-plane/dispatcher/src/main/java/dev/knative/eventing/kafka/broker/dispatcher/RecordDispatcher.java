@@ -134,8 +134,6 @@ public final class RecordDispatcher implements Handler<KafkaConsumerRecord<Strin
       |        |                       | dlq failure |             v
       |        |                       +-------------+----------> end
       +->end<--+
-
-
      */
 
     onRecordReceived(record, promise);
