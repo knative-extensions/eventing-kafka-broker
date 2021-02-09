@@ -257,6 +257,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 	coreconfig.IncrementContractGeneration(ct)
 
+	logger.Debug("Egress changes", zap.Int("changed", changed))
+
 	if changed == coreconfig.EgressChanged {
 		// Update the configuration map with the new dataPlaneConfig data.
 		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
