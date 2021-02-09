@@ -32,7 +32,7 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManagerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.ReceiverVerticle;
@@ -289,8 +289,8 @@ public class DataPlaneTest {
   private static ConsumerDeployerVerticle setUpDispatcher(final Vertx vertx, final VertxTestContext context)
     throws InterruptedException {
 
-    final ConsumerRecordOffsetStrategyFactory
-      consumerRecordOffsetStrategyFactory = ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class));
+    final OffsetManagerFactory
+      offsetManagerFactory = OffsetManagerFactory.unordered(mock(Counter.class));
 
     final var consumerConfigs = new Properties();
     consumerConfigs.put(BOOTSTRAP_SERVERS_CONFIG, format("localhost:%d", KAFKA_PORT));
@@ -300,7 +300,7 @@ public class DataPlaneTest {
     final var producerConfigs = producerConfigs();
 
     final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
-      consumerRecordOffsetStrategyFactory,
+      offsetManagerFactory,
       consumerConfigs,
       new WebClientOptions(),
       producerConfigs,

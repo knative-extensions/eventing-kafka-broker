@@ -41,11 +41,11 @@ public final class ConsumerVerticle extends AbstractVerticle {
 
   private KafkaConsumer<String, CloudEvent> consumer;
   private AutoCloseable consumerMeterBinder;
-  private ConsumerRecordHandler handler;
+  private RecordDispatcher handler;
 
   private final Set<String> topics;
   private final Function<Vertx, Future<KafkaConsumer<String, CloudEvent>>> consumerFactory;
-  private final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<ConsumerRecordHandler>>
+  private final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<RecordDispatcher>>
     recordHandlerFactory;
 
   /**
@@ -58,7 +58,7 @@ public final class ConsumerVerticle extends AbstractVerticle {
   public ConsumerVerticle(
     final Function<Vertx, Future<KafkaConsumer<String, CloudEvent>>> consumerFactory,
     final Set<String> topics,
-    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<ConsumerRecordHandler>> recordHandlerFactory) {
+    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<RecordDispatcher>> recordHandlerFactory) {
 
     Objects.requireNonNull(consumerFactory, "provide consumerFactory");
     Objects.requireNonNull(topics, "provide topic");

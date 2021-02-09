@@ -29,7 +29,7 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManagerFactory;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventBuilder;
@@ -82,7 +82,7 @@ public class UnorderedConsumerTest {
     final var consumerVerticleFactoryMock = new ConsumerVerticleFactoryMock(
       consumerConfigs,
       producerConfigs,
-      ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class))
+      OffsetManagerFactory.unordered(mock(Counter.class))
     );
 
     final var event = new CloudEventBuilder()

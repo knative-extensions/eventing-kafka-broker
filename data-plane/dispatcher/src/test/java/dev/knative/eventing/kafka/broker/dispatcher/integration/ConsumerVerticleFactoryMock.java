@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.Credentials;
-import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManagerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
@@ -52,9 +52,9 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
   public ConsumerVerticleFactoryMock(
     final Properties consumerConfigs,
     final Properties producerConfigs,
-    final ConsumerRecordOffsetStrategyFactory consumerRecordOffsetStrategyFactory) {
+    final OffsetManagerFactory offsetManagerFactory) {
 
-    super(consumerRecordOffsetStrategyFactory, consumerConfigs, new WebClientOptions(), producerConfigs,
+    super(offsetManagerFactory, consumerConfigs, new WebClientOptions(), producerConfigs,
       mock(AuthProvider.class));
     mockProducer = new ConcurrentHashMap<>();
     mockConsumer = new ConcurrentHashMap<>();

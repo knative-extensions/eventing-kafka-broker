@@ -20,7 +20,7 @@ import io.vertx.core.AbstractVerticle;
 import java.util.concurrent.ExecutionException;
 
 /**
- * ConsumerVerticleFactory is responsible for instantiating consumer verticles.
+ * This class is responsible for instantiating consumer verticles.
  */
 @FunctionalInterface
 public interface ConsumerVerticleFactory {
