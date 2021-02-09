@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.junit5.VertxExtension;
@@ -39,22 +40,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
-public class DispatcherRecordHandlerTest {
+public class RecordDispatcherTest {
 
   @Test
   public void shouldNotSendToSubscriberNorToDLQIfValueDoesntMatch() {
 
-    final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
+    final OffsetManager receiver = offsetManagerMock();
 
-    final var dispatcherHandler = new DispatcherRecordHandler(
-      ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
+    final var dispatcherHandler = new RecordDispatcher(
       value -> false,
-      receiver,
+      ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
+      ConsumerRecordSender.create(Future.failedFuture("DLQ send called"), Future.succeededFuture()),
       new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
-      ),
-      ConsumerRecordSender.create(Future.failedFuture("DLQ send called"), Future.succeededFuture())
+      ), receiver
     );
 
     final var record = record();
@@ -71,29 +71,26 @@ public class DispatcherRecordHandlerTest {
   public void shouldSendOnlyToSubscriberIfValueMatches() {
 
     final var sendCalled = new AtomicBoolean(false);
-    final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
+    final OffsetManager receiver = offsetManagerMock();
 
-    final var dispatcherHandler = new DispatcherRecordHandler(
-      new ConsumerRecordSenderMock(
-        Future::succeededFuture,
-        record -> {
-          sendCalled.set(true);
-          return Future.succeededFuture();
-        }
-      ),
-      value -> true,
-      receiver,
-      new SinkResponseHandlerMock(
-        Future::succeededFuture,
-        response -> Future.succeededFuture()
-      ),
+    final var dispatcherHandler = new RecordDispatcher(
+      value -> true, new ConsumerRecordSenderMock(
+      Future::succeededFuture,
+      record -> {
+        sendCalled.set(true);
+        return Future.succeededFuture();
+      }
+    ),
       new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
           fail("DLQ send called");
           return Future.succeededFuture();
         }
-      )
+      ), new SinkResponseHandlerMock(
+      Future::succeededFuture,
+      response -> Future.succeededFuture()
+    ), receiver
     );
     final var record = record();
     dispatcherHandler.handle(record);
@@ -111,29 +108,26 @@ public class DispatcherRecordHandlerTest {
 
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
     final var DLQSenderSendCalled = new AtomicBoolean(false);
-    final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
+    final OffsetManager receiver = offsetManagerMock();
 
-    final var dispatcherHandler = new DispatcherRecordHandler(
-      new ConsumerRecordSenderMock(
-        Future::succeededFuture,
-        record -> {
-          subscriberSenderSendCalled.set(true);
-          return Future.failedFuture("");
-        }
-      ),
-      value -> true,
-      receiver,
-      new SinkResponseHandlerMock(
-        Future::succeededFuture,
-        response -> Future.succeededFuture()
-      ),
+    final var dispatcherHandler = new RecordDispatcher(
+      value -> true, new ConsumerRecordSenderMock(
+      Future::succeededFuture,
+      record -> {
+        subscriberSenderSendCalled.set(true);
+        return Future.failedFuture("");
+      }
+    ),
       new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
           DLQSenderSendCalled.set(true);
           return Future.succeededFuture();
         }
-      )
+      ), new SinkResponseHandlerMock(
+      Future::succeededFuture,
+      response -> Future.succeededFuture()
+    ), receiver
     );
     final var record = record();
     dispatcherHandler.handle(record);
@@ -152,29 +146,26 @@ public class DispatcherRecordHandlerTest {
 
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
     final var DLQSenderSendCalled = new AtomicBoolean(false);
-    final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
+    final OffsetManager receiver = offsetManagerMock();
 
-    final var dispatcherHandler = new DispatcherRecordHandler(
-      new ConsumerRecordSenderMock(
-        Future::succeededFuture,
-        record -> {
-          subscriberSenderSendCalled.set(true);
-          return Future.failedFuture("");
-        }
-      ),
-      value -> true,
-      receiver,
-      new SinkResponseHandlerMock(
-        Future::succeededFuture,
-        response -> Future.succeededFuture()
-      ),
+    final var dispatcherHandler = new RecordDispatcher(
+      value -> true, new ConsumerRecordSenderMock(
+      Future::succeededFuture,
+      record -> {
+        subscriberSenderSendCalled.set(true);
+        return Future.failedFuture("");
+      }
+    ),
       new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
           DLQSenderSendCalled.set(true);
           return Future.failedFuture("");
         }
-      )
+      ), new SinkResponseHandlerMock(
+      Future::succeededFuture,
+      response -> Future.succeededFuture()
+    ), receiver
     );
     final var record = record();
     dispatcherHandler.handle(record);
@@ -191,9 +182,9 @@ public class DispatcherRecordHandlerTest {
   @Test
   public void shouldCallFailedToSendToDLQIfValueMatchesAndSubscriberSenderFailsAndNoDLQSender() {
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
-    final ConsumerRecordOffsetStrategy receiver = mock(ConsumerRecordOffsetStrategy.class);
+    final OffsetManager receiver = offsetManagerMock();
 
-    final var dispatcherHandler = new DispatcherRecordHandler(
+    final var dispatcherHandler = new RecordDispatcher(
       new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
@@ -231,15 +222,12 @@ public class DispatcherRecordHandlerTest {
     final var deadLetterSender = mock(ConsumerRecordSender.class);
     when(deadLetterSender.close()).thenReturn(Future.succeededFuture());
 
-    final DispatcherRecordHandler dispatcherRecordHandler = new DispatcherRecordHandler(
-      subscriberSender,
-      Filter.noop(),
-      mock(ConsumerRecordOffsetStrategy.class),
-      sinkResponseHandler,
-      deadLetterSender
+    final RecordDispatcher recordDispatcher = new RecordDispatcher(
+      Filter.noop(), subscriberSender,
+      deadLetterSender, sinkResponseHandler, offsetManagerMock()
     );
 
-    dispatcherRecordHandler.close()
+    recordDispatcher.close()
       .onFailure(context::failNow)
       .onSuccess(r -> context.verify(() -> {
         verify(subscriberSender, times(1)).close();
@@ -251,5 +239,17 @@ public class DispatcherRecordHandlerTest {
 
   private static KafkaConsumerRecord<String, CloudEvent> record() {
     return new KafkaConsumerRecordImpl<>(new ConsumerRecord<>("", 0, 0L, "", CoreObjects.event()));
+  }
+
+  private static OffsetManager offsetManagerMock() {
+    final OffsetManager offsetManager = mock(OffsetManager.class);
+
+    when(offsetManager.recordReceived(any())).thenReturn(Future.succeededFuture());
+    when(offsetManager.recordDiscarded(any())).thenReturn(Future.succeededFuture());
+    when(offsetManager.successfullySentToDLQ(any())).thenReturn(Future.succeededFuture());
+    when(offsetManager.successfullySentToSubscriber(any())).thenReturn(Future.succeededFuture());
+    when(offsetManager.failedToSendToDLQ(any(), any())).thenReturn(Future.succeededFuture());
+
+    return offsetManager;
   }
 }

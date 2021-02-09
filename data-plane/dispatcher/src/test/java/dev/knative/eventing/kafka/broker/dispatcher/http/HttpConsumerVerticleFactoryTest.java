@@ -31,7 +31,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolic
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
-import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManagerFactory;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
@@ -69,7 +69,7 @@ public class HttpConsumerVerticleFactoryTest {
     producerConfigs.setProperty(INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
     final var verticleFactory = new HttpConsumerVerticleFactory(
-      ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class)),
+      OffsetManagerFactory.unordered(mock(Counter.class)),
       consumerProperties,
       new WebClientOptions(),
       producerConfigs,
@@ -112,7 +112,7 @@ public class HttpConsumerVerticleFactoryTest {
     producerConfigs.setProperty(INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
     final var verticleFactory = new HttpConsumerVerticleFactory(
-      ConsumerRecordOffsetStrategyFactory.unordered(mock(Counter.class)),
+      OffsetManagerFactory.unordered(mock(Counter.class)),
       consumerProperties,
       new WebClientOptions(),
       producerConfigs,

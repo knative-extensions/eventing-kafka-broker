@@ -13,32 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher;
+package dev.knative.eventing.kafka.broker.dispatcher.consumer;
 
+import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
+import io.vertx.core.Future;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-public interface ConsumerRecordOffsetStrategy {
+/**
+ * This class manages the offset of the record consumed by {@link RecordDispatcher}
+ */
+public interface OffsetManager {
 
   /**
    * The given record has been received.
    *
    * @param record record received.
    */
-  void recordReceived(KafkaConsumerRecord<?, ?> record);
+  Future<Void> recordReceived(KafkaConsumerRecord<?, ?> record);
 
   /**
    * The given record has been successfully sent to subscriber.
    *
    * @param record record sent to subscriber.
    */
-  void successfullySentToSubscriber(KafkaConsumerRecord<?, ?> record);
+  Future<Void> successfullySentToSubscriber(KafkaConsumerRecord<?, ?> record);
 
   /**
    * The given record has been successfully sent to dead letter queue.
    *
    * @param record record sent to dead letter queue.
    */
-  void successfullySentToDLQ(KafkaConsumerRecord<?, ?> record);
+  Future<Void> successfullySentToDLQ(KafkaConsumerRecord<?, ?> record);
 
   /**
    * The given record cannot be delivered to dead letter queue.
@@ -46,12 +51,12 @@ public interface ConsumerRecordOffsetStrategy {
    * @param record record undeliverable to dead letter queue.
    * @param ex     exception occurred.
    */
-  void failedToSendToDLQ(KafkaConsumerRecord<?, ?> record, Throwable ex);
+  Future<Void> failedToSendToDLQ(KafkaConsumerRecord<?, ?> record, Throwable ex);
 
   /**
    * The given event doesn't pass the filter.
    *
    * @param record record discarded.
    */
-  void recordDiscarded(KafkaConsumerRecord<?, ?> record);
+  Future<Void> recordDiscarded(KafkaConsumerRecord<?, ?> record);
 }

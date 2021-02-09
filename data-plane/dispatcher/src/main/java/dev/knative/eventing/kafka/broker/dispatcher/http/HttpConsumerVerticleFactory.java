@@ -25,11 +25,11 @@ import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.Credentials;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
 import dev.knative.eventing.kafka.broker.core.security.PlaintextCredentials;
-import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordOffsetStrategyFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
-import dev.knative.eventing.kafka.broker.dispatcher.DispatcherRecordHandler;
+import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManagerFactory;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.vertx.circuitbreaker.CircuitBreaker;
@@ -64,31 +64,31 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
   private final Map<String, Object> consumerConfigs;
   private final WebClientOptions webClientOptions;
   private final Map<String, String> producerConfigs;
-  private final ConsumerRecordOffsetStrategyFactory consumerRecordOffsetStrategyFactory;
+  private final OffsetManagerFactory offsetManagerFactory;
   private final AuthProvider authProvider;
 
   /**
    * All args constructor.
    *
-   * @param consumerRecordOffsetStrategyFactory consumer offset handling strategy
-   * @param consumerConfigs                     base consumer configurations.
-   * @param webClientOptions                    web client options.
-   * @param producerConfigs                     base producer configurations.
-   * @param authProvider                        auth provider.
+   * @param offsetManagerFactory consumer offset handling strategy
+   * @param consumerConfigs      base consumer configurations.
+   * @param webClientOptions     web client options.
+   * @param producerConfigs      base producer configurations.
+   * @param authProvider         auth provider.
    */
   public HttpConsumerVerticleFactory(
-    final ConsumerRecordOffsetStrategyFactory consumerRecordOffsetStrategyFactory,
+    final OffsetManagerFactory offsetManagerFactory,
     final Properties consumerConfigs,
     final WebClientOptions webClientOptions,
     final Properties producerConfigs,
     final AuthProvider authProvider) {
 
-    Objects.requireNonNull(consumerRecordOffsetStrategyFactory, "provide consumerRecordOffsetStrategyFactory");
+    Objects.requireNonNull(offsetManagerFactory, "provide consumerRecordOffsetStrategyFactory");
     Objects.requireNonNull(consumerConfigs, "provide consumerConfigs");
     Objects.requireNonNull(webClientOptions, "provide webClientOptions");
     Objects.requireNonNull(producerConfigs, "provide producerConfigs");
 
-    this.consumerRecordOffsetStrategyFactory = consumerRecordOffsetStrategyFactory;
+    this.offsetManagerFactory = offsetManagerFactory;
     this.consumerConfigs = consumerConfigs.entrySet()
       .stream()
       .map(e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue()))
@@ -135,7 +135,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
       credentialsFuture
     );
 
-    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<DispatcherRecordHandler>> recordHandlerFactory =
+    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<RecordDispatcher>> recordHandlerFactory =
       (vertx, consumer) -> {
 
         final var circuitBreakerOptions = createCircuitBreakerOptions(resource);
@@ -153,12 +153,12 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
           : createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), circuitBreakerOptions, egressConfig);
 
         return producerFactory.apply(vertx)
-          .map(producer -> new DispatcherRecordHandler(
-            egressSubscriberSender,
+          .map(producer -> new RecordDispatcher(
             egress.hasFilter() ? new AttributesFilter(egress.getFilter().getAttributesMap()) : Filter.noop(),
-            this.consumerRecordOffsetStrategyFactory.get(consumer, resource, egress),
+            egressSubscriberSender,
+            egressDeadLetterSender,
             new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer),
-            egressDeadLetterSender
+            this.offsetManagerFactory.get(consumer, resource, egress)
           ));
       };
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.strategy;
+package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,7 +50,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
 @Execution(value = ExecutionMode.CONCURRENT)
-public class UnorderedConsumerRecordOffsetStrategyTest {
+public class UnorderedOffsetManagerTest {
 
   @Test
   public void shouldCommitAfterSendingEventsOrderedOnTheSamePartition() {
@@ -204,7 +204,7 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
   public void recordReceived() {
     final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
     final Counter eventsSentCounter = mock(Counter.class);
-    new UnorderedConsumerRecordOffsetStrategy(consumer, eventsSentCounter).recordReceived(record("aaa", 0, 0));
+    new UnorderedOffsetManager(consumer, eventsSentCounter).recordReceived(record("aaa", 0, 0));
 
     shouldNeverCommit(consumer);
     shouldNeverPause(consumer);
@@ -217,8 +217,8 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
     final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
     final Counter eventsSentCounter = mock(Counter.class);
 
-    UnorderedConsumerRecordOffsetStrategy strategy =
-      new UnorderedConsumerRecordOffsetStrategy(consumer, eventsSentCounter);
+    UnorderedOffsetManager strategy =
+      new UnorderedOffsetManager(consumer, eventsSentCounter);
     strategy.recordReceived(record("aaa", 0, 0));
     strategy.failedToSendToDLQ(record("aaa", 0, 0), null);
 
@@ -228,14 +228,14 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
   }
 
   private static MapAssert<TopicPartition, Long> assertThatOffsetCommitted(
-    Collection<TopicPartition> partitionsConsumed, Consumer<UnorderedConsumerRecordOffsetStrategy> testExecutor) {
+    Collection<TopicPartition> partitionsConsumed, Consumer<UnorderedOffsetManager> testExecutor) {
     return assertThatOffsetCommittedWithFailures(partitionsConsumed,
       (offsetStrategy, flag) -> testExecutor.accept(offsetStrategy));
   }
 
   private static MapAssert<TopicPartition, Long> assertThatOffsetCommittedWithFailures(
     Collection<TopicPartition> partitionsConsumed,
-    BiConsumer<UnorderedConsumerRecordOffsetStrategy, AtomicBoolean> testExecutor) {
+    BiConsumer<UnorderedOffsetManager, AtomicBoolean> testExecutor) {
     final var mockConsumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.NONE);
     mockConsumer.assign(partitionsConsumed);
 
@@ -263,7 +263,7 @@ public class UnorderedConsumerRecordOffsetStrategyTest {
       .when(vertxConsumer)
       .commit(any(Map.class));
 
-    testExecutor.accept(new UnorderedConsumerRecordOffsetStrategy(vertxConsumer, new CumulativeCounter(mock(Id.class))),
+    testExecutor.accept(new UnorderedOffsetManager(vertxConsumer, new CumulativeCounter(mock(Id.class))),
       failureFlag);
 
     return assertThat(
