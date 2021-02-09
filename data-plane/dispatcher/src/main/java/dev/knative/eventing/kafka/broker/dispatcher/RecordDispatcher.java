@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * ConsumerRecordHandler implements the core algorithm of the Dispatcher (see {@link
+ * This class implements the core algorithm of the Dispatcher (see {@link
  * RecordDispatcher#handle(KafkaConsumerRecord)}).
  *
  * @see RecordDispatcher#handle(KafkaConsumerRecord)
