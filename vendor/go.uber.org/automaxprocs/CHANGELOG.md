@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.4.0 (2021-02-01)
+
+- Support colons in cgroup names.
+- Remove linters from runtime dependencies.
+
 ## v1.3.0 (2020-01-23)
 
 - Migrate to Go modules.

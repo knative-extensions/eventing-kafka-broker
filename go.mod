@@ -8,7 +8,7 @@ require (
 	github.com/cloudevents/sdk-go/v2 v2.3.1
 	github.com/golang/protobuf v1.4.3
 	github.com/google/go-cmp v0.5.4
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/pierdipi/sacura v0.0.0-20201003135834-e90e3a725ff9
 	github.com/rickb777/date v1.14.1
@@ -23,7 +23,7 @@ require (
 	k8s.io/apiserver v0.19.7
 	k8s.io/client-go v0.19.7
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009
-	knative.dev/eventing v0.20.1-0.20210205124628-1774243f59cc
+	knative.dev/eventing v0.20.1-0.20210208155752-37eaf717b34a
 	knative.dev/hack v0.0.0-20210203173706-8368e1f6eacf
-	knative.dev/pkg v0.0.0-20210204171111-887806985c09
+	knative.dev/pkg v0.0.0-20210208175252-a02dcff9ee26
 )
