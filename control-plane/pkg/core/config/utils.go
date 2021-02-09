@@ -62,12 +62,10 @@ func EgressConfigFromDelivery(
 	egressConfig := &contract.EgressConfig{}
 
 	if delivery.DeadLetterSink != nil {
-
 		deadLetterSinkURL, err := resolver.URIFromDestinationV1(ctx, *delivery.DeadLetterSink, parent)
 		if err != nil {
-			return nil, fmt.Errorf("failed to resolve broker.Spec.Deliver.DeadLetterSink: %w", err)
+			return nil, fmt.Errorf("failed to resolve Spec.Delivery.DeadLetterSink: %w", err)
 		}
-
 		egressConfig.DeadLetter = deadLetterSinkURL.String()
 	}
 
@@ -76,7 +74,7 @@ func EgressConfigFromDelivery(
 		var err error
 		delay, err := BackoffDelayFromISO8601String(delivery.BackoffDelay, defaultBackoffDelayMs)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse backoff delay: %w", err)
+			return nil, fmt.Errorf("failed to parse Spec.Delivery.BackoffDelay: %w", err)
 		}
 		egressConfig.BackoffDelay = delay
 		egressConfig.BackoffPolicy = BackoffPolicyFromString(delivery.BackoffPolicy)
