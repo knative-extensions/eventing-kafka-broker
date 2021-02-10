@@ -24,13 +24,12 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class is responsible for managing the consumer lifecycle.
@@ -46,26 +45,26 @@ public final class ConsumerVerticle extends AbstractVerticle {
   private final Set<String> topics;
   private final Function<Vertx, Future<KafkaConsumer<String, CloudEvent>>> consumerFactory;
   private final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<RecordDispatcher>>
-    recordHandlerFactory;
+    recordDispatcherFactory;
 
   /**
    * All args constructor.
    *
-   * @param consumerFactory      Kafka consumer.
-   * @param topics               topic to consume.
-   * @param recordHandlerFactory record handler factory.
+   * @param consumerFactory         Kafka consumer.
+   * @param topics                  topic to consume.
+   * @param recordDispatcherFactory record handler factory.
    */
   public ConsumerVerticle(
     final Function<Vertx, Future<KafkaConsumer<String, CloudEvent>>> consumerFactory,
     final Set<String> topics,
-    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<RecordDispatcher>> recordHandlerFactory) {
+    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<RecordDispatcher>> recordDispatcherFactory) {
 
     Objects.requireNonNull(consumerFactory, "provide consumerFactory");
     Objects.requireNonNull(topics, "provide topic");
-    Objects.requireNonNull(recordHandlerFactory, "provide recordHandlerFactory");
+    Objects.requireNonNull(recordDispatcherFactory, "provide recordDispatcherFactory");
 
     this.topics = topics;
-    this.recordHandlerFactory = recordHandlerFactory;
+    this.recordDispatcherFactory = recordDispatcherFactory;
     this.consumerFactory = consumerFactory;
   }
 
@@ -83,7 +82,7 @@ public final class ConsumerVerticle extends AbstractVerticle {
 
         this.consumer = consumer;
         this.consumerMeterBinder = Metrics.register(this.consumer.unwrap());
-        recordHandlerFactory.apply(vertx, this.consumer)
+        recordDispatcherFactory.apply(vertx, this.consumer)
           .onSuccess(h -> {
             this.handler = h;
             this.consumer.handler(this.handler);

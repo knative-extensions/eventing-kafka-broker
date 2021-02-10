@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
-import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
@@ -29,6 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,6 @@ public final class UnorderedOffsetManager implements OffsetManager {
     .getLogger(UnorderedOffsetManager.class);
 
   private final KafkaConsumer<?, ?> consumer;
-  private final Counter eventsSentCounter;
 
   // This map contains the last acked message for every known TopicPartition
   private final Map<TopicPartition, Long> lastAckedPerPartition;
@@ -50,20 +49,21 @@ public final class UnorderedOffsetManager implements OffsetManager {
   //   set.first() == lastAckedOffset + 1 && set.last() - set.first() == set.size() - 1
   private final Map<TopicPartition, SortedSet<Long>> pendingAcksPerPartition;
 
+  private final Consumer<Integer> onCommit;
+
   /**
    * All args constructor.
    *
    * @param consumer          Kafka consumer.
    * @param eventsSentCounter events sent counter
    */
-  public UnorderedOffsetManager(final KafkaConsumer<?, ?> consumer, final Counter eventsSentCounter) {
+  public UnorderedOffsetManager(final KafkaConsumer<?, ?> consumer, final Consumer<Integer> onCommit) {
     Objects.requireNonNull(consumer, "provide consumer");
-    Objects.requireNonNull(eventsSentCounter, "provide eventsSentCounter");
 
     this.consumer = consumer;
-    this.eventsSentCounter = eventsSentCounter;
     this.lastAckedPerPartition = new HashMap<>();
     this.pendingAcksPerPartition = new HashMap<>();
+    this.onCommit = onCommit;
   }
 
   /**
@@ -147,7 +147,9 @@ public final class UnorderedOffsetManager implements OffsetManager {
         new OffsetAndMetadata(toAck + 1, ""))
       )
         .onSuccess(ignored -> {
-          eventsSentCounter.increment(messagesImGoingToAck.size());
+          if (onCommit != null) {
+            onCommit.accept(messagesImGoingToAck.size());
+          }
           logger.debug(
             "committed {} {} {}",
             keyValue("topic", record.topic()),

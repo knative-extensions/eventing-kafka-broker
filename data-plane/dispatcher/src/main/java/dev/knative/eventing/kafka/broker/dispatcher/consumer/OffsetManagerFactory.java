@@ -17,8 +17,8 @@ package dev.knative.eventing.kafka.broker.dispatcher.consumer;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.UnorderedOffsetManager;
-import io.micrometer.core.instrument.Counter;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
+import java.util.function.Consumer;
 
 /**
  * Factory for {@link OffsetManager}
@@ -30,8 +30,8 @@ public interface OffsetManagerFactory {
                     final DataPlaneContract.Resource resource,
                     final DataPlaneContract.Egress egress);
 
-  static OffsetManagerFactory unordered(final Counter eventsSentCounter) {
-    return (consumer, broker, trigger) -> new UnorderedOffsetManager(consumer, eventsSentCounter);
+  static OffsetManagerFactory unordered(Consumer<Integer> commitHandler) {
+    return (consumer, broker, trigger) -> new UnorderedOffsetManager(consumer, commitHandler);
   }
 
 }

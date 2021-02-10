@@ -112,7 +112,7 @@ public class Main {
       );
 
       final OffsetManagerFactory offsetManagerFactory =
-        OffsetManagerFactory.unordered(eventsSentCounter);
+        OffsetManagerFactory.unordered(eventsSentCounter::increment);
 
       final var clientOptions = new WebClientOptions(webClientConfig);
       clientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);

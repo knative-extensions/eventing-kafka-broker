@@ -24,8 +24,6 @@ import static org.mockito.Mockito.verify;
 
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Meter.Id;
-import io.micrometer.core.instrument.cumulative.CumulativeCounter;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
@@ -204,7 +202,7 @@ public class UnorderedOffsetManagerTest {
   public void recordReceived() {
     final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
     final Counter eventsSentCounter = mock(Counter.class);
-    new UnorderedOffsetManager(consumer, eventsSentCounter).recordReceived(record("aaa", 0, 0));
+    new UnorderedOffsetManager(consumer, eventsSentCounter::increment).recordReceived(record("aaa", 0, 0));
 
     shouldNeverCommit(consumer);
     shouldNeverPause(consumer);
@@ -218,7 +216,7 @@ public class UnorderedOffsetManagerTest {
     final Counter eventsSentCounter = mock(Counter.class);
 
     UnorderedOffsetManager strategy =
-      new UnorderedOffsetManager(consumer, eventsSentCounter);
+      new UnorderedOffsetManager(consumer, eventsSentCounter::increment);
     strategy.recordReceived(record("aaa", 0, 0));
     strategy.failedToSendToDLQ(record("aaa", 0, 0), null);
 
@@ -263,8 +261,7 @@ public class UnorderedOffsetManagerTest {
       .when(vertxConsumer)
       .commit(any(Map.class));
 
-    testExecutor.accept(new UnorderedOffsetManager(vertxConsumer, new CumulativeCounter(mock(Id.class))),
-      failureFlag);
+    testExecutor.accept(new UnorderedOffsetManager(vertxConsumer, null), failureFlag);
 
     return assertThat(
       mockConsumer.committed(Set.copyOf(partitionsConsumed))

@@ -290,7 +290,7 @@ public class DataPlaneTest {
     throws InterruptedException {
 
     final OffsetManagerFactory
-      offsetManagerFactory = OffsetManagerFactory.unordered(mock(Counter.class));
+      offsetManagerFactory = OffsetManagerFactory.unordered(null);
 
     final var consumerConfigs = new Properties();
     consumerConfigs.put(BOOTSTRAP_SERVERS_CONFIG, format("localhost:%d", KAFKA_PORT));

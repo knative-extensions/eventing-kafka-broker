@@ -35,7 +35,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManagerFactor
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
-import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.VertxExtension;
@@ -69,7 +68,7 @@ public class HttpConsumerVerticleFactoryTest {
     producerConfigs.setProperty(INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
     final var verticleFactory = new HttpConsumerVerticleFactory(
-      OffsetManagerFactory.unordered(mock(Counter.class)),
+      OffsetManagerFactory.unordered(null),
       consumerProperties,
       new WebClientOptions(),
       producerConfigs,
@@ -112,7 +111,7 @@ public class HttpConsumerVerticleFactoryTest {
     producerConfigs.setProperty(INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
     final var verticleFactory = new HttpConsumerVerticleFactory(
-      OffsetManagerFactory.unordered(mock(Counter.class)),
+      OffsetManagerFactory.unordered(null),
       consumerProperties,
       new WebClientOptions(),
       producerConfigs,
