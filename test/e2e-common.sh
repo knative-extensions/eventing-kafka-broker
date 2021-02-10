@@ -18,7 +18,7 @@ source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
 source $(pwd)/hack/data-plane.sh
 source $(pwd)/hack/control-plane.sh
 
-readonly EVENTING_CONFIG="./config"
+readonly EVENTING_CONFIG="./third_party/eventing-latest/"
 
 # Vendored eventing test images.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
@@ -57,16 +57,12 @@ function knative_teardown() {
 
 function knative_eventing() {
   if ! is_release_branch; then
-    echo ">> Install Knative Eventing from HEAD"
-    pushd .
-    cd "${GOPATH}" && mkdir -p src/knative.dev && cd src/knative.dev || fail_test "Failed to set up Eventing"
-    git clone https://github.com/knative/eventing
-    cd eventing || fail_test "Failed to set up Eventing"
-    ko apply --strict -f "${EVENTING_CONFIG}"
-    popd || fail_test "Failed to set up Eventing"
+    echo ">> Install Knative Eventing from latest - ${EVENTING_CONFIG}"
+    kubectl apply -f "${EVENTING_CONFIG}/eventing-crds.yaml"
+    kubectl apply -f "${EVENTING_CONFIG}/eventing-core.yaml"
   else
     echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
-    kubectl apply -f ${KNATIVE_EVENTING_RELEASE}
+    kubectl apply -f "${KNATIVE_EVENTING_RELEASE}"
   fi
 
   kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
