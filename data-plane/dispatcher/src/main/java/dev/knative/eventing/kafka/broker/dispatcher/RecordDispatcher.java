@@ -145,7 +145,7 @@ public final class RecordDispatcher implements Handler<KafkaConsumerRecord<Strin
     logDebug("Record match filtering", record);
     subscriberSender.apply(record)
       .onSuccess(res -> onSubscriberSuccess(record, finalProm))
-      .onFailure(ex -> onSubscriberFailure(record, ex, finalProm));
+      .onFailure(ex -> onSubscriberFailure(record, finalProm));
   }
 
   private void onFilterNotMatching(final KafkaConsumerRecord<String, CloudEvent> record,
@@ -163,9 +163,7 @@ public final class RecordDispatcher implements Handler<KafkaConsumerRecord<Strin
   }
 
   private void onSubscriberFailure(final KafkaConsumerRecord<String, CloudEvent> record,
-                                   final Throwable exception,
                                    final Promise<Void> finalProm) {
-    logError("Failed to send event to subscriber", record, exception);
     dlqSender.apply(record)
       .onSuccess(v -> onDLQSuccess(record, finalProm))
       .onFailure(ex -> onDLQFailure(record, ex, finalProm));
