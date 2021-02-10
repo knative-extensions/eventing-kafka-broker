@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
@@ -36,17 +34,22 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.tracing.TracingOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import net.logstash.logback.encoder.LogstashEncoder;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.ClosedWatchServiceException;
+import java.nio.file.FileSystems;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 public class Main {
 
@@ -144,10 +147,12 @@ public class Main {
         })
         .onFailure(t -> {
           // This is a catastrophic failure, close the application
-          logger.error("Consumer deployer not started", t);
+          logger.error("Receiver not started", t);
           vertx.close(v -> System.exit(1));
         });
-      waitVerticle.await(5, TimeUnit.SECONDS);
+      if (!waitVerticle.await(env.getWaitStartupSeconds(), TimeUnit.SECONDS)) {
+        throw new TimeoutException("Failed to deploy receiver verticle");
+      }
 
       final var publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
       final var fs = FileSystems.getDefault().newWatchService();
@@ -158,10 +163,13 @@ public class Main {
 
       fw.watch(); // block forever
 
+    } catch (final ClosedWatchServiceException ignored) {
+      // Do nothing, shutdown hook closed the watch service.
     } catch (final Exception ex) {
       logger.error("Failed during filesystem watch", ex);
 
       Shutdown.closeSync(vertx).run();
+      System.exit(1);
     }
   }
 }

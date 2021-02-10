@@ -15,10 +15,10 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ReceiverEnvTest {
 
@@ -30,6 +30,7 @@ class ReceiverEnvTest {
   private static final String HTTPSERVER_CONFIG_FILE_PATH = "/etc/http-server-config";
   private static final String TRACING_CONFIG_PATH = "/etc/tracing";
   private static final String METRICS_JVM_ENABLED = "true";
+  public static final int WAIT_STARTUP_SECONDS = 8;
 
   @Test
   public void create() {
@@ -46,6 +47,7 @@ class ReceiverEnvTest {
         case BaseEnv.METRICS_PUBLISH_QUANTILES -> "TRUE";
         case BaseEnv.CONFIG_TRACING_PATH -> TRACING_CONFIG_PATH;
         case BaseEnv.METRICS_JVM_ENABLED -> METRICS_JVM_ENABLED;
+        case BaseEnv.WAIT_STARTUP_SECONDS -> Integer.valueOf(WAIT_STARTUP_SECONDS).toString();
         default -> throw new IllegalArgumentException(key);
       }
     );
@@ -58,6 +60,7 @@ class ReceiverEnvTest {
     assertThat(env.getHttpServerConfigFilePath()).isEqualTo(HTTPSERVER_CONFIG_FILE_PATH);
     assertThat(env.getConfigTracingPath()).isEqualTo(TRACING_CONFIG_PATH);
     assertThat(env.isMetricsJvmEnabled()).isEqualTo(Boolean.valueOf(METRICS_JVM_ENABLED));
+    assertThat(env.getWaitStartupSeconds()).isEqualTo(WAIT_STARTUP_SECONDS);
 
     // Check toString is overridden
     assertThat(env.toString()).doesNotContain("@");

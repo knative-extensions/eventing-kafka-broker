@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
@@ -38,16 +36,21 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.tracing.TracingOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClientOptions;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import net.logstash.logback.encoder.LogstashEncoder;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.ClosedWatchServiceException;
+import java.nio.file.FileSystems;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 public class Main {
 
@@ -141,21 +144,26 @@ public class Main {
           logger.error("Consumer deployer not started", t);
           vertx.close(v -> System.exit(1));
         });
-      waitConsumerDeployer.await(5, TimeUnit.SECONDS);
+      if (!waitConsumerDeployer.await(env.getWaitStartupSeconds(), TimeUnit.SECONDS)) {
+        throw new TimeoutException("Failed to deploy consumer deployer");
+      }
 
       final var publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
       final var fs = FileSystems.getDefault().newWatchService();
-      var fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
+      final var fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
 
       // Gracefully clean up resources.
       Runtime.getRuntime().addShutdownHook(new Thread(Shutdown.run(vertx, fw, publisher, sdkTracerProvider)));
 
       fw.watch(); // block forever
 
+    } catch (final ClosedWatchServiceException ignored) {
+      // Do nothing, shutdown hook closed the watch service.
     } catch (final Exception ex) {
       logger.error("Failed during filesystem watch", ex);
 
       Shutdown.closeSync(vertx).run();
+      System.exit(1);
     }
   }
 }

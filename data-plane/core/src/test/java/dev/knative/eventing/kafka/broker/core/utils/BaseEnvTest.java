@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test;
 
 public class BaseEnvTest {
 
-
   private static final Function<String, String> provider = s -> switch (s) {
     case "PRODUCER_CONFIG_FILE_PATH" -> "/tmp/config";
     case "DATA_PLANE_CONFIG_FILE_PATH" -> "/tmp/config-data";
@@ -31,6 +30,7 @@ public class BaseEnvTest {
     case "METRICS_PUBLISH_QUANTILES" -> "TRUE";
     case "CONFIG_TRACING_PATH" -> "/etc/tracing";
     case "METRICS_JVM_ENABLED" -> "false";
+    case "WAIT_STARTUP_SECONDS" -> "1";
     default -> throw new IllegalArgumentException("unknown " + s);
   };
 

@@ -94,6 +94,9 @@ spec:
             # https://github.com/fabric8io/kubernetes-client/issues/2212
             - name: HTTP2_DISABLE
               value: "true"
+            # This should be set according to initial delay seconds
+            - name: WAIT_STARTUP_SECONDS
+              value: "8"
           command:
             - "java"
           args:
@@ -107,7 +110,7 @@ spec:
               port: 9090
               path: /metrics
               scheme: HTTP
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 3
             successThreshold: 1
             timeoutSeconds: 1
@@ -117,7 +120,7 @@ spec:
               port: 9090
               path: /metrics
               scheme: HTTP
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 3
             successThreshold: 1
             timeoutSeconds: 1

@@ -15,9 +15,9 @@
  */
 package dev.knative.eventing.kafka.broker.core.utils;
 
-import static java.util.Objects.requireNonNull;
-
 import java.util.function.Function;
+
+import static java.util.Objects.requireNonNull;
 
 public class BaseEnv {
 
@@ -31,6 +31,8 @@ public class BaseEnv {
 
   public static final String CONFIG_TRACING_PATH = "CONFIG_TRACING_PATH";
 
+  public static final String WAIT_STARTUP_SECONDS = "WAIT_STARTUP_SECONDS";
+
   private final String producerConfigFilePath;
   private final String dataPlaneConfigFilePath;
 
@@ -41,6 +43,8 @@ public class BaseEnv {
 
   private final String configTracingPath;
 
+  private final int waitStartupSeconds;
+
   public BaseEnv(Function<String, String> envProvider) {
     this.metricsPath = requireNonNull(envProvider.apply(METRICS_PATH));
     this.metricsPort = Integer.parseInt(requireNonNull(envProvider.apply(METRICS_PORT)));
@@ -49,6 +53,7 @@ public class BaseEnv {
     this.producerConfigFilePath = requireNonNull(envProvider.apply(PRODUCER_CONFIG_FILE_PATH));
     this.dataPlaneConfigFilePath = requireNonNull(envProvider.apply(DATA_PLANE_CONFIG_FILE_PATH));
     this.configTracingPath = requireNonNull(envProvider.apply(CONFIG_TRACING_PATH));
+    this.waitStartupSeconds = Integer.parseInt(envProvider.apply(WAIT_STARTUP_SECONDS));
   }
 
   public String getProducerConfigFilePath() {
@@ -77,6 +82,10 @@ public class BaseEnv {
 
   public String getConfigTracingPath() {
     return configTracingPath;
+  }
+
+  public int getWaitStartupSeconds() {
+    return waitStartupSeconds;
   }
 
   @Override
