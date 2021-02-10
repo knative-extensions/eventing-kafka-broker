@@ -2,7 +2,6 @@
 # At least one WG lead from https://github.com/knative/community/blob/master/working-groups/WORKING-GROUPS.md#event-delivery
 # must be in the "approvers" list.
 approvers:
-- Harwayne
 - matzew
 - slinkydeveloper
 # Also including TOC members as backup:
@@ -14,7 +13,6 @@ approvers:
 - pierDipi
 
 reviewers:
-- Harwayne
 - matzew
 - slinkydeveloper
 - pierDipi
