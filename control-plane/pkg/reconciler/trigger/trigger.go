@@ -163,6 +163,12 @@ func (r *Reconciler) getTriggerConfig(ctx context.Context, trigger *eventing.Tri
 		}
 	}
 
+	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, trigger, trigger.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
+	if err != nil {
+		return nil, err
+	}
+	egress.EgressConfig = egressConfig
+
 	return egress, nil
 }
 

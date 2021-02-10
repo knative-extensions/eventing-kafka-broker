@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
-import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
@@ -43,6 +41,9 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,8 +54,8 @@ import java.util.Properties;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
+
+import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
 
 public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
@@ -138,8 +139,11 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<RecordDispatcher>> recordHandlerFactory =
       (vertx, consumer) -> {
 
-        final var circuitBreakerOptions = createCircuitBreakerOptions(resource);
-        final var egressConfig = resource.getEgressConfig();
+        final var egressConfig =
+          egress.hasEgressConfig() ?
+            egress.getEgressConfig() :
+            resource.getEgressConfig();
+        final var circuitBreakerOptions = createCircuitBreakerOptions(egressConfig);
 
         final var egressSubscriberSender = createConsumerRecordSender(
           vertx,
@@ -211,9 +215,9 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     );
   }
 
-  private static CircuitBreakerOptions createCircuitBreakerOptions(final DataPlaneContract.Resource resource) {
-    if (resource.hasEgressConfig()) {
-      return new CircuitBreakerOptions().setMaxRetries(resource.getEgressConfig().getRetry());
+  private static CircuitBreakerOptions createCircuitBreakerOptions(final DataPlaneContract.EgressConfig egressConfig) {
+    if (egressConfig.getRetry() > 0) {
+      return new CircuitBreakerOptions().setMaxRetries(egressConfig.getRetry());
     }
     return new CircuitBreakerOptions();
   }

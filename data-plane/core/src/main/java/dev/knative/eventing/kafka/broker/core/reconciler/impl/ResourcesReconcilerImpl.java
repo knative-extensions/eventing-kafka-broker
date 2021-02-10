@@ -243,6 +243,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       && Objects.equals(e1.getDestination(), e2.getDestination())
       && Objects.equals(e1.getReplyUrl(), e2.getReplyUrl())
       && Objects.equals(e1.getReplyToOriginalTopic(), e2.getReplyToOriginalTopic())
+      && Objects.equals(e1.getEgressConfig(), e2.getEgressConfig())
       && Objects.equals(e1.getFilter(), e2.getFilter());
   }
 

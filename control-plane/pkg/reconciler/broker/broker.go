@@ -336,7 +336,7 @@ func (r *Reconciler) defaultConfig() (*kafka.TopicConfig, error) {
 }
 
 func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
-	res := &contract.Resource{
+	resource := &contract.Resource{
 		Uid:    string(broker.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
@@ -348,7 +348,7 @@ func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker
 	}
 
 	if secret != nil {
-		res.Auth = &contract.Resource_AuthSecret{
+		resource.Auth = &contract.Resource_AuthSecret{
 			AuthSecret: &contract.Reference{
 				Uuid:      string(secret.UID),
 				Namespace: secret.Namespace,
@@ -358,40 +358,13 @@ func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker
 		}
 	}
 
-	delivery := broker.Spec.Delivery
-	if delivery != nil {
-
-		if delivery.DeadLetterSink != nil {
-
-			deadLetterSinkURL, err := r.Resolver.URIFromDestinationV1(ctx, *delivery.DeadLetterSink, broker)
-			if err != nil {
-				return nil, fmt.Errorf("failed to resolve broker.Spec.Deliver.DeadLetterSink: %w", err)
-			}
-
-			ensureEgressConfig(res)
-			res.EgressConfig.DeadLetter = deadLetterSinkURL.String()
-		}
-
-		if delivery.Retry != nil {
-			ensureEgressConfig(res)
-			res.EgressConfig.Retry = uint32(*delivery.Retry)
-			var err error
-			delay, err := coreconfig.BackoffDelayFromISO8601String(delivery.BackoffDelay, r.Configs.DefaultBackoffDelayMs)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse backoff delay: %w", err)
-			}
-			res.EgressConfig.BackoffDelay = delay
-			res.EgressConfig.BackoffPolicy = coreconfig.BackoffPolicyFromString(delivery.BackoffPolicy)
-		}
+	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, broker, broker.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
+	if err != nil {
+		return nil, err
 	}
+	resource.EgressConfig = egressConfig
 
-	return res, nil
-}
-
-func ensureEgressConfig(res *contract.Resource) {
-	if res.EgressConfig == nil {
-		res.EgressConfig = &contract.EgressConfig{}
-	}
+	return resource, nil
 }
 
 func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev1.ConfigMap) {

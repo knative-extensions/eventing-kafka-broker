@@ -17,11 +17,14 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"math"
 
 	"github.com/rickb777/date/period"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	duck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
@@ -42,6 +45,42 @@ func ContentModeFromString(mode string) contract.ContentMode {
 			[]string{eventing.ModeStructured, eventing.ModeBinary},
 		))
 	}
+}
+
+func EgressConfigFromDelivery(
+	ctx context.Context,
+	resolver *resolver.URIResolver,
+	parent metav1.Object,
+	delivery *duck.DeliverySpec,
+	defaultBackoffDelayMs uint64,
+) (*contract.EgressConfig, error) {
+
+	if delivery == nil || (delivery.DeadLetterSink == nil && delivery.Retry == nil) {
+		return nil, nil
+	}
+
+	egressConfig := &contract.EgressConfig{}
+
+	if delivery.DeadLetterSink != nil {
+		deadLetterSinkURL, err := resolver.URIFromDestinationV1(ctx, *delivery.DeadLetterSink, parent)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve Spec.Delivery.DeadLetterSink: %w", err)
+		}
+		egressConfig.DeadLetter = deadLetterSinkURL.String()
+	}
+
+	if delivery.Retry != nil {
+		egressConfig.Retry = uint32(*delivery.Retry)
+		var err error
+		delay, err := BackoffDelayFromISO8601String(delivery.BackoffDelay, defaultBackoffDelayMs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse Spec.Delivery.BackoffDelay: %w", err)
+		}
+		egressConfig.BackoffDelay = delay
+		egressConfig.BackoffPolicy = BackoffPolicyFromString(delivery.BackoffPolicy)
+	}
+
+	return egressConfig, nil
 }
 
 // BackoffPolicyFromString returns the BackoffPolicy from the given string.

@@ -745,7 +745,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"failed to get contract configuration: failed to resolve broker.Spec.Deliver.DeadLetterSink: %v",
+					"failed to get contract configuration: failed to resolve Spec.Delivery.DeadLetterSink: %v",
 					"destination missing Ref and URI, expected at least one",
 				),
 			},
