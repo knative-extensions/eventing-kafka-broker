@@ -17,10 +17,11 @@
 package dev.knative.eventing.kafka.broker.core.security;
 
 import io.fabric8.kubernetes.api.model.Secret;
-import java.util.Base64;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Base64;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -32,6 +33,7 @@ class KubernetesCredentials implements Credentials {
 
   static final String USER_CERTIFICATE_KEY = "user.crt";
   static final String USER_KEY_KEY = "user.key";
+  static final String USER_SKIP_KEY = "user.skip";
 
   static final String USERNAME_KEY = "user";
   static final String PASSWORD_KEY = "password";
@@ -44,6 +46,7 @@ class KubernetesCredentials implements Credentials {
   private String caCertificates;
   private String userCertificate;
   private String userKey;
+  private Boolean skipUser;
   private SecurityProtocol securityProtocol;
   private String SASLMechanism;
   private String SASLUsername;
@@ -66,6 +69,26 @@ class KubernetesCredentials implements Credentials {
       this.caCertificates = new String(Base64.getDecoder().decode(truststore));
     }
     return this.caCertificates;
+  }
+
+  @Override
+  public boolean skipUser() {
+    if (secret == null || secret.getData() == null) {
+      return false;
+    }
+    if (skipUser == null) {
+      final var skip = secret.getData().get(USER_SKIP_KEY);
+      if (skip == null) {
+        this.skipUser = false;
+      } else {
+        try {
+          this.skipUser = Boolean.parseBoolean(skip);
+        } catch (final Exception ex) {
+          this.skipUser = false;
+        }
+      }
+    }
+    return this.skipUser;
   }
 
   @Override

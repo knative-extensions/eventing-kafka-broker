@@ -26,6 +26,13 @@ public interface Credentials {
   String caCertificates();
 
   /**
+   * Skip client auth.
+   *
+   * @return true if client auth should be skipped otherwise false
+   */
+  boolean skipUser();
+
+  /**
    * @return user certificate.
    */
   String userCertificate();

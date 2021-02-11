@@ -26,6 +26,11 @@ public class PlaintextCredentials implements Credentials {
   }
 
   @Override
+  public boolean skipUser() {
+    return true;
+  }
+
+  @Override
   public String userCertificate() {
     return null;
   }
