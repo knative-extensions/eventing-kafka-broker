@@ -28,12 +28,15 @@ import org.apache.kafka.common.security.ssl.DefaultSslEngineFactory;
 
 public class KafkaClientsAuth {
 
-  public static void attachCredentials(final Properties properties, final Credentials credentials) {
+  public static Properties attachCredentials(final Properties properties, final Credentials credentials) {
     clientsProperties(properties::setProperty, credentials);
+    return properties;
   }
 
-  public static void attachCredentials(final Map<String, Object> configs, final Credentials credentials) {
+  public static Map<String, Object> attachCredentials(final Map<String, Object> configs,
+                                                      final Credentials credentials) {
     clientsProperties(configs::put, credentials);
+    return configs;
   }
 
   private static void clientsProperties(final BiConsumer<String, String> propertiesSetter,
