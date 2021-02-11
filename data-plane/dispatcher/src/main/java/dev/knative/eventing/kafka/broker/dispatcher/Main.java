@@ -28,7 +28,6 @@ import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManagerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
@@ -111,18 +110,15 @@ public class Main {
         keyValue("webClientConfig", webClientConfig)
       );
 
-      final OffsetManagerFactory offsetManagerFactory =
-        OffsetManagerFactory.unordered(eventsSentCounter::increment);
-
       final var clientOptions = new WebClientOptions(webClientConfig);
       clientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
       final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
-        offsetManagerFactory,
         consumerConfig,
         clientOptions,
         producerConfig,
-        AuthProvider.kubernetes()
+        AuthProvider.kubernetes(),
+        eventsSentCounter
       );
 
       final var consumerDeployerVerticle = new ConsumerDeployerVerticle(

@@ -19,17 +19,22 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.core.filter.impl.AttributesFilter;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
-import dev.knative.eventing.kafka.broker.core.security.Credentials;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
 import dev.knative.eventing.kafka.broker.core.security.PlaintextCredentials;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.ConsumerType;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.ConsumerVerticleFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.BaseConsumerVerticle;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.OrderedOffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.UnorderedConsumerVerticle;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.UnorderedOffsetManager;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
+import io.micrometer.core.instrument.Counter;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
@@ -48,11 +53,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
 
 public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
@@ -63,24 +70,28 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
   private final WebClientOptions webClientOptions;
   private final Map<String, Object> producerConfigs;
   private final AuthProvider authProvider;
+  private final Counter eventsSentCounter;
 
   /**
    * All args constructor.
    *
-   * @param consumerConfigs      base consumer configurations.
-   * @param webClientOptions     web client options.
-   * @param producerConfigs      base producer configurations.
-   * @param authProvider         auth provider.
+   * @param consumerConfigs   base consumer configurations.
+   * @param webClientOptions  web client options.
+   * @param producerConfigs   base producer configurations.
+   * @param authProvider      auth provider.
+   * @param eventsSentCounter events sent counter.
    */
   public HttpConsumerVerticleFactory(
     final Properties consumerConfigs,
     final WebClientOptions webClientOptions,
     final Properties producerConfigs,
-    final AuthProvider authProvider) {
+    final AuthProvider authProvider,
+    final Counter eventsSentCounter) {
 
     Objects.requireNonNull(consumerConfigs, "provide consumerConfigs");
     Objects.requireNonNull(webClientOptions, "provide webClientOptions");
     Objects.requireNonNull(producerConfigs, "provide producerConfigs");
+    Objects.requireNonNull(eventsSentCounter, "provide eventsSentCounter");
 
     this.consumerConfigs = consumerConfigs.entrySet()
       .stream()
@@ -92,6 +103,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
       .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     this.webClientOptions = webClientOptions;
     this.authProvider = authProvider;
+    this.eventsSentCounter = eventsSentCounter;
   }
 
   /**
@@ -105,7 +117,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     // Consumer and producer configs are shared objects and they act as a prototype for each instance.
     final var consumerConfigs = new HashMap<>(this.consumerConfigs);
     consumerConfigs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
-    consumerConfigs.put(GROUP_ID_CONFIG, egress.getConsumerGroup());
+    consumerConfigs.put(ConsumerConfig.GROUP_ID_CONFIG, egress.getConsumerGroup());
 
     final var producerConfigs = new HashMap<>(this.producerConfigs);
     producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
@@ -114,97 +126,81 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     // TODO I'm assuming ordered/unordered will be configure here, at egress level
     final ConsumerType type = ConsumerType.UNORDERED;
 
-    final ABC initializer = vertx -> {
+    final BiFunction<Vertx, BaseConsumerVerticle, Future<Void>> initializer = (vertx, consumerVerticle) ->
       (resource.hasAuthSecret() ?
         authProvider.getCredentials(resource.getAuthSecret().getNamespace(), resource.getAuthSecret().getName()) :
         Future.succeededFuture(new PlaintextCredentials())
-      ).compose(credentials -> {
+      ).onSuccess(credentials -> {
         KafkaClientsAuth.attachCredentials(consumerConfigs, credentials);
         KafkaClientsAuth.attachCredentials(producerConfigs, credentials);
 
-        KafkaConsumer<String, CloudEvent> consumer = KafkaConsumer.create(
-          vertx,
-          new KafkaClientOptions()
-            .setConfig(consumerConfigs)
-            .setTracingPolicy(TracingPolicy.PROPAGATE)
-        );
+        KafkaConsumer<String, CloudEvent> consumer = createConsumer(vertx, consumerConfigs);
+        AutoCloseable metricsCloser = Metrics.register(consumer.unwrap());
+        consumerVerticle.setConsumer(consumer);
+        consumerVerticle.setCloser(() -> Metrics.close(vertx, metricsCloser));
 
-        KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(
-          vertx,
-          new KafkaClientOptions().setConfig(producerConfigs)
-        );
-
-        final var circuitBreakerOptions = createCircuitBreakerOptions(resource);
-        final var egressConfig = resource.getEgressConfig();
-
-        final var egressSubscriberSender = createConsumerRecordSender(
-          vertx,
-          egress.getDestination(),
-          circuitBreakerOptions,
-          egressConfig
-        );
-
-        final var egressDeadLetterSender = hasDeadLetterSink(egressConfig)
-          ? createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), circuitBreakerOptions, egressConfig)
-          : NO_DLQ_SENDER;
-
-        final RecordDispatcher recordDispatcher = new RecordDispatcher(
-          egress.hasFilter() ? new AttributesFilter(egress.getFilter().getAttributesMap()) : Filter.noop(),
-          egressSubscriberSender,
-          egressDeadLetterSender,
-          new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer),
-          type.getOffsetManager(consumer, null) //TODO
-        );
-
-      });
-    };
-
-    final Future<Credentials> credentialsFuture = resource.hasAuthSecret() ?
-      authProvider.getCredentials(resource.getAuthSecret().getNamespace(), resource.getAuthSecret().getName()) :
-      Future.succeededFuture(new PlaintextCredentials());
-
-
-    final BiFunction<Vertx, KafkaConsumer<String, CloudEvent>, Future<RecordDispatcher>> recordDispatcherFactory =
-      (vertx, consumer) -> {
+        KafkaProducer<String, CloudEvent> producer = createProducer(vertx, producerConfigs);
 
         final var egressConfig =
           egress.hasEgressConfig() ?
             egress.getEgressConfig() :
             resource.getEgressConfig();
-        final var circuitBreakerOptions = createCircuitBreakerOptions(egressConfig);
 
         final var egressSubscriberSender = createConsumerRecordSender(
           vertx,
           egress.getDestination(),
-          circuitBreakerOptions,
           egressConfig
         );
 
         final var egressDeadLetterSender = hasDeadLetterSink(egressConfig)
-          ? createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), circuitBreakerOptions, egressConfig)
+          ? createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), egressConfig)
           : NO_DLQ_SENDER;
 
-        return producerFactory.apply(vertx)
-          .map(producer -> new RecordDispatcher(
-            egress.hasFilter() ? new AttributesFilter(egress.getFilter().getAttributesMap()) : Filter.noop(),
-            egressSubscriberSender,
-            egressDeadLetterSender,
-            new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer),
-            type.getOffsetManager(consumer, null) //TODO
-          ));
-      };
+        final var filter = egress.hasFilter() ?
+          new AttributesFilter(egress.getFilter().getAttributesMap()) :
+          Filter.noop();
 
-    return new UnorderedConsumerVerticle(consumer, recordDispatcher, new HashSet<>(resource.getTopicsList()));
+        final RecordDispatcher recordDispatcher = new RecordDispatcher(
+          filter,
+          egressSubscriberSender,
+          egressDeadLetterSender,
+          new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer),
+          getOffsetManager(type, consumer, eventsSentCounter::increment)
+        );
+
+        consumerVerticle.setRecordDispatcher(recordDispatcher);
+
+      })
+        .mapEmpty();
+
+    return getConsumerVerticle(type, initializer, new HashSet<>(resource.getTopicsList()));
+  }
+
+  protected KafkaProducer<String, CloudEvent> createProducer(final Vertx vertx,
+                                                             final Map<String, Object> producerConfigs) {
+    Properties producerProperties = new Properties();
+    producerProperties.putAll(producerConfigs);
+    return KafkaProducer.create(vertx, producerProperties);
+  }
+
+  protected KafkaConsumer<String, CloudEvent> createConsumer(final Vertx vertx,
+                                                             final Map<String, Object> consumerConfigs) {
+    return KafkaConsumer.create(
+      vertx,
+      new KafkaClientOptions()
+        .setConfig(consumerConfigs)
+        .setTracingPolicy(TracingPolicy.PROPAGATE)
+    );
   }
 
   private ConsumerRecordSender createConsumerRecordSender(
     final Vertx vertx,
     final String target,
-    final CircuitBreakerOptions circuitBreakerOptions,
     final EgressConfig egress) {
 
-    final var circuitBreaker = CircuitBreaker.create(target, vertx, circuitBreakerOptions);
-    circuitBreaker.retryPolicy(computeRetryPolicy(egress));
+    final var circuitBreaker = CircuitBreaker
+      .create(target, vertx, createCircuitBreakerOptions(egress))
+      .retryPolicy(computeRetryPolicy(egress));
 
     return new HttpConsumerRecordSender(
       vertx,
@@ -215,7 +211,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
   }
 
   private static CircuitBreakerOptions createCircuitBreakerOptions(final DataPlaneContract.EgressConfig egressConfig) {
-    if (egressConfig.getRetry() > 0) {
+    if (egressConfig != null && egressConfig.getRetry() > 0) {
       return new CircuitBreakerOptions().setMaxRetries(egressConfig.getRetry());
     }
     return new CircuitBreakerOptions();
@@ -223,7 +219,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
   /* package visibility for test */
   static Function<Integer, Long> computeRetryPolicy(final EgressConfig egress) {
-    if (egress != null && egress.getBackoffPolicy() != null && egress.getBackoffDelay() > 0) {
+    if (egress != null && egress.getBackoffDelay() > 0) {
       final var delay = egress.getBackoffDelay();
       return switch (egress.getBackoffPolicy()) {
         case Linear -> retryCount -> delay * retryCount;
@@ -235,5 +231,23 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
   private static boolean hasDeadLetterSink(final EgressConfig egressConfig) {
     return !(egressConfig == null || egressConfig.getDeadLetter() == null || egressConfig.getDeadLetter().isEmpty());
+  }
+
+
+  private static OffsetManager getOffsetManager(final ConsumerType type, final KafkaConsumer<?, ?> consumer,
+                                                Consumer<Integer> commitHandler) {
+    return switch (type) {
+      case ORDERED -> new OrderedOffsetManager(consumer, commitHandler);
+      case UNORDERED -> new UnorderedOffsetManager(consumer, commitHandler);
+    };
+  }
+
+  private static AbstractVerticle getConsumerVerticle(final ConsumerType type,
+                                                      final BiFunction<Vertx, BaseConsumerVerticle, Future<Void>> initializer,
+                                                      final Set<String> topics) {
+    return switch (type) {
+      case ORDERED -> new UnorderedConsumerVerticle(initializer, topics); //TODO
+      case UNORDERED -> new UnorderedConsumerVerticle(initializer, topics);
+    };
   }
 }

@@ -40,19 +40,15 @@ public class KafkaClientsAuth {
                                         final Credentials credentials) {
     final var protocol = credentials.securityProtocol();
 
-    switch (protocol) {
-      case SSL -> {
-        propertiesSetter.accept(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, protocol.name);
-        ssl(propertiesSetter, credentials);
-      }
-      case SASL_PLAINTEXT -> {
-        propertiesSetter.accept(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, protocol.name);
-        sasl(propertiesSetter, credentials);
-      }
-      case SASL_SSL -> {
-        propertiesSetter.accept(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, protocol.name);
-        ssl(propertiesSetter, credentials);
-        sasl(propertiesSetter, credentials);
+    if (protocol != null) {
+      propertiesSetter.accept(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, protocol.name);
+      switch (protocol) {
+        case SSL -> ssl(propertiesSetter, credentials);
+        case SASL_PLAINTEXT -> sasl(propertiesSetter, credentials);
+        case SASL_SSL -> {
+          ssl(propertiesSetter, credentials);
+          sasl(propertiesSetter, credentials);
+        }
       }
     }
   }
