@@ -175,6 +175,85 @@ func TestSSL(t *testing.T) {
 	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
 }
 
+func TestSSLNoUserKey(t *testing.T) {
+	ca, _, userCert := loadCerts(t)
+
+	secret := map[string][]byte{
+		"protocol": []byte("SSL"),
+		"user.crt": userCert,
+		"ca.crt":   ca,
+	}
+	config := sarama.NewConfig()
+
+	err := options(config, secretData(secret))
+
+	assert.NotNil(t, err)
+}
+
+func TestSSLNoUserCert(t *testing.T) {
+	ca, userKey, _ := loadCerts(t)
+
+	secret := map[string][]byte{
+		"protocol": []byte("SSL"),
+		"user.key": userKey,
+		"ca.crt":   ca,
+	}
+	config := sarama.NewConfig()
+
+	err := options(config, secretData(secret))
+
+	assert.NotNil(t, err)
+}
+
+func TestSSLInvalidKeyPair(t *testing.T) {
+	ca, _, _ := loadCerts(t)
+
+	secret := map[string][]byte{
+		"protocol": []byte("SSL"),
+		"user.key": []byte("foo"),
+		"user.crt": []byte("bar"),
+		"ca.crt":   ca,
+	}
+	config := sarama.NewConfig()
+
+	err := options(config, secretData(secret))
+
+	assert.NotNil(t, err)
+}
+
+func TestSSLNoClientAuth(t *testing.T) {
+	ca, _, _ := loadCerts(t)
+
+	secret := map[string][]byte{
+		"protocol":  []byte("SSL"),
+		"user.skip": []byte("true"),
+		"ca.crt":    ca,
+	}
+	config := sarama.NewConfig()
+
+	err := options(config, secretData(secret))
+
+	assert.Nil(t, err)
+	assert.True(t, config.Net.TLS.Enable)
+	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
+	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
+}
+
+func TestSSLNoClientAuthInvalidFlag(t *testing.T) {
+	ca, _, _ := loadCerts(t)
+
+	secret := map[string][]byte{
+		"protocol":  []byte("SSL"),
+		"user.skip": []byte("foo"),
+		"ca.crt":    ca,
+	}
+	config := sarama.NewConfig()
+
+	err := options(config, secretData(secret))
+
+	assert.NotNil(t, err)
+}
+
 func TestSASLPLainSSL(t *testing.T) {
 	ca, userKey, userCert := loadCerts(t)
 
@@ -257,6 +336,25 @@ func TestSASLSCRAM512SSL(t *testing.T) {
 	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeSCRAMSHA512), config.Net.SASL.Mechanism)
 	assert.Equal(t, "my-user-name", config.Net.SASL.User)
 	assert.Equal(t, "my-user-password", config.Net.SASL.Password)
+}
+
+func TestSASLSCRAM512SSLInvalidCaCert(t *testing.T) {
+	_, userKey, userCert := loadCerts(t)
+
+	secret := map[string][]byte{
+		"protocol":       []byte("SASL_SSL"),
+		"sasl.mechanism": []byte("SCRAM-SHA-512"),
+		"ca.crt":         []byte(`foo`),
+		"user.crt":       userCert,
+		"user.key":       userKey,
+		"user":           []byte("my-user-name"),
+		"password":       []byte("my-user-password"),
+	}
+	config := sarama.NewConfig()
+
+	err := options(config, secretData(secret))
+
+	assert.NotNil(t, err)
 }
 
 func loadCerts(t *testing.T) (ca, userKey, userCert []byte) {
