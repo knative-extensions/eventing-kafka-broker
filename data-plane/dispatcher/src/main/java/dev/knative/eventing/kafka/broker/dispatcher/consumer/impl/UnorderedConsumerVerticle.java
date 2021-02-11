@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryGuarantee;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -22,7 +23,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 /**
- * This {@link io.vertx.core.Verticle} implements an unordered consumer logic, as described in {@link dev.knative.eventing.kafka.broker.dispatcher.consumer.ConsumerType#UNORDERED}.
+ * This {@link io.vertx.core.Verticle} implements an unordered consumer logic, as described in {@link DeliveryGuarantee#UNORDERED}.
  */
 public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
 

@@ -15,7 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer;
 
-public enum ConsumerType {
+public enum DeliveryGuarantee {
   /**
    * Ordered consumer is a per-partition blocking consumer that deliver messages in order.
    */
