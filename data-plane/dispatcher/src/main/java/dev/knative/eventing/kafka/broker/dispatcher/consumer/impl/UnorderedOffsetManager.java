@@ -54,8 +54,8 @@ public final class UnorderedOffsetManager implements OffsetManager {
   /**
    * All args constructor.
    *
-   * @param consumer          Kafka consumer.
-   * @param eventsSentCounter events sent counter
+   * @param consumer Kafka consumer.
+   * @param onCommit Callback invoked when an offset is actually committed
    */
   public UnorderedOffsetManager(final KafkaConsumer<?, ?> consumer, final Consumer<Integer> onCommit) {
     Objects.requireNonNull(consumer, "provide consumer");

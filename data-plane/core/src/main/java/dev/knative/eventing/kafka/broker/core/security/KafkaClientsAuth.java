@@ -16,7 +16,9 @@
 
 package dev.knative.eventing.kafka.broker.core.security;
 
-import io.vertx.core.Future;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.BiConsumer;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
@@ -24,49 +26,41 @@ import org.apache.kafka.common.security.plain.PlainLoginModule;
 import org.apache.kafka.common.security.scram.ScramLoginModule;
 import org.apache.kafka.common.security.ssl.DefaultSslEngineFactory;
 
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.BiConsumer;
-
 public class KafkaClientsAuth {
 
-  public static Future<Properties> updateConfigsFromProps(final Credentials credentials,
-                                                          final Properties properties) {
-    return clientsProperties(properties::setProperty, credentials)
-      .map(r -> properties);
+  public static void attachCredentials(final Properties properties, final Credentials credentials) {
+    clientsProperties(properties::setProperty, credentials);
   }
 
-  public static Future<Map<String, String>> updateProducerConfigs(final Credentials credentials,
-                                                                  final Map<String, String> configs) {
-    return clientsProperties(configs::put, credentials)
-      .map(r -> configs);
+  public static void attachCredentials(final Map<String, Object> configs, final Credentials credentials) {
+    clientsProperties(configs::put, credentials);
   }
 
-  public static Future<Map<String, Object>> updateConsumerConfigs(final Credentials credentials,
-                                                                  final Map<String, Object> configs) {
-    return clientsProperties(configs::put, credentials)
-      .map(r -> configs);
-  }
-
-  private static Future<Void> clientsProperties(final BiConsumer<String, String> propertiesSetter, final Credentials credentials) {
+  private static void clientsProperties(final BiConsumer<String, String> propertiesSetter,
+                                        final Credentials credentials) {
     final var protocol = credentials.securityProtocol();
-    if (protocol == null) {
-      return Future.succeededFuture();
-    }
 
-    propertiesSetter.accept(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, protocol.name);
-    return switch (protocol) {
-      case PLAINTEXT -> Future.succeededFuture();
-      case SSL -> ssl(propertiesSetter, credentials);
-      case SASL_PLAINTEXT -> sasl(propertiesSetter, credentials);
-      case SASL_SSL -> ssl(propertiesSetter, credentials).compose(r -> sasl(propertiesSetter, credentials));
-    };
+    switch (protocol) {
+      case SSL -> {
+        propertiesSetter.accept(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, protocol.name);
+        ssl(propertiesSetter, credentials);
+      }
+      case SASL_PLAINTEXT -> {
+        propertiesSetter.accept(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, protocol.name);
+        sasl(propertiesSetter, credentials);
+      }
+      case SASL_SSL -> {
+        propertiesSetter.accept(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, protocol.name);
+        ssl(propertiesSetter, credentials);
+        sasl(propertiesSetter, credentials);
+      }
+    }
   }
 
-  private static Future<Void> sasl(final BiConsumer<String, String> propertiesSetter, final Credentials credentials) {
+  private static void sasl(final BiConsumer<String, String> propertiesSetter, final Credentials credentials) {
     final var mechanism = credentials.SASLMechanism();
     if (mechanism == null) {
-      return Future.failedFuture("SASL mechanism required");
+      throw new IllegalStateException("SASL mechanism required");
     }
     propertiesSetter.accept(SaslConfigs.SASL_MECHANISM, mechanism);
     if ("PLAIN".equals(mechanism)) {
@@ -82,10 +76,9 @@ public class KafkaClientsAuth {
         credentials.SASLPassword()
       ));
     }
-    return Future.succeededFuture();
   }
 
-  private static Future<Void> ssl(final BiConsumer<String, String> propertiesSetter, final Credentials credentials) {
+  private static void ssl(final BiConsumer<String, String> propertiesSetter, final Credentials credentials) {
     propertiesSetter.accept(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
     propertiesSetter.accept(SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG, credentials.caCertificates());
     final var keystore = credentials.userCertificate();
@@ -94,6 +87,5 @@ public class KafkaClientsAuth {
       propertiesSetter.accept(SslConfigs.SSL_KEYSTORE_KEY_CONFIG, credentials.userKey());
       propertiesSetter.accept(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
     }
-    return Future.succeededFuture();
   }
 }

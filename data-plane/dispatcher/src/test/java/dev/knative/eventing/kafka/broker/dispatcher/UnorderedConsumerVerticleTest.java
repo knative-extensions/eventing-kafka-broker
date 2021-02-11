@@ -23,7 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.UnorderedConsumerVerticle;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -47,7 +47,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
-public class ConsumerVerticleTest {
+public class UnorderedConsumerVerticleTest {
 
   static {
     BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
@@ -59,18 +59,8 @@ public class ConsumerVerticleTest {
     final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
     final var topic = "topic1";
 
-    final var verticle = new ConsumerVerticle(
-      v -> Future.succeededFuture(KafkaConsumer.create(v, consumer)),
-      Set.of(topic),
-      (a, b) -> Future.succeededFuture(new RecordDispatcher(
-        value -> false,
-        ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
-        ConsumerRecordSender.create(Future.failedFuture("DLQ send called"), Future.succeededFuture()),
-        new SinkResponseHandlerMock(
-          Future::succeededFuture,
-          response -> Future.succeededFuture()
-        ), mock(OffsetManager.class)
-      ))
+    final var verticle = new UnorderedConsumerVerticle(
+      consumer, recordDispatcher, Set.of(topic)
     );
 
     final Promise<String> promise = Promise.promise();
@@ -91,18 +81,8 @@ public class ConsumerVerticleTest {
     final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
     final var topic = "topic1";
 
-    final var verticle = new ConsumerVerticle(
-      v -> Future.succeededFuture(KafkaConsumer.create(v, consumer)),
-      Set.of(topic),
-      (a, b) -> Future.succeededFuture(new RecordDispatcher(
-        value -> false,
-        ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
-        ConsumerRecordSender.create(Future.failedFuture("DLQ send called"), Future.succeededFuture()),
-        new SinkResponseHandlerMock(
-          Future::succeededFuture,
-          response -> Future.succeededFuture()
-        ), mock(OffsetManager.class)
-      ))
+    final var verticle = new UnorderedConsumerVerticle(
+      consumer, recordDispatcher, Set.of(topic)
     );
 
     final Promise<String> deployPromise = Promise.promise();
@@ -151,31 +131,8 @@ public class ConsumerVerticleTest {
     final var dlsSenderClosed = new AtomicBoolean(false);
     final var sinkClosed = new AtomicBoolean(false);
 
-    final var verticle = new ConsumerVerticle(
-      v -> Future.succeededFuture(consumer),
-      Arrays.stream(topics).collect(Collectors.toSet()),
-      (v, c) -> Future.succeededFuture(new RecordDispatcher(
-        ce -> true, new ConsumerRecordSenderMock(
-        () -> {
-          consumerRecordSenderClosed.set(true);
-          return Future.succeededFuture();
-        },
-        record -> Future.succeededFuture()
-      ),
-        new ConsumerRecordSenderMock(
-          () -> {
-            dlsSenderClosed.set(true);
-            return Future.succeededFuture();
-          },
-          record -> Future.succeededFuture()
-        ), new SinkResponseHandlerMock(
-        () -> {
-          sinkClosed.set(true);
-          return Future.succeededFuture();
-        },
-        response -> Future.succeededFuture()
-      ), mock(OffsetManager.class)
-      ))
+    final var verticle = new UnorderedConsumerVerticle(
+      consumer, recordDispatcher, Arrays.stream(topics).collect(Collectors.toSet())
     );
 
     vertx.deployVerticle(verticle)

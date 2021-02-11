@@ -16,22 +16,21 @@
 package dev.knative.eventing.kafka.broker.dispatcher.consumer;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.UnorderedOffsetManager;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
-import java.util.function.Consumer;
+import io.vertx.core.AbstractVerticle;
+import java.util.concurrent.ExecutionException;
 
 /**
- * Factory for {@link OffsetManager}
+ * This class is responsible for instantiating consumer verticles.
  */
 @FunctionalInterface
-public interface OffsetManagerFactory {
+public interface ConsumerVerticleFactory {
 
-  OffsetManager get(final KafkaConsumer<?, ?> consumer,
-                    final DataPlaneContract.Resource resource,
-                    final DataPlaneContract.Egress egress);
-
-  static OffsetManagerFactory unordered(Consumer<Integer> commitHandler) {
-    return (consumer, broker, trigger) -> new UnorderedOffsetManager(consumer, commitHandler);
-  }
-
+  /**
+   * Get a new consumer verticle.
+   *
+   * @param egress trigger data.
+   * @return a new consumer verticle.
+   */
+  AbstractVerticle get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress)
+    throws ExecutionException, InterruptedException;
 }

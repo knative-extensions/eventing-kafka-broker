@@ -16,6 +16,13 @@
 
 package dev.knative.eventing.kafka.broker.core.security;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.HashMap;
+import java.util.Properties;
+import javax.security.auth.spi.LoginModule;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
@@ -24,14 +31,6 @@ import org.apache.kafka.common.security.plain.PlainLoginModule;
 import org.apache.kafka.common.security.scram.ScramLoginModule;
 import org.apache.kafka.common.security.ssl.DefaultSslEngineFactory;
 import org.junit.jupiter.api.Test;
-
-import javax.security.auth.spi.LoginModule;
-import java.util.HashMap;
-import java.util.Properties;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class KafkaClientsAuthTest {
 
@@ -60,7 +59,7 @@ public class KafkaClientsAuthTest {
     when(credentials.SASLUsername()).thenReturn("aaa");
     when(credentials.SASLPassword()).thenReturn("bbb");
 
-    assertThat(KafkaClientsAuth.updateConfigsFromProps(credentials, props).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.attachCredentials(props, credentials).succeeded()).isTrue();
 
     final var expected = new Properties();
     expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_SSL.name());
@@ -94,7 +93,7 @@ public class KafkaClientsAuthTest {
     when(credentials.userKey()).thenReturn("key");
     when(credentials.caCertificates()).thenReturn("xyz");
 
-    assertThat(KafkaClientsAuth.updateConfigsFromProps(credentials, props).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.attachCredentials(props, credentials).succeeded()).isTrue();
 
     final var expected = new Properties();
     expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SSL.name());
@@ -133,7 +132,7 @@ public class KafkaClientsAuthTest {
     final var credentials = mock(Credentials.class);
     when(credentials.securityProtocol()).thenReturn(SecurityProtocol.PLAINTEXT);
 
-    assertThat(KafkaClientsAuth.updateConfigsFromProps(credentials, props).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.attachCredentials(props, credentials).succeeded()).isTrue();
 
     final var expected = new Properties();
     expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.PLAINTEXT.name());
@@ -159,7 +158,7 @@ public class KafkaClientsAuthTest {
     when(credentials.SASLUsername()).thenReturn("aaa");
     when(credentials.SASLPassword()).thenReturn("bbb");
 
-    assertThat(KafkaClientsAuth.updateConfigsFromProps(credentials, props).succeeded()).isTrue();
+    assertThat(KafkaClientsAuth.attachCredentials(props, credentials).succeeded()).isTrue();
 
     final var expected = new Properties();
 
