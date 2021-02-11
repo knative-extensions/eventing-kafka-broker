@@ -16,10 +16,11 @@
 package dev.knative.eventing.kafka.broker.core.utils;
 
 import io.vertx.core.Vertx;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class Shutdown {
 
@@ -27,6 +28,7 @@ public class Shutdown {
 
   public static Runnable run(final Vertx vertx, final AutoCloseable... closeables) {
     return () -> {
+      logger.info("Executing shutdown");
       for (AutoCloseable closeable : closeables) {
         try {
           closeable.close();
@@ -40,6 +42,7 @@ public class Shutdown {
 
   public static Runnable closeSync(final Vertx vertx) {
     return () -> {
+      logger.info("Closing Vert.x");
       final var wait = new CountDownLatch(1);
       vertx.close(ignore -> wait.countDown());
       try {
