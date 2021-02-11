@@ -32,7 +32,6 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManagerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.ReceiverVerticle;
@@ -289,9 +288,6 @@ public class DataPlaneTest {
   private static ConsumerDeployerVerticle setUpDispatcher(final Vertx vertx, final VertxTestContext context)
     throws InterruptedException {
 
-    final OffsetManagerFactory
-      offsetManagerFactory = OffsetManagerFactory.unordered(mock(Counter.class));
-
     final var consumerConfigs = new Properties();
     consumerConfigs.put(BOOTSTRAP_SERVERS_CONFIG, format("localhost:%d", KAFKA_PORT));
     consumerConfigs.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
@@ -300,11 +296,12 @@ public class DataPlaneTest {
     final var producerConfigs = producerConfigs();
 
     final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
-      offsetManagerFactory,
       consumerConfigs,
       new WebClientOptions(),
       producerConfigs,
-      mock(AuthProvider.class));
+      mock(AuthProvider.class),
+      mock(Counter.class)
+    );
 
     final var verticle = new ConsumerDeployerVerticle(
       consumerVerticleFactory,

@@ -17,13 +17,10 @@ package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
 import static org.mockito.Mockito.mock;
 
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
-import dev.knative.eventing.kafka.broker.core.security.Credentials;
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManagerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.CloudEvent;
-import io.vertx.core.Future;
+import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
@@ -51,64 +48,60 @@ public class ConsumerVerticleFactoryMock extends HttpConsumerVerticleFactory {
 
   public ConsumerVerticleFactoryMock(
     final Properties consumerConfigs,
-    final Properties producerConfigs,
-    final OffsetManagerFactory offsetManagerFactory) {
-
-    super(offsetManagerFactory, consumerConfigs, new WebClientOptions(), producerConfigs,
-      mock(AuthProvider.class));
+    final Properties producerConfigs) {
+    super(
+      consumerConfigs,
+      new WebClientOptions(),
+      producerConfigs,
+      mock(AuthProvider.class),
+      mock(Counter.class)
+    );
     mockProducer = new ConcurrentHashMap<>();
     mockConsumer = new ConcurrentHashMap<>();
   }
 
   @Override
-  protected Function<Vertx, Future<KafkaProducer<String, CloudEvent>>> createProducerFactory(
-    final Map<String, String> producerConfigs,
-    final DataPlaneContract.Resource resource,
-    final Future<Credentials> credentialsFuture) {
-
-    return vertx -> {
-      final var producer = new MockProducer<String, CloudEvent>(
-        true,
-        new StringSerializer(),
-        (topic, data) -> new byte[0] // No need to use the real one, since it doesn't support headers
-      );
-
-      return Future.succeededFuture(KafkaProducer.create(vertx, producer));
-    };
+  protected KafkaProducer<String, CloudEvent> createProducer(Vertx vertx,
+                                                             Map<String, Object> producerConfigs) {
+    return KafkaProducer.create(vertx, new MockProducer<>(
+      true,
+      new StringSerializer(),
+      (topic, data) -> new byte[0] // No need to use the real one, since it doesn't support headers
+    ));
   }
 
   @Override
-  protected Function<Vertx, Future<KafkaConsumer<String, CloudEvent>>> createConsumerFactory(
-    final Map<String, Object> consumerConfigs,
-    final DataPlaneContract.Resource resource,
-    final Future<Credentials> credentialsFuture) {
-    return vertx -> {
+  protected KafkaConsumer<String, CloudEvent> createConsumer(Vertx vertx,
+                                                             Map<String, Object> consumerConfigs) {
+    final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
 
-      final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
+    consumer.schedulePollTask(() -> {
+      consumer.unsubscribe();
 
-      consumer.schedulePollTask(() -> {
-        consumer.unsubscribe();
+      consumer.assign(
+        records.stream()
+          .map(r -> new TopicPartition(r.topic(), r.partition()))
+          .distinct()
+          .collect(Collectors.toList())
+      );
 
-        consumer.assign(records.stream()
-          .map(r -> new TopicPartition(resource.getTopics(0), r.partition()))
-          .collect(Collectors.toList()));
+      records.forEach(record -> consumer.addRecord(new ConsumerRecord<>(
+        record.topic(),
+        record.partition(),
+        record.offset(),
+        record.key(),
+        record.value()
+      )));
 
-        for (final var record : records) {
-          consumer.addRecord(new ConsumerRecord<>(
-            resource.getTopics(0),
-            record.partition(),
-            record.offset(),
-            record.key(),
-            record.value()
-          ));
-          consumer.updateEndOffsets(Map.of(
-            new TopicPartition(resource.getTopics(0), record.partition()), 0L
-          ));
-        }
-      });
+      consumer.updateEndOffsets(
+        records.stream()
+          .map(r -> new TopicPartition(r.topic(), r.partition()))
+          .distinct()
+          .collect(Collectors.toMap(Function.identity(), v -> 0L))
+      );
+    });
 
-      return Future.succeededFuture(KafkaConsumer.create(vertx, consumer));
-    };
+    return KafkaConsumer.create(vertx, consumer);
   }
 
   public void setRecords(final List<ConsumerRecord<String, CloudEvent>> records) {

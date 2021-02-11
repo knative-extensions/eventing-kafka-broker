@@ -19,7 +19,6 @@ import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
 import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.contract;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
@@ -29,12 +28,10 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManagerFactory;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
-import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -71,6 +68,8 @@ public class UnorderedConsumerTest {
   private static final Logger logger = LoggerFactory.getLogger(UnorderedConsumerTest.class);
   private static final int NUM_SYSTEM_VERTICLES = 1;
 
+  private static final String TOPIC = "abc";
+
   @Test
   public void testUnorderedConsumer(final Vertx vertx)
     throws IOException, InterruptedException, ExecutionException {
@@ -81,8 +80,7 @@ public class UnorderedConsumerTest {
 
     final var consumerVerticleFactoryMock = new ConsumerVerticleFactoryMock(
       consumerConfigs,
-      producerConfigs,
-      OffsetManagerFactory.unordered(mock(Counter.class))
+      producerConfigs
     );
 
     final var event = new CloudEventBuilder()
@@ -93,9 +91,9 @@ public class UnorderedConsumerTest {
       .build();
 
     final var consumerRecords = Arrays.asList(
-      new ConsumerRecord<>("", 0, 0, "", event),
-      new ConsumerRecord<>("", 0, 1, "", event),
-      new ConsumerRecord<>("", 0, 2, "", event)
+      new ConsumerRecord<>(TOPIC, 0, 0, "", event),
+      new ConsumerRecord<>(TOPIC, 0, 1, "", event),
+      new ConsumerRecord<>(TOPIC, 0, 2, "", event)
     );
     consumerVerticleFactoryMock.setRecords(consumerRecords);
 
@@ -167,7 +165,7 @@ public class UnorderedConsumerTest {
         assertThat(history.stream().map(ProducerRecord::key)).containsAnyElementsOf(partitionKeys);
       }
       for (final var consumer : consumers.values()) {
-        var key = new TopicPartition("", 0);
+        var key = new TopicPartition(TOPIC, 0);
 
         assertThat(consumer.committed(Set.of(key)))
           .extractingByKey(key)

@@ -13,24 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher;
+package dev.knative.eventing.kafka.broker.dispatcher.consumer;
 
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import io.vertx.core.AbstractVerticle;
-import java.util.concurrent.ExecutionException;
-
-/**
- * This class is responsible for instantiating consumer verticles.
- */
-@FunctionalInterface
-public interface ConsumerVerticleFactory {
-
+public enum DeliveryGuarantee {
   /**
-   * Get a new consumer verticle.
-   *
-   * @param egress trigger data.
-   * @return a new consumer verticle.
+   * Ordered consumer is a per-partition blocking consumer that deliver messages in order.
    */
-  AbstractVerticle get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress)
-    throws ExecutionException, InterruptedException;
+  ORDERED,
+  /**
+   * Unordered consumer is a non-blocking consumer that potentially deliver messages unordered, while preserving proper offset management.
+   */
+  UNORDERED
 }
