@@ -84,8 +84,8 @@ func run(path string) error {
 
 	log.Println("Creating state manager ...")
 	sm := sacura.NewStateManager()
-	sm.ReadReceived(received)
-	sm.ReadSent(sent)
+	receivedSignal := sm.ReadReceived(received)
+	sentSignal := sm.ReadSent(sent)
 
 	log.Println("Starting receiver ...")
 	if err := sacura.StartReceiver(ctx, config.Receiver, received); err != nil {
@@ -94,7 +94,15 @@ func run(path string) error {
 
 	log.Println("Waiting for attacker to finish ...")
 	<-ctx.Done()
+
+	log.Println("Attacker finished sending events - waiting for events")
 	<-time.After(config.ParsedTimeout)
+
+	log.Println("Waiting for received channel signal")
+	<-receivedSignal
+
+	log.Println("Waiting for sent channel signal")
+	<-sentSignal
 
 	if diff := sm.Diff(); diff != "" {
 		return fmt.Errorf("set state is not correct: %s", diff)

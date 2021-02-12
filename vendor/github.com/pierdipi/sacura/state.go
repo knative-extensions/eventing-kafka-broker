@@ -1,18 +1,13 @@
 package sacura
 
 import (
-	"sync"
-
 	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 type StateManager struct {
-	received   sets.String
-	receivedMu sync.Mutex
-
-	sent   sets.String
-	sentMu sync.RWMutex
+	received sets.String
+	sent     sets.String
 }
 
 func NewStateManager() *StateManager {
@@ -22,64 +17,28 @@ func NewStateManager() *StateManager {
 	}
 }
 
-func (s *StateManager) ReadSent(sent <-chan string) {
+func (s *StateManager) ReadSent(sent <-chan string) <-chan struct{} {
+	sg := make(chan struct{})
 	go func(set *StateManager) {
 		for id := range sent {
-			set.insertSent(id)
+			s.sent.Insert(id)
 		}
+		sg <- struct{}{}
 	}(s)
+	return sg
 }
 
-func (s *StateManager) ReadReceived(received <-chan string) {
+func (s *StateManager) ReadReceived(received <-chan string) <-chan struct{} {
+	sg := make(chan struct{})
 	go func(set *StateManager) {
 		for id := range received {
-			set.insertReceived(id)
+			s.received.Insert(id)
 		}
+		sg <- struct{}{}
 	}(s)
-}
-
-func (s *StateManager) insertSent(id string) {
-	s.sentMu.Lock()
-	defer s.sentMu.Unlock()
-
-	s.sent.Insert(id)
-}
-
-func (s *StateManager) insertReceived(id string) {
-
-	s.sentMu.RLock()
-	isSent := s.sent.Has(id)
-	s.sentMu.RUnlock()
-	if isSent {
-
-		// The received message is in the sent set so we can remove from the sent set
-		// and not add it the the received set.
-		s.sentMu.Lock()
-		s.sent.Delete(id)
-		s.sentMu.Unlock()
-
-		return
-	}
-
-	s.receivedMu.Lock()
-	defer s.receivedMu.Unlock()
-
-	s.received.Insert(id)
-}
-
-func (s *StateManager) Lock() {
-	s.receivedMu.Lock()
-	s.sentMu.Lock()
-}
-
-func (s *StateManager) Unlock() {
-	s.receivedMu.Unlock()
-	s.sentMu.Unlock()
+	return sg
 }
 
 func (s *StateManager) Diff() string {
-	s.Lock()
-	defer s.Unlock()
-
 	return cmp.Diff(s.received.List(), s.sent.List())
 }
