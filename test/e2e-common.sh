@@ -18,7 +18,7 @@ source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
 source $(pwd)/hack/data-plane.sh
 source $(pwd)/hack/control-plane.sh
 
-readonly EVENTING_CONFIG="./third_party/eventing-latest/"
+readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
 
 # Vendored eventing test images.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
@@ -65,7 +65,7 @@ function knative_eventing() {
     kubectl apply -f "${KNATIVE_EVENTING_RELEASE}"
   fi
 
-  kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
+  ! kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
 
   # Publish test images.
   echo ">> Publishing test images from eventing"
