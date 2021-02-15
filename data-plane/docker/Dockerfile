@@ -33,18 +33,17 @@ COPY core/pom.xml core/pom.xml
 COPY receiver/pom.xml receiver/pom.xml
 COPY dispatcher/pom.xml dispatcher/pom.xml
 COPY contract/pom.xml contract/pom.xml
-COPY tests/pom.xml tests/pom.xml
 COPY ./mvnw .
 COPY ./.mvn/wrapper .mvn/wrapper
 COPY docker/generate_jdk.sh .
 
 # Install dependencies. Note: don't build a single submodule (recever or dispatcher) since it just slows down
 # consecutive builds.
-RUN ./mvnw install -am -DskipTests -Dlicense.skip -Deditorconfig.skip --no-transfer-progress
+RUN ./mvnw install -am -DskipTests -Drelease -Dlicense.skip -Deditorconfig.skip --no-transfer-progress
 
 COPY . .
 
-RUN ./mvnw package -pl=${APP_DIR} -am -DskipTests -Deditorconfig.skip --no-transfer-progress
+RUN ./mvnw package -pl=${APP_DIR} -Drelease -am -DskipTests -Deditorconfig.skip --no-transfer-progress
 
 RUN ./generate_jdk.sh /build/${APP_DIR}/target/${APP_JAR}
 
