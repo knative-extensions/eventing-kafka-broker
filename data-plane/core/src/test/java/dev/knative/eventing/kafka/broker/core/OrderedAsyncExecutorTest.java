@@ -45,7 +45,9 @@ public class OrderedAsyncExecutorTest {
       Arguments.of(0L, 100),
       Arguments.of(0L, 1000),
       Arguments.of(0L, 10000),
-      Arguments.of(50L, 500),
+      Arguments.of(50L, 50),
+      Arguments.of(50L, 50),
+      Arguments.of(50L, 250),
       Arguments.of(100L, 10),
       Arguments.of(100L, 100),
       Arguments.of(1000L, 10)
