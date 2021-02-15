@@ -1,7 +1,5 @@
 package dev.knative.eventing.kafka.broker.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -21,6 +19,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(VertxExtension.class)
 public class OrderedAsyncExecutorTest {
@@ -118,10 +118,6 @@ public class OrderedAsyncExecutorTest {
     } else {
       // Some random number around the provided millis
       long delay = Math.round(millis + ((random.nextDouble() - 0.5) * millis * 0.5));
-
-      if (delay < 1) {
-        System.out.println("WTF: " + delay + ", millis: " + millis);
-      }
 
       return () -> {
         Promise<Void> prom = Promise.promise();

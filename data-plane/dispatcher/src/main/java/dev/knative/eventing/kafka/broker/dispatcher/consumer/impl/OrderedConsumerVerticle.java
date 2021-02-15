@@ -30,13 +30,12 @@ import org.slf4j.LoggerFactory;
 
 public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
+  private static final Logger logger = LoggerFactory.getLogger(OrderedConsumerVerticle.class);
+  private static final Duration POLLING_TIMEOUT = Duration.ofMillis(100);
   // If pendingRecords > LOAD_THRESHOLD, we'll wait for polling, otherwise we'll poll immediately
   private static final int LOAD_THRESHOLD = 100;
   // poll wait ms = POLL_WAIT_FACTOR * pendingRecords
   private static final long POLL_WAIT_FACTOR = 5;
-
-  private static final Logger logger = LoggerFactory.getLogger(OrderedConsumerVerticle.class);
-  private static final Duration POLLING_TIMEOUT = Duration.ofMillis(100);
 
   private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
 
