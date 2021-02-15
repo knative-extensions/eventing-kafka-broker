@@ -75,7 +75,7 @@ public class OrderedAsyncExecutorTest {
 
   @Test
   public void shouldStop(Vertx vertx) throws InterruptedException {
-    int tasks = 100;
+    int tasks = 10;
     Random random = new Random();
 
     // Deploy the verticle
@@ -99,6 +99,8 @@ public class OrderedAsyncExecutorTest {
     asyncExecutor.stop();
 
     // Let's wait for a bunch of seconds before asserting
+    // We don't need to wait for any event to happen, we just want to make sure
+    // that the async executor actually stopped and no other task was executed
     Thread.sleep(1000);
 
     assertThat(executed).hasSizeLessThan(tasks);
