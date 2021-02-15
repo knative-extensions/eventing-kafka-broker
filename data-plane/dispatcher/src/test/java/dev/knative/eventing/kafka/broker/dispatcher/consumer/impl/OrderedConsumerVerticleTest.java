@@ -20,7 +20,6 @@ import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
@@ -56,32 +55,35 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
 
   private static Stream<Arguments> inputArgs() {
     return Stream.of(
-      Arguments.of(0L, 10),
-      Arguments.of(0L, 100),
-      Arguments.of(0L, 1000),
-      Arguments.of(0L, 10000),
-      Arguments.of(50L, 500),
-      Arguments.of(100L, 10),
-      Arguments.of(100L, 100),
-      Arguments.of(1000L, 10)
+      Arguments.of(0L, 10, 10, true),
+      Arguments.of(0L, 100, 10, true),
+      Arguments.of(0L, 1_000, 10, true),
+      Arguments.of(0L, 10_000, 10, true),
+      Arguments.of(50L, 500, 10, true),
+      Arguments.of(100L, 10, 10, true),
+      Arguments.of(100L, 100, 10, true),
+      Arguments.of(1000L, 10, 10, true),
+      Arguments.of(1000L, 100, 10, false), // ~10 seconds +- 5 seconds
+      Arguments.of(500L, 10_000 * 4, 10_000, false), // ~2 seconds +- 1 second
+      Arguments.of(500L, 100_000 * 4, 100_000, false) // ~2 seconds +- 1 second
     );
   }
 
-  @Timeout(value = 20, timeUnit = TimeUnit.SECONDS) // Longest takes 10 secs
-  @ParameterizedTest
+  @ParameterizedTest(name = "with delay {0}ms, tasks {1}, partitions {2} and random partition assignment {3}")
   @MethodSource("inputArgs")
-  public void consumeOneByOne(final long millis, final int tasks, final Vertx vertx) throws InterruptedException {
+  public void consumeOneByOne(final long delay, final int tasks, final int partitions, final boolean randomAssignment,
+                              final Vertx vertx) throws InterruptedException {
     final var topic = "topic1";
     final Random random = new Random();
     final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
 
     // Mock the record dispatcher to count down the latch and save the received records order
     CountDownLatch latch = new CountDownLatch(tasks);
-    final Map<TopicPartition, List<Long>> receivedRecords = new HashMap<>();
+    final Map<TopicPartition, List<Long>> receivedRecords = new HashMap<>(partitions);
     final var recordDispatcher = mock(RecordDispatcher.class);
     when(recordDispatcher.apply(any())).then(invocation -> {
       final KafkaConsumerRecord<String, CloudEvent> record = invocation.getArgument(0);
-      return recordDispatcherLogicMock(vertx, random, millis, latch, record, receivedRecords);
+      return recordDispatcherLogicMock(vertx, random, delay, latch, record, receivedRecords);
     });
     when(recordDispatcher.close()).thenReturn(Future.succeededFuture());
 
@@ -107,20 +109,22 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
 
     // Assign partitions to consumer (required to add records)
     consumer.updateEndOffsets(
-      IntStream.range(0, 10)
+      IntStream.range(0, partitions)
         .mapToObj(partition -> new org.apache.kafka.common.TopicPartition(topic, partition))
         .collect(Collectors.toMap(Function.identity(), v -> 0L))
     );
     consumer.rebalance(
-      IntStream.range(0, 10)
+      IntStream.range(0, partitions)
         .mapToObj(partition -> new org.apache.kafka.common.TopicPartition(topic, partition))
         .collect(Collectors.toList())
     );
 
     // Add the records
-    Map<Integer, Long> lastCommitted = new HashMap<>();
+    Map<Integer, Long> lastCommitted = new HashMap<>(partitions);
     for (int i = 0; i < tasks; i++) {
-      int partition = (int) Math.round(Math.floor(random.nextDouble() * 10));
+      int partition = randomAssignment ?
+        (int) Math.round(Math.floor(random.nextDouble() * partitions)) :
+        i % partitions;
       long offset = lastCommitted.getOrDefault(partition, -1L);
       offset++;
       consumer.addRecord(record(topic, partition, offset));
@@ -128,7 +132,9 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
     }
 
     // Wait for all records to be processed
-    latch.await();
+    assertThat(
+      latch.await(60, TimeUnit.SECONDS)
+    ).isTrue();
 
     // Check they were received in order
     for (Map.Entry<TopicPartition, List<Long>> e : receivedRecords.entrySet()) {
@@ -143,12 +149,13 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
     }
 
     // Check they are all received
-    assertThat(receivedRecords
-      .values()
-      .stream()
-      .mapToInt(List::size)
-      .sum())
-      .isEqualTo(tasks);
+    assertThat(
+      receivedRecords
+        .values()
+        .stream()
+        .mapToInt(List::size)
+        .sum()
+    ).isEqualTo(tasks);
   }
 
   @Override
