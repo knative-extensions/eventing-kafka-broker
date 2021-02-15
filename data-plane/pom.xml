@@ -66,6 +66,7 @@
     <module>receiver</module>
     <module>dispatcher</module>
     <module>tests</module>
+    <module>benchmarks</module>
   </modules>
 
   <repositories>
