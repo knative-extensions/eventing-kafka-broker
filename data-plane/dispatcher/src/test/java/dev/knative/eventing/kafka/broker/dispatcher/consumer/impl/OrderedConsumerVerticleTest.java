@@ -182,12 +182,10 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
     KafkaConsumerRecord<String, CloudEvent> record,
     Map<TopicPartition, List<Long>> receivedRecords) {
     if (millis == 0) {
-      if (latch != null) {
-        latch.countDown();
-      }
       receivedRecords
         .computeIfAbsent(new TopicPartition(record.topic(), record.partition()), tp -> new ArrayList<>())
         .add(record.offset());
+      latch.countDown();
       return Future.succeededFuture();
     } else {
       // Some random number around the provided millis
@@ -195,12 +193,10 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
 
       Promise<Void> prom = Promise.promise();
       vertx.setTimer(delay, v -> {
-        if (latch != null) {
-          latch.countDown();
-        }
         receivedRecords
           .computeIfAbsent(new TopicPartition(record.topic(), record.partition()), tp -> new ArrayList<>())
           .add(record.offset());
+        latch.countDown();
         prom.complete();
       });
       return prom.future();

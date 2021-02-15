@@ -39,7 +39,7 @@ public class OrderedAsyncExecutorTest {
   }
 
   @Timeout(value = 20, timeUnit = TimeUnit.SECONDS) // Longest takes 10 secs
-  @ParameterizedTest
+  @ParameterizedTest(name = "with delay {0}ms and tasks {1}")
   @MethodSource("inputArgs")
   public void shouldExecuteInOrder(final long millis, final int tasks, Vertx vertx) throws InterruptedException {
     Random random = new Random();
@@ -89,10 +89,11 @@ public class OrderedAsyncExecutorTest {
 
     List<Integer> executed = new ArrayList<>(tasks);
 
+    CountDownLatch tasksLatch = new CountDownLatch(tasks);
     OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor();
 
     for (int i = 0; i < tasks; i++) {
-      Supplier<Future<?>> task = generateTask(vertx, random, 100, i, null, executed);
+      Supplier<Future<?>> task = generateTask(vertx, random, 100, i, tasksLatch, executed);
       vertx.runOnContext((v) -> asyncExecutor.offer(task));
     }
 
@@ -101,7 +102,10 @@ public class OrderedAsyncExecutorTest {
     // Let's wait for a bunch of seconds before asserting
     // We don't need to wait for any event to happen, we just want to make sure
     // that the async executor actually stopped and no other task was executed
-    Thread.sleep(1000);
+    // If this await returns false, then the latch didn't count down to 0
+    assertThat(
+      tasksLatch.await(1, TimeUnit.SECONDS)
+    ).isFalse();
 
     assertThat(executed).hasSizeLessThan(tasks);
   }
@@ -111,10 +115,8 @@ public class OrderedAsyncExecutorTest {
                                            CountDownLatch latch, List<Integer> executed) {
     if (millis == 0) {
       return () -> {
-        if (latch != null) {
-          latch.countDown();
-        }
         executed.add(i);
+        latch.countDown();
         return Future.succeededFuture();
       };
     } else {
@@ -124,10 +126,8 @@ public class OrderedAsyncExecutorTest {
       return () -> {
         Promise<Void> prom = Promise.promise();
         vertx.setTimer(delay, v -> {
-          if (latch != null) {
-            latch.countDown();
-          }
           executed.add(i);
+          latch.countDown();
           prom.complete();
         });
         return prom.future();
