@@ -60,16 +60,17 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
       Arguments.of(0L, 1_000, 10, true),
       Arguments.of(0L, 10_000, 10, true),
       Arguments.of(50L, 500, 10, true),
+      Arguments.of(50L, 100_000, 1_000, true),
+      Arguments.of(50L, 100_000, 1_000, false),
       Arguments.of(100L, 10, 10, true),
       Arguments.of(100L, 100, 10, true),
       Arguments.of(1000L, 10, 10, true),
       Arguments.of(1000L, 100, 10, false), // ~10 seconds +- 5 seconds
-      Arguments.of(500L, 10_000 * 4, 10_000, false), // ~2 seconds +- 1 second
-      Arguments.of(500L, 100_000 * 4, 100_000, false) // ~2 seconds +- 1 second
+      Arguments.of(500L, 10_000 * 4, 10_000, false)
     );
   }
 
-  @ParameterizedTest(name = "with delay {0}ms, tasks {1}, partitions {2} and random partition assignment {3}")
+  @ParameterizedTest(name = "with delay {0}ms, {1} tasks, {2} partitions and random partition assignment {3}")
   @MethodSource("inputArgs")
   public void consumeOneByOne(final long delay, final int tasks, final int partitions, final boolean randomAssignment,
                               final Vertx vertx) throws InterruptedException {

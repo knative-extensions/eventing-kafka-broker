@@ -19,7 +19,6 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +52,6 @@ public class OrderedAsyncExecutorTest {
     );
   }
 
-  @Timeout(value = 20, timeUnit = TimeUnit.SECONDS) // Longest takes 10 secs
   @ParameterizedTest(name = "with delay {0}ms and tasks {1}")
   @MethodSource("inputArgs")
   public void shouldExecuteInOrder(final long millis, final int tasks, Vertx vertx) throws InterruptedException {
@@ -78,7 +76,9 @@ public class OrderedAsyncExecutorTest {
       vertx.runOnContext((v) -> asyncExecutor.offer(task));
     }
 
-    tasksLatch.await();
+    assertThat(
+      tasksLatch.await(20, TimeUnit.SECONDS) // Longest takes 10 secs
+    ).isTrue();
 
     // Check if tasks were executed in order
     IntStream.range(0, tasks)

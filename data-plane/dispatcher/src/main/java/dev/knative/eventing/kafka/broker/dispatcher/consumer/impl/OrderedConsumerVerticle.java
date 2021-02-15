@@ -32,10 +32,14 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private static final Logger logger = LoggerFactory.getLogger(OrderedConsumerVerticle.class);
   private static final Duration POLLING_TIMEOUT = Duration.ofMillis(100);
-  // If pendingRecords > LOAD_THRESHOLD, we'll wait for polling, otherwise we'll poll immediately
-  private static final int LOAD_THRESHOLD = 100;
-  // poll wait ms = POLL_WAIT_FACTOR * pendingRecords
-  private static final long POLL_WAIT_FACTOR = 5;
+
+  // poll wait ms = (POLL_WAIT_RECORD_FACTOR * pendingRecords) / (partitions - POLL_WAIT_PARTITION_FACTOR * Math.sqrt(partitions))
+  // Each record takes 10 ms to be processed
+  private static final double POLL_WAIT_RECORD_FACTOR = 10;
+  // This is used to take in account how much the parallelism is effective
+  private static final double POLL_WAIT_PARTITION_FACTOR = 1 / (double) Runtime.getRuntime().availableProcessors();
+  private static final long MAX_POLL_WAIT = 10 * 1000;
+  private static final int MIN_POLL_WAIT = 100;
 
   private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
 
@@ -86,7 +90,9 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   void schedulePoll() {
     // Check if we need to poll immediately, or wait a bit for the queues to free
-    if (this.pendingRecords > LOAD_THRESHOLD) {
+    long pollWait = pollWaitMs();
+
+    if (pollWait > MIN_POLL_WAIT) {
       vertx.setTimer(pollWaitMs(), v -> this.poll());
     } else {
       // Poll immediately
@@ -120,7 +126,12 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   }
 
   long pollWaitMs() {
-    return POLL_WAIT_FACTOR * this.pendingRecords;
+    double partitions = this.recordDispatcherExecutors.size();
+    long computed = Math.round(
+      (POLL_WAIT_RECORD_FACTOR * pendingRecords) /
+        (partitions - (POLL_WAIT_PARTITION_FACTOR * Math.sqrt(partitions)))
+    );
+    return Math.min(computed, MAX_POLL_WAIT);
   }
 
 }
