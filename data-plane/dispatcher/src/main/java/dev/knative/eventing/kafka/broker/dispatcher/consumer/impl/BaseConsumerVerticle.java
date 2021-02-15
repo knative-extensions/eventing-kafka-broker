@@ -32,17 +32,19 @@ import org.slf4j.LoggerFactory;
 
 public abstract class BaseConsumerVerticle extends AbstractVerticle {
 
+  public interface Initializer extends BiFunction<Vertx, BaseConsumerVerticle, Future<Void>> {
+  }
+
   private static final Logger logger = LoggerFactory.getLogger(BaseConsumerVerticle.class);
 
+  private final Initializer initializer;
   final Set<String> topics;
-  private final BiFunction<Vertx, BaseConsumerVerticle, Future<Void>> initializer;
 
   KafkaConsumer<String, CloudEvent> consumer;
   RecordDispatcher recordDispatcher;
   private Supplier<Future<?>> closer;
 
-  public BaseConsumerVerticle(final BiFunction<Vertx, BaseConsumerVerticle, Future<Void>> initializer,
-                              final Set<String> topics) {
+  public BaseConsumerVerticle(final Initializer initializer, final Set<String> topics) {
     Objects.requireNonNull(topics);
     Objects.requireNonNull(initializer);
 
