@@ -15,13 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Future;
@@ -46,6 +39,13 @@ import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @Execution(value = ExecutionMode.CONCURRENT)
 public class UnorderedOffsetManagerTest {
@@ -195,6 +195,18 @@ public class UnorderedOffsetManagerTest {
       offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 1));
     })
       .containsEntry(new TopicPartition("aaa", 0), 2L);
+  }
+
+  @Test
+  public void shouldContinueToWorkAfterSendingALotOfRecords() {
+    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+      offsetStrategy.recordReceived(record("aaa", 0, 0));
+      for (int i = 128 * 64 - 1; i >= 0; i--) {
+        offsetStrategy.successfullySentToSubscriber(record("aaa", 0, i));
+      }
+      offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 128L * 64L));
+    })
+      .containsEntry(new TopicPartition("aaa", 0), 128L * 64L + 1L);
   }
 
   @Test
