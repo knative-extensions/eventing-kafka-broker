@@ -15,11 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.core.tracing;
 
-import static dev.knative.eventing.kafka.broker.core.tracing.TracingSpan.ACTIVE_CONTEXT;
-import static dev.knative.eventing.kafka.broker.core.tracing.TracingSpan.ACTIVE_SPAN;
-import static io.opentelemetry.context.Context.current;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
@@ -35,6 +30,10 @@ import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static dev.knative.eventing.kafka.broker.core.tracing.TracingSpan.ACTIVE_CONTEXT;
+import static dev.knative.eventing.kafka.broker.core.tracing.TracingSpan.ACTIVE_SPAN;
+import static io.opentelemetry.context.Context.current;
 
 public class OpenTelemetryTracer implements VertxTracer<Span, Span> {
 
@@ -79,13 +78,6 @@ public class OpenTelemetryTracer implements VertxTracer<Span, Span> {
       .setAttribute(ResourceAttributes.SERVICE_NAMESPACE, Tracing.SERVICE_NAMESPACE)
       .startSpan();
 
-    logger.debug("{} {} {} {}",
-      keyValue("context", tracingContext.getClass()),
-      keyValue("span", span.getClass()),
-      keyValue("operation", "receiveRequest"),
-      keyValue("headers", headers)
-    );
-
     tagExtractor.extractTo(request, span::setAttribute);
 
     context.putLocal(ACTIVE_CONTEXT, tracingContext.with(span));
@@ -105,12 +97,6 @@ public class OpenTelemetryTracer implements VertxTracer<Span, Span> {
     if (span == null) {
       return;
     }
-
-    logger.debug("{} {}",
-      keyValue("span", span.getClass()),
-      keyValue("operation", "sendResponse"),
-      failure
-    );
 
     if (failure != null) {
       span.recordException(failure);
@@ -133,12 +119,6 @@ public class OpenTelemetryTracer implements VertxTracer<Span, Span> {
     final BiConsumer<String, String> headers,
     final TagExtractor<R> tagExtractor) {
 
-    logger.debug("{} {} {}",
-      keyValue("operation", "sendRequest"),
-      keyValue("policy", policy),
-      keyValue("request", request)
-    );
-
     if (TracingPolicy.IGNORE.equals(policy) || request == null) {
       return null;
     }
@@ -147,11 +127,6 @@ public class OpenTelemetryTracer implements VertxTracer<Span, Span> {
 
     final io.opentelemetry.context.Context tracingContext = context.getLocal(ACTIVE_CONTEXT);
     if (tracingContext == null) {
-
-      logger.debug("No active span or context {} {}",
-        keyValue("request", request),
-        keyValue("operation", "sendRequest")
-      );
 
       if (TracingPolicy.ALWAYS.equals(policy)) {
 
@@ -182,11 +157,6 @@ public class OpenTelemetryTracer implements VertxTracer<Span, Span> {
 
     W3CTraceContextPropagator.getInstance().inject(tracingContext.with(span), headers, setter);
 
-    logger.debug("{} {}",
-      keyValue("span", span.getClass()),
-      keyValue("operation", "sendRequest")
-    );
-
     return span;
   }
 
@@ -198,16 +168,9 @@ public class OpenTelemetryTracer implements VertxTracer<Span, Span> {
     final Throwable failure,
     final TagExtractor<R> tagExtractor) {
 
-    logger.debug("{} {}", keyValue("operation", "receiveResponse"), keyValue("span", span));
-
     if (span == null) {
       return;
     }
-
-    logger.debug("{} {}",
-      keyValue("span", span.getClass()),
-      keyValue("operation", "receiveResponse")
-    );
 
     if (failure != null) {
       span.recordException(failure);

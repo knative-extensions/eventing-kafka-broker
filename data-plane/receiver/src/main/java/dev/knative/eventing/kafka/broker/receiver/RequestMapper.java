@@ -15,12 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
-import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
@@ -46,6 +40,12 @@ import java.util.function.Function;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
+import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
 
 /**
  * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to Kafka through the Kafka
@@ -111,10 +111,10 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
     if (ingressInfo == null) {
       request.response().setStatusCode(RESOURCE_NOT_FOUND).end();
 
-      logger.warn("resource not found {} {}",
-        keyValue("resources", pathMapper.keySet()),
-        keyValue("path", request.path())
-      );
+      MDC.put("resources", pathMapper.keySet().toString());
+      MDC.put("path", request.path());
+      logger.warn("resource not found. Available resources: {}, request path: {}", pathMapper.keySet(), request.path());
+      MDC.clear();
 
       return;
     }
@@ -126,33 +126,33 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
           request.response().setStatusCode(RECORD_PRODUCED).end();
           produceEventsCounter.increment();
 
-          logger.debug("Record produced {} {} {} {} {} {}",
-            keyValue("topic", record.topic()),
-            keyValue("partition", metadata.getPartition()),
-            keyValue("offset", metadata.getOffset()),
-            keyValue("value", record.value()),
-            keyValue("headers", record.headers()),
-            keyValue("path", request.path())
-          );
+          if (logger.isDebugEnabled()) {
+            logger.debug("Record produced. Topic: {}, partition: {}, offset: {}, value: {}, headers: {}, path: {}",
+              record.topic(),
+              metadata.getPartition(),
+              metadata.getOffset(),
+              record.value(),
+              record.headers(),
+              request.path()
+            );
+          }
         })
         .onFailure(cause -> {
           request.response().setStatusCode(FAILED_TO_PRODUCE).end();
 
-          logger.error("Failed to send record {} {}",
-            keyValue("topic", record.topic()),
-            keyValue("path", request.path()),
-            cause
-          );
+          MDC.put("path", request.path());
+          MDC.put("topic", record.topic());
+          logger.error("Failed to send record received at {} to topic {}", request.path(), record.topic(), cause);
+          MDC.clear();
         })
       )
       .onFailure(cause -> {
         request.response().setStatusCode(MAPPER_FAILED).end();
         badRequestCounter.increment();
 
-        logger.warn("Failed to send record {}",
-          keyValue("path", request.path()),
-          cause
-        );
+        MDC.put("path", request.path());
+        logger.warn("Failed to parse record received at {}", request.path(), cause);
+        MDC.clear();
       });
   }
 

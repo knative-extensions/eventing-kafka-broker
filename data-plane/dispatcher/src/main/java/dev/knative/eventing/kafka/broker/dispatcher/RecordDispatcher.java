@@ -23,14 +23,12 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * This class implements the core algorithm of the Dispatcher (see {@link
@@ -197,35 +195,28 @@ public final class RecordDispatcher implements Handler<KafkaConsumerRecord<Strin
     final KafkaConsumerRecord<String, CloudEvent> record,
     final Throwable cause) {
 
+    MDC.put("topic", record.topic());
+    MDC.put("partition", String.valueOf(record.partition()));
+    MDC.put("offset", String.valueOf(record.offset()));
+    MDC.put("event.id", record.value().getId());
     if (logger.isDebugEnabled()) {
-      logger.error(msg + " {} {} {} {} {}",
-        keyValue("topic", record.topic()),
-        keyValue("partition", record.partition()),
-        keyValue("headers", record.headers()),
-        keyValue("offset", record.offset()),
-        keyValue("event", record.value()),
-        cause
-      );
-    } else {
-      logger.error(msg + " {} {} {}",
-        keyValue("topic", record.topic()),
-        keyValue("partition", record.partition()),
-        keyValue("offset", record.offset()),
-        cause
-      );
+      MDC.put("headers", record.headers().toString());
+      MDC.put("event", record.value().toString());
     }
+    logger.error(msg, cause);
+    MDC.clear();
   }
 
   private static void logDebug(
     final String msg,
     final KafkaConsumerRecord<String, CloudEvent> record) {
 
-    logger.debug(msg + " {} {} {} {} {}",
-      keyValue("topic", record.topic()),
-      keyValue("partition", record.partition()),
-      keyValue("headers", record.headers()),
-      keyValue("offset", record.offset()),
-      keyValue("event", record.value())
+    logger.debug(msg + ". Topic: {}, partition: {}, headers: {}, offset: {}, event: {}",
+      record.topic(),
+      record.partition(),
+      record.headers(),
+      record.offset(),
+      record.value()
     );
   }
 

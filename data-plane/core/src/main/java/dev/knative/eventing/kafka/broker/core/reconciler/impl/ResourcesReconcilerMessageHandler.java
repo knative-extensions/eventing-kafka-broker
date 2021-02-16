@@ -21,13 +21,11 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 public class ResourcesReconcilerMessageHandler implements Handler<Message<Object>> {
 
@@ -55,7 +53,7 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
     if (newContract != null) {
       last.set(newContract);
 
-      logger.info("Set new contract {}", keyValue("contractGeneration", newContract.getGeneration()));
+      logger.debug("Set new contract {}", newContract.getGeneration());
     }
 
     // Our reconciler is on the same verticle of the handler, therefore they use both the same thread.
@@ -65,19 +63,25 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
 
       final var contract = last.get();
 
-      logger.info("Reconciling contract {}", keyValue("contractGeneration", contract.getGeneration()));
+      logger.debug("Reconciling contract {}", contract.getGeneration());
 
       resourcesReconciler.reconcile(contract.getResourcesList())
-        .onSuccess(v -> logger.info(
-          "Reconciled contract generation {}",
-          keyValue("contractGeneration", contract.getGeneration()))
-        )
-        .onFailure(cause -> logger.error(
-          "Failed to reconcile contract generation {}",
-          keyValue("contractGeneration", contract.getGeneration()),
-          cause
-          )
-        )
+        .onSuccess(v -> {
+          MDC.put("contractGeneration", String.valueOf(contract.getGeneration()));
+          logger.info(
+            "Reconciled contract generation {}", contract.getGeneration()
+          );
+          MDC.clear();
+        })
+        .onFailure(cause -> {
+          MDC.put("contractGeneration", String.valueOf(contract.getGeneration()));
+          logger.error(
+            "Failed to reconcile contract generation {}",
+            contract.getGeneration(),
+            cause
+          );
+          MDC.clear();
+        })
         .onComplete(r -> {
 
           // We have reconciled the last known contract.

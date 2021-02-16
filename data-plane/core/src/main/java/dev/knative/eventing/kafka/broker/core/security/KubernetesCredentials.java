@@ -17,14 +17,10 @@
 package dev.knative.eventing.kafka.broker.core.security;
 
 import io.fabric8.kubernetes.api.model.Secret;
+import java.util.Base64;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
-import java.util.Base64;
-
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 class KubernetesCredentials implements Credentials {
 
@@ -113,7 +109,7 @@ class KubernetesCredentials implements Credentials {
       }
       final var protocol = new String(Base64.getDecoder().decode(protocolStr));
       if (!SecurityProtocol.names().contains(protocol)) {
-        logger.debug("Security protocol {}", keyValue(SECURITY_PROTOCOL, protocol));
+        logger.debug("Security protocol {}", protocol);
         return null;
       }
       this.securityProtocol = SecurityProtocol.forName(protocol);

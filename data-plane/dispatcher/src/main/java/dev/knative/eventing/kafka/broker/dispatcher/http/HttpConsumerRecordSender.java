@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
 import io.cloudevents.CloudEvent;
@@ -34,6 +32,7 @@ import java.net.URI;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 public final class HttpConsumerRecordSender implements ConsumerRecordSender {
 
@@ -81,7 +80,9 @@ public final class HttpConsumerRecordSender implements ConsumerRecordSender {
       try {
         send(record, breaker);
       } catch (CloudEventRWException e) {
-        logger.error("failed to write event to the request {}", keyValue("subscriberURI", subscriberURI), e);
+        MDC.put("subscriberURI", subscriberURI);
+        logger.error("failed to write event to the request {}", subscriberURI, e);
+        MDC.clear();
         breaker.tryFail(e);
       }
     });
@@ -107,18 +108,14 @@ public final class HttpConsumerRecordSender implements ConsumerRecordSender {
   }
 
   private void logError(final KafkaConsumerRecord<String, CloudEvent> record, final HttpResponse<Buffer> response) {
+    MDC.put("subscriberURI", subscriberURI);
+    MDC.put("statusCode", String.valueOf(response.statusCode()));
+    MDC.put("event.id", record.value().getId());
     if (logger.isDebugEnabled()) {
-      logger.error("failed to send event to subscriber {} {} {}",
-        keyValue("subscriberURI", subscriberURI),
-        keyValue("statusCode", response.statusCode()),
-        keyValue("event", record.value())
-      );
-    } else {
-      logger.error("failed to send event to subscriber {} {}",
-        keyValue("subscriberURI", subscriberURI),
-        keyValue("statusCode", response.statusCode())
-      );
+      MDC.put("event", record.value().toString());
     }
+    logger.error("failed to send event to subscriber");
+    MDC.clear();
   }
 
   @Override

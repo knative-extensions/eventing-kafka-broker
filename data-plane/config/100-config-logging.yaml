@@ -24,6 +24,9 @@ metadata:
 data:
   config.xml: |
     <configuration>
+      <!-- This is required for the contextual logging to work -->
+      <conversionRule conversionWord="vcl"
+                      converterClass="io.reactiverse.contextual.logging.LogbackConverter"/>
       <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
       </appender>

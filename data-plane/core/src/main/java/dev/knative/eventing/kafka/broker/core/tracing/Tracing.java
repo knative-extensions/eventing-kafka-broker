@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.core.tracing;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.Backend;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
@@ -31,6 +29,7 @@ import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 public class Tracing {
 
@@ -48,13 +47,16 @@ public class Tracing {
   private static final Logger logger = LoggerFactory.getLogger(Tracing.class);
 
   public static SdkTracerProvider setup(final TracingConfig tracingConfig) {
+    MDC.put("backend", tracingConfig.getBackend().toString());
+    MDC.put("sampleRate", String.valueOf(tracingConfig.getSamplingRate()));
+    MDC.put("url", tracingConfig.getURL());
     logger.info(
-      "Registering tracing configurations {} {} {} {}",
-      keyValue("backend", tracingConfig.getBackend()),
-      keyValue("sampleRate", tracingConfig.getSamplingRate()),
-      keyValue("URL", tracingConfig.getURL()),
-      keyValue("loggingDebugEnabled", logger.isDebugEnabled())
+      "Registering tracing configurations. Backend: {}, sample rate: {}, url: {}",
+      tracingConfig.getBackend(),
+      tracingConfig.getSamplingRate(),
+      tracingConfig.getURL()
     );
+    MDC.clear();
 
     SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
 

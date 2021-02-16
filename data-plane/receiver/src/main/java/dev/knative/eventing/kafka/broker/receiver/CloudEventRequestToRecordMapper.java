@@ -15,9 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
-import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
@@ -54,12 +51,12 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper {
         if (logger.isDebugEnabled()) {
           final var span = TracingSpan.getCurrent(vertx);
           if (span != null) {
-            logger.debug("received event {} {}",
-              keyValue("event", event),
-              keyValue(Tracing.TRACE_ID_KEY, span.getSpanContext().getTraceIdAsHexString())
+            logger.debug("received event {} with trace id {}",
+              event,
+              span.getSpanContext().getTraceIdAsHexString()
             );
           } else {
-            logger.debug("received event {}", keyValue("event", event));
+            logger.debug("received event {}", event);
           }
         }
 

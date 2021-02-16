@@ -34,12 +34,6 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.tracing.TracingOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import net.logstash.logback.encoder.LogstashEncoder;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.ClosedWatchServiceException;
@@ -48,8 +42,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
-
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import net.logstash.logback.encoder.LogstashEncoder;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
 
@@ -91,7 +88,7 @@ public class Main {
 
     final var producerConfigs = Configurations.getProperties(env.getProducerConfigFilePath());
 
-    logger.info("Starting Receiver {}", keyValue("env", env));
+    logger.info("Starting Receiver with env: {}", env);
 
     final var vertx = Vertx.vertx(
       new VertxOptions()

@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.core.tracing;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import java.util.function.BiConsumer;
 import javax.annotation.Nonnull;
@@ -32,8 +30,6 @@ public class HeadersPropagatorSetter implements Setter<BiConsumer<String, String
     if (carrier == null) {
       return;
     }
-
-    logger.debug("Set {} {}", keyValue("key", key), keyValue("value", value));
 
     carrier.accept(key, value);
   }

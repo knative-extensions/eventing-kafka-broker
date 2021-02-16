@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.SinkResponseHandler;
@@ -89,10 +87,10 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler {
     } catch (final Exception ex) {
       if (maybeIsNotEvent(response)) {
         logger.debug(
-          "Response is not recognized as event, discarding it {} {} {}",
-          keyValue("response", response),
-          keyValue("response.body", response == null || response.body() == null ? "null" : response.body()),
-          keyValue("response.body.len", response == null || response.body() == null ? "null" : response.body().length())
+          "Response is not recognized as event, discarding it. Response status code: {}, response body: {}, response body len: {}",
+          response.statusCode(),
+          response.body() == null ? "null" : response.body(),
+          response.body() == null ? "0" : response.body().length()
         );
         return Future.succeededFuture();
       }

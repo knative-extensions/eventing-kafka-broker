@@ -148,21 +148,12 @@ public final class UnorderedOffsetManager implements OffsetManager {
           if (onCommit != null) {
             onCommit.accept(messagesImGoingToAck.size());
           }
-          logger.debug(
-            "committed for topic partition {} {} offset {}",
-            record.topic(),
-            record.partition(),
-            toAck + 1
-          );
+          logger.debug("Committed offset {} for topic {} partition {}", toAck + 1, topicPartition.getTopic(),
+            topicPartition.getPartition());
         })
         .onFailure(cause ->
-          logger.error(
-            "failed to commit for topic partition {} {} offset {}",
-            record.topic(),
-            record.partition(),
-            toAck + 1,
-            cause
-          )
+          logger.error("Failed to commit offset {} for topic {} partition {}", toAck + 1, topicPartition.getTopic(),
+            topicPartition.getPartition(), cause)
         ).mapEmpty();
     }
     return Future.succeededFuture();

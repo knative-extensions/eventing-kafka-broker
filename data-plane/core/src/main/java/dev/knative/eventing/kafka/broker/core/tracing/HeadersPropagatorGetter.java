@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.core.tracing;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -35,8 +33,6 @@ final class HeadersPropagatorGetter implements TextMapPropagator.Getter<Iterable
       .map(Entry::getKey)
       .collect(Collectors.toSet());
 
-    logger.debug("Keys {}", keyValue("keys", keys));
-
     return keys;
   }
 
@@ -51,8 +47,6 @@ final class HeadersPropagatorGetter implements TextMapPropagator.Getter<Iterable
       .findFirst()
       .map(Entry::getValue)
       .orElse(null);
-
-    logger.debug("Get {} {}", keyValue("key", key), keyValue("value", value));
 
     return value;
   }

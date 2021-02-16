@@ -22,9 +22,6 @@ import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.core.utils.CollectionsUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,8 +31,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 public class ResourcesReconcilerImpl implements ResourcesReconciler {
 
@@ -123,11 +121,10 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       final var oldResource = this.cachedResources.get(newResource.getUid());
 
       if (resourceEquals(newResource, oldResource) && egressEquals(newEgress, this.cachedEgresses.get(uid).getKey())) {
-        logger.debug("Nothing changed for egress {} {} {}",
-          keyValue("id", newEgress.getUid()),
-          keyValue("consumerGroup", newEgress.getConsumerGroup()),
-          keyValue("destination", newEgress.getDestination())
-        );
+        if (logger.isDebugEnabled()) {
+          logger.debug("Nothing changed for egress {} {} {}", newEgress.getUid(), newEgress.getConsumerGroup(),
+            newEgress.getDestination());
+        }
         return;
       }
 
@@ -275,18 +272,18 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
   }
 
   private static void logFailure(final String msg, final DataPlaneContract.Egress egress, final Throwable cause) {
-    logger.error(msg + " {} {} {}",
-      keyValue("id", egress.getUid()),
-      keyValue("consumerGroup", egress.getConsumerGroup()),
-      keyValue("destination", egress.getDestination()),
-      cause);
+    MDC.put("id", egress.getUid());
+    MDC.put("consumerGroup", egress.getConsumerGroup());
+    MDC.put("destination", egress.getDestination());
+    logger.error(msg, cause);
+    MDC.clear();
   }
 
   private static void logFailure(final String msg, final DataPlaneContract.Resource resource, final Throwable cause) {
-    logger.error(msg + " {} {} {}",
-      keyValue("id", resource.getUid()),
-      keyValue("ingress.path", resource.getIngress().getPath()),
-      keyValue("topics", resource.getTopicsList()),
-      cause);
+    MDC.put("id", resource.getUid());
+    MDC.put("ingress.path", resource.getIngress().getPath());
+    MDC.put("topics", resource.getTopicsList().toString());
+    logger.error(msg, cause);
+    MDC.clear();
   }
 }

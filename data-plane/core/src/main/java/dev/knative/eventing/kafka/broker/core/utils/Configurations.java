@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.core.utils;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import io.vertx.core.json.JsonObject;
 import java.io.FileReader;
 import java.io.IOException;
@@ -24,6 +22,7 @@ import java.util.Objects;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 public class Configurations {
 
@@ -41,7 +40,9 @@ public class Configurations {
     try (final var configReader = new FileReader(path)) {
       props.load(configReader);
     } catch (IOException e) {
-      logger.error("failed to load configurations from file {}", keyValue("path", path), e);
+      MDC.put("path", path);
+      logger.error("failed to load configurations from file {}", path, e);
+      MDC.clear();
     }
 
     return props;

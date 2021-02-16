@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
@@ -31,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * ResourcesManager manages Resource and Egress objects by instantiating and starting verticles based on resources
@@ -93,28 +92,28 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
       return vertx.deployVerticle(verticle)
         .onSuccess(deploymentId -> {
           this.deployedDispatchers.put(egress.getUid(), deploymentId);
-          logger.info("Verticle deployed {} {} {}",
-            keyValue("egress.uid", egress.getUid()),
-            keyValue("resource.uid", resource.getUid()),
-            keyValue("deploymentId", deploymentId)
-          );
+          MDC.put("egress.uid", egress.getUid());
+          MDC.put("resource.uid", resource.getUid());
+          if (logger.isDebugEnabled()) {
+            MDC.put("deploymentId", deploymentId);
+          }
+          logger.info("Verticle deployed");
+          MDC.clear();
         })
         .onFailure(cause -> {
             // this is a bad state we cannot start the verticle for consuming messages.
-            logger.error("failed to start verticle {} {}",
-              keyValue("egress", egress),
-              keyValue("resource", resource),
-              cause
-            );
+            MDC.put("egress.uid", egress.getUid());
+            MDC.put("resource.uid", resource.getUid());
+            logger.error("failed to start verticle", cause);
+            MDC.clear();
           }
         )
         .mapEmpty();
     } catch (Exception e) {
-      logger.error("Potential control-plane bug: failed to get verticle {} {}",
-        keyValue("egress.uid", egress.getUid()),
-        keyValue("resource.uid", resource.getUid()),
-        e
-      );
+      MDC.put("egress.uid", egress.getUid());
+      MDC.put("resource.uid", resource.getUid());
+      logger.error("Potential control-plane bug: failed to get verticle", e);
+      MDC.clear();
       return Future.failedFuture(new IllegalStateException("Potential control-plane bug: failed to get verticle", e));
     }
   }
@@ -135,11 +134,10 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
       .compose(
         v -> {
           this.deployedDispatchers.remove(egress.getUid());
-          logger.info(
-            "Removed egress {} {}",
-            keyValue("egress.uid", egress.getUid()),
-            keyValue("resource.uid", resource.getUid())
-          );
+          MDC.put("egress.uid", egress.getUid());
+          MDC.put("resource.uid", resource.getUid());
+          logger.info("Removed egress");
+          MDC.clear();
           return Future.succeededFuture();
         },
         cause -> {
@@ -148,12 +146,10 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
             this.deployedDispatchers.remove(egress.getUid());
             return Future.succeededFuture();
           }
-          logger.error(
-            "Failed to un-deploy verticle {} {}",
-            keyValue("egress.uid", egress.getUid()),
-            keyValue("resource.uid", resource.getUid()),
-            cause
-          );
+          MDC.put("egress.uid", egress.getUid());
+          MDC.put("resource.uid", resource.getUid());
+          logger.error("Failed to un-deploy verticle", cause);
+          MDC.clear();
           return Future.failedFuture(cause);
         }
       );

@@ -35,12 +35,6 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.tracing.TracingOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClientOptions;
-import net.logstash.logback.encoder.LogstashEncoder;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.ClosedWatchServiceException;
@@ -48,8 +42,12 @@ import java.nio.file.FileSystems;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import net.logstash.logback.encoder.LogstashEncoder;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 public class Main {
 
@@ -84,7 +82,7 @@ public class Main {
 
     final SdkTracerProvider sdkTracerProvider = Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
 
-    logger.info("Starting Dispatcher {}", keyValue("env", env));
+    logger.info("Starting Dispatcher with env: {}", env);
 
     final var vertx = Vertx.vertx(
       new VertxOptions()
@@ -107,11 +105,11 @@ public class Main {
       consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
       final var webClientConfig = Configurations.getPropertiesAsJson(env.getWebClientConfigFilePath());
 
-      logger.info("Configurations {} {} {}",
-        keyValue("producerConfig", producerConfig),
-        keyValue("consumerConfig", consumerConfig),
-        keyValue("webClientConfig", webClientConfig)
-      );
+      MDC.put("producerConfig", producerConfig.toString());
+      MDC.put("consumerConfig", consumerConfig.toString());
+      MDC.put("webClientConfig", webClientConfig.toString());
+      logger.info("Configurations");
+      MDC.clear();
 
       final var clientOptions = new WebClientOptions(webClientConfig);
       clientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);

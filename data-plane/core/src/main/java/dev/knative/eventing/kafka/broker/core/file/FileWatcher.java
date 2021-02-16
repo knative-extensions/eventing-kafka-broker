@@ -18,9 +18,6 @@ package dev.knative.eventing.kafka.broker.core.file;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -32,12 +29,13 @@ import java.nio.file.Path;
 import java.nio.file.WatchService;
 import java.util.Objects;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
 
 /**
  * FileWatcher is the class responsible for watching a given file and reports update.
@@ -149,9 +147,7 @@ public class FileWatcher implements Closeable, AutoCloseable {
       final var previousLastContract = this.lastContract;
       this.lastContract = contract.getGeneration();
       if (contract.getGeneration() == previousLastContract) {
-        logger.debug("Contract unchanged {}",
-          keyValue("generation", contract.getGeneration())
-        );
+        logger.debug("Contract unchanged {}", contract.getGeneration());
         return;
       }
       contractConsumer.accept(contract);

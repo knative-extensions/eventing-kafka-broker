@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.common.TopicPartition;
@@ -106,21 +104,12 @@ public final class OrderedOffsetManager implements OffsetManager {
         if (onCommit != null) {
           onCommit.accept(1);
         }
-        logger.debug(
-          "committed {} {} {}",
-          keyValue("topic", record.topic()),
-          keyValue("partition", record.partition()),
-          keyValue("offset", record.offset() + 1)
-        );
+        logger.debug("Committed offset {} for topic {} partition {}", record.offset() + 1, record.topic(),
+          record.partition());
       })
       .onFailure(cause ->
-        logger.error(
-          "failed to commit {} {} {}",
-          keyValue("topic", record.topic()),
-          keyValue("partition", record.partition()),
-          keyValue("offset", record.offset() + 1),
-          cause
-        )
+        logger.error("Failed to commit offset {} for topic {} partition {}", record.offset() + 1, record.topic(),
+          record.partition(), cause)
       ).mapEmpty();
   }
 
