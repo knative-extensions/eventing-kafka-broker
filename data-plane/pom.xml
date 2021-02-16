@@ -65,8 +65,32 @@
     <module>core</module>
     <module>receiver</module>
     <module>dispatcher</module>
-    <module>tests</module>
   </modules>
+
+  <profiles>
+    <!-- Enable tests and benchmarks only in non-release mode -->
+    <profile>
+      <id>no-release</id>
+      <activation>
+        <property>
+          <name>!release</name>
+        </property>
+      </activation>
+      <modules>
+        <module>benchmarks</module>
+        <module>tests</module>
+      </modules>
+    </profile>
+
+    <profile>
+      <id>release</id>
+      <activation>
+        <property>
+          <name>release</name>
+        </property>
+      </activation>
+    </profile>
+  </profiles>
 
   <repositories>
     <repository>
