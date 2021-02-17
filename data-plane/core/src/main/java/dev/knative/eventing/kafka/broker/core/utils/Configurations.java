@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.core.utils;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import io.vertx.core.json.JsonObject;
 import java.io.FileReader;
 import java.io.IOException;
@@ -24,6 +22,8 @@ import java.util.Objects;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public class Configurations {
 

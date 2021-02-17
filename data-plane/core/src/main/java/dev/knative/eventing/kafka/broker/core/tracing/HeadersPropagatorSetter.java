@@ -15,13 +15,13 @@
  */
 package dev.knative.eventing.kafka.broker.core.tracing;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import java.util.function.BiConsumer;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public class HeadersPropagatorSetter implements Setter<BiConsumer<String, String>> {
 

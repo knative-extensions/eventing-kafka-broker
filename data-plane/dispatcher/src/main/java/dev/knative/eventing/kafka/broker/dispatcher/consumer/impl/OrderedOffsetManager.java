@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.common.TopicPartition;
@@ -28,6 +26,8 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 /**
  * This class implements the offset strategy for the ordered consumer.

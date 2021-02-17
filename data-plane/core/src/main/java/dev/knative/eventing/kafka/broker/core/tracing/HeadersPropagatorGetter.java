@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.core.tracing;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -24,6 +22,8 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 final class HeadersPropagatorGetter implements TextMapPropagator.Getter<Iterable<Entry<String, String>>> {
 

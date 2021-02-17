@@ -196,6 +196,35 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven.surefire.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>run-all-tests</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>check-logging-classpath-exclusion</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <includes>
+                <include>**/LoggingTest.java</include>
+              </includes>
+              <classpathDependencyExcludes>
+                <exclude>ch.qos.logback:logback-core</exclude>
+                <exclude>ch.qos.logback:logback-classic</exclude>
+                <exclude>net.logstash.logback:logstash-logback-encoder</exclude>
+              </classpathDependencyExcludes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 

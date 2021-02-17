@@ -17,14 +17,12 @@
 package dev.knative.eventing.kafka.broker.core.security;
 
 import io.fabric8.kubernetes.api.model.Secret;
+import java.util.Base64;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.util.Base64;
-
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 class KubernetesCredentials implements Credentials {
 

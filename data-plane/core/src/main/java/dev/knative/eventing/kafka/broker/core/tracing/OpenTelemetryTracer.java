@@ -15,11 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.core.tracing;
 
-import static dev.knative.eventing.kafka.broker.core.tracing.TracingSpan.ACTIVE_CONTEXT;
-import static dev.knative.eventing.kafka.broker.core.tracing.TracingSpan.ACTIVE_SPAN;
-import static io.opentelemetry.context.Context.current;
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
@@ -35,6 +30,11 @@ import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static dev.knative.eventing.kafka.broker.core.tracing.TracingSpan.ACTIVE_CONTEXT;
+import static dev.knative.eventing.kafka.broker.core.tracing.TracingSpan.ACTIVE_SPAN;
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import static io.opentelemetry.context.Context.current;
 
 public class OpenTelemetryTracer implements VertxTracer<Span, Span> {
 

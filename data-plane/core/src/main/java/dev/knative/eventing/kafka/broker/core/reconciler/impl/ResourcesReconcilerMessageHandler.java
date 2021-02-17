@@ -21,13 +21,12 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public class ResourcesReconcilerMessageHandler implements Handler<Message<Object>> {
 
