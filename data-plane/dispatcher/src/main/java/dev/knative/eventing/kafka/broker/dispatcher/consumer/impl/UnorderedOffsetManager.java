@@ -151,21 +151,35 @@ public final class UnorderedOffsetManager implements OffsetManager {
   }
 
   /**
-   * This offset tracker keeps track of the committed records flipping a bit in the stored long.
+   * This offset tracker keeps track of the committed records.
+   *
+   * <h2>Implementation details</h2>
+   *
+   * <p>
+   * For each record, the tracker flip a bit at an index representing the difference between the record's offset and the last acked record offset.
+   * To figure out if we need to commit or not, we just need to check if every bit of the long, up to the greatest uncommitted offset, is 1.
+   * In numerical representation this is equal to 2<sup>(greatestIndex - lastAcked)</sup> - 1. To avoid computing these numbers, we statically initialize
+   * all masks.
+   *
+   * <p>
+   * Because a long is only 64 bit, we use an array of longs (blocks) to represent the eventual uncommitted records.
+   * If blocks are more than one, in order to commit, every block except the last one must have all bits flipped to 1
+   * (in numerical representation -1 because of 2-complement representation of long) and the last block should follow the rule above explained.
+   * Note: in the best and more realistic case the store needs just 1 long, which means that only 64 records are sent unordered.
    */
   private static class OffsetTracker {
 
-    private final static int ACKS_GARBAGE_SIZE_THRESHOLD = 128; // Meaning 8192 messages are on hold
-    private final static long[] POWS = new long[64];
+    private final static int ACKS_GARBAGE_SIZE_THRESHOLD = 16; // Meaning 1024 messages are on hold
+    private final static long[] MASKS = new long[64];
 
     static {
-      // Initialize POWS
+      // Initialize MASKS
       for (int i = 0; i < 64; i++) {
-        long pow = 0;
+        long mask = 0;
         for (int j = 0; j <= i; j++) {
-          pow |= 1L << j;
+          mask |= 1L << j;
         }
-        POWS[i] = pow;
+        MASKS[i] = mask;
       }
     }
 
@@ -202,12 +216,12 @@ public final class UnorderedOffsetManager implements OffsetManager {
     public boolean shouldCommit() {
       // Let's check if we have all the bits to 1, except the last one
       for (int b = 0; b < this.greaterBlockIndex; b++) {
-        if (this.uncommitted[b] != POWS[63]) {
+        if (this.uncommitted[b] != MASKS[63]) {
           return false;
         }
       }
 
-      return this.uncommitted[this.greaterBlockIndex] == POWS[this.greaterBitIndexInGreaterBlock];
+      return this.uncommitted[this.greaterBlockIndex] == MASKS[this.greaterBitIndexInGreaterBlock];
     }
 
     public long uncommittedSize() {
@@ -238,6 +252,7 @@ public final class UnorderedOffsetManager implements OffsetManager {
 
     private void checkAcksArraySize(int blockIndex) {
       if (this.uncommitted.length < blockIndex) {
+        // Let's make sure we create enough room for more unordered records
         this.uncommitted = Arrays.copyOf(this.uncommitted, (blockIndex + 1) * 2);
       }
     }
