@@ -23,14 +23,13 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 /**
  * This class implements the core algorithm of the Dispatcher (see {@link

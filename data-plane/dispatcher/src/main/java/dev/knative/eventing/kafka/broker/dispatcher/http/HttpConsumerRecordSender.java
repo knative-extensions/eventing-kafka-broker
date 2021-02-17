@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
-import static net.logstash.logback.argument.StructuredArguments.keyValue;
-
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
 import io.cloudevents.CloudEvent;
@@ -34,6 +32,8 @@ import java.net.URI;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public final class HttpConsumerRecordSender implements ConsumerRecordSender {
 
