@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.benchmarks;
+package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.UnorderedOffsetManager;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -40,95 +39,110 @@ import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.infra.Blackhole;
 
 public class UnorderedOffsetManagerBenchmark {
 
   @State(Scope.Thread)
-  public static class OffsetManagerState {
+  public static class RecordsState {
 
-    private UnorderedOffsetManager offsetManager;
+    private KafkaConsumerRecord<String, CloudEvent>[][] records;
 
-    @Setup(Level.Invocation)
+    @Setup(Level.Trial)
+    @SuppressWarnings("unchecked")
     public void doSetup() {
-      this.offsetManager = new UnorderedOffsetManager(new MockKafkaConsumer(), null);
-    }
-
-    @TearDown(Level.Invocation)
-    public void doTearDown() {
-      this.offsetManager = null;
+      this.records = new KafkaConsumerRecord[100][10_000];
+      for (int p = 0; p < 100; p++) {
+        for (int o = 0; o < 10_000; o++) {
+          this.records[p][o] = new KafkaConsumerRecordImpl<>(
+            new ConsumerRecord<>(
+              "abc",
+              p,
+              o,
+              null,
+              null
+            )
+          );
+        }
+      }
     }
 
   }
 
   @Benchmark
-  public void benchmarkReverseOrder(OffsetManagerState state, Blackhole blackhole) {
+  public void benchmarkReverseOrder(RecordsState recordsState, Blackhole blackhole) {
+    UnorderedOffsetManager offsetManager = new UnorderedOffsetManager(new MockKafkaConsumer(), null);
+
     int partitions = 100;
     for (int partition = 0; partition < partitions; partition++) {
       blackhole.consume(
-        state.offsetManager.recordReceived(record(partition, 0L))
+        offsetManager.recordReceived(recordsState.records[partition][0])
       );
     }
 
-    for (long offset = 9_999; offset > 0; offset--) {
+    for (int offset = 9_999; offset > 0; offset--) {
       for (int partition = 0; partition < partitions; partition++) {
         blackhole.consume(
-          state.offsetManager.recordReceived(record(partition, offset))
+          offsetManager.recordReceived(recordsState.records[partition][offset])
         );
         blackhole.consume(
-          state.offsetManager.successfullySentToSubscriber(record(partition, offset))
+          offsetManager.successfullySentToSubscriber(recordsState.records[partition][offset])
         );
       }
     }
 
     for (int partition = 0; partition < partitions; partition++) {
       blackhole.consume(
-        state.offsetManager.successfullySentToSubscriber(record(partition, 0L))
+        offsetManager.successfullySentToSubscriber(recordsState.records[partition][0])
       );
     }
   }
 
   @Benchmark
-  public void benchmarkOrdered(OffsetManagerState state, Blackhole blackhole) {
+  public void benchmarkOrdered(RecordsState recordsState, Blackhole blackhole) {
+    UnorderedOffsetManager offsetManager = new UnorderedOffsetManager(new MockKafkaConsumer(), null);
     int partitions = 100;
 
-    for (long offset = 0; offset < 10_000; offset++) {
+    for (int offset = 0; offset < 10_000; offset++) {
       for (int partition = 0; partition < partitions; partition++) {
         blackhole.consume(
-          state.offsetManager.recordReceived(record(partition, offset))
+          offsetManager.recordReceived(recordsState.records[partition][offset])
         );
         blackhole.consume(
-          state.offsetManager.successfullySentToSubscriber(record(partition, offset))
+          offsetManager.successfullySentToSubscriber(recordsState.records[partition][offset])
         );
       }
     }
   }
 
   @Benchmark
-  public void benchmarkRealisticCase(OffsetManagerState state, Blackhole blackhole) {
+  public void benchmarkRealisticCase(RecordsState recordsState, Blackhole blackhole) {
+    UnorderedOffsetManager offsetManager = new UnorderedOffsetManager(new MockKafkaConsumer(), null);
     int partitions = 10;
+
     for (int partition = 0; partition < partitions; partition++) {
       blackhole.consume(
-        state.offsetManager.recordReceived(record(partition, 0L))
+        offsetManager.recordReceived(recordsState.records[partition][0])
       );
     }
 
     for (int partition = 0; partition < partitions; partition++) {
-      for (long offset : List.of(5L, 2L, 0L, 7L, 1L, 3L, 4L, 6L)) {
+      for (int offset : new int[] {5, 2, 0, 7, 1, 3, 4, 6}) {
         blackhole.consume(
-          state.offsetManager.successfullySentToSubscriber(record(partition, offset))
+          offsetManager.successfullySentToSubscriber(recordsState.records[partition][offset])
         );
       }
     }
   }
 
   @Benchmark
-  public void benchmarkMixedABit(OffsetManagerState state, Blackhole blackhole) {
+  public void benchmarkMixedABit(RecordsState recordsState, Blackhole blackhole) {
+    UnorderedOffsetManager offsetManager = new UnorderedOffsetManager(new MockKafkaConsumer(), null);
     int partitions = 4;
+
     for (int partition = 0; partition < partitions; partition++) {
       blackhole.consume(
-        state.offsetManager.recordReceived(record(partition, 0L))
+        offsetManager.recordReceived(recordsState.records[partition][0])
       );
     }
 
@@ -136,30 +150,18 @@ public class UnorderedOffsetManagerBenchmark {
       // This will commit in the following order:
       // 1 0 3 2 5 4 ...
       blackhole.consume(
-        state.offsetManager.successfullySentToSubscriber(record(2, i % 2 == 0 ? i + 1 : i - 1))
+        offsetManager.successfullySentToSubscriber(recordsState.records[2][i % 2 == 0 ? i + 1 : i - 1])
       );
       blackhole.consume(
-        state.offsetManager.successfullySentToSubscriber(record(1, i % 2 == 0 ? i + 1 : i - 1))
+        offsetManager.successfullySentToSubscriber(recordsState.records[1][i % 2 == 0 ? i + 1 : i - 1])
       );
       blackhole.consume(
-        state.offsetManager.successfullySentToSubscriber(record(0, i % 2 == 0 ? i + 1 : i - 1))
+        offsetManager.successfullySentToSubscriber(recordsState.records[0][i % 2 == 0 ? i + 1 : i - 1])
       );
       blackhole.consume(
-        state.offsetManager.successfullySentToSubscriber(record(3, i % 2 == 0 ? i + 1 : i - 1))
+        offsetManager.successfullySentToSubscriber(recordsState.records[3][i % 2 == 0 ? i + 1 : i - 1])
       );
     }
-  }
-
-  private static KafkaConsumerRecord<String, CloudEvent> record(int partition, long offset) {
-    return new KafkaConsumerRecordImpl<>(
-      new ConsumerRecord<>(
-        "abc",
-        partition,
-        offset,
-        null,
-        null
-      )
-    );
   }
 
   static class MockKafkaConsumer implements io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> {
