@@ -26,7 +26,7 @@ public class PlaintextCredentials implements Credentials {
   }
 
   @Override
-  public boolean skipUser() {
+  public boolean skipClientAuth() {
     return true;
   }
 
