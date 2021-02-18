@@ -65,6 +65,7 @@
     <module>core</module>
     <module>receiver</module>
     <module>dispatcher</module>
+    <module>control-protocol</module>
   </modules>
 
   <profiles>
