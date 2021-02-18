@@ -26,17 +26,25 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	testlib "knative.dev/eventing/test/lib"
+
+	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
+	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 const (
-	app       = "sacura"
-	namespace = "sacura"
+	app                            = "sacura"
+	namespace                      = "sacura"
+	sacuraVerifyCommittedOffsetJob = "verify-committed-offset"
+	sacuraTriggerName              = "trigger"
+	sacuraTopic                    = "knative-broker-sacura-sacura"
 
 	pollTimeout  = 30 * time.Minute
 	pollInterval = 10 * time.Second
@@ -61,6 +69,31 @@ func TestSacuraJob(t *testing.T) {
 	if jobPollError != nil {
 		t.Fatal(jobPollError)
 	}
+
+	t.Log(strings.Repeat("-", 30))
+	t.Log("Verify committed offset")
+	t.Log(strings.Repeat("-", 30))
+
+	trigger, err := c.Eventing.EventingV1().Triggers(namespace).Get(ctx, sacuraTriggerName, metav1.GetOptions{})
+	require.Nil(t, err, "Failed to get trigger %s/%s: %v", namespace, sacuraTriggerName)
+
+	err = kafkatest.VerifyCommittedOffset(
+		c.Kube,
+		c.Tracker,
+		types.NamespacedName{
+			Namespace: namespace,
+			Name:      sacuraVerifyCommittedOffsetJob,
+		},
+		&kafkatest.AdminConfig{
+			BootstrapServers: pkgtesting.BootstrapServersPlaintext,
+			Topic:            sacuraTopic,
+			Group:            string(trigger.UID),
+		},
+	)
+
+	logJobOutput(t, sacuraVerifyCommittedOffsetJob, c, namespace, ctx)
+
+	require.Nil(t, err, "Failed to verify committed offset")
 }
 
 func isJobSucceeded(job *batchv1.Job) (bool, error) {
