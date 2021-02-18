@@ -87,7 +87,7 @@ public class CredentialsValidatorTest {
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
-    when(credential.skipUser()).thenReturn(true);
+    when(credential.skipClientAuth()).thenReturn(true);
     when(credential.userCertificate()).thenReturn("  ");
     when(credential.userKey()).thenReturn("  ");
     when(credential.caCertificates()).thenReturn(null);

@@ -30,7 +30,7 @@ public interface Credentials {
    *
    * @return true if client auth should be skipped otherwise false
    */
-  boolean skipUser();
+  boolean skipClientAuth();
 
   /**
    * @return user certificate.

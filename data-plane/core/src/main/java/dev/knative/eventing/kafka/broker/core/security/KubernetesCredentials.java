@@ -72,7 +72,7 @@ class KubernetesCredentials implements Credentials {
   }
 
   @Override
-  public boolean skipUser() {
+  public boolean skipClientAuth() {
     if (secret == null || secret.getData() == null) {
       return false;
     }

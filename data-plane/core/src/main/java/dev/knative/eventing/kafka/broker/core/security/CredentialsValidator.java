@@ -35,7 +35,7 @@ class CredentialsValidator {
     }
 
     if (is(SecurityProtocol.SSL, securityProtocol)) {
-      if (credentials.skipUser()) {
+      if (credentials.skipClientAuth()) {
         return null;
       }
       if (anyBlank(credentials.userCertificate(), credentials.userKey())) {
