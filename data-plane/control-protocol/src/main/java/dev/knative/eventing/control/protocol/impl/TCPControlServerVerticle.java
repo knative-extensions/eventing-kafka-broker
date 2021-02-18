@@ -110,7 +110,10 @@ public class TCPControlServerVerticle extends AbstractVerticle {
   }
 
   private void emitMessageOnEventBus(ControlMessage message) {
-    // TODO should the message delivery be serialized? (we do that in the golang version)
+    // TODO should the message delivery be serialized using AsyncOrderedExecutor?
+    //  Or should "downstream" take care of that?
+    //  Or should we provide an OrderedMessageHandler for the event bus or similar?
+    //  Note: that's the behaviour of the Golang client
     vertx.eventBus().request(this.incomingMessageAddress, message, DELIVERY_OPTIONS)
       .onFailure(t -> logger
         .error("Cannot route the incoming control message to {}: {}", this.incomingMessageAddress, message, t))
