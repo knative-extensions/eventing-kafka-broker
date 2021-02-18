@@ -110,6 +110,7 @@ public class TCPControlServerVerticle extends AbstractVerticle {
   }
 
   private void emitMessageOnEventBus(ControlMessage message) {
+    // TODO should the message delivery be serialized? (we do that in the golang version)
     vertx.eventBus().request(this.incomingMessageAddress, message, DELIVERY_OPTIONS)
       .onFailure(t -> logger
         .error("Cannot route the incoming control message to {}: {}", this.incomingMessageAddress, message, t))
