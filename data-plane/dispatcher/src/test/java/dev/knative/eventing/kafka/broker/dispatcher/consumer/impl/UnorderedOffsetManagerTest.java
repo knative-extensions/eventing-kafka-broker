@@ -15,40 +15,28 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.MockConsumer;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
-import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @Execution(value = ExecutionMode.CONCURRENT)
-public class UnorderedOffsetManagerTest {
+public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
+
+  @Override
+  OffsetManager createOffsetManager(
+    KafkaConsumer<?, ?> consumer) {
+    return new UnorderedOffsetManager(consumer, null);
+  }
 
   @Test
   public void shouldCommitAfterSendingEventsOrderedOnTheSamePartition() {
@@ -235,80 +223,5 @@ public class UnorderedOffsetManagerTest {
     shouldNeverCommit(consumer);
     shouldNeverPause(consumer);
     verify(eventsSentCounter, never()).increment();
-  }
-
-  private static MapAssert<TopicPartition, Long> assertThatOffsetCommitted(
-    Collection<TopicPartition> partitionsConsumed, Consumer<UnorderedOffsetManager> testExecutor) {
-    return assertThatOffsetCommittedWithFailures(partitionsConsumed,
-      (offsetStrategy, flag) -> testExecutor.accept(offsetStrategy));
-  }
-
-  private static MapAssert<TopicPartition, Long> assertThatOffsetCommittedWithFailures(
-    Collection<TopicPartition> partitionsConsumed,
-    BiConsumer<UnorderedOffsetManager, AtomicBoolean> testExecutor) {
-    final var mockConsumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.NONE);
-    mockConsumer.assign(partitionsConsumed);
-
-    // Funky flag to flip in order to induce a failure
-    AtomicBoolean failureFlag = new AtomicBoolean(false);
-
-    final KafkaConsumer<String, CloudEvent> vertxConsumer = mock(KafkaConsumer.class);
-    doAnswer(invocation -> {
-      if (failureFlag.get()) {
-        return Future.failedFuture("some failure");
-      }
-      // If you don't want to lose hours in debugging, please don't remove this FQCNs :)
-      final Map<io.vertx.kafka.client.common.TopicPartition, io.vertx.kafka.client.consumer.OffsetAndMetadata>
-        topicsPartitions = invocation.getArgument(0);
-      mockConsumer.commitSync(
-        topicsPartitions.entrySet()
-          .stream()
-          .collect(Collectors.toMap(
-            e -> new TopicPartition(e.getKey().getTopic(), e.getKey().getPartition()),
-            e -> new OffsetAndMetadata(e.getValue().getOffset(), e.getValue().getMetadata())
-          ))
-      );
-      return Future.succeededFuture();
-    })
-      .when(vertxConsumer)
-      .commit(any(Map.class));
-
-    testExecutor.accept(new UnorderedOffsetManager(vertxConsumer, null), failureFlag);
-
-    return assertThat(
-      mockConsumer.committed(Set.copyOf(partitionsConsumed))
-        .entrySet()
-        .stream()
-        .collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue().offset()))
-    );
-  }
-
-  private static KafkaConsumerRecord<String, CloudEvent> record(String topic, int partition, long offset) {
-    return new KafkaConsumerRecordImpl<>(
-      new ConsumerRecord<>(
-        topic,
-        partition,
-        offset,
-        null,
-        null
-      )
-    );
-  }
-
-  @SuppressWarnings("unchecked")
-  private static void shouldNeverCommit(final KafkaConsumer<String, CloudEvent> consumer) {
-    verify(consumer, never()).commit();
-    verify(consumer, never()).commit(any(Handler.class));
-    verify(consumer, never()).commit(any(Map.class));
-    verify(consumer, never()).commit(any(), any());
-  }
-
-  @SuppressWarnings("unchecked")
-  private static void shouldNeverPause(final KafkaConsumer<String, CloudEvent> consumer) {
-    verify(consumer, never()).pause();
-    verify(consumer, never()).pause(any(io.vertx.kafka.client.common.TopicPartition.class));
-    verify(consumer, never()).pause(any(Set.class));
-    verify(consumer, never()).pause(any(io.vertx.kafka.client.common.TopicPartition.class), any());
-    verify(consumer, never()).pause(any(Set.class), any());
   }
 }

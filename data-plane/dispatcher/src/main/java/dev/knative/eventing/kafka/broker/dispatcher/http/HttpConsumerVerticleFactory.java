@@ -29,6 +29,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.consumer.ConsumerVerticleFac
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryGuarantee;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.BaseConsumerVerticle;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.OrderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.OrderedOffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.UnorderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.UnorderedOffsetManager;
@@ -54,7 +55,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -126,7 +126,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     // TODO I'm assuming ordered/unordered will be configure here, at egress level
     final DeliveryGuarantee deliveryGuarantee = DeliveryGuarantee.UNORDERED;
 
-    final BiFunction<Vertx, BaseConsumerVerticle, Future<Void>> initializer = (vertx, consumerVerticle) ->
+    final BaseConsumerVerticle.Initializer initializer = (vertx, consumerVerticle) ->
       (resource.hasAuthSecret() ?
         authProvider.getCredentials(resource.getAuthSecret().getNamespace(), resource.getAuthSecret().getName()) :
         Future.succeededFuture(new PlaintextCredentials())
@@ -243,10 +243,10 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
   }
 
   private static AbstractVerticle getConsumerVerticle(final DeliveryGuarantee type,
-                                                      final BiFunction<Vertx, BaseConsumerVerticle, Future<Void>> initializer,
+                                                      final BaseConsumerVerticle.Initializer initializer,
                                                       final Set<String> topics) {
     return switch (type) {
-      case ORDERED -> new UnorderedConsumerVerticle(initializer, topics); //TODO
+      case ORDERED -> new OrderedConsumerVerticle(initializer, topics);
       case UNORDERED -> new UnorderedConsumerVerticle(initializer, topics);
     };
   }

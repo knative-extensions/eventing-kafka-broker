@@ -37,7 +37,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
  *
  * @see RecordDispatcher#handle(KafkaConsumerRecord)
  */
-public final class RecordDispatcher implements Handler<KafkaConsumerRecord<String, CloudEvent>>,
+public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, CloudEvent>>,
   Function<KafkaConsumerRecord<String, CloudEvent>, Future<Void>> {
 
   private static final Logger logger = LoggerFactory.getLogger(RecordDispatcher.class);
