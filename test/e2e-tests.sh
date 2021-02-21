@@ -23,7 +23,7 @@ if ! ${SKIP_INITIALIZE}; then
 fi
 
 if ! ${LOCAL_DEVELOPMENT}; then
-  scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
+  scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller kafka-broker-receiver kafka-broker-dispatcher kafka-sink-receiver
   wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing didn't come up"
   apply_chaos || fail_test "Failed to apply chaos"
   apply_sacura || fail_test "Failed to apply Sacura"
