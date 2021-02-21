@@ -27,6 +27,7 @@ import (
 	testlib "knative.dev/eventing/test/lib"
 
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
+	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func TestConsumerGroupLagProvider(t *testing.T) {
@@ -49,7 +50,7 @@ func TestConsumerGroupLagProvider(t *testing.T) {
 		},
 	)
 
-	logJobOutput(t, consumerGroupLagJobName, client, client.Namespace, ctx)
+	pkgtesting.LogJobOutput(t, ctx, client, client.Namespace, consumerGroupLagJobName)
 
 	require.Nil(t, err)
 }

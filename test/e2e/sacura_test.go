@@ -28,9 +28,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	batchv1 "k8s.io/api/batch/v1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	testlib "knative.dev/eventing/test/lib"
@@ -64,7 +62,7 @@ func TestSacuraJob(t *testing.T) {
 		return isJobSucceeded(job)
 	})
 
-	logJobOutput(t, app, c, namespace, ctx)
+	pkgtesting.LogJobOutput(t, ctx, c, namespace, app)
 
 	if jobPollError != nil {
 		t.Fatal(jobPollError)
@@ -91,8 +89,6 @@ func TestSacuraJob(t *testing.T) {
 		},
 	)
 
-	logJobOutput(t, sacuraVerifyCommittedOffsetJob, c, namespace, ctx)
-
 	require.Nil(t, err, "Failed to verify committed offset")
 }
 
@@ -102,25 +98,4 @@ func isJobSucceeded(job *batchv1.Job) (bool, error) {
 	}
 
 	return job.Status.Succeeded > 0, nil
-}
-
-func logJobOutput(t *testing.T, app string, c *testlib.Client, namespace string, ctx context.Context) {
-
-	selector := labels.SelectorFromSet(map[string]string{"app": app})
-
-	pods, err := c.Kube.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{LabelSelector: selector.String()})
-	assert.Nil(t, err)
-	assert.Greater(t, len(pods.Items), 0)
-
-	logs := make([]string, 0, len(pods.Items))
-	for _, pod := range pods.Items {
-		if l, err := c.Kube.CoreV1().Pods(namespace).GetLogs(pod.Name, &corev1.PodLogOptions{}).DoRaw(ctx); err != nil {
-			logs = append(logs, err.Error())
-		} else {
-			logs = append(logs, string(l))
-		}
-	}
-
-	t.Log(strings.Join(logs, "\n"))
-	testlib.ExportLogs(namespace, namespace)
 }
