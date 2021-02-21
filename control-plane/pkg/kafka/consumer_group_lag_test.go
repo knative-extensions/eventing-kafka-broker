@@ -34,8 +34,9 @@ func TestConsumerGroupLagProvider(t *testing.T) {
 		group = "group-1"
 	)
 
-	addr := "localhost:9092"
+	addr := "localhost:43245"
 	listener, err := net.Listen("tcp", addr)
+	require.Nil(t, err)
 
 	go func() {
 		conn, _ := listener.Accept()
