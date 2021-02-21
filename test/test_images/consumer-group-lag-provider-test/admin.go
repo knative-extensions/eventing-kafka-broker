@@ -96,6 +96,7 @@ func main() {
 
 	consumerConfig := sarama.NewConfig()
 	consumerConfig.Consumer.Fetch.Min = 1
+	consumerConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
 	consumerConfig.Consumer.Offsets.AutoCommit.Enable = false
 
 	consumer, err := sarama.NewConsumerGroup(testingpkg.BootstrapServersPlaintextArr, consumerGroup, consumerConfig)
@@ -168,6 +169,7 @@ type handler struct {
 }
 
 func (h *handler) Setup(sarama.ConsumerGroupSession) error {
+	log.Println("Consumer started")
 	return nil
 }
 
