@@ -123,17 +123,22 @@ func (p *consumerGroupLagProvider) getPartitionLag(partition int32, topic string
 		return PartitionLag{}, fmt.Errorf("failed to find offset block for partition %d of topic %s", partition, topic)
 	}
 	consumerOffset := block.Offset
-	if consumerOffset <= invalidOffset {
-		return PartitionLag{}, fmt.Errorf("received invalid consumer offset for topic %s offset: %d", topic, consumerOffset)
-	}
 
 	// Get the offset of the message that will be produced next.
 	latestOffset, err := p.client.GetOffset(topic, partition, sarama.OffsetNewest)
 	if err != nil {
 		return PartitionLag{}, fmt.Errorf("failed to find latest offset for topic %s and partition %d", topic, partition)
 	}
-	if latestOffset <= invalidOffset {
-		return PartitionLag{}, fmt.Errorf("received invalid latest for topic %s offset: %d", topic, latestOffset)
+	latestOffset = max(0, latestOffset) // latest offset should always be greater than 0.
+
+	if consumerOffset <= invalidOffset {
+		// When we receive an invalid consumer offset, it means no offset has yet been committed.
+		// So, set consumer offset to the offset that will be produced next.
+		//
+		// Note: setting it to 0 isn't a viable option since depending on the initial offset strategy
+		// (sarama.OffsetNewest or sarama.OffsetOldest) the offset that will be consumed next might be
+		// any valid offset and, in this case, it's exactly the offset that will be produced next.
+		consumerOffset = latestOffset
 	}
 
 	pl := PartitionLag{
@@ -142,6 +147,13 @@ func (p *consumerGroupLagProvider) getPartitionLag(partition int32, topic string
 		Lag:            latestOffset - consumerOffset,
 	}
 	return pl, nil
+}
+
+func max(offset int64, x int64) int64 {
+	if offset > x {
+		return offset
+	}
+	return x
 }
 
 func (p *consumerGroupLagProvider) Close() error {
