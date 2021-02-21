@@ -75,21 +75,22 @@ func TestSacuraJob(t *testing.T) {
 	trigger, err := c.Eventing.EventingV1().Triggers(namespace).Get(ctx, sacuraTriggerName, metav1.GetOptions{})
 	require.Nil(t, err, "Failed to get trigger %s/%s: %v", namespace, sacuraTriggerName)
 
-	err = kafkatest.VerifyCommittedOffset(
-		c.Kube,
-		c.Tracker,
-		types.NamespacedName{
-			Namespace: namespace,
-			Name:      sacuraVerifyCommittedOffsetJob,
-		},
-		&kafkatest.AdminConfig{
-			BootstrapServers: pkgtesting.BootstrapServersPlaintext,
-			Topic:            sacuraTopic,
-			Group:            string(trigger.UID),
-		},
-	)
-
-	require.Nil(t, err, "Failed to verify committed offset")
+	t.Run("verify committed offset", func(t *testing.T) {
+		err = kafkatest.VerifyCommittedOffset(
+			c.Kube,
+			c.Tracker,
+			types.NamespacedName{
+				Namespace: namespace,
+				Name:      sacuraVerifyCommittedOffsetJob,
+			},
+			&kafkatest.AdminConfig{
+				BootstrapServers: pkgtesting.BootstrapServersPlaintext,
+				Topic:            sacuraTopic,
+				Group:            string(trigger.UID),
+			},
+		)
+		require.Nil(t, err, "Failed to verify committed offset")
+	})
 }
 
 func isJobSucceeded(job *batchv1.Job) (bool, error) {
