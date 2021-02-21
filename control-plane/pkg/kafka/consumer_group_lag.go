@@ -51,19 +51,22 @@ type PartitionLag struct {
 	Lag            int64 // LatestOffset - ConsumerOffset
 }
 
+type adminFunc func(client sarama.Client) (sarama.ClusterAdmin, error)
+
 type consumerGroupLagProvider struct {
-	client sarama.Client
+	client    sarama.Client
+	adminFunc adminFunc
 }
 
 // NewConsumerGroupLagProvider creates a new ConsumerGroupLagProvider.
-func NewConsumerGroupLagProvider(client sarama.Client) ConsumerGroupLagProvider {
-	return &consumerGroupLagProvider{client: client}
+func NewConsumerGroupLagProvider(client sarama.Client, adminFunc adminFunc) ConsumerGroupLagProvider {
+	return &consumerGroupLagProvider{client: client, adminFunc: adminFunc}
 }
 
 // GetLag returns consumer group lag for a given group.
 func (p *consumerGroupLagProvider) GetLag(topic, consumerGroup string) (ConsumerGroupLag, error) {
 
-	admin, err := sarama.NewClusterAdminFromClient(p.client)
+	admin, err := p.adminFunc(p.client)
 	if err != nil {
 		return ConsumerGroupLag{}, fmt.Errorf("failed to create admin client: %w", err)
 	}
