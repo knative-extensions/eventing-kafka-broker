@@ -45,7 +45,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to create sarama client", err)
 	}
-	consumerGroupLagProvider := kafka.NewConsumerGroupLagProvider(client)
+	consumerGroupLagProvider := kafka.NewConsumerGroupLagProvider(client, sarama.NewClusterAdminFromClient)
 	defer consumerGroupLagProvider.Close()
 
 	lag, err := consumerGroupLagProvider.GetLag(envConfig.Topic, envConfig.Group)

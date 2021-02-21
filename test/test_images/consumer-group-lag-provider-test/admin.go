@@ -113,7 +113,7 @@ func main() {
 	err = consumer.Close()
 	mustBeNil(err)
 
-	consumerGroupLagProvider := kafka.NewConsumerGroupLagProvider(client)
+	consumerGroupLagProvider := kafka.NewConsumerGroupLagProvider(client, sarama.NewClusterAdminFromClient)
 	defer func() { mustBeNil(consumerGroupLagProvider.Close()) }()
 
 	consumerGroupLag, err := consumerGroupLagProvider.GetLag(topic, consumerGroup)
