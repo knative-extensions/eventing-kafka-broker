@@ -34,16 +34,23 @@ func TestConsumerGroupLagProvider(t *testing.T) {
 		group = "group-1"
 	)
 
-	addr := "localhost:43245"
-	listener, err := net.Listen("tcp", addr)
+	brokerAddr := "localhost:43245"
+
+	// Fake Kafka broker
+	listener, err := net.Listen("tcp", brokerAddr)
 	require.Nil(t, err)
+	defer listener.Close()
 
 	go func() {
-		conn, _ := listener.Accept()
+		conn, err := listener.Accept()
+		if err != nil {
+			return
+		}
 		_, _ = io.Copy(ioutil.Discard, conn)
 	}()
 
-	broker := sarama.NewBroker(addr)
+	broker := sarama.NewBroker(brokerAddr)
+	defer broker.Close()
 	err = broker.Open(sarama.NewConfig())
 	require.Nil(t, err)
 
