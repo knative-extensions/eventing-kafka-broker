@@ -49,7 +49,7 @@ func VerifyConsumerGroupLag(
 			},
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit: pointer.Int32Ptr(1),
+			BackoffLimit: pointer.Int32Ptr(0),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
