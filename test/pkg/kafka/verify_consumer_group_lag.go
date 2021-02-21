@@ -30,20 +30,13 @@ import (
 )
 
 const (
-	committedOffsetImage = "committed-offset"
+	consumerGroupLagImage = "consumer-group-lag-provider-test"
 )
 
-type AdminConfig struct {
-	BootstrapServers string `json:"bootstrapServers" required:"true" split_words:"true"`
-	Topic            string `json:"topic" required:"true" split_words:"true"`
-	Group            string `json:"group" required:"true" split_words:"true"`
-}
-
-func VerifyCommittedOffset(
+func VerifyConsumerGroupLag(
 	client kubernetes.Interface,
 	tracker *testlib.Tracker,
-	namespacedName types.NamespacedName,
-	config *AdminConfig) error {
+	namespacedName types.NamespacedName) error {
 
 	ctx := context.Background()
 
@@ -56,7 +49,7 @@ func VerifyCommittedOffset(
 			},
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit: pointer.Int32Ptr(2),
+			BackoffLimit: pointer.Int32Ptr(1),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
@@ -67,22 +60,8 @@ func VerifyCommittedOffset(
 					Containers: []corev1.Container{
 						{
 							Name:            namespacedName.Name,
-							Image:           pkgtest.ImagePath(committedOffsetImage),
+							Image:           pkgtest.ImagePath(consumerGroupLagImage),
 							ImagePullPolicy: corev1.PullIfNotPresent,
-							Env: []corev1.EnvVar{
-								{
-									Name:  "BOOTSTRAP_SERVERS",
-									Value: config.BootstrapServers,
-								},
-								{
-									Name:  "TOPIC",
-									Value: config.Topic,
-								},
-								{
-									Name:  "GROUP",
-									Value: config.Group,
-								},
-							},
 						},
 					},
 					RestartPolicy: "Never",

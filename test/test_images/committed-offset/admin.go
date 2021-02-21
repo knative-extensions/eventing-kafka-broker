@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright 2021 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,11 +45,10 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to create sarama client", err)
 	}
-	defer client.Close()
+	consumerGroupLagProvider := kafka.NewConsumerGroupLagProvider(client)
+	defer consumerGroupLagProvider.Close()
 
-	consumerGroupLagProvider := kafka.NewConsumerGroupLagProvider(client, envConfig.Topic)
-
-	lag, err := consumerGroupLagProvider.GetLag(envConfig.Group)
+	lag, err := consumerGroupLagProvider.GetLag(envConfig.Topic, envConfig.Group)
 	if err != nil {
 		log.Fatal("Failed to get lag", err)
 	}

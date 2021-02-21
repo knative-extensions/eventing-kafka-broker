@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: consumer-group-lag-provider-test
+spec:
+  containers:
+    - name: consumer-group-lag-provider-test
+      image: ko://knative.dev/eventing-kafka-broker/test/test_images/consumer-group-lag-provider-test

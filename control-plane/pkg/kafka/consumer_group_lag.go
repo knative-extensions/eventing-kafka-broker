@@ -17,6 +17,7 @@
 package kafka
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -27,72 +28,68 @@ const (
 	invalidOffset = -1
 )
 
-// ConsumerGroupLag is the sum of the differences between the latest published message and the latest committed offset
-// of each partition in a topic
+// ConsumerGroupLagProvider provides consumer group lags.
+type ConsumerGroupLagProvider interface {
+	// GetLag returns consumer group lag for a given topic and a given consumer group.
+	GetLag(topic, consumerGroup string) (ConsumerGroupLag, error)
+
+	// Close closes the consumer group lag provider.
+	Close() error
+}
+
+// ConsumerGroupLag contains partition lag of a topic.
 type ConsumerGroupLag struct {
-	Topic       string
-	ByPartition map[int32]uint64
+	Topic         string
+	ConsumerGroup string
+	ByPartition   []PartitionLag
 }
 
-// Total returns the sum of each partition lag.
-func (cgl ConsumerGroupLag) Total() uint64 {
-	var total uint64
-	for _, lag := range cgl.ByPartition {
-		total += lag
-	}
-	return total
+// PartitionLag contains consumer lag information of a partition.
+type PartitionLag struct {
+	LatestOffset   int64 // Offset that will be produced next.
+	ConsumerOffset int64 // Offset that will be consumed next.
+	Lag            int64 // LatestOffset - ConsumerOffset
 }
 
-func (cgl ConsumerGroupLag) String() string {
-	sb := strings.Builder{}
-	header := "partition: lag\n"
-	sb.WriteString(header)
-	sb.WriteString(strings.Repeat("-", len(header)-1) + "\n")
-	for p, l := range cgl.ByPartition {
-		sb.WriteString(fmt.Sprintf("%d: %d\n", p, l))
-	}
-	return sb.String()
-}
-
-// ConsumerGroupLagProvider provides consumer group lags for a given topic.
-type ConsumerGroupLagProvider struct {
+type consumerGroupLagProvider struct {
 	client sarama.Client
-	topic  string
 }
 
-// NewConsumerGroupLagProvider creates a new ConsumerGroupLagProvider
-func NewConsumerGroupLagProvider(client sarama.Client, topic string) ConsumerGroupLagProvider {
-	return ConsumerGroupLagProvider{client: client, topic: topic}
+// NewConsumerGroupLagProvider creates a new ConsumerGroupLagProvider.
+func NewConsumerGroupLagProvider(client sarama.Client) ConsumerGroupLagProvider {
+	return &consumerGroupLagProvider{client: client}
 }
 
-// GetLag returns consumer group lag for the given group.
-func (p *ConsumerGroupLagProvider) GetLag(group string) (ConsumerGroupLag, error) {
+// GetLag returns consumer group lag for a given group.
+func (p *consumerGroupLagProvider) GetLag(topic, consumerGroup string) (ConsumerGroupLag, error) {
 
 	admin, err := sarama.NewClusterAdminFromClient(p.client)
 	if err != nil {
 		return ConsumerGroupLag{}, fmt.Errorf("failed to create admin client: %w", err)
 	}
+	// Note: Do not close admin since it closes the underlying client.
 
-	partitions, err := getPartitionsForTopic(admin, p.topic)
+	partitions, err := getPartitionsForTopic(admin, topic)
 	if err != nil {
 		return ConsumerGroupLag{}, err
 	}
 
-	offsets, err := admin.ListConsumerGroupOffsets(group, map[string][]int32{p.topic: partitions})
+	offsets, err := admin.ListConsumerGroupOffsets(consumerGroup, map[string][]int32{topic: partitions})
 	if err != nil {
-		return ConsumerGroupLag{}, fmt.Errorf("error listing consumer group offsets: %s", err)
+		return ConsumerGroupLag{}, fmt.Errorf("failed to list consumer group offsets: %w", err)
 	}
 
 	consumerGroupLag := ConsumerGroupLag{
-		Topic:       p.topic,
-		ByPartition: make(map[int32]uint64, len(partitions)),
+		Topic:         topic,
+		ConsumerGroup: consumerGroup,
+		ByPartition:   make([]PartitionLag, len(partitions)),
 	}
 	for _, partition := range partitions {
-		lag, err := p.getLagForPartition(partition, offsets)
+		partitionLag, err := p.getPartitionLag(partition, topic, offsets)
 		if err != nil {
-			return ConsumerGroupLag{}, fmt.Errorf("failed to get lag for partition %d: %v", partition, err)
+			return consumerGroupLag, fmt.Errorf("failed to get lag for partition %d: %w", partition, err)
 		}
-		consumerGroupLag.ByPartition[partition] = lag
+		consumerGroupLag.ByPartition[partition] = partitionLag
 	}
 	return consumerGroupLag, nil
 }
@@ -104,38 +101,90 @@ func getPartitionsForTopic(admin sarama.ClusterAdmin, topic string) ([]int32, er
 		return nil, fmt.Errorf("failed to describe topic %s: %w", topic, err)
 	}
 	if len(topicsMetadata) != 1 {
-		return nil, fmt.Errorf("unexpected %d topic metadata", len(topicsMetadata))
+		return nil, fmt.Errorf("unexpected number of topic metadata for topic %s: %d", topic, len(topicsMetadata))
 	}
 
 	partitionMetadata := topicsMetadata[0].Partitions
-	partitions := make([]int32, len(partitionMetadata))
-	for i, p := range partitionMetadata {
-		partitions[i] = p.ID
+	partitions := make([]int32, 0, len(partitionMetadata))
+	for _, p := range partitionMetadata {
+		partitions = append(partitions, p.ID)
 	}
-
 	return partitions, nil
 }
 
-func (p *ConsumerGroupLagProvider) getLagForPartition(partition int32, offsets *sarama.OffsetFetchResponse) (uint64, error) {
+func (p *consumerGroupLagProvider) getPartitionLag(partition int32, topic string, offsets *sarama.OffsetFetchResponse) (PartitionLag, error) {
 
-	// Get the latest committed offset.
-	block := offsets.GetBlock(p.topic, partition)
+	// Get the offset of the message that will be consumed next.
+	block := offsets.GetBlock(topic, partition)
 	if block == nil {
-		return 0, fmt.Errorf("failed to find offset block for partition %d", partition)
+		return PartitionLag{}, fmt.Errorf("failed to find offset block for partition %d of topic %s", partition, topic)
 	}
 	consumerOffset := block.Offset
 	if consumerOffset <= invalidOffset {
-		return 0, fmt.Errorf("invalid consumer offset %d", consumerOffset)
+		return PartitionLag{}, fmt.Errorf("received invalid consumer offset for topic %s offset: %d", topic, consumerOffset)
 	}
 
 	// Get the offset of the message that will be produced next.
-	latestOffset, err := p.client.GetOffset(p.topic, partition, sarama.OffsetNewest)
+	latestOffset, err := p.client.GetOffset(topic, partition, sarama.OffsetNewest)
 	if err != nil {
-		return 0, fmt.Errorf("failed to find latest offset for topic %s and partition %d", p.topic, partition)
+		return PartitionLag{}, fmt.Errorf("failed to find latest offset for topic %s and partition %d", topic, partition)
 	}
 	if latestOffset <= invalidOffset {
-		return 0, fmt.Errorf("invalid latest offset %d", latestOffset)
+		return PartitionLag{}, fmt.Errorf("received invalid latest for topic %s offset: %d", topic, latestOffset)
 	}
 
-	return uint64(latestOffset - consumerOffset), nil
+	pl := PartitionLag{
+		LatestOffset:   latestOffset,
+		ConsumerOffset: consumerOffset,
+		Lag:            latestOffset - consumerOffset,
+	}
+	return pl, nil
+}
+
+func (p *consumerGroupLagProvider) Close() error {
+	if err := p.client.Close(); err != nil && !errors.Is(err, sarama.ErrClosedClient) {
+		return err
+	}
+	return nil
+}
+
+// Total returns the sum of each partition lag.
+func (cgl ConsumerGroupLag) Total() uint64 {
+	var total uint64
+	for _, lag := range cgl.ByPartition {
+		total += uint64(lag.Lag)
+	}
+	return total
+}
+
+func (cgl ConsumerGroupLag) String() string {
+	sb := &strings.Builder{}
+
+	writeSeparator := func(n int, sb *strings.Builder) {
+		sb.WriteString(strings.Repeat("-", n))
+		sb.WriteRune('\n')
+	}
+
+	// Write header
+	// --------------
+	// partition: lag
+	// --------------
+	header := "partition: lag\n"
+	n := len(header)
+
+	sb.WriteString(fmt.Sprintf("Topic: %s\n", cgl.Topic))
+	sb.WriteString(fmt.Sprintf("Consumer group: %s\n", cgl.ConsumerGroup))
+	writeSeparator(n, sb)
+	sb.WriteString(header)
+	writeSeparator(n, sb)
+
+	for p, l := range cgl.ByPartition {
+		sb.WriteString(fmt.Sprintf("%d: %d\n", p, l))
+	}
+	sb.WriteString(fmt.Sprintf("Total lag: %d\n", cgl.Total()))
+	return sb.String()
+}
+
+func (pl PartitionLag) String() string {
+	return fmt.Sprintf("latest offset %d consumer offset %d lag %d", pl.LatestOffset, pl.ConsumerOffset, pl.Lag)
 }
