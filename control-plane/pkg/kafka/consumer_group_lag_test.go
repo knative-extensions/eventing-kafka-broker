@@ -19,6 +19,7 @@ package kafka
 import (
 	"io"
 	"io/ioutil"
+	"math"
 	"net"
 	"testing"
 
@@ -29,57 +30,129 @@ import (
 
 func TestConsumerGroupLagProvider(t *testing.T) {
 
-	const (
-		topic = "topic-1"
-		group = "group-1"
-	)
+	const group = "group-1"
 
 	brokerAddr := "localhost:43245"
+	broker, closeFunc := fakeKafkaBrokerListener(t, brokerAddr)
+	defer closeFunc()
 
-	// Fake Kafka broker
-	listener, err := net.Listen("tcp", brokerAddr)
-	require.Nil(t, err)
-	defer listener.Close()
-
-	go func() {
-		conn, err := listener.Accept()
-		if err != nil {
-			return
-		}
-		_, _ = io.Copy(ioutil.Discard, conn)
-	}()
-
-	broker := sarama.NewBroker(brokerAddr)
-	defer broker.Close()
-	err = broker.Open(sarama.NewConfig())
-	require.Nil(t, err)
-
-	client := &saramaClientMock{
-		t:      t,
-		topics: []string{topic},
-		partitionsByTopic: map[string][]Partition{
-			topic: {
-				{ID: 0, ConsumerOffset: 10, LatestOffset: 10},
-				{ID: 1, ConsumerOffset: 0, LatestOffset: 0},
-				{ID: 2, ConsumerOffset: 3, LatestOffset: 3},
-				{ID: 3, ConsumerOffset: 20, LatestOffset: 20},
-				{ID: 4, ConsumerOffset: 12, LatestOffset: 12},
+	tt := []struct {
+		name    string
+		client  *saramaClientMock
+		wantLag uint64
+	}{
+		{
+			name: "No Lag",
+			client: &saramaClientMock{
+				topics: []string{"topic-1"},
+				partitionsByTopic: map[string][]Partition{
+					"topic-1": {
+						{ID: 0, ConsumerOffset: 10, LatestOffset: 10},
+						{ID: 1, ConsumerOffset: 0, LatestOffset: 0},
+						{ID: 2, ConsumerOffset: 3, LatestOffset: 3},
+						{ID: 3, ConsumerOffset: 20, LatestOffset: 20},
+						{ID: 4, ConsumerOffset: 12, LatestOffset: 12},
+					},
+				},
+				groups: []string{group},
+				broker: broker,
 			},
 		},
-		groups: []string{group},
-		broker: broker,
+		{
+			name: "Single partition Lag",
+			client: &saramaClientMock{
+				topics: []string{"topic-1", "topic-2", "topic-3"},
+				partitionsByTopic: map[string][]Partition{
+					"topic-1": {
+						{ID: 0, ConsumerOffset: 10, LatestOffset: 10},
+						{ID: 1, ConsumerOffset: 0, LatestOffset: 3},
+						{ID: 2, ConsumerOffset: 3, LatestOffset: 3},
+						{ID: 3, ConsumerOffset: 20, LatestOffset: 20},
+						{ID: 4, ConsumerOffset: 12, LatestOffset: 12},
+					},
+					"topic-2": {
+						{ID: 0, ConsumerOffset: 10, LatestOffset: 10},
+						{ID: 1, ConsumerOffset: 3, LatestOffset: 3},
+						{ID: 2, ConsumerOffset: 3, LatestOffset: 3},
+						{ID: 3, ConsumerOffset: 20, LatestOffset: 20},
+						{ID: 4, ConsumerOffset: 1, LatestOffset: 12},
+					},
+					"topic-3": {
+						{ID: 0, ConsumerOffset: 1, LatestOffset: 7},
+						{ID: 1, ConsumerOffset: 3, LatestOffset: 3},
+						{ID: 2, ConsumerOffset: 3, LatestOffset: 3},
+						{ID: 3, ConsumerOffset: 20, LatestOffset: 20},
+						{ID: 4, ConsumerOffset: 12, LatestOffset: 12},
+					},
+				},
+				groups: []string{group},
+				broker: broker,
+			},
+		},
+		{
+			name: "Partitions Lag",
+			client: &saramaClientMock{
+				topics: []string{"topic-1", "topic-2", "topic-3", "topic-4"},
+				partitionsByTopic: map[string][]Partition{
+					"topic-1": {
+						{ID: 0, ConsumerOffset: 7, LatestOffset: 10},
+						{ID: 1, ConsumerOffset: 0, LatestOffset: 3},
+						{ID: 2, ConsumerOffset: 2, LatestOffset: 3},
+						{ID: 3, ConsumerOffset: 20, LatestOffset: 20},
+						{ID: 4, ConsumerOffset: 1, LatestOffset: 12},
+					},
+					"topic-2": {
+						{ID: 0, ConsumerOffset: 7, LatestOffset: 10},
+					},
+					"topic-3": {
+						{ID: 0, ConsumerOffset: 0, LatestOffset: 10},
+						{ID: 1, ConsumerOffset: 0, LatestOffset: 3},
+						{ID: 2, ConsumerOffset: 0, LatestOffset: 3},
+						{ID: 3, ConsumerOffset: 0, LatestOffset: 20},
+						{ID: 4, ConsumerOffset: 0, LatestOffset: 12},
+					},
+					"topic-4": {
+						{ID: 0, ConsumerOffset: 0, LatestOffset: math.MaxInt64},
+						{ID: 1, ConsumerOffset: 0, LatestOffset: math.MaxInt64},
+						{ID: 2, ConsumerOffset: 0, LatestOffset: math.MaxInt64},
+						{ID: 3, ConsumerOffset: 0, LatestOffset: math.MaxInt64},
+						{ID: 4, ConsumerOffset: 0, LatestOffset: math.MaxInt64},
+					},
+				},
+				groups: []string{group},
+				broker: broker,
+			},
+		},
 	}
 
-	provider := NewConsumerGroupLagProvider(client, func(sarama.Client) (sarama.ClusterAdmin, error) { return client, nil })
+	t.Parallel()
+	for _, tc := range tt {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			tc.client.t = t
 
-	lag, err := provider.GetLag(topic, group)
-	require.Nil(t, err)
+			for _, topic := range tc.client.topics {
+				t.Run(topic, func(t *testing.T) {
+					provider := NewConsumerGroupLagProvider(tc.client, func(sarama.Client) (sarama.ClusterAdmin, error) { return tc.client, nil })
 
-	require.Equal(t, uint64(0), lag.Total())
+					lag, err := provider.GetLag(topic, group)
+					require.Nil(t, err)
 
-	err = provider.Close()
-	require.Nil(t, err)
-	require.True(t, client.closed)
+					wantLag := uint64(0)
+					for _, p := range tc.client.partitionsByTopic[topic] {
+						wantLag += uint64(p.LatestOffset - p.ConsumerOffset)
+					}
+
+					require.Equal(t, wantLag, lag.Total())
+
+					err = provider.Close()
+					require.Nil(t, err)
+					require.True(t, tc.client.closed)
+				})
+			}
+		})
+	}
+
 }
 
 func TestConsumerGroupLagTotal(t *testing.T) {
@@ -391,4 +464,27 @@ func (s saramaClientMock) getPartitions(topic string) []int32 {
 		partitions = append(partitions, p.ID)
 	}
 	return partitions
+}
+
+func fakeKafkaBrokerListener(t *testing.T, addr string) (*sarama.Broker, func()) {
+	// Fake Kafka broker
+	listener, err := net.Listen("tcp", addr)
+	require.Nil(t, err)
+
+	go func() {
+		conn, err := listener.Accept()
+		if err != nil {
+			return
+		}
+		_, _ = io.Copy(ioutil.Discard, conn)
+	}()
+
+	broker := sarama.NewBroker(addr)
+	err = broker.Open(sarama.NewConfig())
+	require.Nil(t, err)
+
+	return broker, func() {
+		_ = broker.Close()
+		_ = listener.Close()
+	}
 }

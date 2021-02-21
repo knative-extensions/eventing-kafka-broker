@@ -53,8 +53,6 @@ func main() {
 	producerConfig.Producer.Flush.Bytes = 1
 	producerConfig.Producer.Flush.MaxMessages = 1
 	producerConfig.Producer.Flush.Messages = 1
-	// Disable potential duplication
-	producerConfig.Producer.Idempotent = true
 	// Sync producer config
 	producerConfig.Producer.Return.Successes = true
 	producerConfig.Producer.Return.Errors = true
