@@ -55,6 +55,10 @@ func main() {
 	producerConfig.Producer.Flush.Messages = 1
 	// Disable potential duplication
 	producerConfig.Producer.Idempotent = true
+	// Sync producer config
+	producerConfig.Producer.Return.Successes = true
+	producerConfig.Producer.Return.Errors = true
+
 	producer, err := sarama.NewSyncProducer(testingpkg.BootstrapServersPlaintextArr, producerConfig)
 	mustBeNil(err)
 
