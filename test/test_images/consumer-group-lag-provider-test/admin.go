@@ -28,6 +28,12 @@ import (
 
 func main() {
 
+	defer func() {
+		if err := recover(); err != nil {
+			log.Fatal("Panic", err)
+		}
+	}()
+
 	const (
 		topic         = "test-consumer-group-lag-provider"
 		consumerGroup = topic
@@ -65,6 +71,9 @@ func main() {
 	n := 3
 	producedMsgPartition := int32(-1)
 	lastOffset := int64(-1)
+
+	log.Println("Sending events to topic", topic)
+
 	for i := 0; i < n; i++ {
 		msg := &sarama.ProducerMessage{
 			Topic: topic,
@@ -73,6 +82,7 @@ func main() {
 		}
 		partition, offset, err := producer.SendMessage(msg)
 		mustBeNil(err)
+		log.Printf("Event sent partition %d offset %d", partition, offset)
 		if producedMsgPartition == -1 {
 			producedMsgPartition = partition
 		}
@@ -81,6 +91,8 @@ func main() {
 	if int64(n) != lastOffset+1 { // Consistency check
 		log.Fatalf("Expected last offset to be equal to %d got %d", n, lastOffset+1)
 	}
+
+	log.Println("Consuming events from topic", topic)
 
 	consumerConfig := sarama.NewConfig()
 	consumerConfig.Consumer.Fetch.Min = 1
@@ -103,6 +115,7 @@ func main() {
 				return
 			case <-msgs:
 				count++
+				log.Println("Count", n)
 				if count == n {
 					return
 				}
@@ -112,14 +125,20 @@ func main() {
 	err = consumer.Close()
 	mustBeNil(err)
 
+	log.Println("Starting consumer group lag provider")
+
 	consumerGroupLagProvider := kafka.NewConsumerGroupLagProvider(client, sarama.NewClusterAdminFromClient)
 	defer func() { mustBeNil(consumerGroupLagProvider.Close()) }()
 
+	log.Printf("Getting lag for topic %s and consumer group %s\n", topic, consumerGroup)
 	consumerGroupLag, err := consumerGroupLagProvider.GetLag(topic, consumerGroup)
 	mustBeNil(err)
 
+	log.Println("ConsumerGroupLag", consumerGroupLag)
+
 	nNonZeroOffsets := 0
-	for _, l := range consumerGroupLag.ByPartition {
+	for p, l := range consumerGroupLag.ByPartition {
+		log.Printf("Partition %d Lag %s\n", p, l)
 		if l.ConsumerOffset > 0 {
 			nNonZeroOffsets++
 		}
@@ -138,6 +157,7 @@ func main() {
 	}
 
 	total := consumerGroupLag.Total()
+	log.Println("Total lag", total)
 	if total != 0 {
 		log.Fatal("Expected total to be 0 got", total)
 	}
@@ -160,6 +180,7 @@ func (h *handler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 
 	for msg := range claim.Messages() {
 		session.MarkMessage(msg, "")
+		log.Println("Message received", string(msg.Key), string(msg.Value))
 		h.msgs <- msg
 	}
 
