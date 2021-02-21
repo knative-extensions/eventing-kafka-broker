@@ -61,6 +61,7 @@ func main() {
 
 	producer, err := sarama.NewSyncProducer(testingpkg.BootstrapServersPlaintextArr, producerConfig)
 	mustBeNil(err)
+	defer producer.Close()
 
 	// Produce messages with the same key.
 	n := 3
