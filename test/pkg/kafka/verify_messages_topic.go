@@ -18,14 +18,11 @@ package kafka
 
 import (
 	"context"
-	"fmt"
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/pointer"
 	testlib "knative.dev/eventing/test/lib"
@@ -90,23 +87,5 @@ func VerifyMessagesInTopic(
 			},
 		},
 	}
-	job, err := client.BatchV1().Jobs(namespacedName.Namespace).Create(ctx, job, metav1.CreateOptions{})
-
-	if err != nil {
-		return fmt.Errorf("failed to create job: %w", err)
-	}
-
-	gvr, _ := meta.UnsafeGuessKindToResource(job.GroupVersionKind())
-	tracker.Add(gvr.Group, gvr.Version, gvr.Resource, namespacedName.Namespace, namespacedName.Name)
-
-	return wait.PollImmediate(interval, timeout, func() (bool, error) {
-		job, err := client.BatchV1().Jobs(namespacedName.Namespace).Get(ctx, namespacedName.Name, metav1.GetOptions{})
-		if err != nil {
-			return false, fmt.Errorf("failed to get job: %w", err)
-		}
-		if job.Status.Succeeded >= 1 {
-			return true, nil
-		}
-		return false, nil
-	})
+	return verifyJobSucceeded(ctx, client, tracker, namespacedName, job)
 }
