@@ -6,6 +6,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
@@ -437,4 +438,13 @@ func TestNewClusterAdminFuncIsTopicPresentCloseClusterAdmin(t *testing.T) {
 	assert.Nil(t, err, "IsTopicPresentAndValid() error = %v, wantErr %v", err, false)
 	assert.True(t, got, "IsTopicPresentAndValid() got = %v, want %v", got, true)
 	assert.True(t, ca.ExpectedClose, "expected call to Close() on ClusterAdmin")
+}
+
+func TestBootstrapServersArray(t *testing.T) {
+	bss := BootstrapServersArray("bs:9091, bs:9000,,bs:9002,")
+
+	require.Contains(t, bss, "bs:9091")
+	require.Contains(t, bss, "bs:9000")
+	require.Contains(t, bss, "bs:9002")
+	require.Len(t, bss, 3)
 }

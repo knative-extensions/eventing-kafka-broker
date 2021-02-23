@@ -43,7 +43,18 @@ func BootstrapServersCommaSeparated(bootstrapServers []string) string {
 }
 
 func BootstrapServersArray(bootstrapServers string) []string {
-	return strings.Split(bootstrapServers, ",")
+	bss := strings.Split(bootstrapServers, ",")
+
+	j := len(bss)
+	for i := 0; i < j; i++ {
+		bss[i] = strings.TrimSpace(bss[i])
+		if bss[i] == "" {
+			j--
+			bss[i] = bss[j]
+			i--
+		}
+	}
+	return bss[:j]
 }
 
 // Topic returns a topic name given a topic prefix and a generic object.
