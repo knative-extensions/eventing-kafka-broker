@@ -142,7 +142,7 @@ func (p *consumerGroupLagProvider) getPartitionLag(partition int32, topic string
 	if err != nil {
 		return PartitionLag{}, fmt.Errorf("failed to find latest offset for topic %s and partition %d", topic, partition)
 	}
-	latestOffset = max(0, latestOffset) // latest offset should always be greater than 0.
+	latestOffset = max(0, latestOffset) // latest offset should always be greater or equal to 0.
 
 	if consumerOffset <= invalidOffset {
 		// When we receive an invalid consumer offset, it means no offset has yet been committed.
