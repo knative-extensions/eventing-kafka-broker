@@ -19,8 +19,10 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/Shopify/sarama"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
@@ -80,13 +82,21 @@ func main() {
 			Key:   sarama.StringEncoder(key),
 			Value: sarama.StringEncoder(value),
 		}
-		partition, offset, err := producer.SendMessage(msg)
+		// Send message might fail with:
+		// "kafka server: Request was for a topic or partition that does not exist on this broker."
+		err := wait.PollImmediateUntil(time.Minute, func() (done bool, err error) {
+			partition, offset, err := producer.SendMessage(msg)
+			if err != nil {
+				return false, nil
+			}
+			log.Printf("Event sent partition %d offset %d", partition, offset)
+			if producedMsgPartition == -1 {
+				producedMsgPartition = partition
+			}
+			lastOffset = offset
+			return true, nil
+		}, ctx.Done())
 		mustBeNil(err)
-		log.Printf("Event sent partition %d offset %d", partition, offset)
-		if producedMsgPartition == -1 {
-			producedMsgPartition = partition
-		}
-		lastOffset = offset
 	}
 	if int64(n) != lastOffset+1 { // Consistency check
 		log.Fatalf("Expected last offset to be equal to %d got %d", n, lastOffset+1)
@@ -126,42 +136,48 @@ func main() {
 	err = consumer.Close()
 	mustBeNil(err)
 
-	log.Println("Starting consumer group lag provider")
+	// Wait for propagation of the committed offset
+	err = wait.PollImmediateUntil(time.Minute, func() (done bool, err error) {
+		log.Println("Starting consumer group lag provider")
 
-	consumerGroupLagProvider := kafka.NewConsumerGroupLagProvider(client, sarama.NewClusterAdminFromClient, sarama.OffsetOldest)
-	defer func() { mustBeNil(consumerGroupLagProvider.Close()) }()
+		consumerGroupLagProvider := kafka.NewConsumerGroupLagProvider(client, sarama.NewClusterAdminFromClient, sarama.OffsetOldest)
+		defer consumerGroupLagProvider.Close()
 
-	log.Printf("Getting lag for topic %s and consumer group %s\n", topic, consumerGroup)
-	consumerGroupLag, err := consumerGroupLagProvider.GetLag(topic, consumerGroup)
+		log.Printf("Getting lag for topic %s and consumer group %s\n", topic, consumerGroup)
+		consumerGroupLag, err := consumerGroupLagProvider.GetLag(topic, consumerGroup)
+		mustBeNil(err)
+
+		log.Println("ConsumerGroupLag", consumerGroupLag)
+
+		nNonZeroOffsets := 0
+		for p, l := range consumerGroupLag.ByPartition {
+			log.Printf("Partition %d Lag %s\n", p, l)
+			if l.ConsumerOffset > 0 {
+				nNonZeroOffsets++
+			}
+			if l.ConsumerOffset < 0 {
+				log.Fatal("Consumer offset cannot be negative")
+			}
+			if l.LatestOffset < 0 {
+				log.Fatal("Latest offset cannot be negative")
+			}
+			if l.LatestOffset-l.ConsumerOffset != l.Lag {
+				log.Fatal("Expected Lag to be equal to LatestOffset - ConsumerOffset got", l)
+			}
+		}
+		if nNonZeroOffsets != 1 { // consistency check
+			log.Println("Only 1 partition is expected to have records since test uses the same key for all of them ", nNonZeroOffsets)
+			return false, nil
+		}
+
+		total := consumerGroupLag.Total()
+		log.Println("Total lag", total)
+		if total != 0 {
+			return false, nil
+		}
+		return true, nil
+	}, ctx.Done())
 	mustBeNil(err)
-
-	log.Println("ConsumerGroupLag", consumerGroupLag)
-
-	nNonZeroOffsets := 0
-	for p, l := range consumerGroupLag.ByPartition {
-		log.Printf("Partition %d Lag %s\n", p, l)
-		if l.ConsumerOffset > 0 {
-			nNonZeroOffsets++
-		}
-		if l.ConsumerOffset < 0 {
-			log.Fatal("Consumer offset cannot be negative")
-		}
-		if l.LatestOffset < 0 {
-			log.Fatal("Latest offset cannot be negative")
-		}
-		if l.LatestOffset-l.ConsumerOffset != l.Lag {
-			log.Fatal("Expected Lag to be equal to LatestOffset - ConsumerOffset got", l)
-		}
-	}
-	if nNonZeroOffsets != 1 { // consistency check
-		log.Fatal("Only 1 partition is expected to have records since test uses the same key for all of them", nNonZeroOffsets)
-	}
-
-	total := consumerGroupLag.Total()
-	log.Println("Total lag", total)
-	if total != 0 {
-		log.Fatal("Expected total to be 0 got", total)
-	}
 }
 
 type handler struct {
