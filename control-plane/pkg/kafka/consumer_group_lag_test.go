@@ -133,7 +133,7 @@ func TestConsumerGroupLagProvider(t *testing.T) {
 
 			for _, topic := range tc.client.topics {
 				t.Run(topic, func(t *testing.T) {
-					provider := NewConsumerGroupLagProvider(tc.client, func(sarama.Client) (sarama.ClusterAdmin, error) { return tc.client, nil })
+					provider := NewConsumerGroupLagProvider(tc.client, func(sarama.Client) (sarama.ClusterAdmin, error) { return tc.client, nil }, -100)
 
 					lag, err := provider.GetLag(topic, group)
 					require.Nil(t, err)

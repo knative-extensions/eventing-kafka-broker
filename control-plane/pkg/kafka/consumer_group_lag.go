@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/Shopify/sarama"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 const (
@@ -54,13 +55,25 @@ type PartitionLag struct {
 type adminFunc func(client sarama.Client) (sarama.ClusterAdmin, error)
 
 type consumerGroupLagProvider struct {
-	client    sarama.Client
-	adminFunc adminFunc
+	client         sarama.Client
+	adminFunc      adminFunc
+	offsetStrategy int64
 }
 
+var (
+	offsetStrategies = sets.NewInt64(sarama.OffsetNewest, sarama.OffsetOldest)
+)
+
+const (
+	defaultOffsetStrategy = sarama.OffsetOldest
+)
+
 // NewConsumerGroupLagProvider creates a new ConsumerGroupLagProvider.
-func NewConsumerGroupLagProvider(client sarama.Client, adminFunc adminFunc) ConsumerGroupLagProvider {
-	return &consumerGroupLagProvider{client: client, adminFunc: adminFunc}
+func NewConsumerGroupLagProvider(client sarama.Client, adminFunc adminFunc, saramaOffsetStrategy int64) ConsumerGroupLagProvider {
+	if !offsetStrategies.Has(saramaOffsetStrategy) {
+		saramaOffsetStrategy = defaultOffsetStrategy
+	}
+	return &consumerGroupLagProvider{client: client, adminFunc: adminFunc, offsetStrategy: saramaOffsetStrategy}
 }
 
 // GetLag returns consumer group lag for a given group.
@@ -133,12 +146,19 @@ func (p *consumerGroupLagProvider) getPartitionLag(partition int32, topic string
 
 	if consumerOffset <= invalidOffset {
 		// When we receive an invalid consumer offset, it means no offset has yet been committed.
-		// So, set consumer offset to the offset that will be produced next.
-		//
-		// Note: setting it to 0 isn't a viable option since depending on the initial offset strategy
-		// (sarama.OffsetNewest or sarama.OffsetOldest) the offset that will be consumed next might be
-		// any valid offset and, in this case, it's exactly the offset that will be produced next.
-		consumerOffset = latestOffset
+
+		if p.offsetStrategy == sarama.OffsetOldest {
+			// Set consumer offset to the first offset.
+			consumerOffset = 0
+		} else if p.offsetStrategy == sarama.OffsetNewest {
+			// Set consumer offset to the offset that will be produced next.
+			consumerOffset = latestOffset
+		} else {
+			return PartitionLag{}, fmt.Errorf(
+				"received invalid offset (%d) and unknown offset strategy (%d) configured",
+				consumerOffset, p.offsetStrategy,
+			)
+		}
 	}
 
 	pl := PartitionLag{
@@ -194,7 +214,7 @@ func (cgl ConsumerGroupLag) String() string {
 	writeSeparator(n, sb)
 
 	for p, l := range cgl.ByPartition {
-		sb.WriteString(fmt.Sprintf("%d: %d\n", p, l))
+		sb.WriteString(fmt.Sprintf("%d: %s\n", p, l))
 	}
 	sb.WriteString(fmt.Sprintf("Total lag: %d\n", cgl.Total()))
 	return sb.String()

@@ -128,7 +128,7 @@ func main() {
 
 	log.Println("Starting consumer group lag provider")
 
-	consumerGroupLagProvider := kafka.NewConsumerGroupLagProvider(client, sarama.NewClusterAdminFromClient)
+	consumerGroupLagProvider := kafka.NewConsumerGroupLagProvider(client, sarama.NewClusterAdminFromClient, sarama.OffsetOldest)
 	defer func() { mustBeNil(consumerGroupLagProvider.Close()) }()
 
 	log.Printf("Getting lag for topic %s and consumer group %s\n", topic, consumerGroup)
