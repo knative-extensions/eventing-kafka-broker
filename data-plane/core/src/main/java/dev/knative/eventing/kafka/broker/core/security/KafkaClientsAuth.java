@@ -16,15 +16,16 @@
 
 package dev.knative.eventing.kafka.broker.core.security;
 
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.BiConsumer;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.security.plain.PlainLoginModule;
 import org.apache.kafka.common.security.scram.ScramLoginModule;
 import org.apache.kafka.common.security.ssl.DefaultSslEngineFactory;
+
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.BiConsumer;
 
 public class KafkaClientsAuth {
 
@@ -78,13 +79,17 @@ public class KafkaClientsAuth {
   }
 
   private static void ssl(final BiConsumer<String, String> propertiesSetter, final Credentials credentials) {
-    propertiesSetter.accept(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
-    propertiesSetter.accept(SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG, credentials.caCertificates());
-    final var keystore = credentials.userCertificate();
-    if (keystore != null) {
-      propertiesSetter.accept(SslConfigs.SSL_KEYSTORE_CERTIFICATE_CHAIN_CONFIG, credentials.userCertificate());
-      propertiesSetter.accept(SslConfigs.SSL_KEYSTORE_KEY_CONFIG, credentials.userKey());
+    final var caCert = credentials.caCertificates();
+    if (caCert != null) {
+      propertiesSetter.accept(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
+      propertiesSetter.accept(SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG, caCert);
+    }
+    final var userCert = credentials.userCertificate();
+    final var userKey = credentials.userKey();
+    if (userCert != null && userKey != null) {
       propertiesSetter.accept(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
+      propertiesSetter.accept(SslConfigs.SSL_KEYSTORE_CERTIFICATE_CHAIN_CONFIG, userCert);
+      propertiesSetter.accept(SslConfigs.SSL_KEYSTORE_KEY_CONFIG, userKey);
     }
   }
 }

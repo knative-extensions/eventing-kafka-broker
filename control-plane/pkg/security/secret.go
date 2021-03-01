@@ -20,6 +20,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"strconv"
 
 	"github.com/Shopify/sarama"
 )
@@ -31,6 +32,7 @@ const (
 
 	UserCertificate = "user.crt"
 	UserKey         = "user.key"
+	UserSkip        = "user.skip" // default: false
 
 	SaslMechanismKey = "sasl.mechanism"
 	SaslUserKey      = "user"
@@ -149,32 +151,54 @@ func saslConfig(protocol string, data map[string][]byte) ConfigOption {
 func sslConfig(protocol string, data map[string][]byte) ConfigOption {
 	return func(config *sarama.Config) error {
 
-		caCert, ok := data[CaCertificateKey]
-		if !ok {
-			return fmt.Errorf("[protocol %s] required CA certificate (key: %s)", protocol, CaCertificateKey)
+		// If there is no CaCertificateKey, we assume that we can use system's root CA set.
+		var certPool *x509.CertPool
+		if caCert, ok := data[CaCertificateKey]; ok {
+			certPool = x509.NewCertPool()
+			if !certPool.AppendCertsFromPEM(caCert) {
+				return fmt.Errorf(
+					"[protocol %s] failed to parse CA certificates (key: %s)",
+					protocol, CaCertificateKey,
+				)
+			}
 		}
 
 		var tlsCerts []tls.Certificate
 		if protocol == ProtocolSSL {
-			userKeyCert, ok := data[UserKey]
-			if !ok {
-				return fmt.Errorf("[protocol %s] required user key (key: %s)", protocol, UserKey)
-			}
 
-			userCert, ok := data[UserCertificate]
-			if !ok {
-				return fmt.Errorf("[protocol %s] required user key (key: %s)", protocol, UserCertificate)
-			}
+			// When protocol=SSL we might have 2 options:
+			//	- client auth is required on the broker side (mTLS)
+			//	- client auth is not required on the broker side
 
-			tlsCert, err := tls.X509KeyPair(userCert, userKeyCert)
+			skipClientAuth, err := skipClientAuthCheck(data)
 			if err != nil {
-				return fmt.Errorf("[protocol %s] failed to load x.509 key pair: %w", protocol, err)
+				return fmt.Errorf("[protocol %s] %w", protocol, err)
 			}
-			tlsCerts = []tls.Certificate{tlsCert}
-		}
 
-		certPool := x509.NewCertPool()
-		certPool.AppendCertsFromPEM(caCert)
+			if !skipClientAuth {
+				userKeyCert, ok := data[UserKey]
+				if !ok {
+					return fmt.Errorf(
+						`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
+						protocol, UserKey, UserSkip,
+					)
+				}
+
+				userCert, ok := data[UserCertificate]
+				if !ok {
+					return fmt.Errorf(
+						`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
+						protocol, UserCertificate, UserSkip,
+					)
+				}
+
+				tlsCert, err := tls.X509KeyPair(userCert, userKeyCert)
+				if err != nil {
+					return fmt.Errorf("[protocol %s] failed to load x.509 key pair: %w", protocol, err)
+				}
+				tlsCerts = []tls.Certificate{tlsCert}
+			}
+		}
 
 		config.Net.TLS.Enable = true
 		config.Net.TLS.Config = &tls.Config{
@@ -186,4 +210,16 @@ func sslConfig(protocol string, data map[string][]byte) ConfigOption {
 
 		return nil
 	}
+}
+
+func skipClientAuthCheck(data map[string][]byte) (bool, error) {
+	clientAuth, ok := data[UserSkip]
+	if !ok {
+		return false, nil // Client auth is required by default.
+	}
+	enabled, err := strconv.ParseBool(string(clientAuth))
+	if err != nil {
+		return false, fmt.Errorf("failed to parse client auth flag (key: %s): %w", UserSkip, err)
+	}
+	return enabled, nil
 }
