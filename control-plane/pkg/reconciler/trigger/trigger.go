@@ -56,6 +56,116 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 	})
 }
 
+func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
+
+	logger := log.Logger(ctx, "reconcile", trigger)
+
+	statusConditionManager := statusConditionManager{
+		Trigger:  trigger,
+		Configs:  r.Configs,
+		Recorder: controller.GetEventRecorder(ctx),
+	}
+
+	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return statusConditionManager.failedToGetBroker(err)
+	}
+
+	if apierrors.IsNotFound(err) {
+
+		// Actually check if the broker doesn't exist.
+		// Note: do not introduce another `broker` variable with `:`
+		broker, err = r.EventingClient.EventingV1().Brokers(trigger.Namespace).Get(ctx, trigger.Spec.Broker, metav1.GetOptions{})
+
+		if apierrors.IsNotFound(err) {
+
+			logger.Debug("broker not found", zap.String("finalizeDuringReconcile", "notFound"))
+			// The associated broker doesn't exist anymore, so clean up Trigger resources.
+			return r.FinalizeKind(ctx, trigger)
+		}
+	}
+
+	// Ignore Triggers that are associated with a Broker we don't own.
+	if isOur, brokerClass := isOurBroker(broker); !isOur {
+		logger.Debug("Ignoring Trigger", zap.String(eventing.BrokerClassAnnotationKey, brokerClass))
+		return nil
+	}
+
+	if !broker.GetDeletionTimestamp().IsZero() {
+
+		logger.Debug("broker deleted", zap.String("finalizeDuringReconcile", "deleted"))
+
+		// The associated broker doesn't exist anymore, so clean up Trigger resources.
+		return r.FinalizeKind(ctx, trigger)
+	}
+
+	statusConditionManager.propagateBrokerCondition(broker)
+
+	// Get data plane config map.
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		return statusConditionManager.failedToGetDataPlaneConfigMap(err)
+	}
+
+	logger.Debug("Got contract config map")
+
+	// Get data plane config data.
+	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
+	if err != nil || ct == nil {
+		return statusConditionManager.failedToGetDataPlaneConfigFromConfigMap(err)
+	}
+
+	logger.Debug(
+		"Got contract data from config map",
+		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(ct)),
+	)
+
+	brokerIndex := coreconfig.FindResource(ct, broker.UID)
+	if brokerIndex == coreconfig.NoResource {
+		return statusConditionManager.brokerNotFoundInDataPlaneConfigMap()
+	}
+	triggerIndex := coreconfig.FindEgress(ct.Resources[brokerIndex].Egresses, trigger.UID)
+
+	triggerConfig, err := r.getTriggerConfig(ctx, trigger)
+	if err != nil {
+		return statusConditionManager.failedToResolveTriggerConfig(err)
+	}
+	statusConditionManager.subscriberResolved()
+
+	changed := coreconfig.AddOrUpdateEgressConfig(ct, brokerIndex, triggerConfig, triggerIndex)
+
+	coreconfig.IncrementContractGeneration(ct)
+
+	logger.Debug("Egress changes", zap.Int("changed", changed))
+
+	if changed == coreconfig.EgressChanged {
+		// Update the configuration map with the new dataPlaneConfig data.
+		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
+			trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
+			return err
+		}
+
+		// Update volume generation annotation of dispatcher pods
+		if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+			// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
+			// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
+			// ready. So, log out the error and move on to the next step.
+			logger.Warn(
+				"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
+				zap.Error(err),
+			)
+
+			statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
+		} else {
+			logger.Debug("Updated dispatcher pod annotation")
+		}
+	}
+
+	logger.Debug("Contract config map updated")
+
+	return statusConditionManager.reconciled()
+}
+
 func (r *Reconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		return r.finalizeKind(ctx, trigger)
@@ -181,116 +291,6 @@ func deleteTrigger(egresses []*contract.Egress, index int) []*contract.Egress {
 	egresses[index] = egresses[len(egresses)-1]
 	// truncate the array.
 	return egresses[:len(egresses)-1]
-}
-
-func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-
-	logger := log.Logger(ctx, "reconcile", trigger)
-
-	statusConditionManager := statusConditionManager{
-		Trigger:  trigger,
-		Configs:  r.Configs,
-		Recorder: controller.GetEventRecorder(ctx),
-	}
-
-	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
-	if err != nil && !apierrors.IsNotFound(err) {
-		return statusConditionManager.failedToGetBroker(err)
-	}
-
-	if apierrors.IsNotFound(err) {
-
-		// Actually check if the broker doesn't exist.
-		// Note: do not introduce another `broker` variable with `:`
-		broker, err = r.EventingClient.EventingV1().Brokers(trigger.Namespace).Get(ctx, trigger.Spec.Broker, metav1.GetOptions{})
-
-		if apierrors.IsNotFound(err) {
-
-			logger.Debug("broker not found", zap.String("finalizeDuringReconcile", "notFound"))
-			// The associated broker doesn't exist anymore, so clean up Trigger resources.
-			return r.FinalizeKind(ctx, trigger)
-		}
-	}
-
-	// Ignore Triggers that are associated with a Broker we don't own.
-	if isOur, brokerClass := isOurBroker(broker); !isOur {
-		logger.Debug("Ignoring Trigger", zap.String(eventing.BrokerClassAnnotationKey, brokerClass))
-		return nil
-	}
-
-	if !broker.GetDeletionTimestamp().IsZero() {
-
-		logger.Debug("broker deleted", zap.String("finalizeDuringReconcile", "deleted"))
-
-		// The associated broker doesn't exist anymore, so clean up Trigger resources.
-		return r.FinalizeKind(ctx, trigger)
-	}
-
-	statusConditionManager.propagateBrokerCondition(broker)
-
-	// Get data plane config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
-	if err != nil {
-		return statusConditionManager.failedToGetDataPlaneConfigMap(err)
-	}
-
-	logger.Debug("Got contract config map")
-
-	// Get data plane config data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
-	if err != nil || ct == nil {
-		return statusConditionManager.failedToGetDataPlaneConfigFromConfigMap(err)
-	}
-
-	logger.Debug(
-		"Got contract data from config map",
-		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(ct)),
-	)
-
-	brokerIndex := coreconfig.FindResource(ct, broker.UID)
-	if brokerIndex == coreconfig.NoResource {
-		return statusConditionManager.brokerNotFoundInDataPlaneConfigMap()
-	}
-	triggerIndex := coreconfig.FindEgress(ct.Resources[brokerIndex].Egresses, trigger.UID)
-
-	triggerConfig, err := r.getTriggerConfig(ctx, trigger)
-	if err != nil {
-		return statusConditionManager.failedToResolveTriggerConfig(err)
-	}
-	statusConditionManager.subscriberResolved()
-
-	changed := coreconfig.AddOrUpdateEgressConfig(ct, brokerIndex, triggerConfig, triggerIndex)
-
-	coreconfig.IncrementContractGeneration(ct)
-
-	logger.Debug("Egress changes", zap.Int("changed", changed))
-
-	if changed == coreconfig.EgressChanged {
-		// Update the configuration map with the new dataPlaneConfig data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-			trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
-			return err
-		}
-
-		// Update volume generation annotation of dispatcher pods
-		if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-			// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-			// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
-			// ready. So, log out the error and move on to the next step.
-			logger.Warn(
-				"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-				zap.Error(err),
-			)
-
-			statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
-		} else {
-			logger.Debug("Updated dispatcher pod annotation")
-		}
-	}
-
-	logger.Debug("Contract config map updated")
-
-	return statusConditionManager.reconciled()
 }
 
 func isOurBroker(broker *eventing.Broker) (bool, string) {
