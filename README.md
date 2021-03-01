@@ -21,6 +21,9 @@
 </p>
 
 <p align="center">
+  <a href="https://img.shields.io/github/downloads/knative-sandbox/eventing-kafka-broker/total">
+    <img src="https://img.shields.io/github/downloads/knative-sandbox/eventing-kafka-broker/total" alt="Go-Report">
+  </a>
   <a href="https://codecov.io/gh/knative-sandbox/eventing-kafka-broker">
     <img src="https://codecov.io/gh/knative-sandbox/eventing-kafka-broker/branch/master/graph/badge.svg" alt="Go-Report">
   </a>
