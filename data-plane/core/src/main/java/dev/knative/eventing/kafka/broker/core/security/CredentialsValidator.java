@@ -35,7 +35,10 @@ class CredentialsValidator {
     }
 
     if (is(SecurityProtocol.SSL, securityProtocol)) {
-      if (anyBlank(credentials.userCertificate(), credentials.userKey(), credentials.caCertificates())) {
+      if (credentials.skipClientAuth()) {
+        return null;
+      }
+      if (anyBlank(credentials.userCertificate(), credentials.userKey())) {
         return "Security protocol " + securityProtocol.name + ": invalid user certificate or user key or CA certificates";
       }
       return null;
@@ -53,9 +56,6 @@ class CredentialsValidator {
     }
 
     if (is(SecurityProtocol.SASL_SSL, securityProtocol)) {
-      if (anyBlank(credentials.caCertificates())) {
-        return "Security protocol " + securityProtocol.name + ": invalid truststore";
-      }
       if (isInvalidSASLMechanism(SASLMechanism)) {
         return "Security protocol " + securityProtocol.name + ": invalid SASL mechanism, expected SCRAM-SHA-256 or SCRAM-SHA-512 got " + SASLMechanism;
       }
