@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.5.4
 	github.com/google/uuid v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/pierdipi/sacura v0.0.0-20210217202508-ca8881596d9a
+	github.com/pierdipi/sacura v0.0.0-20210302185533-982357fc042b
 	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.7.0
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c

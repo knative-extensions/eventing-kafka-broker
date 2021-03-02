@@ -289,7 +289,7 @@ github.com/openzipkin/zipkin-go/model
 github.com/openzipkin/zipkin-go/propagation
 github.com/openzipkin/zipkin-go/reporter
 github.com/openzipkin/zipkin-go/reporter/http
-# github.com/pierdipi/sacura v0.0.0-20210217202508-ca8881596d9a
+# github.com/pierdipi/sacura v0.0.0-20210302185533-982357fc042b
 ## explicit
 github.com/pierdipi/sacura
 github.com/pierdipi/sacura/cmd/sacura
