@@ -174,10 +174,10 @@ func TestConsumerGroupLagTotal(t *testing.T) {
 			cgl: ConsumerGroupLag{
 				Topic: "topic",
 				ByPartition: []PartitionLag{
-					{Lag: 20},
-					{Lag: 21},
-					{Lag: 22},
-					{Lag: 1},
+					{LatestOffset: 23, ConsumerOffset: 3},
+					{LatestOffset: 22, ConsumerOffset: 1},
+					{LatestOffset: 22, ConsumerOffset: 0},
+					{LatestOffset: 2, ConsumerOffset: 1},
 				},
 			},
 			want: 20 + 21 + 22 + 1,

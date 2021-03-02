@@ -49,7 +49,6 @@ type ConsumerGroupLag struct {
 type PartitionLag struct {
 	LatestOffset   int64 // Offset that will be produced next.
 	ConsumerOffset int64 // Offset that will be consumed next.
-	Lag            int64 // LatestOffset - ConsumerOffset
 }
 
 type adminFunc func(client sarama.Client) (sarama.ClusterAdmin, error)
@@ -164,7 +163,6 @@ func (p *consumerGroupLagProvider) getPartitionLag(partition int32, topic string
 	pl := PartitionLag{
 		LatestOffset:   latestOffset,
 		ConsumerOffset: consumerOffset,
-		Lag:            latestOffset - consumerOffset,
 	}
 	return pl, nil
 }
@@ -187,7 +185,7 @@ func (p *consumerGroupLagProvider) Close() error {
 func (cgl ConsumerGroupLag) Total() uint64 {
 	var total uint64
 	for _, lag := range cgl.ByPartition {
-		total += uint64(lag.Lag)
+		total += uint64(lag.Lag())
 	}
 	return total
 }
@@ -220,6 +218,11 @@ func (cgl ConsumerGroupLag) String() string {
 	return sb.String()
 }
 
+// Lag returns LatestOffset - ConsumerOffset
+func (pl PartitionLag) Lag() int64 {
+	return pl.LatestOffset - pl.ConsumerOffset
+}
+
 func (pl PartitionLag) String() string {
-	return fmt.Sprintf("latest offset %d consumer offset %d lag %d", pl.LatestOffset, pl.ConsumerOffset, pl.Lag)
+	return fmt.Sprintf("latest offset %d consumer offset %d lag %d", pl.LatestOffset, pl.ConsumerOffset, pl.Lag())
 }

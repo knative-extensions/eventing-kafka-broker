@@ -161,7 +161,7 @@ func main() {
 			if l.LatestOffset < 0 {
 				log.Fatal("Latest offset cannot be negative")
 			}
-			if l.LatestOffset-l.ConsumerOffset != l.Lag {
+			if l.LatestOffset-l.ConsumerOffset != l.Lag() {
 				log.Fatal("Expected Lag to be equal to LatestOffset - ConsumerOffset got", l)
 			}
 		}
