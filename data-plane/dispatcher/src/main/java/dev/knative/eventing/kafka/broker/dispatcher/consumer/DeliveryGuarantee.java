@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+
 public enum DeliveryGuarantee {
   /**
    * Ordered consumer is a per-partition blocking consumer that deliver messages in order.
@@ -23,5 +25,15 @@ public enum DeliveryGuarantee {
   /**
    * Unordered consumer is a non-blocking consumer that potentially deliver messages unordered, while preserving proper offset management.
    */
-  UNORDERED
+  UNORDERED;
+
+  public static DeliveryGuarantee fromContract(DataPlaneContract.DeliveryGuarantee deliveryGuarantee) {
+    if (deliveryGuarantee == null) {
+      return UNORDERED;
+    }
+    return switch (deliveryGuarantee) {
+      case ORDERED -> ORDERED;
+      case UNORDERED, UNRECOGNIZED -> UNORDERED;
+    };
+  }
 }

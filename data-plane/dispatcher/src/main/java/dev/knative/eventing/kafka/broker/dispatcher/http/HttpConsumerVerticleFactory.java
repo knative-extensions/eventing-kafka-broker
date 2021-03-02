@@ -123,8 +123,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
     producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
-    // TODO I'm assuming ordered/unordered will be configure here, at egress level
-    final DeliveryGuarantee deliveryGuarantee = DeliveryGuarantee.UNORDERED;
+    final DeliveryGuarantee deliveryGuarantee = DeliveryGuarantee.fromContract(egress.getDeliveryGuarantee());
 
     final BaseConsumerVerticle.Initializer initializer = (vertx, consumerVerticle) ->
       (resource.hasAuthSecret() ?
