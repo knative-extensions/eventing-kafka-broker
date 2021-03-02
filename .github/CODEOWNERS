@@ -4,6 +4,3 @@
 * @knative-sandbox/eventing-writers
 * @knative-sandbox/eventing-kafka-broker-approvers
 
-# hack and test are owned by productivity
-/hack/* @knative-sandbox/productivity-wg-leads
-/test/* @knative-sandbox/productivity-wg-leads
