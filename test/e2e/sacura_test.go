@@ -62,7 +62,7 @@ func TestSacuraJob(t *testing.T) {
 		return isJobSucceeded(job)
 	})
 
-	pkgtesting.LogJobOutput(t, ctx, c, namespace, app)
+	pkgtesting.LogJobOutput(t, ctx, c.Kube, namespace, app)
 
 	if jobPollError != nil {
 		t.Fatal(jobPollError)

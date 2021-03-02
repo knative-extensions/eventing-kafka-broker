@@ -50,7 +50,7 @@ func TestConsumerGroupLagProvider(t *testing.T) {
 		},
 	)
 
-	pkgtesting.LogJobOutput(t, ctx, client, client.Namespace, consumerGroupLagJobName)
+	pkgtesting.LogJobOutput(t, ctx, client.Kube, client.Namespace, consumerGroupLagJobName)
 
 	require.Nil(t, err)
 }
