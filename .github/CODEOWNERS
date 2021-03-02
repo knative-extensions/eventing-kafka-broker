@@ -1,8 +1,5 @@
 # Default owners are TOC, release leads and Eventing writers
-* @knative-sandbox/technical-oversight-committee
-* @knative-sandbox/knative-release-leads
-* @knative-sandbox/eventing-writers
-* @knative-sandbox/eventing-kafka-broker-approvers
+* @knative-sandbox/technical-oversight-committee @knative-sandbox/knative-release-leads @knative-sandbox/eventing-writers @knative-sandbox/eventing-kafka-broker-approvers
 
 # hack and test are owned by productivity
 /hack/* @knative-sandbox/productivity-wg-leads
