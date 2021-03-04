@@ -43,6 +43,12 @@ message EgressConfig {
   uint64 backoffDelay = 4;
 }
 
+// Check dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryOrder for more details
+enum DeliveryOrder {
+  ORDERED = 0;
+  UNORDERED = 1;
+}
+
 message Egress {
   // consumer group name
   string consumerGroup = 1;
@@ -67,6 +73,10 @@ message Egress {
   // Egress configuration.
   // It overrides Resource's EgressConfig.
   EgressConfig egressConfig = 7;
+
+  // Delivery guarantee to use
+  // Empty defaults to unordered
+  DeliveryOrder deliveryOrder = 8;
 }
 
 // CloudEvent content mode

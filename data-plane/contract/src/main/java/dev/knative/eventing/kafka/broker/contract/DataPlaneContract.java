@@ -144,6 +144,118 @@ public final class DataPlaneContract {
 
   /**
    * <pre>
+   * Check dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryOrder for more details
+   * </pre>
+   *
+   * Protobuf enum {@code DeliveryOrder}
+   */
+  public enum DeliveryOrder
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>ORDERED = 0;</code>
+     */
+    ORDERED(0),
+    /**
+     * <code>UNORDERED = 1;</code>
+     */
+    UNORDERED(1),
+    UNRECOGNIZED(-1),
+    ;
+
+    /**
+     * <code>ORDERED = 0;</code>
+     */
+    public static final int ORDERED_VALUE = 0;
+    /**
+     * <code>UNORDERED = 1;</code>
+     */
+    public static final int UNORDERED_VALUE = 1;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static DeliveryOrder valueOf(int value) {
+      return forNumber(value);
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
+    public static DeliveryOrder forNumber(int value) {
+      switch (value) {
+        case 0: return ORDERED;
+        case 1: return UNORDERED;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<DeliveryOrder>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        DeliveryOrder> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<DeliveryOrder>() {
+            public DeliveryOrder findValueByNumber(int number) {
+              return DeliveryOrder.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalStateException(
+            "Can't get the descriptor of an unrecognized enum value.");
+      }
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(1);
+    }
+
+    private static final DeliveryOrder[] VALUES = values();
+
+    public static DeliveryOrder valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private DeliveryOrder(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:DeliveryOrder)
+  }
+
+  /**
+   * <pre>
    * CloudEvent content mode
    * </pre>
    *
@@ -228,7 +340,7 @@ public final class DataPlaneContract {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(1);
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(2);
     }
 
     private static final ContentMode[] VALUES = values();
@@ -2216,6 +2328,27 @@ public final class DataPlaneContract {
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder getEgressConfigOrBuilder();
 
+    /**
+     * <pre>
+     * Delivery guarantee to use
+     * Empty defaults to unordered
+     * </pre>
+     *
+     * <code>.DeliveryOrder deliveryOrder = 8;</code>
+     * @return The enum numeric value on the wire for deliveryOrder.
+     */
+    int getDeliveryOrderValue();
+    /**
+     * <pre>
+     * Delivery guarantee to use
+     * Empty defaults to unordered
+     * </pre>
+     *
+     * <code>.DeliveryOrder deliveryOrder = 8;</code>
+     * @return The deliveryOrder.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder getDeliveryOrder();
+
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.ReplyStrategyCase getReplyStrategyCase();
   }
   /**
@@ -2234,6 +2367,7 @@ public final class DataPlaneContract {
       consumerGroup_ = "";
       destination_ = "";
       uid_ = "";
+      deliveryOrder_ = 0;
     }
 
     @java.lang.Override
@@ -2328,6 +2462,12 @@ public final class DataPlaneContract {
                 egressConfig_ = subBuilder.buildPartial();
               }
 
+              break;
+            }
+            case 64: {
+              int rawValue = input.readEnum();
+
+              deliveryOrder_ = rawValue;
               break;
             }
             default: {
@@ -2706,6 +2846,35 @@ public final class DataPlaneContract {
       return getEgressConfig();
     }
 
+    public static final int DELIVERYORDER_FIELD_NUMBER = 8;
+    private int deliveryOrder_;
+    /**
+     * <pre>
+     * Delivery guarantee to use
+     * Empty defaults to unordered
+     * </pre>
+     *
+     * <code>.DeliveryOrder deliveryOrder = 8;</code>
+     * @return The enum numeric value on the wire for deliveryOrder.
+     */
+    @java.lang.Override public int getDeliveryOrderValue() {
+      return deliveryOrder_;
+    }
+    /**
+     * <pre>
+     * Delivery guarantee to use
+     * Empty defaults to unordered
+     * </pre>
+     *
+     * <code>.DeliveryOrder deliveryOrder = 8;</code>
+     * @return The deliveryOrder.
+     */
+    @java.lang.Override public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder getDeliveryOrder() {
+      @SuppressWarnings("deprecation")
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.valueOf(deliveryOrder_);
+      return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.UNRECOGNIZED : result;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2741,6 +2910,9 @@ public final class DataPlaneContract {
       if (egressConfig_ != null) {
         output.writeMessage(7, getEgressConfig());
       }
+      if (deliveryOrder_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.ORDERED.getNumber()) {
+        output.writeEnum(8, deliveryOrder_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -2774,6 +2946,10 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(7, getEgressConfig());
       }
+      if (deliveryOrder_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.ORDERED.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(8, deliveryOrder_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -2805,6 +2981,7 @@ public final class DataPlaneContract {
         if (!getEgressConfig()
             .equals(other.getEgressConfig())) return false;
       }
+      if (deliveryOrder_ != other.deliveryOrder_) return false;
       if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
       switch (replyStrategyCase_) {
         case 3:
@@ -2843,6 +3020,8 @@ public final class DataPlaneContract {
         hash = (37 * hash) + EGRESSCONFIG_FIELD_NUMBER;
         hash = (53 * hash) + getEgressConfig().hashCode();
       }
+      hash = (37 * hash) + DELIVERYORDER_FIELD_NUMBER;
+      hash = (53 * hash) + deliveryOrder_;
       switch (replyStrategyCase_) {
         case 3:
           hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
@@ -3006,6 +3185,8 @@ public final class DataPlaneContract {
           egressConfig_ = null;
           egressConfigBuilder_ = null;
         }
+        deliveryOrder_ = 0;
+
         replyStrategyCase_ = 0;
         replyStrategy_ = null;
         return this;
@@ -3057,6 +3238,7 @@ public final class DataPlaneContract {
         } else {
           result.egressConfig_ = egressConfigBuilder_.build();
         }
+        result.deliveryOrder_ = deliveryOrder_;
         result.replyStrategyCase_ = replyStrategyCase_;
         onBuilt();
         return result;
@@ -3123,6 +3305,9 @@ public final class DataPlaneContract {
         }
         if (other.hasEgressConfig()) {
           mergeEgressConfig(other.getEgressConfig());
+        }
+        if (other.deliveryOrder_ != 0) {
+          setDeliveryOrderValue(other.getDeliveryOrderValue());
         }
         switch (other.getReplyStrategyCase()) {
           case REPLYURL: {
@@ -4043,6 +4228,85 @@ public final class DataPlaneContract {
           egressConfig_ = null;
         }
         return egressConfigBuilder_;
+      }
+
+      private int deliveryOrder_ = 0;
+      /**
+       * <pre>
+       * Delivery guarantee to use
+       * Empty defaults to unordered
+       * </pre>
+       *
+       * <code>.DeliveryOrder deliveryOrder = 8;</code>
+       * @return The enum numeric value on the wire for deliveryOrder.
+       */
+      @java.lang.Override public int getDeliveryOrderValue() {
+        return deliveryOrder_;
+      }
+      /**
+       * <pre>
+       * Delivery guarantee to use
+       * Empty defaults to unordered
+       * </pre>
+       *
+       * <code>.DeliveryOrder deliveryOrder = 8;</code>
+       * @param value The enum numeric value on the wire for deliveryOrder to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDeliveryOrderValue(int value) {
+        
+        deliveryOrder_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Delivery guarantee to use
+       * Empty defaults to unordered
+       * </pre>
+       *
+       * <code>.DeliveryOrder deliveryOrder = 8;</code>
+       * @return The deliveryOrder.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder getDeliveryOrder() {
+        @SuppressWarnings("deprecation")
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.valueOf(deliveryOrder_);
+        return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.UNRECOGNIZED : result;
+      }
+      /**
+       * <pre>
+       * Delivery guarantee to use
+       * Empty defaults to unordered
+       * </pre>
+       *
+       * <code>.DeliveryOrder deliveryOrder = 8;</code>
+       * @param value The deliveryOrder to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDeliveryOrder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        
+        deliveryOrder_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Delivery guarantee to use
+       * Empty defaults to unordered
+       * </pre>
+       *
+       * <code>.DeliveryOrder deliveryOrder = 8;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearDeliveryOrder() {
+        
+        deliveryOrder_ = 0;
+        onChanged();
+        return this;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -10478,30 +10742,32 @@ public final class DataPlaneContract {
       "utesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028" +
       "\001\"n\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\r\n" +
       "\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.Ba" +
-      "ckoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\"\334\001\n\006Eg" +
+      "ckoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\"\203\002\n\006Eg" +
       "ress\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n\013destinati" +
       "on\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\0226\n\024replyToO" +
       "riginalTopic\030\004 \001(\0132\026.google.protobuf.Emp" +
       "tyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001" +
-      "(\t\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConfigB" +
-      "\017\n\rreplyStrategy\"[\n\007Ingress\022!\n\013contentMo" +
-      "de\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH\000\022\016" +
-      "\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"K\n\tReferen" +
-      "ce\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004n" +
-      "ame\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"\364\001\n\010Resource\022" +
-      "\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstra" +
-      "pServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingres" +
-      "s\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig\022\031" +
-      "\n\010egresses\030\006 \003(\0132\007.Egress\022,\n\nabsentAuth\030" +
-      "\007 \001(\0132\026.google.protobuf.EmptyH\000\022 \n\nauthS" +
-      "ecret\030\010 \001(\0132\n.ReferenceH\000B\006\n\004Auth\"<\n\010Con" +
-      "tract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002" +
-      " \003(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Expo" +
-      "nential\020\000\022\n\n\006Linear\020\001*)\n\013ContentMode\022\n\n\006" +
-      "BINARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knative." +
-      "eventing.kafka.broker.contractB\021DataPlan" +
-      "eContractZ\032control-plane/pkg/contractb\006p" +
-      "roto3"
+      "(\t\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConfig\022" +
+      "%\n\rdeliveryOrder\030\010 \001(\0162\016.DeliveryOrderB\017" +
+      "\n\rreplyStrategy\"[\n\007Ingress\022!\n\013contentMod" +
+      "e\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH\000\022\016\n" +
+      "\004host\030\003 \001(\tH\000B\r\n\013ingressType\"K\n\tReferenc" +
+      "e\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004na" +
+      "me\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"\364\001\n\010Resource\022\013" +
+      "\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrap" +
+      "Servers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress" +
+      "\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig\022\031\n" +
+      "\010egresses\030\006 \003(\0132\007.Egress\022,\n\nabsentAuth\030\007" +
+      " \001(\0132\026.google.protobuf.EmptyH\000\022 \n\nauthSe" +
+      "cret\030\010 \001(\0132\n.ReferenceH\000B\006\n\004Auth\"<\n\010Cont" +
+      "ract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 " +
+      "\003(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Expon" +
+      "ential\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\013\n" +
+      "\007ORDERED\020\000\022\r\n\tUNORDERED\020\001*)\n\013ContentMode" +
+      "\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knat" +
+      "ive.eventing.kafka.broker.contractB\021Data" +
+      "PlaneContractZ\032control-plane/pkg/contrac" +
+      "tb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -10531,7 +10797,7 @@ public final class DataPlaneContract {
     internal_static_Egress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Egress_descriptor,
-        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "Filter", "Uid", "EgressConfig", "ReplyStrategy", });
+        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "ReplyStrategy", });
     internal_static_Ingress_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_Ingress_fieldAccessorTable = new
