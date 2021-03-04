@@ -26,7 +26,7 @@ import dev.knative.eventing.kafka.broker.core.security.PlaintextCredentials;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.ConsumerVerticleFactory;
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryGuarantee;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryOrder;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.BaseConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.OrderedConsumerVerticle;
@@ -123,7 +123,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
     producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
-    final DeliveryGuarantee deliveryGuarantee = DeliveryGuarantee.fromContract(egress.getDeliveryGuarantee());
+    final DeliveryOrder deliveryOrder = DeliveryOrder.fromContract(egress.getDeliveryOrder());
 
     final BaseConsumerVerticle.Initializer initializer = (vertx, consumerVerticle) ->
       (resource.hasAuthSecret() ?
@@ -162,7 +162,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
           egressSubscriberSender,
           egressDeadLetterSender,
           new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer),
-          getOffsetManager(deliveryGuarantee, consumer, eventsSentCounter::increment)
+          getOffsetManager(deliveryOrder, consumer, eventsSentCounter::increment)
         );
 
         // Set all the built objects in the consumer verticle
@@ -172,7 +172,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
       })
         .mapEmpty();
 
-    return getConsumerVerticle(deliveryGuarantee, initializer, new HashSet<>(resource.getTopicsList()));
+    return getConsumerVerticle(deliveryOrder, initializer, new HashSet<>(resource.getTopicsList()));
   }
 
   protected KafkaProducer<String, CloudEvent> createProducer(final Vertx vertx,
@@ -233,7 +233,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
   }
 
 
-  private static OffsetManager getOffsetManager(final DeliveryGuarantee type, final KafkaConsumer<?, ?> consumer,
+  private static OffsetManager getOffsetManager(final DeliveryOrder type, final KafkaConsumer<?, ?> consumer,
                                                 Consumer<Integer> commitHandler) {
     return switch (type) {
       case ORDERED -> new OrderedOffsetManager(consumer, commitHandler);
@@ -241,7 +241,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     };
   }
 
-  private static AbstractVerticle getConsumerVerticle(final DeliveryGuarantee type,
+  private static AbstractVerticle getConsumerVerticle(final DeliveryOrder type,
                                                       final BaseConsumerVerticle.Initializer initializer,
                                                       final Set<String> topics) {
     return switch (type) {

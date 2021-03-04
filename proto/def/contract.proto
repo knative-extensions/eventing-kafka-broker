@@ -43,8 +43,8 @@ message EgressConfig {
   uint64 backoffDelay = 4;
 }
 
-// Check dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryGuarantee for more details
-enum DeliveryGuarantee {
+// Check dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryOrder for more details
+enum DeliveryOrder {
   ORDERED = 0;
   UNORDERED = 1;
 }
@@ -76,7 +76,7 @@ message Egress {
 
   // Delivery guarantee to use
   // Empty defaults to unordered
-  DeliveryGuarantee deliveryGuarantee = 8;
+  DeliveryOrder deliveryOrder = 8;
 }
 
 // CloudEvent content mode

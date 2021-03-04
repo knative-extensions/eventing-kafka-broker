@@ -15,12 +15,12 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryGuarantee;
+import dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryOrder;
 import io.vertx.core.Promise;
 import java.util.Set;
 
 /**
- * This {@link io.vertx.core.Verticle} implements an unordered consumer logic, as described in {@link DeliveryGuarantee#UNORDERED}.
+ * This {@link io.vertx.core.Verticle} implements an unordered consumer logic, as described in {@link DeliveryOrder#UNORDERED}.
  */
 public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
 

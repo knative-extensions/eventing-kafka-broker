@@ -16,23 +16,24 @@
 package dev.knative.eventing.kafka.broker.dispatcher.consumer;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+public enum DeliveryOrder {
+  /**
+   * Ordered consumer is a per-partition blocking consumer that deliver messages in order.
+   */
+  ORDERED,
+  /**
+   * Unordered consumer is a non-blocking consumer that potentially deliver messages unordered, while preserving proper offset management.
+   */
+  UNORDERED;
 
-class DeliveryGuaranteeTest {
-
-  @Test
-  void fromContract() {
-    assertThat(DeliveryGuarantee.fromContract(null))
-      .isEqualTo(DeliveryGuarantee.UNORDERED);
-
-    assertThat(DeliveryGuarantee.fromContract(DataPlaneContract.DeliveryGuarantee.UNORDERED))
-      .isEqualTo(DeliveryGuarantee.UNORDERED);
-    assertThat(DeliveryGuarantee.fromContract(DataPlaneContract.DeliveryGuarantee.UNRECOGNIZED))
-      .isEqualTo(DeliveryGuarantee.UNORDERED);
-
-    assertThat(DeliveryGuarantee.fromContract(DataPlaneContract.DeliveryGuarantee.ORDERED))
-      .isEqualTo(DeliveryGuarantee.ORDERED);
+  public static DeliveryOrder fromContract(DataPlaneContract.DeliveryOrder deliveryOrder) {
+    if (deliveryOrder == null) {
+      return UNORDERED;
+    }
+    return switch (deliveryOrder) {
+      case ORDERED -> ORDERED;
+      case UNORDERED, UNRECOGNIZED -> UNORDERED;
+    };
   }
 }

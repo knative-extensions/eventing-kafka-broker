@@ -144,12 +144,12 @@ public final class DataPlaneContract {
 
   /**
    * <pre>
-   * Check dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryGuarantee for more details
+   * Check dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryOrder for more details
    * </pre>
    *
-   * Protobuf enum {@code DeliveryGuarantee}
+   * Protobuf enum {@code DeliveryOrder}
    */
-  public enum DeliveryGuarantee
+  public enum DeliveryOrder
       implements com.google.protobuf.ProtocolMessageEnum {
     /**
      * <code>ORDERED = 0;</code>
@@ -186,7 +186,7 @@ public final class DataPlaneContract {
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
-    public static DeliveryGuarantee valueOf(int value) {
+    public static DeliveryOrder valueOf(int value) {
       return forNumber(value);
     }
 
@@ -194,7 +194,7 @@ public final class DataPlaneContract {
      * @param value The numeric wire value of the corresponding enum entry.
      * @return The enum associated with the given numeric wire value.
      */
-    public static DeliveryGuarantee forNumber(int value) {
+    public static DeliveryOrder forNumber(int value) {
       switch (value) {
         case 0: return ORDERED;
         case 1: return UNORDERED;
@@ -202,15 +202,15 @@ public final class DataPlaneContract {
       }
     }
 
-    public static com.google.protobuf.Internal.EnumLiteMap<DeliveryGuarantee>
+    public static com.google.protobuf.Internal.EnumLiteMap<DeliveryOrder>
         internalGetValueMap() {
       return internalValueMap;
     }
     private static final com.google.protobuf.Internal.EnumLiteMap<
-        DeliveryGuarantee> internalValueMap =
-          new com.google.protobuf.Internal.EnumLiteMap<DeliveryGuarantee>() {
-            public DeliveryGuarantee findValueByNumber(int number) {
-              return DeliveryGuarantee.forNumber(number);
+        DeliveryOrder> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<DeliveryOrder>() {
+            public DeliveryOrder findValueByNumber(int number) {
+              return DeliveryOrder.forNumber(number);
             }
           };
 
@@ -231,9 +231,9 @@ public final class DataPlaneContract {
       return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(1);
     }
 
-    private static final DeliveryGuarantee[] VALUES = values();
+    private static final DeliveryOrder[] VALUES = values();
 
-    public static DeliveryGuarantee valueOf(
+    public static DeliveryOrder valueOf(
         com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
       if (desc.getType() != getDescriptor()) {
         throw new java.lang.IllegalArgumentException(
@@ -247,11 +247,11 @@ public final class DataPlaneContract {
 
     private final int value;
 
-    private DeliveryGuarantee(int value) {
+    private DeliveryOrder(int value) {
       this.value = value;
     }
 
-    // @@protoc_insertion_point(enum_scope:DeliveryGuarantee)
+    // @@protoc_insertion_point(enum_scope:DeliveryOrder)
   }
 
   /**
@@ -2334,20 +2334,20 @@ public final class DataPlaneContract {
      * Empty defaults to unordered
      * </pre>
      *
-     * <code>.DeliveryGuarantee deliveryGuarantee = 8;</code>
-     * @return The enum numeric value on the wire for deliveryGuarantee.
+     * <code>.DeliveryOrder deliveryOrder = 8;</code>
+     * @return The enum numeric value on the wire for deliveryOrder.
      */
-    int getDeliveryGuaranteeValue();
+    int getDeliveryOrderValue();
     /**
      * <pre>
      * Delivery guarantee to use
      * Empty defaults to unordered
      * </pre>
      *
-     * <code>.DeliveryGuarantee deliveryGuarantee = 8;</code>
-     * @return The deliveryGuarantee.
+     * <code>.DeliveryOrder deliveryOrder = 8;</code>
+     * @return The deliveryOrder.
      */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryGuarantee getDeliveryGuarantee();
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder getDeliveryOrder();
 
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.ReplyStrategyCase getReplyStrategyCase();
   }
@@ -2367,7 +2367,7 @@ public final class DataPlaneContract {
       consumerGroup_ = "";
       destination_ = "";
       uid_ = "";
-      deliveryGuarantee_ = 0;
+      deliveryOrder_ = 0;
     }
 
     @java.lang.Override
@@ -2467,7 +2467,7 @@ public final class DataPlaneContract {
             case 64: {
               int rawValue = input.readEnum();
 
-              deliveryGuarantee_ = rawValue;
+              deliveryOrder_ = rawValue;
               break;
             }
             default: {
@@ -2846,19 +2846,19 @@ public final class DataPlaneContract {
       return getEgressConfig();
     }
 
-    public static final int DELIVERYGUARANTEE_FIELD_NUMBER = 8;
-    private int deliveryGuarantee_;
+    public static final int DELIVERYORDER_FIELD_NUMBER = 8;
+    private int deliveryOrder_;
     /**
      * <pre>
      * Delivery guarantee to use
      * Empty defaults to unordered
      * </pre>
      *
-     * <code>.DeliveryGuarantee deliveryGuarantee = 8;</code>
-     * @return The enum numeric value on the wire for deliveryGuarantee.
+     * <code>.DeliveryOrder deliveryOrder = 8;</code>
+     * @return The enum numeric value on the wire for deliveryOrder.
      */
-    @java.lang.Override public int getDeliveryGuaranteeValue() {
-      return deliveryGuarantee_;
+    @java.lang.Override public int getDeliveryOrderValue() {
+      return deliveryOrder_;
     }
     /**
      * <pre>
@@ -2866,13 +2866,13 @@ public final class DataPlaneContract {
      * Empty defaults to unordered
      * </pre>
      *
-     * <code>.DeliveryGuarantee deliveryGuarantee = 8;</code>
-     * @return The deliveryGuarantee.
+     * <code>.DeliveryOrder deliveryOrder = 8;</code>
+     * @return The deliveryOrder.
      */
-    @java.lang.Override public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryGuarantee getDeliveryGuarantee() {
+    @java.lang.Override public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder getDeliveryOrder() {
       @SuppressWarnings("deprecation")
-      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryGuarantee result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryGuarantee.valueOf(deliveryGuarantee_);
-      return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryGuarantee.UNRECOGNIZED : result;
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.valueOf(deliveryOrder_);
+      return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.UNRECOGNIZED : result;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -2910,8 +2910,8 @@ public final class DataPlaneContract {
       if (egressConfig_ != null) {
         output.writeMessage(7, getEgressConfig());
       }
-      if (deliveryGuarantee_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryGuarantee.ORDERED.getNumber()) {
-        output.writeEnum(8, deliveryGuarantee_);
+      if (deliveryOrder_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.ORDERED.getNumber()) {
+        output.writeEnum(8, deliveryOrder_);
       }
       unknownFields.writeTo(output);
     }
@@ -2946,9 +2946,9 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(7, getEgressConfig());
       }
-      if (deliveryGuarantee_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryGuarantee.ORDERED.getNumber()) {
+      if (deliveryOrder_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.ORDERED.getNumber()) {
         size += com.google.protobuf.CodedOutputStream
-          .computeEnumSize(8, deliveryGuarantee_);
+          .computeEnumSize(8, deliveryOrder_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2981,7 +2981,7 @@ public final class DataPlaneContract {
         if (!getEgressConfig()
             .equals(other.getEgressConfig())) return false;
       }
-      if (deliveryGuarantee_ != other.deliveryGuarantee_) return false;
+      if (deliveryOrder_ != other.deliveryOrder_) return false;
       if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
       switch (replyStrategyCase_) {
         case 3:
@@ -3020,8 +3020,8 @@ public final class DataPlaneContract {
         hash = (37 * hash) + EGRESSCONFIG_FIELD_NUMBER;
         hash = (53 * hash) + getEgressConfig().hashCode();
       }
-      hash = (37 * hash) + DELIVERYGUARANTEE_FIELD_NUMBER;
-      hash = (53 * hash) + deliveryGuarantee_;
+      hash = (37 * hash) + DELIVERYORDER_FIELD_NUMBER;
+      hash = (53 * hash) + deliveryOrder_;
       switch (replyStrategyCase_) {
         case 3:
           hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
@@ -3185,7 +3185,7 @@ public final class DataPlaneContract {
           egressConfig_ = null;
           egressConfigBuilder_ = null;
         }
-        deliveryGuarantee_ = 0;
+        deliveryOrder_ = 0;
 
         replyStrategyCase_ = 0;
         replyStrategy_ = null;
@@ -3238,7 +3238,7 @@ public final class DataPlaneContract {
         } else {
           result.egressConfig_ = egressConfigBuilder_.build();
         }
-        result.deliveryGuarantee_ = deliveryGuarantee_;
+        result.deliveryOrder_ = deliveryOrder_;
         result.replyStrategyCase_ = replyStrategyCase_;
         onBuilt();
         return result;
@@ -3306,8 +3306,8 @@ public final class DataPlaneContract {
         if (other.hasEgressConfig()) {
           mergeEgressConfig(other.getEgressConfig());
         }
-        if (other.deliveryGuarantee_ != 0) {
-          setDeliveryGuaranteeValue(other.getDeliveryGuaranteeValue());
+        if (other.deliveryOrder_ != 0) {
+          setDeliveryOrderValue(other.getDeliveryOrderValue());
         }
         switch (other.getReplyStrategyCase()) {
           case REPLYURL: {
@@ -4230,18 +4230,18 @@ public final class DataPlaneContract {
         return egressConfigBuilder_;
       }
 
-      private int deliveryGuarantee_ = 0;
+      private int deliveryOrder_ = 0;
       /**
        * <pre>
        * Delivery guarantee to use
        * Empty defaults to unordered
        * </pre>
        *
-       * <code>.DeliveryGuarantee deliveryGuarantee = 8;</code>
-       * @return The enum numeric value on the wire for deliveryGuarantee.
+       * <code>.DeliveryOrder deliveryOrder = 8;</code>
+       * @return The enum numeric value on the wire for deliveryOrder.
        */
-      @java.lang.Override public int getDeliveryGuaranteeValue() {
-        return deliveryGuarantee_;
+      @java.lang.Override public int getDeliveryOrderValue() {
+        return deliveryOrder_;
       }
       /**
        * <pre>
@@ -4249,13 +4249,13 @@ public final class DataPlaneContract {
        * Empty defaults to unordered
        * </pre>
        *
-       * <code>.DeliveryGuarantee deliveryGuarantee = 8;</code>
-       * @param value The enum numeric value on the wire for deliveryGuarantee to set.
+       * <code>.DeliveryOrder deliveryOrder = 8;</code>
+       * @param value The enum numeric value on the wire for deliveryOrder to set.
        * @return This builder for chaining.
        */
-      public Builder setDeliveryGuaranteeValue(int value) {
+      public Builder setDeliveryOrderValue(int value) {
         
-        deliveryGuarantee_ = value;
+        deliveryOrder_ = value;
         onChanged();
         return this;
       }
@@ -4265,14 +4265,14 @@ public final class DataPlaneContract {
        * Empty defaults to unordered
        * </pre>
        *
-       * <code>.DeliveryGuarantee deliveryGuarantee = 8;</code>
-       * @return The deliveryGuarantee.
+       * <code>.DeliveryOrder deliveryOrder = 8;</code>
+       * @return The deliveryOrder.
        */
       @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryGuarantee getDeliveryGuarantee() {
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder getDeliveryOrder() {
         @SuppressWarnings("deprecation")
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryGuarantee result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryGuarantee.valueOf(deliveryGuarantee_);
-        return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryGuarantee.UNRECOGNIZED : result;
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.valueOf(deliveryOrder_);
+        return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.UNRECOGNIZED : result;
       }
       /**
        * <pre>
@@ -4280,16 +4280,16 @@ public final class DataPlaneContract {
        * Empty defaults to unordered
        * </pre>
        *
-       * <code>.DeliveryGuarantee deliveryGuarantee = 8;</code>
-       * @param value The deliveryGuarantee to set.
+       * <code>.DeliveryOrder deliveryOrder = 8;</code>
+       * @param value The deliveryOrder to set.
        * @return This builder for chaining.
        */
-      public Builder setDeliveryGuarantee(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryGuarantee value) {
+      public Builder setDeliveryOrder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder value) {
         if (value == null) {
           throw new NullPointerException();
         }
         
-        deliveryGuarantee_ = value.getNumber();
+        deliveryOrder_ = value.getNumber();
         onChanged();
         return this;
       }
@@ -4299,12 +4299,12 @@ public final class DataPlaneContract {
        * Empty defaults to unordered
        * </pre>
        *
-       * <code>.DeliveryGuarantee deliveryGuarantee = 8;</code>
+       * <code>.DeliveryOrder deliveryOrder = 8;</code>
        * @return This builder for chaining.
        */
-      public Builder clearDeliveryGuarantee() {
+      public Builder clearDeliveryOrder() {
         
-        deliveryGuarantee_ = 0;
+        deliveryOrder_ = 0;
         onChanged();
         return this;
       }
@@ -10742,32 +10742,32 @@ public final class DataPlaneContract {
       "utesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028" +
       "\001\"n\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\r\n" +
       "\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.Ba" +
-      "ckoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\"\213\002\n\006Eg" +
+      "ckoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\"\203\002\n\006Eg" +
       "ress\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n\013destinati" +
       "on\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\0226\n\024replyToO" +
       "riginalTopic\030\004 \001(\0132\026.google.protobuf.Emp" +
       "tyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001" +
       "(\t\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConfig\022" +
-      "-\n\021deliveryGuarantee\030\010 \001(\0162\022.DeliveryGua" +
-      "ranteeB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n\013co" +
-      "ntentMode\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002 " +
-      "\001(\tH\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"K\n\t" +
-      "Reference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001" +
-      "(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"\364\001\n\010Re" +
-      "source\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020b" +
-      "ootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010" +
-      ".Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.EgressC" +
-      "onfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022,\n\nabse" +
-      "ntAuth\030\007 \001(\0132\026.google.protobuf.EmptyH\000\022 " +
-      "\n\nauthSecret\030\010 \001(\0132\n.ReferenceH\000B\006\n\004Auth" +
-      "\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\treso" +
-      "urces\030\002 \003(\0132\t.Resource*,\n\rBackoffPolicy\022" +
-      "\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*/\n\021Delivery" +
-      "Guarantee\022\013\n\007ORDERED\020\000\022\r\n\tUNORDERED\020\001*)\n" +
-      "\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001" +
-      "B[\n*dev.knative.eventing.kafka.broker.co" +
-      "ntractB\021DataPlaneContractZ\032control-plane" +
-      "/pkg/contractb\006proto3"
+      "%\n\rdeliveryOrder\030\010 \001(\0162\016.DeliveryOrderB\017" +
+      "\n\rreplyStrategy\"[\n\007Ingress\022!\n\013contentMod" +
+      "e\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH\000\022\016\n" +
+      "\004host\030\003 \001(\tH\000B\r\n\013ingressType\"K\n\tReferenc" +
+      "e\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004na" +
+      "me\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"\364\001\n\010Resource\022\013" +
+      "\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrap" +
+      "Servers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress" +
+      "\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig\022\031\n" +
+      "\010egresses\030\006 \003(\0132\007.Egress\022,\n\nabsentAuth\030\007" +
+      " \001(\0132\026.google.protobuf.EmptyH\000\022 \n\nauthSe" +
+      "cret\030\010 \001(\0132\n.ReferenceH\000B\006\n\004Auth\"<\n\010Cont" +
+      "ract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 " +
+      "\003(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Expon" +
+      "ential\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\013\n" +
+      "\007ORDERED\020\000\022\r\n\tUNORDERED\020\001*)\n\013ContentMode" +
+      "\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knat" +
+      "ive.eventing.kafka.broker.contractB\021Data" +
+      "PlaneContractZ\032control-plane/pkg/contrac" +
+      "tb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -10797,7 +10797,7 @@ public final class DataPlaneContract {
     internal_static_Egress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Egress_descriptor,
-        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "Filter", "Uid", "EgressConfig", "DeliveryGuarantee", "ReplyStrategy", });
+        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "ReplyStrategy", });
     internal_static_Ingress_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_Ingress_fieldAccessorTable = new
