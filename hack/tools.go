@@ -36,4 +36,7 @@ import (
 
 	// For detecting events loss
 	_ "github.com/pierdipi/sacura/cmd/sacura"
+
+	// eventshub is a cloudevents sender/receiver utility for e2e testing.
+	_ "knative.dev/reconciler-test/cmd/eventshub"
 )

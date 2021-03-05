@@ -39,13 +39,15 @@ export_logs_continuously "kafka-broker-dispatcher" "kafka-broker-receiver" "kafk
 
 failed=false
 
-go_test_e2e -timeout=30m ./test/... || failed=true
+go_test_e2e -timeout=30m ./test/e2e_new || failed=true
+
+go_test_e2e -timeout=30m ./test/e2e || failed=true
 
 if ! ${LOCAL_DEVELOPMENT}; then
-  go_test_e2e -tags=sacura -timeout=20m ./test/... || failed=true
+  go_test_e2e -tags=sacura -timeout=20m ./test/e2e || failed=true
 fi
 
-go_test_e2e -tags=deletecm ./test/... || failed=true
+go_test_e2e -tags=deletecm ./test/e2e || failed=true
 
 if [ $failed = true ]; then
   fail_test "Integration tests failed"
