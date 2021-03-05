@@ -19,8 +19,9 @@
 package e2e_new
 
 import (
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"testing"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 
 	"knative.dev/pkg/system"
 	_ "knative.dev/pkg/system/testing"
