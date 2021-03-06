@@ -25,10 +25,14 @@ sleep 5
 header "Applying Strimzi Cluster Operator file"
 cat $(dirname $0)/strimzi-cluster-operator.yaml | sed "s/cluster.local/${CLUSTER_SUFFIX}/g" | kubectl apply -n kafka -f -
 
-sleep 5
+sleep 10
 
-kubectl -n kafka apply -f $(dirname $0)/kafka-ephemeral.yaml
+kubectl -n kafka apply -f $(dirname $0)/kafka-ephemeral.yaml || kubectl -n kafka apply -f $(dirname $0)/kafka-ephemeral.yaml
+
+echo "Create TLS user"
 kubectl apply -n kafka -f $(dirname $0)/user-tls.yaml
+
+echo "Create SASL SCRUM 512 user"
 kubectl apply -n kafka -f $(dirname $0)/user-sasl-scram-512.yaml
 
 sleep 5
