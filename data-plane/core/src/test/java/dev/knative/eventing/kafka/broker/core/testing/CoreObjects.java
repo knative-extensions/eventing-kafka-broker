@@ -74,6 +74,10 @@ public final class CoreObjects {
       .setConsumerGroup("1-1234567")
       .setDestination(DESTINATION)
       .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
+      .setEgressConfig(DataPlaneContract.EgressConfig.newBuilder()
+        .setRetry(1)
+        .setBackoffDelay(1000)
+        .build())
       .build();
   }
 
