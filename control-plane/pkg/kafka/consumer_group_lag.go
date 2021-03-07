@@ -218,7 +218,7 @@ func (cgl ConsumerGroupLag) String() string {
 	return sb.String()
 }
 
-// Lag returns LatestOffset - ConsumerOffset
+// Lag returns LatestOffset - ConsumerOffset.
 func (pl PartitionLag) Lag() int64 {
 	return pl.LatestOffset - pl.ConsumerOffset
 }
