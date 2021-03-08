@@ -22,6 +22,8 @@ if ! ${SKIP_INITIALIZE}; then
   initialize $@ --skip-istio-addon
 fi
 
+save_release_artifacts || fail_test "Failed to save release artifacts"
+
 if ! ${LOCAL_DEVELOPMENT}; then
   scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
   wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing didn't come up"
