@@ -45,6 +45,13 @@ jobs:
         with:
           java-version: ${{ matrix.java-version }}
 
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
       - name: Check for .codecov.yaml
         id: codecov-enabled
         uses: andstor/file-existence-action@v1
@@ -53,7 +60,7 @@ jobs:
 
       - if: steps.codecov-enabled.outputs.files_exists == 'true'
         name: Java Test
-        run: mvn verify --file data-plane/pom.xml --no-transfer-progress
+        run: mvn verify -B -U --file data-plane/pom.xml --no-transfer-progress
 
       - if: steps.codecov-enabled.outputs.files_exists == 'true'
         name: Codecov

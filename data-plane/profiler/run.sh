@@ -47,7 +47,7 @@ echo "Async profiler URL: ${ASYNC_PROFILER_URL}"
 echo "Kafka URL: ${KAFKA_URL}"
 
 # Build the data plane.
-cd "${PROJECT_ROOT_DIR}" && ./mvnw package -DskipTests -Dlicense.skip -Deditorconfig.skip --no-transfer-progress && cd - || exit 1
+cd "${PROJECT_ROOT_DIR}" && ./mvnw package -DskipTests -Dlicense.skip -Deditorconfig.skip -B -U --no-transfer-progress && cd - || exit 1
 
 # Download async profiler.
 rm async-profiler
