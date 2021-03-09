@@ -21,6 +21,6 @@ spec:
     name: config-broker
 
   delivery:
-    retry: 3
+    retry: 5
     backoffPolicy: exponential
-    backoffDelay: PT0.5S
+    backoffDelay: PT5S
