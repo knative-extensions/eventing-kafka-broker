@@ -47,6 +47,11 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,10 +63,12 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
+
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
+
+  private static final Logger logger = LoggerFactory.getLogger(HttpConsumerVerticleFactory.class);
 
   private final static ConsumerRecordSender NO_DLQ_SENDER =
     ConsumerRecordSender.create(Future.failedFuture("No DLQ set"), Future.succeededFuture());
@@ -200,7 +207,10 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
     final var circuitBreaker = CircuitBreaker
       .create(target, vertx, createCircuitBreakerOptions(egress))
-      .retryPolicy(computeRetryPolicy(egress));
+      .retryPolicy(computeRetryPolicy(egress))
+      .openHandler(r -> logger.info("Circuit breaker opened {}", keyValue("target", target)))
+      .halfOpenHandler(r -> logger.info("Circuit breaker half-opened {}", keyValue("target", target)))
+      .closeHandler(r -> logger.info("Circuit breaker closed {}", keyValue("target", target)));
 
     return new HttpConsumerRecordSender(
       vertx,
@@ -212,7 +222,16 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
   private static CircuitBreakerOptions createCircuitBreakerOptions(final DataPlaneContract.EgressConfig egressConfig) {
     if (egressConfig != null && egressConfig.getRetry() > 0) {
-      return new CircuitBreakerOptions().setMaxRetries(egressConfig.getRetry());
+      return new CircuitBreakerOptions()
+        // TODO reset timeout should be configurable or, at least, set by the control plane
+        .setResetTimeout(
+          egressConfig.getBackoffDelay() > 0 ?
+            egressConfig.getBackoffDelay() :
+            CircuitBreakerOptions.DEFAULT_RESET_TIMEOUT
+        )
+        // TODO max failures should be configurable or, at least, set by the control plane
+        .setMaxFailures(egressConfig.getRetry() * 2)
+        .setMaxRetries(egressConfig.getRetry());
     }
     return new CircuitBreakerOptions();
   }
@@ -230,9 +249,8 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
   }
 
   private static boolean hasDeadLetterSink(final EgressConfig egressConfig) {
-    return !(egressConfig == null || egressConfig.getDeadLetter() == null || egressConfig.getDeadLetter().isEmpty());
+    return !(egressConfig == null || egressConfig.getDeadLetter().isEmpty());
   }
-
 
   private static OffsetManager getOffsetManager(final DeliveryGuarantee type, final KafkaConsumer<?, ?> consumer,
                                                 Consumer<Integer> commitHandler) {
