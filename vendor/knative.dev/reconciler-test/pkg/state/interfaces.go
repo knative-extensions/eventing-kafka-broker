@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Knative Authors
+Copyright 2021 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,18 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package state
 
-import (
-	"context"
+import "context"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-func (cmp *ConfigMapPropagation) SetDefaults(ctx context.Context) {
-	// If we haven't configured the selector,
-	// then set the default selector to be an empty map
-	if cmp != nil && cmp.Spec.Selector == nil {
-		cmp.Spec.Selector = &metav1.LabelSelector{}
-	}
+// This is a subset of knative.dev/pkg/kvstore.Interface
+type Store interface {
+	// Get gets the key from the Store into the provided value
+	Get(ctx context.Context, key string, value interface{}) error
+	// Set sets the key into the Store from the provided value
+	Set(ctx context.Context, key string, value interface{}) error
 }

@@ -16,8 +16,15 @@ limitations under the License.
 
 package feature
 
+import "time"
+
 // T is an interface similar to testing.T passed to StepFn to perform logging and assertions
 type T interface {
+	Name() string
+
+	Log(args ...interface{})
+	Logf(format string, args ...interface{})
+
 	Error(args ...interface{})
 	Errorf(format string, args ...interface{})
 	Fail()
@@ -26,10 +33,14 @@ type T interface {
 	Fatalf(format string, args ...interface{})
 	FailNow()
 
-	Log(args ...interface{})
-	Logf(format string, args ...interface{})
-
 	Skip(args ...interface{})
 	Skipf(format string, args ...interface{})
 	SkipNow()
+
+	Failed() bool
+	Skipped() bool
+
+	// Note: these are step scoped!
+	Cleanup(f func())
+	Deadline() (deadline time.Time, ok bool)
 }
