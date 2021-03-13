@@ -20,6 +20,7 @@ import (
 	"context"
 
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/tracker"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/manifest"
 )
@@ -46,5 +47,19 @@ func AsRef(name string) *duckv1.KReference {
 		Kind:       "Service",
 		Name:       name,
 		APIVersion: "v1",
+	}
+}
+
+func AsTrackerReference(name string) *tracker.Reference {
+	return &tracker.Reference{
+		Kind:       "Service",
+		Name:       name,
+		APIVersion: "v1",
+	}
+}
+
+func AsDestinationRef(name string) *duckv1.Destination {
+	return &duckv1.Destination{
+		Ref: AsRef(name),
 	}
 }
