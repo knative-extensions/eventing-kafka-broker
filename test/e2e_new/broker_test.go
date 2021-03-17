@@ -28,10 +28,11 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
+	"knative.dev/eventing/test/rekt/resources/broker"
 	brokerfeatures "knative.dev/eventing/test/rekt/features/broker"
 )
 
-func TestBrokerAsMiddleware(t *testing.T) {
+func TestBrokerSourceToSink(t *testing.T) {
 	t.Parallel()
 
 	ctx, env := global.Environment(
@@ -42,7 +43,7 @@ func TestBrokerAsMiddleware(t *testing.T) {
 	)
 
 	// Install and wait for a Ready Broker.
-	env.Prerequisite(ctx, t, brokerfeatures.BrokerGoesReady("default", kafka.BrokerClass))
+	env.Prerequisite(ctx, t, brokerfeatures.GoesReady("default", broker.WithBrokerClass(kafka.BrokerClass)))
 
 	// Test that a Broker can act as middleware.
 	env.Test(ctx, t, brokerfeatures.SourceToSink("default"))
