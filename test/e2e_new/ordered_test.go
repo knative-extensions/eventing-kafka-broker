@@ -51,6 +51,7 @@ func OrderedDelivery() *feature.Feature {
 	brokerName := feature.MakeRandomK8sName("broker")
 
 	f.Setup("install broker", broker.Install(brokerName, broker.WithBrokerClass(kafka.BrokerClass)))
+	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName, features.Interval, features.Timeout))
 
 	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
@@ -60,7 +61,7 @@ func OrderedDelivery() *feature.Feature {
 		trigger.WithSubscriber(svc.AsRef(sinkName), ""),
 		trigger.WithAnnotation("kafka.eventing.knative.dev/delivery.order", "ordered"),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(brokerName, features.Interval, features.Timeout))
+	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Setup("install source", eventshub.Install(
 		sourceName,
@@ -70,7 +71,11 @@ func OrderedDelivery() *feature.Feature {
 	))
 
 	f.Assert("receive events in order", func(ctx context.Context, t feature.T) {
-		events := eventshub.StoreFromContext(ctx, sinkName).AssertExact(20, MatchKind(EventReceived), MatchEvent(cetest.ContainsExtensions("sequence")))
+		events := eventshub.StoreFromContext(ctx, sinkName).AssertExact(
+			20,
+			MatchKind(EventReceived),
+			MatchEvent(cetest.ContainsExtensions("sequence")),
+		)
 
 		// Check we received exactly 20 and no more
 		require.Len(t, events, 20)
