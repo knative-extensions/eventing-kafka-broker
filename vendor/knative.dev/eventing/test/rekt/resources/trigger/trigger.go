@@ -78,8 +78,10 @@ func WithSubscriber(ref *duckv1.KReference, uri string) CfgFn {
 // Install will create a Trigger resource, augmented with the config fn options.
 func Install(name, brokerName string, opts ...CfgFn) feature.StepFn {
 	cfg := map[string]interface{}{
-		"name":       name,
-		"brokerName": brokerName,
+		"name": name,
+	}
+	if len(brokerName) > 0 {
+		cfg["brokerName"] = brokerName
 	}
 	for _, fn := range opts {
 		fn(cfg)
@@ -92,6 +94,6 @@ func Install(name, brokerName string, opts ...CfgFn) feature.StepFn {
 }
 
 // IsReady tests to see if a Trigger becomes ready within the time given.
-func IsReady(name string, interval, timeout time.Duration) feature.StepFn {
-	return k8s.IsReady(gvr(), name, interval, timeout)
+func IsReady(name string, timing ...time.Duration) feature.StepFn {
+	return k8s.IsReady(gvr(), name, timing...)
 }
