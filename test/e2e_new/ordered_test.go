@@ -26,6 +26,7 @@ import (
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/stretchr/testify/require"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"knative.dev/eventing/test/rekt/features"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/svc"
@@ -36,7 +37,6 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/trigger"
 
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
@@ -50,22 +50,24 @@ func OrderedDelivery() *feature.Feature {
 	triggerName := feature.MakeRandomK8sName("trigger")
 	brokerName := feature.MakeRandomK8sName("broker")
 
-	f.Setup("install source", eventshub.Install(
-		sourceName,
-		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
-		eventshub.AddSequence,
-		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
-	))
-	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
 	f.Setup("install broker", broker.Install(brokerName, broker.WithBrokerClass(kafka.BrokerClass)))
+	f.Setup("broker is addressable", broker.IsAddressable(brokerName, features.Interval, features.Timeout))
+
+	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
 		trigger.WithSubscriber(svc.AsRef(sinkName), ""),
 		trigger.WithAnnotation("kafka.eventing.knative.dev/delivery.order", "ordered"),
 	))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName, features.Interval, features.Timeout))
 	f.Setup("trigger is ready", trigger.IsReady(brokerName, features.Interval, features.Timeout))
+
+	f.Setup("install source", eventshub.Install(
+		sourceName,
+		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
+		eventshub.AddSequence,
+		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
+	))
 
 	f.Assert("receive events in order", func(ctx context.Context, t feature.T) {
 		events := eventshub.StoreFromContext(ctx, sinkName).AssertExact(20, MatchKind(EventReceived), MatchEvent(cetest.ContainsExtensions("sequence")))
