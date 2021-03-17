@@ -107,6 +107,5 @@ func TestOrderedDelivery(t *testing.T) {
 		environment.Managed(t),
 	)
 
-	// Execute the
 	env.Test(ctx, t, OrderedDelivery())
 }
