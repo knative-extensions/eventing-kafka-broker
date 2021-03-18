@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
-    eventing.knative.dev/release: "v20210211-c4e9c3ba2"
+    eventing.knative.dev/release: "v20210317-3b812fcb4"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
@@ -422,6 +422,7 @@ spec:
       - sources
     kind: ApiServerSource
     plural: apiserversources
+    singular: apiserversource
   scope: Namespaced
   conversion:
     strategy: Webhook
@@ -452,7 +453,7 @@ kind: CustomResourceDefinition
 metadata:
   name: brokers.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210211-c4e9c3ba2"
+    eventing.knative.dev/release: "v20210317-3b812fcb4"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
 spec:
@@ -630,7 +631,7 @@ kind: CustomResourceDefinition
 metadata:
   name: channels.messaging.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210211-c4e9c3ba2"
+    eventing.knative.dev/release: "v20210317-3b812fcb4"
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
@@ -852,7 +853,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20210211-c4e9c3ba2"
+    eventing.knative.dev/release: "v20210317-3b812fcb4"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
@@ -1100,6 +1101,7 @@ spec:
       - sources
     kind: ContainerSource
     plural: containersources
+    singular: containersource
   scope: Namespaced
   conversion:
     strategy: Webhook
@@ -1129,7 +1131,7 @@ kind: CustomResourceDefinition
 metadata:
   name: eventtypes.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210211-c4e9c3ba2"
+    eventing.knative.dev/release: "v20210317-3b812fcb4"
     knative.dev/crd-install: "true"
 spec:
   group: eventing.knative.dev
@@ -1273,7 +1275,7 @@ kind: CustomResourceDefinition
 metadata:
   name: parallels.flows.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210211-c4e9c3ba2"
+    eventing.knative.dev/release: "v20210317-3b812fcb4"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
 spec:
@@ -1541,7 +1543,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20210211-c4e9c3ba2"
+    eventing.knative.dev/release: "v20210317-3b812fcb4"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
@@ -1910,6 +1912,7 @@ spec:
       - sources
     kind: PingSource
     plural: pingsources
+    singular: pingsource
   scope: Namespaced
   conversion:
     strategy: Webhook
@@ -1939,7 +1942,7 @@ kind: CustomResourceDefinition
 metadata:
   name: sequences.flows.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210211-c4e9c3ba2"
+    eventing.knative.dev/release: "v20210317-3b812fcb4"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
 spec:
@@ -2170,7 +2173,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20210211-c4e9c3ba2"
+    eventing.knative.dev/release: "v20210317-3b812fcb4"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
@@ -2362,6 +2365,7 @@ spec:
       - bindings
     kind: SinkBinding
     plural: sinkbindings
+    singular: sinkbinding
   scope: Namespaced
   conversion:
     strategy: Webhook
@@ -2391,7 +2395,7 @@ kind: CustomResourceDefinition
 metadata:
   name: subscriptions.messaging.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210211-c4e9c3ba2"
+    eventing.knative.dev/release: "v20210317-3b812fcb4"
     knative.dev/crd-install: "true"
 spec:
   group: messaging.knative.dev
@@ -2628,7 +2632,7 @@ kind: CustomResourceDefinition
 metadata:
   name: triggers.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210211-c4e9c3ba2"
+    eventing.knative.dev/release: "v20210317-3b812fcb4"
     knative.dev/crd-install: "true"
 spec:
   group: eventing.knative.dev
