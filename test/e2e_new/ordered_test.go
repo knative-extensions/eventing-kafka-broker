@@ -21,9 +21,11 @@ package e2e_new
 import (
 	"context"
 	"sort"
+	"strconv"
 	"testing"
 	"time"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/stretchr/testify/require"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
@@ -66,7 +68,7 @@ func OrderedDelivery() *feature.Feature {
 	f.Setup("install source", eventshub.Install(
 		sourceName,
 		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
-		eventshub.InputEvent(cetest.FullEvent()),
+		eventshub.InputEventWithEncoding(cetest.FullEvent(), cloudevents.EncodingBinary),
 		eventshub.AddSequence,
 		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
 	))
@@ -87,8 +89,10 @@ func OrderedDelivery() *feature.Feature {
 		})
 		for i, event := range events {
 			expectedSequence := i + 1 // sequence is 1 indexed
-			var actualSequence int
-			err := event.Event.ExtensionAs("sequence", &actualSequence)
+			var actualSequenceStr string
+			err := event.Event.ExtensionAs("sequence", &actualSequenceStr)
+			require.NoError(t, err)
+			actualSequence, err := strconv.Atoi(actualSequenceStr)
 			require.NoError(t, err)
 			require.Equal(t, expectedSequence, actualSequence, "event: %v", event)
 		}
