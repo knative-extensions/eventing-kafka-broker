@@ -52,6 +52,10 @@ func OrderedDelivery() *feature.Feature {
 	triggerName := feature.MakeRandomK8sName("trigger")
 	brokerName := feature.MakeRandomK8sName("broker")
 
+	ev := cetest.FullEvent()
+	// We need to make sure the event goes always in the same partition, because ordering is per partition
+	ev.SetExtension("partitionkey", "abc")
+
 	f.Setup("install broker", broker.Install(brokerName, broker.WithBrokerClass(kafka.BrokerClass)))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName, features.Interval, features.Timeout))
@@ -68,7 +72,7 @@ func OrderedDelivery() *feature.Feature {
 	f.Setup("install source", eventshub.Install(
 		sourceName,
 		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
-		eventshub.InputEventWithEncoding(cetest.FullEvent(), cloudevents.EncodingBinary),
+		eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
 		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
 	))
