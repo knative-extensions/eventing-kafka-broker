@@ -91,6 +91,7 @@ func OrderedDelivery() *feature.Feature {
 		sort.SliceStable(events, func(i, j int) bool {
 			return events[i].Time.Before(events[j].Time)
 		})
+		t.Logf("Events: %v", events)
 		for i, event := range events {
 			expectedSequence := i + 1 // sequence is 1 indexed
 			var actualSequenceStr string
