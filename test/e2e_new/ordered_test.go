@@ -66,6 +66,7 @@ func OrderedDelivery() *feature.Feature {
 	f.Setup("install source", eventshub.Install(
 		sourceName,
 		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
+		eventshub.InputEvent(cetest.FullEvent()),
 		eventshub.AddSequence,
 		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
 	))
