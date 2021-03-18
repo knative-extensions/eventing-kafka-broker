@@ -28,8 +28,8 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
-	"knative.dev/eventing/test/rekt/resources/broker"
 	brokerfeatures "knative.dev/eventing/test/rekt/features/broker"
+	"knative.dev/eventing/test/rekt/resources/broker"
 )
 
 func TestBrokerSourceToSink(t *testing.T) {
