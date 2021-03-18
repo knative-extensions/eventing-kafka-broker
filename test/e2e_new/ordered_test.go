@@ -60,7 +60,11 @@ func OrderedDelivery() *feature.Feature {
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName, features.Interval, features.Timeout))
 
-	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
+	f.Setup("install sink", eventshub.Install(
+		sinkName,
+		eventshub.StartReceiver,
+		eventshub.ResponseWaitTime(100*time.Millisecond),
+	))
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
@@ -91,7 +95,6 @@ func OrderedDelivery() *feature.Feature {
 		sort.SliceStable(events, func(i, j int) bool {
 			return events[i].Time.Before(events[j].Time)
 		})
-		t.Logf("Events: %v", events)
 		for i, event := range events {
 			expectedSequence := i + 1 // sequence is 1 indexed
 			var actualSequenceStr string
@@ -99,7 +102,7 @@ func OrderedDelivery() *feature.Feature {
 			require.NoError(t, err)
 			actualSequence, err := strconv.Atoi(actualSequenceStr)
 			require.NoError(t, err)
-			require.Equal(t, expectedSequence, actualSequence, "event: %v", event)
+			require.Equal(t, expectedSequence, actualSequence, "events: %+v", events)
 		}
 	})
 
