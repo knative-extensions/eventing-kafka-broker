@@ -29,8 +29,9 @@ import (
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/stretchr/testify/require"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/utils"
 	"knative.dev/eventing/test/rekt/features"
-	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/svc"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
@@ -39,12 +40,13 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
+	"knative.dev/eventing-kafka-broker/test/e2e_new/broker"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/trigger"
 
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
 )
 
-func OrderedDelivery() *feature.Feature {
+func SinglePartitionOrderedDelivery() *feature.Feature {
 	f := feature.NewFeature()
 
 	sourceName := feature.MakeRandomK8sName("source")
@@ -53,10 +55,13 @@ func OrderedDelivery() *feature.Feature {
 	brokerName := feature.MakeRandomK8sName("broker")
 
 	ev := cetest.FullEvent()
-	// We need to make sure the event goes always in the same partition, because ordering is per partition
-	ev.SetExtension("partitionkey", "abc")
 
-	f.Setup("install broker", broker.Install(brokerName, broker.WithBrokerClass(kafka.BrokerClass)))
+	f.Setup("install one partition configuration", single_partition_config.Install)
+	f.Setup("install broker", broker.Install(
+		brokerName,
+		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithConfig(single_partition_config.ConfigMapName),
+	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName, features.Interval, features.Timeout))
 
@@ -106,6 +111,8 @@ func OrderedDelivery() *feature.Feature {
 		}
 	})
 
+	f.Teardown("log contract config map", utils.LogContractConfigMap)
+
 	return f
 }
 
@@ -120,5 +127,5 @@ func TestOrderedDelivery(t *testing.T) {
 		environment.Managed(t),
 	)
 
-	env.Test(ctx, t, OrderedDelivery())
+	env.Test(ctx, t, SinglePartitionOrderedDelivery())
 }

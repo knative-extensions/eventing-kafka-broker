@@ -45,8 +45,8 @@ message EgressConfig {
 
 // Check dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryOrder for more details
 enum DeliveryOrder {
-  ORDERED = 0;
-  UNORDERED = 1;
+  UNORDERED = 0;
+  ORDERED = 1;
 }
 
 message Egress {

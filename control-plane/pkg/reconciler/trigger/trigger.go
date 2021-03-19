@@ -288,7 +288,7 @@ func (r *Reconciler) getTriggerConfig(ctx context.Context, trigger *eventing.Tri
 
 	deliveryOrderAnnotationValue, ok := trigger.Annotations[deliveryOrderAnnotation]
 	if ok {
-		deliveryOrder, err := parseTriggerOrder(deliveryOrderAnnotationValue)
+		deliveryOrder, err := deliveryOrderFromString(deliveryOrderAnnotationValue)
 		if err != nil {
 			return nil, err
 		}
@@ -314,7 +314,7 @@ func isOurBroker(broker *eventing.Broker) (bool, string) {
 	return brokerClass == kafka.BrokerClass, brokerClass
 }
 
-func parseTriggerOrder(val string) (contract.DeliveryOrder, error) {
+func deliveryOrderFromString(val string) (contract.DeliveryOrder, error) {
 	switch strings.ToLower(val) {
 	case deliveryOrderOrdered:
 		return contract.DeliveryOrder_ORDERED, nil
