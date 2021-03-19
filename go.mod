@@ -23,8 +23,8 @@ require (
 	k8s.io/apiserver v0.19.7
 	k8s.io/client-go v0.19.7
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009
-	knative.dev/eventing v0.21.1-0.20210318223100-266b743802ed
+	knative.dev/eventing v0.21.1-0.20210319074953-c42772d75cc0
 	knative.dev/hack v0.0.0-20210317214554-58edbdc42966
 	knative.dev/pkg v0.0.0-20210318052054-dfeeb1817679
-	knative.dev/reconciler-test v0.0.0-20210318201654-cee1961aec9e
+	knative.dev/reconciler-test v0.0.0-20210319003554-fe1effbb0013
 )
