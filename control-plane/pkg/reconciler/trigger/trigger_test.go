@@ -431,6 +431,31 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			},
 		},
 		{
+			Name: "Broker not ready",
+			Objects: []runtime.Object{
+				newTrigger(),
+				NewBroker(
+					func(v *eventing.Broker) { v.Status.InitializeConditions() },
+					BrokerConfigNotParsed("wrong"),
+				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerBrokerFailed("wrong", ""),
+					),
+				},
+			},
+		},
+		{
 			Name: "Broker deleted, no broker in config map",
 			Objects: []runtime.Object{
 				newTrigger(),
