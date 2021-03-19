@@ -31,7 +31,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/utils"
-	"knative.dev/eventing/test/rekt/features"
 	"knative.dev/eventing/test/rekt/resources/svc"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
@@ -63,7 +62,7 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 		broker.WithConfig(single_partition_config.ConfigMapName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName, features.Interval, features.Timeout))
+	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
 
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
