@@ -120,7 +120,6 @@ type TriggerStatus struct {
 	duckv1.Status `json:",inline"`
 
 	// SubscriberURI is the resolved URI of the receiver for this Trigger.
-	// +optional
 	SubscriberURI *apis.URL `json:"subscriberUri,omitempty"`
 }
 

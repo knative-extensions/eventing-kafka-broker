@@ -51,7 +51,7 @@ data:
       "development": true,
       "outputPaths": ["stdout"],
       "errorOutputPaths": ["stderr"],
-      "encoding": "json",
+      "encoding": "console",
       "encoderConfig": {
         "timeKey": "ts",
         "levelKey": "level",

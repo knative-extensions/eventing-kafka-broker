@@ -23,6 +23,7 @@ import (
 
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
+	v1alpha1 "knative.dev/eventing/pkg/apis/configs/v1alpha1"
 	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	v1beta1 "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	flowsv1 "knative.dev/eventing/pkg/apis/flows/v1"
@@ -30,7 +31,7 @@ import (
 	messagingv1 "knative.dev/eventing/pkg/apis/messaging/v1"
 	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
 	sourcesv1 "knative.dev/eventing/pkg/apis/sources/v1"
-	v1alpha1 "knative.dev/eventing/pkg/apis/sources/v1alpha1"
+	sourcesv1alpha1 "knative.dev/eventing/pkg/apis/sources/v1alpha1"
 	v1alpha2 "knative.dev/eventing/pkg/apis/sources/v1alpha2"
 	sourcesv1beta1 "knative.dev/eventing/pkg/apis/sources/v1beta1"
 	v1beta2 "knative.dev/eventing/pkg/apis/sources/v1beta2"
@@ -62,7 +63,11 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=eventing.knative.dev, Version=v1
+	// Group=configs.internal.knative.dev, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithResource("configmappropagations"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Configs().V1alpha1().ConfigMapPropagations().Informer()}, nil
+
+		// Group=eventing.knative.dev, Version=v1
 	case v1.SchemeGroupVersion.WithResource("brokers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Eventing().V1().Brokers().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("triggers"):
@@ -113,9 +118,9 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1().SinkBindings().Informer()}, nil
 
 		// Group=sources.knative.dev, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("apiserversources"):
+	case sourcesv1alpha1.SchemeGroupVersion.WithResource("apiserversources"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().ApiServerSources().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("sinkbindings"):
+	case sourcesv1alpha1.SchemeGroupVersion.WithResource("sinkbindings"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().SinkBindings().Informer()}, nil
 
 		// Group=sources.knative.dev, Version=v1alpha2

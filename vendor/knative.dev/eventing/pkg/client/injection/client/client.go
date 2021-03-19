@@ -29,9 +29,6 @@ import (
 
 func init() {
 	injection.Default.RegisterClient(withClient)
-	injection.Default.RegisterClientFetcher(func(ctx context.Context) interface{} {
-		return Get(ctx)
-	})
 }
 
 // Key is used as the key for associating information with a context.Context.

@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Knative Authors
+Copyright 2020 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,24 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package knconf
+package v1alpha1
 
 import (
 	"context"
-	"strings"
 
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-	"knative.dev/reconciler-test/pkg/feature"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func HasReadyInConditions(_ context.Context, t feature.T, status duckv1.Status) {
-	found := []string(nil)
-	for _, c := range status.Conditions {
-		if c.Type == "Ready" {
-			// Success!
-			return
-		}
-		found = append(found, string(c.Type))
+func (cmp *ConfigMapPropagation) SetDefaults(ctx context.Context) {
+	// If we haven't configured the selector,
+	// then set the default selector to be an empty map
+	if cmp != nil && cmp.Spec.Selector == nil {
+		cmp.Spec.Selector = &metav1.LabelSelector{}
 	}
-	t.Errorf(`does not have "Ready" condition, has: [%s]`, strings.Join(found, ","))
 }

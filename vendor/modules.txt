@@ -621,6 +621,7 @@ gopkg.in/evanphx/json-patch.v4
 # gopkg.in/inf.v0 v0.9.1
 gopkg.in/inf.v0
 # gopkg.in/yaml.v2 v2.4.0
+## explicit
 gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 gopkg.in/yaml.v3
@@ -681,6 +682,7 @@ k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextension
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1/fake
 k8s.io/apiextensions-apiserver/pkg/client/listers/apiextensions/v1
+k8s.io/apiextensions-apiserver/pkg/client/listers/apiextensions/v1beta1
 # k8s.io/apimachinery v0.19.7
 ## explicit
 k8s.io/apimachinery/pkg/api/equality
@@ -1014,11 +1016,14 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.21.1-0.20210319074953-c42772d75cc0
+# knative.dev/eventing v0.21.2
 ## explicit
 knative.dev/eventing/pkg/apis/config
+knative.dev/eventing/pkg/apis/configs
+knative.dev/eventing/pkg/apis/configs/v1alpha1
 knative.dev/eventing/pkg/apis/duck
 knative.dev/eventing/pkg/apis/duck/v1
+knative.dev/eventing/pkg/apis/duck/v1alpha1
 knative.dev/eventing/pkg/apis/duck/v1beta1
 knative.dev/eventing/pkg/apis/eventing
 knative.dev/eventing/pkg/apis/eventing/v1
@@ -1040,6 +1045,8 @@ knative.dev/eventing/pkg/apis/sources/v1beta2
 knative.dev/eventing/pkg/client/clientset/versioned
 knative.dev/eventing/pkg/client/clientset/versioned/fake
 knative.dev/eventing/pkg/client/clientset/versioned/scheme
+knative.dev/eventing/pkg/client/clientset/versioned/typed/configs/v1alpha1
+knative.dev/eventing/pkg/client/clientset/versioned/typed/configs/v1alpha1/fake
 knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1
 knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1/fake
 knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1beta1
@@ -1063,6 +1070,8 @@ knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1beta1/fake
 knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1beta2
 knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1beta2/fake
 knative.dev/eventing/pkg/client/informers/externalversions
+knative.dev/eventing/pkg/client/informers/externalversions/configs
+knative.dev/eventing/pkg/client/informers/externalversions/configs/v1alpha1
 knative.dev/eventing/pkg/client/informers/externalversions/eventing
 knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1
 knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1beta1
@@ -1091,6 +1100,7 @@ knative.dev/eventing/pkg/client/injection/informers/factory/fake
 knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker
 knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger
 knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1beta1/broker
+knative.dev/eventing/pkg/client/listers/configs/v1alpha1
 knative.dev/eventing/pkg/client/listers/eventing/v1
 knative.dev/eventing/pkg/client/listers/eventing/v1beta1
 knative.dev/eventing/pkg/client/listers/flows/v1
@@ -1130,14 +1140,9 @@ knative.dev/eventing/test/performance/infra/common
 knative.dev/eventing/test/performance/infra/event_state
 knative.dev/eventing/test/performance/infra/receiver
 knative.dev/eventing/test/performance/infra/sender
-knative.dev/eventing/test/rekt/features/broker
-knative.dev/eventing/test/rekt/features/knconf
-knative.dev/eventing/test/rekt/resources/broker
-knative.dev/eventing/test/rekt/resources/flaker
+knative.dev/eventing/test/rekt/features
 knative.dev/eventing/test/rekt/resources/svc
-knative.dev/eventing/test/rekt/resources/trigger
 knative.dev/eventing/test/test_images
-knative.dev/eventing/test/test_images/event-flaker
 knative.dev/eventing/test/test_images/event-sender
 knative.dev/eventing/test/test_images/heartbeats
 knative.dev/eventing/test/test_images/performance
