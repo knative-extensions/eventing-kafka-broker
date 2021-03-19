@@ -42,9 +42,9 @@ import (
 )
 
 const (
-	deliveryOrderAnnotation = "kafka.eventing.knative.dev/delivery.order"
-	deliveryOrderOrdered    = "ordered"
-	deliveryOrderUnordered  = "unordered"
+	deliveryOrderLabel     = "kafka.eventing.knative.dev/delivery.order"
+	deliveryOrderOrdered   = "ordered"
+	deliveryOrderUnordered = "unordered"
 )
 
 type Reconciler struct {
@@ -286,13 +286,15 @@ func (r *Reconciler) getTriggerConfig(ctx context.Context, trigger *eventing.Tri
 	}
 	egress.EgressConfig = egressConfig
 
-	deliveryOrderAnnotationValue, ok := trigger.Annotations[deliveryOrderAnnotation]
-	if ok {
-		deliveryOrder, err := deliveryOrderFromString(deliveryOrderAnnotationValue)
-		if err != nil {
-			return nil, err
+	if trigger.Labels != nil {
+		deliveryOrderLabelValue, ok := trigger.Labels[deliveryOrderLabel]
+		if ok {
+			deliveryOrder, err := deliveryOrderFromString(deliveryOrderLabelValue)
+			if err != nil {
+				return nil, err
+			}
+			egress.DeliveryOrder = deliveryOrder
 		}
-		egress.DeliveryOrder = deliveryOrder
 	}
 
 	return egress, nil
@@ -321,6 +323,6 @@ func deliveryOrderFromString(val string) (contract.DeliveryOrder, error) {
 	case deliveryOrderUnordered:
 		return contract.DeliveryOrder_UNORDERED, nil
 	default:
-		return contract.DeliveryOrder_UNORDERED, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, deliveryOrderOrdered, deliveryOrderUnordered)
+		return contract.DeliveryOrder_UNORDERED, fmt.Errorf("invalid label %s value: %s. Allowed values [ %q | %q ]", deliveryOrderLabel, val, deliveryOrderOrdered, deliveryOrderUnordered)
 	}
 }

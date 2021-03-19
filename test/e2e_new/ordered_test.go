@@ -74,7 +74,7 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 		triggerName,
 		brokerName,
 		trigger.WithSubscriber(svc.AsRef(sinkName), ""),
-		trigger.WithAnnotation("kafka.eventing.knative.dev/delivery.order", "ordered"),
+		trigger.WithLabel("kafka.eventing.knative.dev/delivery.order", "ordered"),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 

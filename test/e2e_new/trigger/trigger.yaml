@@ -17,8 +17,8 @@ kind: Trigger
 metadata:
   name: {{ .name }}
   namespace: {{ .namespace }}
-  annotations:
-  {{ range $key, $value := .annotations }}
+  labels:
+  {{ range $key, $value := .labels }}
     {{ $key }}: "{{ $value }}"
   {{ end }}
 spec:
