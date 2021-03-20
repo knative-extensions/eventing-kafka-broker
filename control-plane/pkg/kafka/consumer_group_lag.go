@@ -47,8 +47,17 @@ type ConsumerGroupLag struct {
 
 // PartitionLag contains consumer lag information of a partition.
 type PartitionLag struct {
-	LatestOffset   int64 // Offset that will be produced next.
-	ConsumerOffset int64 // Offset that will be consumed next.
+	// Offset that will be produced next.
+	LatestOffset int64
+	// Offset that will be consumed next.
+	ConsumerOffset int64
+	// Signal whether a consumer made a fetch request or not to the leader of this partition.
+	//
+	// Note: a committed offset is the offset that will be consumed next.
+	//
+	// OffsetCommitted = false, no fetch request has been made by a consumer to the leader of this partition.
+	// OffsetCommitted = true, a fetch request has been made by a consumer to the leader of this partition.
+	OffsetCommitted bool
 }
 
 type adminFunc func(client sarama.Client) (sarama.ClusterAdmin, error)
@@ -143,8 +152,10 @@ func (p *consumerGroupLagProvider) getPartitionLag(partition int32, topic string
 	}
 	latestOffset = max(0, latestOffset) // latest offset should always be greater or equal to 0.
 
+	offsetCommitted := true
 	if consumerOffset <= invalidOffset {
 		// When we receive an invalid consumer offset, it means no offset has yet been committed.
+		offsetCommitted = false
 
 		if p.offsetStrategy == sarama.OffsetOldest {
 			// Set consumer offset to the first offset.
@@ -161,8 +172,9 @@ func (p *consumerGroupLagProvider) getPartitionLag(partition int32, topic string
 	}
 
 	pl := PartitionLag{
-		LatestOffset:   latestOffset,
-		ConsumerOffset: consumerOffset,
+		LatestOffset:    latestOffset,
+		ConsumerOffset:  consumerOffset,
+		OffsetCommitted: offsetCommitted,
 	}
 	return pl, nil
 }
@@ -224,5 +236,10 @@ func (pl PartitionLag) Lag() int64 {
 }
 
 func (pl PartitionLag) String() string {
-	return fmt.Sprintf("latest offset %d consumer offset %d lag %d", pl.LatestOffset, pl.ConsumerOffset, pl.Lag())
+	return fmt.Sprintf("latest offset %d consumer offset %d offsetCommitted %v lag %d",
+		pl.LatestOffset,
+		pl.ConsumerOffset,
+		pl.OffsetCommitted,
+		pl.Lag(),
+	)
 }
