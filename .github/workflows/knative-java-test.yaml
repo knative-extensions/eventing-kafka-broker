@@ -15,7 +15,7 @@
 # This file is automagically synced here from github.com/knative-sandbox/.github
 # repo by knobots: https://github.com/mattmoor/knobots and will be overwritten.
 
-name: Test
+name: Java Test
 
 on:
 
@@ -58,9 +58,8 @@ jobs:
         with:
           files: .codecov.yaml
 
-      - if: steps.codecov-enabled.outputs.files_exists == 'true'
-        name: Java Test
-        run: mvn verify -B -U --file data-plane/pom.xml --no-transfer-progress
+      - name: Java Test
+        run: make dp-ut
 
       - if: steps.codecov-enabled.outputs.files_exists == 'true'
         name: Codecov

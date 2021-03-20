@@ -32,26 +32,26 @@ export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
 export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
 
 # The number of control plane replicas to run.
-readonly REPLICAS=${REPLICAS:-3}
+readonly REPLICAS=${REPLICAS:-1}
 
 export SYSTEM_NAMESPACE="knative-eventing"
 export CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}
 
 function knative_setup() {
-  knative_eventing "apply --strict"
+  knative_eventing
   return $?
 }
 
 function knative_teardown() {
   if ! is_release_branch; then
-    echo ">> Install Knative Eventing from HEAD"
+    echo ">> Delete Knative Eventing from HEAD"
     pushd .
     cd eventing || fail_test "Failed to set up Eventing"
-    ko delete --ignore-not-found -f "${EVENTING_CONFIG}"
+    kubectl delete --ignore-not-found -f "${EVENTING_CONFIG}"
     popd || fail_test "Failed to set up Eventing"
   else
-    echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
-    kubectl delete --ignore-not-found -f ${KNATIVE_EVENTING_RELEASE}
+    echo ">> Delete Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
+    kubectl delete --ignore-not-found -f "${KNATIVE_EVENTING_RELEASE}"
   fi
 }
 
@@ -88,7 +88,7 @@ function knative_eventing() {
   ./test/kafka/kafka_setup.sh || fail_test "Failed to set up Kafka cluster"
 }
 
-function test_setup() {
+function build_components_from_source() {
 
   [ -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" ] && rm "${EVENTING_KAFKA_BROKER_ARTIFACT}"
@@ -99,6 +99,13 @@ function test_setup() {
 
   header "Control plane setup"
   control_plane_setup || fail_test "Failed to set up control plane components"
+
+  return $?
+}
+
+function test_setup() {
+
+  build_components_from_source || return $?
 
   kubectl apply -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
   wait_until_pods_running knative-eventing || fail_test "Control plane did not come up"
@@ -118,9 +125,9 @@ function test_setup() {
 }
 
 function test_teardown() {
-  kubectl delete -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || fail_test "Failed to tear down control plane"
-  kubectl delete -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to tear down kafka broker"
-  kubectl delete -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to tear down kafka sink"
+  kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || fail_test "Failed to tear down control plane"
+  kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to tear down kafka broker"
+  kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to tear down kafka sink"
 }
 
 function scale_controlplane() {
@@ -138,13 +145,24 @@ function apply_chaos() {
   ko apply -f ./test/config/chaos || return $?
 }
 
+function delete_chaos() {
+  kubectl delete --ignore-not-found -f ./test/config/chaos || return $?
+}
+
 function apply_sacura() {
   ko apply -f ./test/config/sacura/0-namespace.yaml || return $?
+  ko apply -f ./test/config/sacura/100-broker-config.yaml || return $?
   ko apply -f ./test/config/sacura/101-broker.yaml || return $?
 
   kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || return $?
 
   ko apply -f ./test/config/sacura || return $?
+}
+
+function delete_sacura() {
+  kubectl delete --ignore-not-found -f ./test/config/sacura/101-broker.yaml || return $?
+  kubectl delete --ignore-not-found -f ./test/config/sacura/100-broker-config.yaml || return $?
+  kubectl delete --ignore-not-found -f ./test/config/sacura/0-namespace.yaml || return $?
 }
 
 function export_logs_continuously() {

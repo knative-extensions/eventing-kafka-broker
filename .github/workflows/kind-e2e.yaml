@@ -65,6 +65,8 @@ jobs:
       ARTIFACTS: ${{ github.workspace }}/artifacts
 
       EVENTING_CONFIG: ${{ matrix.eventing-config }}
+      NODE_VERSION: ${{ matrix.k8s-version }}
+      NODE_SHA: ${{ matrix.kind-image-sha }}
 
     steps:
       - name: Install Dependencies
@@ -99,49 +101,14 @@ jobs:
           chmod +x ./kind
           sudo mv kind /usr/local/bin
 
-      - name: Configure KinD Cluster
-        run: |
-          set -x
-
-          # KinD configuration.
-          cat > kind.yaml <<EOF
-          apiVersion: kind.x-k8s.io/v1alpha4
-          kind: Cluster
-
-          # This is needed in order to support projected volumes with service account tokens.
-          # See: https://kubernetes.slack.com/archives/CEKK1KTN2/p1600268272383600
-          kubeadmConfigPatches:
-            - |
-              apiVersion: kubeadm.k8s.io/v1beta2
-              kind: ClusterConfiguration
-              metadata:
-                name: config
-              apiServer:
-                extraArgs:
-                  "service-account-issuer": "kubernetes.default.svc"
-                  "service-account-signing-key-file": "/etc/kubernetes/pki/sa.key"
-              networking:
-                dnsDomain: "${CLUSTER_SUFFIX}"
-          nodes:
-          - role: control-plane
-            image: kindest/node:${{ matrix.k8s-version }}@${{ matrix.kind-image-sha }}
-          - role: worker
-            image: kindest/node:${{ matrix.k8s-version }}@${{ matrix.kind-image-sha }}
-          EOF
-
       - name: Create KinD Cluster
-        run: |
-          set -x
+        run: make kind-up
 
-          kind create cluster --config kind.yaml
+      - name: Install Dependencies (Eventing, Kafka, etc)
+        run: make deps-up
 
-      - name: Install Knative Eventing and Eventing Kafka Broker
-        run: |
-          source test/e2e-common.sh
-
-          knative_setup
-
-          test_setup
+      - name: Install Eventing Kafka Broker
+        run: make up
 
       - name: Wait for things to be up
         run: |
@@ -167,6 +134,9 @@ jobs:
           # Run the tests tagged as e2e on the KinD cluster.
           go test -race -count=1 -timeout=1h -short -tags=e2e \
              ${{ matrix.test-suite }} ${{ matrix.extra-test-flags }}
+
+      - name: Teardown Eventing Kafka Broker
+        run: make down
 
       - name: Collect system diagnostics
         if: ${{ failure() }}
