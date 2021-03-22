@@ -48,6 +48,8 @@ import (
 func SinglePartitionOrderedDelivery() *feature.Feature {
 	f := feature.NewFeature()
 
+	const responseWaitTime = 100 * time.Millisecond
+
 	sourceName := feature.MakeRandomK8sName("source")
 	sinkName := feature.MakeRandomK8sName("sink")
 	triggerName := feature.MakeRandomK8sName("trigger")
@@ -67,7 +69,7 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
 		eventshub.StartReceiver,
-		eventshub.ResponseWaitTime(100*time.Millisecond),
+		eventshub.ResponseWaitTime(responseWaitTime),
 	))
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
@@ -99,6 +101,8 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 		sort.SliceStable(events, func(i, j int) bool {
 			return events[i].Time.Before(events[j].Time)
 		})
+
+		// Test sequence
 		for i, event := range events {
 			expectedSequence := i + 1 // sequence is 1 indexed
 			var actualSequenceStr string
@@ -107,6 +111,20 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 			actualSequence, err := strconv.Atoi(actualSequenceStr)
 			require.NoError(t, err)
 			require.Equal(t, expectedSequence, actualSequence, "events: %+v", events)
+		}
+
+		// Test timings: because events are ordered, and the receiver pauses for 100 ms,
+		// their time should be > ~100 ms distant
+
+		// Assuming 10ms is the clock skew (highly improbable on a local cluster)
+		const clockSkew = 10 * time.Millisecond
+
+		prev := events[0].Time
+		for _, event := range events[1:] {
+			require.True(t, prev.Before(event.Time), "EventInfo.Time should be before the previous EventInfo.Time: %s < %s", prev, event.Time)
+			require.Greater(t, event.Time.Sub(prev) + clockSkew, responseWaitTime)
+
+			prev = event.Time
 		}
 	})
 
