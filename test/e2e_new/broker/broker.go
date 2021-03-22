@@ -1,18 +1,18 @@
 /*
-Copyright 2020 The Knative Authors
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Copyright 2021 The Knative Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package broker
 
@@ -33,11 +33,12 @@ import (
 	"knative.dev/reconciler-test/pkg/manifest"
 )
 
+// TODO copy pasted from eventing, remove once upstream is clear how templating should work...
+
 var EnvCfg EnvConfig
 
 type EnvConfig struct {
-	BrokerClass        string `envconfig:"BROKER_CLASS" default:"MTChannelBasedBroker" required:"true"`
-	BrokerTemplatesDir string `envconfig:"BROKER_TEMPLATES"`
+	BrokerClass string `envconfig:"BROKER_CLASS" default:"MTChannelBasedBroker" required:"true"`
 }
 
 func init() {
@@ -45,15 +46,6 @@ func init() {
 	if err := envconfig.Process("", &EnvCfg); err != nil {
 		log.Fatal("Failed to process env var", err)
 	}
-}
-
-func WithEnvConfig() []manifest.CfgFn {
-	cfg := []manifest.CfgFn{WithBrokerClass(EnvCfg.BrokerClass)}
-
-	if EnvCfg.BrokerTemplatesDir != "" {
-		cfg = append(cfg, WithBrokerTemplateFiles(EnvCfg.BrokerTemplatesDir))
-	}
-	return cfg
 }
 
 func Gvr() schema.GroupVersionResource {
@@ -67,9 +59,14 @@ func WithBrokerClass(class string) manifest.CfgFn {
 	}
 }
 
-func WithBrokerTemplateFiles(dir string) manifest.CfgFn {
-	return func(cfg map[string]interface{}) {
-		cfg["__brokerTemplateDir"] = dir
+// WithConfig adds the broker class config to a Broker spec.
+func WithConfig(name string) manifest.CfgFn {
+	return func(templateData map[string]interface{}) {
+		cfg := make(map[string]interface{})
+		cfg["kind"] = "ConfigMap"
+		cfg["apiVersion"] = "v1"
+		cfg["name"] = name
+		templateData["config"] = cfg
 	}
 }
 
@@ -127,13 +124,6 @@ func Install(name string, opts ...manifest.CfgFn) feature.StepFn {
 		fn(cfg)
 	}
 
-	if dir, ok := cfg["__brokerTemplateDir"]; ok {
-		return func(ctx context.Context, t feature.T) {
-			if _, err := manifest.InstallYaml(ctx, dir.(string), cfg); err != nil {
-				t.Fatal(err)
-			}
-		}
-	}
 	return func(ctx context.Context, t feature.T) {
 		if _, err := manifest.InstallLocalYaml(ctx, cfg); err != nil {
 			t.Fatal(err)

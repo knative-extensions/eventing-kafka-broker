@@ -154,6 +154,132 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			},
 		},
 		{
+			Name: "Reconciled normal - Trigger with ordered delivery",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderOrdered)),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+						},
+					},
+				}, &configs),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									DeliveryOrder: contract.DeliveryOrder_ORDERED,
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderOrdered),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - Trigger with unordered delivery",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderUnordered)),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+						},
+					},
+				}, &configs),
+				BrokerDispatcherPod(configs.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									DeliveryOrder: contract.DeliveryOrder_UNORDERED,
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderUnordered),
+					),
+				},
+			},
+		},
+		{
 			Name: "Reconciled normal - Trigger delivery",
 			Objects: []runtime.Object{
 				NewBroker(

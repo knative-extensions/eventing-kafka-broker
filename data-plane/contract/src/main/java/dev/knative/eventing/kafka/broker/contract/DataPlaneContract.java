@@ -152,24 +152,24 @@ public final class DataPlaneContract {
   public enum DeliveryOrder
       implements com.google.protobuf.ProtocolMessageEnum {
     /**
-     * <code>ORDERED = 0;</code>
+     * <code>UNORDERED = 0;</code>
      */
-    ORDERED(0),
+    UNORDERED(0),
     /**
-     * <code>UNORDERED = 1;</code>
+     * <code>ORDERED = 1;</code>
      */
-    UNORDERED(1),
+    ORDERED(1),
     UNRECOGNIZED(-1),
     ;
 
     /**
-     * <code>ORDERED = 0;</code>
+     * <code>UNORDERED = 0;</code>
      */
-    public static final int ORDERED_VALUE = 0;
+    public static final int UNORDERED_VALUE = 0;
     /**
-     * <code>UNORDERED = 1;</code>
+     * <code>ORDERED = 1;</code>
      */
-    public static final int UNORDERED_VALUE = 1;
+    public static final int ORDERED_VALUE = 1;
 
 
     public final int getNumber() {
@@ -196,8 +196,8 @@ public final class DataPlaneContract {
      */
     public static DeliveryOrder forNumber(int value) {
       switch (value) {
-        case 0: return ORDERED;
-        case 1: return UNORDERED;
+        case 0: return UNORDERED;
+        case 1: return ORDERED;
         default: return null;
       }
     }
@@ -2910,7 +2910,7 @@ public final class DataPlaneContract {
       if (egressConfig_ != null) {
         output.writeMessage(7, getEgressConfig());
       }
-      if (deliveryOrder_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.ORDERED.getNumber()) {
+      if (deliveryOrder_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.UNORDERED.getNumber()) {
         output.writeEnum(8, deliveryOrder_);
       }
       unknownFields.writeTo(output);
@@ -2946,7 +2946,7 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(7, getEgressConfig());
       }
-      if (deliveryOrder_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.ORDERED.getNumber()) {
+      if (deliveryOrder_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.UNORDERED.getNumber()) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(8, deliveryOrder_);
       }
@@ -10762,8 +10762,8 @@ public final class DataPlaneContract {
       "cret\030\010 \001(\0132\n.ReferenceH\000B\006\n\004Auth\"<\n\010Cont" +
       "ract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 " +
       "\003(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Expon" +
-      "ential\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\013\n" +
-      "\007ORDERED\020\000\022\r\n\tUNORDERED\020\001*)\n\013ContentMode" +
+      "ential\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r\n" +
+      "\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*)\n\013ContentMode" +
       "\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knat" +
       "ive.eventing.kafka.broker.contractB\021Data" +
       "PlaneContractZ\032control-plane/pkg/contrac" +

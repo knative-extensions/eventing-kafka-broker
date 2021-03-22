@@ -19,6 +19,7 @@ package trigger
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
@@ -38,6 +39,12 @@ import (
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/log"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+)
+
+const (
+	deliveryOrderAnnotation = "kafka.eventing.knative.dev/delivery.order"
+	deliveryOrderOrdered    = "ordered"
+	deliveryOrderUnordered  = "unordered"
 )
 
 type Reconciler struct {
@@ -284,6 +291,15 @@ func (r *Reconciler) getTriggerConfig(ctx context.Context, trigger *eventing.Tri
 	}
 	egress.EgressConfig = egressConfig
 
+	deliveryOrderAnnotationValue, ok := trigger.Annotations[deliveryOrderAnnotation]
+	if ok {
+		deliveryOrder, err := deliveryOrderFromString(deliveryOrderAnnotationValue)
+		if err != nil {
+			return nil, err
+		}
+		egress.DeliveryOrder = deliveryOrder
+	}
+
 	return egress, nil
 }
 
@@ -301,4 +317,15 @@ func deleteTrigger(egresses []*contract.Egress, index int) []*contract.Egress {
 func isOurBroker(broker *eventing.Broker) (bool, string) {
 	brokerClass := broker.GetAnnotations()[eventing.BrokerClassAnnotationKey]
 	return brokerClass == kafka.BrokerClass, brokerClass
+}
+
+func deliveryOrderFromString(val string) (contract.DeliveryOrder, error) {
+	switch strings.ToLower(val) {
+	case deliveryOrderOrdered:
+		return contract.DeliveryOrder_ORDERED, nil
+	case deliveryOrderUnordered:
+		return contract.DeliveryOrder_UNORDERED, nil
+	default:
+		return contract.DeliveryOrder_UNORDERED, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, deliveryOrderOrdered, deliveryOrderUnordered)
+	}
 }

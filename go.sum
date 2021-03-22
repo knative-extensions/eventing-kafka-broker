@@ -705,6 +705,7 @@ github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQD
 github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
 github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da/go.mod h1:gi+0XIa01GRL2eRQVjQkKGqKF3SF9vZR/HnPullcV2E=
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
+github.com/sergi/go-diff v1.0.0 h1:Kpca3qRNrduNnOQeazBd0ysaKrUJiIuISHxogkT9RPQ=
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
@@ -1294,16 +1295,13 @@ k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 h1:0T5IaWHO3sJTEmCP6mUlBvMukxPKU
 k8s.io/utils v0.0.0-20210111153108-fddb29f9d009/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 knative.dev/eventing v0.21.1-0.20210319074953-c42772d75cc0 h1:9qEZPdRz+ZH2ZkU+ntqpnxbkHfpiiyrAZM1rXOf8C58=
 knative.dev/eventing v0.21.1-0.20210319074953-c42772d75cc0/go.mod h1:NfgiculSlgtkSOIgUciZ6BxRTzJgy2+VGnsChDW/vSA=
-knative.dev/hack v0.0.0-20210309141825-9b73a256fd9a h1:0UGKyvFzY1Czu0lP9+0IrJhwtKe2oNLI2GYa7MIQ5c0=
 knative.dev/hack v0.0.0-20210309141825-9b73a256fd9a/go.mod h1:PHt8x8yX5Z9pPquBEfIj0X66f8iWkWfR0S/sarACJrI=
 knative.dev/hack v0.0.0-20210317214554-58edbdc42966 h1:qSnMQkq4gnhD5Hb8Mpfn7IrpkiQFhXXFPOA7uIl2lAc=
 knative.dev/hack v0.0.0-20210317214554-58edbdc42966/go.mod h1:PHt8x8yX5Z9pPquBEfIj0X66f8iWkWfR0S/sarACJrI=
 knative.dev/hack/schema v0.0.0-20210317214554-58edbdc42966/go.mod h1:ffjwmdcrH5vN3mPhO8RrF2KfNnbHeCE2C60A+2cv3U0=
-knative.dev/pkg v0.0.0-20210315160101-6a33a1ab29ac h1:aGbaOcyNqxnvvujRtSMfkwehPER3TTsAw5mgCVqYZ08=
 knative.dev/pkg v0.0.0-20210315160101-6a33a1ab29ac/go.mod h1:7swdJzGy7U6iq8538vt2yFsZJqmnSAxMFexWK9Ktyes=
 knative.dev/pkg v0.0.0-20210318052054-dfeeb1817679 h1:5yTTe0oW2/a13DU2b4U42h7lSHZLWy32a/8DEkkH7C4=
 knative.dev/pkg v0.0.0-20210318052054-dfeeb1817679/go.mod h1:o1aTlbc+h60DP9P6nd/WmP99Ny9Ls3U/JIjL4xMgqpw=
-knative.dev/reconciler-test v0.0.0-20210318201654-cee1961aec9e h1:oDLr53xvxm2+36YgetdA76/iBgmHpCgLU0zULmRaOfQ=
 knative.dev/reconciler-test v0.0.0-20210318201654-cee1961aec9e/go.mod h1:0Rqoen7S2xgblliOrJfSe127JjPI2tMaTnEqhvmjtBI=
 knative.dev/reconciler-test v0.0.0-20210319003554-fe1effbb0013 h1:HT+sPYLpHl0xSK0LQJlViSpuTa6Of0cS6k5Qq1D101Y=
 knative.dev/reconciler-test v0.0.0-20210319003554-fe1effbb0013/go.mod h1:QSd2hWDDwFh+9AHOkiECsj2ZY2DGJBKnj6aT6LITBuw=
