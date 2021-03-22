@@ -34,7 +34,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.OrderedOffsetM
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.UnorderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.UnorderedOffsetManager;
 import io.cloudevents.CloudEvent;
-import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
@@ -128,7 +127,6 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
     final var producerConfigs = new HashMap<>(this.producerConfigs);
     producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
-    producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
     // TODO I'm assuming ordered/unordered will be configure here, at egress level
     final DeliveryGuarantee deliveryGuarantee = DeliveryGuarantee.UNORDERED;
