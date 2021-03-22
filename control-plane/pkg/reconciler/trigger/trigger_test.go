@@ -159,7 +159,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				NewBroker(
 					BrokerReady,
 				),
-				newTrigger(withLabel(deliveryOrderLabel, deliveryOrderOrdered)),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderLabel, deliveryOrderOrdered)),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -211,7 +211,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
-						withLabel(deliveryOrderLabel, deliveryOrderOrdered),
+						reconcilertesting.WithAnnotation(deliveryOrderLabel, deliveryOrderOrdered),
 					),
 				},
 			},
@@ -222,7 +222,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				NewBroker(
 					BrokerReady,
 				),
-				newTrigger(withLabel(deliveryOrderLabel, deliveryOrderUnordered)),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderLabel, deliveryOrderUnordered)),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -274,7 +274,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
-						withLabel(deliveryOrderLabel, deliveryOrderUnordered),
+						reconcilertesting.WithAnnotation(deliveryOrderLabel, deliveryOrderUnordered),
 					),
 				},
 			},
@@ -2145,15 +2145,6 @@ func newTrigger(options ...reconcilertesting.TriggerOption) runtime.Object {
 			},
 		)...,
 	)
-}
-
-func withLabel(key string, value string) func(*eventing.Trigger) {
-	return func(e *eventing.Trigger) {
-		if e.Labels == nil {
-			e.Labels = make(map[string]string)
-		}
-		e.Labels[key] = value
-	}
 }
 
 func withAttributes(attributes eventing.TriggerFilterAttributes) func(*eventing.Trigger) {
