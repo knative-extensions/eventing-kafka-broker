@@ -159,7 +159,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				NewBroker(
 					BrokerReady,
 				),
-				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderLabel, deliveryOrderOrdered)),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderOrdered)),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -211,7 +211,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
-						reconcilertesting.WithAnnotation(deliveryOrderLabel, deliveryOrderOrdered),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderOrdered),
 					),
 				},
 			},
@@ -222,7 +222,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				NewBroker(
 					BrokerReady,
 				),
-				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderLabel, deliveryOrderUnordered)),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderUnordered)),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -274,7 +274,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
-						reconcilertesting.WithAnnotation(deliveryOrderLabel, deliveryOrderUnordered),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderUnordered),
 					),
 				},
 			},

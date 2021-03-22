@@ -36,12 +36,12 @@ func gvr() schema.GroupVersionResource {
 }
 
 // WithAnnotation adds an annotation
-func WithLabel(key string, value string) CfgFn {
+func WithAnnotation(key string, value string) CfgFn {
 	return func(cfg map[string]interface{}) {
-		if _, set := cfg["labels"]; !set {
-			cfg["labels"] = map[string]interface{}{}
+		if _, set := cfg["annotations"]; !set {
+			cfg["annotations"] = map[string]interface{}{}
 		}
-		(cfg["labels"].(map[string]interface{}))[key] = value
+		(cfg["annotations"].(map[string]interface{}))[key] = value
 	}
 }
 
