@@ -27,6 +27,7 @@ import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.kafka.CloudEventSerializer;
+import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -111,6 +112,7 @@ public class Main {
 
       producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
       producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
+      producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
       final Function<Vertx, RequestMapper> handlerFactory = v -> new RequestMapper(
         v,
