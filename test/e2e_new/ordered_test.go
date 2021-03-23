@@ -29,8 +29,10 @@ import (
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/stretchr/testify/require"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/broker"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/multiple_partition_config"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/utils"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/trigger"
 	"knative.dev/eventing/test/rekt/resources/svc"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
@@ -39,11 +41,23 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
-	"knative.dev/eventing-kafka-broker/test/e2e_new/broker"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/trigger"
-
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
 )
+
+func TestOrderedDelivery(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, SinglePartitionOrderedDelivery())
+	env.Test(ctx, t, MultiplePartitionOrderedDelivery())
+}
 
 func SinglePartitionOrderedDelivery() *feature.Feature {
 	f := feature.NewFeature()
@@ -87,15 +101,112 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
 	))
 
-	f.Assert("receive events in order", func(ctx context.Context, t feature.T) {
+	f.Assert("receive events in order", assertDeliveryOrderAndTiming(
+		sinkName,
+		20,
+		responseWaitTime,
+		cetest.ContainsExtensions("sequence"),
+	))
+
+	return f
+}
+
+func MultiplePartitionOrderedDelivery() *feature.Feature {
+	f := feature.NewFeature()
+
+	const responseWaitTime = 100 * time.Millisecond
+
+	sourceName := feature.MakeRandomK8sName("source")
+	sinkName := feature.MakeRandomK8sName("sink")
+	triggerName := feature.MakeRandomK8sName("trigger")
+	brokerName := feature.MakeRandomK8sName("broker")
+
+	evA := cetest.FullEvent()
+	evA.SetExtension("partitionkey", "a")
+	evB := cetest.FullEvent()
+	evB.SetExtension("partitionkey", "b")
+	evC := cetest.FullEvent()
+	evC.SetExtension("partitionkey", "c")
+
+	f.Setup("install multiple partition configuration", multiple_partition_config.Install)
+	f.Setup("install broker", broker.Install(
+		brokerName,
+		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithConfig(multiple_partition_config.ConfigMapName),
+	))
+	f.Setup("broker is ready", broker.IsReady(brokerName))
+	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+
+	f.Setup("install sink", eventshub.Install(
+		sinkName,
+		eventshub.StartReceiver,
+		eventshub.ResponseWaitTime(responseWaitTime),
+	))
+	f.Setup("install trigger", trigger.Install(
+		triggerName,
+		brokerName,
+		trigger.WithSubscriber(svc.AsRef(sinkName), ""),
+		trigger.WithAnnotation("kafka.eventing.knative.dev/delivery.order", "ordered"),
+	))
+	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+
+	f.Setup("install source for events keyed 'a'", eventshub.Install(
+		sourceName,
+		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
+		eventshub.InputEventWithEncoding(evA, cloudevents.EncodingBinary),
+		eventshub.AddSequence,
+		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
+	))
+	f.Setup("install source for events keyed 'b'", eventshub.Install(
+		sourceName,
+		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
+		eventshub.InputEventWithEncoding(evB, cloudevents.EncodingBinary),
+		eventshub.AddSequence,
+		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
+	))
+	f.Setup("install source for events keyed 'c'", eventshub.Install(
+		sourceName,
+		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
+		eventshub.InputEventWithEncoding(evC, cloudevents.EncodingBinary),
+		eventshub.AddSequence,
+		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
+	))
+
+	f.Assert("receive events keyed 'a' in order", assertDeliveryOrderAndTiming(
+		sinkName,
+		20,
+		responseWaitTime,
+		cetest.ContainsExtensions("sequence"),
+		cetest.HasExtension("partitionkey", "a"),
+	))
+	f.Assert("receive events keyed 'b' in order", assertDeliveryOrderAndTiming(
+		sinkName,
+		20,
+		responseWaitTime,
+		cetest.ContainsExtensions("sequence"),
+		cetest.HasExtension("partitionkey", "b"),
+	))
+	f.Assert("receive events keyed 'c' in order", assertDeliveryOrderAndTiming(
+		sinkName,
+		20,
+		responseWaitTime,
+		cetest.ContainsExtensions("sequence"),
+		cetest.HasExtension("partitionkey", "c"),
+	))
+
+	return f
+}
+
+func assertDeliveryOrderAndTiming(sinkName string, expectedNumber int, responseWaitTime time.Duration, matchers ...cetest.EventMatcher) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
 		events := eventshub.StoreFromContext(ctx, sinkName).AssertExact(
-			20,
+			expectedNumber,
 			MatchKind(EventReceived),
-			MatchEvent(cetest.ContainsExtensions("sequence")),
+			MatchEvent(matchers...),
 		)
 
-		// Check we received exactly 20 and no more
-		require.Len(t, events, 20)
+		// Check we received exactly expectedNumber and no more
+		require.Len(t, events, expectedNumber)
 
 		// Now we need to check we received these in order
 		sort.SliceStable(events, func(i, j int) bool {
@@ -126,23 +237,5 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 
 			prev = event.Time
 		}
-	})
-
-	f.Teardown("log contract config map", utils.LogContractConfigMap)
-
-	return f
-}
-
-func TestOrderedDelivery(t *testing.T) {
-	t.Parallel()
-
-	ctx, env := global.Environment(
-		knative.WithKnativeNamespace(system.Namespace()),
-		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
-		k8s.WithEventListener,
-		environment.Managed(t),
-	)
-
-	env.Test(ctx, t, SinglePartitionOrderedDelivery())
+	}
 }
