@@ -29,12 +29,19 @@ import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
+import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.tracing.TracingOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClientOptions;
+import net.logstash.logback.encoder.LogstashEncoder;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.ClosedWatchServiceException;
@@ -42,11 +49,6 @@ import java.nio.file.FileSystems;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import net.logstash.logback.encoder.LogstashEncoder;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -102,6 +104,7 @@ public class Main {
 
       final var producerConfig = Configurations.getProperties(env.getProducerConfigFilePath());
       producerConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
+      producerConfig.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
       final var consumerConfig = Configurations.getProperties(env.getConsumerConfigFilePath());
       consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
       final var webClientConfig = Configurations.getPropertiesAsJson(env.getWebClientConfigFilePath());

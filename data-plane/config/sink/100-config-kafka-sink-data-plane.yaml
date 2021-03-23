@@ -40,7 +40,6 @@ data:
     receive.buffer.bytes=-1
     request.timeout.ms=30000
     enable.idempotence=false
-    # interceptor.classes=""
     max.in.flight.requests.per.connection=5
     metadata.max.age.ms=300000
     # metric.reporters=""
