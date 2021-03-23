@@ -116,7 +116,6 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 
 	const responseWaitTime = 100 * time.Millisecond
 
-	sourceName := feature.MakeRandomK8sName("source")
 	sinkName := feature.MakeRandomK8sName("sink")
 	triggerName := feature.MakeRandomK8sName("trigger")
 	brokerName := feature.MakeRandomK8sName("broker")
@@ -151,21 +150,21 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Setup("install source for events keyed 'a'", eventshub.Install(
-		sourceName,
+		feature.MakeRandomK8sName("source-a"),
 		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
 		eventshub.InputEventWithEncoding(evA, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
 		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
 	))
 	f.Setup("install source for events keyed 'b'", eventshub.Install(
-		sourceName,
+		feature.MakeRandomK8sName("source-b"),
 		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
 		eventshub.InputEventWithEncoding(evB, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
 		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
 	))
 	f.Setup("install source for events keyed 'c'", eventshub.Install(
-		sourceName,
+		feature.MakeRandomK8sName("source-c"),
 		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
 		eventshub.InputEventWithEncoding(evC, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
