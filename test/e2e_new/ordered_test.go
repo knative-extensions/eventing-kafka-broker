@@ -122,7 +122,7 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 		prev := events[0].Time
 		for _, event := range events[1:] {
 			require.True(t, prev.Before(event.Time), "EventInfo.Time should be before the previous EventInfo.Time: %s < %s", prev, event.Time)
-			require.Greater(t, event.Time.Sub(prev) + clockSkew, responseWaitTime)
+			require.Greater(t, event.Time.Sub(prev)+clockSkew, responseWaitTime)
 
 			prev = event.Time
 		}
