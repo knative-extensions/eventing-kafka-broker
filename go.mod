@@ -27,3 +27,5 @@ require (
 	knative.dev/pkg v0.0.0-20210331065221-952fdd90dbb0
 	knative.dev/reconciler-test v0.0.0-20210331073522-b09f3669345a
 )
+
+replace knative.dev/eventing => github.com/vaikas/eventing v0.0.0-20210404214556-bb50e6bc634a
