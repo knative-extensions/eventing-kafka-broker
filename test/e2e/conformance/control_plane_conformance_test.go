@@ -31,15 +31,15 @@ import (
 
 func brokerCreator(client *testlib.Client, name string) {
 
-	broker := client.CreateBrokerV1Beta1OrFail(name,
-		resources.WithBrokerClassForBrokerV1Beta1(kafka.BrokerClass),
+	broker := client.CreateBrokerOrFail(name,
+		resources.WithBrokerClassForBroker(kafka.BrokerClass),
 	)
 
 	client.WaitForResourceReadyOrFail(broker.Name, testlib.BrokerTypeMeta)
 }
 
-func TestBrokerV1Beta1ControlPlane(t *testing.T) {
+func TestBrokerControlPlane(t *testing.T) {
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
-		conformance.BrokerV1Beta1ControlPlaneTest(t, brokerCreator)
+		conformance.BrokerV1ControlPlaneTest(t, brokerCreator)
 	})
 }

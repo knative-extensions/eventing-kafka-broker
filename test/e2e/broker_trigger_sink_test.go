@@ -78,9 +78,9 @@ func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
 		client.WaitForResourceReadyOrFail(kafkaSink.Name, &kafkaSink.TypeMeta)
 
 		// Create a Kafka Broker
-		br := client.CreateBrokerV1OrFail(
+		br := client.CreateBrokerOrFail(
 			"broker",
-			resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
+			resources.WithBrokerClassForBroker(kafka.BrokerClass),
 		)
 
 		// Create 2 Triggers with the same subscriber
@@ -92,19 +92,19 @@ func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
 			Name:       "kafka-sink",
 		}
 
-		client.CreateTriggerV1OrFail(
+		client.CreateTriggerOrFail(
 			"trigger-1",
-			resources.WithBrokerV1(br.Name),
-			resources.WithAttributesTriggerFilterV1("", "trigger1", nil),
+			resources.WithBroker(br.Name),
+			resources.WithAttributesTriggerFilter("", "trigger1", nil),
 			func(trigger *eventing.Trigger) {
 				trigger.Spec.Subscriber.Ref = sinkReference
 			},
 		)
 
-		client.CreateTriggerV1OrFail(
+		client.CreateTriggerOrFail(
 			"trigger-2",
-			resources.WithBrokerV1(br.Name),
-			resources.WithAttributesTriggerFilterV1("", "trigger2", nil),
+			resources.WithBroker(br.Name),
+			resources.WithAttributesTriggerFilter("", "trigger2", nil),
 			func(trigger *eventing.Trigger) {
 				trigger.Spec.Subscriber.Ref = sinkReference
 			},
