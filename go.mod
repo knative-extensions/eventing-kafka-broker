@@ -24,8 +24,6 @@ require (
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009
 	knative.dev/eventing v0.22.0
 	knative.dev/hack v0.0.0-20210325223819-b6ab329907d3
-	knative.dev/pkg v0.0.0-20210331065221-952fdd90dbb0
-	knative.dev/reconciler-test v0.0.0-20210331073522-b09f3669345a
+	knative.dev/pkg v0.0.0-20210406170139-b8e331a6abf3
+	knative.dev/reconciler-test v0.0.0-20210405202627-a2f04af1fc88
 )
-
-replace knative.dev/eventing => github.com/vaikas/eventing v0.0.0-20210404214556-bb50e6bc634a
