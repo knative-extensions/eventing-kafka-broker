@@ -17,6 +17,7 @@
 package broker
 
 import (
+	"fmt"
 	"strings"
 
 	eventingtestlib "knative.dev/eventing/test/lib"
@@ -32,16 +33,12 @@ func Creator(client *eventingtestlib.Client, version string) string {
 
 	switch version {
 	case "v1":
-		client.CreateBrokerV1OrFail(
+		client.CreateBrokerOrFail(
 			name,
-			resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
+			resources.WithBrokerClassForBroker(kafka.BrokerClass),
 		)
-
-	case "v1beta1":
-		client.CreateBrokerV1Beta1OrFail(
-			name,
-			resources.WithBrokerClassForBrokerV1Beta1(kafka.BrokerClass),
-		)
+	default:
+		panic(fmt.Sprintf("Unsupported version of Broker: %q", version))
 	}
 
 	return name

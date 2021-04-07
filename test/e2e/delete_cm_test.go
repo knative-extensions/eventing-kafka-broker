@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/pointer"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
@@ -69,17 +69,17 @@ func TestDeleteBrokerConfigMap(t *testing.T) {
 
 	eventId := uuid.New().String()
 
-	client.CreateBrokerV1OrFail(
+	client.CreateBrokerOrFail(
 		brokerName,
-		resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
+		resources.WithBrokerClassForBroker(kafka.BrokerClass),
 	)
 
 	eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber)
 
-	client.CreateTriggerOrFailV1Beta1(
+	client.CreateTriggerOrFail(
 		triggerName,
-		resources.WithBrokerV1Beta1(brokerName),
-		resources.WithSubscriberServiceRefForTriggerV1Beta1(subscriber),
+		resources.WithBroker(brokerName),
+		resources.WithSubscriberServiceRefForTrigger(subscriber),
 		func(trigger *eventing.Trigger) {
 			trigger.Spec.Filter = &eventing.TriggerFilter{
 				Attributes: map[string]string{

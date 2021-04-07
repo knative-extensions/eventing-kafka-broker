@@ -26,7 +26,7 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/stretchr/testify/assert"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
@@ -54,11 +54,11 @@ func TestBrokerIngressV1Beta1(t *testing.T) {
 		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, loggerName)
 		client.WaitForAllTestResourcesReadyOrFail(ctx)
 
-		trigger := client.CreateTriggerOrFailV1Beta1(
+		trigger := client.CreateTriggerOrFail(
 			triggerName,
-			resources.WithBrokerV1Beta1(broker.Name),
-			resources.WithAttributesTriggerFilterV1Beta1("", "", nil),
-			resources.WithSubscriberServiceRefForTriggerV1Beta1(loggerName),
+			resources.WithBroker(broker.Name),
+			resources.WithAttributesTriggerFilter("", "", nil),
+			resources.WithSubscriberServiceRefForTrigger(loggerName),
 		)
 
 		client.WaitForResourceReadyOrFail(trigger.Name, testlib.TriggerTypeMeta)
@@ -240,34 +240,34 @@ func TestBrokerConsumerV1Beta1(t *testing.T) {
 			),
 		)
 
-		trigger := client.CreateTriggerOrFailV1Beta1(
+		trigger := client.CreateTriggerOrFail(
 			triggerName,
-			resources.WithBrokerV1Beta1(broker.Name),
-			resources.WithAttributesTriggerFilterV1Beta1("", "", nil),
-			resources.WithSubscriberServiceRefForTriggerV1Beta1(loggerName),
+			resources.WithBroker(broker.Name),
+			resources.WithAttributesTriggerFilter("", "", nil),
+			resources.WithSubscriberServiceRefForTrigger(loggerName),
 		)
 
 		client.WaitForResourceReadyOrFail(trigger.Name, testlib.TriggerTypeMeta)
-		secondTrigger := client.CreateTriggerOrFailV1Beta1(
+		secondTrigger := client.CreateTriggerOrFail(
 			secondTriggerName,
-			resources.WithBrokerV1Beta1(broker.Name),
-			resources.WithAttributesTriggerFilterV1Beta1("filtered-event", "", nil),
-			resources.WithSubscriberServiceRefForTriggerV1Beta1(secondLoggerName),
+			resources.WithBroker(broker.Name),
+			resources.WithAttributesTriggerFilter("filtered-event", "", nil),
+			resources.WithSubscriberServiceRefForTrigger(secondLoggerName),
 		)
 		client.WaitForResourceReadyOrFail(secondTrigger.Name, testlib.TriggerTypeMeta)
 
-		transformTrigger := client.CreateTriggerOrFailV1Beta1(
+		transformTrigger := client.CreateTriggerOrFail(
 			"transform-trigger",
-			resources.WithBrokerV1Beta1(broker.Name),
-			resources.WithAttributesTriggerFilterV1Beta1(replySource, baseEvent.Type(), nil),
-			resources.WithSubscriberServiceRefForTriggerV1Beta1(transformerName),
+			resources.WithBroker(broker.Name),
+			resources.WithAttributesTriggerFilter(replySource, baseEvent.Type(), nil),
+			resources.WithSubscriberServiceRefForTrigger(transformerName),
 		)
 		client.WaitForResourceReadyOrFail(transformTrigger.Name, testlib.TriggerTypeMeta)
-		replyTrigger := client.CreateTriggerOrFailV1Beta1(
+		replyTrigger := client.CreateTriggerOrFail(
 			"reply-trigger",
-			resources.WithBrokerV1Beta1(broker.Name),
-			resources.WithAttributesTriggerFilterV1Beta1("reply-check-source", "reply-check-type", nil),
-			resources.WithSubscriberServiceRefForTriggerV1Beta1(loggerName),
+			resources.WithBroker(broker.Name),
+			resources.WithAttributesTriggerFilter("reply-check-source", "reply-check-type", nil),
+			resources.WithSubscriberServiceRefForTrigger(loggerName),
 		)
 		client.WaitForResourceReadyOrFail(replyTrigger.Name, testlib.TriggerTypeMeta)
 
@@ -379,8 +379,8 @@ func TestBrokerConsumerV1Beta1(t *testing.T) {
 
 func createBroker(client *testlib.Client) *eventing.Broker {
 
-	broker := client.CreateBrokerV1Beta1OrFail("broker",
-		resources.WithBrokerClassForBrokerV1Beta1(kafka.BrokerClass),
+	broker := client.CreateBrokerOrFail("broker",
+		resources.WithBrokerClassForBroker(kafka.BrokerClass),
 	)
 
 	client.WaitForResourceReadyOrFail(broker.Name, testlib.BrokerTypeMeta)

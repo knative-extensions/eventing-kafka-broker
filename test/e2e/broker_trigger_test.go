@@ -27,7 +27,7 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1beta1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
@@ -66,17 +66,17 @@ func TestBrokerTrigger(t *testing.T) {
 		nonMatchingEventId := uuid.New().String()
 		eventId := uuid.New().String()
 
-		br := client.CreateBrokerV1OrFail(
+		br := client.CreateBrokerOrFail(
 			brokerName,
-			resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
+			resources.WithBrokerClassForBroker(kafka.BrokerClass),
 		)
 
 		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber)
 
-		client.CreateTriggerOrFailV1Beta1(
+		client.CreateTriggerOrFail(
 			triggerName,
-			resources.WithBrokerV1Beta1(brokerName),
-			resources.WithSubscriberServiceRefForTriggerV1Beta1(subscriber),
+			resources.WithBroker(brokerName),
+			resources.WithSubscriberServiceRefForTrigger(subscriber),
 			func(trigger *eventing.Trigger) {
 				trigger.Spec.Filter = &eventing.TriggerFilter{
 					Attributes: map[string]string{
@@ -190,10 +190,10 @@ func TestBrokerWithConfig(t *testing.T) {
 			broker.BootstrapServersConfigMapKey:              testingpkg.BootstrapServersPlaintext,
 		})
 
-		br := client.CreateBrokerV1OrFail(
+		br := client.CreateBrokerOrFail(
 			brokerName,
-			resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
-			resources.WithConfigForBrokerV1(&duckv1.KReference{
+			resources.WithBrokerClassForBroker(kafka.BrokerClass),
+			resources.WithConfigForBroker(&duckv1.KReference{
 				Kind:       "ConfigMap",
 				Namespace:  cm.Namespace,
 				Name:       cm.Name,
@@ -203,10 +203,10 @@ func TestBrokerWithConfig(t *testing.T) {
 
 		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber)
 
-		client.CreateTriggerOrFailV1Beta1(
+		client.CreateTriggerOrFail(
 			triggerName,
-			resources.WithBrokerV1Beta1(brokerName),
-			resources.WithSubscriberServiceRefForTriggerV1Beta1(subscriber),
+			resources.WithBroker(brokerName),
+			resources.WithSubscriberServiceRefForTrigger(subscriber),
 			func(trigger *eventing.Trigger) {
 				trigger.Spec.Filter = &eventing.TriggerFilter{
 					Attributes: map[string]string{

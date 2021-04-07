@@ -32,16 +32,6 @@ func TestEventTransformationForTriggerV1BrokerV1(t *testing.T) {
 	runTest(t, "v1", "v1")
 }
 
-func TestEventTransformationForTriggerV1Beta1BrokerV1(t *testing.T) {
-	runTest(t, "v1", "v1beta1")
-}
-func TestEventTransformationForTriggerV1Beta1BrokerV1Beta1(t *testing.T) {
-	runTest(t, "v1beta1", "v1beta1")
-}
-func TestEventTransformationForTriggerV1BrokerV1Beta1(t *testing.T) {
-	runTest(t, "v1beta1", "v1")
-}
-
 func runTest(t *testing.T, brokerVersion string, triggerVersion string) {
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
 

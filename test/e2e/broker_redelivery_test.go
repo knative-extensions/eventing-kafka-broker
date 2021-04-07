@@ -24,7 +24,6 @@ import (
 
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
-	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	"knative.dev/eventing/test/e2e/helpers"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
@@ -45,9 +44,9 @@ func TestBrokerRedeliveryBrokerV1BackoffLinear(t *testing.T) {
 
 			backoff := eventingduck.BackoffPolicyLinear
 
-			client.CreateBrokerV1OrFail(brokerName,
-				resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
-				resources.WithDeliveryForBrokerV1(&eventingduck.DeliverySpec{
+			client.CreateBrokerOrFail(brokerName,
+				resources.WithBrokerClassForBroker(kafka.BrokerClass),
+				resources.WithDeliveryForBroker(&eventingduck.DeliverySpec{
 					Retry:         &numRetries,
 					BackoffPolicy: &backoff,
 					BackoffDelay:  pointer.StringPtr("PT0.2S"),
@@ -67,53 +66,9 @@ func TestBrokerRedeliveryBrokerV1BackoffExponential(t *testing.T) {
 
 			backoff := eventingduck.BackoffPolicyExponential
 
-			client.CreateBrokerV1OrFail(brokerName,
-				resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
-				resources.WithDeliveryForBrokerV1(&eventingduck.DeliverySpec{
-					Retry:         &numRetries,
-					BackoffPolicy: &backoff,
-					BackoffDelay:  pointer.StringPtr("PT0.2S"),
-				}),
-			)
-
-			return brokerName
-		})
-	})
-}
-
-func TestBrokerRedeliveryBrokerV1Beta1BackoffLinear(t *testing.T) {
-
-	kafkatesting.RunMultiple(t, func(t *testing.T) {
-
-		helpers.BrokerRedelivery(context.Background(), t, func(client *testlib.Client, numRetries int32) string {
-
-			backoff := eventingduckv1beta1.BackoffPolicyLinear
-
-			client.CreateBrokerV1Beta1OrFail(brokerName,
-				resources.WithBrokerClassForBrokerV1Beta1(kafka.BrokerClass),
-				resources.WithDeliveryForBrokerV1Beta1(&eventingduckv1beta1.DeliverySpec{
-					Retry:         &numRetries,
-					BackoffPolicy: &backoff,
-					BackoffDelay:  pointer.StringPtr("PT0.2S"),
-				}),
-			)
-
-			return brokerName
-		})
-	})
-}
-
-func TestBrokerRedeliveryBrokerV1Beta1BackoffExponential(t *testing.T) {
-
-	kafkatesting.RunMultiple(t, func(t *testing.T) {
-
-		helpers.BrokerRedelivery(context.Background(), t, func(client *testlib.Client, numRetries int32) string {
-
-			backoff := eventingduckv1beta1.BackoffPolicyExponential
-
-			client.CreateBrokerV1Beta1OrFail(brokerName,
-				resources.WithBrokerClassForBrokerV1Beta1(kafka.BrokerClass),
-				resources.WithDeliveryForBrokerV1Beta1(&eventingduckv1beta1.DeliverySpec{
+			client.CreateBrokerOrFail(brokerName,
+				resources.WithBrokerClassForBroker(kafka.BrokerClass),
+				resources.WithDeliveryForBroker(&eventingduck.DeliverySpec{
 					Retry:         &numRetries,
 					BackoffPolicy: &backoff,
 					BackoffDelay:  pointer.StringPtr("PT0.2S"),

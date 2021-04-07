@@ -69,10 +69,10 @@ func brokerAuth(t *testing.T, secretProvider SecretProvider, configProvider Conf
 			configProvider(secretName, client),
 		)
 
-		client.CreateBrokerV1OrFail(
+		client.CreateBrokerOrFail(
 			brokerName,
-			resources.WithBrokerClassForBrokerV1(kafka.BrokerClass),
-			resources.WithConfigForBrokerV1(&duckv1.KReference{
+			resources.WithBrokerClassForBroker(kafka.BrokerClass),
+			resources.WithConfigForBroker(&duckv1.KReference{
 				APIVersion: "v1",
 				Kind:       "ConfigMap",
 				Namespace:  client.Namespace,
@@ -120,10 +120,10 @@ func brokerAuth(t *testing.T, secretProvider SecretProvider, configProvider Conf
 
 		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber, recordevents.AddTracing())
 
-		client.CreateTriggerV1OrFail(
+		client.CreateTriggerOrFail(
 			triggerName,
-			resources.WithBrokerV1(brokerName),
-			resources.WithSubscriberServiceRefForTriggerV1(subscriber),
+			resources.WithBroker(brokerName),
+			resources.WithSubscriberServiceRefForTrigger(subscriber),
 		)
 
 		client.WaitForAllTestResourcesReadyOrFail(ctx)
