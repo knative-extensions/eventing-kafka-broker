@@ -35,7 +35,6 @@ import (
 	"knative.dev/eventing-kafka-broker/test/e2e_new/trigger"
 	"knative.dev/eventing/test/rekt/resources/svc"
 	"knative.dev/pkg/system"
-	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
@@ -52,7 +51,6 @@ func TestOrderedDelivery(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
-		environment.Managed(t),
 	)
 
 	env.Test(ctx, t, SinglePartitionOrderedDelivery())
@@ -199,6 +197,7 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 func assertDeliveryOrderAndTiming(sinkName string, expectedNumber int, responseWaitTime time.Duration, matchers ...cetest.EventMatcher) feature.StepFn {
 	return func(ctx context.Context, t feature.T) {
 		events := eventshub.StoreFromContext(ctx, sinkName).AssertExact(
+			t,
 			expectedNumber,
 			MatchKind(EventReceived),
 			MatchEvent(matchers...),
