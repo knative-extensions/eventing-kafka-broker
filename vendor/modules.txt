@@ -1014,7 +1014,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.22.1-0.20210407214954-4a3216ca221e
+# knative.dev/eventing v0.22.1-0.20210414081501-1f54d0e1f1d5
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck
@@ -1128,7 +1128,7 @@ knative.dev/eventing/test/test_images/request-sender
 # knative.dev/hack v0.0.0-20210325223819-b6ab329907d3
 ## explicit
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20210409203851-3a2ae6db7097
+# knative.dev/pkg v0.0.0-20210412173742-b51994e3b312
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1218,12 +1218,19 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20210408195651-721473fa3c57
+# knative.dev/reconciler-test v0.0.0-20210414002500-fe2c0060d76e
 ## explicit
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment
 knative.dev/reconciler-test/pkg/eventshub
 knative.dev/reconciler-test/pkg/eventshub/assert
+knative.dev/reconciler-test/pkg/eventshub/dropevents
+knative.dev/reconciler-test/pkg/eventshub/dropevents/dropeventsfibonacci
+knative.dev/reconciler-test/pkg/eventshub/dropevents/dropeventsfirst
+knative.dev/reconciler-test/pkg/eventshub/logger_vent
+knative.dev/reconciler-test/pkg/eventshub/receiver
+knative.dev/reconciler-test/pkg/eventshub/recorder_vent
+knative.dev/reconciler-test/pkg/eventshub/sender
 knative.dev/reconciler-test/pkg/feature
 knative.dev/reconciler-test/pkg/images
 knative.dev/reconciler-test/pkg/k8s
@@ -1231,15 +1238,7 @@ knative.dev/reconciler-test/pkg/knative
 knative.dev/reconciler-test/pkg/manifest
 knative.dev/reconciler-test/pkg/milestone
 knative.dev/reconciler-test/pkg/state
-knative.dev/reconciler-test/pkg/test_images
-knative.dev/reconciler-test/pkg/test_images/eventshub
-knative.dev/reconciler-test/pkg/test_images/eventshub/dropevents
-knative.dev/reconciler-test/pkg/test_images/eventshub/dropevents/dropeventsfibonacci
-knative.dev/reconciler-test/pkg/test_images/eventshub/dropevents/dropeventsfirst
-knative.dev/reconciler-test/pkg/test_images/eventshub/logger_vent
-knative.dev/reconciler-test/pkg/test_images/eventshub/receiver
-knative.dev/reconciler-test/pkg/test_images/eventshub/recorder_vent
-knative.dev/reconciler-test/pkg/test_images/eventshub/sender
+knative.dev/reconciler-test/resources/svc
 # sigs.k8s.io/structured-merge-diff/v4 v4.0.1
 sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.2.0
