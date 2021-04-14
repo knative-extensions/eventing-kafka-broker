@@ -13,4 +13,4 @@ updates:
       - "pierDipi"
     commit-message:
       prefix: "[data-plane]"
-    target-branch: "master"
+    target-branch: "main"
