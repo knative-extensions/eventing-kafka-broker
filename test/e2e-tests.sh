@@ -19,7 +19,7 @@ if [ "$(uname)" == "Darwin" ]; then
 fi
 
 if ! ${SKIP_INITIALIZE}; then
-  initialize $@ --skip-istio-addon
+  initialize $@ --skip-istio-addon --min-nodes=2
 fi
 
 save_release_artifacts || fail_test "Failed to save release artifacts"
