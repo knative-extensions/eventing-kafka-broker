@@ -39,7 +39,7 @@
     <maven.enforcer.plugin.version>3.0.0-M3</maven.enforcer.plugin.version>
     <maven.license.plugin.version>2.0.0</maven.license.plugin.version>
 
-    <mycila.license.plugin.version>4.0.rc2</mycila.license.plugin.version>
+    <mycila.license.plugin.version>4.0</mycila.license.plugin.version>
 
     <!-- dependencies version -->
     <vertx.version>4.0.2</vertx.version>
