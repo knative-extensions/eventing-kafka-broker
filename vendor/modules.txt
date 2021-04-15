@@ -88,13 +88,13 @@ github.com/cespare/xxhash/v2
 # github.com/cloudevents/conformance v0.2.0
 github.com/cloudevents/conformance/pkg/event
 github.com/cloudevents/conformance/pkg/http
-# github.com/cloudevents/sdk-go/observability/opencensus/v2 v2.4.0
+# github.com/cloudevents/sdk-go/observability/opencensus/v2 v2.4.1
 github.com/cloudevents/sdk-go/observability/opencensus/v2/client
 github.com/cloudevents/sdk-go/observability/opencensus/v2/http
 # github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.2.0
 ## explicit
 github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2
-# github.com/cloudevents/sdk-go/v2 v2.4.0
+# github.com/cloudevents/sdk-go/v2 v2.4.1
 ## explicit
 github.com/cloudevents/sdk-go/v2
 github.com/cloudevents/sdk-go/v2/binding
@@ -1014,7 +1014,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.22.1-0.20210414081501-1f54d0e1f1d5
+# knative.dev/eventing v0.22.1-0.20210414182901-fc115ae011e1
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck
@@ -1218,7 +1218,7 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20210414002500-fe2c0060d76e
+# knative.dev/reconciler-test v0.0.0-20210414181401-b0c3de288f3b
 ## explicit
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment
