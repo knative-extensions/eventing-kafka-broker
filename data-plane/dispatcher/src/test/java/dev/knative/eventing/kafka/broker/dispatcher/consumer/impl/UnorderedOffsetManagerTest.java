@@ -51,6 +51,16 @@ public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
   }
 
   @Test
+  public void shouldNotCommitAndNotGoOutOfBounds() {
+    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+      offsetStrategy.recordReceived(record("aaa", 0, 0));
+      offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 64));
+      offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 128));
+    })
+      .isEmpty();
+  }
+
+  @Test
   public void shouldCommitAfterSendingEventsOrderedOnTheSamePartitionWithInducedFailure() {
     assertThatOffsetCommittedWithFailures(List.of(new TopicPartition("aaa", 0)), (offsetStrategy, failureFlag) -> {
       offsetStrategy.recordReceived(record("aaa", 0, 0));
