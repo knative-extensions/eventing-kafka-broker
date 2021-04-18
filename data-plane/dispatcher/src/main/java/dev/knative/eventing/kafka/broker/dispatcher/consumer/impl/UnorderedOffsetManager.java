@@ -251,7 +251,7 @@ public final class UnorderedOffsetManager implements OffsetManager {
     }
 
     private void checkAcksArraySize(int blockIndex) {
-      if (this.uncommitted.length < blockIndex) {
+      if (blockIndex > this.uncommitted.length - 1) {
         // Let's make sure we create enough room for more unordered records
         this.uncommitted = Arrays.copyOf(this.uncommitted, (blockIndex + 1) * 2);
       }
