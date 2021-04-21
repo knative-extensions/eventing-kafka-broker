@@ -25,7 +25,7 @@ data:
   config-kafka-broker-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
     value.serializer=io.cloudevents.kafka.CloudEventSerializer
-    acks=1
+    acks=all
     buffer.memory=33554432
     # compression.type=snappy
     retries=2147483647
