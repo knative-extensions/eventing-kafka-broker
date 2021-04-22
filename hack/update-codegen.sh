@@ -62,3 +62,5 @@ if ! ${GITHUB_ACTIONS:-false}; then
 fi
 
 ${REPO_ROOT_DIR}/hack/update-deps.sh
+
+chmod +x ./vendor/knative.dev/eventing/hack/create-kind-cluster.sh
