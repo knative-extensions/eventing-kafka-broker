@@ -136,7 +136,7 @@ jobs:
              ${{ matrix.test-suite }} ${{ matrix.extra-test-flags }}
 
       - name: Teardown Eventing Kafka Broker
-        run: make down
+        run: ./hack/run teardown
 
       - name: Collect system diagnostics
         if: ${{ failure() }}
