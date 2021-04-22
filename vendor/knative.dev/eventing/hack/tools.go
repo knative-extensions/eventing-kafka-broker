@@ -23,22 +23,12 @@ import (
 	_ "knative.dev/pkg/configmap/hash-gen"
 	_ "knative.dev/pkg/hack"
 
-	// Hack scripts from eventing
-	_ "knative.dev/eventing/hack"
+	// Needed for the storage version too.
+	_ "knative.dev/pkg/apiextensions/storageversion/cmd/migrate"
+	_ "knative.dev/pkg/test/mako/stub-sidecar"
 
-	// Test images from eventing
-	_ "knative.dev/eventing/test/test_images/event-sender"
-	_ "knative.dev/eventing/test/test_images/heartbeats"
-	_ "knative.dev/eventing/test/test_images/performance"
-	_ "knative.dev/eventing/test/test_images/print"
-	_ "knative.dev/eventing/test/test_images/recordevents"
-	_ "knative.dev/eventing/test/test_images/request-sender"
-
-	// For chaos testing the leader election.
+	// For chaos testing the leaderelection stuff.
 	_ "knative.dev/pkg/leaderelection/chaosduck"
-
-	// For detecting events loss
-	_ "github.com/pierdipi/sacura/cmd/sacura"
 
 	// eventshub is a cloudevents sender/receiver utility for e2e testing.
 	_ "knative.dev/reconciler-test/cmd/eventshub"
