@@ -102,13 +102,13 @@ jobs:
           sudo mv kind /usr/local/bin
 
       - name: Create KinD Cluster
-        run: make kind-up
+        run: ./vendor/knative.dev/hack/create-kind-cluster.sh
 
       - name: Install Dependencies (Eventing, Kafka, etc)
-        run: make deps-up
+        run: ./hack/run deploy-infra
 
       - name: Install Eventing Kafka Broker
-        run: make up
+        run: ./hack/run deploy
 
       - name: Wait for things to be up
         run: |

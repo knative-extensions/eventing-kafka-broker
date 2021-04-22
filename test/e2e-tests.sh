@@ -8,6 +8,8 @@ readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
 readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
 export REPLICAS=${REPLICAS:-3}
 
+ROOT_DIR=$(dirname $0)/..
+
 source $(dirname $0)/e2e-common.sh
 
 # If gcloud is not available make it a no-op, not an error.
@@ -26,8 +28,8 @@ fi
 save_release_artifacts || fail_test "Failed to save release artifacts"
 
 if ! ${LOCAL_DEVELOPMENT}; then
-  make sacura-up || fail_test "Failed to apply Sacura"
-  make chaos-up || fail_test "Failed to apply chaos"
+  "${ROOT_DIR}"/hack/run deploy-sacura || fail_test "Failed to apply Sacura"
+  "${ROOT_DIR}"/hack/run deploy-chaos || fail_test "Failed to apply chaos"
 fi
 
 header "Waiting Knative eventing to come up"
@@ -38,8 +40,7 @@ header "Running tests"
 
 export_logs_continuously "kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver"
 
-make it || fail_test "Integration tests failed"
-
-make sacura-test || fail_test "Sacura test failed"
+"${ROOT_DIR}"/hack/run integration-tests || fail_test "Integration tests failed"
+"${ROOT_DIR}"/hack/run sacura-tests  || fail_test "Sacura test failed"
 
 success
