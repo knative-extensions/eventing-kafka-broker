@@ -35,9 +35,6 @@ function fail_test() {
 function build_tests() {
   header "Running control plane build tests"
   default_build_test_runner || fail_test "Control plane build tests failed"
-
-  header "Running data plane build tests"
-  data_plane_build_tests || fail_test "Data plane build tests failed"
 }
 
 function unit_tests() {

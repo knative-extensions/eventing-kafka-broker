@@ -145,28 +145,19 @@ function k8s() {
 }
 
 function data_plane_unit_tests() {
-
-  java_ut || java_ut || fail_test "Data plane unit tests failed"
+  pushd ${DATA_PLANE_DIR} || fail_test
+  ./mvnw clean verify --no-transfer-progress || fail_test "Data plane unit tests failed"
 
   echo "Copy test reports in ${ARTIFACTS}"
-  docker cp "$(docker create --rm tests)":/reports "${ARTIFACTS}" || fail_test "Failed to copy test reports in ${ARTIFACTS}"
-
-  cd ${ARTIFACTS}/reports && find * -maxdepth 0 -exec mv {} ../junit_{} \; && cd - && rm -r ${ARTIFACTS}/reports
-
-  return $?
-}
-
-function java_ut() {
-  docker build \
-    --file ${DATA_PLANE_DIR}/docker/test/Dockerfile \
-    --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
-    --tag tests ${DATA_PLANE_DIR}
+  find . -type f -regextype posix-extended -regex ".*/TEST-.*.xml$" | xargs -I '{}' cp {} ${ARTIFACTS}/
+  pushd ${ARTIFACTS} || fail_test
+  for f in * ; do
+    mv -- "$f" "junit_$f" ;
+  done
+  popd || fail_test
+  popd || fail_test
 
   return $?
-}
-
-function data_plane_build_tests() {
-  return 0
 }
 
 # Note: do not change this function name, it's used during releases.
