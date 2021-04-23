@@ -42,6 +42,7 @@ readonly KAFKA_SINK_RECEIVER_TEMPLATE_FILE=${KAFKA_SINK_DATA_PLANE_CONFIG_TEMPLA
 
 readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-knative-kafka-broker-receiver}"
 readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-knative-kafka-broker-dispatcher}"
+readonly control_protocol_conformance_server="${KNATIVE_KAFKA_BROKER_DISPATCHER:-control-protocol-conformance-java-server}"
 
 # The BASE_IMAGE must have system libraries (libc, zlib, etc) compatible with the JAVA_IMAGE because
 # Jlink generates a jdk linked to the same system libraries available on the base images.
@@ -53,6 +54,9 @@ readonly RECEIVER_DIRECTORY=receiver
 
 readonly DISPATCHER_JAR="dispatcher-1.0-SNAPSHOT.jar"
 readonly DISPATCHER_DIRECTORY=dispatcher
+
+readonly CONTROL_PROTOCOL_CONFORMANCE_SERVER_JAR="control-protocol-conformance-server-1.0-SNAPSHOT.jar"
+readonly CONTROL_PROTOCOL_CONFORMANCE_SERVER_DIRECTORY=control-protocol-conformance-server
 
 # Checks whether the given function exists.
 function function_exists() {
@@ -109,6 +113,30 @@ function dispatcher_build_push() {
   return $?
 }
 
+function control_protocol_conformance_server_build_push() {
+  local uuid=${UUID}
+  if [ "${uuid}" = "latest" ]; then
+    uuid="$(uuidgen --time)"
+  fi
+
+  export KNATIVE_CONTROL_PROTOCOL_CONFORMANCE_SERVER_IMAGE="${KO_DOCKER_REPO}"/"${control_protocol_conformance_server}":"${uuid}"
+
+  header "Building control protocol conformance server ..."
+
+  docker build \
+    -f ${DATA_PLANE_DIR}/docker/Dockerfile \
+    -f ${DATA_PLANE_DIR}/docker/Dockerfile \
+    --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
+    --build-arg BASE_IMAGE=${BASE_IMAGE} \
+    --build-arg APP_JAR=${CONTROL_PROTOCOL_CONFORMANCE_SERVER_JAR} \
+    --build-arg APP_DIR=${CONTROL_PROTOCOL_CONFORMANCE_SERVER_DIRECTORY} \
+    -t "${KNATIVE_CONTROL_PROTOCOL_CONFORMANCE_SERVER_IMAGE}" ${DATA_PLANE_DIR} &&
+    docker_push "${KNATIVE_CONTROL_PROTOCOL_CONFORMANCE_SERVER_IMAGE}" &&
+    with_kind "${KNATIVE_CONTROL_PROTOCOL_CONFORMANCE_SERVER_IMAGE}"
+
+  return $?
+}
+
 function data_plane_build_push() {
 
   local uuid=${UUID}
@@ -117,9 +145,7 @@ function data_plane_build_push() {
   fi
 
   export KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${receiver}":"${uuid}"
-
   export KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE="${KO_DOCKER_REPO}"/"${dispatcher}":"${uuid}"
-
   export KNATIVE_KAFKA_SINK_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${receiver}":"${uuid}"
 
   receiver_build_push || receiver_build_push || fail_test "failed to build receiver"

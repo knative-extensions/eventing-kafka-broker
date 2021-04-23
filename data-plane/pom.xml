@@ -66,7 +66,7 @@
     <module>receiver</module>
     <module>dispatcher</module>
     <module>control-protocol</module>
-      <module>control-protocol-conformance-server</module>
+    <module>control-protocol-conformance-server</module>
   </modules>
 
   <profiles>

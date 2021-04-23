@@ -30,6 +30,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y binutils
 COPY pom.xml .
 COPY .editorconfig .
 COPY core/pom.xml core/pom.xml
+COPY control-protocol/pom.xml control-protocol/pom.xml
+COPY control-protocol-conformance-server/pom.xml control-protocol-conformance-server/pom.xml
 COPY receiver/pom.xml receiver/pom.xml
 COPY dispatcher/pom.xml dispatcher/pom.xml
 COPY contract/pom.xml contract/pom.xml

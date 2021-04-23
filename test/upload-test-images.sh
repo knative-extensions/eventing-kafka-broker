@@ -33,6 +33,16 @@ function upload_test_images() {
   # ko resolve is being used for the side-effect of publishing images,
   # so the resulting yaml produced is ignored.
   ko resolve ${tag_option} -RBf "${image_dir}" >/dev/null
+
+  # TODO align data plane script to properly understand the KO_DOCKER_REPO
+  if [ $KO_DOCKER_REPO = "kind.local" ]; then
+    export WITH_KIND=true
+    export SKIP_PUSH=true
+  fi
+
+  source $(pwd)/hack/data-plane.sh
+
+  control_protocol_conformance_server_build_push
 }
 
 : ${KO_DOCKER_REPO:?"You must set 'KO_DOCKER_REPO', see DEVELOPMENT.md"}
