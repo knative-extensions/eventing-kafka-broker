@@ -22,7 +22,7 @@ public interface ControlMessageHeader {
   /**
    * @return the message op code
    */
-  short opCode();
+  byte opCode();
 
   /**
    * @return the message UUID

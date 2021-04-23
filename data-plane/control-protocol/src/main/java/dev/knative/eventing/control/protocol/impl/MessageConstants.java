@@ -21,6 +21,6 @@ class MessageConstants {
 
   final static int MESSAGE_HEADER_LENGTH = 24;
 
-  final static byte ACK_OP_CODE = 0;
+  final static byte ACK_OP_CODE = Byte.MAX_VALUE;
 
 }

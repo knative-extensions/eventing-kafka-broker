@@ -100,7 +100,7 @@ public class ControlMessageImpl implements ControlMessage {
   }
 
   @Override
-  public short opCode() {
+  public byte opCode() {
     return this.opCode;
   }
 

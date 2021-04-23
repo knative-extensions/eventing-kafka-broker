@@ -147,8 +147,7 @@ public class TCPControlServerVerticle extends AbstractVerticle {
       .onSuccess(v -> logger.debug("Successfully sent {}", message))
       .onFailure(t -> {
         logger.error("Cannot dispatch message {}", message, t);
-        // TODO define a loop limit here?
-        internalWriteOnConnection(message, buffer);
+        // TODO should we retry here?
       });
   }
 
