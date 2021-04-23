@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
-    eventing.knative.dev/release: "v20210421-8565fcdcf"
+    eventing.knative.dev/release: "v20210423-a0a33025a"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
@@ -453,7 +453,7 @@ kind: CustomResourceDefinition
 metadata:
   name: brokers.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210421-8565fcdcf"
+    eventing.knative.dev/release: "v20210423-a0a33025a"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
 spec:
@@ -622,7 +622,7 @@ kind: CustomResourceDefinition
 metadata:
   name: channels.messaging.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210421-8565fcdcf"
+    eventing.knative.dev/release: "v20210423-a0a33025a"
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
@@ -835,7 +835,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20210421-8565fcdcf"
+    eventing.knative.dev/release: "v20210423-a0a33025a"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
@@ -1113,7 +1113,7 @@ kind: CustomResourceDefinition
 metadata:
   name: eventtypes.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210421-8565fcdcf"
+    eventing.knative.dev/release: "v20210423-a0a33025a"
     knative.dev/crd-install: "true"
 spec:
   group: eventing.knative.dev
@@ -1248,7 +1248,7 @@ kind: CustomResourceDefinition
 metadata:
   name: parallels.flows.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210421-8565fcdcf"
+    eventing.knative.dev/release: "v20210423-a0a33025a"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
 spec:
@@ -1507,7 +1507,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20210421-8565fcdcf"
+    eventing.knative.dev/release: "v20210423-a0a33025a"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
@@ -1906,7 +1906,7 @@ kind: CustomResourceDefinition
 metadata:
   name: sequences.flows.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210421-8565fcdcf"
+    eventing.knative.dev/release: "v20210423-a0a33025a"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
 spec:
@@ -2128,7 +2128,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20210421-8565fcdcf"
+    eventing.knative.dev/release: "v20210423-a0a33025a"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
@@ -2350,7 +2350,7 @@ kind: CustomResourceDefinition
 metadata:
   name: subscriptions.messaging.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210421-8565fcdcf"
+    eventing.knative.dev/release: "v20210423-a0a33025a"
     knative.dev/crd-install: "true"
 spec:
   group: messaging.knative.dev
@@ -2578,7 +2578,7 @@ kind: CustomResourceDefinition
 metadata:
   name: triggers.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210421-8565fcdcf"
+    eventing.knative.dev/release: "v20210423-a0a33025a"
     knative.dev/crd-install: "true"
 spec:
   group: eventing.knative.dev
