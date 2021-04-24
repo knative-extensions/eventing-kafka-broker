@@ -146,9 +146,8 @@ function k8s() {
 
 function data_plane_unit_tests() {
   pushd ${DATA_PLANE_DIR} || fail_test
-  java -version
-  mvn --version
-  mvn clean verify --no-transfer-progress || fail_test "Data plane unit tests failed"
+  mvn clean verify --no-transfer-progress
+  mvn_output=$?
 
   echo "Copy test reports in ${ARTIFACTS}"
   find . -type f -regextype posix-extended -regex ".*/TEST-.*.xml$" | xargs -I '{}' cp {} ${ARTIFACTS}/
@@ -159,7 +158,7 @@ function data_plane_unit_tests() {
   popd || fail_test
   popd || fail_test
 
-  return $?
+  return $mvn_output
 }
 
 # Note: do not change this function name, it's used during releases.
