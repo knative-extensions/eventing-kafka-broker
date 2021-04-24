@@ -1,5 +1,5 @@
 
-Lists of 151 third-party dependencies.
+Lists of 150 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.2.3 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.2.3 - http://logback.qos.ch/logback-core)
      (The Apache Software License, Version 2.0) Jackson-annotations (com.fasterxml.jackson.core:jackson-annotations:2.11.3 - http://github.com/FasterXML/jackson)
@@ -131,7 +131,6 @@ Lists of 151 third-party dependencies.
      (Eclipse Public License v2.0) JUnit Jupiter (Aggregator) (org.junit.jupiter:junit-jupiter:5.7.1 - https://junit.org/junit5/)
      (Eclipse Public License v2.0) JUnit Jupiter API (org.junit.jupiter:junit-jupiter-api:5.7.1 - https://junit.org/junit5/)
      (Eclipse Public License v2.0) JUnit Jupiter Engine (org.junit.jupiter:junit-jupiter-engine:5.7.1 - https://junit.org/junit5/)
-     (Eclipse Public License v2.0) JUnit Jupiter Migration Support (org.junit.jupiter:junit-jupiter-migrationsupport:5.7.1 - https://junit.org/junit5/)
      (Eclipse Public License v2.0) JUnit Jupiter Params (org.junit.jupiter:junit-jupiter-params:5.7.1 - https://junit.org/junit5/)
      (Eclipse Public License v2.0) JUnit Platform Commons (org.junit.platform:junit-platform-commons:1.7.1 - https://junit.org/junit5/)
      (Eclipse Public License v2.0) JUnit Platform Engine API (org.junit.platform:junit-platform-engine:1.7.1 - https://junit.org/junit5/)
