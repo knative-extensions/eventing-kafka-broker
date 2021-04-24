@@ -39,11 +39,11 @@ COPY docker/generate_jdk.sh .
 
 # Install dependencies. Note: don't build a single submodule (recever or dispatcher) since it just slows down
 # consecutive builds.
-RUN ./mvnw install -am -DskipTests -Drelease -Dlicense.skip -Deditorconfig.skip --no-transfer-progress
+RUN ./mvnw install -T 2C -am -Drelease -DskipTests -Dmaven.test.skip -ff -Dlicense.skip -Deditorconfig.skip --no-transfer-progress
 
 COPY . .
 
-RUN ./mvnw package -pl=${APP_DIR} -Drelease -am -DskipTests -Deditorconfig.skip --no-transfer-progress
+RUN ./mvnw package -pl=${APP_DIR} -T 2C -am -Drelease -DskipTests -Dmaven.test.skip -ff -Deditorconfig.skip --no-transfer-progress
 
 RUN ./generate_jdk.sh /build/${APP_DIR}/target/${APP_JAR}
 
