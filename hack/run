@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 ROOT_DIR=$(dirname $0)/..
 
@@ -63,4 +63,7 @@ elif [[ "${action}" == "generate" ]]; then
 	"${ROOT_DIR}"/proto/hack/generate-proto.sh
   # Run API generator
 	"${ROOT_DIR}"/hack/update-codegen.sh
+else
+  echo "Unrecognized action ${action}"
+  exit 1
 fi
