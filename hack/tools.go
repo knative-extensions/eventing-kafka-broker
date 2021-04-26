@@ -41,5 +41,5 @@ import (
 	_ "knative.dev/reconciler-test/cmd/eventshub"
 
 	// control protocol conformance tester
-	_ "knative.dev/control-protocol/test_images/conformance-go-client"
+	_ "knative.dev/control-protocol/test/test_images/conformance-go-client"
 )

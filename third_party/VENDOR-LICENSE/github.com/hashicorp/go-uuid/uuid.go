@@ -24,6 +24,7 @@ func GenerateRandomBytesWithReader(size int, reader io.Reader) ([]byte, error) {
 	return buf, nil
 }
 
+
 const uuidLen = 16
 
 // GenerateUUID is used to generate a random UUID
