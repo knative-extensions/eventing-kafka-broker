@@ -19,6 +19,10 @@ import java.util.UUID;
 
 public interface ControlMessageHeader {
 
+  byte DEFAULT_VERSION = 0;
+
+  int MESSAGE_HEADER_LENGTH = 24;
+
   /**
    * @return the message op code
    */

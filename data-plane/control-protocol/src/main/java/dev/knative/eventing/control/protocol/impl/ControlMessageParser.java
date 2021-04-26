@@ -16,6 +16,7 @@
 package dev.knative.eventing.control.protocol.impl;
 
 import dev.knative.eventing.control.protocol.ControlMessage;
+import dev.knative.eventing.control.protocol.ControlMessageHeader;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 
@@ -38,6 +39,9 @@ public class ControlMessageParser implements Handler<Buffer> {
     if (pendingBuffer == null) {
       pendingBuffer = inputBuffer;
     } else {
+      // We need to copy because we don't know if the original buffer was bounded or not
+      // nor we want to modfy the original data
+      pendingBuffer = pendingBuffer.copy();
       pendingBuffer.appendBuffer(inputBuffer);
     }
 
@@ -47,7 +51,7 @@ public class ControlMessageParser implements Handler<Buffer> {
 
     // Parse the header
     if (!headerParsed) {
-      if (pendingBuffer.length() >= MessageConstants.MESSAGE_HEADER_LENGTH) {
+      if (pendingBuffer.length() >= ControlMessageHeader.MESSAGE_HEADER_LENGTH) {
         // We're ready to read the message header
         pendingBuilder
           .setVersion(pendingBuffer.getByte(0))
@@ -60,7 +64,7 @@ public class ControlMessageParser implements Handler<Buffer> {
           .setLength(payloadLength);
 
         headerParsed = true;
-        pendingBuffer = pendingBuffer.getBuffer(24, pendingBuffer.length());
+        pendingBuffer = pendingBuffer.slice(24, pendingBuffer.length());
 
       } else {
         // We can't do anything else!
@@ -73,13 +77,18 @@ public class ControlMessageParser implements Handler<Buffer> {
     if (pendingBuffer.length() >= payloadLength) {
       // Save any additional bytes in the buffer
       Buffer remainingBuffer = null;
+      Buffer payloadBuffer = null;
       if (pendingBuffer.length() > payloadLength) {
-        pendingBuffer = pendingBuffer.getBuffer(0, payloadLength);
-        remainingBuffer = pendingBuffer.getBuffer(payloadLength, pendingBuffer.length());
+        payloadBuffer = pendingBuffer.slice(0, payloadLength);
+        remainingBuffer = pendingBuffer.slice(payloadLength, pendingBuffer.length());
+      } else {
+        payloadBuffer = pendingBuffer;
       }
 
-      // Set the payload
-      pendingBuilder.setPayload(pendingBuffer);
+      if (payloadLength > 0) {
+        // Set the payload
+        pendingBuilder.setPayload(payloadBuffer);
+      }
 
       // Let's emit the message
       controlMessageHandler.handle(pendingBuilder.build());

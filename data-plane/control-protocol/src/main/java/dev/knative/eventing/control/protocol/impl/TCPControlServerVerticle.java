@@ -17,6 +17,8 @@ package dev.knative.eventing.control.protocol.impl;
 
 import dev.knative.eventing.control.protocol.ControlMessage;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -70,6 +72,16 @@ public class TCPControlServerVerticle extends AbstractVerticle {
       .onComplete(startPromise);
   }
 
+  @Override
+  public void stop(Promise<Void> stopPromise) {
+    CompositeFuture.all(
+      (server != null) ? server.close() : Future.succeededFuture(),
+      (actualConnection != null) ? actualConnection.close() : Future.succeededFuture()
+    )
+      .<Void>mapEmpty()
+      .onComplete(stopPromise);
+  }
+
   private NetServerOptions createNetServerOptions() {
     return new NetServerOptions()
       .setPort(port)
@@ -93,7 +105,7 @@ public class TCPControlServerVerticle extends AbstractVerticle {
   }
 
   private void handleInboundMessage(ControlMessage message) {
-    if (message.opCode() == MessageConstants.ACK_OP_CODE) {
+    if (message.opCode() == ControlMessage.ACK_OP_CODE) {
       handleInboundAck(message.uuid());
     } else {
       emitMessageOnEventBus(message);
@@ -122,7 +134,7 @@ public class TCPControlServerVerticle extends AbstractVerticle {
 
   private void sendAckBack(UUID uuid) {
     ControlMessage message = new ControlMessageImpl.Builder()
-      .setOpCode(MessageConstants.ACK_OP_CODE)
+      .setOpCode(ControlMessage.ACK_OP_CODE)
       .setUuid(uuid)
       .build();
     writeOnConnection(message);
