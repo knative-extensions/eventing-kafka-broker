@@ -1,0 +1,34 @@
+data-plane/**/target
+
+data-plane/**/dependency-reduced-pom.xml
+
+
+### STS ###
+data-plane/**/.apt_generated
+data-plane/**/.classpath
+data-plane/**/.factorypath
+data-plane/**/.project
+data-plane/**/.settings
+
+### IntelliJ IDEA ###
+**/.idea
+**/*.iws
+**/*.iml
+**/*.ipr
+
+### NetBeans ###
+data-plane/**/nbproject/private/
+data-plane/**/nbbuild/
+data-plane/**/dist/
+data-plane/**/nbdist/
+data-plane/**/.nb-gradle/
+data-plane/**/build/
+
+### VS Code ###
+**/.vscode/
+
+## Ignore released file
+eventing-kafka-controller.yaml
+eventing-kafka-broker.yaml
+eventing-kafka-sink.yaml
+

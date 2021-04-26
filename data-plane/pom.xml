@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>dev.knative.eventing.kafka.broker</groupId>
+  <artifactId>data-plane</artifactId>
+  <packaging>pom</packaging>
+  <version>1.0-SNAPSHOT</version>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <java.version>15</java.version>
+
+    <!-- Maven plugins -->
+    <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
+    <maven.surefire.plugin.version>3.0.0-M5</maven.surefire.plugin.version>
+    <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
+    <maven.editorconfig.plugin.version>0.1.1</maven.editorconfig.plugin.version>
+    <maven.jacoco.plugin.version>0.8.6</maven.jacoco.plugin.version>
+    <maven.enforcer.plugin.version>3.0.0-M3</maven.enforcer.plugin.version>
+    <maven.license.plugin.version>2.0.0</maven.license.plugin.version>
+
+    <mycila.license.plugin.version>4.0</mycila.license.plugin.version>
+
+    <!-- dependencies version -->
+    <vertx.version>4.0.3</vertx.version>
+    <cloudevents.sdk.version>2.0.0</cloudevents.sdk.version>
+    <micrometer.version>1.6.6</micrometer.version>
+    <opentelemetry.version>0.15.0</opentelemetry.version>
+    <jackson.version>2.12.3</jackson.version>
+    <protobuf.version>3.15.8</protobuf.version>
+    <slf4j.version>1.7.30</slf4j.version>
+    <ch.qos.logback.version>1.2.3</ch.qos.logback.version>
+    <net.logstash.logback.encoder.version>6.6</net.logstash.logback.encoder.version>
+    <assertj.version>3.19.0</assertj.version>
+    <awaitility.version>4.0.3</awaitility.version>
+    <junit.jupiter.version>5.7.1</junit.jupiter.version>
+    <mokito.junit.jupiter.version>3.9.0</mokito.junit.jupiter.version>
+    <fabric8.kubernetes.version>5.3.0</fabric8.kubernetes.version>
+    <kafka.version>2.7.0</kafka.version>
+    <debezium.version>1.5.0.Final</debezium.version>
+  </properties>
+
+  <modules>
+    <module>contract</module>
+    <module>core</module>
+    <module>receiver</module>
+    <module>dispatcher</module>
+  </modules>
+
+  <profiles>
+    <!-- Enable tests and benchmarks only in non-release mode -->
+    <profile>
+      <id>no-release</id>
+      <activation>
+        <property>
+          <name>!release</name>
+        </property>
+      </activation>
+      <modules>
+        <module>benchmarks</module>
+        <module>tests</module>
+      </modules>
+    </profile>
+
+    <profile>
+      <id>release</id>
+      <activation>
+        <property>
+          <name>release</name>
+        </property>
+      </activation>
+    </profile>
+  </profiles>
+
+  <repositories>
+    <repository>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+      <id>sonatype</id>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Vertx -->
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-stack-depchain</artifactId>
+        <version>${vertx.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-clients</artifactId>
+        <version>${kafka.version}</version>
+      </dependency>
+
+      <!-- Micrometer -->
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-bom</artifactId>
+        <version>${micrometer.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-bom</artifactId>
+        <version>${opentelemetry.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- Kubernetes -->
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>kubernetes-client</artifactId>
+        <version>${fabric8.kubernetes.version}</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>okhttp</artifactId>
+            <groupId>com.squareup.okhttp3</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>kubernetes-server-mock</artifactId>
+        <version>${fabric8.kubernetes.version}</version>
+        <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <artifactId>okhttp</artifactId>
+            <groupId>com.squareup.okhttp3</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <!-- Jackson -->
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- Logback -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-core</artifactId>
+        <version>${ch.qos.logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${ch.qos.logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.logstash.logback</groupId>
+        <artifactId>logstash-logback-encoder</artifactId>
+        <version>${net.logstash.logback.encoder.version}</version>
+      </dependency>
+
+      <!-- CloudEvents SDK -->
+      <dependency>
+        <groupId>io.cloudevents</groupId>
+        <artifactId>cloudevents-http-vertx</artifactId>
+        <version>${cloudevents.sdk.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web-client</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.cloudevents</groupId>
+        <artifactId>cloudevents-kafka</artifactId>
+        <version>${cloudevents.sdk.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.cloudevents</groupId>
+        <artifactId>cloudevents-json-jackson</artifactId>
+        <version>${cloudevents.sdk.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <!-- Protobuf -->
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${protobuf.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java-util</artifactId>
+        <version>${protobuf.version}</version>
+      </dependency>
+
+      <!-- Testing -->
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-junit5</artifactId>
+        <version>${vertx.version}</version>
+        <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>${junit.jupiter.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-migrationsupport</artifactId>
+        <version>${junit.jupiter.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-junit-jupiter</artifactId>
+        <version>${mokito.junit.jupiter.version}</version>
+        <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>${assertj.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <version>${awaitility.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <!--
+        For testing Kafka integrations, Debezium has nice utilities to create Kafka clusters
+        programmatically.
+      -->
+      <dependency>
+        <groupId>io.debezium</groupId>
+        <artifactId>debezium-core</artifactId>
+        <version>${debezium.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.debezium</groupId>
+        <artifactId>debezium-core</artifactId>
+        <version>${debezium.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka_2.12</artifactId>
+        <version>${kafka.version}</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.ec4j.maven</groupId>
+          <artifactId>editorconfig-maven-plugin</artifactId>
+          <version>${maven.editorconfig.plugin.version}</version>
+          <executions>
+            <execution>
+              <id>check</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <excludes>
+              <exclude>.dockerignore</exclude>
+              <exclude>config/***</exclude>
+              <exclude>.mvn/***</exclude>
+            </excludes>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${maven.surefire.plugin.version}</version>
+          <configuration>
+            <!-- This is required for the jacoco maven plugin -->
+            <argLine>${argLine}</argLine>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler.plugin.version}</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${maven.enforcer.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>enforce-maven</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <dependencyConvergence/>
+                <requireReleaseDeps>
+                  <excludes>dev.knative.eventing.kafka.broker:*</excludes>
+                  <failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
+                </requireReleaseDeps>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${maven.jacoco.plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Aggregate third party licenses in THIRD-PARTY.txt -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${maven.license.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>aggregate-download-licenses</id>
+            <goals>
+              <goal>aggregate-download-licenses</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>aggregate-add-third-party</id>
+            <goals>
+              <goal>aggregate-add-third-party</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${maven.multiModuleProjectDirectory}</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!--
+      Use this Plugin for headers due to https://github.com/mojohaus/license-maven-plugin/issues/112 and bad format.
+
+      To add header to all files run: `./mvnw com.mycila:license-maven-plugin:format`
+
+      -->
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${mycila.license.plugin.version}</version>
+        <configuration>
+          <licenseSets>
+            <licenseSet>
+              <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
+              <excludes>
+                <exclude>**/README</exclude>
+                <exclude>src/test/resources/**</exclude>
+                <exclude>src/main/resources/**</exclude>
+                <exclude>**/*.yaml</exclude>
+                <exclude>**/*.yml</exclude>
+                <exclude>**/*.txt</exclude>
+                <exclude>**/DataPlaneContract.java</exclude>
+              </excludes>
+            </licenseSet>
+          </licenseSets>
+          <properties>
+            <owner>Knative Authors</owner>
+            <email>knative-dev@googlegroups.com</email>
+            <project.inceptionYear>2018</project.inceptionYear>
+          </properties>
+        </configuration>
+        <executions>
+          <execution>
+            <id>check-license</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

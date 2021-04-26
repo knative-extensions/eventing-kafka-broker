@@ -1,0 +1,22 @@
+{
+  "generation": "7",
+  "resources": [
+    {
+      "uid": "eaf20344-ecd9-4502-b373-30993b5df5f4",
+      "topics": [
+        "attack-ingress-single"
+      ],
+      "bootstrapServers": "localhost:9092",
+      "ingress": {
+        "path": "/attack-ingress-single"
+      },
+      "egresses": [
+        {
+          "consumerGroup": "669082ef-b02b-4662-9a6e-85acd0f38c3c",
+          "destination": "http://localhost:8081",
+          "uid": "669082ef-b02b-4662-9a6e-85acd0f38c3c"
+        }
+      ]
+    }
+  ]
+}

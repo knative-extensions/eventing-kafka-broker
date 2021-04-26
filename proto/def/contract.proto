@@ -1,0 +1,188 @@
+syntax = 'proto3';
+
+import "google/protobuf/empty.proto";
+
+option go_package = "control-plane/pkg/contract";
+option java_package = "dev.knative.eventing.kafka.broker.contract";
+option java_outer_classname = "DataPlaneContract";
+
+message Filter {
+  // attributes filters events by exact match on event context attributes.
+  // Each key in the map is compared with the equivalent key in the event
+  // context. An event passes the filter if all values are equal to the
+  // specified values.
+  //
+  // Nested context attributes are not supported as keys. Only string values are supported.
+  map<string, string> attributes = 1;
+}
+
+// BackoffPolicyType is the type for backoff policies
+enum BackoffPolicy {
+
+  // Exponential backoff policy
+  Exponential = 0;
+
+  // Linear backoff policy
+  Linear = 1;
+}
+
+message EgressConfig {
+  // Dead letter is where the event is sent when something goes wrong
+  string deadLetter = 1;
+
+  // retry is the minimum number of retries the sender should attempt when
+  // sending an event before moving it to the dead letter sink.
+  //
+  // Setting retry to 0 means don't retry.
+  uint32 retry = 2;
+
+  // backoffPolicy is the retry backoff policy (linear, exponential).
+  BackoffPolicy backoffPolicy = 3;
+
+  // backoffDelay is the delay before retrying in milliseconds.
+  uint64 backoffDelay = 4;
+}
+
+// Check dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryOrder for more details
+enum DeliveryOrder {
+  UNORDERED = 0;
+  ORDERED = 1;
+}
+
+message Egress {
+  // consumer group name
+  string consumerGroup = 1;
+
+  // destination is the sink where events are sent.
+  string destination = 2;
+
+  oneof replyStrategy {
+    // Send the response to an url
+    string replyUrl = 3;
+
+    // Send the response to a Kafka topic
+    google.protobuf.Empty replyToOriginalTopic = 4;
+  }
+
+  Filter filter = 5;
+
+  // Id of the egress
+  // It's the same as the Kubernetes resource uid
+  string uid = 6;
+
+  // Egress configuration.
+  // It overrides Resource's EgressConfig.
+  EgressConfig egressConfig = 7;
+
+  // Delivery guarantee to use
+  // Empty defaults to unordered
+  DeliveryOrder deliveryOrder = 8;
+}
+
+// CloudEvent content mode
+enum ContentMode {
+  BINARY = 0;
+  STRUCTURED = 1;
+}
+
+message Ingress {
+  // Optional content mode to use when pushing messages to Kafka
+  ContentMode contentMode = 1;
+
+  // Ingress can both listen on a specific HTTP path
+  // or listen to the / path but match the Host header
+  oneof ingressType {
+    // path to listen for incoming events.
+    string path = 2;
+
+    // host header to match
+    string host = 3;
+  }
+}
+
+// Kubernetes resource reference.
+message Reference {
+
+  // Object id.
+  string uuid = 1;
+
+  // Object namespace.
+  string namespace = 2;
+
+  // Object name.
+  string name = 3;
+
+  // Object version.
+  string version = 4;
+}
+
+message Resource {
+  // Id of the resource
+  // It's the same as the Kubernetes resource uid
+  string uid = 1;
+
+  // Topics name
+  // Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
+  //  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
+  repeated string topics = 2;
+
+  // A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+  // Note: we're using a comma separated list simply because that's how java kafka client likes it.
+  string bootstrapServers = 3;
+
+  // Optional ingress for this topic
+  Ingress ingress = 4;
+
+  // Optional configuration of egress valid for the whole resource
+  EgressConfig egressConfig = 5;
+
+  // Optional egresses for this topic
+  repeated Egress egresses = 6;
+
+  oneof Auth {
+    // No auth configured.
+    google.protobuf.Empty absentAuth = 7;
+
+    // Secret reference.
+    //
+    // Secret format:
+    //
+    //   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+    //   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+    //   ca.crt: <CA PEM certificate>
+    //   user.crt: <User PEM certificate>
+    //   user.key: <User PEM key>
+    //   user: <SASL username>
+    //   password: <SASL password>
+    //
+    // Validation:
+    //   - protocol=PLAINTEXT
+    //   - protocol=SSL
+    //     - required:
+    //       - ca.crt
+    //       - user.crt
+    //       - user.key
+    //   - protocol=SASL_PLAINTEXT
+    //     - required:
+    //       - sasl.mechanism
+    //       - user
+    //       - password
+    //   - protocol=SASL_SSL
+    //     - required:
+    //       - sasl.mechanism
+    //       - ca.crt
+    //       - user.crt
+    //       - user.key
+    //       - user
+    //       - password
+    Reference authSecret = 8;
+  }
+}
+
+message Contract {
+  // Count each contract update.
+  // Make sure each data plane pod has the same contract generation number.
+  uint64 generation = 1;
+
+  repeated Resource resources = 2;
+}
