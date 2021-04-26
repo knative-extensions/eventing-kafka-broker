@@ -106,18 +106,18 @@ public class TCPControlServerVerticle extends AbstractVerticle {
 
   private void handleInboundMessage(ControlMessage message) {
     if (message.opCode() == ControlMessage.ACK_OP_CODE) {
-      handleInboundAck(message.uuid());
+      handleInboundAck(message);
     } else {
       emitMessageOnEventBus(message);
     }
   }
 
-  private void handleInboundAck(UUID uuid) {
-    Message<ControlMessage> message = this.toAck.get(uuid);
+  private void handleInboundAck(ControlMessage ackMessage) {
+    Message<ControlMessage> message = this.toAck.get(ackMessage.uuid());
     if (message == null) {
-      logger.warn("Received an ack for an unknown uuid {}", uuid);
+      logger.warn("Received an ack for an unknown uuid {}", ackMessage.uuid());
     } else {
-      message.reply(message.body());
+      message.reply(ackMessage);
     }
   }
 
@@ -129,14 +129,27 @@ public class TCPControlServerVerticle extends AbstractVerticle {
     vertx.eventBus().request(this.incomingMessageAddress, message, DELIVERY_OPTIONS)
       .onFailure(t -> logger
         .error("Cannot route the incoming control message to {}: {}", this.incomingMessageAddress, message, t))
-      .onSuccess(m -> sendAckBack(message.uuid()));
+      .onSuccess(m -> sendAckBack(message.uuid(), m.body()));
   }
 
-  private void sendAckBack(UUID uuid) {
-    ControlMessage message = new ControlMessageImpl.Builder()
+  private void sendAckBack(UUID uuid, Object body) {
+    ControlMessageImpl.Builder builder = new ControlMessageImpl.Builder()
       .setOpCode(ControlMessage.ACK_OP_CODE)
-      .setUuid(uuid)
-      .build();
+      .setUuid(uuid);
+
+    if (body != null) {
+      if (body instanceof Throwable) {
+        builder
+          .setLengthAndPayload(
+            Buffer.buffer(((Throwable) body).getMessage())
+          );
+      } else {
+        builder
+          .setLengthAndPayload(Buffer.buffer(String.valueOf(body)));
+      }
+    }
+
+    ControlMessage message = builder.build();
     writeOnConnection(message);
   }
 
@@ -150,6 +163,7 @@ public class TCPControlServerVerticle extends AbstractVerticle {
     if (actualConnection == null) {
       // Enqueue the message
       this.enqueuedWaitingForConnection.offer(message);
+      return;
     }
     this.internalWriteOnConnection(message, message.toBuffer());
   }

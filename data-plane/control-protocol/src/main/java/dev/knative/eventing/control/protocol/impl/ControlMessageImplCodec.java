@@ -15,7 +15,6 @@
  */
 package dev.knative.eventing.control.protocol.impl;
 
-import dev.knative.eventing.control.protocol.ControlMessage;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.MessageCodec;
@@ -25,21 +24,21 @@ import io.vertx.core.eventbus.MessageCodec;
  * <p>
  * https://github.com/eclipse-vertx/vert.x/issues/3375
  */
-public final class ControlMessageCodec implements MessageCodec<ControlMessage, ControlMessage> {
+public final class ControlMessageImplCodec implements MessageCodec<ControlMessageImpl, ControlMessageImpl> {
 
   @Override
-  public void encodeToWire(Buffer buffer, ControlMessage controlMessage) {
+  public void encodeToWire(Buffer buffer, ControlMessageImpl controlMessage) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public ControlMessage decodeFromWire(int i, Buffer buffer) {
+  public ControlMessageImpl decodeFromWire(int i, Buffer buffer) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public ControlMessage transform(
-    ControlMessage controlMessage) {
+  public ControlMessageImpl transform(
+    ControlMessageImpl controlMessage) {
     return controlMessage;
   }
 
@@ -57,6 +56,6 @@ public final class ControlMessageCodec implements MessageCodec<ControlMessage, C
    * Register this event codec to the provided event bus
    */
   public static void register(EventBus eventBus) {
-    eventBus.registerDefaultCodec(ControlMessage.class, new ControlMessageCodec());
+    eventBus.registerDefaultCodec(ControlMessageImpl.class, new ControlMessageImplCodec());
   }
 }
