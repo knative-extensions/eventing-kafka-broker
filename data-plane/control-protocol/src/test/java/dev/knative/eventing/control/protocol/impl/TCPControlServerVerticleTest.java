@@ -24,9 +24,12 @@ import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,6 +74,49 @@ class TCPControlServerVerticleTest {
 
     assertThat(received)
       .containsExactly(expected);
+  }
+
+  @Test
+  public void testReceivingInSerializedOrder(Vertx vertx) throws Exception {
+    final long minDelay = 100L;
+    final Random random = new Random();
+
+    // Just echo with empty
+    List<Long> timestamps = new ArrayList<>();
+    vertx.eventBus().consumer(INCOMING_EB_ADDRESS).handler(msg -> {
+        timestamps.add(System.currentTimeMillis());
+        long delay = Math.round(minDelay + ((random.nextDouble() - 0.5) * minDelay * 0.5));
+        vertx.setTimer(delay, v -> {
+          timestamps.add(System.currentTimeMillis());
+          msg.reply(null);
+        });
+      }
+    );
+
+    Supplier<ControlMessage> input = () -> new ControlMessageImpl.Builder()
+      .setOpCode((byte) 1)
+      .setUuid(UUID.randomUUID())
+      .setLengthAndPayload(Buffer.buffer("abc123"))
+      .build();
+
+    Socket socket = new Socket("localhost", port);
+
+    for (int i = 0; i < 20; i++) {
+      socket.getOutputStream().write(
+        input.get().toBuffer().getBytes()
+      );
+    }
+
+    for (int i = 0; i < 20; i++) {
+      socket.getInputStream().readNBytes(24);
+    }
+
+    // The expected array is the timestamps array, in an ordered manner
+    List<Long> expected = new ArrayList<>(timestamps);
+    expected.sort(Comparator.comparingLong(Long::longValue));
+
+    assertThat(timestamps)
+      .isEqualTo(expected);
   }
 
   @Test

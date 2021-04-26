@@ -42,22 +42,29 @@ public class TCPControlServerVerticle extends AbstractVerticle {
   private final int port;
   private final String incomingMessageAddress;
   private final String outgoingMessageAddress;
+
   private final Map<UUID, Message<ControlMessage>> toAck;
   private final Queue<ControlMessage> enqueuedWaitingForConnection;
 
   private NetServer server;
   private NetSocket actualConnection;
+  private SerializedEventBusRequester serializedEventBusRequester;
 
   public TCPControlServerVerticle(int port, String incomingMessageAddress, String outgoingMessageAddress) {
     this.port = port;
     this.incomingMessageAddress = incomingMessageAddress;
     this.outgoingMessageAddress = outgoingMessageAddress;
+
     this.toAck = new HashMap<>();
     this.enqueuedWaitingForConnection = new ArrayDeque<>();
   }
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
+    // Initialize event bus requester
+    this.serializedEventBusRequester =
+      new SerializedEventBusRequester(vertx.eventBus(), this.incomingMessageAddress, DELIVERY_OPTIONS);
+
     // Start the event bus message listener
     vertx.eventBus().<ControlMessage>localConsumer(this.outgoingMessageAddress)
       .handler(this::handleOutboundMessage);
@@ -122,11 +129,7 @@ public class TCPControlServerVerticle extends AbstractVerticle {
   }
 
   private void emitMessageOnEventBus(ControlMessage message) {
-    // TODO should the message delivery be serialized using AsyncOrderedExecutor?
-    //  Or should "downstream" take care of that?
-    //  Or should we provide an OrderedMessageHandler for the event bus or similar?
-    //  Note: that's the behaviour of the Golang client
-    vertx.eventBus().request(this.incomingMessageAddress, message, DELIVERY_OPTIONS)
+    this.serializedEventBusRequester.request(message)
       .onFailure(t -> logger
         .error("Cannot route the incoming control message to {}: {}", this.incomingMessageAddress, message, t))
       .onSuccess(m -> sendAckBack(message.uuid(), m.body()));

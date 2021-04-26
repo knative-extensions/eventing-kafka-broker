@@ -36,6 +36,9 @@ public interface ControlMessage extends ControlMessageHeader {
    */
   Object payloadAsJson();
 
+  /**
+   * @return the conversion of this message to {@link Buffer}
+   */
   Buffer toBuffer();
 
 }
