@@ -98,15 +98,20 @@ public class CredentialsValidatorTest {
 
   @Test
   public void securityProtocolSaslPlaintextScramSha256Valid() {
-    securityProtocolSaslPlaintextScramValid("SCRAM-SHA-256");
+    securityProtocolSaslPlaintextValid("SCRAM-SHA-256");
   }
 
   @Test
   public void securityProtocolSaslPlaintextScramSha512Valid() {
-    securityProtocolSaslPlaintextScramValid("SCRAM-SHA-512");
+    securityProtocolSaslPlaintextValid("SCRAM-SHA-512");
   }
 
-  private static void securityProtocolSaslPlaintextScramValid(final String mechanism) {
+  @Test
+  public void securityProtocolSaslPlaintextPlainValid() {
+    securityProtocolSaslPlaintextValid("PLAIN");
+  }
+
+  private static void securityProtocolSaslPlaintextValid(final String mechanism) {
 
     final var credential = mock(Credentials.class);
 
@@ -161,6 +166,19 @@ public class CredentialsValidatorTest {
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
     when(credential.caCertificates()).thenReturn("xyz");
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-256");
+    when(credential.SASLUsername()).thenReturn("aaa");
+    when(credential.SASLPassword()).thenReturn("bbb");
+
+    assertThat(CredentialsValidator.validate(credential)).isNull();
+  }
+
+  @Test
+  public void securityProtocolSaslPlainSslValid() {
+    final var credential = mock(Credentials.class);
+
+    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+    when(credential.caCertificates()).thenReturn("xyz");
+    when(credential.SASLMechanism()).thenReturn("PLAIN");
     when(credential.SASLUsername()).thenReturn("aaa");
     when(credential.SASLPassword()).thenReturn("bbb");
 
