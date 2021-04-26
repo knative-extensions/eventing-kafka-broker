@@ -6,7 +6,6 @@ require (
 	github.com/Shopify/sarama v1.28.0
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.2.0
 	github.com/cloudevents/sdk-go/v2 v2.4.1
-	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.5
 	github.com/google/uuid v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
