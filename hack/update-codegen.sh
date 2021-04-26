@@ -51,5 +51,5 @@ ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
 
 group "Update deps post-codegen"
 
-${REPO_ROOT_DIR}/hack/generate_proto.sh
+${REPO_ROOT_DIR}/hack/generate-proto.sh
 ${REPO_ROOT_DIR}/hack/update-deps.sh
