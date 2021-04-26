@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mock;
 
-import com.google.protobuf.Empty;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
@@ -79,7 +78,7 @@ public class HttpConsumerVerticleFactoryTest {
       .setConsumerGroup("1234")
       .setUid("1234")
       .setDestination("http://localhost:43256")
-      .setReplyToOriginalTopic(Empty.newBuilder().build())
+      .setReplyToOriginalTopic(DataPlaneContract.Empty.newBuilder().build())
       .build();
     final var resource = DataPlaneContract.Resource.newBuilder()
       .setUid("123456")
@@ -123,7 +122,7 @@ public class HttpConsumerVerticleFactoryTest {
       .setConsumerGroup("1234")
       .setUid("1234")
       .setDestination("http://localhost:43256")
-      .setReplyToOriginalTopic(Empty.newBuilder().build())
+      .setReplyToOriginalTopic(DataPlaneContract.Empty.newBuilder().build())
       .build();
     final var resource = DataPlaneContract.Resource.newBuilder()
       .setUid("123456")
