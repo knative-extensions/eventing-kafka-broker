@@ -1,8 +1,8 @@
 golang-lru
 ==========
 
-This provides the `lru` package which implements a fixed-size thread safe LRU cache. It is based on the cache in
-Groupcache.
+This provides the `lru` package which implements a fixed-size
+thread safe LRU cache. It is based on the cache in Groupcache.
 
 Documentation
 =============
