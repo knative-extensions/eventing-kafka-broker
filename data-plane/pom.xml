@@ -66,6 +66,9 @@
     <module>receiver</module>
     <module>dispatcher</module>
     <module>control-protocol</module>
+
+    <!-- Although this module is for testing purpose,
+         we have it in the release modules because we need to build it for the test image -->
     <module>control-protocol-conformance-server</module>
   </modules>
 
