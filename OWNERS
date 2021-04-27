@@ -2,18 +2,11 @@
 # At least one WG lead from https://github.com/knative/community/blob/master/working-groups/WORKING-GROUPS.md#event-delivery
 # must be in the "approvers" list.
 approvers:
-- matzew
-- slinkydeveloper
-- pierDipi
-# Also including TOC members as backup:
-- evankanderson
-- grantr
-- markusthoemmes
-- mattmoor
-- tcnghia
+- technical-oversight-committee
+- knative-release-leads
+- eventing-writers
+- eventing-kafka-broker-approvers
 
 reviewers:
-- matzew
-- slinkydeveloper
-- pierDipi
-- devguyio
+- eventing-writers
+- eventing-kafka-broker-approvers
