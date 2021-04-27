@@ -56,7 +56,7 @@ jobs:
           files: .codecov.yaml
 
       - name: Java Test
-        run: ./hack/run unit-tests-data-plane
+        run: ./hack/run.sh unit-tests-data-plane
 
       - if: steps.codecov-enabled.outputs.files_exists == 'true'
         name: Codecov
