@@ -105,10 +105,10 @@ jobs:
         run: ./vendor/knative.dev/eventing/hack/create-kind-cluster.sh
 
       - name: Install Dependencies (Eventing, Kafka, etc)
-        run: ./hack/run deploy-infra
+        run: ./hack/run.sh deploy-infra
 
       - name: Install Eventing Kafka Broker
-        run: ./hack/run deploy
+        run: ./hack/run.sh deploy
 
       - name: Wait for things to be up
         run: |
@@ -136,7 +136,7 @@ jobs:
              ${{ matrix.test-suite }} ${{ matrix.extra-test-flags }}
 
       - name: Teardown Eventing Kafka Broker
-        run: ./hack/run teardown
+        run: ./hack/run.sh teardown
 
       - name: Collect system diagnostics
         if: ${{ failure() }}
