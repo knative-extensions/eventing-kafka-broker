@@ -20,12 +20,12 @@ source $(pwd)/hack/control-plane.sh
 
 readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
 
-# Vendored eventing test images.
+# Vendor test images.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
+readonly VENDOR_PKG_TEST_IMAGES="vendor/knative.dev/pkg/leaderelection/chaosduck"
+readonly VENDOR_CONTROL_PROTOCOL_TEST_IMAGES="vendor/knative.dev/control-protocol/test/test_images/"
 
 readonly CHAOS_CONFIG="test/config/chaos/chaosduck.yaml"
-# Vendored pkg test images.
-readonly VENDOR_PKG_TEST_IMAGES="vendor/knative.dev/pkg/leaderelection/chaosduck"
 
 export EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT="eventing-kafka-controller.yaml"
 export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
@@ -82,6 +82,14 @@ function knative_eventing() {
   sed -i 's@knative.dev/pkg/leaderelection/chaosduck@knative.dev/eventing-kafka-broker/vendor/knative.dev/pkg/leaderelection/chaosduck@g' "${CHAOS_CONFIG}"
   ./test/upload-test-images.sh ${VENDOR_PKG_TEST_IMAGES} e2e || fail_test "Error uploading test images"
   sed -i 's@knative.dev/eventing-kafka-broker/vendor/knative.dev/pkg/leaderelection/chaosduck@knative.dev/pkg/leaderelection/chaosduck@g' "${CHAOS_CONFIG}"
+
+  # Publish test images from control-protocol.
+  echo ">> Publishing test images from control-protocol"
+  # We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
+  # path has to be a GOPATH.
+  sed -i 's@knative.dev/control-protocol/test/test_images@knative.dev/eventing-kafka-broker/vendor/knative.dev/control-protocol/test/test_images@g' "${VENDOR_CONTROL_PROTOCOL_TEST_IMAGES}"*/*.yaml
+  ./test/upload-test-images.sh ${VENDOR_CONTROL_PROTOCOL_TEST_IMAGES} e2e || fail_test "Error uploading test images"
+  sed -i 's@knative.dev/eventing-kafka-broker/vendor/knative.dev/control-protocol/test/test_images@knative.dev/control-protocol/test/test_images@g' "${VENDOR_CONTROL_PROTOCOL_TEST_IMAGES}"*/*.yaml
 
   ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 
