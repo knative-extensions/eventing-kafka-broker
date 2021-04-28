@@ -372,6 +372,10 @@ public final class DataPlaneContract {
   }
   /**
    * <pre>
+   * We don't use the google.protobuf.Empty type because
+   * configuring the include directory is a mess for the contributors and for the build scripts.
+   * Hence, more than dealing with contributors that can't get their dev environment
+   * working with the project, we prefer to have this additional single line of code.
    * Protobuf include nightmare? No thanks!
    * </pre>
    *
@@ -597,6 +601,10 @@ public final class DataPlaneContract {
     }
     /**
      * <pre>
+     * We don't use the google.protobuf.Empty type because
+     * configuring the include directory is a mess for the contributors and for the build scripts.
+     * Hence, more than dealing with contributors that can't get their dev environment
+     * working with the project, we prefer to have this additional single line of code.
      * Protobuf include nightmare? No thanks!
      * </pre>
      *
