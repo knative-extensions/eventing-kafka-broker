@@ -128,24 +128,24 @@ public class ControlMessageImpl implements ControlMessage {
 
   @Override
   public byte[] payload() {
-    return this.payload.getBytes();
+    return (this.payload != null) ? this.payload.getBytes() : null;
   }
 
   @Override
   public Object payloadAsJson() {
-    return Json.decodeValue(this.payload);
+    return (this.payload != null) ? Json.decodeValue(this.payload) : null;
   }
 
   @Override
   public Buffer toBuffer() {
     Buffer buffer = Buffer.buffer(
       ControlMessageHeader.MESSAGE_HEADER_LENGTH + ((this.payload != null) ? this.payload.length() : 0));
-    buffer.setByte(0, this.version);
-    buffer.setByte(1, this.flags);
-    buffer.setByte(2, (byte) 0x00);
-    buffer.setByte(3, this.opCode);
+    buffer.setUnsignedByte(0, this.version);
+    buffer.setUnsignedByte(1, this.flags);
+    buffer.setUnsignedByte(2, (byte) 0x00);
+    buffer.setUnsignedByte(3, this.opCode);
     UUIDUtils.writeToBuffer(buffer, this.uuid, 4);
-    buffer.setInt(20, this.length);
+    buffer.setUnsignedInt(20, this.length);
     if (this.payload != null) {
       buffer.setBuffer(24, this.payload);
     }

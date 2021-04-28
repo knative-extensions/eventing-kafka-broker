@@ -114,14 +114,9 @@ function dispatcher_build_push() {
 }
 
 function control_protocol_conformance_server_build_push() {
-  local uuid=${UUID}
-  if [ "${uuid}" = "latest" ]; then
-    uuid="$(uuidgen --time)"
-  fi
+  export KNATIVE_CONTROL_PROTOCOL_CONFORMANCE_SERVER_IMAGE="${KO_DOCKER_REPO}"/"${control_protocol_conformance_server}"
 
-  export KNATIVE_CONTROL_PROTOCOL_CONFORMANCE_SERVER_IMAGE="${KO_DOCKER_REPO}"/"${control_protocol_conformance_server}":"${uuid}"
-
-  header "Building control protocol conformance server ..."
+  header "Building control protocol conformance server '${KNATIVE_CONTROL_PROTOCOL_CONFORMANCE_SERVER_IMAGE}' ..."
 
   docker build \
     -f ${DATA_PLANE_DIR}/docker/Dockerfile \

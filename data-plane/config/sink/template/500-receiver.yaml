@@ -108,8 +108,6 @@ spec:
             # This should be set according to initial delay seconds
             - name: WAIT_STARTUP_SECONDS
               value: "8"
-          command:
-            - "java"
           args:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"

@@ -57,3 +57,6 @@ COPY --from=builder /app /app
 
 # Configure PATH
 ENV PATH="/app/jdk/bin:${PATH}"
+
+ENTRYPOINT ["java"]
+CMD ["-jar", "/app/app.jar"]

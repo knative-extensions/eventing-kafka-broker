@@ -19,7 +19,7 @@ import io.vertx.core.buffer.Buffer;
 
 public interface ControlMessage extends ControlMessageHeader {
 
-  byte ACK_OP_CODE = Byte.MAX_VALUE;
+  byte ACK_OP_CODE = (byte) 0xFF;
 
   /**
    * @return the mutable payload buffer

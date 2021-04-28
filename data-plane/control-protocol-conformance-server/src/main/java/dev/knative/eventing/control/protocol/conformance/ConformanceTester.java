@@ -16,6 +16,7 @@
 package dev.knative.eventing.control.protocol.conformance;
 
 import dev.knative.eventing.control.protocol.ControlMessage;
+import dev.knative.eventing.control.protocol.impl.ControlMessageImplCodec;
 import dev.knative.eventing.control.protocol.impl.TCPControlServerVerticle;
 import io.vertx.core.Vertx;
 import java.util.Queue;
@@ -42,6 +43,7 @@ public class ConformanceTester {
     );
 
     Vertx vertx = Vertx.vertx();
+    ControlMessageImplCodec.register(vertx.eventBus());
     vertx.deployVerticle(new TCPControlServerVerticle(port, INCOMING_EB_ADDRESS, OUTGOING_EB_ADDRESS))
       .toCompletionStage()
       .toCompletableFuture()
@@ -93,11 +95,16 @@ public class ConformanceTester {
       logger.info("Sending control message: {}", message);
 
       vertx.runOnContext(v ->
-        vertx.eventBus().request(OUTGOING_EB_ADDRESS, message).onComplete(ar -> {
-          if (message.opCode() == FAIL_OP_CODE && ar.succeeded()) {
+        vertx.eventBus().<ControlMessage>request(OUTGOING_EB_ADDRESS, message).onComplete(ar -> {
+          if (ar.failed()) {
+            logger.error("Failed to dispatch {}", message);
+            System.exit(1);
+          }
+
+          if (message.opCode() == FAIL_OP_CODE && ar.result().body().payloadBuffer() == null) {
             logger.error("Expecting message to fail, but it succeeded {}", message);
             System.exit(1);
-          } else if (message.opCode() != FAIL_OP_CODE && ar.failed()) {
+          } else if (message.opCode() != FAIL_OP_CODE && ar.result().body().payloadBuffer() != null) {
             logger.error("Expecting message to succeed, but it failed {}", message);
             System.exit(1);
           }

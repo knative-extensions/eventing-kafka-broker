@@ -105,6 +105,22 @@ class ControlMessageParserTest {
   }
 
   @Test
+  public void testHandleAckMessage() throws Exception {
+    List<ControlMessage> parsedMessages = new ArrayList<>();
+    ControlMessageParser parser = new ControlMessageParser(parsedMessages::add);
+
+    ControlMessage expected = new ControlMessageImpl.Builder()
+      .setOpCode(ControlMessage.ACK_OP_CODE)
+      .setUuid(UUID.randomUUID())
+      .build();
+
+    parser.handle(expected.toBuffer());
+
+    assertThat(parsedMessages)
+      .containsExactly(expected);
+  }
+
+  @Test
   public void testHandleEmptyPayload() throws Exception {
     List<ControlMessage> parsedMessages = new ArrayList<>();
     ControlMessageParser parser = new ControlMessageParser(parsedMessages::add);
