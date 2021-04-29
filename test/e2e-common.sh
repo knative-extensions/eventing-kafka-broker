@@ -85,7 +85,7 @@ function knative_eventing() {
 
   # Publish test images from control-protocol.
   echo ">> Publishing test images from control-protocol"
-  # We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
+  # We vendor test image code from control-protocol, in order to use ko to resolve them into Docker images, the
   # path has to be a GOPATH.
   sed -i 's@knative.dev/control-protocol/test/test_images@knative.dev/eventing-kafka-broker/vendor/knative.dev/control-protocol/test/test_images@g' "${VENDOR_CONTROL_PROTOCOL_TEST_IMAGES}"*/*.yaml
   ./test/upload-test-images.sh ${VENDOR_CONTROL_PROTOCOL_TEST_IMAGES} e2e || fail_test "Error uploading test images"
