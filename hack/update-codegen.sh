@@ -51,5 +51,9 @@ ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
 
 group "Update deps post-codegen"
 
-${REPO_ROOT_DIR}/proto/hack/generate_proto
+# Our GH Actions env doesn't have protoc.
+# For more details: https://github.com/knative-sandbox/eventing-kafka-broker/pull/847#issuecomment-828562570
+if ! ${GITHUB_ACTIONS:-false}; then
+  ${REPO_ROOT_DIR}/hack/generate-proto.sh
+fi
 ${REPO_ROOT_DIR}/hack/update-deps.sh
