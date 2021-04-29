@@ -20,6 +20,7 @@ import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
+import io.opentelemetry.api.trace.Span;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
@@ -52,7 +53,7 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper {
         }
 
         if (logger.isDebugEnabled()) {
-          final var span = TracingSpan.getCurrent(vertx);
+          final var span = Span.current();
           if (span != null) {
             logger.debug("received event {} {}",
               keyValue("event", event),
@@ -63,8 +64,7 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper {
           }
         }
 
-        TracingSpan.decorateCurrent(vertx, event);
-
+        TracingSpan.decorateCurrentWithEvent(event);
         return KafkaProducerRecord.create(topic, event);
       });
   }

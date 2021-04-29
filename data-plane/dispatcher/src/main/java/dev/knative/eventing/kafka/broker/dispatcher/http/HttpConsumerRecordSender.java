@@ -75,7 +75,7 @@ public final class HttpConsumerRecordSender implements ConsumerRecordSender {
   @Override
   public Future<HttpResponse<Buffer>> send(final KafkaConsumerRecord<String, CloudEvent> record) {
 
-    TracingSpan.decorateCurrent(vertx, record.value());
+    TracingSpan.decorateCurrentWithEvent(record.value());
 
     return circuitBreaker.execute(breaker -> {
       try {

@@ -16,9 +16,14 @@
 package dev.knative.eventing.kafka.broker.core.tracing;
 
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.Backend;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.OpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
@@ -47,7 +52,7 @@ public class Tracing {
 
   private static final Logger logger = LoggerFactory.getLogger(Tracing.class);
 
-  public static SdkTracerProvider setup(final TracingConfig tracingConfig) {
+  public static OpenTelemetry setup(final TracingConfig tracingConfig) {
     logger.info(
       "Registering tracing configurations {} {} {} {}",
       keyValue("backend", tracingConfig.getBackend()),
@@ -80,7 +85,14 @@ public class Tracing {
       );
     }
 
-    return tracerProviderBuilder.build();
+    OpenTelemetrySdkBuilder sdkBuilder = OpenTelemetrySdk.builder();
+    sdkBuilder.setTracerProvider(tracerProviderBuilder.build());
+    sdkBuilder.setPropagators(ContextPropagators.create(
+      W3CTraceContextPropagator.getInstance()
+    ));
+
+
+    return sdkBuilder.build();
   }
 
   private static SpanExporter zipkinExporter(TracingConfig tracingConfig) {

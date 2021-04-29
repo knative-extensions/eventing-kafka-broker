@@ -53,6 +53,10 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-opentelemetry</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>io.micrometer</groupId>
