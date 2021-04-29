@@ -31,6 +31,7 @@ import (
 )
 
 func TestConsumerGroupLagProvider(t *testing.T) {
+	t.Skip("Only useful for debugging the consumer group lag provider control-plane/pkg/kafka/consumer_group_lag.go")
 
 	const (
 		consumerGroupLagJobName = "consumer-group-lag-provider-test"
