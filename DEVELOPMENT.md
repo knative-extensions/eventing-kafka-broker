@@ -47,19 +47,19 @@ export KO_DOCKER_REPO=kind.local
 ### Install dependencies (Eventing and Kafka) and publish test images
 
 ```shell
-./hack/run deploy-infra
+./hack/run.sh deploy-infra
 ```
 
 ### Install Eventing Kafka Broker
 
 ```shell
-./hack/run deploy
+./hack/run.sh deploy
 ```
 
 ### Run build tests
 
 ```shell
-./hack/run build-tests
+./hack/run.sh build-tests
 ```
 
 _Note: These tests do not require a running Kubernetes cluster._
@@ -67,19 +67,19 @@ _Note: These tests do not require a running Kubernetes cluster._
 ### Run unit tests
 
 ```shell
-./hack/run unit-tests
+./hack/run.sh unit-tests
 ```
 
 If you want to run only data plane unit tests run the following command:
 
 ```shell
-./hack/run unit-tests-data-plane
+./hack/run.sh unit-tests-data-plane
 ```
 
 Or, alternatively, if you want to run only control plane unit tests run the following command:
 
 ```shell
-./hack/run unit-tests-control-plane
+./hack/run.sh unit-tests-control-plane
 ```
 
 _Note: These tests do not require a running Kubernetes cluster._
@@ -97,7 +97,7 @@ Once we have everything up and running we can start writing code, building, test
 We can run the following command to apply newly added changes to our Kubernetes cluster:
 
 ```shell
-./hack/run deploy
+./hack/run.sh deploy
 ```
 
 ### Run Sacura test
@@ -109,14 +109,14 @@ We use it to test that our components don't lose events for a given period of ti
 _Note: This test requires at least 4Gi of memory_
 
 ```shell
-./hack/run deploy-sacura
-./hack/run sacura-test
+./hack/run.sh deploy-sacura
+./hack/run.sh sacura-test
 ```
 
 Once the test completes, run the following command to clean up sacura resources:
 
 ```shell
-./hack/run teardown-sacura
+./hack/run.sh teardown-sacura
 ```
 
 ### Run Chaos test
@@ -127,7 +127,7 @@ issues.
 _Note: `chaosduck` is heavyweight since it requires that every component has multiple replicas._
 
 ```shell
-./hack/run deploy-chaos
+./hack/run.sh deploy-chaos
 ```
 
 `chaosduck` itself does nothing other than killing leader pods, so at this point you should run our E2E tests.
@@ -135,7 +135,7 @@ _Note: `chaosduck` is heavyweight since it requires that every component has mul
 Once you want to stop `chaosduck`, run the following command:
 
 ```shell
-./hack/run teardown-chaos
+./hack/run.sh teardown-chaos
 ```
 
 ### Run profiler
@@ -149,18 +149,17 @@ _Note: this command requires root privileges, and it can only run on Linux._
 
 ```shell
 export EVENT=alloc
-./hack/run profiler
+./hack/run.sh profiler
 ```
 
 For more information on the profiler test, see [the profiler test doc](./data-plane/profiler/README.md).
 
 ## Code generation
 
-Sometimes, before running `make up` to rebuild and apply newly added changes, it's required to run our code generators,
-by running the following command:
+Sometimes, before deploying the services it's required to run our code generators, by running the following command:
 
 ```shell
-./hack/run  generate
+./hack/run.sh generate
 ```
 
 This step is required only if we're changing a protobuf definition file, or for some specific API changes.
@@ -172,13 +171,13 @@ If you're unsure, whether you need to run it or not for your changes, run [our b
 ### Delete dependencies
 
 ```shell
-./hack/run teardown-infra
+./hack/run.sh teardown-infra
 ```
 
 ### Delete Eventing Kafka Broker
 
 ```shell
-./hack/run teardown
+./hack/run.sh teardown
 ```
 
 ### Delete KinD cluster
