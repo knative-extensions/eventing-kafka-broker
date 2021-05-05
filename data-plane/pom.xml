@@ -35,7 +35,7 @@
     <maven.surefire.plugin.version>3.0.0-M5</maven.surefire.plugin.version>
     <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
     <maven.editorconfig.plugin.version>0.1.1</maven.editorconfig.plugin.version>
-    <maven.jacoco.plugin.version>0.8.6</maven.jacoco.plugin.version>
+    <maven.jacoco.plugin.version>0.8.7</maven.jacoco.plugin.version>
     <maven.enforcer.plugin.version>3.0.0-M3</maven.enforcer.plugin.version>
     <maven.license.plugin.version>2.0.0</maven.license.plugin.version>
 
