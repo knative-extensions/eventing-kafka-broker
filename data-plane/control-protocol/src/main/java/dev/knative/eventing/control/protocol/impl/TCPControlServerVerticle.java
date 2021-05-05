@@ -28,9 +28,13 @@ import io.vertx.core.net.NetServerOptions;
 import io.vertx.core.net.NetSocket;
 import java.util.ArrayDeque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +51,7 @@ public class TCPControlServerVerticle extends AbstractVerticle {
   private final Queue<ControlMessage> enqueuedWaitingForConnection;
 
   private NetServer server;
-  private NetSocket actualConnection;
+  private Set<NetSocket> connections;
   private SerializedEventBusRequester serializedEventBusRequester;
 
   public TCPControlServerVerticle(int port, String incomingMessageAddress, String outgoingMessageAddress) {
@@ -57,6 +61,8 @@ public class TCPControlServerVerticle extends AbstractVerticle {
 
     this.toAck = new HashMap<>();
     this.enqueuedWaitingForConnection = new ArrayDeque<>();
+
+    this.connections = new HashSet<>();
   }
 
   @Override
@@ -82,8 +88,10 @@ public class TCPControlServerVerticle extends AbstractVerticle {
   @Override
   public void stop(Promise<Void> stopPromise) {
     CompositeFuture.all(
-      (server != null) ? server.close() : Future.succeededFuture(),
-      (actualConnection != null) ? actualConnection.close() : Future.succeededFuture()
+      Stream.concat(
+        Stream.of((server != null) ? server.close() : Future.succeededFuture()),
+        this.connections.stream().map(NetSocket::close)
+      ).collect(Collectors.toList())
     )
       .<Void>mapEmpty()
       .onComplete(stopPromise);
@@ -96,14 +104,10 @@ public class TCPControlServerVerticle extends AbstractVerticle {
   }
 
   private void newConnectionHandler(NetSocket netSocket) {
-    if (actualConnection != null) {
-      // Close the previous connection,
-      // the control protocol assumes only one connection is open at any given time
-      actualConnection.close();
-    }
-    actualConnection = netSocket;
-    actualConnection.handler(new ControlMessageParser(this::handleInboundMessage));
-    actualConnection.exceptionHandler(t -> logger.error("Error in connection", t));
+    this.connections.add(netSocket);
+    netSocket.handler(new ControlMessageParser(this::handleInboundMessage));
+    netSocket.exceptionHandler(t -> logger.error("Error in connection", t));
+    netSocket.closeHandler(v -> this.connections.remove(netSocket));
 
     // Dequeue the elements waiting for a connection
     while (!enqueuedWaitingForConnection.isEmpty()) {
@@ -163,7 +167,7 @@ public class TCPControlServerVerticle extends AbstractVerticle {
   }
 
   private void writeOnConnection(ControlMessage message) {
-    if (actualConnection == null) {
+    if (this.connections.isEmpty()) {
       // Enqueue the message
       this.enqueuedWaitingForConnection.offer(message);
       return;
@@ -172,7 +176,11 @@ public class TCPControlServerVerticle extends AbstractVerticle {
   }
 
   private void internalWriteOnConnection(ControlMessage message, Buffer buffer) {
-    actualConnection.write(buffer)
+    CompositeFuture.all(
+      this.connections.stream()
+        .map(conn -> conn.write(buffer))
+        .collect(Collectors.toList())
+    )
       .onSuccess(v -> logger.debug("Successfully sent {}", message))
       .onFailure(t -> {
         logger.error("Cannot dispatch message {}", message, t);
