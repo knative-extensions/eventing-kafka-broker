@@ -40,7 +40,10 @@ header "Running tests"
 
 export_logs_continuously "kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver"
 
-"${ROOT_DIR}"/hack/run.sh integration-tests || fail_test "Integration tests failed"
+go_test_e2e -timeout=30m ./test/e2e_new/...
+go_test_e2e -timeout=30m ./test/e2e/...
+go_test_e2e -tags=deletecm ./test/e2e/...
+
 "${ROOT_DIR}"/hack/run.sh sacura-tests  || fail_test "Sacura test failed"
 
 success

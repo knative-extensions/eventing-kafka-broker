@@ -87,7 +87,7 @@ _Note: These tests do not require a running Kubernetes cluster._
 ### Run integration and E2E tests
 
 ```shell
-./hack/run integration-tests
+LOCAL_DEVELOPMENT=true SKIP_INITIALIZE=true ./test/e2e-tests.sh
 ```
 
 ### Hack, build, test and iterate

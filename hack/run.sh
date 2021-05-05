@@ -22,7 +22,6 @@ function usage() {
   echo "   unit-tests-data-plane, unit-test-data-plane             Run data-plane unit tests"
   echo "   unit-tests-control-plane, unit-test-control-plane       Run control-plane unit tests"
   echo "   build-tests-control-plane, build-test-control-plane     Run build tests"
-  echo "   integration-tests, integration-test-control-plane       Run integration tests"
   echo "   deploy-sacura                                           Deploy sacura job"
   echo "   sacura-test                                             Run sacura tests"
   echo "   teardown-sacura                                         Remove sacura job"
@@ -49,10 +48,6 @@ elif [[ "${action}" == "unit-test-control-plane" || "${action}" == "unit-tests-c
   go test -race ./...
 elif [[ "${action}" == "build-test" || "${action}" == "build-tests" ]]; then
   "${ROOT_DIR}"/test/presubmit-tests.sh --build-tests
-elif [[ "${action}" == "integration-test" || "${action}" == "integration-tests" ]]; then
-  source "${ROOT_DIR}"/test/e2e-common.sh && go_test_e2e -timeout=30m ./test/e2e_new/...
-  source "${ROOT_DIR}"/test/e2e-common.sh && go_test_e2e -timeout=30m ./test/e2e/...
-  source "${ROOT_DIR}"/test/e2e-common.sh && go_test_e2e -tags=deletecm ./test/e2e/...
 elif [[ "${action}" == "deploy-sacura" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && apply_sacura
 elif [[ "${action}" == "sacura-test" || "${action}" == "sacura-tests" ]]; then
