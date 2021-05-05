@@ -56,4 +56,8 @@ group "Update deps post-codegen"
 if ! ${GITHUB_ACTIONS:-false}; then
   ${REPO_ROOT_DIR}/hack/generate-proto.sh
 fi
+
+# Update Java third party file
+mvn --file ${REPO_ROOT_DIR}/data-plane/pom.xml -Dlicense.outputDirectory=. license:aggregate-add-third-party
+
 ${REPO_ROOT_DIR}/hack/update-deps.sh

@@ -39,6 +39,7 @@ DIRS=(
   "/go.mod"
   "/go.sum"
   "/data-plane/contract/src/main/java"
+  "/data-plane/THIRD-PARTY.txt"
   "/control-plane/pkg/core/config"
   "/control-plane/pkg/apis"
   "/control-plane/pkg/client"
