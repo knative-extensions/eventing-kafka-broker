@@ -103,13 +103,20 @@ class TCPControlServerVerticleTest {
       .setUuid(secondInput.uuid())
       .build();
 
-    Socket firstSocket = new Socket("localhost", port);
-    List<ControlMessage> firstReceived =
-      sendAndReceive(firstSocket, firstInput, firstExpected.toBuffer().length() + secondExpected.toBuffer().length());
+    int expectedLength = firstExpected.toBuffer().length() + secondExpected.toBuffer().length();
 
+    Socket firstSocket = new Socket("localhost", port);
     Socket secondSocket = new Socket("localhost", port);
-    List<ControlMessage> secondReceived =
-      sendAndReceive(secondSocket, secondInput, firstExpected.toBuffer().length() + secondExpected.toBuffer().length());
+
+    firstSocket.getOutputStream().write(
+      firstInput.toBuffer().getBytes()
+    );
+    secondSocket.getOutputStream().write(
+      secondInput.toBuffer().getBytes()
+    );
+
+    List<ControlMessage> firstReceived = receive(firstSocket, expectedLength);
+    List<ControlMessage> secondReceived = receive(secondSocket, expectedLength);
 
     assertThat(firstReceived)
       .containsExactlyInAnyOrderElementsOf(secondReceived)
@@ -291,12 +298,17 @@ class TCPControlServerVerticleTest {
 
   private List<ControlMessage> sendAndReceive(Socket socket, ControlMessage msg, int expectedToRead)
     throws IOException {
-    List<ControlMessage> parsedMessages = new ArrayList<>();
-    ControlMessageParser parser = new ControlMessageParser(parsedMessages::add);
-
     socket.getOutputStream().write(
       msg.toBuffer().getBytes()
     );
+
+    return receive(socket, expectedToRead);
+  }
+
+  private List<ControlMessage> receive(Socket socket, int expectedToRead)
+    throws IOException {
+    List<ControlMessage> parsedMessages = new ArrayList<>();
+    ControlMessageParser parser = new ControlMessageParser(parsedMessages::add);
 
     parser.handle(
       Buffer.buffer(socket.getInputStream().readNBytes(expectedToRead))

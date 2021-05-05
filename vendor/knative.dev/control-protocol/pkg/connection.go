@@ -16,13 +16,19 @@ limitations under the License.
 
 package control
 
+import "context"
+
 // Connection handles the low level stuff, reading and writing to the wire
 type Connection interface {
-	// OutboundMessages returns a channel that accepts the messages that goes on the wire
-	OutboundMessages() chan<- *Message
+	// WriteMessage writes a message to the wire.
+	// This blocks until the message is written to the wire.
+	// Returns ctx.Error() if the provided context is closed.
+	WriteMessage(ctx context.Context, msg *Message) error
 
-	// InboundMessages returns a channel that returns the inbound messages from the wire
-	InboundMessages() <-chan *Message
+	// ReadMessage reads a message from the wire.
+	// This blocks until there's a message available to read.
+	// Returns ctx.Error() if the provided context is closed.
+	ReadMessage(ctx context.Context) (*Message, error)
 
 	// Errors returns a channel that signals very bad, usually fatal, errors
 	// (like cannot re-establish the connection after several attempts)
