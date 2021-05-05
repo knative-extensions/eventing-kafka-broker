@@ -24,9 +24,8 @@ You need to install:
       maven property for the required Java version used in this project
 - [`protoc`](https://github.com/protocolbuffers/protobuf)
      - To install protoc, you can follow https://grpc.io/docs/protoc-installation/
-- [`protoc-gen-go`]
-     - To install `protoc-gen-go` run `go install
-       google.golang.org/protobuf/cmd/protoc-gen-go@[version]` and 
+- `protoc-gen-go`
+     - To install `protoc-gen-go` run `go install google.golang.org/protobuf/cmd/protoc-gen-go@[version]`
 
 _Note: See [`protoc` and `protoc-gen-go` current used versions](https://github.com/knative-sandbox/eventing-kafka-broker/blob/main/control-plane/pkg/contract/contract.pb.go#L3)_
 
