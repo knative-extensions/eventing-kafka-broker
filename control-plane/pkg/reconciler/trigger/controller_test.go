@@ -54,5 +54,5 @@ func TestFilterTriggers(t *testing.T) {
 		},
 	})
 
-	assert.True(t, pass)
+	assert.False(t, pass)
 }
