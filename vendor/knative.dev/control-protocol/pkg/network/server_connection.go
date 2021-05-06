@@ -117,11 +117,11 @@ type serverTcpConnection struct {
 func newServerTcpConnection(ctx context.Context, listener net.Listener, tlsConfigLoader func() (*tls.Config, error)) *serverTcpConnection {
 	c := &serverTcpConnection{
 		baseTcpConnection: baseTcpConnection{
-			ctx:                    ctx,
-			logger:                 logging.FromContext(ctx),
-			outboundMessageChannel: make(chan *ctrl.Message, 10),
-			inboundMessageChannel:  make(chan *ctrl.Message, 10),
-			errors:                 make(chan error, 10),
+			ctx:                 ctx,
+			logger:              logging.FromContext(ctx),
+			writeQueue:          newUnboundedMessageQueue(),
+			readQueue:           newUnboundedMessageQueue(),
+			unrecoverableErrors: make(chan error, 10),
 		},
 		listener:        listener,
 		tlsConfigLoader: tlsConfigLoader,
@@ -147,7 +147,7 @@ func (t *serverTcpConnection) startAcceptPolling(closedServerChannel chan struct
 		// or catastrophic failure happened. In both cases, we want to close
 		t.listenLoop()
 
-		t.close()
+		t.cleanup()
 		close(closedServerChannel)
 	}()
 }
@@ -168,7 +168,7 @@ func (t *serverTcpConnection) listenLoop() {
 				tlsConf, err := t.tlsConfigLoader()
 				if err != nil {
 					t.logger.Warnf("Cannot load tls configuration: %v", err)
-					t.errors <- err
+					t.unrecoverableErrors <- err
 					_ = conn.Close()
 					continue
 				}

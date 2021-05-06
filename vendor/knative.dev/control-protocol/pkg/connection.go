@@ -18,11 +18,14 @@ package control
 
 // Connection handles the low level stuff, reading and writing to the wire
 type Connection interface {
-	// OutboundMessages returns a channel that accepts the messages that goes on the wire
-	OutboundMessages() chan<- *Message
+	// WriteMessage writes a message to the wire.
+	// This method may not perform the actual writing, but it could just add the message to a local queue, which then dispatch the actual message.
+	WriteMessage(msg *Message)
 
-	// InboundMessages returns a channel that returns the inbound messages from the wire
-	InboundMessages() <-chan *Message
+	// ReadMessage reads a message from the wire.
+	// This blocks until there's a message available to read.
+	// Returns nil if the Connection is closed.
+	ReadMessage() *Message
 
 	// Errors returns a channel that signals very bad, usually fatal, errors
 	// (like cannot re-establish the connection after several attempts)

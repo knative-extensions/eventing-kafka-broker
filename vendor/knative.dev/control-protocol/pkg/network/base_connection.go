@@ -18,11 +18,8 @@ package network
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"io"
 	"net"
-	"regexp"
 	"sync"
 
 	"go.uber.org/zap"
@@ -34,71 +31,61 @@ type baseTcpConnection struct {
 	ctx    context.Context
 	logger *zap.SugaredLogger
 
-	outboundMessageChannel chan *ctrl.Message
-	inboundMessageChannel  chan *ctrl.Message
-	errors                 chan error
+	writeQueue unboundedMessageQueue
+	readQueue  unboundedMessageQueue
+
+	unrecoverableErrors chan error
 }
 
-func (t *baseTcpConnection) OutboundMessages() chan<- *ctrl.Message {
-	return t.outboundMessageChannel
+var _ ctrl.Connection = (*baseTcpConnection)(nil)
+
+func (t *baseTcpConnection) WriteMessage(msg *ctrl.Message) {
+	t.writeQueue.append(msg)
 }
 
-func (t *baseTcpConnection) InboundMessages() <-chan *ctrl.Message {
-	return t.inboundMessageChannel
+func (t *baseTcpConnection) ReadMessage() *ctrl.Message {
+	return t.readQueue.blockingPoll(t.ctx)
 }
 
 func (t *baseTcpConnection) Errors() <-chan error {
-	return t.errors
+	return t.unrecoverableErrors
 }
 
-func (t *baseTcpConnection) read(conn net.Conn) error {
-	msg := &ctrl.Message{}
-	n, err := msg.ReadFrom(conn)
-	if err != nil {
-		return err
-	}
-	if n != int64(msg.Length())+24 {
-		return fmt.Errorf("the number of read bytes doesn't match the expected length: %d != %d", n, int64(msg.Length())+24)
-	}
-
-	t.inboundMessageChannel <- msg
-	return nil
-}
-
-func (t *baseTcpConnection) write(conn net.Conn, msg *ctrl.Message) error {
-	n, err := msg.WriteTo(conn)
-	if err != nil {
-		return err
-	}
-	if n != int64(msg.Length())+24 {
-		return fmt.Errorf("the number of read bytes doesn't match the expected length: %d != %d", n, int64(msg.Length())+24)
-	}
-	return nil
-}
-
+// consumeConnection associates a net.Conn to this baseTcpConnection struct, reading its internal write queue and writing its internal read queue.
+// This method is blocking and returns when either the connection broke or the t.ctx get closed.
 func (t *baseTcpConnection) consumeConnection(conn net.Conn) {
 	t.logger.Infof("Started consuming new conn: %s", conn.RemoteAddr())
 
+	// This channel get closed also when t.ctx is closed by the last goroutine in this method
 	closedConnCtx, closedConnCancel := context.WithCancel(context.TODO())
 
 	var wg sync.WaitGroup
 	wg.Add(3)
 
 	// We have 3 polling loops:
-	// * One polls the 2 contexts and, if one of them is done, it closes the connection, in order to close the other goroutines
+	// * One polls the 2 contexts and, if one of them is done, it closes the connection, in order to cleanup the other goroutines
 	// * One polls outbound messages and writes to the conn
 	// * One reads from the conn and push to inbound messages
 	go func() {
 		defer wg.Done()
+
 		// Wait for one of the two to complete
 		select {
 		case <-closedConnCtx.Done():
 			break
 		case <-t.ctx.Done():
+			// Let's make sure this channel is closed
+			closedConnCancel()
 			break
 		}
+
+		// Either the connection is closed or the context is closed,
+		// we unblock the polling to stop the below goroutine.
+		// When unblocking, closedConnCtx is closed.
+		t.writeQueue.unblockPoll()
+
 		err := conn.Close()
-		if err != nil && !isEOF(err) && !isUseOfClosedConnection(err) {
+		if err != nil && !isEOF(err) {
 			t.logger.Warnf("Error while closing the connection with local %s and remote %s: %s", conn.LocalAddr().String(), conn.RemoteAddr().String(), err)
 		}
 		t.logger.Debugf("Connection closed with local %s and remote %s", conn.LocalAddr().String(), conn.RemoteAddr().String())
@@ -106,27 +93,25 @@ func (t *baseTcpConnection) consumeConnection(conn net.Conn) {
 	go func() {
 		defer wg.Done()
 		for {
-			select {
-			case <-closedConnCtx.Done():
-				return
-			case <-t.ctx.Done():
-				return
-			case msg, ok := <-t.outboundMessageChannel:
-				if !ok {
-					t.logger.Debugf("Outbound channel closed, closing the polling")
-					return
-				}
-				err := t.write(conn, msg)
-				if err != nil {
-					t.outboundMessageChannel <- msg
+			// Blocking queue polling
+			msg := t.writeQueue.blockingPoll(closedConnCtx)
+			if msg == nil {
+				return // Polling was
+			}
 
-					if isEOF(err) {
-						return // Closed conn
-					}
-					t.errors <- err
-					if !isTransientError(err) {
-						return // Broken conn
-					}
+			err := connWrite(conn, msg)
+			if err != nil {
+				// Let's re-enqueue the message
+				t.writeQueue.prepend(msg)
+
+				if isEOF(err) {
+					return // Closed conn
+				}
+
+				// Signal the error
+				t.unrecoverableErrors <- err
+				if !isTransientError(err) {
+					return // Broken conn
 				}
 			}
 		}
@@ -137,23 +122,29 @@ func (t *baseTcpConnection) consumeConnection(conn net.Conn) {
 		// connection broke
 		defer closedConnCancel()
 		for {
-			// Blocking read
-			err := t.read(conn)
-			select {
-			case <-closedConnCtx.Done():
-				return
-			case <-t.ctx.Done():
-				return
-			default:
-				if err != nil {
-					if isEOF(err) {
-						return // Closed conn
-					}
-					t.errors <- err
-					if !isTransientError(err) {
-						return // Broken conn
-					}
+			// Blocking connection read
+			msg, err := connRead(conn)
+
+			if err != nil {
+				// Check closed conn
+				if isEOF(err) {
+					return
 				}
+
+				// Signal the error
+				t.unrecoverableErrors <- err
+
+				// Broken connection
+				if !isTransientError(err) {
+					return
+				}
+			} else {
+				t.readQueue.append(msg)
+			}
+
+			// t.ctx is closed
+			if t.ctx.Err() != nil {
+				return
 			}
 		}
 	}()
@@ -163,29 +154,36 @@ func (t *baseTcpConnection) consumeConnection(conn net.Conn) {
 	t.logger.Debugf("Stopped consuming connection with local %s and remote %s", conn.LocalAddr().String(), conn.RemoteAddr().String())
 }
 
-func (t *baseTcpConnection) close() {
-	close(t.inboundMessageChannel)
-	close(t.outboundMessageChannel)
-	close(t.errors)
+// cleanup is safe to be invoked only if no connection is being consumed and t.ctx is closed
+func (t *baseTcpConnection) cleanup() {
+	// Let's make sure we unblock some dangling polling
+	t.writeQueue.unblockPoll()
+	t.readQueue.unblockPoll()
+
+	// the unrecoverableErrors channel is closed
+	close(t.unrecoverableErrors)
 }
 
-func isTransientError(err error) bool {
-	// Transient errors are fine
-	if neterr, ok := err.(net.Error); ok {
-		if neterr.Temporary() || neterr.Timeout() {
-			return true
-		}
+func connRead(conn net.Conn) (*ctrl.Message, error) {
+	msg := &ctrl.Message{}
+	n, err := msg.ReadFrom(conn)
+	if err != nil {
+		return nil, err
 	}
-	return false
+	if n != int64(msg.Length())+24 {
+		return nil, fmt.Errorf("the number of read bytes doesn't match the expected length: %d != %d", n, int64(msg.Length())+24)
+	}
+
+	return msg, nil
 }
 
-func isEOF(err error) bool {
-	return errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF)
-}
-
-var isUseOfClosedConnectionRegex = regexp.MustCompile("use of closed.* connection")
-
-func isUseOfClosedConnection(err error) bool {
-	// Don't rely on this check, it's just used to reduce logging noise, it shouldn't be used as assertion
-	return isUseOfClosedConnectionRegex.MatchString(err.Error())
+func connWrite(conn net.Conn, msg *ctrl.Message) error {
+	n, err := msg.WriteTo(conn)
+	if err != nil {
+		return err
+	}
+	if n != int64(msg.Length())+24 {
+		return fmt.Errorf("the number of read bytes doesn't match the expected length: %d != %d", n, int64(msg.Length())+24)
+	}
+	return nil
 }
