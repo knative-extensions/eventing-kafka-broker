@@ -23,7 +23,7 @@ jobs:
         with:
           java-version: 15
 
-      - run: mvn --file data-plane/pom.xml -Dlicense.outputDirectory=. license:aggregate-add-third-party
+      - run: mvn --no-transfer-progress -B --file data-plane/pom.xml -Dlicense.outputDirectory=. license:aggregate-add-third-party
       - run: mkdir ./dependabot-pr
       - name: Save branch ref
         run: echo ${{ github.ref }} | sed 's/refs\/heads\///' > ./dependabot-pr/BRANCH_REF
@@ -31,7 +31,6 @@ jobs:
         run: |
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-      - run: licensed cache
       # NOTE: Prefixing/appending commit messages with `[dependabot skip]` allows
       # dependabot to rebase/update the pull request, force-pushing over any changes
       - name: Commit and copy license changes
