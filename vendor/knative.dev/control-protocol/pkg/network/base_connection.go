@@ -39,23 +39,12 @@ type baseTcpConnection struct {
 	errors                 chan error
 }
 
-var _ ctrl.Connection = (*baseTcpConnection)(nil)
-
-func (t *baseTcpConnection) WriteMessage(ctx context.Context, msg *ctrl.Message) error {
-	t.outboundMessageChannel <- msg
-	return nil
+func (t *baseTcpConnection) OutboundMessages() chan<- *ctrl.Message {
+	return t.outboundMessageChannel
 }
 
-func (t *baseTcpConnection) ReadMessage(ctx context.Context) (*ctrl.Message, error) {
-	select {
-	case msg, ok := <-t.inboundMessageChannel:
-		if !ok {
-			return nil, ctx.Err()
-		}
-		return msg, nil
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	}
+func (t *baseTcpConnection) InboundMessages() <-chan *ctrl.Message {
+	return t.inboundMessageChannel
 }
 
 func (t *baseTcpConnection) Errors() <-chan error {
@@ -129,7 +118,7 @@ func (t *baseTcpConnection) consumeConnection(conn net.Conn) {
 				}
 				err := t.write(conn, msg)
 				if err != nil {
-					t.WriteMessage(t.ctx, msg) // TODO
+					t.outboundMessageChannel <- msg
 
 					if isEOF(err) {
 						return // Closed conn

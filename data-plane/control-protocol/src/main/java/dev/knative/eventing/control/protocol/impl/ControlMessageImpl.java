@@ -184,6 +184,8 @@ public class ControlMessageImpl implements ControlMessage {
       "\n" +
       "  , length=" + length +
       "\n" +
+      "  , payload=" + payload +
+      "\n" +
       '}';
   }
 }
