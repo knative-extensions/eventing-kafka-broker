@@ -55,7 +55,7 @@ jobs:
 
       - if: steps.codecov-enabled.outputs.files_exists == 'true'
         name: Produce Go Coverage
-        run: echo 'COVER_OPTS=-coverprofile=coverage.txt -covermode=atomic -coverpkg=knative.dev/eventing-kafka-broker/...' >> $GITHUB_ENV
+        run: echo 'COVER_OPTS=-coverprofile=coverage.txt -covermode=atomic -coverpkg=./...' >> $GITHUB_ENV
 
       - name: Test
         run: go test -race $COVER_OPTS ./...
