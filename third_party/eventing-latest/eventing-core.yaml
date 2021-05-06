@@ -16,7 +16,7 @@ kind: Namespace
 metadata:
   name: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 
 ---
 # Copyright 2018 The Knative Authors
@@ -39,14 +39,14 @@ metadata:
   name: eventing-controller
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: eventing-controller
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 subjects:
   - kind: ServiceAccount
     name: eventing-controller
@@ -61,7 +61,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller-resolver
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 subjects:
   - kind: ServiceAccount
     name: eventing-controller
@@ -76,7 +76,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller-source-observer
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 subjects:
   - kind: ServiceAccount
     name: eventing-controller
@@ -91,7 +91,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller-sources-controller
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 subjects:
   - kind: ServiceAccount
     name: eventing-controller
@@ -106,7 +106,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller-manipulator
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 subjects:
   - kind: ServiceAccount
     name: eventing-controller
@@ -137,14 +137,14 @@ metadata:
   name: pingsource-mt-adapter
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: knative-eventing-pingsource-mt-adapter
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 subjects:
   - kind: ServiceAccount
     name: pingsource-mt-adapter
@@ -175,14 +175,14 @@ metadata:
   name: eventing-webhook
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: eventing-webhook
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 subjects:
   - kind: ServiceAccount
     name: eventing-webhook
@@ -198,7 +198,7 @@ metadata:
   namespace: knative-eventing
   name: eventing-webhook
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 subjects:
   - kind: ServiceAccount
     name: eventing-webhook
@@ -213,7 +213,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-webhook-resolver
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 subjects:
   - kind: ServiceAccount
     name: eventing-webhook
@@ -228,7 +228,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-webhook-podspecable-binding
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 subjects:
   - kind: ServiceAccount
     name: eventing-webhook
@@ -259,7 +259,7 @@ metadata:
   name: config-br-default-channel
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 data:
   channelTemplateSpec: |
     apiVersion: messaging.knative.dev/v1
@@ -286,7 +286,7 @@ metadata:
   name: config-br-defaults
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 data:
   # Configuration for defaulting channels that do not specify CRD implementations.
   default-br-config: |
@@ -318,7 +318,7 @@ metadata:
   name: default-ch-webhook
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 data:
   # Configuration for defaulting channels that do not specify CRD implementations.
   default-ch-config: |
@@ -351,7 +351,7 @@ metadata:
   name: config-ping-defaults
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
   annotations:
     knative.dev/example-checksum: "f8e5a744"
 data:
@@ -396,7 +396,7 @@ metadata:
   name: config-leader-election
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
   annotations:
     knative.dev/example-checksum: "96896b00"
 data:
@@ -456,7 +456,7 @@ metadata:
   name: config-logging
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
 data:
@@ -508,7 +508,7 @@ metadata:
   name: config-observability
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
   annotations:
@@ -583,7 +583,7 @@ metadata:
   name: config-tracing
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
   annotations:
@@ -644,7 +644,7 @@ metadata:
   name: eventing-controller
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     knative.dev/high-availability: "true"
 spec:
   selector:
@@ -654,7 +654,7 @@ spec:
     metadata:
       labels:
         app: eventing-controller
-        eventing.knative.dev/release: "v20210505-7ae9d3e93"
+        eventing.knative.dev/release: "v20210506-2f44af0cd"
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes.
       affinity:
@@ -671,7 +671,7 @@ spec:
       containers:
         - name: eventing-controller
           terminationMessagePolicy: FallbackToLogsOnError
-          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/controller@sha256:6c3283f055a720038aa51a94dab9f1676e3c49b725206c9ab2a55d9f34f3d85a
+          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/controller@sha256:9ab644ec8df420fb40df3d5450ae9d2b65008a14f4c1329219ef589b9e07d7ac
           resources:
             requests:
               cpu: 100m
@@ -689,7 +689,7 @@ spec:
               value: knative.dev/eventing
             # APIServerSource
             - name: APISERVER_RA_IMAGE
-              value: gcr.io/knative-nightly/knative.dev/eventing/cmd/apiserver_receive_adapter@sha256:f6f2b4d9a63a3e8448bf0e0b21ae04161aaa8b5daa14c2a2df0549400c953830
+              value: gcr.io/knative-nightly/knative.dev/eventing/cmd/apiserver_receive_adapter@sha256:b989f95b6790edbc77d123aad39f3de61aa6b0b501cc7531ab8695e73114da4a
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -733,7 +733,7 @@ metadata:
   name: pingsource-mt-adapter
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 spec:
   # when set to 0 (and only 0) will be set to 1 when the first PingSource is created.
   replicas: 0
@@ -746,12 +746,12 @@ spec:
       labels:
         eventing.knative.dev/source: ping-source-controller
         sources.knative.dev/role: adapter
-        eventing.knative.dev/release: "v20210505-7ae9d3e93"
+        eventing.knative.dev/release: "v20210506-2f44af0cd"
     spec:
       enableServiceLinks: false
       containers:
         - name: dispatcher
-          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/mtping@sha256:8c3b974ce4d3192b405d98624a0be7e3f657942453bd0da34103bb0147240a69
+          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/mtping@sha256:bcf43620036f64f2ae3e94c064a230f10c9b1c9cd96f3b60d2884d1a569be316
           env:
             - name: SYSTEM_NAMESPACE
               value: ''
@@ -809,7 +809,7 @@ metadata:
   name: eventing-webhook
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -832,7 +832,7 @@ metadata:
   name: eventing-webhook
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 spec:
   minAvailable: 80%
   selector:
@@ -860,7 +860,7 @@ metadata:
   name: eventing-webhook
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 spec:
   selector:
     matchLabels: &labels
@@ -887,7 +887,7 @@ spec:
           terminationMessagePolicy: FallbackToLogsOnError
           # This is the Go import path for the binary that is containerized
           # and substituted here.
-          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/webhook@sha256:380e661b2519289a2e8cd669f3f139cee5fbf967885f76f26b15dbe443e80744
+          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/webhook@sha256:8b3eb56de45ef8ba25886840316a53b921a960b978df4eb1655e2c9c75f3e32c
           resources:
             requests:
               # taken from serving.
@@ -951,7 +951,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     role: eventing-webhook
   name: eventing-webhook
   namespace: knative-eventing
@@ -983,7 +983,7 @@ kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
@@ -1208,7 +1208,7 @@ kind: CustomResourceDefinition
 metadata:
   name: brokers.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
 spec:
@@ -1348,14 +1348,6 @@ spec:
       - knative
       - eventing
   scope: Namespaced
-  conversion:
-    strategy: Webhook
-    webhook:
-      conversionReviewVersions: ["v1", "v1beta1"]
-      clientConfig:
-        service:
-          name: eventing-webhook
-          namespace: knative-eventing
 
 ---
 # Copyright 2020 The Knative Authors
@@ -1377,7 +1369,7 @@ kind: CustomResourceDefinition
 metadata:
   name: channels.messaging.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
@@ -1591,7 +1583,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
@@ -1852,7 +1844,7 @@ kind: CustomResourceDefinition
 metadata:
   name: eventtypes.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     knative.dev/crd-install: "true"
 spec:
   group: eventing.knative.dev
@@ -1987,7 +1979,7 @@ kind: CustomResourceDefinition
 metadata:
   name: parallels.flows.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
 spec:
@@ -2247,7 +2239,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
@@ -2436,7 +2428,7 @@ kind: CustomResourceDefinition
 metadata:
   name: sequences.flows.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
 spec:
@@ -2659,7 +2651,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
@@ -2675,32 +2667,30 @@ spec:
         status: {}
       schema:
         openAPIV3Schema:
-          type: object
           description: 'SinkBinding describes a Binding that is also a Source. The `sink` (from the Source duck) is resolved to a URL and then projected into the `subject` by augmenting the runtime contract of the referenced containers to have a `K_SINK` environment variable holding the endpoint to which to send cloud events.'
+          type: object
           properties:
             spec:
               type: object
-              description: 'SinkBindingSpec holds the desired state of the SinkBinding (from the client).'
               properties:
                 ceOverrides:
-                  description: 'CloudEventOverrides defines overrides to control the output format and modifications of the event sent to the sink.'
+                  description: CloudEventOverrides defines overrides to control the output format and modifications of the event sent to the sink.
                   type: object
                   properties:
                     extensions:
-                      description: 'Extensions specify what attribute are added or overridden on the outbound event. Each `Extensions` key-value pair are set on the event as an attribute extension independently.'
+                      description: Extensions specify what attribute are added or overridden on the outbound event. Each `Extensions` key-value pair are set on the event as an attribute extension independently.
                       type: object
-                      additionalProperties:
-                        type: string
+                      x-kubernetes-preserve-unknown-fields: true
                 sink:
-                  description: 'Sink is a reference to an object that will resolve to a uri to use as the sink.'
+                  description: Sink is a reference to an object that will resolve to a uri to use as the sink.
                   type: object
                   properties:
                     ref:
-                      description: 'Ref points to an Addressable.'
+                      description: Ref points to an Addressable.
                       type: object
                       properties:
                         apiVersion:
-                          description: 'API version of the referent.'
+                          description: API version of the referent.
                           type: string
                         kind:
                           description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
@@ -2712,71 +2702,70 @@ spec:
                           description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/ This is optional field, it gets defaulted to the object holding it if left out.'
                           type: string
                     uri:
-                      description: 'URI can be an absolute URL(non-empty scheme and non-empty host) pointing to the target or a relative URI. Relative URIs will be resolved using the base URI retrieved from Ref.'
+                      description: URI can be an absolute URL(non-empty scheme and non-empty host) pointing to the target or a relative URI. Relative URIs will be resolved using the base URI retrieved from Ref.
                       type: string
                 subject:
-                  description: 'Subject references the resource(s) whose "runtime contract" should be augmented by Binding implementations.'
+                  description: Subject references the resource(s) whose "runtime contract" should be augmented by Binding implementations.
                   type: object
                   properties:
                     apiVersion:
-                      description: 'API version of the referent.'
+                      description: API version of the referent.
                       type: string
                     kind:
-                      description: 'Kind of the referent.'
+                      description: Kind of the referent.
                       type: string
                     name:
-                      description: 'Name of the referent. Mutually exclusive with Selector.'
+                      description: Name of the referent. Mutually exclusive with Selector.
                       type: string
                     namespace:
-                      description: 'Namespace of the referent.'
+                      description: Namespace of the referent.
                       type: string
                     selector:
-                      description: 'Selector of the referents. Mutually exclusive with Name.'
+                      description: Selector of the referents. Mutually exclusive with Name.
                       type: object
                       properties:
                         matchExpressions:
-                          description: 'matchExpressions is a list of label selector requirements. The requirements are ANDed.'
+                          description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
                           type: array
                           items:
                             type: object
                             properties:
                               key:
-                                description: 'key is the label key that the selector applies to.'
+                                description: key is the label key that the selector applies to.
                                 type: string
                               operator:
-                                description: 'operator represents a key''s relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.'
+                                description: operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
                                 type: string
                               values:
-                                description: 'values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.'
+                                description: values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
                                 type: array
                                 items:
                                   type: string
                         matchLabels:
-                          description: 'matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.'
+                          description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
                           type: object
                           x-kubernetes-preserve-unknown-fields: true
             status:
               type: object
-              description: 'SinkBindingStatus communicates the observed state of the SinkBinding (from the controller).'
               properties:
                 annotations:
-                  description: 'Annotations is additional Status fields for the Resource to save some additional State as well as convey more information to the user. This is roughly akin to Annotations on any k8s resource, just the reconciler conveying richer information outwards.'
+                  description: Annotations is additional Status fields for the Resource to save some additional State as well as convey more information to the user. This is roughly akin to Annotations on any k8s resource, just the reconciler conveying richer information outwards.
                   type: object
                   x-kubernetes-preserve-unknown-fields: true
                 ceAttributes:
-                  description: 'CloudEventAttributes are the specific attributes that the Source uses as part of its CloudEvents.'
+                  description: CloudEventAttributes are the specific attributes that the Source uses as part of its CloudEvents.
                   type: array
                   items:
                     type: object
                     properties:
                       source:
-                        description: 'Source is the CloudEvents source attribute.'
+                        description: Source is the CloudEvents source attribute.
                         type: string
                       type:
-                        description: 'Type refers to the CloudEvent type attribute.'
+                        description: Type refers to the CloudEvent type attribute.
                         type: string
                 conditions:
-                  description: 'Conditions the latest available observations of a resource''s current state.'
+                  description: Conditions the latest available observations of a resource's current state.
                   type: array
                   items:
                     type: object
@@ -2785,29 +2774,29 @@ spec:
                       - status
                     properties:
                       lastTransitionTime:
-                        description: 'LastTransitionTime is the last time the condition transitioned from one status to another. We use VolatileTime in place of metav1.Time to exclude this from creating equality.Semantic differences (all other things held constant).'
+                        description: LastTransitionTime is the last time the condition transitioned from one status to another. We use VolatileTime in place of metav1.Time to exclude this from creating equality.Semantic differences (all other things held constant).
                         type: string
                       message:
-                        description: 'A human readable message indicating details about the transition.'
+                        description: A human readable message indicating details about the transition.
                         type: string
                       reason:
-                        description: 'The reason for the condition''s last transition.'
+                        description: The reason for the condition's last transition.
                         type: string
                       severity:
-                        description: 'Severity with which to treat failures of this type of condition. When this is not specified, it defaults to Error.'
+                        description: Severity with which to treat failures of this type of condition. When this is not specified, it defaults to Error.
                         type: string
                       status:
-                        description: 'Status of the condition, one of True, False, Unknown.'
+                        description: Status of the condition, one of True, False, Unknown.
                         type: string
                       type:
-                        description: 'Type of condition.'
+                        description: Type of condition.
                         type: string
                 observedGeneration:
-                  description: 'ObservedGeneration is the ''Generation'' of the Service that was last processed by the controller.'
+                  description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.
                   type: integer
                   format: int64
                 sinkUri:
-                  description: 'SinkURI is the current active sink URI that has been configured for the Source.'
+                  description: SinkURI is the current active sink URI that has been configured for the Source.
                   type: string
       additionalPrinterColumns:
         - name: Sink
@@ -2832,14 +2821,6 @@ spec:
     plural: sinkbindings
     singular: sinkbinding
   scope: Namespaced
-  conversion:
-    strategy: Webhook
-    webhook:
-      conversionReviewVersions: ["v1", "v1beta1"]
-      clientConfig:
-        service:
-          name: eventing-webhook
-          namespace: knative-eventing
 
 ---
 # Copyright 2020 The Knative Authors
@@ -2860,7 +2841,7 @@ kind: CustomResourceDefinition
 metadata:
   name: subscriptions.messaging.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     knative.dev/crd-install: "true"
 spec:
   group: messaging.knative.dev
@@ -3088,7 +3069,7 @@ kind: CustomResourceDefinition
 metadata:
   name: triggers.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     knative.dev/crd-install: "true"
 spec:
   group: eventing.knative.dev
@@ -3245,14 +3226,6 @@ spec:
       - knative
       - eventing
   scope: Namespaced
-  conversion:
-    strategy: Webhook
-    webhook:
-      conversionReviewVersions: ["v1", "v1beta1"]
-      clientConfig:
-        service:
-          name: eventing-webhook
-          namespace: knative-eventing
 
 ---
 # Copyright 2019 The Knative Authors
@@ -3275,7 +3248,7 @@ kind: ClusterRole
 metadata:
   name: addressable-resolver
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 aggregationRule:
   clusterRoleSelectors:
     - matchLabels:
@@ -3287,7 +3260,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: service-addressable-resolver
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     duck.knative.dev/addressable: "true"
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -3305,7 +3278,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: serving-addressable-resolver
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     duck.knative.dev/addressable: "true"
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -3326,7 +3299,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: channel-addressable-resolver
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     duck.knative.dev/addressable: "true"
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -3351,7 +3324,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: broker-addressable-resolver
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     duck.knative.dev/addressable: "true"
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -3370,7 +3343,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: messaging-addressable-resolver
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     duck.knative.dev/addressable: "true"
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -3391,7 +3364,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: flows-addressable-resolver
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     duck.knative.dev/addressable: "true"
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -3427,7 +3400,7 @@ kind: ClusterRole
 metadata:
   name: eventing-broker-filter
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 rules:
   - apiGroups:
       - ""
@@ -3452,7 +3425,7 @@ kind: ClusterRole
 metadata:
   name: eventing-broker-ingress
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 rules:
   - apiGroups:
       - ""
@@ -3468,7 +3441,7 @@ kind: ClusterRole
 metadata:
   name: eventing-config-reader
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 rules:
   - apiGroups:
       - ""
@@ -3500,7 +3473,7 @@ kind: ClusterRole
 metadata:
   name: channelable-manipulator
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 aggregationRule:
   clusterRoleSelectors:
     - matchLabels:
@@ -3512,7 +3485,7 @@ kind: ClusterRole
 metadata:
   name: meta-channelable-manipulator
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     duck.knative.dev/channelable: "true"
 # Do not use this role directly. These rules will be added to the "channelable-manipulator" role.
 rules:
@@ -3549,7 +3522,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: knative-eventing-namespaced-admin
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
 rules:
   - apiGroups: ["eventing.knative.dev"]
@@ -3561,7 +3534,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: knative-messaging-namespaced-admin
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
 rules:
   - apiGroups: ["messaging.knative.dev"]
@@ -3573,7 +3546,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: knative-flows-namespaced-admin
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
 rules:
   - apiGroups: ["flows.knative.dev"]
@@ -3585,7 +3558,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: knative-sources-namespaced-admin
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
 rules:
   - apiGroups: ["sources.knative.dev"]
@@ -3597,7 +3570,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: knative-bindings-namespaced-admin
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
 rules:
   - apiGroups: ["bindings.knative.dev"]
@@ -3610,7 +3583,7 @@ metadata:
   name: knative-eventing-namespaced-edit
   labels:
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 rules:
   - apiGroups: ["eventing.knative.dev", "messaging.knative.dev", "sources.knative.dev", "flows.knative.dev", "bindings.knative.dev"]
     resources: ["*"]
@@ -3622,7 +3595,7 @@ metadata:
   name: knative-eventing-namespaced-view
   labels:
     rbac.authorization.k8s.io/aggregate-to-view: "true"
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 rules:
   - apiGroups: ["eventing.knative.dev", "messaging.knative.dev", "sources.knative.dev", "flows.knative.dev", "bindings.knative.dev"]
     resources: ["*"]
@@ -3648,7 +3621,7 @@ kind: ClusterRole
 metadata:
   name: knative-eventing-controller
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 rules:
   - apiGroups:
       - ""
@@ -3782,7 +3755,7 @@ kind: ClusterRole
 metadata:
   name: knative-eventing-pingsource-mt-adapter
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 rules:
   - apiGroups:
       - ""
@@ -3848,7 +3821,7 @@ kind: ClusterRole
 metadata:
   name: podspecable-binding
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 aggregationRule:
   clusterRoleSelectors:
     - matchLabels:
@@ -3860,7 +3833,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: builtin-podspecable-binding
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     duck.knative.dev/podspecable: "true"
 # Do not use this role directly. These rules will be added to the "podspecable-binding role.
 rules:
@@ -3906,7 +3879,7 @@ kind: ClusterRole
 metadata:
   name: source-observer
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 aggregationRule:
   clusterRoleSelectors:
     - matchLabels:
@@ -3918,7 +3891,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: eventing-sources-source-observer
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
     duck.knative.dev/source: "true"
 # Do not use this role directly. These rules will be added to the "source-observer" role.
 rules:
@@ -3954,7 +3927,7 @@ kind: ClusterRole
 metadata:
   name: knative-eventing-sources-controller
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 rules:
   - apiGroups:
       - ""
@@ -4039,7 +4012,7 @@ kind: ClusterRole
 metadata:
   name: knative-eventing-webhook
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 rules:
   # For watching logging configuration and getting certs.
   - apiGroups:
@@ -4130,7 +4103,7 @@ metadata:
   namespace: knative-eventing
   name: knative-eventing-webhook
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 rules:
   # For manipulating certs into secrets.
   - apiGroups:
@@ -4165,7 +4138,7 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: config.webhook.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 webhooks:
   - admissionReviewVersions: ["v1", "v1beta1"]
     clientConfig:
@@ -4201,7 +4174,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: webhook.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 webhooks:
   - admissionReviewVersions: ["v1", "v1beta1"]
     clientConfig:
@@ -4233,7 +4206,7 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: validation.webhook.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 webhooks:
   - admissionReviewVersions: ["v1", "v1beta1"]
     clientConfig:
@@ -4266,7 +4239,7 @@ metadata:
   name: eventing-webhook-certs
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 # The data is populated at install time.
 
 ---
@@ -4289,7 +4262,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: sinkbindings.webhook.sources.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210505-7ae9d3e93"
+    eventing.knative.dev/release: "v20210506-2f44af0cd"
 webhooks:
   - admissionReviewVersions: ["v1", "v1beta1"]
     clientConfig:
