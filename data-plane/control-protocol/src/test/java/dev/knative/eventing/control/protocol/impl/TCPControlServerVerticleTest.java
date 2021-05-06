@@ -77,46 +77,6 @@ class TCPControlServerVerticleTest {
   }
 
   @Test
-  public void testTwoSocketsReceiveAndAckWithEmpty(Vertx vertx) throws Exception {
-    // Just echo with empty
-    vertx.eventBus().consumer(INCOMING_EB_ADDRESS).handler(msg -> msg.reply(null));
-
-    ControlMessage firstInput = new ControlMessageImpl.Builder()
-      .setOpCode((byte) 1)
-      .setUuid(UUID.randomUUID())
-      .setLengthAndPayload(Buffer.buffer("abc123"))
-      .build();
-
-    ControlMessage firstExpected = new ControlMessageImpl.Builder()
-      .setOpCode(ControlMessage.ACK_OP_CODE)
-      .setUuid(firstInput.uuid())
-      .build();
-
-    ControlMessage secondInput = new ControlMessageImpl.Builder()
-      .setOpCode((byte) 10)
-      .setUuid(UUID.randomUUID())
-      .setLengthAndPayload(Buffer.buffer("abc123456"))
-      .build();
-
-    ControlMessage secondExpected = new ControlMessageImpl.Builder()
-      .setOpCode(ControlMessage.ACK_OP_CODE)
-      .setUuid(secondInput.uuid())
-      .build();
-
-    Socket firstSocket = new Socket("localhost", port);
-    List<ControlMessage> firstReceived =
-      sendAndReceive(firstSocket, firstInput, firstExpected.toBuffer().length() + secondExpected.toBuffer().length());
-
-    Socket secondSocket = new Socket("localhost", port);
-    List<ControlMessage> secondReceived =
-      sendAndReceive(secondSocket, secondInput, firstExpected.toBuffer().length() + secondExpected.toBuffer().length());
-
-    assertThat(firstReceived)
-      .containsExactlyInAnyOrderElementsOf(secondReceived)
-      .containsExactlyInAnyOrder(firstExpected, secondExpected);
-  }
-
-  @Test
   public void testReceivingInSerializedOrder(Vertx vertx) throws Exception {
     final long minDelay = 100L;
     final Random random = new Random();
@@ -124,7 +84,7 @@ class TCPControlServerVerticleTest {
     // Just echo with empty
     List<Long> timestamps = new ArrayList<>();
     vertx.eventBus().consumer(INCOMING_EB_ADDRESS).handler(msg -> {
-      timestamps.add(System.currentTimeMillis());
+        timestamps.add(System.currentTimeMillis());
         long delay = Math.round(minDelay + ((random.nextDouble() - 0.5) * minDelay * 0.5));
         vertx.setTimer(delay, v -> {
           timestamps.add(System.currentTimeMillis());
