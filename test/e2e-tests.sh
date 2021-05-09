@@ -28,8 +28,8 @@ fi
 save_release_artifacts || fail_test "Failed to save release artifacts"
 
 if ! ${LOCAL_DEVELOPMENT}; then
-  "${ROOT_DIR}"/hack/run.sh deploy-sacura || fail_test "Failed to apply Sacura"
-  "${ROOT_DIR}"/hack/run.sh deploy-chaos || fail_test "Failed to apply chaos"
+  apply_sacura || fail_test "Failed to apply Sacura"
+  apply_chaos || fail_test "Failed to apply chaos"
 fi
 
 header "Waiting Knative eventing to come up"
@@ -44,6 +44,6 @@ go_test_e2e -timeout=30m ./test/e2e_new/...
 go_test_e2e -timeout=30m ./test/e2e/...
 go_test_e2e -tags=deletecm ./test/e2e/...
 
-"${ROOT_DIR}"/hack/run.sh sacura-tests  || fail_test "Sacura test failed"
+go_test_e2e -tags=sacura -timeout=40m ./test/e2e/...
 
 success

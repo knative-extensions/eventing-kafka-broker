@@ -86,6 +86,8 @@ _Note: These tests do not require a running Kubernetes cluster._
 
 ### Run integration and E2E tests
 
+_Note: This test requires at least 5Gi of memory_
+
 ```shell
 LOCAL_DEVELOPMENT=true SKIP_INITIALIZE=true ./test/e2e-tests.sh
 ```
