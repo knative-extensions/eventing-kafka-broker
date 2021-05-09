@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright 2021 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,21 +30,20 @@ import (
 )
 
 const (
-	kafkaConsumerImage = "kafka-consumer"
+	committedOffsetImage = "committed-offset"
 )
 
-type ConsumerConfig struct {
+type AdminConfig struct {
 	BootstrapServers string `json:"bootstrapServers" required:"true" split_words:"true"`
 	Topic            string `json:"topic" required:"true" split_words:"true"`
-	IDS              string `json:"ids" required:"true" split_words:"true"`
-	ContentMode      string `json:"contentMode" required:"true" split_words:"true"`
+	Group            string `json:"group" required:"true" split_words:"true"`
 }
 
-func VerifyMessagesInTopic(
+func VerifyCommittedOffset(
 	client kubernetes.Interface,
 	tracker *testlib.Tracker,
 	namespacedName types.NamespacedName,
-	config *ConsumerConfig) error {
+	config *AdminConfig) error {
 
 	ctx := context.Background()
 
@@ -52,15 +51,23 @@ func VerifyMessagesInTopic(
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespacedName.Namespace,
 			Name:      namespacedName.Name,
+			Labels: map[string]string{
+				"app": namespacedName.Name,
+			},
 		},
 		Spec: batchv1.JobSpec{
 			BackoffLimit: pointer.Int32Ptr(2),
 			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": namespacedName.Name,
+					},
+				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
 							Name:            namespacedName.Name,
-							Image:           pkgtest.ImagePath(kafkaConsumerImage),
+							Image:           pkgtest.ImagePath(committedOffsetImage),
 							ImagePullPolicy: corev1.PullIfNotPresent,
 							Env: []corev1.EnvVar{
 								{
@@ -72,12 +79,8 @@ func VerifyMessagesInTopic(
 									Value: config.Topic,
 								},
 								{
-									Name:  "IDS",
-									Value: config.IDS,
-								},
-								{
-									Name:  "CONTENT_MODE",
-									Value: config.ContentMode,
+									Name:  "GROUP",
+									Value: config.Group,
 								},
 							},
 						},

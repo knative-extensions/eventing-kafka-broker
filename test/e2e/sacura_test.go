@@ -26,17 +26,23 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	batchv1 "k8s.io/api/batch/v1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	testlib "knative.dev/eventing/test/lib"
+
+	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
+	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 const (
-	app       = "sacura"
-	namespace = "sacura"
+	app                            = "sacura"
+	namespace                      = "sacura"
+	sacuraVerifyCommittedOffsetJob = "verify-committed-offset"
+	sacuraTriggerName              = "trigger"
+	sacuraTopic                    = "knative-broker-sacura-sacura"
 
 	pollTimeout  = 30 * time.Minute
 	pollInterval = 10 * time.Second
@@ -56,11 +62,35 @@ func TestSacuraJob(t *testing.T) {
 		return isJobSucceeded(job)
 	})
 
-	logJobOutput(t, app, c, namespace, ctx)
+	pkgtesting.LogJobOutput(t, ctx, c.Kube, namespace, app)
 
 	if jobPollError != nil {
 		t.Fatal(jobPollError)
 	}
+
+	t.Log(strings.Repeat("-", 30))
+	t.Log("Verify committed offset")
+	t.Log(strings.Repeat("-", 30))
+
+	trigger, err := c.Eventing.EventingV1().Triggers(namespace).Get(ctx, sacuraTriggerName, metav1.GetOptions{})
+	require.Nil(t, err, "Failed to get trigger %s/%s: %v", namespace, sacuraTriggerName)
+
+	t.Run("verify committed offset", func(t *testing.T) {
+		err = kafkatest.VerifyCommittedOffset(
+			c.Kube,
+			c.Tracker,
+			types.NamespacedName{
+				Namespace: namespace,
+				Name:      sacuraVerifyCommittedOffsetJob,
+			},
+			&kafkatest.AdminConfig{
+				BootstrapServers: pkgtesting.BootstrapServersPlaintext,
+				Topic:            sacuraTopic,
+				Group:            string(trigger.UID),
+			},
+		)
+		require.Nil(t, err, "Failed to verify committed offset")
+	})
 }
 
 func isJobSucceeded(job *batchv1.Job) (bool, error) {
@@ -69,25 +99,4 @@ func isJobSucceeded(job *batchv1.Job) (bool, error) {
 	}
 
 	return job.Status.Succeeded > 0, nil
-}
-
-func logJobOutput(t *testing.T, app string, c *testlib.Client, namespace string, ctx context.Context) {
-
-	selector := labels.SelectorFromSet(map[string]string{"app": app})
-
-	pods, err := c.Kube.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{LabelSelector: selector.String()})
-	assert.Nil(t, err)
-	assert.Greater(t, len(pods.Items), 0)
-
-	logs := make([]string, 0, len(pods.Items))
-	for _, pod := range pods.Items {
-		if l, err := c.Kube.CoreV1().Pods(namespace).GetLogs(pod.Name, &corev1.PodLogOptions{}).DoRaw(ctx); err != nil {
-			logs = append(logs, err.Error())
-		} else {
-			logs = append(logs, string(l))
-		}
-	}
-
-	t.Log(strings.Join(logs, "\n"))
-	testlib.ExportLogs(namespace, namespace)
 }
