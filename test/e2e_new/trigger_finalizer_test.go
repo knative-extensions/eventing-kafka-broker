@@ -46,6 +46,8 @@ func TestTriggerNoFinalizerOnBrokerNotFound(t *testing.T) {
 		k8s.WithEventListener,
 	)
 
+	t.Logf("Namespace is %s", env.Namespace())
+
 	env.Test(ctx, t, triggerNoFinalizerOnBrokerNotFound())
 }
 

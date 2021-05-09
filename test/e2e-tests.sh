@@ -24,12 +24,12 @@ fi
 
 save_release_artifacts || fail_test "Failed to save release artifacts"
 
-if ! ${LOCAL_DEVELOPMENT}; then
-  scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
-  wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing didn't come up"
-  apply_chaos || fail_test "Failed to apply chaos"
-  apply_sacura || fail_test "Failed to apply Sacura"
-fi
+#if ! ${LOCAL_DEVELOPMENT}; then
+#  scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
+#  wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing didn't come up"
+#  apply_chaos || fail_test "Failed to apply chaos"
+#  apply_sacura || fail_test "Failed to apply Sacura"
+#fi
 
 header "Waiting Knative eventing to come up"
 
@@ -43,13 +43,13 @@ failed=false
 
 go_test_e2e -timeout=30m ./test/e2e_new/... || failed=true
 
-go_test_e2e -timeout=30m ./test/e2e/... || failed=true
+#go_test_e2e -timeout=30m ./test/e2e/... || failed=true
 
-if ! ${LOCAL_DEVELOPMENT}; then
-  go_test_e2e -tags=sacura -timeout=20m ./test/e2e/... || failed=true
-fi
-
-go_test_e2e -tags=deletecm ./test/e2e/... || failed=true
+#if ! ${LOCAL_DEVELOPMENT}; then
+#  go_test_e2e -tags=sacura -timeout=20m ./test/e2e/... || failed=true
+#fi
+#
+#go_test_e2e -tags=deletecm ./test/e2e/... || failed=true
 
 if [ $failed = true ]; then
   fail_test "Integration tests failed"

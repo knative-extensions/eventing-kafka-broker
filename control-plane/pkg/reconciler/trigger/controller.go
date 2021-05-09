@@ -104,12 +104,8 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
 		Handler: cache.ResourceEventHandlerFuncs{
-			AddFunc: func(obj interface{}) {
-				globalResync(obj)
-			},
-			DeleteFunc: func(obj interface{}) {
-				globalResync(obj)
-			},
+			AddFunc:    globalResync,
+			DeleteFunc: globalResync,
 		},
 	})
 
