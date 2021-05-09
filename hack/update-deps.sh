@@ -22,3 +22,5 @@ source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
 go_update_deps "$@"
 
+chmod +x ./vendor/knative.dev/eventing/hack/create-kind-cluster.sh
+
