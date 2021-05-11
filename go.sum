@@ -1271,8 +1271,8 @@ k8s.io/kube-openapi v0.0.0-20200805222855-6aeccd4b50c6/go.mod h1:UuqjUnNftUyPE5H
 k8s.io/utils v0.0.0-20200729134348-d5654de09c73/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 h1:0T5IaWHO3sJTEmCP6mUlBvMukxPKUQWqiI/YuiBNMiQ=
 k8s.io/utils v0.0.0-20210111153108-fddb29f9d009/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
-knative.dev/eventing v0.22.1-0.20210504001137-8a094e6031f2 h1:m1Thy5RduRcPY60QRWXRHO5P2gZDex9uk7aF4rnvd4k=
-knative.dev/eventing v0.22.1-0.20210504001137-8a094e6031f2/go.mod h1:p7FKFj0dYMKI1Ji0GSKdRg2YzLMWVXABm0QHN2RtkSI=
+knative.dev/eventing v0.22.1-0.20210511131446-68934518c68f h1:3bYpG0sg4qjVilSFOlt5BBGR0czbeU4ApkxtEdilOB8=
+knative.dev/eventing v0.22.1-0.20210511131446-68934518c68f/go.mod h1:V2vHWE8p2p6sokoNVXafQLiWGJ7hQpw0IzI+w5RqOaA=
 knative.dev/hack v0.0.0-20210325223819-b6ab329907d3 h1:km0Rrh0T9/wA2pivQm1hqSPVwgNgGCHC2WNn3GakZmE=
 knative.dev/hack v0.0.0-20210325223819-b6ab329907d3/go.mod h1:PHt8x8yX5Z9pPquBEfIj0X66f8iWkWfR0S/sarACJrI=
 knative.dev/hack v0.0.0-20210428122153-93ad9129c268 h1:lBIj9Epd9UQ55NEaHzAdY/UZbuaegCdGPKVC2+Z68Q0=
@@ -1282,8 +1282,12 @@ knative.dev/pkg v0.0.0-20210420053235-1afd04993622 h1:wSyDPp/LuOLeDCpvUHgKXqb4Df
 knative.dev/pkg v0.0.0-20210420053235-1afd04993622/go.mod h1:UtcSLHy2XIz5blWoPTA40F87zk4O7erxkCwv+7Tsmws=
 knative.dev/pkg v0.0.0-20210428141353-878c85083565 h1:4I8Pm2IlSJbdJ1R9fC18kOlZlfCZkB59JraRGratgnY=
 knative.dev/pkg v0.0.0-20210428141353-878c85083565/go.mod h1:fIl4l4OmZodkElyaHoT0LCF5wT+3+P/kinawQ4XlLtE=
+knative.dev/pkg v0.0.0-20210510175900-4564797bf3b7 h1:i4P8emOPrLctmbaPHp5eRIOqz+XTOkit7KgZeS+onKs=
+knative.dev/pkg v0.0.0-20210510175900-4564797bf3b7/go.mod h1:fIl4l4OmZodkElyaHoT0LCF5wT+3+P/kinawQ4XlLtE=
 knative.dev/reconciler-test v0.0.0-20210428195854-3db87491edb3 h1:nYSGqYmXe6zIGX5uzYrAl73fn5yPfxtQNg5KIIDu/gE=
 knative.dev/reconciler-test v0.0.0-20210428195854-3db87491edb3/go.mod h1:yZihS1XoBt7oxU6Jq+U2hMKmUvfKFEaj3vMqOMBt/tI=
+knative.dev/reconciler-test v0.0.0-20210506205310-ed3c37806817 h1:St9fyMUnKmumy+5jlawD/lfdBSnAVY/8bgoqOUdfFHs=
+knative.dev/reconciler-test v0.0.0-20210506205310-ed3c37806817/go.mod h1:pUozU+xgCWG9eH+4bYBXM0zWPl8lwvan34gCi/ZDP8o=
 modernc.org/cc v1.0.0/go.mod h1:1Sk4//wdnYJiUIxnW8ddKpaOJCF37yAdqYnkxUpaYxw=
 modernc.org/golex v1.0.0/go.mod h1:b/QX9oBD/LhixY6NDh+IdGv17hgB+51fET1i2kPSmvk=
 modernc.org/mathutil v1.0.0/go.mod h1:wU0vUrJsVWBZ4P6e7xtFJEhFSNsfRLJ8H458uRjg03k=
