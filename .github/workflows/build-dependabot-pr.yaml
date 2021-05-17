@@ -29,15 +29,15 @@ jobs:
         run: echo ${{ github.ref }} | sed 's/refs\/heads\///' > ./dependabot-pr/BRANCH_REF
       - name: Configure git
         run: |
-          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
+          git config --local user.email "automation@knative.team"
+          git config --local user.name "Knative Automation"
       # NOTE: Prefixing/appending commit messages with `[dependabot skip]` allows
       # dependabot to rebase/update the pull request, force-pushing over any changes
       - name: Commit and copy license changes
         run: |
           if [[ $(git status | grep 'data-plane/THIRD-PARTY.txt') ]]; then
             git add data-plane/THIRD-PARTY.txt
-            git commit -m "[dependabot skip] Update data-plane/THIRD-PARTY.txt"
+            git commit --signoff -m "[dependabot skip] Update data-plane/THIRD-PARTY.txt"
             git format-patch -n HEAD^ --binary --stdout > ./dependabot-pr/changes.patch
           else
             echo "Licenses were not changed"
