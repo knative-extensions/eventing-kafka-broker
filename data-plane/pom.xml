@@ -45,14 +45,14 @@
     <vertx.version>4.0.3</vertx.version>
     <cloudevents.sdk.version>2.1.1</cloudevents.sdk.version>
     <micrometer.version>1.6.6</micrometer.version>
-    <opentelemetry.version>0.15.0</opentelemetry.version>
+    <opentelemetry.version>1.2.0</opentelemetry.version>
     <jackson.version>2.12.3</jackson.version>
     <protobuf.version>3.16.0</protobuf.version>
     <slf4j.version>1.7.30</slf4j.version>
     <ch.qos.logback.version>1.2.3</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>6.6</net.logstash.logback.encoder.version>
     <assertj.version>3.19.0</assertj.version>
-    <awaitility.version>4.0.3</awaitility.version>
+    <awaitility.version>4.1.0</awaitility.version>
     <junit.jupiter.version>5.7.1</junit.jupiter.version>
     <mokito.junit.jupiter.version>3.9.0</mokito.junit.jupiter.version>
     <fabric8.kubernetes.version>5.3.1</fabric8.kubernetes.version>
