@@ -37,6 +37,7 @@ import (
 
 func TestTriggerNoFinalizerOnBrokerNotFound(t *testing.T) {
 
+	t.Skip("Flaky https://github.com/knative-sandbox/eventing-kafka-broker/issues/885")
 	t.Parallel()
 
 	ctx, env := global.Environment(
@@ -45,6 +46,8 @@ func TestTriggerNoFinalizerOnBrokerNotFound(t *testing.T) {
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
 	)
+
+	t.Logf("Namespace is %s", env.Namespace())
 
 	env.Test(ctx, t, triggerNoFinalizerOnBrokerNotFound())
 }
