@@ -459,7 +459,7 @@
           <properties>
             <owner>Knative Authors</owner>
             <email>knative-dev@googlegroups.com</email>
-            <project.inceptionYear>2018</project.inceptionYear>
+            <year>2018</year>
           </properties>
         </configuration>
         <executions>
