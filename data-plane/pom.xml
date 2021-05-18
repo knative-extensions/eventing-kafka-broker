@@ -38,8 +38,7 @@
     <maven.jacoco.plugin.version>0.8.7</maven.jacoco.plugin.version>
     <maven.enforcer.plugin.version>3.0.0-M3</maven.enforcer.plugin.version>
     <maven.license.plugin.version>2.0.0</maven.license.plugin.version>
-
-    <mycila.license.plugin.version>4.0</mycila.license.plugin.version>
+    <mycila.license.plugin.version>4.1</mycila.license.plugin.version>
 
     <!-- dependencies version -->
     <vertx.version>4.0.3</vertx.version>
@@ -449,13 +448,10 @@
           <licenseSets>
             <licenseSet>
               <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
+              <includes>
+                <include>src/**/*.java</include>
+              </includes>
               <excludes>
-                <exclude>**/README</exclude>
-                <exclude>src/test/resources/**</exclude>
-                <exclude>src/main/resources/**</exclude>
-                <exclude>**/*.yaml</exclude>
-                <exclude>**/*.yml</exclude>
-                <exclude>**/*.txt</exclude>
                 <exclude>**/DataPlaneContract.java</exclude>
               </excludes>
             </licenseSet>
