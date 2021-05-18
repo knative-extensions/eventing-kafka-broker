@@ -51,13 +51,14 @@ ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
 
 group "Update deps post-codegen"
 
-# Our GH Actions env doesn't have protoc.
+# Our GH Actions env doesn't have protoc, nor Java.
 # For more details: https://github.com/knative-sandbox/eventing-kafka-broker/pull/847#issuecomment-828562570
+# Also: https://github.com/knative-sandbox/knobots/runs/2609020026?check_suite_focus=true#step:6:291
 if ! ${GITHUB_ACTIONS:-false}; then
   ${REPO_ROOT_DIR}/hack/generate-proto.sh
-fi
 
-# Update Java third party file
-mvn --file ${REPO_ROOT_DIR}/data-plane/pom.xml -Dlicense.outputDirectory=. license:aggregate-add-third-party
+  # Update Java third party file
+  mvn --file ${REPO_ROOT_DIR}/data-plane/pom.xml -Dlicense.outputDirectory=. license:aggregate-add-third-party
+fi
 
 ${REPO_ROOT_DIR}/hack/update-deps.sh
