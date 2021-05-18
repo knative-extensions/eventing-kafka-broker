@@ -37,6 +37,7 @@ import (
 
 func TestTriggerNoFinalizerOnBrokerNotFound(t *testing.T) {
 
+	t.Skip("Flaky https://github.com/knative-sandbox/eventing-kafka-broker/issues/885")
 	t.Parallel()
 
 	ctx, env := global.Environment(
