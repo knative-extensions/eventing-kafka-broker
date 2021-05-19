@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package dev.knative.eventing.kafka.broker.core.security;
 
 import io.fabric8.kubernetes.api.model.Secret;
