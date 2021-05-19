@@ -2192,7 +2192,7 @@ func withTriggerSubscriberResolvedSucceeded(deliveryOrder contract.DeliveryOrder
 	return func(t *eventing.Trigger) {
 		t.GetConditionSet().Manage(&t.Status).MarkTrueWithReason(
 			eventing.TriggerConditionSubscriberResolved,
-			"SubscriberResolved",
+			string(eventing.TriggerConditionSubscriberResolved),
 			fmt.Sprintf("Subscriber will receive events with the delivery order: %s", deliveryOrder.String()),
 		)
 	}
