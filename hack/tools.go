@@ -23,9 +23,6 @@ import (
 	_ "knative.dev/pkg/configmap/hash-gen"
 	_ "knative.dev/pkg/hack"
 
-	// Hack scripts from eventing
-	_ "knative.dev/eventing/hack"
-
 	// Test images from eventing
 	_ "knative.dev/eventing/test/test_images/event-sender"
 	_ "knative.dev/eventing/test/test_images/heartbeats"

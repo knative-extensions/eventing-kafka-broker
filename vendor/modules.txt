@@ -1017,7 +1017,6 @@ k8s.io/utils/pointer
 k8s.io/utils/trace
 # knative.dev/eventing v0.23.1-0.20210521082618-8fbacd01b514
 ## explicit
-knative.dev/eventing/hack
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck
 knative.dev/eventing/pkg/apis/duck/v1
@@ -1120,8 +1119,6 @@ knative.dev/eventing/test/test_images/request-sender
 knative.dev/hack
 # knative.dev/pkg v0.0.0-20210520062216-e749d6a2ad0e
 ## explicit
-knative.dev/pkg/apiextensions/storageversion
-knative.dev/pkg/apiextensions/storageversion/cmd/migrate
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
 knative.dev/pkg/apis/duck/ducktypes
@@ -1192,13 +1189,11 @@ knative.dev/pkg/test/mako/alerter
 knative.dev/pkg/test/mako/alerter/github
 knative.dev/pkg/test/mako/alerter/slack
 knative.dev/pkg/test/mako/config
-knative.dev/pkg/test/mako/stub-sidecar
 knative.dev/pkg/test/monitoring
 knative.dev/pkg/test/prow
 knative.dev/pkg/test/slackutil
 knative.dev/pkg/test/spoof
 knative.dev/pkg/test/zipkin
-knative.dev/pkg/third_party/mako/proto/quickstore_go_proto
 knative.dev/pkg/tracing
 knative.dev/pkg/tracing/config
 knative.dev/pkg/tracing/propagation

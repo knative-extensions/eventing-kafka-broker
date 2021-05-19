@@ -47,3 +47,4 @@ nodes:
 - role: worker
   image: kindest/node:${NODE_VERSION}@${NODE_SHA}
 EOF
+
