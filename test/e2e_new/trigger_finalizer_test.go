@@ -52,6 +52,7 @@ func TestTriggerNoFinalizerOnBrokerNotFound(t *testing.T) {
 	env.Test(ctx, t, triggerNoFinalizerOnBrokerNotFound())
 }
 
+//nolint:golint,unused
 func triggerNoFinalizerOnBrokerNotFound() *feature.Feature {
 
 	f := feature.NewFeature()
