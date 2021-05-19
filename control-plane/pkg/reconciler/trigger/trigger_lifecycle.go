@@ -122,6 +122,10 @@ func (m *statusConditionManager) failedToUpdateDispatcherPodsAnnotation(err erro
 	)
 }
 
-func (m *statusConditionManager) subscriberResolved() {
-	m.Trigger.Status.MarkSubscriberResolvedSucceeded()
+func (m *statusConditionManager) subscriberResolved(details string) {
+	m.Trigger.GetConditionSet().Manage(&m.Trigger.Status).MarkTrueWithReason(
+		eventing.TriggerConditionSubscriberResolved,
+		string(eventing.TriggerConditionSubscriberResolved),
+		details,
+	)
 }

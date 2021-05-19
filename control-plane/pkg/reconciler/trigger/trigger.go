@@ -142,7 +142,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	if err != nil {
 		return statusConditionManager.failedToResolveTriggerConfig(err)
 	}
-	statusConditionManager.subscriberResolved()
+	statusConditionManager.subscriberResolved(
+		fmt.Sprintf("Subscriber will receive events with the delivery order: %s", triggerConfig.DeliveryOrder.String()),
+	)
 
 	changed := coreconfig.AddOrUpdateEgressConfig(ct, brokerIndex, triggerConfig, triggerIndex)
 

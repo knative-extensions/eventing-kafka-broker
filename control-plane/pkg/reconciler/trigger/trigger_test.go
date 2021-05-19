@@ -148,7 +148,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
-						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 					),
 				},
 			},
@@ -210,7 +210,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
-						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_ORDERED),
 						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderOrdered),
 					),
 				},
@@ -273,7 +273,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
-						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderUnordered),
 					),
 				},
@@ -342,7 +342,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
-						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 					),
 				},
 			},
@@ -454,7 +454,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
-						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 					),
 				},
 			},
@@ -751,7 +751,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
-						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 					),
 				},
 			},
@@ -937,7 +937,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
-						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 					),
 				},
 			},
@@ -1118,7 +1118,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
-						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 					),
 				},
 			},
@@ -1363,7 +1363,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
-						reconcilertesting.WithTriggerSubscriberResolvedSucceeded(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 					),
 				},
 			},
@@ -2186,6 +2186,16 @@ func withSubscriberURI(trigger *eventing.Trigger) {
 		panic(err)
 	}
 	trigger.Status.SubscriberURI = u
+}
+
+func withTriggerSubscriberResolvedSucceeded(deliveryOrder contract.DeliveryOrder) func(*eventing.Trigger) {
+	return func(t *eventing.Trigger) {
+		t.GetConditionSet().Manage(&t.Status).MarkTrueWithReason(
+			eventing.TriggerConditionSubscriberResolved,
+			string(eventing.TriggerConditionSubscriberResolved),
+			fmt.Sprintf("Subscriber will receive events with the delivery order: %s", deliveryOrder.String()),
+		)
+	}
 }
 
 func patchFinalizers() clientgotesting.PatchActionImpl {
