@@ -2654,6 +2654,15 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string replyUrl = 3;</code>
+     * @return Whether the replyUrl field is set.
+     */
+    boolean hasReplyUrl();
+    /**
+     * <pre>
+     * Send the response to an url
+     * </pre>
+     *
+     * <code>string replyUrl = 3;</code>
      * @return The replyUrl.
      */
     java.lang.String getReplyUrl();
@@ -3070,6 +3079,17 @@ public final class DataPlaneContract {
     }
 
     public static final int REPLYURL_FIELD_NUMBER = 3;
+    /**
+     * <pre>
+     * Send the response to an url
+     * </pre>
+     *
+     * <code>string replyUrl = 3;</code>
+     * @return Whether the replyUrl field is set.
+     */
+    public boolean hasReplyUrl() {
+      return replyStrategyCase_ == 3;
+    }
     /**
      * <pre>
      * Send the response to an url
@@ -4000,6 +4020,18 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string replyUrl = 3;</code>
+       * @return Whether the replyUrl field is set.
+       */
+      @java.lang.Override
+      public boolean hasReplyUrl() {
+        return replyStrategyCase_ == 3;
+      }
+      /**
+       * <pre>
+       * Send the response to an url
+       * </pre>
+       *
+       * <code>string replyUrl = 3;</code>
        * @return The replyUrl.
        */
       @java.lang.Override
@@ -4824,6 +4856,15 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string path = 2;</code>
+     * @return Whether the path field is set.
+     */
+    boolean hasPath();
+    /**
+     * <pre>
+     * path to listen for incoming events.
+     * </pre>
+     *
+     * <code>string path = 2;</code>
      * @return The path.
      */
     java.lang.String getPath();
@@ -4838,6 +4879,15 @@ public final class DataPlaneContract {
     com.google.protobuf.ByteString
         getPathBytes();
 
+    /**
+     * <pre>
+     * host header to match
+     * </pre>
+     *
+     * <code>string host = 3;</code>
+     * @return Whether the host field is set.
+     */
+    boolean hasHost();
     /**
      * <pre>
      * host header to match
@@ -5031,6 +5081,17 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string path = 2;</code>
+     * @return Whether the path field is set.
+     */
+    public boolean hasPath() {
+      return ingressTypeCase_ == 2;
+    }
+    /**
+     * <pre>
+     * path to listen for incoming events.
+     * </pre>
+     *
+     * <code>string path = 2;</code>
      * @return The path.
      */
     public java.lang.String getPath() {
@@ -5078,6 +5139,17 @@ public final class DataPlaneContract {
     }
 
     public static final int HOST_FIELD_NUMBER = 3;
+    /**
+     * <pre>
+     * host header to match
+     * </pre>
+     *
+     * <code>string host = 3;</code>
+     * @return Whether the host field is set.
+     */
+    public boolean hasHost() {
+      return ingressTypeCase_ == 3;
+    }
     /**
      * <pre>
      * host header to match
@@ -5589,6 +5661,18 @@ public final class DataPlaneContract {
        * </pre>
        *
        * <code>string path = 2;</code>
+       * @return Whether the path field is set.
+       */
+      @java.lang.Override
+      public boolean hasPath() {
+        return ingressTypeCase_ == 2;
+      }
+      /**
+       * <pre>
+       * path to listen for incoming events.
+       * </pre>
+       *
+       * <code>string path = 2;</code>
        * @return The path.
        */
       @java.lang.Override
@@ -5692,6 +5776,18 @@ public final class DataPlaneContract {
         return this;
       }
 
+      /**
+       * <pre>
+       * host header to match
+       * </pre>
+       *
+       * <code>string host = 3;</code>
+       * @return Whether the host field is set.
+       */
+      @java.lang.Override
+      public boolean hasHost() {
+        return ingressTypeCase_ == 3;
+      }
       /**
        * <pre>
        * host header to match
