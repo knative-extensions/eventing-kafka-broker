@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-
 # variables used:
 # - SKIP_INITIALIZE (default: false) - skip cluster creation.
 # - LOCAL_DEVELOPMENT (default: false) - skip heavy workloads installation like load and chaos generators.
@@ -42,12 +40,12 @@ header "Running tests"
 
 export_logs_continuously "kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver"
 
-go_test_e2e -timeout=30m ./test/e2e_new/...
-go_test_e2e -timeout=30m ./test/e2e/...
-go_test_e2e -tags=deletecm ./test/e2e/...
+go_test_e2e -timeout=30m ./test/e2e_new/... || fail_test "E2E (new) suite failed"
+go_test_e2e -timeout=30m ./test/e2e/... || fail_test "E2E suite failed"
+go_test_e2e -tags=deletecm ./test/e2e/... || fail_test "E2E (deletecm) suite failed"
 
 if ! ${LOCAL_DEVELOPMENT}; then
-  go_test_e2e -tags=sacura -timeout=40m ./test/e2e/...
+  go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E (sacura) suite failed"
 fi
 
 success
