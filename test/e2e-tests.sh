@@ -28,6 +28,7 @@ fi
 save_release_artifacts || fail_test "Failed to save release artifacts"
 
 if ! ${LOCAL_DEVELOPMENT}; then
+  scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
   apply_sacura || fail_test "Failed to apply Sacura"
   apply_chaos || fail_test "Failed to apply chaos"
 fi
