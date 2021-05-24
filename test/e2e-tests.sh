@@ -6,6 +6,9 @@
 
 readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
 readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
+export REPLICAS=${REPLICAS:-3}
+
+ROOT_DIR=$(dirname $0)/..
 
 source $(dirname $0)/e2e-common.sh
 
@@ -26,9 +29,8 @@ save_release_artifacts || fail_test "Failed to save release artifacts"
 
 if ! ${LOCAL_DEVELOPMENT}; then
   scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
-  wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing didn't come up"
-  apply_chaos || fail_test "Failed to apply chaos"
   apply_sacura || fail_test "Failed to apply Sacura"
+  apply_chaos || fail_test "Failed to apply chaos"
 fi
 
 header "Waiting Knative eventing to come up"
@@ -39,20 +41,12 @@ header "Running tests"
 
 export_logs_continuously "kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver"
 
-failed=false
-
-go_test_e2e -timeout=30m ./test/e2e_new/... || failed=true
-
-go_test_e2e -timeout=30m ./test/e2e/... || failed=true
+go_test_e2e -timeout=30m ./test/e2e_new/... || fail_test "E2E (new) suite failed"
+go_test_e2e -timeout=30m ./test/e2e/... || fail_test "E2E suite failed"
+go_test_e2e -tags=deletecm ./test/e2e/... || fail_test "E2E (deletecm) suite failed"
 
 if ! ${LOCAL_DEVELOPMENT}; then
-  go_test_e2e -tags=sacura -timeout=20m ./test/e2e/... || failed=true
-fi
-
-go_test_e2e -tags=deletecm ./test/e2e/... || failed=true
-
-if [ $failed = true ]; then
-  fail_test "Integration tests failed"
+  go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E (sacura) suite failed"
 fi
 
 success

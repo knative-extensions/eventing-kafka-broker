@@ -38,7 +38,7 @@ echo "Profiling event ${EVENT}"
 
 PROJECT_ROOT_DIR=$(dirname $0)/..
 RESOURCES_DIR="$(dirname $0)"/resources
-ASYNC_PROFILER_URL="https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.0-rc/async-profiler-2.0-rc-linux-x64.tar.gz"
+ASYNC_PROFILER_URL="https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.0/async-profiler-2.0-linux-x64.tar.gz"
 KAFKA_URL="https://archive.apache.org/dist/kafka/2.6.0/kafka_2.13-2.6.0.tgz"
 
 echo "Project root dir: ${PROJECT_ROOT_DIR}"
