@@ -57,7 +57,7 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper {
           if (span != null) {
             logger.debug("received event {} {}",
               keyValue("event", event),
-              keyValue(Tracing.TRACE_ID_KEY, span.getSpanContext().getTraceIdAsHexString())
+              keyValue(Tracing.TRACE_ID_KEY, span.getSpanContext().getTraceId())
             );
           } else {
             logger.debug("received event {}", keyValue("event", event));

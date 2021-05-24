@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.core.tracing;
 
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.Backend;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -31,7 +32,6 @@ import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,10 +39,12 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public class Tracing {
 
+  private static final AttributeKey<String> SERVICE_NAME_KEY = AttributeKey.stringKey("service.name");
+  private static final AttributeKey<String> SERVICE_NAMESPACE_KEY = AttributeKey.stringKey("service.namespace");
+
   public final static String SERVICE_NAME;
   public final static String SERVICE_NAMESPACE;
   public final static String TRACE_ID_KEY = "traceId";
-
   private static final String DEFAULT_SERVICE_NAME = "Knative";
 
   static {
@@ -64,7 +66,10 @@ public class Tracing {
     SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
 
     tracerProviderBuilder.setResource(
-      Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, SERVICE_NAME))
+      Resource.create(Attributes.of(
+        SERVICE_NAME_KEY, SERVICE_NAME,
+        SERVICE_NAMESPACE_KEY, SERVICE_NAMESPACE
+      ))
     );
     tracerProviderBuilder.setSampler(
       Sampler.traceIdRatioBased(tracingConfig.getSamplingRate())
