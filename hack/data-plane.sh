@@ -17,12 +17,10 @@
 # variables used:
 # - KO_DOCKER_REPO (required)
 # - UUID (default: latest)
-# - SKIP_PUSH (default: false) --> images will not be pushed to remote registry
-# - WITH_KIND (default: false) --> images will be loaded in KinD
+# - SKIP_PUSH (default: false) --> images will not be pushed to remote registry, nor to kind local registry
 
 source $(pwd)/hack/label.sh
 
-readonly WITH_KIND=${WITH_KIND:-false}
 readonly SKIP_PUSH=${SKIP_PUSH:-false}
 readonly UUID=${UUID:-${TAG:-latest}}
 
@@ -65,15 +63,14 @@ if ! function_exists header; then
   }
 fi
 
-function docker_push() {
-  if ! ${SKIP_PUSH}; then
-    docker push "$1"
+function image_push() {
+  if ${SKIP_PUSH}; then
+    return
   fi
-}
-
-function with_kind() {
-  if ${WITH_KIND}; then
-    kind load docker-image "$1"
+  if [ "$KO_DOCKER_REPO" = "kind.local" ]; then
+   kind load docker-image "$1"
+  else
+    docker push "$1"
   fi
 }
 
@@ -87,8 +84,7 @@ function receiver_build_push() {
     --build-arg APP_JAR=${RECEIVER_JAR} \
     --build-arg APP_DIR=${RECEIVER_DIRECTORY} \
     -t "${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}" ${DATA_PLANE_DIR} &&
-    docker_push "${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}" &&
-    with_kind "${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}"
+    image_push "${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}"
 
   return $?
 }
@@ -103,8 +99,7 @@ function dispatcher_build_push() {
     --build-arg APP_JAR=${DISPATCHER_JAR} \
     --build-arg APP_DIR=${DISPATCHER_DIRECTORY} \
     -t "${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}" ${DATA_PLANE_DIR} &&
-    docker_push "${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}" &&
-    with_kind "${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}"
+    image_push "${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}"
 
   return $?
 }
