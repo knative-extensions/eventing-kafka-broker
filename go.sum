@@ -1268,8 +1268,8 @@ knative.dev/hack/schema v0.0.0-20210428122153-93ad9129c268/go.mod h1:ffjwmdcrH5v
 knative.dev/hack/schema v0.0.0-20210428122153-93ad9129c268/go.mod h1:ffjwmdcrH5vN3mPhO8RrF2KfNnbHeCE2C60A+2cv3U0=
 knative.dev/pkg v0.0.0-20210510175900-4564797bf3b7/go.mod h1:fIl4l4OmZodkElyaHoT0LCF5wT+3+P/kinawQ4XlLtE=
 knative.dev/pkg v0.0.0-20210518131015-67897f4ec290/go.mod h1:fIl4l4OmZodkElyaHoT0LCF5wT+3+P/kinawQ4XlLtE=
-knative.dev/pkg v0.0.0-20210520062216-e749d6a2ad0e h1:BTHdk8J4PQ1UQIZlpBQaN4sw+vYqap4P97OWP/qytbo=
-knative.dev/pkg v0.0.0-20210520062216-e749d6a2ad0e/go.mod h1:fIl4l4OmZodkElyaHoT0LCF5wT+3+P/kinawQ4XlLtE=
+knative.dev/pkg v0.0.0-20210525071438-e2947dba201a h1:YDaIL+uCZG3+QAXYrnI2F3QOfq5MSQcBA6lyduwXr28=
+knative.dev/pkg v0.0.0-20210525071438-e2947dba201a/go.mod h1:fIl4l4OmZodkElyaHoT0LCF5wT+3+P/kinawQ4XlLtE=
 knative.dev/reconciler-test v0.0.0-20210514214942-8d70771450f1/go.mod h1:ZHvzjwe5aUnWDx+u5y9EPaZ++5PM9Yapp/IvBDiS+Yk=
 knative.dev/reconciler-test v0.0.0-20210520170117-ffe49e0e092f h1:SR7fMoSw9/bxznFti0VzgkMSZM+6jqziSjXkC2MbLT0=
 knative.dev/reconciler-test v0.0.0-20210520170117-ffe49e0e092f/go.mod h1:ZHvzjwe5aUnWDx+u5y9EPaZ++5PM9Yapp/IvBDiS+Yk=
