@@ -29,7 +29,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFac
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.tracing.TracingPolicy;
@@ -81,7 +81,7 @@ public class Main {
 
     final var env = new DispatcherEnv(System::getenv);
 
-    final OpenTelemetry openTelemetry = Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
+    final OpenTelemetrySdk openTelemetry = Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
 
     logger.info("Starting Dispatcher {}", keyValue("env", env));
 
@@ -147,7 +147,8 @@ public class Main {
       final var fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
 
       // Gracefully clean up resources.
-      Runtime.getRuntime().addShutdownHook(new Thread(Shutdown.run(vertx, fw, publisher)));
+      Runtime.getRuntime()
+        .addShutdownHook(new Thread(Shutdown.run(vertx, fw, publisher, openTelemetry.getSdkTracerProvider())));
 
       fw.watch(); // block forever
 

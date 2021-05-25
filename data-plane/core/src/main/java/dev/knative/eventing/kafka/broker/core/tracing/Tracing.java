@@ -16,7 +16,6 @@
 package dev.knative.eventing.kafka.broker.core.tracing;
 
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.Backend;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
@@ -54,12 +53,12 @@ public class Tracing {
 
   private static final Logger logger = LoggerFactory.getLogger(Tracing.class);
 
-  public static OpenTelemetry setup(final TracingConfig tracingConfig) {
+  public static OpenTelemetrySdk setup(final TracingConfig tracingConfig) {
     logger.info(
       "Registering tracing configurations {} {} {} {}",
       keyValue("backend", tracingConfig.getBackend()),
       keyValue("sampleRate", tracingConfig.getSamplingRate()),
-      keyValue("URL", tracingConfig.getURL()),
+      keyValue("url", tracingConfig.getUrl()),
       keyValue("loggingDebugEnabled", logger.isDebugEnabled())
     );
 
@@ -72,38 +71,47 @@ public class Tracing {
       ))
     );
     tracerProviderBuilder.setSampler(
-      Sampler.traceIdRatioBased(tracingConfig.getSamplingRate())
+      Sampler.parentBased((tracingConfig.getSamplingRate() == 1) ? Sampler.alwaysOn() :
+        Sampler.traceIdRatioBased(tracingConfig.getSamplingRate()))
     );
 
-    if (tracingConfig.getBackend().equals(Backend.ZIPKIN)) {
-      logger.debug("Add Zipkin processor");
-      tracerProviderBuilder.addSpanProcessor(
-        BatchSpanProcessor
-          .builder(zipkinExporter(tracingConfig))
-          .build()
-      );
-
-    } else if (logger.isDebugEnabled()) {
-      logger.debug("Add Logging processor");
+    if (logger.isDebugEnabled()) {
+      logger.debug("Add logging processor");
       tracerProviderBuilder.addSpanProcessor(
         SimpleSpanProcessor.create(new LoggingSpanExporter())
       );
     }
+    if (tracingConfig.getBackend().equals(Backend.ZIPKIN)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Add Zipkin simple processor");
+        tracerProviderBuilder.addSpanProcessor(
+          SimpleSpanProcessor.create(zipkinExporter(tracingConfig))
+        );
+      } else {
+        logger.debug("Add Zipkin batch processor");
+        tracerProviderBuilder.addSpanProcessor(
+          BatchSpanProcessor
+            .builder(zipkinExporter(tracingConfig))
+            .build()
+        );
+      }
+    }
 
     OpenTelemetrySdkBuilder sdkBuilder = OpenTelemetrySdk.builder();
-    sdkBuilder.setTracerProvider(tracerProviderBuilder.build());
+    sdkBuilder.setTracerProvider(
+      tracerProviderBuilder.build()
+    );
     sdkBuilder.setPropagators(ContextPropagators.create(
       W3CTraceContextPropagator.getInstance()
     ));
 
-
-    return sdkBuilder.build();
+    return sdkBuilder.buildAndRegisterGlobal();
   }
 
   private static SpanExporter zipkinExporter(TracingConfig tracingConfig) {
     return ZipkinSpanExporter
       .builder()
-      .setEndpoint(tracingConfig.getURL())
+      .setEndpoint(tracingConfig.getUrl())
       .build();
   }
 

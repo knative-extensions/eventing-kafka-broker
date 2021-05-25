@@ -27,7 +27,7 @@ import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
@@ -79,7 +79,7 @@ public class Main {
   public static void main(final String[] args) throws IOException {
     final var env = new ReceiverEnv(System::getenv);
 
-    final OpenTelemetry openTelemetry = Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
+    final OpenTelemetrySdk openTelemetry = Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
 
     // HACK HACK HACK
     // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
@@ -115,7 +115,7 @@ public class Main {
         v,
         AuthProvider.kubernetes(),
         producerConfigs,
-        new CloudEventRequestToRecordMapper(vertx),
+        new CloudEventRequestToRecordMapper(),
         properties -> KafkaProducer.create(v, properties),
         badRequestCounter,
         produceEventsCounter
@@ -157,7 +157,8 @@ public class Main {
       var fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
 
       // Gracefully clean up resources.
-      Runtime.getRuntime().addShutdownHook(new Thread(Shutdown.run(vertx, fw, publisher)));
+      Runtime.getRuntime()
+        .addShutdownHook(new Thread(Shutdown.run(vertx, fw, publisher, openTelemetry.getSdkTracerProvider())));
 
       fw.watch(); // block forever
 

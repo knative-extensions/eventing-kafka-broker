@@ -25,7 +25,7 @@ import java.nio.file.Path;
 public final class TracingConfig {
 
   private final Backend backend;
-  private final String URL;
+  private final String url;
   private final float samplingRate;
 
   private TracingConfig(final Backend backend, final String url, final float samplingRate) {
@@ -38,7 +38,7 @@ public final class TracingConfig {
     }
 
     this.backend = backend;
-    this.URL = url;
+    this.url = url;
     this.samplingRate = Math.min(1, Math.max(samplingRate, 0));
   }
 
@@ -162,8 +162,8 @@ public final class TracingConfig {
     return backend;
   }
 
-  String getURL() {
-    return URL;
+  String getUrl() {
+    return url;
   }
 
   float getSamplingRate() {
@@ -189,7 +189,7 @@ public final class TracingConfig {
   public String toString() {
     return "TracingConfig{" +
       "backend=" + backend +
-      ", URL='" + URL + '\'' +
+      ", url='" + url + '\'' +
       ", samplingRate=" + samplingRate +
       '}';
   }
