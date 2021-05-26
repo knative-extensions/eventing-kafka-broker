@@ -38,7 +38,7 @@ export SYSTEM_NAMESPACE="knative-eventing"
 export CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}
 
 function knative_setup() {
-  knative_eventing "apply --strict"
+  knative_eventing "apply"
   return $?
 }
 
@@ -139,12 +139,12 @@ function apply_chaos() {
 }
 
 function apply_sacura() {
-  ko apply --strict -f ./test/config/sacura/0-namespace.yaml || return $?
-  ko apply --strict -f ./test/config/sacura/101-broker.yaml || return $?
+  ko apply -f ./test/config/sacura/0-namespace.yaml || return $?
+  ko apply -f ./test/config/sacura/101-broker.yaml || return $?
 
   kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || return $?
 
-  ko apply --strict -f ./test/config/sacura || return $?
+  ko apply -f ./test/config/sacura || return $?
 }
 
 function export_logs_continuously() {
