@@ -22,6 +22,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.metrics.MetricsOptions;
+import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.micrometer.MetricsDomain;
 import io.vertx.micrometer.MetricsNaming;
 import io.vertx.micrometer.MicrometerMetricsOptions;
@@ -52,7 +53,10 @@ public class Metrics {
       .setRegistryName(METRICS_REGISTRY_NAME)
       .setJvmMetricsEnabled(metricsConfigs.isMetricsJvmEnabled())
       .setPrometheusOptions(new VertxPrometheusOptions()
-        .setEmbeddedServerOptions(new HttpServerOptions().setPort(metricsConfigs.getMetricsPort()))
+        .setEmbeddedServerOptions(new HttpServerOptions()
+          .setPort(metricsConfigs.getMetricsPort())
+          .setTracingPolicy(TracingPolicy.IGNORE)
+        )
         .setEmbeddedServerEndpoint(metricsConfigs.getMetricsPath())
         .setPublishQuantiles(metricsConfigs.isPublishQuantilesEnabled())
         .setStartEmbeddedServer(true)
