@@ -235,9 +235,11 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
         )
         // TODO max failures should be configurable or, at least, set by the control plane
         .setMaxFailures(egressConfig.getRetry() * 2)
-        .setMaxRetries(egressConfig.getRetry());
+        .setMaxRetries(egressConfig.getRetry())
+        .setNotificationAddress(null);
     }
-    return new CircuitBreakerOptions();
+    return new CircuitBreakerOptions()
+      .setNotificationAddress(null);
   }
 
   /* package visibility for test */

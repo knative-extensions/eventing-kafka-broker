@@ -79,7 +79,6 @@ function receiver_build_push() {
 
   docker build \
     -f ${DATA_PLANE_DIR}/docker/Dockerfile \
-    --no-cache \
     --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
     --build-arg BASE_IMAGE=${BASE_IMAGE} \
     --build-arg APP_JAR=${RECEIVER_JAR} \
@@ -95,7 +94,6 @@ function dispatcher_build_push() {
 
   docker build \
     -f ${DATA_PLANE_DIR}/docker/Dockerfile \
-    --no-cache \
     --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
     --build-arg BASE_IMAGE=${BASE_IMAGE} \
     --build-arg APP_JAR=${DISPATCHER_JAR} \

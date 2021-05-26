@@ -71,8 +71,7 @@ public class Tracing {
       ))
     );
     tracerProviderBuilder.setSampler(
-      Sampler.parentBased((tracingConfig.getSamplingRate() == 1) ? Sampler.alwaysOn() :
-        Sampler.traceIdRatioBased(tracingConfig.getSamplingRate()))
+      Sampler.parentBased(Sampler.traceIdRatioBased(tracingConfig.getSamplingRate()))
     );
 
     if (logger.isDebugEnabled()) {
