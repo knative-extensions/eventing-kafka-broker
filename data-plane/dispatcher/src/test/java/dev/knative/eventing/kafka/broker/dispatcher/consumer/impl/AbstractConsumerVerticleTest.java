@@ -63,7 +63,8 @@ public abstract class AbstractConsumerVerticleTest {
         Future::succeededFuture,
         response -> Future.succeededFuture()
       ),
-      RecordDispatcherTest.offsetManagerMock()
+      RecordDispatcherTest.offsetManagerMock(),
+      null
     );
     final var topic = "topic1";
 
@@ -101,7 +102,8 @@ public abstract class AbstractConsumerVerticleTest {
         Future::succeededFuture,
         response -> Future.succeededFuture()
       ),
-      RecordDispatcherTest.offsetManagerMock()
+      RecordDispatcherTest.offsetManagerMock(),
+      null
     );
     final var topic = "topic1";
 
@@ -192,7 +194,8 @@ public abstract class AbstractConsumerVerticleTest {
         },
         response -> Future.succeededFuture()
       ),
-      RecordDispatcherTest.offsetManagerMock()
+      RecordDispatcherTest.offsetManagerMock(),
+      null
     );
 
     final var verticle = createConsumerVerticle(
