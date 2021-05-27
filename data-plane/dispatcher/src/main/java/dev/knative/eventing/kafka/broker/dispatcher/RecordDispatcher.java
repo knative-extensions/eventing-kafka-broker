@@ -138,14 +138,16 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
     if (consumerTracer != null) {
       Context context = Vertx.currentContext();
       ConsumerTracer.StartedSpan span = consumerTracer.prepareMessageReceived(context, record.record());
-      finalProm.future()
-        .onComplete(ar -> {
-          if (ar.succeeded()) {
-            span.finish(context);
-          } else {
-            span.fail(context, ar.cause());
-          }
-        });
+      if (span != null) {
+        finalProm.future()
+          .onComplete(ar -> {
+            if (ar.succeeded()) {
+              span.finish(context);
+            } else {
+              span.fail(context, ar.cause());
+            }
+          });
+      }
     }
 
     offsetManager.recordReceived(record)
