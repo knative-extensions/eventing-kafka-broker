@@ -125,7 +125,7 @@ func filterTriggers(lister eventinglisters.BrokerLister) func(interface{}) bool 
 
 		broker, err := lister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
 		if err != nil {
-			return true // TODO decide what to do on NotFound/Found
+			return false
 		}
 
 		value, ok := broker.GetAnnotations()[apiseventing.BrokerClassKey]
