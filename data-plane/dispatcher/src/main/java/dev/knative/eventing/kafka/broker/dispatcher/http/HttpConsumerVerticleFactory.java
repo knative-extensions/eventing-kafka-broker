@@ -236,9 +236,11 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
         // TODO max failures should be configurable or, at least, set by the control plane
         .setMaxFailures(egressConfig.getRetry() * 2)
         .setMaxRetries(egressConfig.getRetry())
+        // This disables circuit breaker notifications on the event bus
         .setNotificationAddress(null);
     }
     return new CircuitBreakerOptions()
+      // This disables circuit breaker notifications on the event bus
       .setNotificationAddress(null);
   }
 
