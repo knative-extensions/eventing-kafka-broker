@@ -167,12 +167,12 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 		sinkName,
 		eventshub.StartReceiver,
 	))
-	f.Setup("install trigger", trigger.Install(
+	f.Setup("install trigger a", trigger.Install(
 		triggerAName,
 		brokerName,
 		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
 	))
-	f.Setup("install trigger", trigger.Install(
+	f.Setup("install trigger b", trigger.Install(
 		triggerBName,
 		brokerName,
 		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
@@ -190,7 +190,7 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 	f.Assert("received event has traceparent header",
 		OnStore(sinkName).
 			Match(MatchKind(EventReceived), hasTraceparentHeader).
-			Exact(2),
+			Exact(20),
 	)
 
 	return f
