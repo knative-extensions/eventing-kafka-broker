@@ -20,6 +20,7 @@ package e2e_new
 
 import (
 	"context"
+	"knative.dev/reconciler-test/pkg/environment"
 	"sort"
 	"strconv"
 	"testing"
@@ -51,6 +52,7 @@ func TestOrderedDelivery(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.Managed(t),
 	)
 
 	env.Test(ctx, t, SinglePartitionOrderedDelivery())
