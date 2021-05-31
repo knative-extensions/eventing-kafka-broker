@@ -47,7 +47,7 @@ class CredentialsValidator {
     final var SASLMechanism = credentials.SASLMechanism();
     if (is(SecurityProtocol.SASL_PLAINTEXT, securityProtocol)) {
       if (isInvalidSASLMechanism(SASLMechanism)) {
-        return "Security protocol " + securityProtocol.name + ": invalid SASL mechanism, expected SCRAM-SHA-256 or SCRAM-SHA-512 got " + SASLMechanism;
+        return "Security protocol " + securityProtocol.name + ": invalid SASL mechanism, expected SCRAM-SHA-256, SCRAM-SHA-512 or PLAIN got " + SASLMechanism;
       }
       if (anyBlank(credentials.SASLUsername(), credentials.SASLPassword())) {
         return "Security protocol " + securityProtocol.name + ":  invalid SASL username or password";
@@ -57,7 +57,7 @@ class CredentialsValidator {
 
     if (is(SecurityProtocol.SASL_SSL, securityProtocol)) {
       if (isInvalidSASLMechanism(SASLMechanism)) {
-        return "Security protocol " + securityProtocol.name + ": invalid SASL mechanism, expected SCRAM-SHA-256 or SCRAM-SHA-512 got " + SASLMechanism;
+        return "Security protocol " + securityProtocol.name + ": invalid SASL mechanism, expected SCRAM-SHA-256, SCRAM-SHA-512 or PLAIN got " + SASLMechanism;
       }
       if (anyBlank(credentials.SASLUsername(), credentials.SASLPassword())) {
         return "Security protocol " + securityProtocol.name + ":  invalid SASL username or password";
@@ -80,7 +80,7 @@ class CredentialsValidator {
   }
 
   private static boolean isInvalidSASLMechanism(final String SASLMechanism) {
-    return !(is("SCRAM-SHA-256", SASLMechanism) || is("SCRAM-SHA-512", SASLMechanism));
+    return !(is("SCRAM-SHA-256", SASLMechanism) || is("SCRAM-SHA-512", SASLMechanism) || is("PLAIN", SASLMechanism));
   }
 
   private static boolean anyBlank(final String... stores) {

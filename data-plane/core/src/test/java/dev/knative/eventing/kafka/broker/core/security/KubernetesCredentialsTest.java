@@ -32,13 +32,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class KubernetesCredentialsTest {
 
   @Test
-  public void getKubernetesCredentialsFromSecret() {
+  public void getKubernetesCredentialsFromSecretSaslPlain() {
+    getKubernetesCredentialsFromSecret("PLAIN");
+  }
 
+  @Test
+  public void getKubernetesCredentialsFromSecretSaslScram256() {
+    getKubernetesCredentialsFromSecret("SCRAM-SHA-256");
+  }
+
+  @Test
+  public void getKubernetesCredentialsFromSecretSaslScram512() {
+    getKubernetesCredentialsFromSecret("SCRAM-SHA-512");
+  }
+
+  private static void getKubernetesCredentialsFromSecret(final String saslMechanism) {
     final var data = Map.of(
       KubernetesCredentials.CA_CERTIFICATE_KEY, "CA_CERT",
       KubernetesCredentials.USER_CERTIFICATE_KEY, "USER_CERT",
       KubernetesCredentials.USER_KEY_KEY, "USER_KEY",
-      KubernetesCredentials.SASL_MECHANISM, "SCRAM-SHA-256",
+      KubernetesCredentials.SASL_MECHANISM, saslMechanism,
       KubernetesCredentials.SECURITY_PROTOCOL, SecurityProtocol.SASL_SSL.name,
       KubernetesCredentials.USERNAME_KEY, "USERNAME",
       KubernetesCredentials.PASSWORD_KEY, "PASSWORD"
