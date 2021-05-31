@@ -20,9 +20,10 @@ package e2e_new
 
 import (
 	"fmt"
-	"knative.dev/reconciler-test/pkg/environment"
 	"testing"
 	"time"
+
+	"knative.dev/reconciler-test/pkg/environment"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"knative.dev/pkg/system"

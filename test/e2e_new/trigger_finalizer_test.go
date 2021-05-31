@@ -20,9 +20,10 @@ package e2e_new
 
 import (
 	"context"
-	"knative.dev/reconciler-test/pkg/environment"
 	"testing"
 	"time"
+
+	"knative.dev/reconciler-test/pkg/environment"
 
 	"github.com/stretchr/testify/assert"
 	triggerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"

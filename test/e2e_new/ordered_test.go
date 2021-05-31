@@ -20,11 +20,12 @@ package e2e_new
 
 import (
 	"context"
-	"knative.dev/reconciler-test/pkg/environment"
 	"sort"
 	"strconv"
 	"testing"
 	"time"
+
+	"knative.dev/reconciler-test/pkg/environment"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
