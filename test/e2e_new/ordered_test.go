@@ -29,16 +29,16 @@ import (
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/stretchr/testify/require"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/broker"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/multiple_partition_config"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/trigger"
-	"knative.dev/eventing/test/rekt/resources/svc"
+	"knative.dev/eventing/test/rekt/resources/broker"
+	"knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
+	"knative.dev/reconciler-test/resources/svc"
 
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
 )
@@ -73,7 +73,13 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 	f.Setup("install broker", broker.Install(
 		brokerName,
 		broker.WithBrokerClass(kafka.BrokerClass),
-		broker.WithConfig(single_partition_config.ConfigMapName),
+		func(templateData map[string]interface{}) {
+			cfg := make(map[string]interface{})
+			cfg["kind"] = "ConfigMap"
+			cfg["apiVersion"] = "v1"
+			cfg["name"] = single_partition_config.ConfigMapName
+			templateData["config"] = cfg
+		},
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
@@ -86,14 +92,14 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsRef(sinkName), ""),
+		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
 		trigger.WithAnnotation("kafka.eventing.knative.dev/delivery.order", "ordered"),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Setup("install source", eventshub.Install(
 		sourceName,
-		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
+		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
 		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
@@ -129,7 +135,13 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 	f.Setup("install broker", broker.Install(
 		brokerName,
 		broker.WithBrokerClass(kafka.BrokerClass),
-		broker.WithConfig(multiple_partition_config.ConfigMapName),
+		func(templateData map[string]interface{}) {
+			cfg := make(map[string]interface{})
+			cfg["kind"] = "ConfigMap"
+			cfg["apiVersion"] = "v1"
+			cfg["name"] = multiple_partition_config.ConfigMapName
+			templateData["config"] = cfg
+		},
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
@@ -142,28 +154,28 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsRef(sinkName), ""),
+		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
 		trigger.WithAnnotation("kafka.eventing.knative.dev/delivery.order", "ordered"),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Setup("install source for events keyed 'a'", eventshub.Install(
 		feature.MakeRandomK8sName("source-a"),
-		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
+		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(evA, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
 		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
 	))
 	f.Setup("install source for events keyed 'b'", eventshub.Install(
 		feature.MakeRandomK8sName("source-b"),
-		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
+		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(evB, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
 		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
 	))
 	f.Setup("install source for events keyed 'c'", eventshub.Install(
 		feature.MakeRandomK8sName("source-c"),
-		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
+		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(evC, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
 		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
