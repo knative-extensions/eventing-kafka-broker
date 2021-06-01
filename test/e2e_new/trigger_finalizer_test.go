@@ -25,8 +25,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	triggerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/trigger"
 	triggerfeatures "knative.dev/eventing/test/rekt/features/trigger"
+	"knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
