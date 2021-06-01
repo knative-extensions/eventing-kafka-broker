@@ -73,13 +73,7 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 	f.Setup("install broker", broker.Install(
 		brokerName,
 		broker.WithBrokerClass(kafka.BrokerClass),
-		func(templateData map[string]interface{}) {
-			cfg := make(map[string]interface{})
-			cfg["kind"] = "ConfigMap"
-			cfg["apiVersion"] = "v1"
-			cfg["name"] = single_partition_config.ConfigMapName
-			templateData["config"] = cfg
-		},
+		broker.WithConfig(single_partition_config.ConfigMapName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
@@ -135,13 +129,7 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 	f.Setup("install broker", broker.Install(
 		brokerName,
 		broker.WithBrokerClass(kafka.BrokerClass),
-		func(templateData map[string]interface{}) {
-			cfg := make(map[string]interface{})
-			cfg["kind"] = "ConfigMap"
-			cfg["apiVersion"] = "v1"
-			cfg["name"] = multiple_partition_config.ConfigMapName
-			templateData["config"] = cfg
-		},
+		broker.WithConfig(multiple_partition_config.ConfigMapName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
