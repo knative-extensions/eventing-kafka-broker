@@ -26,6 +26,8 @@ import (
 	"knative.dev/reconciler-test/pkg/environment"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
+	"knative.dev/eventing/test/rekt/resources/broker"
+	"knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
@@ -34,8 +36,6 @@ import (
 	"knative.dev/reconciler-test/resources/svc"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/broker"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/trigger"
 
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
 )
@@ -88,7 +88,7 @@ func TracingHeadersUsingOrderedDelivery() *feature.Feature {
 
 	f.Setup("install source", eventshub.Install(
 		sourceName,
-		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
+		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),
 		eventshub.AddTracing,
 	))
@@ -133,7 +133,7 @@ func TracingHeadersUsingUnorderedDelivery() *feature.Feature {
 
 	f.Setup("install source", eventshub.Install(
 		sourceName,
-		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
+		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),
 		eventshub.AddTracing,
 	))
@@ -184,7 +184,7 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 
 	f.Setup("install source", eventshub.Install(
 		sourceName,
-		eventshub.StartSenderToResource(broker.Gvr(), brokerName),
+		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),
 		eventshub.AddTracing,
 		eventshub.SendMultipleEvents(10, time.Millisecond*100),
