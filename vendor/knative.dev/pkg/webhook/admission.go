@@ -143,7 +143,6 @@ func admissionHandler(rootLogger *zap.SugaredLogger, stats StatsReporter, c Admi
 	}
 }
 
-// StatelessAdmissionImpl marks a reconciler as stateless.
 // Inline this type to implement StatelessAdmissionController.
 type StatelessAdmissionImpl struct{}
 

@@ -109,6 +109,10 @@ func init() {
 
 func withInformerFactory(ctx {{.contextContext|raw}}) {{.contextContext|raw}} {
 	c := {{.clientGet|raw}}(ctx)
+	opts := []{{.informersSharedInformerOption|raw}}{}
+	if {{.injectionHasNamespace|raw}}(ctx) {
+		opts = append(opts, {{.informersWithNamespace|raw}}({{.injectionGetNamespace|raw}}(ctx)))
+	}
 	untyped := ctx.Value({{.factoryLabelKey|raw}}{})
 	if untyped == nil {
 		{{.loggingFromContext|raw}}(ctx).Panic(
@@ -116,15 +120,11 @@ func withInformerFactory(ctx {{.contextContext|raw}}) {{.contextContext|raw}} {
 	}
 	labelSelectors := untyped.([]string)
 	for _, selector := range labelSelectors {
-		opts := []{{.informersSharedInformerOption|raw}}{}
-		if {{.injectionHasNamespace|raw}}(ctx) {
-			opts = append(opts, {{.informersWithNamespace|raw}}({{.injectionGetNamespace|raw}}(ctx)))
-		}		
-		opts = append(opts, {{.informersWithTweakListOptions|raw}}(func(l *{{.metav1ListOptions|raw}}) {
+		thisOpts := append(opts, {{.informersWithTweakListOptions|raw}}(func(l *{{.metav1ListOptions|raw}}) {
 			l.LabelSelector = selector
 		}))
 		ctx = context.WithValue(ctx, {{.factoryKey|raw}}{Selector: selector},
-			{{.informersNewSharedInformerFactoryWithOptions|raw}}(c, {{.controllerGetResyncPeriod|raw}}(ctx), opts...))
+			{{.informersNewSharedInformerFactoryWithOptions|raw}}(c, {{.controllerGetResyncPeriod|raw}}(ctx), thisOpts...))
 	}
 	return ctx
 }

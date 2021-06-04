@@ -22,10 +22,7 @@ import (
 )
 
 const (
-	// NamespaceEnvKey is the environment variable that specifies the system namespace.
-	NamespaceEnvKey = "SYSTEM_NAMESPACE"
-	// ResourceLabelEnvKey is the environment variable that specifies the system resource
-	// label.
+	NamespaceEnvKey     = "SYSTEM_NAMESPACE"
 	ResourceLabelEnvKey = "SYSTEM_RESOURCE_LABEL"
 )
 

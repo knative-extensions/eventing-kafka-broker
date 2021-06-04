@@ -48,9 +48,7 @@ var (
 	// - characters are printable US-ASCII
 	reconcilerTagKey = tag.MustNewKey("reconciler")
 	successTagKey    = tag.MustNewKey("success")
-
-	// NamespaceTagKey marks metrics with a namespace.
-	NamespaceTagKey = tag.MustNewKey(metricskey.LabelNamespaceName)
+	NamespaceTagKey  = tag.MustNewKey(metricskey.LabelNamespaceName)
 )
 
 func init() {

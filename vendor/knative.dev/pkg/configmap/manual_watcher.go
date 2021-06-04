@@ -44,7 +44,7 @@ func (w *ManualWatcher) Watch(name string, o ...Observer) {
 	w.observers[name] = append(w.observers[name], o...)
 }
 
-// ForEach implements Watcher
+// Watch implements Watcher
 func (w *ManualWatcher) ForEach(f func(string, []Observer) error) error {
 	for k, v := range w.observers {
 		if err := f(k, v); err != nil {

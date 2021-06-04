@@ -54,7 +54,7 @@ and tests can pass in `t.Logf` like this:
 
 ```go
 _, err = pkgTest.WaitForEndpointState(
-    kubeClient,
+    clients.KubeClient,
     t.Logf,
     ...),
 ```

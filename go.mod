@@ -26,3 +26,5 @@ require (
 	knative.dev/pkg v0.0.0-20210601111137-79f8b3fe0343
 	knative.dev/reconciler-test v0.0.0-20210528174829-f667a8f5433e
 )
+
+replace knative.dev/pkg => /home/slinkydeveloper/go/src/knative.dev/pkg

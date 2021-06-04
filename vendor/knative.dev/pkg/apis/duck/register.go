@@ -21,7 +21,6 @@ import (
 )
 
 const (
-	// GroupName is the name of the API group.
 	GroupName = ducktypes.GroupName
 
 	// AddressableDuckVersionLabel is the label we use to declare
