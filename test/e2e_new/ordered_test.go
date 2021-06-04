@@ -25,6 +25,8 @@ import (
 	"testing"
 	"time"
 
+	"knative.dev/reconciler-test/pkg/environment"
+
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/stretchr/testify/require"
@@ -51,6 +53,7 @@ func TestOrderedDelivery(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.Managed(t),
 	)
 
 	env.Test(ctx, t, SinglePartitionOrderedDelivery())

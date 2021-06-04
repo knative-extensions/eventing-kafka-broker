@@ -15,16 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
@@ -38,6 +28,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class RecordDispatcherTest {
@@ -54,8 +54,7 @@ public class RecordDispatcherTest {
       new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
-      ), receiver
-    );
+      ), receiver, null);
 
     final var record = record();
     dispatcherHandler.handle(record);
@@ -90,8 +89,7 @@ public class RecordDispatcherTest {
       ), new SinkResponseHandlerMock(
       Future::succeededFuture,
       response -> Future.succeededFuture()
-    ), receiver
-    );
+    ), receiver, null);
     final var record = record();
     dispatcherHandler.handle(record);
 
@@ -127,8 +125,7 @@ public class RecordDispatcherTest {
       ), new SinkResponseHandlerMock(
       Future::succeededFuture,
       response -> Future.succeededFuture()
-    ), receiver
-    );
+    ), receiver, null);
     final var record = record();
     dispatcherHandler.handle(record);
 
@@ -165,8 +162,7 @@ public class RecordDispatcherTest {
       ), new SinkResponseHandlerMock(
       Future::succeededFuture,
       response -> Future.succeededFuture()
-    ), receiver
-    );
+    ), receiver, null);
     final var record = record();
     dispatcherHandler.handle(record);
 
@@ -198,8 +194,7 @@ public class RecordDispatcherTest {
         Future::succeededFuture,
         response -> Future.succeededFuture()
       ),
-      receiver
-    );
+      receiver, null);
     final var record = record();
     dispatcherHandler.handle(record);
 
@@ -225,8 +220,7 @@ public class RecordDispatcherTest {
 
     final RecordDispatcher recordDispatcher = new RecordDispatcher(
       Filter.noop(), subscriberSender,
-      deadLetterSender, sinkResponseHandler, offsetManagerMock()
-    );
+      deadLetterSender, sinkResponseHandler, offsetManagerMock(), null);
 
     recordDispatcher.close()
       .onFailure(context::failNow)

@@ -80,7 +80,7 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler {
         return Future.failedFuture(new IllegalArgumentException("event cannot be null"));
       }
 
-      TracingSpan.decorateCurrent(vertx, event);
+      TracingSpan.decorateCurrentWithEvent(event);
 
       return producer
         .send(KafkaProducerRecord.create(topic, event))

@@ -19,9 +19,12 @@ import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.CompositeFuture;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import java.util.Objects;
 import java.util.function.Function;
@@ -47,6 +50,7 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
   private final Function<KafkaConsumerRecord<String, CloudEvent>, Future<Void>> dlqSender;
   private final OffsetManager offsetManager;
   private final Supplier<Future<?>> closer;
+  private final ConsumerTracer consumerTracer;
 
   /**
    * All args constructor.
@@ -56,15 +60,15 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
    * @param deadLetterQueueSender sender to DLQ
    * @param sinkResponseHandler   handler of the response from {@code subscriberSender}
    * @param offsetManager         hook receiver {@link OffsetManager}. It allows to plug in custom offset
-   *                              management depending on the success/failure during the algorithm.
+   * @param consumerTracer        consumer tracer
    */
   public RecordDispatcher(
     final Filter filter,
     final ConsumerRecordSender subscriberSender,
     final ConsumerRecordSender deadLetterQueueSender,
     final SinkResponseHandler sinkResponseHandler,
-    final OffsetManager offsetManager) {
-
+    final OffsetManager offsetManager,
+    final ConsumerTracer consumerTracer) {
     Objects.requireNonNull(filter, "provide filter");
     Objects.requireNonNull(subscriberSender, "provide subscriberSender");
     Objects.requireNonNull(deadLetterQueueSender, "provide deadLetterQueueSender");
@@ -80,6 +84,7 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
       deadLetterQueueSender.close(),
       subscriberSender.close()
     );
+    this.consumerTracer = consumerTracer;
   }
 
   /**
@@ -128,6 +133,23 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
 
   private void onRecordReceived(final KafkaConsumerRecord<String, CloudEvent> record, Promise<Void> finalProm) {
     logDebug("Handling record", record);
+
+    // Trace record received event
+    if (consumerTracer != null) {
+      Context context = Vertx.currentContext();
+      ConsumerTracer.StartedSpan span = consumerTracer.prepareMessageReceived(context, record.record());
+      if (span != null) {
+        finalProm.future()
+          .onComplete(ar -> {
+            if (ar.succeeded()) {
+              span.finish(context);
+            } else {
+              span.fail(context, ar.cause());
+            }
+          });
+      }
+    }
+
     offsetManager.recordReceived(record)
       .onSuccess(v -> {
         // Execute filtering

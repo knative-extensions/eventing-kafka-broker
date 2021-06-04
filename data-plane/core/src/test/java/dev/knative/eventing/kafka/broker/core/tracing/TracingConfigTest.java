@@ -15,18 +15,18 @@
  */
 package dev.knative.eventing.kafka.broker.core.tracing;
 
-import static java.nio.file.StandardOpenOption.APPEND;
-import static java.nio.file.StandardOpenOption.CREATE;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.Backend;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+
+import static java.nio.file.StandardOpenOption.APPEND;
+import static java.nio.file.StandardOpenOption.CREATE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 public class TracingConfigTest {
 
@@ -43,7 +43,7 @@ public class TracingConfigTest {
 
     assertThat(config.getBackend()).isEqualTo(Backend.ZIPKIN);
     assertThat(config.getSamplingRate()).isEqualTo(0.1F);
-    assertThat(config.getURL()).isEqualTo("http://localhost:9241/v2/api/spans/");
+    assertThat(config.getUrl()).isEqualTo("http://localhost:9241/v2/api/spans/");
   }
 
   @Test

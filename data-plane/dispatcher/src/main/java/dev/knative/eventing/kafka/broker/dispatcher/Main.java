@@ -21,7 +21,6 @@ import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
-import dev.knative.eventing.kafka.broker.core.tracing.OpenTelemetryVertxTracingFactory;
 import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
@@ -30,18 +29,12 @@ import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFac
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
-import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import io.vertx.core.tracing.TracingOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClientOptions;
-import net.logstash.logback.encoder.LogstashEncoder;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.ClosedWatchServiceException;
@@ -49,6 +42,11 @@ import java.nio.file.FileSystems;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import net.logstash.logback.encoder.LogstashEncoder;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -83,16 +81,14 @@ public class Main {
 
     final var env = new DispatcherEnv(System::getenv);
 
-    final SdkTracerProvider sdkTracerProvider = Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
+    final OpenTelemetrySdk openTelemetry = Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
 
     logger.info("Starting Dispatcher {}", keyValue("env", env));
 
     final var vertx = Vertx.vertx(
       new VertxOptions()
         .setMetricsOptions(Metrics.getOptions(env))
-        .setTracingOptions(new TracingOptions()
-          .setFactory(new OpenTelemetryVertxTracingFactory(sdkTracerProvider.get(Tracing.SERVICE_NAME)))
-        )
+        .setTracingOptions(new OpenTelemetryOptions(openTelemetry))
     );
 
     try {
@@ -151,7 +147,8 @@ public class Main {
       final var fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
 
       // Gracefully clean up resources.
-      Runtime.getRuntime().addShutdownHook(new Thread(Shutdown.run(vertx, fw, publisher, sdkTracerProvider)));
+      Runtime.getRuntime()
+        .addShutdownHook(new Thread(Shutdown.run(vertx, fw, publisher, openTelemetry.getSdkTracerProvider())));
 
       fw.watch(); // block forever
 

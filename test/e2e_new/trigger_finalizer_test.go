@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	"knative.dev/reconciler-test/pkg/environment"
+
 	"github.com/stretchr/testify/assert"
 	triggerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 	triggerfeatures "knative.dev/eventing/test/rekt/features/trigger"
@@ -45,6 +47,7 @@ func TestTriggerNoFinalizerOnBrokerNotFound(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.Managed(t),
 	)
 
 	t.Logf("Namespace is %s", env.Namespace())

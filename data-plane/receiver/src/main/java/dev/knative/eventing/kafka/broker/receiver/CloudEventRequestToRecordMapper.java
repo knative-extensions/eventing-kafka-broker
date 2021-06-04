@@ -20,8 +20,9 @@ import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import org.slf4j.Logger;
@@ -33,10 +34,7 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper {
 
   private static final Logger logger = LoggerFactory.getLogger(CloudEventRequestToRecordMapper.class);
 
-  private final Vertx vertx;
-
-  public CloudEventRequestToRecordMapper(final Vertx vertx) {
-    this.vertx = vertx;
+  public CloudEventRequestToRecordMapper() {
   }
 
   @Override
@@ -52,19 +50,18 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper {
         }
 
         if (logger.isDebugEnabled()) {
-          final var span = TracingSpan.getCurrent(vertx);
+          final var span = Span.fromContextOrNull(Context.current());
           if (span != null) {
-            logger.debug("received event {} {}",
+            logger.debug("Received event {} {}",
               keyValue("event", event),
-              keyValue(Tracing.TRACE_ID_KEY, span.getSpanContext().getTraceIdAsHexString())
+              keyValue(Tracing.TRACE_ID_KEY, span.getSpanContext().getTraceId())
             );
           } else {
-            logger.debug("received event {}", keyValue("event", event));
+            logger.debug("Received event {}", keyValue("event", event));
           }
         }
 
-        TracingSpan.decorateCurrent(vertx, event);
-
+        TracingSpan.decorateCurrentWithEvent(event);
         return KafkaProducerRecord.create(topic, event);
       });
   }

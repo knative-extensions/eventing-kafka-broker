@@ -40,17 +40,14 @@ import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.common.KafkaClientOptions;
+import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,6 +59,10 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -167,7 +168,13 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
           egressSubscriberSender,
           egressDeadLetterSender,
           new HttpSinkResponseHandler(vertx, resource.getTopics(0), producer),
-          getOffsetManager(deliveryOrder, consumer, eventsSentCounter::increment)
+          getOffsetManager(deliveryOrder, consumer, eventsSentCounter::increment),
+          ConsumerTracer.create(
+            ((VertxInternal) vertx).tracer(),
+            new KafkaClientOptions()
+              .setConfig(consumerConfigs)
+              .setTracingPolicy(TracingPolicy.PROPAGATE)
+          )
         );
 
         // Set all the built objects in the consumer verticle
@@ -193,7 +200,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
       vertx,
       new KafkaClientOptions()
         .setConfig(consumerConfigs)
-        .setTracingPolicy(TracingPolicy.PROPAGATE)
+        .setTracingPolicy(TracingPolicy.IGNORE)
     );
   }
 
@@ -228,9 +235,13 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
         )
         // TODO max failures should be configurable or, at least, set by the control plane
         .setMaxFailures(egressConfig.getRetry() * 2)
-        .setMaxRetries(egressConfig.getRetry());
+        .setMaxRetries(egressConfig.getRetry())
+        // This disables circuit breaker notifications on the event bus
+        .setNotificationAddress(null);
     }
-    return new CircuitBreakerOptions();
+    return new CircuitBreakerOptions()
+      // This disables circuit breaker notifications on the event bus
+      .setNotificationAddress(null);
   }
 
   /* package visibility for test */

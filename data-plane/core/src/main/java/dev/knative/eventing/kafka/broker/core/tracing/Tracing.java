@@ -16,9 +16,14 @@
 package dev.knative.eventing.kafka.broker.core.tracing;
 
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.Backend;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.OpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
@@ -26,7 +31,6 @@ import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,10 +38,12 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public class Tracing {
 
+  private static final AttributeKey<String> SERVICE_NAME_KEY = AttributeKey.stringKey("service.name");
+  private static final AttributeKey<String> SERVICE_NAMESPACE_KEY = AttributeKey.stringKey("service.namespace");
+
   public final static String SERVICE_NAME;
   public final static String SERVICE_NAMESPACE;
   public final static String TRACE_ID_KEY = "traceId";
-
   private static final String DEFAULT_SERVICE_NAME = "Knative";
 
   static {
@@ -47,46 +53,64 @@ public class Tracing {
 
   private static final Logger logger = LoggerFactory.getLogger(Tracing.class);
 
-  public static SdkTracerProvider setup(final TracingConfig tracingConfig) {
+  public static OpenTelemetrySdk setup(final TracingConfig tracingConfig) {
     logger.info(
       "Registering tracing configurations {} {} {} {}",
       keyValue("backend", tracingConfig.getBackend()),
       keyValue("sampleRate", tracingConfig.getSamplingRate()),
-      keyValue("URL", tracingConfig.getURL()),
+      keyValue("url", tracingConfig.getUrl()),
       keyValue("loggingDebugEnabled", logger.isDebugEnabled())
     );
 
     SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
 
     tracerProviderBuilder.setResource(
-      Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, SERVICE_NAME))
+      Resource.create(Attributes.of(
+        SERVICE_NAME_KEY, SERVICE_NAME,
+        SERVICE_NAMESPACE_KEY, SERVICE_NAMESPACE
+      ))
     );
     tracerProviderBuilder.setSampler(
-      Sampler.traceIdRatioBased(tracingConfig.getSamplingRate())
+      Sampler.parentBased(Sampler.traceIdRatioBased(tracingConfig.getSamplingRate()))
     );
 
-    if (tracingConfig.getBackend().equals(Backend.ZIPKIN)) {
-      logger.debug("Add Zipkin processor");
-      tracerProviderBuilder.addSpanProcessor(
-        BatchSpanProcessor
-          .builder(zipkinExporter(tracingConfig))
-          .build()
-      );
-
-    } else if (logger.isDebugEnabled()) {
-      logger.debug("Add Logging processor");
+    if (logger.isDebugEnabled()) {
+      logger.debug("Add logging processor");
       tracerProviderBuilder.addSpanProcessor(
         SimpleSpanProcessor.create(new LoggingSpanExporter())
       );
     }
+    if (tracingConfig.getBackend().equals(Backend.ZIPKIN)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Add Zipkin simple processor");
+        tracerProviderBuilder.addSpanProcessor(
+          SimpleSpanProcessor.create(zipkinExporter(tracingConfig))
+        );
+      } else {
+        logger.debug("Add Zipkin batch processor");
+        tracerProviderBuilder.addSpanProcessor(
+          BatchSpanProcessor
+            .builder(zipkinExporter(tracingConfig))
+            .build()
+        );
+      }
+    }
 
-    return tracerProviderBuilder.build();
+    OpenTelemetrySdkBuilder sdkBuilder = OpenTelemetrySdk.builder();
+    sdkBuilder.setTracerProvider(
+      tracerProviderBuilder.build()
+    );
+    sdkBuilder.setPropagators(ContextPropagators.create(
+      W3CTraceContextPropagator.getInstance()
+    ));
+
+    return sdkBuilder.buildAndRegisterGlobal();
   }
 
   private static SpanExporter zipkinExporter(TracingConfig tracingConfig) {
     return ZipkinSpanExporter
       .builder()
-      .setEndpoint(tracingConfig.getURL())
+      .setEndpoint(tracingConfig.getUrl())
       .build();
   }
 
