@@ -238,6 +238,11 @@
           </exclusion>
         </exclusions>
       </dependency>
+      <dependency>
+        <groupId>io.cloudevents</groupId>
+        <artifactId>cloudevents-sql</artifactId>
+        <version>${cloudevents.sdk.version}</version>
+      </dependency>
 
       <!-- Protobuf -->
       <dependency>
