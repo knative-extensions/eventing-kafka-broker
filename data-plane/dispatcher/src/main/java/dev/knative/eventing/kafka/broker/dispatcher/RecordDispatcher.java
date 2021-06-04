@@ -135,6 +135,7 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
     logDebug("Handling record", record);
 
     // Trace record received event
+    // This needs to be done manually in order to work properly with both ordered and unordered delivery.
     if (consumerTracer != null) {
       Context context = Vertx.currentContext();
       ConsumerTracer.StartedSpan span = consumerTracer.prepareMessageReceived(context, record.record());
