@@ -173,6 +173,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
             ((VertxInternal) vertx).tracer(),
             new KafkaClientOptions()
               .setConfig(consumerConfigs)
+              // Make sure the policy is propagate for the manually instantiated consumer tracer
               .setTracingPolicy(TracingPolicy.PROPAGATE)
           )
         );
@@ -200,6 +201,8 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
       vertx,
       new KafkaClientOptions()
         .setConfig(consumerConfigs)
+        // Disable tracing provided by vertx-kafka-client, because it doesn't work well with our dispatch logic.
+        // RecordDispatcher, when receiving a new record, takes care of adding the proper receive record span.
         .setTracingPolicy(TracingPolicy.IGNORE)
     );
   }
