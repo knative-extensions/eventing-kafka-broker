@@ -21,7 +21,6 @@ import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
-import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
@@ -79,7 +78,7 @@ public class Main {
   public static void main(final String[] args) throws IOException {
     final var env = new ReceiverEnv(System::getenv);
 
-    final OpenTelemetrySdk openTelemetry = Tracing.setup(TracingConfig.fromDir(env.getConfigTracingPath()));
+    final OpenTelemetrySdk openTelemetry = TracingConfig.fromDir(env.getConfigTracingPath()).setup();
 
     // HACK HACK HACK
     // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the

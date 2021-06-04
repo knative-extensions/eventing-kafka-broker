@@ -15,7 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import dev.knative.eventing.kafka.broker.core.tracing.Tracing;
+import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
@@ -54,7 +54,7 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper {
           if (span != null) {
             logger.debug("Received event {} {}",
               keyValue("event", event),
-              keyValue(Tracing.TRACE_ID_KEY, span.getSpanContext().getTraceId())
+              keyValue(TracingConfig.TRACE_ID_KEY, span.getSpanContext().getTraceId())
             );
           } else {
             logger.debug("Received event {}", keyValue("event", event));
