@@ -21,7 +21,7 @@ public class SqlFilter implements Filter {
   @Override
   public boolean test(CloudEvent cloudEvent) {
     try {
-      Object value = this.expression.evaluate(this.runtime, cloudEvent);
+      Object value = this.expression.tryEvaluate(this.runtime, cloudEvent);
       return (Boolean) this.runtime.cast(null /* TODO https://github.com/cloudevents/sdk-java/pull/396 */, value, Type.BOOLEAN);
     } catch (EvaluationException evaluationException) {
       return false;
