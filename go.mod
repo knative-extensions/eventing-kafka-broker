@@ -13,7 +13,7 @@ require (
 	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.7.0
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
-	go.uber.org/zap v1.16.0
+	go.uber.org/zap v1.17.0
 	google.golang.org/protobuf v1.26.0
 	k8s.io/api v0.19.7
 	k8s.io/apiextensions-apiserver v0.19.7
@@ -21,8 +21,8 @@ require (
 	k8s.io/apiserver v0.19.7
 	k8s.io/client-go v0.19.7
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009
-	knative.dev/eventing v0.23.1-0.20210601121637-49420f430b37
-	knative.dev/hack v0.0.0-20210428122153-93ad9129c268
-	knative.dev/pkg v0.0.0-20210601111137-79f8b3fe0343
-	knative.dev/reconciler-test v0.0.0-20210528174829-f667a8f5433e
+	knative.dev/eventing v0.23.1-0.20210604160145-ab3978c3656d
+	knative.dev/hack v0.0.0-20210601210329-de04b70e00d0
+	knative.dev/pkg v0.0.0-20210602095030-0e61d6763dd6
+	knative.dev/reconciler-test v0.0.0-20210603210445-0071c48281c7
 )
