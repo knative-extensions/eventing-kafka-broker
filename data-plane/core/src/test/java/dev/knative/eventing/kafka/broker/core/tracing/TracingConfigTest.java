@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
@@ -100,6 +101,11 @@ public class TracingConfigTest {
     write(dir, "/zipkin-endpoint", "  /v2/api/spans/     ");
 
     assertDoesNotThrow(() -> TracingConfig.fromDir(dir.toAbsolutePath().toString()));
+  }
+
+  @Test
+  public void setupShouldNotFailWhenBackendIsUnknown() {
+    assertThatNoException().isThrownBy(() -> new TracingConfig(Backend.UNKNOWN, null, 0F).setup());
   }
 
   private static void write(final Path root, final String name, final String s) throws IOException {
