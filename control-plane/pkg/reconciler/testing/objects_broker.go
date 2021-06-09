@@ -42,6 +42,8 @@ const (
 	BrokerUUID      = "e7185016-5d98-4b54-84e8-3b1cd4acc6b4"
 	BrokerNamespace = "test-namespace"
 	BrokerName      = "test-broker"
+
+	ReceiverIP = "127.0.0.1"
 )
 
 func BrokerTopic() string {
@@ -199,6 +201,20 @@ func BrokerConfigNotParsed(reason string) func(broker *eventing.Broker) {
 	}
 }
 
+func BrokerProbeSucceeded(broker *eventing.Broker) {
+	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionProbeSucceeded)
+}
+
+func BrokerProbeFailed(statusCode int) func(broker *eventing.Broker) {
+	return func(broker *eventing.Broker) {
+		broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
+			base.ConditionProbeSucceeded,
+			base.ReasonProbeFailed,
+			fmt.Sprintf("probe failed response status code %d from pod knative-eventing/kafka-broker-receiver with ip %s", statusCode, ReceiverIP),
+		)
+	}
+}
+
 func BrokerAddressable(configs *Configs) func(broker *eventing.Broker) {
 
 	return func(broker *eventing.Broker) {
@@ -276,6 +292,7 @@ func BrokerReceiverPod(namespace string, annotations map[string]string) runtime.
 		},
 		Status: corev1.PodStatus{
 			Phase: corev1.PodRunning,
+			PodIP: ReceiverIP,
 		},
 	}
 }

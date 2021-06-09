@@ -18,6 +18,7 @@ package base_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+	testinghttp "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing/http"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
@@ -276,6 +278,58 @@ func TestOnDeleteObserver(t *testing.T) {
 
 }
 
+func TestProbeReceivers(t *testing.T) {
+
+	ctx, _ := reconcilertesting.SetupFakeContext(t)
+
+	addRunningPod(podinformer.Get(ctx).Informer().GetStore(), kubeclient.Get(ctx), base.BrokerReceiverLabel)
+
+	r := &base.Reconciler{
+		RequestProbeDoer: testinghttp.Do(http.StatusOK),
+		PodLister:        podinformer.Get(ctx).Lister(),
+		ReceiverLabel:    base.BrokerReceiverLabel,
+	}
+
+	assert.Nil(t, r.ProbeReceivers("/hello/hello"))
+}
+
+func TestProbeReceiversFailure(t *testing.T) {
+	t.Parallel()
+
+	ctx, _ := reconcilertesting.SetupFakeContext(t)
+
+	addRunningPod(podinformer.Get(ctx).Informer().GetStore(), kubeclient.Get(ctx), base.BrokerReceiverLabel)
+
+	tt := []struct {
+		name       string
+		statusCode int
+		path       string
+	}{
+		{
+			name:       "unexpected status code",
+			path:       "/hello/hello",
+			statusCode: http.StatusInternalServerError,
+		},
+		{
+			name:       "unexpected request path",
+			path:       "/hello", // 1 '/' fails the request
+			statusCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			r := &base.Reconciler{
+				RequestProbeDoer: testinghttp.Do(tc.statusCode),
+				PodLister:        podinformer.Get(ctx).Lister(),
+				ReceiverLabel:    base.BrokerReceiverLabel,
+			}
+
+			assert.NotNil(t, r.ProbeReceivers(tc.path))
+		})
+	}
+}
+
 func addRunningPod(store cache.Store, kc kubernetes.Interface, label string) {
 	pod := &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{},
@@ -284,7 +338,10 @@ func addRunningPod(store cache.Store, kc kubernetes.Interface, label string) {
 			Namespace: "ns",
 			Labels:    map[string]string{"app": label},
 		},
-		Status: corev1.PodStatus{Phase: corev1.PodRunning},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodRunning,
+			PodIP: "10.0.1.4",
+		},
 	}
 
 	if err := store.Add(pod); err != nil {

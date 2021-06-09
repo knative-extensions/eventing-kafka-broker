@@ -19,6 +19,7 @@ package sink
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -53,6 +54,8 @@ type Reconciler struct {
 	ClusterAdmin kafka.NewClusterAdminFunc
 
 	Configs *config.Env
+
+	EnqueueAfter func(ks *eventing.KafkaSink, duration time.Duration)
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *eventing.KafkaSink) reconciler.Event {
@@ -191,6 +194,16 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		}
 
 		logger.Debug("Updated receiver pod annotation")
+	}
+
+	ingress := sinkConfig.Ingress.IngressType.(*contract.Ingress_Path)
+	if err := r.ProbeReceivers(ingress.Path); err != nil {
+		statusConditionManager.ProbeFailed(err)
+		// When a probe fails, we don't return an error but we requeue our sink so that we can probe it again later.
+		r.EnqueueAfter(ks, time.Duration(r.Configs.ProbeFailureRequeueDelayMs)*time.Millisecond)
+		return nil
+	} else {
+		statusConditionManager.ProbeSucceeded()
 	}
 
 	return statusConditionManager.Reconciled()

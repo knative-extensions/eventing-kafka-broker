@@ -37,6 +37,7 @@ const (
 	ConditionTopicReady         apis.ConditionType = "TopicReady"
 	ConditionConfigMapUpdated   apis.ConditionType = "ConfigMapUpdated"
 	ConditionConfigParsed       apis.ConditionType = "ConfigParsed"
+	ConditionProbeSucceeded     apis.ConditionType = "ProbeSucceeded"
 )
 
 var ConditionSet = apis.NewLivingConditionSet(
@@ -45,6 +46,7 @@ var ConditionSet = apis.NewLivingConditionSet(
 	ConditionTopicReady,
 	ConditionConfigMapUpdated,
 	ConditionConfigParsed,
+	ConditionProbeSucceeded,
 )
 
 const (
@@ -54,6 +56,8 @@ const (
 	MessageDataPlaneNotAvailable = "Did you install the data plane for this component?"
 
 	ReasonTopicNotPresent = "Topic is not present"
+
+	ReasonProbeFailed = "A probe request failed"
 )
 
 type Object interface {
@@ -241,4 +245,16 @@ func (manager *StatusConditionManager) TopicNotPresentOrInvalid() error {
 
 	return fmt.Errorf("topic is not present: check topic configuration")
 
+}
+
+func (manager *StatusConditionManager) ProbeFailed(err error) {
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
+		ConditionProbeSucceeded,
+		ReasonProbeFailed,
+		err.Error(),
+	)
+}
+
+func (manager *StatusConditionManager) ProbeSucceeded() {
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrue(ConditionProbeSucceeded)
 }

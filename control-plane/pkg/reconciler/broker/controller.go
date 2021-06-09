@@ -20,6 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -71,6 +73,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			SystemNamespace:             configs.SystemNamespace,
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
+			RequestProbeDoer:            http.DefaultClient.Do,
 		},
 		ClusterAdmin: sarama.NewClusterAdmin,
 		KafkaDefaultTopicDetails: sarama.TopicDetail{
@@ -96,6 +99,10 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass)
+
+	reconciler.EnqueueAfter = func(broker *eventing.Broker, duration time.Duration) {
+		impl.EnqueueAfter(broker, duration)
+	}
 
 	reconciler.Resolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 

@@ -18,6 +18,8 @@ package sink
 
 import (
 	"context"
+	"net/http"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -57,6 +59,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
 			SystemNamespace:             configs.SystemNamespace,
 			ReceiverLabel:               base.SinkReceiverLabel,
+			RequestProbeDoer:            http.DefaultClient.Do,
 		},
 		ConfigMapLister: configmapInformer.Lister(),
 		ClusterAdmin:    sarama.NewClusterAdmin,
@@ -72,6 +75,10 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 	}
 
 	impl := sinkreconciler.NewImpl(ctx, reconciler)
+
+	reconciler.EnqueueAfter = func(ks *eventing.KafkaSink, duration time.Duration) {
+		impl.EnqueueAfter(ks, duration)
+	}
 
 	sinkInformer := sinkinformer.Get(ctx)
 

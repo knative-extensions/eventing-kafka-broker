@@ -15,16 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
@@ -33,6 +23,7 @@ import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
@@ -45,6 +36,10 @@ import io.vertx.kafka.client.producer.RecordMetadata;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+import org.apache.kafka.clients.producer.MockProducer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -53,9 +48,19 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-import org.apache.kafka.clients.producer.MockProducer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.InstanceOfAssertFactories.map;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class RequestMapperTest {
@@ -443,6 +448,64 @@ public class RequestMapperTest {
     }
   }
 
+  @Test
+  public void shouldRespondWithStatusOkOnProbeRequestAndProducerFound() throws InterruptedException {
+    shouldHandleKnativeNetworkingDataPlaneContract(OK.code());
+  }
+
+  @Test
+  public void shouldRespondWithStatusNotFoundOnProbeRequestAndProducerNotFound() throws InterruptedException {
+    shouldHandleKnativeNetworkingDataPlaneContract(NOT_FOUND.code());
+  }
+
+  private void shouldHandleKnativeNetworkingDataPlaneContract(int statusCode) throws InterruptedException {
+
+    final KafkaProducer<String, CloudEvent> producer = mockProducer();
+
+    final var resource = DataPlaneContract.Resource.newBuilder()
+      .setUid("1")
+      .setUid("1-1234")
+      .addTopics("1-12345")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello"))
+      .build();
+
+    final HttpServerRequest request = mockHttpServerRequest(resource, new HeadersMultiMap()
+      .set(RequestMapper.PROBE_HEADER_NAME, "probe")
+      .set(RequestMapper.HASH_HEADER_NAME, "hash")
+    );
+    final var response = mockResponse(request, statusCode);
+    if (statusCode == 200) {
+      when(request.response().putHeader(anyString(), anyString())).thenReturn(response);
+    }
+
+    final var handler = new RequestMapper(
+      mock(Vertx.class),
+      null,
+      new Properties(),
+      mock(RequestToRecordMapper.class),
+      properties -> producer,
+      mock(Counter.class),
+      mock(Counter.class)
+    );
+    final var reconciler = ResourcesReconcilerImpl.builder()
+      .watchIngress(handler)
+      .build();
+
+    final var countDown = new CountDownLatch(1);
+
+    if (statusCode == 200) {
+      reconciler.reconcile(List.of(resource))
+        .onFailure(cause -> fail())
+        .onSuccess(v -> countDown.countDown());
+    }
+
+    countDown.await(TIMEOUT, TimeUnit.SECONDS);
+
+    handler.handle(request);
+
+    verifySetStatusCodeAndTerminateResponse(statusCode, response);
+  }
+
   @SuppressWarnings("unchecked")
   private static KafkaProducer<String, CloudEvent> mockProducer() {
     KafkaProducer<String, CloudEvent> producer = mock(KafkaProducer.class);
@@ -453,18 +516,21 @@ public class RequestMapperTest {
   }
 
   private static HttpServerRequest mockHttpServerRequest(Resource resource) {
+    return mockHttpServerRequest(resource, new HeadersMultiMap());
+  }
+
+  private static HttpServerRequest mockHttpServerRequest(Resource resource, MultiMap headers) {
     final var request = mock(HttpServerRequest.class);
     when(request.path()).thenReturn(resource.getIngress().getPath());
     when(request.method()).thenReturn(new HttpMethod("POST"));
     when(request.host()).thenReturn("127.0.0.1");
     when(request.scheme()).thenReturn("http");
-    when(request.headers()).thenReturn(new HeadersMultiMap());
+    when(request.headers()).thenReturn(headers);
     return request;
   }
 
-  private static HttpServerResponse mockResponse(
-    final HttpServerRequest request,
-    final int statusCode) {
+  private static HttpServerResponse mockResponse(final HttpServerRequest request,
+                                                 final int statusCode) {
     final var response = mock(HttpServerResponse.class);
     when(response.setStatusCode(statusCode)).thenReturn(response);
     when(request.response()).thenReturn(response);

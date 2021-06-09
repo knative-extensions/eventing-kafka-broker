@@ -145,6 +145,20 @@ func SinkConfigParsed(sink *eventing.KafkaSink) {
 	sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrue(base.ConditionConfigParsed)
 }
 
+func SinkProbeSucceeded(sink *eventing.KafkaSink) {
+	sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrue(base.ConditionProbeSucceeded)
+}
+
+func SinkProbeFailed(statusCode int) func(ks *eventing.KafkaSink) {
+	return func(ks *eventing.KafkaSink) {
+		ks.GetConditionSet().Manage(ks.GetStatus()).MarkFalse(
+			base.ConditionProbeSucceeded,
+			base.ReasonProbeFailed,
+			fmt.Sprintf("probe failed response status code %d from pod knative-eventing/kafka-broker-receiver with ip %s", statusCode, ReceiverIP),
+		)
+	}
+}
+
 func SinkTopicNotPresentErr(topic string, err error) func(sink *eventing.KafkaSink) {
 	return func(sink *eventing.KafkaSink) {
 		sink.GetConditionSet().Manage(sink.GetStatus()).MarkFalse(
@@ -252,6 +266,7 @@ func SinkReceiverPod(namespace string, annotations map[string]string) runtime.Ob
 		},
 		Status: corev1.PodStatus{
 			Phase: corev1.PodRunning,
+			PodIP: ReceiverIP,
 		},
 	}
 }

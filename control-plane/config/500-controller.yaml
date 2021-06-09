@@ -97,6 +97,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: BROKER_PROBE_FAILURE_REQUEUE_DELAY_MS
+              value: "50"
+            - name: SINK_PROBE_FAILURE_REQUEUE_DELAY_MS
+              value: "50"
           ports:
             - containerPort: 9090
               name: metrics

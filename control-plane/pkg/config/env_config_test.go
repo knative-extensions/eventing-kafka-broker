@@ -43,6 +43,7 @@ func TestGetEnvConfig(t *testing.T) {
 				IngressName:                 "kafka-broker-ingress",
 				SystemNamespace:             "knative-eventing",
 				DataPlaneConfigFormat:       "json",
+				ProbeFailureRequeueDelayMs:  50,
 			},
 			setEnv: func() {
 				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE", "knative-eventing")
@@ -64,6 +65,7 @@ func TestGetEnvConfig(t *testing.T) {
 				IngressName:                 "kafka-sink-ingress",
 				SystemNamespace:             "knative-eventing",
 				DataPlaneConfigFormat:       "json",
+				ProbeFailureRequeueDelayMs:  50,
 			},
 			setEnv: func() {
 				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_MAP_NAMESPACE", "knative-eventing")

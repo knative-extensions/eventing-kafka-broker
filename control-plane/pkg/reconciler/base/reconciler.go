@@ -19,6 +19,7 @@ package base
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -30,6 +31,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
+	"knative.dev/pkg/network"
 	"knative.dev/pkg/tracker"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -55,6 +57,10 @@ const (
 
 	Protobuf = "protobuf"
 	Json     = "json"
+
+	ReceiverPort = "8080"
+
+	ProbeProtocol = "http"
 )
 
 // Base reconciler for broker and trigger reconciler.
@@ -74,6 +80,8 @@ type Reconciler struct {
 
 	DispatcherLabel string
 	ReceiverLabel   string
+
+	RequestProbeDoer func(r *http.Request) (*http.Response, error)
 }
 
 func (r *Reconciler) IsReceiverRunning() bool {
@@ -301,4 +309,48 @@ func (r *Reconciler) OnDeleteObserver(obj interface{}) {
 	if r.SecretTracker != nil {
 		r.SecretTracker.OnDeletedObserver(obj)
 	}
+}
+
+func (r *Reconciler) ProbeReceivers(path string) error {
+	namespace := r.SystemNamespace
+
+	pods, err := r.PodLister.Pods(namespace).List(r.receiverSelector())
+	if err != nil {
+		return fmt.Errorf("failed to list pods for probing: %w", err)
+	}
+
+	if len(pods) == 0 {
+		return fmt.Errorf("no receiver pods were found in namespace %s with selector %v", namespace, r.receiverSelector())
+	}
+
+	for _, p := range pods {
+		if podIP := p.Status.PodIP; podIP != "" {
+			if err := r.probeReceiver(p.Namespace, p.Name, podIP, ReceiverPort, path); err != nil {
+				return err // probeReceiver already decorates err.
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r *Reconciler) probeReceiver(namespace, name, ip, port, path string) error {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s://%s:%s%s", ProbeProtocol, ip, port, path), nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Add(network.ProbeHeaderName, "probe")
+	req.Header.Add(network.HashHeaderName, "hash")
+
+	response, err := r.RequestProbeDoer(req)
+	if err != nil {
+		return fmt.Errorf("failed to probe pod %s/%s with ip %s: %w", namespace, name, ip, err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("probe failed response status code %d from pod %s/%s with ip %s", response.StatusCode, namespace, name, ip)
+	}
+
+	return nil
 }

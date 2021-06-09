@@ -154,7 +154,11 @@ function apply_sacura() {
   ko apply -f ./test/config/sacura/100-broker-config.yaml || return $?
   ko apply -f ./test/config/sacura/101-broker.yaml || return $?
 
-  kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || return $?
+  kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || {
+    local failed=$?
+    kubectl describe broker -n sacura broker
+    return $failed
+  }
 
   ko apply -f ./test/config/sacura || return $?
 }

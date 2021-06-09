@@ -20,9 +20,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"testing"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"time"
 
 	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
@@ -36,15 +36,17 @@ import (
 	. "knative.dev/pkg/reconciler/testing"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing"
-	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
+	testinghttp "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing/http"
 )
 
 const (
@@ -59,6 +61,7 @@ const (
 	ExpectedTopicsOnDescribeTopics = "expectedTopicsOnDescribeTopics"
 	ExpectedTopicIsPresent         = "expectedTopicIsPresent"
 	ExpectedErrorOnDescribeTopics  = "expectedErrorOnDescribeTopics"
+	wantErrorOnProbeReceivers      = "wantErrorOnProbeReceivers"
 
 	TopicPrefix = "knative-sink-"
 )
@@ -137,6 +140,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
+						SinkProbeSucceeded,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
@@ -200,6 +204,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
+						SinkProbeSucceeded,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
@@ -265,6 +270,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
+						SinkProbeSucceeded,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
@@ -373,6 +379,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
+						SinkProbeSucceeded,
 						BootstrapServers([]string{"kafka-broker:10000"}),
 						SinkTopicReadyWithOwner("my-topic-1", sink.ControllerTopicOwner),
 						SinkConfigMapUpdatedReady(&configs.Env),
@@ -472,6 +479,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
+						SinkProbeSucceeded,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
@@ -521,6 +529,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
+						SinkProbeSucceeded,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
@@ -593,6 +602,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
+						SinkProbeSucceeded,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
@@ -663,6 +673,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
+						SinkProbeSucceeded,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
@@ -743,6 +754,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						InitSinkConditions,
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
+						SinkProbeSucceeded,
 						BootstrapServers(bootstrapServersArr),
 						SinkConfigMapUpdatedReady(&configs.Env),
 						SinkTopicReady,
@@ -750,6 +762,63 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						SinkAddressable(&configs.Env),
 					),
 				},
+			},
+		},
+		{
+			Name: "Reconciled failed - probe receivers failed",
+			Objects: []runtime.Object{
+				NewSink(
+					SinkControllerOwnsTopic,
+					BootstrapServers(bootstrapServersArr),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
+							Topics:  []string{"my-existing-topic-a"},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
+						},
+						{
+							Uid:    "5384faa4-6bdf-428d-b6c2-d6f89ce1d44a",
+							Topics: []string{"my-existing-topic-b"},
+						},
+						{
+							Uid:              SinkUUID,
+							Topics:           []string{SinkTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+				}, &configs),
+				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						SinkControllerOwnsTopic,
+						InitSinkConditions,
+						SinkDataPlaneAvailable,
+						SinkConfigParsed,
+						SinkProbeFailed(http.StatusBadGateway),
+						BootstrapServers(bootstrapServersArr),
+						SinkConfigMapUpdatedReady(&configs.Env),
+						SinkTopicReady,
+						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				wantErrorOnProbeReceivers: http.StatusBadGateway,
 			},
 		},
 	}
@@ -1020,6 +1089,11 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 			errorOnDescribeTopics = isPresentError.(error)
 		}
 
+		probeResponseStatusCode := http.StatusOK
+		if s, ok := row.OtherTestData[wantErrorOnProbeReceivers]; ok {
+			probeResponseStatusCode = s.(int)
+		}
+
 		reconciler := &sink.Reconciler{
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
@@ -1030,6 +1104,7 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
 				SystemNamespace:             configs.SystemNamespace,
 				ReceiverLabel:               base.SinkReceiverLabel,
+				RequestProbeDoer:            testinghttp.Do(probeResponseStatusCode),
 			},
 			ConfigMapLister: listers.GetConfigMapLister(),
 			ClusterAdmin: func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
@@ -1046,6 +1121,8 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 			},
 			Configs: &configs.Env,
 		}
+
+		reconciler.EnqueueAfter = func(ks *v1alpha1.KafkaSink, duration time.Duration) {}
 
 		reconciler.SecretTracker = &FakeTracker{}
 

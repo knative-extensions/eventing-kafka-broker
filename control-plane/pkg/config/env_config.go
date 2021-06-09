@@ -30,6 +30,7 @@ type Env struct {
 	SystemNamespace             string `required:"true" split_words:"true"`
 	DataPlaneConfigFormat       string `required:"true" split_words:"true"`
 	DefaultBackoffDelayMs       uint64 `required:"false" split_words:"true"`
+	ProbeFailureRequeueDelayMs  int64  `required:"false" split_words:"true" default:"50"`
 }
 
 // ValidationOption represents a function to validate the Env configurations.

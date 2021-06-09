@@ -32,19 +32,21 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
 
 /**
@@ -57,6 +59,9 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
   public static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
   public static final int RECORD_PRODUCED = ACCEPTED.code();
   public static final int RESOURCE_NOT_FOUND = NOT_FOUND.code();
+
+  public static final String PROBE_HEADER_NAME = "K-Network-Probe";
+  public static final String HASH_HEADER_NAME = "K-Network-Hash";
 
   private static final Logger logger = LoggerFactory.getLogger(RequestMapper.class);
 
@@ -107,6 +112,19 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
 
   @Override
   public void handle(final HttpServerRequest request) {
+    // This implements the knative/networking data-plane contract.
+    if (request.headers().contains(PROBE_HEADER_NAME) && request.headers().contains(HASH_HEADER_NAME)) {
+      if (pathMapper.containsKey(request.path())) {
+        request.response()
+          .putHeader(HASH_HEADER_NAME, request.headers().get(HASH_HEADER_NAME))
+          .setStatusCode(OK.code())
+          .end();
+        return;
+      }
+      request.response().setStatusCode(RESOURCE_NOT_FOUND).end();
+      return;
+    }
+
     final var ingressInfo = pathMapper.get(request.path());
     if (ingressInfo == null) {
       request.response().setStatusCode(RESOURCE_NOT_FOUND).end();

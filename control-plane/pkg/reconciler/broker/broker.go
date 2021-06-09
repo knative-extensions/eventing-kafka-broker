@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -70,6 +71,8 @@ type Reconciler struct {
 	ClusterAdmin kafka.NewClusterAdminFunc
 
 	Configs *Configs
+
+	EnqueueAfter func(broker *eventing.Broker, duration time.Duration)
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -208,6 +211,17 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		} else {
 			logger.Debug("Updated dispatcher pod annotation")
 		}
+	}
+
+	// To make sure that our receivers have got at least the first broker configuration, we probe our receivers pods
+	ingress := brokerResource.Ingress.IngressType.(*contract.Ingress_Path)
+	if err := r.ProbeReceivers(ingress.Path); err != nil {
+		statusConditionManager.ProbeFailed(err)
+		// When a probe fails, we don't return an error but we requeue our broker so that we can probe it again later.
+		r.EnqueueAfter(broker, time.Duration(r.Configs.ProbeFailureRequeueDelayMs)*time.Millisecond)
+		return nil
+	} else {
+		statusConditionManager.ProbeSucceeded()
 	}
 
 	return statusConditionManager.Reconciled()

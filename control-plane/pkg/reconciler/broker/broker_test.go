@@ -19,14 +19,11 @@ package broker_test // different package name due to import cycles. (broker -> t
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"sync"
 	"testing"
 	"time"
-
-	"k8s.io/utils/pointer"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
@@ -35,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
+	"k8s.io/utils/pointer"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/apis"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
@@ -49,18 +47,21 @@ import (
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
+	tesingthttp "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing/http"
 )
 
 const (
-	wantErrorOnCreateTopic = "wantErrorOnCreateTopic"
-	wantErrorOnDeleteTopic = "wantErrorOnDeleteTopic"
-	ExpectedTopicDetail    = "expectedTopicDetail"
+	wantErrorOnCreateTopic    = "wantErrorOnCreateTopic"
+	wantErrorOnDeleteTopic    = "wantErrorOnDeleteTopic"
+	ExpectedTopicDetail       = "expectedTopicDetail"
+	wantErrorOnProbeReceivers = "wantErrorOnProbeReceivers"
 )
 
 const (
@@ -151,6 +152,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerDataPlaneAvailable,
 						BrokerConfigParsed,
 						BrokerTopicReady,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -208,6 +210,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerDataPlaneAvailable,
 						BrokerTopicReady,
 						BrokerConfigParsed,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -308,6 +311,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerDataPlaneAvailable,
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerTopicReady,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -361,6 +365,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerConfigParsed,
 						BrokerTopicReady,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -441,6 +446,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerConfigParsed,
 						BrokerTopicReady,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -536,6 +542,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerDataPlaneAvailable,
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerConfigParsed,
+						BrokerProbeSucceeded,
 						BrokerTopicReady,
 						BrokerAddressable(&configs),
 					),
@@ -620,6 +627,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerConfigParsed,
 						BrokerTopicReady,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -696,6 +704,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerConfigParsed,
 						BrokerTopicReady,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -864,6 +873,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerDataPlaneAvailable,
 						BrokerConfigParsed,
 						BrokerTopicReady,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -944,6 +954,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerDataPlaneAvailable,
 						BrokerConfigParsed,
 						BrokerTopicReady,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -1155,6 +1166,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerConfigMapUpdatedReady(&configs),
 						BrokerConfigParsed,
 						BrokerTopicReady,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -1246,6 +1258,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerDataPlaneAvailable,
 						BrokerTopicReady,
 						BrokerConfigParsed,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -1310,6 +1323,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerDataPlaneAvailable,
 						BrokerTopicReady,
 						BrokerConfigParsed,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -1371,6 +1385,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerDataPlaneAvailable,
 						BrokerTopicReady,
 						BrokerConfigParsed,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -1435,6 +1450,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerDataPlaneAvailable,
 						BrokerTopicReady,
 						BrokerConfigParsed,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
@@ -1482,12 +1498,61 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						BrokerDataPlaneAvailable,
 						BrokerTopicReady,
 						BrokerConfigParsed,
+						BrokerProbeSucceeded,
 						BrokerAddressable(&configs),
 					),
 				},
 			},
 			OtherTestData: map[string]interface{}{
 				BootstrapServersConfigMapKey: bootstrapServers,
+			},
+		},
+		{
+			Name: "Reconciled failed - probe receivers failed",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithDelivery(),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							BootstrapServers: bootstrapServers,
+							EgressConfig:     &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
+						},
+					},
+					Generation: 1,
+				}, &configs),
+				NewService(),
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithDelivery(),
+						reconcilertesting.WithInitBrokerConditions,
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerDataPlaneAvailable,
+						BrokerTopicReady,
+						BrokerConfigParsed,
+						BrokerProbeFailed(http.StatusInternalServerError),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+				wantErrorOnProbeReceivers:    http.StatusInternalServerError,
 			},
 		},
 	}
@@ -1728,8 +1793,6 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 
 func useTable(t *testing.T, table TableTest, configs *Configs) {
 
-	testCtx, cancel := context.WithCancel(context.Background())
-
 	table.Test(t, NewFactory(configs, func(ctx context.Context, listers *Listers, configs *Configs, row *TableRow) controller.Reconciler {
 
 		defaultTopicDetail := sarama.TopicDetail{
@@ -1757,6 +1820,11 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 			expectedTopicDetail = td.(sarama.TopicDetail)
 		}
 
+		probeResponseStatusCode := http.StatusOK
+		if s, ok := row.OtherTestData[wantErrorOnProbeReceivers]; ok {
+			probeResponseStatusCode = s.(int)
+		}
+
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
@@ -1768,6 +1836,7 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 				SystemNamespace:             configs.SystemNamespace,
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,
+				RequestProbeDoer:            tesingthttp.Do(probeResponseStatusCode),
 			},
 			KafkaDefaultTopicDetails:     defaultTopicDetail,
 			KafkaDefaultTopicDetailsLock: sync.RWMutex{},
@@ -1787,6 +1856,7 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 
 		reconciler.ConfigMapTracker = &FakeTracker{}
 		reconciler.SecretTracker = &FakeTracker{}
+		reconciler.EnqueueAfter = func(broker *eventing.Broker, duration time.Duration) {}
 
 		r := brokerreconciler.NewReconciler(
 			ctx,
@@ -1807,7 +1877,7 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 
 			for {
 				select {
-				case <-testCtx.Done():
+				case <-ctx.Done():
 					return
 				case <-ticker.C:
 					reconciler.SetDefaultTopicDetails(defaultTopicDetail)
@@ -1817,8 +1887,6 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 
 		return r
 	}))
-
-	cancel()
 }
 
 func TestConfigMapUpdate(t *testing.T) {
