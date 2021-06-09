@@ -78,10 +78,9 @@ public final class TracingConfig {
 
   public OpenTelemetrySdk setup() {
     logger.info(
-      "Registering tracing configurations {} {} {} {}",
+      "Registering tracing configurations {} {} {}",
       keyValue("backend", getBackend()),
       keyValue("sampleRate", getSamplingRate()),
-      keyValue("url", getUrl()),
       keyValue("loggingDebugEnabled", logger.isDebugEnabled())
     );
 
