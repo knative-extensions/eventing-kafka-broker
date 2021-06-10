@@ -36,7 +36,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/log"
+	kafkabrokerlogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
@@ -79,8 +79,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 }
 
 func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
-
-	logger := log.Logger(ctx, "reconcile", broker)
+	logger := kafkabrokerlogging.CreateReconcileMethodLogger(ctx, broker)
 
 	statusConditionManager := base.StatusConditionManager{
 		Object:     broker,
@@ -148,7 +147,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger.Debug(
 		"Got contract data from config map",
-		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(ct)),
+		zap.Any(base.ContractLogKey, ct),
 	)
 
 	// Get resource configuration.
@@ -221,8 +220,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 }
 
 func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
-
-	logger := log.Logger(ctx, "finalize", broker)
+	logger := kafkabrokerlogging.CreateFinalizeMethodLogger(ctx, broker)
 
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
@@ -240,7 +238,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 	logger.Debug(
 		"Got contract data from config map",
-		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(ct)),
+		zap.Any(base.ContractLogKey, ct),
 	)
 
 	brokerIndex := coreconfig.FindResource(ct, broker.UID)

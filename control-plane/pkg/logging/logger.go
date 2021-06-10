@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package log
+package logging
 
 import (
 	"context"
@@ -24,16 +24,16 @@ import (
 	"knative.dev/pkg/logging"
 )
 
-func Logger(ctx context.Context, action string, object metav1.Object) *zap.Logger {
-
+func CreateReconcileMethodLogger(ctx context.Context, object metav1.Object) *zap.Logger {
 	return logging.FromContext(ctx).Desugar().With(
-		zap.String(
-			"action",
-			action,
-		),
-		zap.String(
-			"uuid",
-			string(object.GetUID()),
-		),
+		zap.String("action", "reconcile"),
+		zap.String("uuid", string(object.GetUID())),
+	)
+}
+
+func CreateFinalizeMethodLogger(ctx context.Context, object metav1.Object) *zap.Logger {
+	return logging.FromContext(ctx).Desugar().With(
+		zap.String("action", "finalize"),
+		zap.String("uuid", string(object.GetUID())),
 	)
 }
