@@ -19,6 +19,7 @@ package base
 import (
 	"context"
 	"fmt"
+
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
