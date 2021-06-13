@@ -20,19 +20,25 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
-import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.tracing.TracingPolicy;
-import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
+import net.logstash.logback.encoder.LogstashEncoder;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.ClosedWatchServiceException;
@@ -40,12 +46,7 @@ import java.nio.file.FileSystems;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
-import net.logstash.logback.encoder.LogstashEncoder;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.function.Supplier;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -110,34 +111,19 @@ public class Main {
       producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
       producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
-      final Function<Vertx, RequestMapper> handlerFactory = v -> new RequestMapper(
-        v,
-        AuthProvider.kubernetes(),
-        producerConfigs,
-        new CloudEventRequestToRecordMapper(),
-        properties -> KafkaProducer.create(v, properties),
-        badRequestCounter,
-        produceEventsCounter
-      );
-
       final var httpServerOptions = new HttpServerOptions(
         Configurations.getPropertiesAsJson(env.getHttpServerConfigFilePath())
       );
       httpServerOptions.setPort(env.getIngressPort());
       httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
-      final var verticle = new ReceiverVerticle(
-        httpServerOptions,
-        handlerFactory,
-        h -> new SimpleProbeHandlerDecorator(
-          env.getLivenessProbePath(),
-          env.getReadinessProbePath(),
-          h
-        )
-      );
+      final Supplier<Verticle> verticle = new ReceiverVerticleSupplier(env, producerConfigs, badRequestCounter, produceEventsCounter, httpServerOptions);
+
+      final var deploymentOptions = new DeploymentOptions()
+        .setInstances(Runtime.getRuntime().availableProcessors());
 
       final var waitVerticle = new CountDownLatch(1);
-      vertx.deployVerticle(verticle)
+      vertx.deployVerticle(verticle, deploymentOptions)
         .onSuccess(v -> {
           logger.info("Receiver started");
           waitVerticle.countDown();
