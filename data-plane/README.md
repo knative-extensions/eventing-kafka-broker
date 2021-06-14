@@ -17,7 +17,7 @@ Once a request comes, it sends the event in the body to the topic `knative-broke
 ## Dispatcher
 
 The dispatcher starts a file watcher, which watches changes to a mounted ConfigMap. Such ConfigMap contains
-configurations of Brokers and Triggers in the cluster. (see [proto/def/contract.proto](../proto/def/contract.proto))
+configurations of Brokers and Triggers in the cluster. (see [proto/contract.proto](../proto/contract.proto))
 
 For each Trigger it creates a Kafka consumer with `group.id=<trigger_id>`, which is then wrapped in a Vert.x verticle.
 
