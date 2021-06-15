@@ -19,6 +19,7 @@ package base
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -29,7 +30,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"k8s.io/client-go/util/retry"
 	"knative.dev/pkg/tracker"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -196,31 +196,19 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *con
 }
 
 func (r *Reconciler) UpdateDispatcherPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
-
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-
-		labelSelector := r.dispatcherSelector()
-		pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)
-		if errors != nil {
-			return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
-		}
-
-		return r.updatePodsAnnotation(ctx, logger, "dispatcher", volumeGeneration, pods)
-	})
+	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(r.dispatcherSelector())
+	if errors != nil {
+		return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
+	}
+	return r.updatePodsAnnotation(ctx, logger, "dispatcher", volumeGeneration, pods)
 }
 
 func (r *Reconciler) UpdateReceiverPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
-
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-
-		labelSelector := r.receiverSelector()
-		pods, errors := r.PodLister.Pods(r.SystemNamespace).List(labelSelector)
-		if errors != nil {
-			return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
-		}
-
-		return r.updatePodsAnnotation(ctx, logger, "receiver", volumeGeneration, pods)
-	})
+	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(r.receiverSelector())
+	if errors != nil {
+		return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
+	}
+	return r.updatePodsAnnotation(ctx, logger, "receiver", volumeGeneration, pods)
 }
 
 func (r *Reconciler) updatePodsAnnotation(ctx context.Context, logger *zap.Logger, component string, volumeGeneration uint64, pods []*corev1.Pod) error {
@@ -241,6 +229,15 @@ func (r *Reconciler) updatePodsAnnotation(ctx context.Context, logger *zap.Logge
 		annotations := pod.GetAnnotations()
 		if annotations == nil {
 			annotations = make(map[string]string, 1)
+		}
+
+		// Check whether pod's annotation is the expected one.
+		if v, ok := annotations[VolumeGenerationAnnotationKey]; ok {
+			v, err := strconv.ParseUint(v /* base */, 10 /* bitSize */, 64)
+			if err == nil && v == volumeGeneration {
+				// Volume generation already matches the expected volume generation number.
+				continue
+			}
 		}
 
 		annotations[VolumeGenerationAnnotationKey] = fmt.Sprint(volumeGeneration)
