@@ -50,6 +50,7 @@ import java.net.URI;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -258,16 +259,28 @@ public class DataPlaneTest {
   }
 
   @AfterAll
-  public static void teardown(final Vertx vertx) {
+  public static void teardown(final Vertx vertx) throws ExecutionException, InterruptedException {
 
-    // TODO figure out why shutdown times out Vertx context even with timeout increased.
-    // kafkaCluster.shutdown();
+    vertx.undeploy(consumerDeployerVerticle.deploymentID())
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get();
 
-    vertx.undeploy(consumerDeployerVerticle.deploymentID());
-    vertx.undeploy(receiverVerticle.deploymentID());
+    vertx.undeploy(receiverVerticle.deploymentID())
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get();
 
-    if (!dataDir.delete()) {
-      dataDir.deleteOnExit();
+    teardownKafkaCluster();
+  }
+
+  private static void teardownKafkaCluster() {
+    if (kafkaCluster != null) {
+      kafkaCluster.shutdown();
+      kafkaCluster = null;
+      if (!dataDir.delete()) {
+        dataDir.deleteOnExit();
+      }
     }
   }
 
