@@ -117,7 +117,7 @@ public class Main {
       httpServerOptions.setPort(env.getIngressPort());
       httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
-      final Supplier<Verticle> verticle = new ReceiverVerticleSupplier(env, producerConfigs, badRequestCounter, produceEventsCounter, httpServerOptions);
+      final Supplier<Verticle> verticle = new ReceiverVerticleFactory(env, producerConfigs, badRequestCounter, produceEventsCounter, httpServerOptions);
 
       final var deploymentOptions = new DeploymentOptions()
         .setInstances(Runtime.getRuntime().availableProcessors());

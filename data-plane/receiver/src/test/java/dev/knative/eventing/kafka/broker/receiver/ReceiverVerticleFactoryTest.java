@@ -25,11 +25,11 @@ import java.util.Properties;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-public class ReceiverVerticleSupplierTest {
+public class ReceiverVerticleFactoryTest {
 
   @Test
   public void shouldCreateMultipleReceiverVerticleInstances() {
-    final var supplier = new ReceiverVerticleSupplier(
+    final var supplier = new ReceiverVerticleFactory(
       mock(ReceiverEnv.class),
       mock(Properties.class),
       mock(Counter.class),

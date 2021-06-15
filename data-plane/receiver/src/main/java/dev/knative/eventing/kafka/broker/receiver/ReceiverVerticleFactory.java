@@ -25,7 +25,7 @@ import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-class ReceiverVerticleSupplier implements Supplier<Verticle> {
+class ReceiverVerticleFactory implements Supplier<Verticle> {
 
   private final ReceiverEnv env;
   private final Properties producerConfigs;
@@ -33,11 +33,11 @@ class ReceiverVerticleSupplier implements Supplier<Verticle> {
   private final Counter produceEventsCounter;
   private final HttpServerOptions httpServerOptions;
 
-  ReceiverVerticleSupplier(final ReceiverEnv env,
-                           final Properties producerConfigs,
-                           final Counter badRequestCounter,
-                           final Counter produceEventsCounter,
-                           final HttpServerOptions httpServerOptions) {
+  ReceiverVerticleFactory(final ReceiverEnv env,
+                          final Properties producerConfigs,
+                          final Counter badRequestCounter,
+                          final Counter produceEventsCounter,
+                          final HttpServerOptions httpServerOptions) {
 
     this.env = env;
     this.producerConfigs = producerConfigs;
