@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+set -e
+
 # Set runtime variables
 # echo 1 > /proc/sys/kernel/perf_event_paranoid
 # echo 0 > /proc/sys/kernel/kptr_restrict
@@ -40,6 +42,9 @@ PROJECT_ROOT_DIR=$(dirname $0)/..
 RESOURCES_DIR="$(dirname $0)"/resources
 ASYNC_PROFILER_URL="https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.0/async-profiler-2.0-linux-x64.tar.gz"
 KAFKA_URL="https://archive.apache.org/dist/kafka/2.6.0/kafka_2.13-2.6.0.tgz"
+LOG_DIR=${LOG_DIR:-"/tmp/eventing-kafka-broker-logs/profiler"}
+
+rm -rf "${LOG_DIR}" && mkdir -p "${LOG_DIR}"
 
 echo "Project root dir: ${PROJECT_ROOT_DIR}"
 echo "Resource dir: ${RESOURCES_DIR}"
@@ -50,28 +55,26 @@ echo "Kafka URL: ${KAFKA_URL}"
 cd "${PROJECT_ROOT_DIR}" && ./mvnw package -DskipTests -Dlicense.skip -Deditorconfig.skip -B -U --no-transfer-progress && cd - || exit 1
 
 # Download async profiler.
-rm async-profiler
-rm async-profiler.tgz
+rm -rf async-profiler
+rm -rf async-profiler.tgz
 mkdir async-profiler
 wget -O - ${ASYNC_PROFILER_URL} >async-profiler.tgz
 tar xzvf async-profiler.tgz -C async-profiler --strip-components=1
 
 # Download Apache Kafka.
-rm kafka
-rm kafka.tgz
-rm -r /tmp/kafka-logs/
-rm -r /tmp/zookeeper/
+rm -rf kafka
+rm -rf kafka.tgz
+rm -rf /tmp/kafka-logs/
+rm -rf /tmp/zookeeper/
 mkdir kafka
 wget -O - ${KAFKA_URL} >kafka.tgz
 tar xzvf kafka.tgz -C kafka --strip-components=1
 
-ls -al
-
 # Start Zookeeper and Kafka.
 cd kafka || exit 1
-./bin/zookeeper-server-start.sh config/zookeeper.properties &
+./bin/zookeeper-server-start.sh config/zookeeper.properties >"${LOG_DIR}/zookeeper.log" &
 zookeeper_pid=$!
-./bin/kafka-server-start.sh config/server.properties &
+./bin/kafka-server-start.sh config/server.properties >"${LOG_DIR}/kafka.log" &
 kafka_pid=$!
 
 # Create our Kafka topic.
@@ -106,7 +109,7 @@ java \
   -XX:+UnlockDiagnosticVMOptions \
   -XX:+DebugNonSafepoints \
   -Dlogback.configurationFile="${RESOURCES_DIR}"/config-logging.xml \
-  -jar "${PROJECT_ROOT_DIR}"/receiver/target/receiver-1.0-SNAPSHOT.jar &
+  -jar "${PROJECT_ROOT_DIR}"/receiver/target/receiver-1.0-SNAPSHOT.jar >"${LOG_DIR}/receiver.log" &
 receiver_pid=$!
 
 # Define expected env variables.
@@ -121,7 +124,7 @@ java \
   -XX:+UnlockDiagnosticVMOptions \
   -XX:+DebugNonSafepoints \
   -Dlogback.configurationFile="${RESOURCES_DIR}"/config-logging.xml \
-  -jar "${PROJECT_ROOT_DIR}"/dispatcher/target/dispatcher-1.0-SNAPSHOT.jar &
+  -jar "${PROJECT_ROOT_DIR}"/dispatcher/target/dispatcher-1.0-SNAPSHOT.jar >"${LOG_DIR}/dispatcher.log" &
 dispatcher_pid=$!
 
 # Download Sacura
@@ -155,6 +158,6 @@ kill $dispatcher_pid
 kill -9 $kafka_pid
 kill -9 $zookeeper_pid
 
-rm -r kafka kafka.tgz async-profiler async-profiler.tgz
+rm -rf kafka kafka.tgz async-profiler async-profiler.tgz
 
 exit 0
