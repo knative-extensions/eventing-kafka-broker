@@ -255,7 +255,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
 	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
-	// to anyway update remaining annotations with the contract generation that was saved in the CM.
+	// to update anyway remaining annotations with the contract generation that was saved in the CM.
 	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
 	// Update volume generation annotation of receiver pods
