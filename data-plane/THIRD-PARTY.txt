@@ -125,7 +125,7 @@ Lists of 153 third-party dependencies.
      (Apache License, Version 2.0) Apache ZooKeeper - Server (org.apache.zookeeper:zookeeper:3.5.8 - http://zookeeper.apache.org/zookeeper)
      (Apache License, Version 2.0) Apache ZooKeeper - Jute (org.apache.zookeeper:zookeeper-jute:3.5.8 - http://zookeeper.apache.org/zookeeper-jute)
      (The Apache License, Version 2.0) org.apiguardian:apiguardian-api (org.apiguardian:apiguardian-api:1.1.0 - https://github.com/apiguardian-team/apiguardian)
-     (Apache License, Version 2.0) AssertJ fluent assertions (org.assertj:assertj-core:3.20.0 - https://assertj.github.io/doc/assertj-core/)
+     (Apache License, Version 2.0) AssertJ fluent assertions (org.assertj:assertj-core:3.20.1 - https://assertj.github.io/doc/assertj-core/)
      (Apache 2.0) Awaitility (org.awaitility:awaitility:4.1.0 - http://awaitility.org)
      (GNU General Public License, version 2 (GPL2), with the classpath exception) (The MIT License) Checker Qual (org.checkerframework:checker-compat-qual:2.5.5 - https://checkerframework.org)
      (BSD Licence 3) Hamcrest (org.hamcrest:hamcrest:2.1 - http://hamcrest.org/JavaHamcrest/)
