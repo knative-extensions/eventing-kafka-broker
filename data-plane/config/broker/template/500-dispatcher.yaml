@@ -36,7 +36,6 @@ spec:
       serviceAccountName: knative-kafka-data-plane
       securityContext:
         runAsNonRoot: true
-        runAsUser: 65532
       containers:
         - name: kafka-broker-dispatcher
           image: ${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}
