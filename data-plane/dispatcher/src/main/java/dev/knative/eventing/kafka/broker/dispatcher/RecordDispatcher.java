@@ -57,7 +57,7 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
    *
    * @param filter                event filter
    * @param subscriberSender      sender to trigger subscriber
-   * @param deadLetterSinkSender sender to dead letter sink
+   * @param deadLetterSinkSender  sender to dead letter sink
    * @param sinkResponseHandler   handler of the response from {@code subscriberSender}
    * @param offsetManager         hook receiver {@link OffsetManager}. It allows to plug in custom offset
    * @param consumerTracer        consumer tracer
