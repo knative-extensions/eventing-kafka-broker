@@ -221,7 +221,7 @@ public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void failedToSendToDLS() {
+  public void failedToSendToDeadLetterSink() {
     final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
     final Counter eventsSentCounter = mock(Counter.class);
 
