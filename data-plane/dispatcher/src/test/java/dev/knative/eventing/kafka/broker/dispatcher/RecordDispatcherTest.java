@@ -43,14 +43,14 @@ import static org.mockito.Mockito.when;
 public class RecordDispatcherTest {
 
   @Test
-  public void shouldNotSendToSubscriberNorToDLQIfValueDoesntMatch() {
+  public void shouldNotSendToSubscriberNorToDLSIfValueDoesntMatch() {
 
     final OffsetManager receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcher(
       value -> false,
       ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
-      ConsumerRecordSender.create(Future.failedFuture("DLQ send called"), Future.succeededFuture()),
+      ConsumerRecordSender.create(Future.failedFuture("DLS send called"), Future.succeededFuture()),
       new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
@@ -62,8 +62,8 @@ public class RecordDispatcherTest {
     verify(receiver, times(1)).recordReceived(record);
     verify(receiver, times(1)).recordDiscarded(record);
     verify(receiver, never()).successfullySentToSubscriber(any());
-    verify(receiver, never()).successfullySentToDLQ(any());
-    verify(receiver, never()).failedToSendToDLQ(any(), any());
+    verify(receiver, never()).successfullySentToDeadLetterSink(any());
+    verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
   }
 
   @Test
@@ -83,7 +83,7 @@ public class RecordDispatcherTest {
       new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
-          fail("DLQ send called");
+          fail("DLS send called");
           return Future.succeededFuture();
         }
       ), new SinkResponseHandlerMock(
@@ -96,16 +96,16 @@ public class RecordDispatcherTest {
     assertTrue(sendCalled.get());
     verify(receiver, times(1)).recordReceived(record);
     verify(receiver, times(1)).successfullySentToSubscriber(record);
-    verify(receiver, never()).successfullySentToDLQ(any());
-    verify(receiver, never()).failedToSendToDLQ(any(), any());
+    verify(receiver, never()).successfullySentToDeadLetterSink(any());
+    verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
     verify(receiver, never()).recordDiscarded(any());
   }
 
   @Test
-  public void shouldSendToDLQIfValueMatchesAndSubscriberSenderFails() {
+  public void shouldSendToDLSIfValueMatchesAndSubscriberSenderFails() {
 
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
-    final var DLQSenderSendCalled = new AtomicBoolean(false);
+    final var dlsSenderSendCalled = new AtomicBoolean(false);
     final OffsetManager receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcher(
@@ -119,7 +119,7 @@ public class RecordDispatcherTest {
       new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
-          DLQSenderSendCalled.set(true);
+          dlsSenderSendCalled.set(true);
           return Future.succeededFuture();
         }
       ), new SinkResponseHandlerMock(
@@ -130,19 +130,19 @@ public class RecordDispatcherTest {
     dispatcherHandler.handle(record);
 
     assertTrue(subscriberSenderSendCalled.get());
-    assertTrue(DLQSenderSendCalled.get());
+    assertTrue(dlsSenderSendCalled.get());
     verify(receiver, times(1)).recordReceived(record);
-    verify(receiver, times(1)).successfullySentToDLQ(record);
+    verify(receiver, times(1)).successfullySentToDeadLetterSink(record);
     verify(receiver, never()).successfullySentToSubscriber(any());
-    verify(receiver, never()).failedToSendToDLQ(any(), any());
+    verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
     verify(receiver, never()).recordDiscarded(any());
   }
 
   @Test
-  public void shouldCallFailedToSendToDLQIfValueMatchesAndSubscriberAndDLQSenderFail() {
+  public void shouldCallFailedToSendToDLSIfValueMatchesAndSubscriberAndDLSSenderFail() {
 
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
-    final var DLQSenderSendCalled = new AtomicBoolean(false);
+    final var dlsSenderSendCalled = new AtomicBoolean(false);
     final OffsetManager receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcher(
@@ -156,7 +156,7 @@ public class RecordDispatcherTest {
       new ConsumerRecordSenderMock(
         Future::succeededFuture,
         record -> {
-          DLQSenderSendCalled.set(true);
+          dlsSenderSendCalled.set(true);
           return Future.failedFuture("");
         }
       ), new SinkResponseHandlerMock(
@@ -167,16 +167,16 @@ public class RecordDispatcherTest {
     dispatcherHandler.handle(record);
 
     assertTrue(subscriberSenderSendCalled.get());
-    assertTrue(DLQSenderSendCalled.get());
+    assertTrue(dlsSenderSendCalled.get());
     verify(receiver, times(1)).recordReceived(record);
-    verify(receiver, times(1)).failedToSendToDLQ(eq(record), any());
-    verify(receiver, never()).successfullySentToDLQ(any());
+    verify(receiver, times(1)).failedToSendToDeadLetterSink(eq(record), any());
+    verify(receiver, never()).successfullySentToDeadLetterSink(any());
     verify(receiver, never()).successfullySentToSubscriber(any());
     verify(receiver, never()).recordDiscarded(any());
   }
 
   @Test
-  public void shouldCallFailedToSendToDLQIfValueMatchesAndSubscriberSenderFailsAndNoDLQSender() {
+  public void shouldCallFailedToSendToDLSIfValueMatchesAndSubscriberSenderFailsAndNoDLSSender() {
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
     final OffsetManager receiver = offsetManagerMock();
 
@@ -189,7 +189,7 @@ public class RecordDispatcherTest {
           return Future.failedFuture("");
         }
       ),
-      ConsumerRecordSender.create(Future.failedFuture("No DLQ configured"), Future.succeededFuture()),
+      ConsumerRecordSender.create(Future.failedFuture("No DLS configured"), Future.succeededFuture()),
       new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
@@ -200,8 +200,8 @@ public class RecordDispatcherTest {
 
     assertTrue(subscriberSenderSendCalled.get());
     verify(receiver, times(1)).recordReceived(record);
-    verify(receiver, times(1)).failedToSendToDLQ(eq(record), any());
-    verify(receiver, never()).successfullySentToDLQ(any());
+    verify(receiver, times(1)).failedToSendToDeadLetterSink(eq(record), any());
+    verify(receiver, never()).successfullySentToDeadLetterSink(any());
     verify(receiver, never()).successfullySentToSubscriber(any());
     verify(receiver, never()).recordDiscarded(any());
   }
@@ -241,9 +241,9 @@ public class RecordDispatcherTest {
 
     when(offsetManager.recordReceived(any())).thenReturn(Future.succeededFuture());
     when(offsetManager.recordDiscarded(any())).thenReturn(Future.succeededFuture());
-    when(offsetManager.successfullySentToDLQ(any())).thenReturn(Future.succeededFuture());
+    when(offsetManager.successfullySentToDeadLetterSink(any())).thenReturn(Future.succeededFuture());
     when(offsetManager.successfullySentToSubscriber(any())).thenReturn(Future.succeededFuture());
-    when(offsetManager.failedToSendToDLQ(any(), any())).thenReturn(Future.succeededFuture());
+    when(offsetManager.failedToSendToDeadLetterSink(any(), any())).thenReturn(Future.succeededFuture());
 
     return offsetManager;
   }

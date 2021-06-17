@@ -58,7 +58,7 @@ public abstract class AbstractConsumerVerticleTest {
     final var recordDispatcher = new RecordDispatcher(
       value -> false,
       ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
-      ConsumerRecordSender.create(Future.failedFuture("DLQ send called"), Future.succeededFuture()),
+      ConsumerRecordSender.create(Future.failedFuture("dead letter sink send called"), Future.succeededFuture()),
       new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
@@ -97,7 +97,7 @@ public abstract class AbstractConsumerVerticleTest {
     final var recordDispatcher = new RecordDispatcher(
       value -> false,
       ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
-      ConsumerRecordSender.create(Future.failedFuture("DLQ send called"), Future.succeededFuture()),
+      ConsumerRecordSender.create(Future.failedFuture("dead letter sink send called"), Future.succeededFuture()),
       new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()

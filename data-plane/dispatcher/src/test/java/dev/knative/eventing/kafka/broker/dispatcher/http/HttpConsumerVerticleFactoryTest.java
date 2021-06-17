@@ -97,7 +97,7 @@ public class HttpConsumerVerticleFactoryTest {
   }
 
   @Test
-  public void shouldNotThrowIllegalArgumentExceptionIfNotDLQ() {
+  public void shouldNotThrowIllegalArgumentExceptionIfNotDLS() {
 
     final var consumerProperties = new Properties();
     consumerProperties.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");

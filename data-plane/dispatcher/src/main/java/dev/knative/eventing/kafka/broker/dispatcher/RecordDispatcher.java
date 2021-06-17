@@ -47,7 +47,7 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
 
   private final Filter filter;
   private final Function<KafkaConsumerRecord<String, CloudEvent>, Future<Void>> subscriberSender;
-  private final Function<KafkaConsumerRecord<String, CloudEvent>, Future<Void>> dlqSender;
+  private final Function<KafkaConsumerRecord<String, CloudEvent>, Future<Void>> dlsSender;
   private final OffsetManager offsetManager;
   private final Supplier<Future<?>> closer;
   private final ConsumerTracer consumerTracer;
@@ -57,7 +57,7 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
    *
    * @param filter                event filter
    * @param subscriberSender      sender to trigger subscriber
-   * @param deadLetterQueueSender sender to DLQ
+   * @param deadLetterSinkSender sender to dead letter sink
    * @param sinkResponseHandler   handler of the response from {@code subscriberSender}
    * @param offsetManager         hook receiver {@link OffsetManager}. It allows to plug in custom offset
    * @param consumerTracer        consumer tracer
@@ -65,23 +65,23 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
   public RecordDispatcher(
     final Filter filter,
     final ConsumerRecordSender subscriberSender,
-    final ConsumerRecordSender deadLetterQueueSender,
+    final ConsumerRecordSender deadLetterSinkSender,
     final SinkResponseHandler sinkResponseHandler,
     final OffsetManager offsetManager,
     final ConsumerTracer consumerTracer) {
     Objects.requireNonNull(filter, "provide filter");
     Objects.requireNonNull(subscriberSender, "provide subscriberSender");
-    Objects.requireNonNull(deadLetterQueueSender, "provide deadLetterQueueSender");
+    Objects.requireNonNull(deadLetterSinkSender, "provide deadLetterSinkSender");
     Objects.requireNonNull(offsetManager, "provide offsetStrategy");
     Objects.requireNonNull(sinkResponseHandler, "provide sinkResponseHandler");
 
     this.filter = filter;
     this.subscriberSender = composeSenderAndSinkHandler(subscriberSender, sinkResponseHandler, "subscriber");
-    this.dlqSender = composeSenderAndSinkHandler(deadLetterQueueSender, sinkResponseHandler, "dead letter queue");
+    this.dlsSender = composeSenderAndSinkHandler(deadLetterSinkSender, sinkResponseHandler, "dead letter sink");
     this.offsetManager = offsetManager;
     this.closer = () -> CompositeFuture.all(
       sinkResponseHandler.close(),
-      deadLetterQueueSender.close(),
+      deadLetterSinkSender.close(),
       subscriberSender.close()
     );
     this.consumerTracer = consumerTracer;
@@ -108,12 +108,12 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
       |       |             |                  |
       |       v             |                  |             +-------------+
       |    +--+---------+   |           +------v-------+     |             |
-      |    |            |   |           |  subscriber  +---->+  dlq        |
+      |    |            |   |           |  subscriber  +---->+  dls        |
       |    | filter not |   +---------->+  failure     |     |  success    +---->end
       |    | matching   |               +----+---------+     |             |
       |    |            |                    |               +-----+-------+
       |    +---+--------+              +-----v-------+             |
-      |        |                       | dlq failure |             v
+      |        |                       | dls failure |             v
       |        |                       +-------------+----------> end
       +->end<--+
      */
@@ -186,21 +186,21 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
 
   private void onSubscriberFailure(final KafkaConsumerRecord<String, CloudEvent> record,
                                    final Promise<Void> finalProm) {
-    dlqSender.apply(record)
-      .onSuccess(v -> onDLQSuccess(record, finalProm))
-      .onFailure(ex -> onDLQFailure(record, ex, finalProm));
+    dlsSender.apply(record)
+      .onSuccess(v -> onDLSSuccess(record, finalProm))
+      .onFailure(ex -> onDLSFailure(record, ex, finalProm));
   }
 
-  private void onDLQSuccess(final KafkaConsumerRecord<String, CloudEvent> record, final Promise<Void> finalProm) {
-    logDebug("Successfully sent event to the dlq", record);
-    offsetManager.successfullySentToDLQ(record)
+  private void onDLSSuccess(final KafkaConsumerRecord<String, CloudEvent> record, final Promise<Void> finalProm) {
+    logDebug("Successfully sent event to the dead letter sink", record);
+    offsetManager.successfullySentToDeadLetterSink(record)
       .onComplete(finalProm);
   }
 
 
-  private void onDLQFailure(final KafkaConsumerRecord<String, CloudEvent> record, final Throwable exception,
+  private void onDLSFailure(final KafkaConsumerRecord<String, CloudEvent> record, final Throwable exception,
                             final Promise<Void> finalProm) {
-    offsetManager.failedToSendToDLQ(record, exception)
+    offsetManager.failedToSendToDeadLetterSink(record, exception)
       .onComplete(finalProm);
   }
 

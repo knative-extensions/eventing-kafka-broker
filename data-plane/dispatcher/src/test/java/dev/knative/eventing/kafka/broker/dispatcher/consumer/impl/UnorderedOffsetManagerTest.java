@@ -164,11 +164,11 @@ public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
   }
 
   @Test
-  public void shouldCommitSuccessfullyOnSuccessfullySentToDLQ() {
+  public void shouldCommitSuccessfullyOnSuccessfullySentToDLS() {
     assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
       var rec = record("aaa", 0, 0);
       offsetStrategy.recordReceived(rec);
-      offsetStrategy.successfullySentToDLQ(rec);
+      offsetStrategy.successfullySentToDeadLetterSink(rec);
     })
       .containsEntry(new TopicPartition("aaa", 0), 1L);
   }
@@ -185,11 +185,11 @@ public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
   }
 
   @Test
-  public void shouldCommitSuccessfullyWithRecordFailedToDLQInTheMiddle() {
+  public void shouldCommitSuccessfullyWithRecordFailedToDLSInTheMiddle() {
     assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
       var rec = record("aaa", 0, 0);
       offsetStrategy.recordReceived(rec);
-      offsetStrategy.failedToSendToDLQ(rec, new IllegalStateException());
+      offsetStrategy.failedToSendToDeadLetterSink(rec, new IllegalStateException());
       offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 1));
     })
       .containsEntry(new TopicPartition("aaa", 0), 2L);
@@ -221,14 +221,14 @@ public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void failedToSendToDLQ() {
+  public void failedToSendToDLS() {
     final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
     final Counter eventsSentCounter = mock(Counter.class);
 
     UnorderedOffsetManager strategy =
       new UnorderedOffsetManager(consumer, eventsSentCounter::increment);
     strategy.recordReceived(record("aaa", 0, 0));
-    strategy.failedToSendToDLQ(record("aaa", 0, 0), null);
+    strategy.failedToSendToDeadLetterSink(record("aaa", 0, 0), null);
 
     shouldNeverCommit(consumer);
     shouldNeverPause(consumer);

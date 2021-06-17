@@ -70,8 +70,8 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpConsumerVerticleFactory.class);
 
-  private final static ConsumerRecordSender NO_DLQ_SENDER =
-    ConsumerRecordSender.create(Future.failedFuture("No DLQ set"), Future.succeededFuture());
+  private final static ConsumerRecordSender NO_DLS_SENDER =
+    ConsumerRecordSender.create(Future.failedFuture("No dead letter sink set"), Future.succeededFuture());
 
   private final Map<String, Object> consumerConfigs;
   private final WebClientOptions webClientOptions;
@@ -157,7 +157,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
         final var egressDeadLetterSender = hasDeadLetterSink(egressConfig)
           ? createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), egressConfig)
-          : NO_DLQ_SENDER;
+          : NO_DLS_SENDER;
 
         final var filter = egress.hasFilter() ?
           new AttributesFilter(egress.getFilter().getAttributesMap()) :

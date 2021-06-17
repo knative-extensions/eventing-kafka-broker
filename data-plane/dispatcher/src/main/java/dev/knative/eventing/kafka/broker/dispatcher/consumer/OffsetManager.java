@@ -32,12 +32,12 @@ public interface OffsetManager {
   Future<Void> recordReceived(KafkaConsumerRecord<?, ?> record);
 
   /**
-   * The given record cannot be delivered to dead letter queue.
+   * The given record cannot be delivered to dead letter sink.
    *
-   * @param record record undeliverable to dead letter queue.
+   * @param record record undeliverable to dead letter sink.
    * @param ex     exception occurred.
    */
-  Future<Void> failedToSendToDLQ(KafkaConsumerRecord<?, ?> record, Throwable ex);
+  Future<Void> failedToSendToDeadLetterSink(KafkaConsumerRecord<?, ?> record, Throwable ex);
 
   /**
    * The given event doesn't pass the filter.
@@ -54,9 +54,9 @@ public interface OffsetManager {
   Future<Void> successfullySentToSubscriber(KafkaConsumerRecord<?, ?> record);
 
   /**
-   * The given record has been successfully sent to dead letter queue.
+   * The given record has been successfully sent to dead letter sink.
    *
-   * @param record record sent to dead letter queue.
+   * @param record record sent to dead letter sink.
    */
-  Future<Void> successfullySentToDLQ(KafkaConsumerRecord<?, ?> record);
+  Future<Void> successfullySentToDeadLetterSink(KafkaConsumerRecord<?, ?> record);
 }

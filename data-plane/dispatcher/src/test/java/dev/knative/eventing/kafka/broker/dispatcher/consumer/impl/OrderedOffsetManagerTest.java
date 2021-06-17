@@ -40,9 +40,9 @@ public class OrderedOffsetManagerTest extends AbstractOffsetManagerTest {
   }
 
   @Test
-  public void shouldNotCommitAfterFailedToSendToDLQ() {
+  public void shouldNotCommitAfterFailedToSendToDLS() {
     assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
-      offsetStrategy.failedToSendToDLQ(record("aaa", 0, 0), new IllegalStateException());
+      offsetStrategy.failedToSendToDeadLetterSink(record("aaa", 0, 0), new IllegalStateException());
     }).isEmpty();
   }
 
@@ -62,9 +62,9 @@ public class OrderedOffsetManagerTest extends AbstractOffsetManagerTest {
   }
 
   @Test
-  public void shouldCommitAfterSuccessfullySentToDLQ() {
+  public void shouldCommitAfterSuccessfullySentToDLS() {
     assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
-      offsetStrategy.successfullySentToDLQ(record("aaa", 0, 0));
+      offsetStrategy.successfullySentToDeadLetterSink(record("aaa", 0, 0));
     }).containsEntry(new TopicPartition("aaa", 0), 1L);
   }
 
