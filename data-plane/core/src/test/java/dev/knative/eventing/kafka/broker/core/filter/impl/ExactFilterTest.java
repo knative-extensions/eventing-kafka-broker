@@ -21,11 +21,13 @@ import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class ExactFilterTest {
 
@@ -41,7 +43,25 @@ public class ExactFilterTest {
       23, 20, 50, 0,
       ZoneOffset.UTC
     ))
+    .withExtension("abc", "123")
+    .withExtension("urlext", URI.create("/ext"))
     .build();
+
+  @Test
+  public void testInvalidKey() {
+    assertThatThrownBy(() -> new ExactFilter(null, "123"))
+      .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new ExactFilter("", "123"))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  public void testInvalidValue() {
+    assertThatThrownBy(() -> new ExactFilter("abc", null))
+      .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new ExactFilter("abc", ""))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
 
   @ParameterizedTest
   @MethodSource(value = {"testCases"})
@@ -56,7 +76,11 @@ public class ExactFilterTest {
       Arguments.of(event, "id", "123-42", true),
       Arguments.of(event, "id", "123-43", false),
       Arguments.of(event, "source", "/api/some-source", true),
-      Arguments.of(event, "source", "/api/something-else", false)
+      Arguments.of(event, "source", "/api/something-else", false),
+      Arguments.of(event, "abc", "123", true),
+      Arguments.of(event, "abc", "456", false),
+      Arguments.of(event, "urlext", "/ext", true),
+      Arguments.of(event, "urlext", "/no-ext", false)
     );
   }
 
