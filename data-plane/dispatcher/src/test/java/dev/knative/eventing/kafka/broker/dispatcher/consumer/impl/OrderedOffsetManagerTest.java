@@ -40,7 +40,7 @@ public class OrderedOffsetManagerTest extends AbstractOffsetManagerTest {
   }
 
   @Test
-  public void shouldNotCommitAfterFailedToSendToDLS() {
+  public void shouldNotCommitAfterFailedToSendToDeadLetterSink() {
     assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
       offsetStrategy.failedToSendToDeadLetterSink(record("aaa", 0, 0), new IllegalStateException());
     }).isEmpty();
@@ -62,7 +62,7 @@ public class OrderedOffsetManagerTest extends AbstractOffsetManagerTest {
   }
 
   @Test
-  public void shouldCommitAfterSuccessfullySentToDLS() {
+  public void shouldCommitAfterSuccessfullySentToDeadLetterSink() {
     assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
       offsetStrategy.successfullySentToDeadLetterSink(record("aaa", 0, 0));
     }).containsEntry(new TopicPartition("aaa", 0), 1L);

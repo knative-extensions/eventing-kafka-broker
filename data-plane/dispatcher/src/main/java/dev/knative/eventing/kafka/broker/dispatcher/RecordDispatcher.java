@@ -187,19 +187,19 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
   private void onSubscriberFailure(final KafkaConsumerRecord<String, CloudEvent> record,
                                    final Promise<Void> finalProm) {
     dlsSender.apply(record)
-      .onSuccess(v -> onDLSSuccess(record, finalProm))
-      .onFailure(ex -> onDLSFailure(record, ex, finalProm));
+      .onSuccess(v -> onDeadLetterSinkSuccess(record, finalProm))
+      .onFailure(ex -> onDeadLetterSinkFailure(record, ex, finalProm));
   }
 
-  private void onDLSSuccess(final KafkaConsumerRecord<String, CloudEvent> record, final Promise<Void> finalProm) {
+  private void onDeadLetterSinkSuccess(final KafkaConsumerRecord<String, CloudEvent> record, final Promise<Void> finalProm) {
     logDebug("Successfully sent event to the dead letter sink", record);
     offsetManager.successfullySentToDeadLetterSink(record)
       .onComplete(finalProm);
   }
 
 
-  private void onDLSFailure(final KafkaConsumerRecord<String, CloudEvent> record, final Throwable exception,
-                            final Promise<Void> finalProm) {
+  private void onDeadLetterSinkFailure(final KafkaConsumerRecord<String, CloudEvent> record, final Throwable exception,
+                                       final Promise<Void> finalProm) {
     offsetManager.failedToSendToDeadLetterSink(record, exception)
       .onComplete(finalProm);
   }

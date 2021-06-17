@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 public class RecordDispatcherTest {
 
   @Test
-  public void shouldNotSendToSubscriberNorToDLSIfValueDoesntMatch() {
+  public void shouldNotSendToSubscriberNorToDeadLetterSinkIfValueDoesntMatch() {
 
     final OffsetManager receiver = offsetManagerMock();
 
@@ -102,7 +102,7 @@ public class RecordDispatcherTest {
   }
 
   @Test
-  public void shouldSendToDLSIfValueMatchesAndSubscriberSenderFails() {
+  public void shouldSendToDeadLetterSinkIfValueMatchesAndSubscriberSenderFails() {
 
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
     final var dlsSenderSendCalled = new AtomicBoolean(false);
@@ -139,7 +139,7 @@ public class RecordDispatcherTest {
   }
 
   @Test
-  public void shouldCallFailedToSendToDLSIfValueMatchesAndSubscriberAndDLSSenderFail() {
+  public void shouldCallFailedToSendToDeadLetterSinkIfValueMatchesAndSubscriberAndDeadLetterSinkSenderFail() {
 
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
     final var dlsSenderSendCalled = new AtomicBoolean(false);
@@ -176,7 +176,7 @@ public class RecordDispatcherTest {
   }
 
   @Test
-  public void shouldCallFailedToSendToDLSIfValueMatchesAndSubscriberSenderFailsAndNoDLSSender() {
+  public void shouldCallFailedToSendToDeadLetterSinkIfValueMatchesAndSubscriberSenderFailsAndNoDeadLetterSinkSender() {
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
     final OffsetManager receiver = offsetManagerMock();
 
@@ -207,7 +207,7 @@ public class RecordDispatcherTest {
   }
 
   @Test
-  public void shouldCloseSinkResponseHandlerSubscriberSenderAndDLSSender(final VertxTestContext context) {
+  public void shouldCloseSinkResponseHandlerSubscriberSenderAndDeadLetterSinkSender(final VertxTestContext context) {
 
     final var subscriberSender = mock(ConsumerRecordSender.class);
     when(subscriberSender.close()).thenReturn(Future.succeededFuture());

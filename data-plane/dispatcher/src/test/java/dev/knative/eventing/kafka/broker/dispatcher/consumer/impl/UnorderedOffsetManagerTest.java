@@ -164,7 +164,7 @@ public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
   }
 
   @Test
-  public void shouldCommitSuccessfullyOnSuccessfullySentToDLS() {
+  public void shouldCommitSuccessfullyOnSuccessfullySentToDeadLetterSink() {
     assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
       var rec = record("aaa", 0, 0);
       offsetStrategy.recordReceived(rec);
@@ -185,7 +185,7 @@ public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
   }
 
   @Test
-  public void shouldCommitSuccessfullyWithRecordFailedToDLSInTheMiddle() {
+  public void shouldCommitSuccessfullyWithRecordFailedToDeadLetterSinkInTheMiddle() {
     assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
       var rec = record("aaa", 0, 0);
       offsetStrategy.recordReceived(rec);
