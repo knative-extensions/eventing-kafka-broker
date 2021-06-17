@@ -76,7 +76,7 @@ public final class OrderedOffsetManager implements OffsetManager {
    * {@inheritDoc}
    */
   @Override
-  public Future<Void> successfullySentToDLQ(final KafkaConsumerRecord<?, ?> record) {
+  public Future<Void> successfullySentToDeadLetterSink(final KafkaConsumerRecord<?, ?> record) {
     return commit(record);
   }
 
@@ -84,7 +84,7 @@ public final class OrderedOffsetManager implements OffsetManager {
    * {@inheritDoc}
    */
   @Override
-  public Future<Void> failedToSendToDLQ(final KafkaConsumerRecord<?, ?> record, final Throwable ex) {
+  public Future<Void> failedToSendToDeadLetterSink(final KafkaConsumerRecord<?, ?> record, final Throwable ex) {
     return Future.succeededFuture();
   }
 
