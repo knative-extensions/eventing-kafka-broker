@@ -228,23 +228,34 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
   }
 
   private static CircuitBreakerOptions createCircuitBreakerOptions(final DataPlaneContract.EgressConfig egressConfig) {
-    if (egressConfig != null && egressConfig.getRetry() > 0) {
-      return new CircuitBreakerOptions()
-        // TODO reset timeout should be configurable or, at least, set by the control plane
-        .setResetTimeout(
-          egressConfig.getBackoffDelay() > 0 ?
-            egressConfig.getBackoffDelay() :
-            CircuitBreakerOptions.DEFAULT_RESET_TIMEOUT
-        )
-        // TODO max failures should be configurable or, at least, set by the control plane
-        .setMaxFailures(egressConfig.getRetry() * 2)
-        .setMaxRetries(egressConfig.getRetry())
-        // This disables circuit breaker notifications on the event bus
-        .setNotificationAddress(null);
+    CircuitBreakerOptions options = new CircuitBreakerOptions();
+
+    // This disables circuit breaker notifications on the event bus
+    options.setNotificationAddress(null);
+
+    if (egressConfig != null) {
+      // Single request timeout
+      options.setTimeout(
+        egressConfig.getTimeout() > 0 ?
+          egressConfig.getTimeout() :
+          CircuitBreakerOptions.DEFAULT_TIMEOUT
+      );
+
+      // Retry options
+      if (egressConfig.getRetry() > 0) {
+        return new CircuitBreakerOptions()
+          // TODO reset timeout should be configurable or, at least, set by the control plane
+          .setResetTimeout(
+            egressConfig.getBackoffDelay() > 0 ?
+              egressConfig.getBackoffDelay() :
+              CircuitBreakerOptions.DEFAULT_RESET_TIMEOUT
+          )
+          // TODO max failures should be configurable or, at least, set by the control plane
+          .setMaxFailures(egressConfig.getRetry() * 2)
+          .setMaxRetries(egressConfig.getRetry());
+      }
     }
-    return new CircuitBreakerOptions()
-      // This disables circuit breaker notifications on the event bus
-      .setNotificationAddress(null);
+    return options;
   }
 
   /* package visibility for test */
