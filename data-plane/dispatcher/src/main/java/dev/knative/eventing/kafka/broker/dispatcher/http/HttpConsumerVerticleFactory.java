@@ -71,7 +71,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
   private static final Logger logger = LoggerFactory.getLogger(HttpConsumerVerticleFactory.class);
 
   private final static ConsumerRecordSender NO_DEAD_LETTER_SINK_SENDER =
-    ConsumerRecordSender.create(Future.failedFuture("No dead letter sink set"), Future.succeededFuture());
+    ConsumerRecordSender.noop("No dead letter sink set");
 
   private final Map<String, Object> consumerConfigs;
   private final WebClientOptions webClientOptions;

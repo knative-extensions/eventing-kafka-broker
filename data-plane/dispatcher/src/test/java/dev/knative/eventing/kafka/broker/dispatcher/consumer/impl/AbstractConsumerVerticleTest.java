@@ -57,8 +57,8 @@ public abstract class AbstractConsumerVerticleTest {
     final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
     final var recordDispatcher = new RecordDispatcher(
       value -> false,
-      ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
-      ConsumerRecordSender.create(Future.failedFuture("dead letter sink send called"), Future.succeededFuture()),
+      ConsumerRecordSender.noop("subscriber send called"),
+      ConsumerRecordSender.noop("dead letter sink send called"),
       new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
@@ -96,8 +96,8 @@ public abstract class AbstractConsumerVerticleTest {
     final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
     final var recordDispatcher = new RecordDispatcher(
       value -> false,
-      ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
-      ConsumerRecordSender.create(Future.failedFuture("dead letter sink send called"), Future.succeededFuture()),
+      ConsumerRecordSender.noop("subscriber send called"),
+      ConsumerRecordSender.noop("dead letter sink send called"),
       new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
