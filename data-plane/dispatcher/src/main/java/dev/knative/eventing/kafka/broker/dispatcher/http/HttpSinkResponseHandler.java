@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
+import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.SinkResponseHandler;
@@ -111,10 +112,10 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler {
   }
 
   @Override
-  public Future<?> close() {
+  public Future<Void> close() {
     return CompositeFuture.all(
       this.producer.close(),
-      Metrics.close(vertx, producerMeterBinder)
-    );
+      AsyncCloseable.wrapAutoCloseable(producerMeterBinder).close()
+    ).mapEmpty();
   }
 }

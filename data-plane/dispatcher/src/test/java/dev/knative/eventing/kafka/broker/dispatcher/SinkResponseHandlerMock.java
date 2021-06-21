@@ -23,13 +23,21 @@ import java.util.function.Supplier;
 
 public class SinkResponseHandlerMock implements SinkResponseHandler {
 
-  private final Supplier<Future<?>> onClose;
+  private final Supplier<Future<Void>> onClose;
   private final Function<HttpResponse<Buffer>, Future<Void>> onSend;
 
-  public SinkResponseHandlerMock(final Supplier<Future<?>> onClose,
-                                 final Function<HttpResponse<Buffer>, Future<Void>> onSend) {
-    this.onClose = onClose;
-    this.onSend = onSend;
+  public SinkResponseHandlerMock(final Function<HttpResponse<Buffer>, Future<Void>> onSend,
+                                 final Supplier<Future<Void>> onClose) {
+    this.onSend = onSend != null ? onSend : r -> Future.succeededFuture();
+    this.onClose = onClose != null ? onClose : Future::succeededFuture;
+  }
+
+  public SinkResponseHandlerMock(final Function<HttpResponse<Buffer>, Future<Void>> onSend) {
+    this(onSend, null);
+  }
+
+  public SinkResponseHandlerMock() {
+    this(null, null);
   }
 
   @Override
@@ -38,7 +46,7 @@ public class SinkResponseHandlerMock implements SinkResponseHandler {
   }
 
   @Override
-  public Future<?> close() {
+  public Future<Void> close() {
     return this.onClose.get();
   }
 }

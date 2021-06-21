@@ -15,13 +15,14 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-public interface ConsumerRecordSender {
+public interface ConsumerRecordSender extends AsyncCloseable {
 
   /**
    * Send the given record. (the record passed the filter)
@@ -30,13 +31,6 @@ public interface ConsumerRecordSender {
    * @return a successful future or a failed future.
    */
   Future<HttpResponse<Buffer>> send(KafkaConsumerRecord<String, CloudEvent> record);
-
-  /**
-   * Close consumer record sender.
-   *
-   * @return a successful future or a failed future.
-   */
-  Future<?> close();
 
   /**
    * Create a noop {@link ConsumerRecordSender} that fails every send with the specified message.
@@ -52,7 +46,7 @@ public interface ConsumerRecordSender {
       }
 
       @Override
-      public Future<?> close() {
+      public Future<Void> close() {
         return Future.succeededFuture();
       }
     };

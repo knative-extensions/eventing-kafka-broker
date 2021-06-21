@@ -189,11 +189,13 @@ public class HttpSinkResponseHandlerTest {
       producer
     );
 
-    sinkResponseHandler.close()
-      .onFailure(context::failNow)
-      .onSuccess(r -> context.verify(() -> {
-        verify(producer, times(1)).close();
-        context.completeNow();
-      }));
+    vertx.runOnContext(v -> {
+      sinkResponseHandler.close()
+        .onFailure(context::failNow)
+        .onSuccess(r -> context.verify(() -> {
+          verify(producer, times(1)).close();
+          context.completeNow();
+        }));
+    });
   }
 }

@@ -43,24 +43,16 @@ public class MetricsTest {
   }
 
   @Test
-  public void shouldRegisterAndCloseProducerMetricsThread(final Vertx vertx, final VertxTestContext context) {
-    final var producer = new MockProducer<>();
-
-    final var meterBinder = Metrics.register(producer);
-
-    Metrics.close(vertx, meterBinder)
-      .onFailure(context::failNow)
-      .onSuccess(r -> context.completeNow());
+  public void shouldRegisterAndCloseProducerMetricsThread()
+    throws Exception {
+    final var meterBinder = Metrics.register(new MockProducer<>());
+    meterBinder.close();
   }
 
   @Test
-  public void shouldRegisterAndCloseConsumerMetricsThread(final Vertx vertx, final VertxTestContext context) {
-    final var consumer = new MockConsumer<>(OffsetResetStrategy.LATEST);
-
-    final var meterBinder = Metrics.register(consumer);
-
-    Metrics.close(vertx, meterBinder)
-      .onFailure(context::failNow)
-      .onSuccess(r -> context.completeNow());
+  public void shouldRegisterAndCloseConsumerMetricsThread()
+    throws Exception {
+    final var meterBinder = Metrics.register(new MockConsumer<>(OffsetResetStrategy.LATEST));
+    meterBinder.close();
   }
 }

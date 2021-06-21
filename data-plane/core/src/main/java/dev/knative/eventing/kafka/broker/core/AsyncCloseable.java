@@ -2,8 +2,10 @@ package dev.knative.eventing.kafka.broker.core;
 
 import io.vertx.core.Closeable;
 import io.vertx.core.CompositeFuture;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -42,6 +44,38 @@ public interface AsyncCloseable extends Closeable {
     return () -> CompositeFuture
       .all(Arrays.stream(closeables).map(AsyncCloseable::close).collect(Collectors.toList()))
       .mapEmpty();
+  }
+
+  /**
+   * Wrap the provided blocking {@link AutoCloseable} into an {@link AsyncCloseable}.
+   *
+   * @param context the context to use to execute the blocking operation
+   * @param closeable the closeable to wrap
+   * @return the wrapped closeable
+   */
+  static AsyncCloseable wrapAutoCloseable(Context context, AutoCloseable closeable) {
+    return () -> context.executeBlocking(promise -> {
+      try {
+        closeable.close();
+        promise.complete();
+      } catch (Exception e) {
+        promise.fail(e);
+      }
+    });
+  }
+
+  /**
+   * Like {@link #wrapAutoCloseable(Context, AutoCloseable)} but using the current context, if any, when the close is invoked.
+   */
+  static AsyncCloseable wrapAutoCloseable(AutoCloseable closeable) {
+    return () -> Vertx.currentContext().executeBlocking(promise -> {
+      try {
+        closeable.close();
+        promise.complete();
+      } catch (Exception e) {
+        promise.fail(e);
+      }
+    });
   }
 
 }

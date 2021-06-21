@@ -432,15 +432,17 @@ public class RequestMapperTest {
       .watchIngress(handler)
       .build();
 
-    Future<Void> fut = Future.succeededFuture();
-    for (Map.Entry<List<DataPlaneContract.Resource>, BiConsumer<Integer, RequestMapper>> entry : invocations) {
-      fut = fut.compose(v -> reconciler.reconcile(entry.getKey()))
-        .onSuccess(i -> context.verify(() -> {
-          entry.getValue().accept(producerFactoryInvocations.get(), handler);
-          checkpoint.flag();
-        }))
-        .onFailure(context::failNow);
-    }
+    vertx.runOnContext(v -> {
+      Future<Void> fut = Future.succeededFuture();
+      for (Map.Entry<List<DataPlaneContract.Resource>, BiConsumer<Integer, RequestMapper>> entry : invocations) {
+        fut = fut.compose(v1 -> reconciler.reconcile(entry.getKey()))
+          .onSuccess(i -> context.verify(() -> {
+            entry.getValue().accept(producerFactoryInvocations.get(), handler);
+            checkpoint.flag();
+          }))
+          .onFailure(context::failNow);
+      }
+    });
   }
 
   @SuppressWarnings("unchecked")

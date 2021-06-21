@@ -98,22 +98,4 @@ public class Metrics {
     clientMetrics.bindTo(getRegistry());
     return clientMetrics;
   }
-
-  /**
-   * Close the given meter binder.
-   *
-   * @param vertx       vertx instance.
-   * @param meterBinder meter binder to close.
-   * @return A succeeded or a failed future.
-   */
-  public static Future<?> close(final Vertx vertx, final AutoCloseable meterBinder) {
-    return vertx.executeBlocking(promise -> {
-      try {
-        meterBinder.close();
-        promise.complete();
-      } catch (Exception e) {
-        promise.fail(e);
-      }
-    });
-  }
 }

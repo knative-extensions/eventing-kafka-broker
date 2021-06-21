@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.http;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
+import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.core.filter.impl.AttributesFilter;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
@@ -181,7 +182,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
         // Set all the built objects in the consumer verticle
         consumerVerticle.setRecordDispatcher(recordDispatcher);
         consumerVerticle.setConsumer(consumer);
-        consumerVerticle.setCloser(() -> Metrics.close(vertx, metricsCloser));
+        consumerVerticle.setCloser(AsyncCloseable.wrapAutoCloseable(metricsCloser));
       })
         .mapEmpty();
 

@@ -25,14 +25,19 @@ import java.util.function.Supplier;
 
 public class ConsumerRecordSenderMock implements ConsumerRecordSender {
 
-  private final Supplier<Future<?>> onClose;
+  private final Supplier<Future<Void>> onClose;
   private final Function<KafkaConsumerRecord<String, CloudEvent>, Future<HttpResponse<Buffer>>> onSend;
 
   public ConsumerRecordSenderMock(
-    final Supplier<Future<?>> onClose,
     final Function<KafkaConsumerRecord<String, CloudEvent>, Future<HttpResponse<Buffer>>> onSend) {
-    this.onClose = onClose;
+    this(onSend, null);
+  }
+
+  public ConsumerRecordSenderMock(
+    final Function<KafkaConsumerRecord<String, CloudEvent>, Future<HttpResponse<Buffer>>> onSend,
+    final Supplier<Future<Void>> onClose) {
     this.onSend = onSend;
+    this.onClose = onClose != null ? onClose : Future::succeededFuture;
   }
 
   @Override
@@ -41,7 +46,7 @@ public class ConsumerRecordSenderMock implements ConsumerRecordSender {
   }
 
   @Override
-  public Future<?> close() {
+  public Future<Void> close() {
     return this.onClose.get();
   }
 }
