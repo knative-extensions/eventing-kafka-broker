@@ -243,7 +243,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
       // Retry options
       if (egressConfig.getRetry() > 0) {
-        return new CircuitBreakerOptions()
+        options
           // TODO reset timeout should be configurable or, at least, set by the control plane
           .setResetTimeout(
             egressConfig.getBackoffDelay() > 0 ?
