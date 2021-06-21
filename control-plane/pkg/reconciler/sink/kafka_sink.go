@@ -166,9 +166,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	// Update contract data with the new sink configuration.
 	changed := coreconfig.AddOrUpdateResourceConfig(ct, sinkConfig, sinkIndex, logger)
 
-	coreconfig.IncrementContractGeneration(ct)
-
 	if changed == coreconfig.ResourceChanged {
+		// Resource changed, increment contract generation.
+		coreconfig.IncrementContractGeneration(ct)
 		// Update the configuration map with the new contract data.
 		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
 			logger.Error("failed to update data plane config map", zap.Error(
@@ -181,17 +181,20 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	logger.Debug("Config map updated")
 
-	if changed == coreconfig.ResourceChanged {
-		// After #37 we reject events to a non-existing Sink, which means that we cannot consider a Sink Ready if all
-		// receivers haven't got the Sink, so update failures to receiver pods is a hard failure.
+	// We update receiver pods annotation regardless of our contract changed or not due to the fact  that in a previous
+	// reconciliation we might have failed to update one of our data plane pod annotation, so we want to anyway update
+	// remaining annotations with the contract generation that was saved in the CM.
+	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
-		// Update volume generation annotation of receiver pods
-		if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-			return err
-		}
+	// Since we reject events to a non-existing Sink, which means that we cannot consider a Sink Ready if all
+	// receivers haven't got the Sink, so update failures to receiver pods is a hard failure.
 
-		logger.Debug("Updated receiver pod annotation")
+	// Update volume generation annotation of receiver pods
+	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+		return err
 	}
+
+	logger.Debug("Updated receiver pod annotation")
 
 	return statusConditionManager.Reconciled()
 }
@@ -230,6 +233,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 
 		logger.Debug("Sink deleted", zap.Int("index", sinkIndex))
 
+		// Resource changed, increment contract generation.
 		coreconfig.IncrementContractGeneration(ct)
 
 		// Update the configuration map with the new contract data.
@@ -239,6 +243,23 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 
 		logger.Debug("Sinks config map updated")
 	}
+
+	// We update receiver pods annotation regardless of our contract changed or not due to the fact  that in a previous
+	// reconciliation we might have failed to update one of our data plane pod annotation, so we want to anyway update
+	// remaining annotations with the contract generation that was saved in the CM.
+	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
+
+	// Update volume generation annotation of receiver pods
+	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+		return err
+	}
+
+	// TODO probe (as in #974) and check if status code is 404 otherwise requeue and return.
+	//  Rationale: after deleting a topic closing a producer ends up blocking and requesting metadata for max.block.ms
+	//  because topic metadata aren't available anymore.
+	// 	See (under discussions KIPs, unlikely to be accepted as they are):
+	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
+	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
 
 	if ks.GetStatus().Annotations[base.TopicOwnerAnnotation] == ControllerTopicOwner {
 		securityOption, _, err := security.NewOptionFromSecret(ctx, &SecretLocator{KafkaSink: ks}, r.SecretProviderFunc())
