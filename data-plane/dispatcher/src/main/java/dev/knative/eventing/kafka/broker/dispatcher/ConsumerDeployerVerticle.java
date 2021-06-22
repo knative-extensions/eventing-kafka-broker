@@ -17,8 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
-import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
-import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
+import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.ConsumerVerticleFactory;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -33,11 +32,7 @@ import org.slf4j.LoggerFactory;
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 /**
- * ResourcesManager manages Resource and Egress objects by instantiating and starting verticles based on resources
- * configurations.
- *
- * <p>Note: {@link ConsumerDeployerVerticle} is not thread-safe and it's not supposed to be shared between
- * threads.
+ * This verticle listens on Egress reconciliations by deploying/undeploying new consumer verticles.
  */
 public final class ConsumerDeployerVerticle extends AbstractVerticle implements EgressReconcilerListener {
 
@@ -67,13 +62,10 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
 
   @Override
   public void start() {
-    this.messageConsumer = ResourcesReconcilerMessageHandler.start(
-      vertx,
-      ResourcesReconcilerImpl
-        .builder()
-        .watchEgress(this)
-        .build()
-    );
+    this.messageConsumer = ResourcesReconciler
+      .builder()
+      .watchEgress(this)
+      .buildAndListen(vertx);
   }
 
   @Override

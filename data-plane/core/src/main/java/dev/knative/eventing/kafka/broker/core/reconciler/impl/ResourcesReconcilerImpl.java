@@ -50,7 +50,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
   // egress uid -> <Egress, Resource>
   private final Map<String, Map.Entry<DataPlaneContract.Egress, DataPlaneContract.Resource>> cachedEgresses;
 
-  private ResourcesReconcilerImpl(
+  ResourcesReconcilerImpl(
     IngressReconcilerListener ingressReconcilerListener,
     EgressReconcilerListener egressReconcilerListener) {
     if (ingressReconcilerListener == null && egressReconcilerListener == null) {
@@ -244,33 +244,6 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       && Objects.equals(e1.getReplyToOriginalTopic(), e2.getReplyToOriginalTopic())
       && Objects.equals(e1.getEgressConfig(), e2.getEgressConfig())
       && Objects.equals(e1.getFilter(), e2.getFilter());
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private IngressReconcilerListener ingressReconcilerListener;
-    private EgressReconcilerListener egressReconcilerListener;
-
-    public Builder watchIngress(
-      IngressReconcilerListener ingressReconcilerListener) {
-      Objects.requireNonNull(ingressReconcilerListener);
-      this.ingressReconcilerListener = ingressReconcilerListener;
-      return this;
-    }
-
-    public Builder watchEgress(
-      EgressReconcilerListener egressReconcilerListener) {
-      Objects.requireNonNull(egressReconcilerListener);
-      this.egressReconcilerListener = egressReconcilerListener;
-      return this;
-    }
-
-    public ResourcesReconcilerImpl build() {
-      return new ResourcesReconcilerImpl(ingressReconcilerListener, egressReconcilerListener);
-    }
   }
 
   private static void logFailure(final String msg, final DataPlaneContract.Egress egress, final Throwable cause) {
