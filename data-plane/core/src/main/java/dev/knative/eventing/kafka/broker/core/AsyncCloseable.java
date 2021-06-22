@@ -56,9 +56,11 @@ public interface AsyncCloseable extends Closeable {
    * @return the composed closeables
    */
   static AsyncCloseable compose(AsyncCloseable... closeables) {
-    return () -> CompositeFuture
-      .all(Arrays.stream(closeables).map(AsyncCloseable::close).collect(Collectors.toList()))
-      .mapEmpty();
+    return () -> CompositeFuture.all(
+      Arrays.stream(closeables)
+        .map(AsyncCloseable::close)
+        .collect(Collectors.toList())
+    ).mapEmpty();
   }
 
   /**
