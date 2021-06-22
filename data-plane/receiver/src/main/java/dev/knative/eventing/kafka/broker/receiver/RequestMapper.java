@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.receiver;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
@@ -233,7 +234,7 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
     if (rc.decrementAndCheck()) {
       // Nobody is referring to this producer anymore, clean it up and close it
       this.producerReferences.remove(ingressInfo.getProducerProperties());
-      return rc.getValue().close(vertx)
+      return rc.getValue().close()
         .onSuccess(r -> {
           // Remove ingress info from the maps
           this.pathMapper.remove(ingressInfo.getPath());
@@ -255,7 +256,7 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
     };
   }
 
-  private static class ProducerHolder {
+  private static class ProducerHolder implements AsyncCloseable {
 
     private final KafkaProducer<String, CloudEvent> producer;
     private final AutoCloseable producerMeterBinder;
@@ -269,22 +270,23 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
       return producer;
     }
 
-    Future<Void> close(final Vertx vertx) {
+    @Override
+    public Future<Void> close() {
       return producer.flush()
         .compose(
-          s -> closeNow(vertx),
+          s -> closeNow(),
           c -> {
             logger.error("Failed to flush producer", c);
-            return closeNow(vertx);
+            return closeNow();
           }
         );
     }
 
-    private Future<Void> closeNow(final Vertx vertx) {
-      return CompositeFuture.all(
-        producer.close(),
-        Metrics.close(vertx, this.producerMeterBinder)
-      ).mapEmpty();
+    private Future<Void> closeNow() {
+      return AsyncCloseable.compose(
+        producer::close,
+        AsyncCloseable.wrapAutoCloseable(this.producerMeterBinder)
+      ).close();
     }
   }
 

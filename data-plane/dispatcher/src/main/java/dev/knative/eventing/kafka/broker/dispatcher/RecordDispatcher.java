@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
 import io.cloudevents.CloudEvent;
@@ -41,7 +42,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
  * @see RecordDispatcher#handle(KafkaConsumerRecord)
  */
 public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, CloudEvent>>,
-  Function<KafkaConsumerRecord<String, CloudEvent>, Future<Void>> {
+  Function<KafkaConsumerRecord<String, CloudEvent>, Future<Void>>, AsyncCloseable {
 
   private static final Logger logger = LoggerFactory.getLogger(RecordDispatcher.class);
 
@@ -49,7 +50,7 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
   private final Function<KafkaConsumerRecord<String, CloudEvent>, Future<Void>> subscriberSender;
   private final Function<KafkaConsumerRecord<String, CloudEvent>, Future<Void>> dlsSender;
   private final OffsetManager offsetManager;
-  private final Supplier<Future<?>> closer;
+  private final AsyncCloseable closeable;
   private final ConsumerTracer consumerTracer;
 
   /**
@@ -79,11 +80,7 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
     this.subscriberSender = composeSenderAndSinkHandler(subscriberSender, sinkResponseHandler, "subscriber");
     this.dlsSender = composeSenderAndSinkHandler(deadLetterSinkSender, sinkResponseHandler, "dead letter sink");
     this.offsetManager = offsetManager;
-    this.closer = () -> CompositeFuture.all(
-      sinkResponseHandler.close(),
-      deadLetterSinkSender.close(),
-      subscriberSender.close()
-    );
+    this.closeable = AsyncCloseable.compose(sinkResponseHandler, deadLetterSinkSender, subscriberSender);
     this.consumerTracer = consumerTracer;
   }
 
@@ -251,7 +248,7 @@ public class RecordDispatcher implements Handler<KafkaConsumerRecord<String, Clo
     );
   }
 
-  public Future<?> close() {
-    return this.closer.get();
+  public Future<Void> close() {
+    return this.closeable.close();
   }
 }

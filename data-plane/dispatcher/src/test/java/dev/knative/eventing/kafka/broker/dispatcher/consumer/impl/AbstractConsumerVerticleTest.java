@@ -59,10 +59,7 @@ public abstract class AbstractConsumerVerticleTest {
       value -> false,
       ConsumerRecordSender.noop("subscriber send called"),
       ConsumerRecordSender.noop("dead letter sink send called"),
-      new SinkResponseHandlerMock(
-        Future::succeededFuture,
-        response -> Future.succeededFuture()
-      ),
+      new SinkResponseHandlerMock(),
       RecordDispatcherTest.offsetManagerMock(),
       null
     );
@@ -98,10 +95,7 @@ public abstract class AbstractConsumerVerticleTest {
       value -> false,
       ConsumerRecordSender.noop("subscriber send called"),
       ConsumerRecordSender.noop("dead letter sink send called"),
-      new SinkResponseHandlerMock(
-        Future::succeededFuture,
-        response -> Future.succeededFuture()
-      ),
+      new SinkResponseHandlerMock(),
       RecordDispatcherTest.offsetManagerMock(),
       null
     );
@@ -174,25 +168,22 @@ public abstract class AbstractConsumerVerticleTest {
     final var recordDispatcher = new RecordDispatcher(
       ce -> true,
       new ConsumerRecordSenderMock(
-        () -> {
+        record -> Future.succeededFuture(), () -> {
           consumerRecordSenderClosed.set(true);
           return Future.succeededFuture();
-        },
-        record -> Future.succeededFuture()
+        }
       ),
       new ConsumerRecordSenderMock(
-        () -> {
+        record -> Future.succeededFuture(), () -> {
           dlsSenderClosed.set(true);
           return Future.succeededFuture();
-        },
-        record -> Future.succeededFuture()
+        }
       ),
       new SinkResponseHandlerMock(
-        () -> {
+        response -> Future.succeededFuture(), () -> {
           sinkClosed.set(true);
           return Future.succeededFuture();
-        },
-        response -> Future.succeededFuture()
+        }
       ),
       RecordDispatcherTest.offsetManagerMock(),
       null

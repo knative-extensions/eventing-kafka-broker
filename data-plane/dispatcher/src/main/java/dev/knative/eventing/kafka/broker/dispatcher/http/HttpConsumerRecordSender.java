@@ -122,7 +122,7 @@ public final class HttpConsumerRecordSender implements ConsumerRecordSender {
   }
 
   @Override
-  public Future<?> close() {
+  public Future<Void> close() {
     this.circuitBreaker.close();
     this.client.close();
     return Future.succeededFuture();

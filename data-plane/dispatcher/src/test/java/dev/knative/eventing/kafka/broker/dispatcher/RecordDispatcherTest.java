@@ -51,10 +51,10 @@ public class RecordDispatcherTest {
       value -> false,
       ConsumerRecordSender.noop("subscriber send called"),
       ConsumerRecordSender.noop("DLS send called"),
-      new SinkResponseHandlerMock(
-        Future::succeededFuture,
-        response -> Future.succeededFuture()
-      ), receiver, null);
+      new SinkResponseHandlerMock(),
+      receiver,
+      null
+    );
 
     final var record = record();
     dispatcherHandler.handle(record);
@@ -74,22 +74,21 @@ public class RecordDispatcherTest {
 
     final var dispatcherHandler = new RecordDispatcher(
       value -> true, new ConsumerRecordSenderMock(
-      Future::succeededFuture,
       record -> {
         sendCalled.set(true);
         return Future.succeededFuture();
       }
     ),
       new ConsumerRecordSenderMock(
-        Future::succeededFuture,
         record -> {
           fail("DLS send called");
           return Future.succeededFuture();
         }
-      ), new SinkResponseHandlerMock(
-      Future::succeededFuture,
-      response -> Future.succeededFuture()
-    ), receiver, null);
+      ),
+      new SinkResponseHandlerMock(),
+      receiver,
+      null
+    );
     final var record = record();
     dispatcherHandler.handle(record);
 
@@ -110,22 +109,20 @@ public class RecordDispatcherTest {
 
     final var dispatcherHandler = new RecordDispatcher(
       value -> true, new ConsumerRecordSenderMock(
-      Future::succeededFuture,
       record -> {
         subscriberSenderSendCalled.set(true);
         return Future.failedFuture("");
       }
     ),
       new ConsumerRecordSenderMock(
-        Future::succeededFuture,
         record -> {
           dlsSenderSendCalled.set(true);
           return Future.succeededFuture();
         }
-      ), new SinkResponseHandlerMock(
-      Future::succeededFuture,
-      response -> Future.succeededFuture()
-    ), receiver, null);
+      ), new SinkResponseHandlerMock(),
+      receiver,
+      null
+    );
     final var record = record();
     dispatcherHandler.handle(record);
 
@@ -147,22 +144,21 @@ public class RecordDispatcherTest {
 
     final var dispatcherHandler = new RecordDispatcher(
       value -> true, new ConsumerRecordSenderMock(
-      Future::succeededFuture,
       record -> {
         subscriberSenderSendCalled.set(true);
         return Future.failedFuture("");
       }
     ),
       new ConsumerRecordSenderMock(
-        Future::succeededFuture,
         record -> {
           dlsSenderSendCalled.set(true);
           return Future.failedFuture("");
         }
-      ), new SinkResponseHandlerMock(
-      Future::succeededFuture,
-      response -> Future.succeededFuture()
-    ), receiver, null);
+      ),
+      new SinkResponseHandlerMock(),
+      receiver,
+      null
+    );
     final var record = record();
     dispatcherHandler.handle(record);
 
@@ -183,18 +179,16 @@ public class RecordDispatcherTest {
     final var dispatcherHandler = new RecordDispatcher(
       value -> true,
       new ConsumerRecordSenderMock(
-        Future::succeededFuture,
         record -> {
           subscriberSenderSendCalled.set(true);
           return Future.failedFuture("");
         }
       ),
       ConsumerRecordSender.noop("No DLS configured"),
-      new SinkResponseHandlerMock(
-        Future::succeededFuture,
-        response -> Future.succeededFuture()
-      ),
-      receiver, null);
+      new SinkResponseHandlerMock(),
+      receiver,
+      null
+    );
     final var record = record();
     dispatcherHandler.handle(record);
 

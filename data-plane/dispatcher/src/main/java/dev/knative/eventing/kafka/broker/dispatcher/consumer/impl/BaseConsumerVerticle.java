@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
+import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
@@ -42,7 +43,7 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
 
   KafkaConsumer<String, CloudEvent> consumer;
   RecordDispatcher recordDispatcher;
-  private Supplier<Future<?>> closer;
+  private AsyncCloseable closeable;
 
   public BaseConsumerVerticle(final Initializer initializer, final Set<String> topics) {
     Objects.requireNonNull(topics);
@@ -68,11 +69,11 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
   public void stop(Promise<Void> stopPromise) {
     logger.info("Stopping consumer");
 
-    CompositeFuture.all(
-      this.consumer.close(),
-      this.recordDispatcher.close(),
-      this.closer.get()
-    ).<Void>mapEmpty().onComplete(stopPromise);
+    AsyncCloseable.compose(
+      this.consumer::close,
+      this.recordDispatcher,
+      this.closeable
+    ).close(stopPromise);
   }
 
   public void setConsumer(
@@ -85,8 +86,8 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
     this.recordDispatcher = recordDispatcher;
   }
 
-  public void setCloser(Supplier<Future<?>> closer) {
-    this.closer = closer;
+  public void setCloser(AsyncCloseable closeable) {
+    this.closeable = closeable;
   }
 
   void exceptionHandler(Throwable cause) {
