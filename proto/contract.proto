@@ -46,6 +46,9 @@ message EgressConfig {
 
   // backoffDelay is the delay before retrying in milliseconds.
   uint64 backoffDelay = 4;
+
+  // timeout is the single request timeout (not the overall retry timeout)
+  uint64 timeout = 5;
 }
 
 // Check dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryOrder for more details

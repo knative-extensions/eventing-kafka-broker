@@ -1730,6 +1730,16 @@ public final class DataPlaneContract {
      * @return The backoffDelay.
      */
     long getBackoffDelay();
+
+    /**
+     * <pre>
+     * timeout is the single request timeout (not the overall retry timeout)
+     * </pre>
+     *
+     * <code>uint64 timeout = 5;</code>
+     * @return The timeout.
+     */
+    long getTimeout();
   }
   /**
    * Protobuf type {@code EgressConfig}
@@ -1798,6 +1808,11 @@ public final class DataPlaneContract {
             case 32: {
 
               backoffDelay_ = input.readUInt64();
+              break;
+            }
+            case 40: {
+
+              timeout_ = input.readUInt64();
               break;
             }
             default: {
@@ -1937,6 +1952,21 @@ public final class DataPlaneContract {
       return backoffDelay_;
     }
 
+    public static final int TIMEOUT_FIELD_NUMBER = 5;
+    private long timeout_;
+    /**
+     * <pre>
+     * timeout is the single request timeout (not the overall retry timeout)
+     * </pre>
+     *
+     * <code>uint64 timeout = 5;</code>
+     * @return The timeout.
+     */
+    @java.lang.Override
+    public long getTimeout() {
+      return timeout_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -1963,6 +1993,9 @@ public final class DataPlaneContract {
       if (backoffDelay_ != 0L) {
         output.writeUInt64(4, backoffDelay_);
       }
+      if (timeout_ != 0L) {
+        output.writeUInt64(5, timeout_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -1987,6 +2020,10 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(4, backoffDelay_);
       }
+      if (timeout_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(5, timeout_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -2009,6 +2046,8 @@ public final class DataPlaneContract {
       if (backoffPolicy_ != other.backoffPolicy_) return false;
       if (getBackoffDelay()
           != other.getBackoffDelay()) return false;
+      if (getTimeout()
+          != other.getTimeout()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -2029,6 +2068,9 @@ public final class DataPlaneContract {
       hash = (37 * hash) + BACKOFFDELAY_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
           getBackoffDelay());
+      hash = (37 * hash) + TIMEOUT_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getTimeout());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -2170,6 +2212,8 @@ public final class DataPlaneContract {
 
         backoffDelay_ = 0L;
 
+        timeout_ = 0L;
+
         return this;
       }
 
@@ -2200,6 +2244,7 @@ public final class DataPlaneContract {
         result.retry_ = retry_;
         result.backoffPolicy_ = backoffPolicy_;
         result.backoffDelay_ = backoffDelay_;
+        result.timeout_ = timeout_;
         onBuilt();
         return result;
       }
@@ -2260,6 +2305,9 @@ public final class DataPlaneContract {
         }
         if (other.getBackoffDelay() != 0L) {
           setBackoffDelay(other.getBackoffDelay());
+        }
+        if (other.getTimeout() != 0L) {
+          setTimeout(other.getTimeout());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2548,6 +2596,49 @@ public final class DataPlaneContract {
       public Builder clearBackoffDelay() {
         
         backoffDelay_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long timeout_ ;
+      /**
+       * <pre>
+       * timeout is the single request timeout (not the overall retry timeout)
+       * </pre>
+       *
+       * <code>uint64 timeout = 5;</code>
+       * @return The timeout.
+       */
+      @java.lang.Override
+      public long getTimeout() {
+        return timeout_;
+      }
+      /**
+       * <pre>
+       * timeout is the single request timeout (not the overall retry timeout)
+       * </pre>
+       *
+       * <code>uint64 timeout = 5;</code>
+       * @param value The timeout to set.
+       * @return This builder for chaining.
+       */
+      public Builder setTimeout(long value) {
+        
+        timeout_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * timeout is the single request timeout (not the overall retry timeout)
+       * </pre>
+       *
+       * <code>uint64 timeout = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearTimeout() {
+        
+        timeout_ = 0L;
         onChanged();
         return this;
       }
@@ -11274,33 +11365,34 @@ public final class DataPlaneContract {
       "\n\016contract.proto\"\007\n\005Empty\"h\n\006Filter\022+\n\na" +
       "ttributes\030\001 \003(\0132\027.Filter.AttributesEntry" +
       "\0321\n\017AttributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005valu" +
-      "e\030\002 \001(\t:\0028\001\"n\n\014EgressConfig\022\022\n\ndeadLette" +
+      "e\030\002 \001(\t:\0028\001\"\177\n\014EgressConfig\022\022\n\ndeadLette" +
       "r\030\001 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030" +
       "\003 \001(\0162\016.BackoffPolicy\022\024\n\014backoffDelay\030\004 " +
-      "\001(\004\"\363\001\n\006Egress\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n" +
-      "\013destination\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\022&" +
-      "\n\024replyToOriginalTopic\030\004 \001(\0132\006.EmptyH\000\022\027" +
-      "\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001(\t\022#\n\014" +
-      "egressConfig\030\007 \001(\0132\r.EgressConfig\022%\n\rdel" +
-      "iveryOrder\030\010 \001(\0162\016.DeliveryOrderB\017\n\rrepl" +
-      "yStrategy\"[\n\007Ingress\022!\n\013contentMode\030\001 \001(" +
-      "\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH\000\022\016\n\004host\030" +
-      "\003 \001(\tH\000B\r\n\013ingressType\"K\n\tReference\022\014\n\004u" +
-      "uid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001" +
-      "(\t\022\017\n\007version\030\004 \001(\t\"\344\001\n\010Resource\022\013\n\003uid\030" +
-      "\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrapServer" +
-      "s\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress\022#\n\014eg" +
-      "ressConfig\030\005 \001(\0132\r.EgressConfig\022\031\n\010egres" +
-      "ses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAuth\030\007 \001(\0132\006" +
-      ".EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n.Reference" +
-      "H\000B\006\n\004Auth\"<\n\010Contract\022\022\n\ngeneration\030\001 \001" +
-      "(\004\022\034\n\tresources\030\002 \003(\0132\t.Resource*,\n\rBack" +
-      "offPolicy\022\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+" +
-      "\n\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERE" +
-      "D\020\001*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCT" +
-      "URED\020\001B[\n*dev.knative.eventing.kafka.bro" +
-      "ker.contractB\021DataPlaneContractZ\032control" +
-      "-plane/pkg/contractb\006proto3"
+      "\001(\004\022\017\n\007timeout\030\005 \001(\004\"\363\001\n\006Egress\022\025\n\rconsu" +
+      "merGroup\030\001 \001(\t\022\023\n\013destination\030\002 \001(\t\022\022\n\010r" +
+      "eplyUrl\030\003 \001(\tH\000\022&\n\024replyToOriginalTopic\030" +
+      "\004 \001(\0132\006.EmptyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter" +
+      "\022\013\n\003uid\030\006 \001(\t\022#\n\014egressConfig\030\007 \001(\0132\r.Eg" +
+      "ressConfig\022%\n\rdeliveryOrder\030\010 \001(\0162\016.Deli" +
+      "veryOrderB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n" +
+      "\013contentMode\030\001 \001(\0162\014.ContentMode\022\016\n\004path" +
+      "\030\002 \001(\tH\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"" +
+      "K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030" +
+      "\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"\344\001\n" +
+      "\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030" +
+      "\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(" +
+      "\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.Egre" +
+      "ssConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\na" +
+      "bsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030" +
+      "\010 \001(\0132\n.ReferenceH\000B\006\n\004Auth\"<\n\010Contract\022" +
+      "\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t" +
+      ".Resource*,\n\rBackoffPolicy\022\017\n\013Exponentia" +
+      "l\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r\n\tUNOR" +
+      "DERED\020\000\022\013\n\007ORDERED\020\001*)\n\013ContentMode\022\n\n\006B" +
+      "INARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knative.e" +
+      "venting.kafka.broker.contractB\021DataPlane" +
+      "ContractZ\032control-plane/pkg/contractb\006pr" +
+      "oto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -11329,7 +11421,7 @@ public final class DataPlaneContract {
     internal_static_EgressConfig_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_EgressConfig_descriptor,
-        new java.lang.String[] { "DeadLetter", "Retry", "BackoffPolicy", "BackoffDelay", });
+        new java.lang.String[] { "DeadLetter", "Retry", "BackoffPolicy", "BackoffDelay", "Timeout", });
     internal_static_Egress_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_Egress_fieldAccessorTable = new
