@@ -39,26 +39,21 @@ public interface ConsumerRecordSender {
   Future<?> close();
 
   /**
-   * Create a ConsumerRecordSender from the given futures.
+   * Create a noop {@link ConsumerRecordSender} that fails every send with the specified message.
    *
-   * @param closeFuture Future to return on close.
-   * @param sendFuture  Future to return on send.
-   * @return A ConsumerRecordSender that returns a failed future on send.
+   * @param failureMessage future failure message when invoking send.
+   * @return A ConsumerRecordSender that always fails the send invocations with the specified message and always succeeds the close invocations.
    */
-  static ConsumerRecordSender create(Future<HttpResponse<Buffer>> sendFuture, Future<?> closeFuture) {
+  static ConsumerRecordSender noop(String failureMessage) {
     return new ConsumerRecordSender() {
-
-      private final Future<HttpResponse<Buffer>> send = sendFuture;
-      private final Future<?> close = closeFuture;
-
       @Override
       public Future<HttpResponse<Buffer>> send(KafkaConsumerRecord<String, CloudEvent> record) {
-        return this.send;
+        return Future.failedFuture(failureMessage);
       }
 
       @Override
       public Future<?> close() {
-        return this.close;
+        return Future.succeededFuture();
       }
     };
   }

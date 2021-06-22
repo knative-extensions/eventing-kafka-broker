@@ -49,8 +49,8 @@ public class RecordDispatcherTest {
 
     final var dispatcherHandler = new RecordDispatcher(
       value -> false,
-      ConsumerRecordSender.create(Future.failedFuture("subscriber send called"), Future.succeededFuture()),
-      ConsumerRecordSender.create(Future.failedFuture("DLS send called"), Future.succeededFuture()),
+      ConsumerRecordSender.noop("subscriber send called"),
+      ConsumerRecordSender.noop("DLS send called"),
       new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
@@ -189,7 +189,7 @@ public class RecordDispatcherTest {
           return Future.failedFuture("");
         }
       ),
-      ConsumerRecordSender.create(Future.failedFuture("No DLS configured"), Future.succeededFuture()),
+      ConsumerRecordSender.noop("No DLS configured"),
       new SinkResponseHandlerMock(
         Future::succeededFuture,
         response -> Future.succeededFuture()
