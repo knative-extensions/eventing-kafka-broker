@@ -43,10 +43,13 @@ public interface AsyncCloseable extends Closeable {
   }
 
   /**
+   * Transform an {@link AsyncCloseable} into a blocking {@link AutoCloseable}
+   *
+   * @param closeable the closeable to convert
    * @return an implementation of {@link AutoCloseable} that will block when invoked.
    */
-  default AutoCloseable toAutoCloseable() {
-    return () -> this.close().toCompletionStage().toCompletableFuture();
+  static AutoCloseable toAutoCloseable(AsyncCloseable closeable) {
+    return () -> closeable.close().toCompletionStage().toCompletableFuture();
   }
 
   /**
@@ -65,34 +68,35 @@ public interface AsyncCloseable extends Closeable {
 
   /**
    * Wrap the provided blocking {@link AutoCloseable} into an {@link AsyncCloseable}.
+   * This is going to use the current context when the close is invoked.
    *
-   * @param context the context to use to execute the blocking operation
    * @param closeable the closeable to wrap
    * @return the wrapped closeable
    */
-  static AsyncCloseable wrapAutoCloseable(Context context, AutoCloseable closeable) {
-    return () -> context.executeBlocking(promise -> {
-      try {
-        closeable.close();
-        promise.complete();
-      } catch (Exception e) {
-        promise.fail(e);
-      }
-    });
-  }
-
-  /**
-   * Like {@link #wrapAutoCloseable(Context, AutoCloseable)} but using the current context, if any, when the close is invoked.
-   */
   static AsyncCloseable wrapAutoCloseable(AutoCloseable closeable) {
-    return () -> Vertx.currentContext().executeBlocking(promise -> {
-      try {
-        closeable.close();
-        promise.complete();
-      } catch (Exception e) {
-        promise.fail(e);
+    return () -> {
+      Context context = Vertx.currentContext();
+
+      if (context == null) {
+        // I'm not on the event loop, I can just execute this as is!
+        try {
+          closeable.close();
+          return Future.succeededFuture();
+        } catch (Exception e) {
+          return Future.failedFuture(e);
+        }
       }
-    });
+
+      // I'm on the event loop, I need to execute blocking.
+      return context.executeBlocking(promise -> {
+        try {
+          closeable.close();
+          promise.complete();
+        } catch (Exception e) {
+          promise.fail(e);
+        }
+      });
+    };
   }
 
 }
