@@ -117,7 +117,7 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
     if (ingressInfo == null) {
       request.response().setStatusCode(RESOURCE_NOT_FOUND).end();
 
-      logger.warn("resource not found {} {}",
+      logger.warn("Resource not found {} {}",
         keyValue("resources", pathMapper.keySet()),
         keyValue("path", request.path())
       );
@@ -128,7 +128,7 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
     if (request.method() != HttpMethod.POST) {
       request.response().setStatusCode(METHOD_NOT_ALLOWED.code()).end();
 
-      logger.warn("method not allowed {}",
+      logger.warn("Only POST method is allowed. Method not allowed: {}",
         keyValue("method", request.method())
       );
 
