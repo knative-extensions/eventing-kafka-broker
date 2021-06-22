@@ -15,7 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
+import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import java.util.List;
 import org.apache.kafka.common.TopicPartition;
@@ -27,7 +27,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 public class OrderedOffsetManagerTest extends AbstractOffsetManagerTest {
 
   @Override
-  OffsetManager createOffsetManager(
+  RecordDispatcherListener createOffsetManager(
     KafkaConsumer<?, ?> consumer) {
     return new OrderedOffsetManager(consumer, null);
   }

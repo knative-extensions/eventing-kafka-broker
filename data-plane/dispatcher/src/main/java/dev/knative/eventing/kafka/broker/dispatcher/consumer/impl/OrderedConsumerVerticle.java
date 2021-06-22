@@ -122,7 +122,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   void enqueueRecord(TopicPartition topicPartition, KafkaConsumerRecord<String, CloudEvent> record) {
     this.recordDispatcherExecutors.computeIfAbsent(topicPartition, (tp) -> new OrderedAsyncExecutor())
-      .offer(() -> this.recordDispatcher.apply(record).onComplete(v -> this.pendingRecords--));
+      .offer(() -> this.recordDispatcher.dispatch(record).onComplete(v -> this.pendingRecords--));
   }
 
   long pollWaitMs() {

@@ -15,7 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
+import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
@@ -32,7 +32,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 /**
  * This class implements the offset strategy for the ordered consumer.
  */
-public final class OrderedOffsetManager implements OffsetManager {
+public final class OrderedOffsetManager implements RecordDispatcherListener {
 
   private static final Logger logger = LoggerFactory
     .getLogger(OrderedOffsetManager.class);

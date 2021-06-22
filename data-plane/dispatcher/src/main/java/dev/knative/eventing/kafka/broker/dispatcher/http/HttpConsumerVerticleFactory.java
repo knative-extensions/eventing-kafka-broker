@@ -25,10 +25,10 @@ import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
 import dev.knative.eventing.kafka.broker.core.security.PlaintextCredentials;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
-import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
+import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.ConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.DeliveryOrder;
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
+import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.BaseConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.OrderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.impl.OrderedOffsetManager;
@@ -164,7 +164,7 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
           new AttributesFilter(egress.getFilter().getAttributesMap()) :
           Filter.noop();
 
-        final RecordDispatcher recordDispatcher = new RecordDispatcher(
+        final RecordDispatcherImpl recordDispatcher = new RecordDispatcherImpl(
           filter,
           egressSubscriberSender,
           egressDeadLetterSender,
@@ -275,8 +275,8 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     return !(egressConfig == null || egressConfig.getDeadLetter().isEmpty());
   }
 
-  private static OffsetManager getOffsetManager(final DeliveryOrder type, final KafkaConsumer<?, ?> consumer,
-                                                Consumer<Integer> commitHandler) {
+  private static RecordDispatcherListener getOffsetManager(final DeliveryOrder type, final KafkaConsumer<?, ?> consumer,
+                                                           Consumer<Integer> commitHandler) {
     return switch (type) {
       case ORDERED -> new OrderedOffsetManager(consumer, commitHandler);
       case UNORDERED -> new UnorderedOffsetManager(consumer, commitHandler);

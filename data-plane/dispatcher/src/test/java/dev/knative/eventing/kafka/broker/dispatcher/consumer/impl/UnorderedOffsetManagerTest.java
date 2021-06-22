@@ -15,7 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
+import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.verify;
 public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
 
   @Override
-  OffsetManager createOffsetManager(
+  RecordDispatcherListener createOffsetManager(
     KafkaConsumer<?, ?> consumer) {
     return new UnorderedOffsetManager(consumer, null);
   }

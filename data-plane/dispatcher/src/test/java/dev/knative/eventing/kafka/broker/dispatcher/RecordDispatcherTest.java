@@ -17,7 +17,6 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.junit5.VertxExtension;
@@ -45,9 +44,9 @@ public class RecordDispatcherTest {
   @Test
   public void shouldNotSendToSubscriberNorToDeadLetterSinkIfValueDoesntMatch() {
 
-    final OffsetManager receiver = offsetManagerMock();
+    final RecordDispatcherListener receiver = offsetManagerMock();
 
-    final var dispatcherHandler = new RecordDispatcher(
+    final var dispatcherHandler = new RecordDispatcherImpl(
       value -> false,
       ConsumerRecordSender.noop("subscriber send called"),
       ConsumerRecordSender.noop("DLS send called"),
@@ -57,7 +56,7 @@ public class RecordDispatcherTest {
     );
 
     final var record = record();
-    dispatcherHandler.handle(record);
+    dispatcherHandler.dispatch(record);
 
     verify(receiver, times(1)).recordReceived(record);
     verify(receiver, times(1)).recordDiscarded(record);
@@ -70,9 +69,9 @@ public class RecordDispatcherTest {
   public void shouldSendOnlyToSubscriberIfValueMatches() {
 
     final var sendCalled = new AtomicBoolean(false);
-    final OffsetManager receiver = offsetManagerMock();
+    final RecordDispatcherListener receiver = offsetManagerMock();
 
-    final var dispatcherHandler = new RecordDispatcher(
+    final var dispatcherHandler = new RecordDispatcherImpl(
       value -> true, new ConsumerRecordSenderMock(
       record -> {
         sendCalled.set(true);
@@ -90,7 +89,7 @@ public class RecordDispatcherTest {
       null
     );
     final var record = record();
-    dispatcherHandler.handle(record);
+    dispatcherHandler.dispatch(record);
 
     assertTrue(sendCalled.get());
     verify(receiver, times(1)).recordReceived(record);
@@ -105,9 +104,9 @@ public class RecordDispatcherTest {
 
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
     final var dlsSenderSendCalled = new AtomicBoolean(false);
-    final OffsetManager receiver = offsetManagerMock();
+    final RecordDispatcherListener receiver = offsetManagerMock();
 
-    final var dispatcherHandler = new RecordDispatcher(
+    final var dispatcherHandler = new RecordDispatcherImpl(
       value -> true, new ConsumerRecordSenderMock(
       record -> {
         subscriberSenderSendCalled.set(true);
@@ -124,7 +123,7 @@ public class RecordDispatcherTest {
       null
     );
     final var record = record();
-    dispatcherHandler.handle(record);
+    dispatcherHandler.dispatch(record);
 
     assertTrue(subscriberSenderSendCalled.get());
     assertTrue(dlsSenderSendCalled.get());
@@ -140,9 +139,9 @@ public class RecordDispatcherTest {
 
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
     final var dlsSenderSendCalled = new AtomicBoolean(false);
-    final OffsetManager receiver = offsetManagerMock();
+    final RecordDispatcherListener receiver = offsetManagerMock();
 
-    final var dispatcherHandler = new RecordDispatcher(
+    final var dispatcherHandler = new RecordDispatcherImpl(
       value -> true, new ConsumerRecordSenderMock(
       record -> {
         subscriberSenderSendCalled.set(true);
@@ -160,7 +159,7 @@ public class RecordDispatcherTest {
       null
     );
     final var record = record();
-    dispatcherHandler.handle(record);
+    dispatcherHandler.dispatch(record);
 
     assertTrue(subscriberSenderSendCalled.get());
     assertTrue(dlsSenderSendCalled.get());
@@ -174,9 +173,9 @@ public class RecordDispatcherTest {
   @Test
   public void shouldCallFailedToSendToDeadLetterSinkIfValueMatchesAndSubscriberSenderFailsAndNoDeadLetterSinkSender() {
     final var subscriberSenderSendCalled = new AtomicBoolean(false);
-    final OffsetManager receiver = offsetManagerMock();
+    final RecordDispatcherListener receiver = offsetManagerMock();
 
-    final var dispatcherHandler = new RecordDispatcher(
+    final var dispatcherHandler = new RecordDispatcherImpl(
       value -> true,
       new ConsumerRecordSenderMock(
         record -> {
@@ -190,7 +189,7 @@ public class RecordDispatcherTest {
       null
     );
     final var record = record();
-    dispatcherHandler.handle(record);
+    dispatcherHandler.dispatch(record);
 
     assertTrue(subscriberSenderSendCalled.get());
     verify(receiver, times(1)).recordReceived(record);
@@ -212,7 +211,7 @@ public class RecordDispatcherTest {
     final var deadLetterSender = mock(ConsumerRecordSender.class);
     when(deadLetterSender.close()).thenReturn(Future.succeededFuture());
 
-    final RecordDispatcher recordDispatcher = new RecordDispatcher(
+    final RecordDispatcher recordDispatcher = new RecordDispatcherImpl(
       Filter.noop(), subscriberSender,
       deadLetterSender, sinkResponseHandler, offsetManagerMock(), null);
 
@@ -230,15 +229,15 @@ public class RecordDispatcherTest {
     return new KafkaConsumerRecordImpl<>(new ConsumerRecord<>("", 0, 0L, "", CoreObjects.event()));
   }
 
-  public static OffsetManager offsetManagerMock() {
-    final OffsetManager offsetManager = mock(OffsetManager.class);
+  public static RecordDispatcherListener offsetManagerMock() {
+    final RecordDispatcherListener recordDispatcherListener = mock(RecordDispatcherListener.class);
 
-    when(offsetManager.recordReceived(any())).thenReturn(Future.succeededFuture());
-    when(offsetManager.recordDiscarded(any())).thenReturn(Future.succeededFuture());
-    when(offsetManager.successfullySentToDeadLetterSink(any())).thenReturn(Future.succeededFuture());
-    when(offsetManager.successfullySentToSubscriber(any())).thenReturn(Future.succeededFuture());
-    when(offsetManager.failedToSendToDeadLetterSink(any(), any())).thenReturn(Future.succeededFuture());
+    when(recordDispatcherListener.recordReceived(any())).thenReturn(Future.succeededFuture());
+    when(recordDispatcherListener.recordDiscarded(any())).thenReturn(Future.succeededFuture());
+    when(recordDispatcherListener.successfullySentToDeadLetterSink(any())).thenReturn(Future.succeededFuture());
+    when(recordDispatcherListener.successfullySentToSubscriber(any())).thenReturn(Future.succeededFuture());
+    when(recordDispatcherListener.failedToSendToDeadLetterSink(any(), any())).thenReturn(Future.succeededFuture());
 
-    return offsetManager;
+    return recordDispatcherListener;
   }
 }

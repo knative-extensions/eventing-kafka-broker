@@ -19,7 +19,6 @@ import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -27,7 +26,6 @@ import io.vertx.kafka.client.consumer.KafkaConsumer;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,13 +74,11 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
     ).close(stopPromise);
   }
 
-  public void setConsumer(
-    KafkaConsumer<String, CloudEvent> consumer) {
+  public void setConsumer(KafkaConsumer<String, CloudEvent> consumer) {
     this.consumer = consumer;
   }
 
-  public void setRecordDispatcher(
-    RecordDispatcher recordDispatcher) {
+  public void setRecordDispatcher(RecordDispatcher recordDispatcher) {
     this.recordDispatcher = recordDispatcher;
   }
 

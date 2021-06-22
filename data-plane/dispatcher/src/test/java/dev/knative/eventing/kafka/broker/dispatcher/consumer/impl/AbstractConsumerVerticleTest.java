@@ -17,7 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSender;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerRecordSenderMock;
-import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
+import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherTest;
 import dev.knative.eventing.kafka.broker.dispatcher.SinkResponseHandlerMock;
 import io.cloudevents.CloudEvent;
@@ -55,7 +55,7 @@ public abstract class AbstractConsumerVerticleTest {
   @SuppressWarnings("unchecked")
   public void subscribedToTopic(final Vertx vertx, final VertxTestContext context) {
     final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
-    final var recordDispatcher = new RecordDispatcher(
+    final var recordDispatcher = new RecordDispatcherImpl(
       value -> false,
       ConsumerRecordSender.noop("subscriber send called"),
       ConsumerRecordSender.noop("dead letter sink send called"),
@@ -91,7 +91,7 @@ public abstract class AbstractConsumerVerticleTest {
   @SuppressWarnings("unchecked")
   public void stop(final Vertx vertx, final VertxTestContext context) {
     final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
-    final var recordDispatcher = new RecordDispatcher(
+    final var recordDispatcher = new RecordDispatcherImpl(
       value -> false,
       ConsumerRecordSender.noop("subscriber send called"),
       ConsumerRecordSender.noop("dead letter sink send called"),
@@ -165,17 +165,17 @@ public abstract class AbstractConsumerVerticleTest {
     final var dlsSenderClosed = new AtomicBoolean(false);
     final var sinkClosed = new AtomicBoolean(false);
 
-    final var recordDispatcher = new RecordDispatcher(
+    final var recordDispatcher = new RecordDispatcherImpl(
       ce -> true,
       new ConsumerRecordSenderMock(
         record -> Future.succeededFuture(), () -> {
-          consumerRecordSenderClosed.set(true);
-          return Future.succeededFuture();
-        }
+        consumerRecordSenderClosed.set(true);
+        return Future.succeededFuture();
+      }
       ),
       new ConsumerRecordSenderMock(
         record -> Future.succeededFuture(), () -> {
-          dlsSenderClosed.set(true);
+        dlsSenderClosed.set(true);
           return Future.succeededFuture();
         }
       ),

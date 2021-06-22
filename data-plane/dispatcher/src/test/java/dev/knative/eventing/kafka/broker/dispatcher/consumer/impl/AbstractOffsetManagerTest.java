@@ -15,7 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
-import dev.knative.eventing.kafka.broker.dispatcher.consumer.OffsetManager;
+import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -45,7 +45,7 @@ import static org.mockito.Mockito.verify;
 
 public abstract class AbstractOffsetManagerTest {
 
-  abstract OffsetManager createOffsetManager(final KafkaConsumer<?, ?> consumer);
+  abstract RecordDispatcherListener createOffsetManager(final KafkaConsumer<?, ?> consumer);
 
   protected static KafkaConsumerRecord<String, CloudEvent> record(String topic, int partition, long offset) {
     return new KafkaConsumerRecordImpl<>(
@@ -60,14 +60,14 @@ public abstract class AbstractOffsetManagerTest {
   }
 
   protected MapAssert<TopicPartition, Long> assertThatOffsetCommitted(
-    Collection<TopicPartition> partitionsConsumed, Consumer<OffsetManager> testExecutor) {
+    Collection<TopicPartition> partitionsConsumed, Consumer<RecordDispatcherListener> testExecutor) {
     return assertThatOffsetCommittedWithFailures(partitionsConsumed,
       (offsetStrategy, flag) -> testExecutor.accept(offsetStrategy));
   }
 
   protected MapAssert<TopicPartition, Long> assertThatOffsetCommittedWithFailures(
     Collection<TopicPartition> partitionsConsumed,
-    BiConsumer<OffsetManager, AtomicBoolean> testExecutor) {
+    BiConsumer<RecordDispatcherListener, AtomicBoolean> testExecutor) {
     final var mockConsumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.NONE);
     mockConsumer.assign(partitionsConsumed);
 
