@@ -30,7 +30,7 @@ public interface RequestToRecordMapper {
    * @param topic   topic to send the event
    * @return kafka record (record can be null).
    */
-  Future<KafkaProducerRecord<String, CloudEvent>> recordFromRequest(
+  Future<KafkaProducerRecord<String, CloudEvent>> requestToRecord(
     final HttpServerRequest request,
     final String topic
   );

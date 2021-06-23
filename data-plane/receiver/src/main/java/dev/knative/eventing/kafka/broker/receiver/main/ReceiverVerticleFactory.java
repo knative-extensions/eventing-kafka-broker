@@ -57,7 +57,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
         v,
         AuthProvider.kubernetes(),
         producerConfigs,
-        new CloudEventRequestToRecordMapper(),
+        StrictRequestToRecordMapper.getInstance(),
         properties -> KafkaProducer.create(v, properties),
         badRequestCounter,
         produceEventsCounter

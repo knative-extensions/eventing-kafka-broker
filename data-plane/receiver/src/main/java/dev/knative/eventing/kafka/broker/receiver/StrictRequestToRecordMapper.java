@@ -15,30 +15,32 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
-import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+/**
+ * This class implements a strict {@link HttpServerRequest} to {@link KafkaProducerRecord} mapper.
+ * The conversion will fail if the request does not contain a valid {@link CloudEvent}.
+ */
+public class StrictRequestToRecordMapper implements RequestToRecordMapper {
 
-public class CloudEventRequestToRecordMapper implements RequestToRecordMapper {
+  private static class SingletonContainer {
+    private static final StrictRequestToRecordMapper INSTANCE = new StrictRequestToRecordMapper();
+  }
 
-  private static final Logger logger = LoggerFactory.getLogger(CloudEventRequestToRecordMapper.class);
+  public static RequestToRecordMapper getInstance() {
+    return StrictRequestToRecordMapper.SingletonContainer.INSTANCE;
+  }
 
-  public CloudEventRequestToRecordMapper() {
+  private StrictRequestToRecordMapper() {
   }
 
   @Override
-  public Future<KafkaProducerRecord<String, CloudEvent>> recordFromRequest(
+  public Future<KafkaProducerRecord<String, CloudEvent>> requestToRecord(
     final HttpServerRequest request,
     final String topic) {
 
@@ -48,20 +50,6 @@ public class CloudEventRequestToRecordMapper implements RequestToRecordMapper {
         if (event == null) {
           throw new IllegalArgumentException("event cannot be null");
         }
-
-        if (logger.isDebugEnabled()) {
-          final var span = Span.fromContextOrNull(Context.current());
-          if (span != null) {
-            logger.debug("Received event {} {}",
-              keyValue("event", event),
-              keyValue(TracingConfig.TRACE_ID_KEY, span.getSpanContext().getTraceId())
-            );
-          } else {
-            logger.debug("Received event {}", keyValue("event", event));
-          }
-        }
-
-        TracingSpan.decorateCurrentWithEvent(event);
         return KafkaProducerRecord.create(topic, event);
       });
   }

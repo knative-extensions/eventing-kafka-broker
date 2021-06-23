@@ -103,7 +103,7 @@ public class ReceiverTracingVerticleTest {
       vertx,
       null,
       new Properties(),
-      new CloudEventRequestToRecordMapper(),
+      StrictRequestToRecordMapper.getInstance(),
       properties -> KafkaProducer.create(vertx, mockProducer),
       new CumulativeCounter(mock(Id.class)),
       new CumulativeCounter(mock(Id.class))
