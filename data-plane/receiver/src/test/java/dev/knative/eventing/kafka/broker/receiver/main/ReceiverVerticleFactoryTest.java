@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.receiver.main;
 
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.http.HttpServerOptions;
-import org.junit.jupiter.api.Test;
-
 import java.util.Properties;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;

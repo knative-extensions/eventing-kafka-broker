@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.receiver.main;
 
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import org.junit.jupiter.api.Test;

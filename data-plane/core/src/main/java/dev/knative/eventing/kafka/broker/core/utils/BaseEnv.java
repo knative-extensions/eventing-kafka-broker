@@ -22,27 +22,27 @@ import static java.util.Objects.requireNonNull;
 public class BaseEnv {
 
   public static final String PRODUCER_CONFIG_FILE_PATH = "PRODUCER_CONFIG_FILE_PATH";
-  public static final String DATA_PLANE_CONFIG_FILE_PATH = "DATA_PLANE_CONFIG_FILE_PATH";
-
-  public static final String METRICS_PORT = "METRICS_PORT";
-  public static final String METRICS_PATH = "METRICS_PATH";
-  public static final String METRICS_PUBLISH_QUANTILES = "METRICS_PUBLISH_QUANTILES";
-  public static final String METRICS_JVM_ENABLED = "METRICS_JVM_ENABLED";
-
-  public static final String CONFIG_TRACING_PATH = "CONFIG_TRACING_PATH";
-
-  public static final String WAIT_STARTUP_SECONDS = "WAIT_STARTUP_SECONDS";
-
   private final String producerConfigFilePath;
+
+  public static final String DATA_PLANE_CONFIG_FILE_PATH = "DATA_PLANE_CONFIG_FILE_PATH";
   private final String dataPlaneConfigFilePath;
 
+  public static final String METRICS_PORT = "METRICS_PORT";
   private final int metricsPort;
+
+  public static final String METRICS_PATH = "METRICS_PATH";
   private final String metricsPath;
+
+  public static final String METRICS_PUBLISH_QUANTILES = "METRICS_PUBLISH_QUANTILES";
   private final boolean metricsPublishQuantiles;
+
+  public static final String METRICS_JVM_ENABLED = "METRICS_JVM_ENABLED";
   private final boolean metricsJvmEnabled;
 
+  public static final String CONFIG_TRACING_PATH = "CONFIG_TRACING_PATH";
   private final String configTracingPath;
 
+  public static final String WAIT_STARTUP_SECONDS = "WAIT_STARTUP_SECONDS";
   private final int waitStartupSeconds;
 
   public BaseEnv(Function<String, String> envProvider) {
