@@ -1026,7 +1026,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.23.1-0.20210621164716-b312f0e1c8e5
+# knative.dev/eventing v0.23.1-0.20210622190628-74d711b6a367
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck
@@ -1035,6 +1035,7 @@ knative.dev/eventing/pkg/apis/duck/v1beta1
 knative.dev/eventing/pkg/apis/eventing
 knative.dev/eventing/pkg/apis/eventing/v1
 knative.dev/eventing/pkg/apis/eventing/v1beta1
+knative.dev/eventing/pkg/apis/feature
 knative.dev/eventing/pkg/apis/flows
 knative.dev/eventing/pkg/apis/flows/v1
 knative.dev/eventing/pkg/apis/messaging
@@ -1128,10 +1129,10 @@ knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/request-sender
-# knative.dev/hack v0.0.0-20210614141220-66ab1a098940
+# knative.dev/hack v0.0.0-20210622141627-e28525d8d260
 ## explicit
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20210618060751-f454995ff92b
+# knative.dev/pkg v0.0.0-20210622173328-dd0db4b05c80
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1222,7 +1223,7 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20210603210445-0071c48281c7
+# knative.dev/reconciler-test v0.0.0-20210622190528-b155197924aa
 ## explicit
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment
