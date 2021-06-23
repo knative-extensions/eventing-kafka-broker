@@ -72,12 +72,24 @@ func EgressConfigFromDelivery(
 	if delivery.Retry != nil {
 		egressConfig.Retry = uint32(*delivery.Retry)
 		var err error
-		delay, err := BackoffDelayFromISO8601String(delivery.BackoffDelay, defaultBackoffDelayMs)
+		delay, err := DurationMillisFromISO8601String(delivery.BackoffDelay, defaultBackoffDelayMs)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse Spec.Delivery.BackoffDelay: %w", err)
 		}
 		egressConfig.BackoffDelay = delay
 		egressConfig.BackoffPolicy = BackoffPolicyFromString(delivery.BackoffPolicy)
+	}
+
+	if delivery.Timeout != nil {
+		var err error
+		timeout, err := DurationMillisFromISO8601String(
+			delivery.Timeout,
+			0, /* 0 means absent, allowing the data plane to default it */
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse Spec.Delivery.Timeout: %w", err)
+		}
+		egressConfig.Timeout = timeout
 	}
 
 	return egressConfig, nil
@@ -102,17 +114,17 @@ func BackoffPolicyFromString(backoffPolicy *duck.BackoffPolicyType) contract.Bac
 	}
 }
 
-// BackoffDelayFromISO8601String returns the BackoffDelay from the given string.
+// DurationMillisFromISO8601String returns the BackoffDelay from the given string.
 //
 // Default value is the specified defaultDelay.
-func BackoffDelayFromISO8601String(backoffDelay *string, defaultDelay uint64) (uint64, error) {
-	if backoffDelay == nil {
-		return defaultDelay, nil
+func DurationMillisFromISO8601String(durationStr *string, defaultDurationMillis uint64) (uint64, error) {
+	if durationStr == nil {
+		return defaultDurationMillis, nil
 	}
 
-	d, err := period.Parse(*backoffDelay, false)
+	d, err := period.Parse(*durationStr, false)
 	if err != nil {
-		return 0, fmt.Errorf("failed to parse backoffDelay: %w", err)
+		return 0, fmt.Errorf("failed to parse duration string: %w", err)
 	}
 
 	ms, _ := d.Duration()
