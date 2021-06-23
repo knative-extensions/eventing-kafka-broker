@@ -55,7 +55,7 @@ func EgressConfigFromDelivery(
 	defaultBackoffDelayMs uint64,
 ) (*contract.EgressConfig, error) {
 
-	if delivery == nil || (delivery.DeadLetterSink == nil && delivery.Retry == nil) {
+	if delivery == nil || (delivery.DeadLetterSink == nil && delivery.Retry == nil && delivery.Timeout == nil) {
 		return nil, nil
 	}
 
