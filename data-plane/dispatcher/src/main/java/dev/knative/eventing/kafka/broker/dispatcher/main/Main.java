@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher;
+package dev.knative.eventing.kafka.broker.dispatcher.main;
 
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
@@ -24,6 +24,7 @@ import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
+import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;

@@ -13,21 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher;
-
-import static java.util.Objects.requireNonNull;
+package dev.knative.eventing.kafka.broker.dispatcher.main;
 
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import java.util.function.Function;
 
+import static java.util.Objects.requireNonNull;
+
 public class DispatcherEnv extends BaseEnv {
 
   public static final String CONSUMER_CONFIG_FILE_PATH = "CONSUMER_CONFIG_FILE_PATH";
-  public static final String WEBCLIENT_CONFIG_FILE_PATH = "WEBCLIENT_CONFIG_FILE_PATH";
-  public static final String EGRESSES_INITIAL_CAPACITY = "EGRESSES_INITIAL_CAPACITY";
-
   private final String consumerConfigFilePath;
+
+  public static final String WEBCLIENT_CONFIG_FILE_PATH = "WEBCLIENT_CONFIG_FILE_PATH";
   private final String webClientConfigFilePath;
+
+  public static final String EGRESSES_INITIAL_CAPACITY = "EGRESSES_INITIAL_CAPACITY";
   private final int egressesInitialCapacity;
 
   public DispatcherEnv(Function<String, String> envProvider) {
