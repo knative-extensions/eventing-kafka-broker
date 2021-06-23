@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
-
-import static java.util.Objects.requireNonNull;
+package dev.knative.eventing.kafka.broker.receiver.main;
 
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import java.util.function.Function;
+
+import static java.util.Objects.requireNonNull;
 
 class ReceiverEnv extends BaseEnv {
 

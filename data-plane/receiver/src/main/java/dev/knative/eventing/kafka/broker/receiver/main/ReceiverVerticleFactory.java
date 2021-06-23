@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.receiver.main;
 
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
+import dev.knative.eventing.kafka.broker.receiver.CloudEventRequestToRecordMapper;
+import dev.knative.eventing.kafka.broker.receiver.ReceiverVerticle;
+import dev.knative.eventing.kafka.broker.receiver.RequestMapper;
+import dev.knative.eventing.kafka.broker.receiver.SimpleProbeHandlerDecorator;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Verticle;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.kafka.client.producer.KafkaProducer;
-
 import java.util.Properties;
 import java.util.function.Supplier;
 

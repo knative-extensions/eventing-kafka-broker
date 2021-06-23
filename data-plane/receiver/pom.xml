@@ -125,7 +125,7 @@
                 <transformer
                   implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>
-                    dev.knative.eventing.kafka.broker.receiver.Main
+                      dev.knative.eventing.kafka.broker.receiver.main.Main
                   </mainClass>
                 </transformer>
               </transformers>
