@@ -114,7 +114,7 @@ func BackoffPolicyFromString(backoffPolicy *duck.BackoffPolicyType) contract.Bac
 	}
 }
 
-// DurationMillisFromISO8601String returns the BackoffDelay from the given string.
+// DurationMillisFromISO8601String returns the duration in milliseconds from the given string.
 //
 // Default value is the specified defaultDelay.
 func DurationMillisFromISO8601String(durationStr *string, defaultDurationMillis uint64) (uint64, error) {
