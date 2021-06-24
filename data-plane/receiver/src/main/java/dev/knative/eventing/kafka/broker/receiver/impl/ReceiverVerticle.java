@@ -36,6 +36,17 @@ import org.slf4j.LoggerFactory;
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 
+/**
+ * This verticle is responsible for implementing the logic of the receiver.
+ * <p>
+ * The receiver is the component responsible for mapping incoming {@link io.cloudevents.CloudEvent} requests to specific Kafka topics.
+ * In order to do so, this component:
+ * <ul>
+ *   <li>Starts an {@link HttpServer} listening for incoming events</li>
+ *   <li>Starts a {@link ResourcesReconciler}, listen on the event bus for reconciliation events and keeps track of the {@link dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress} objects and their {@code path => (topic, producer)} mapping</li>
+ *   <li>Implements a request handler that invokes a series of {@code preHandlers} and then a final {@link IngressRequestHandler} to publish the record to Kafka</li>
+ * </ul>
+ */
 public class ReceiverVerticle extends AbstractVerticle {
 
   private static final Logger logger = LoggerFactory.getLogger(ReceiverVerticle.class);
