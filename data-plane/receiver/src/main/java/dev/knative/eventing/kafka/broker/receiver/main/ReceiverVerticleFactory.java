@@ -39,7 +39,6 @@ import java.util.function.Supplier;
 
 class ReceiverVerticleFactory implements Supplier<Verticle> {
 
-  private final ReceiverEnv env;
   private final Properties producerConfigs;
   private final HttpServerOptions httpServerOptions;
 
@@ -50,8 +49,6 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                           final Properties producerConfigs,
                           final MeterRegistry metricsRegistry,
                           final HttpServerOptions httpServerOptions) {
-
-    this.env = env;
     this.producerConfigs = producerConfigs;
     this.httpServerOptions = httpServerOptions;
 
