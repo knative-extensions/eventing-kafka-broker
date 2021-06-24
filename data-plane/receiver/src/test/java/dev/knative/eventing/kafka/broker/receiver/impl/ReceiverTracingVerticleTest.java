@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.receiver.impl;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
-import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
-import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
+import dev.knative.eventing.kafka.broker.receiver.handler.IngressRequestHandlerImpl;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
@@ -46,6 +45,7 @@ import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
 import java.net.URI;
+import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -57,6 +57,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -69,7 +70,7 @@ public class ReceiverTracingVerticleTest {
   private InMemorySpanExporter spanExporter;
   private WebClient webClient;
   private MockProducer<String, CloudEvent> mockProducer;
-  private RequestMapper handler;
+  private IngressProducerReconcilableStore store;
 
   static {
     BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
@@ -101,13 +102,10 @@ public class ReceiverTracingVerticleTest {
       new CloudEventSerializerMock()
     );
 
-    this.handler = new RequestMapper(
+    this.store = new IngressProducerReconcilableStore(
       null,
       new Properties(),
-      StrictRequestToRecordMapper.getInstance(),
-      properties -> KafkaProducer.create(vertx, mockProducer),
-      new CumulativeCounter(mock(Id.class)),
-      new CumulativeCounter(mock(Id.class))
+      properties -> KafkaProducer.create(vertx, mockProducer)
     );
 
     final var verticle = new ReceiverVerticle(
@@ -115,8 +113,15 @@ public class ReceiverTracingVerticleTest {
         .setPort(PORT)
         .setHost("localhost")
         .setTracingPolicy(TracingPolicy.PROPAGATE),
-      v -> handler
+      v -> store,
+      Collections.emptyList(),
+      new IngressRequestHandlerImpl(
+        StrictRequestToRecordMapper.getInstance(),
+        new CumulativeCounter(mock(Id.class)),
+        new CumulativeCounter(mock(Id.class))
+      )
     );
+
     vertx.deployVerticle(verticle)
       .toCompletionStage()
       .toCompletableFuture()
@@ -149,7 +154,7 @@ public class ReceiverTracingVerticleTest {
 
     String path = "/broker-ns/broker-name";
 
-    this.handler.onNewIngress(contract, contract.getIngress())
+    this.store.onNewIngress(contract, contract.getIngress())
       .toCompletionStage()
       .toCompletableFuture()
       .get();
@@ -164,7 +169,7 @@ public class ReceiverTracingVerticleTest {
       .get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.statusCode())
-      .isEqualTo(RequestMapper.RECORD_PRODUCED);
+      .isEqualTo(ACCEPTED.code());
 
     if (mockProducer.history().size() > 0) {
       assertThat(mockProducer.history())

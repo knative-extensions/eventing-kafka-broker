@@ -43,9 +43,9 @@ import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE
  */
 public class IngressRequestHandlerImpl implements IngressRequestHandler {
 
-  public static final int MAPPER_FAILED = BAD_REQUEST.code();
-  public static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
-  public static final int RECORD_PRODUCED = ACCEPTED.code();
+  static final int MAPPER_FAILED = BAD_REQUEST.code();
+  static final int RECORD_PRODUCED = ACCEPTED.code();
+  static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
 
   private static final Logger logger = LoggerFactory.getLogger(IngressRequestHandlerImpl.class);
 
@@ -94,19 +94,19 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
         TracingSpan.decorateCurrentWithEvent(record.value());
 
         // Publish the record
-        return publishRecord(producer, record);
-      }).onComplete(ar -> {
-      // Write the response back
-      if (ar.succeeded()) {
-        request.response()
-          .setStatusCode(RECORD_PRODUCED)
-          .end();
-      } else {
-        request.response()
-          .setStatusCode(FAILED_TO_PRODUCE)
-          .end();
-      }
-    });
+        return publishRecord(producer, record).onComplete(ar -> {
+          // Write the response back
+          if (ar.succeeded()) {
+            request.response()
+              .setStatusCode(RECORD_PRODUCED)
+              .end();
+          } else {
+            request.response()
+              .setStatusCode(FAILED_TO_PRODUCE)
+              .end();
+          }
+        });
+      });
   }
 
   private Future<RecordMetadata> publishRecord(IngressProducer ingress,
