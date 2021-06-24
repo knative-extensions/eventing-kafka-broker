@@ -111,7 +111,7 @@ func TestBackoffPolicyFromString(t *testing.T) {
 	}
 }
 
-func TestBackoffDelayFromString(t *testing.T) {
+func TestDurationMillisFromISO8601String(t *testing.T) {
 
 	tests := []struct {
 		name         string
@@ -170,12 +170,12 @@ func TestBackoffDelayFromString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := BackoffDelayFromISO8601String(tt.backoffDelay, tt.defaultDelay)
+			got, err := DurationMillisFromISO8601String(tt.backoffDelay, tt.defaultDelay)
 			if (err != nil) != tt.wantError {
 				t.Errorf("wantError = %v got %v", tt.wantError, err)
 			}
 			if got != tt.want {
-				t.Errorf("BackoffDelayFromISO8601String() = %v, want %v", got, tt.want)
+				t.Errorf("DurationMillisFromISO8601String() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -275,6 +275,7 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 				Retry:          pointer.Int32Ptr(3),
 				BackoffPolicy:  &exponential,
 				BackoffDelay:   pointer.StringPtr("PT1S"),
+				Timeout:        pointer.StringPtr("PT2S"),
 			},
 			defaultBackoffDelayMs: 0,
 			want: &contract.EgressConfig{
@@ -282,6 +283,7 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 				Retry:         3,
 				BackoffPolicy: contract.BackoffPolicy_Exponential,
 				BackoffDelay:  uint64(time.Second.Milliseconds()),
+				Timeout:       uint64(time.Second.Milliseconds() * 2),
 			},
 			wantErr: false,
 		},
@@ -296,6 +298,20 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 			defaultBackoffDelayMs: 0,
 			want: &contract.EgressConfig{
 				DeadLetter: url.String(),
+			},
+			wantErr: false,
+		},
+		{
+			name:     "only timeout",
+			ctx:      ctx,
+			resolver: resolver.NewURIResolver(ctx, func(name types.NamespacedName) {}),
+			parent:   &eventing.KafkaSink{},
+			delivery: &eventingduck.DeliverySpec{
+				Timeout: pointer.StringPtr("PT2S"),
+			},
+			defaultBackoffDelayMs: 0,
+			want: &contract.EgressConfig{
+				Timeout: uint64(time.Second.Milliseconds() * 2),
 			},
 			wantErr: false,
 		},

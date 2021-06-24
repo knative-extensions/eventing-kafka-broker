@@ -322,6 +322,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 										Retry:         3,
 										BackoffPolicy: contract.BackoffPolicy_Exponential,
 										BackoffDelay:  uint64(time.Second.Milliseconds()),
+										Timeout:       uint64((time.Second * 2).Milliseconds()),
 									},
 								},
 							},
@@ -1408,6 +1409,7 @@ func withDelivery(trigger *eventing.Trigger) {
 		Retry:          pointer.Int32Ptr(3),
 		BackoffPolicy:  &exponential,
 		BackoffDelay:   pointer.StringPtr("PT1S"),
+		Timeout:        pointer.StringPtr("PT2S"),
 	}
 }
 
