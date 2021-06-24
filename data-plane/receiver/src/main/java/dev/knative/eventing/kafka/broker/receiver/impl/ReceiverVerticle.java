@@ -34,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 
 public class ReceiverVerticle extends AbstractVerticle {
@@ -114,10 +113,5 @@ public class ReceiverVerticle extends AbstractVerticle {
 
     // Invoke the ingress request handler
     this.ingressRequestHandler.handle(request, producer);
-
-    // Check if ingressRequestHandler behaved correctly
-    if (!request.isEnded()) {
-      request.response().setStatusCode(INTERNAL_SERVER_ERROR.code()).end();
-    }
   }
 }
