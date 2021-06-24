@@ -25,6 +25,8 @@ import io.vertx.kafka.client.producer.KafkaProducerRecord;
 /**
  * This class implements a strict {@link HttpServerRequest} to {@link KafkaProducerRecord} mapper.
  * The conversion will fail if the request does not contain a valid {@link CloudEvent}.
+ * <p>
+ * Instances of this class can be shared among verticles.
  */
 public class StrictRequestToRecordMapper implements RequestToRecordMapper {
 

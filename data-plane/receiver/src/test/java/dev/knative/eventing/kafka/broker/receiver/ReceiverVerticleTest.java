@@ -94,7 +94,6 @@ public class ReceiverVerticleTest {
     produceRequestCount = new CumulativeCounter(mock(Id.class));
 
     handler = new RequestMapper(
-      vertx,
       null,
       new Properties(),
       StrictRequestToRecordMapper.getInstance(),

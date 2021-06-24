@@ -57,7 +57,6 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     return new ReceiverVerticle(
       httpServerOptions,
       v -> new RequestMapper(
-        v,
         AuthProvider.kubernetes(),
         producerConfigs,
         StrictRequestToRecordMapper.getInstance(),

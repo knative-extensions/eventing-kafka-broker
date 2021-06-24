@@ -100,7 +100,6 @@ public class ReceiverTracingVerticleTest {
     );
 
     this.handler = new RequestMapper(
-      vertx,
       null,
       new Properties(),
       StrictRequestToRecordMapper.getInstance(),

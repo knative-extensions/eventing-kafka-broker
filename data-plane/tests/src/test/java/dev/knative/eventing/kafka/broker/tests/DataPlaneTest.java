@@ -333,7 +333,6 @@ public class DataPlaneTest {
     final VertxTestContext context) throws InterruptedException {
 
     final Function<Vertx, RequestMapper> handlerFactory = v -> new RequestMapper(
-      v,
       null,
       producerConfigs(),
       StrictRequestToRecordMapper.getInstance(),

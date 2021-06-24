@@ -28,7 +28,13 @@ import io.vertx.core.http.HttpServerRequest;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+
 public class ReceiverVerticle extends AbstractVerticle {
+
+  public static final int RESOURCE_NOT_FOUND = NOT_FOUND.code();
+  public static final int BAD_METHOD = METHOD_NOT_ALLOWED.code();
 
   private final HttpServerOptions httpServerOptions;
 

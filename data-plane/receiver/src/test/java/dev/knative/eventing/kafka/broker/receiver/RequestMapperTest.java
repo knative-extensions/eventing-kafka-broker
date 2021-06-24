@@ -106,7 +106,6 @@ public class RequestMapperTest {
     final var response = mockResponse(request, statusCode);
 
     final var handler = new RequestMapper(
-      mock(Vertx.class),
       null,
       new Properties(),
       mapper,
@@ -150,7 +149,6 @@ public class RequestMapperTest {
     final var response = mockResponse(request, RequestMapper.MAPPER_FAILED);
 
     final var handler = new RequestMapper(
-      vertx,
       null,
       new Properties(),
       mapper,
@@ -419,7 +417,6 @@ public class RequestMapperTest {
     final var producerFactoryInvocations = new AtomicInteger(0);
 
     final var handler = new RequestMapper(
-      vertx,
       null,
       new Properties(),
       (request, topic) -> Future.succeededFuture(),

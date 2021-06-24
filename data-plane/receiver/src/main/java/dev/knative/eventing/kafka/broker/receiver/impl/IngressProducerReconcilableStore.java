@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.receiver.impl;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
@@ -21,22 +21,15 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
-import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
-import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.core.utils.ReferenceCounter;
+import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
+import dev.knative.eventing.kafka.broker.receiver.IngressProducerStore;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
-import io.micrometer.core.instrument.Counter;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import io.vertx.kafka.client.producer.RecordMetadata;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -46,60 +39,40 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
-import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
-
 /**
- * This class is responsible for mapping HTTP requests to Kafka records, sending records to Kafka through the Kafka
- * producer and terminating requests with the appropriate status code.
+ * This class is an implementation of {@link IngressProducerStore} that can be reconciled
+ * using it as {@link IngressReconcilerListener} of a {@link dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler}.
+ * <p>
+ * Because of its state associated to the specific verticles, this class cannot be shared among verticles.
  */
-public class RequestMapper implements Handler<HttpServerRequest>, IngressReconcilerListener {
+public class IngressProducerReconcilableStore implements IngressProducerStore, IngressReconcilerListener {
 
-  public static final int MAPPER_FAILED = BAD_REQUEST.code();
-  public static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
-  public static final int RECORD_PRODUCED = ACCEPTED.code();
-  public static final int RESOURCE_NOT_FOUND = NOT_FOUND.code();
-
-  private static final Logger logger = LoggerFactory.getLogger(RequestMapper.class);
+  private final Properties producerConfigs;
+  private final Function<Properties, KafkaProducer<String, CloudEvent>> producerFactory;
+  private final AuthProvider authProvider;
 
   // ingress uuid -> IngressInfo
   // This map is used to resolve the ingress info in the reconciler listener
-  private final Map<String, IngressInfo> ingressInfos;
+  private final Map<String, IngressProducerImpl> ingressInfos;
   // producerConfig -> producer
   // This map is used to count the references to the producer instantiated for each producerConfig
   private final Map<Properties, ReferenceCounter<ProducerHolder>> producerReferences;
   // path -> IngressInfo
   // We use this map on the hot path to directly resolve the producer from the path
-  private final Map<String, IngressInfo> pathMapper;
+  private final Map<String, IngressProducerImpl> pathMapper;
 
-  private final Properties producerConfigs;
-  private final RequestToRecordMapper requestToRecordMapper;
-  private final Function<Properties, KafkaProducer<String, CloudEvent>> producerFactory;
-  private final Counter badRequestCounter;
-  private final Counter produceEventsCounter;
-  private final AuthProvider authProvider;
-
-  public RequestMapper(
+  public IngressProducerReconcilableStore(
     final AuthProvider authProvider,
     final Properties producerConfigs,
-    final RequestToRecordMapper requestToRecordMapper,
-    final Function<Properties, KafkaProducer<String, CloudEvent>> producerFactory,
-    final Counter badRequestCounter,
-    final Counter produceEventsCounter) {
+    final Function<Properties, KafkaProducer<String, CloudEvent>> producerFactory
+  ) {
 
     Objects.requireNonNull(producerConfigs, "provide producerConfigs");
-    Objects.requireNonNull(requestToRecordMapper, "provide a mapper");
     Objects.requireNonNull(producerFactory, "provide producerCreator");
 
     this.authProvider = authProvider;
     this.producerConfigs = producerConfigs;
-    this.requestToRecordMapper = requestToRecordMapper;
     this.producerFactory = producerFactory;
-    this.badRequestCounter = badRequestCounter;
-    this.produceEventsCounter = produceEventsCounter;
 
     this.ingressInfos = new HashMap<>();
     this.producerReferences = new HashMap<>();
@@ -107,88 +80,8 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
   }
 
   @Override
-  public void handle(final HttpServerRequest request) {
-    final var ingressInfo = pathMapper.get(request.path());
-    if (ingressInfo == null) {
-      request.response().setStatusCode(RESOURCE_NOT_FOUND).end();
-
-      logger.warn("resource not found {} {}",
-        keyValue("resources", pathMapper.keySet()),
-        keyValue("path", request.path())
-      );
-
-      return;
-    }
-
-    requestToRecordMapper
-      .requestToRecord(request, ingressInfo.getTopic())
-      .onFailure(cause -> {
-        // Conversion to record failed
-        request.response().setStatusCode(MAPPER_FAILED).end();
-        badRequestCounter.increment();
-
-        logger.warn("Failed to convert request to record {}",
-          keyValue("path", request.path()),
-          cause
-        );
-      })
-      .compose(record -> {
-        // Conversion to record succeeded, let's push it to Kafka
-        if (logger.isDebugEnabled()) {
-          final var span = Span.fromContextOrNull(Context.current());
-          if (span != null) {
-            logger.debug("Received event {} {}",
-              keyValue("event", record.value()),
-              keyValue(TracingConfig.TRACE_ID_KEY, span.getSpanContext().getTraceId())
-            );
-          } else {
-            logger.debug("Received event {}", keyValue("event", record.value()));
-          }
-        }
-
-        // Decorate the span with event specific attributed
-        TracingSpan.decorateCurrentWithEvent(record.value());
-
-        // Publish the record
-        return publishRecord(ingressInfo, record);
-      }).onComplete(ar -> {
-      // Write the response back
-      if (ar.succeeded()) {
-        request.response()
-          .setStatusCode(RECORD_PRODUCED)
-          .end();
-      } else {
-        request.response()
-          .setStatusCode(FAILED_TO_PRODUCE)
-          .end();
-      }
-    });
-  }
-
-  private Future<RecordMetadata> publishRecord(IngressInfo ingressInfo,
-                                               KafkaProducerRecord<String, CloudEvent> record) {
-    return ingressInfo.getProducer().send(record)
-      .onComplete(ar -> {
-        if (ar.succeeded()) {
-          produceEventsCounter.increment();
-          if (logger.isDebugEnabled()) {
-            logger.debug("Record produced {} {} {} {} {} {}",
-              keyValue("topic", record.topic()),
-              keyValue("partition", ar.result().getPartition()),
-              keyValue("offset", ar.result().getOffset()),
-              keyValue("value", record.value()),
-              keyValue("headers", record.headers()),
-              keyValue("path", ingressInfo.getPath())
-            );
-          }
-        } else {
-          logger.error("Failed to send record {} {}",
-            keyValue("topic", record.topic()),
-            keyValue("path", ingressInfo.getPath()),
-            ar.cause()
-          );
-        }
-      });
+  public IngressProducer resolve(String path) {
+    return pathMapper.get(path);
   }
 
   @Override
@@ -227,7 +120,7 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
       });
       rc.increment();
 
-      final var ingressInfo = new IngressInfo(
+      final var ingressInfo = new IngressProducerImpl(
         rc.getValue().getProducer(),
         resource.getTopics(0),
         ingress.getPath(),
@@ -292,6 +185,8 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
 
   private static class ProducerHolder implements AsyncCloseable {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProducerHolder.class);
+
     private final KafkaProducer<String, CloudEvent> producer;
     private final AutoCloseable producerMeterBinder;
 
@@ -324,26 +219,28 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
     }
   }
 
-  private static class IngressInfo {
+  private static class IngressProducerImpl implements IngressProducer {
 
     private final KafkaProducer<String, CloudEvent> producer;
     private final String topic;
     private final String path;
     private final Properties producerProperties;
 
-    IngressInfo(final KafkaProducer<String, CloudEvent> producer, final String topic, final String path,
-                final Properties producerProperties) {
+    IngressProducerImpl(final KafkaProducer<String, CloudEvent> producer, final String topic, final String path,
+                        final Properties producerProperties) {
       this.producer = producer;
       this.topic = topic;
       this.path = path;
       this.producerProperties = producerProperties;
     }
 
-    KafkaProducer<String, CloudEvent> getProducer() {
+    @Override
+    public KafkaProducer<String, CloudEvent> getKafkaProducer() {
       return producer;
     }
 
-    String getTopic() {
+    @Override
+    public String getTopic() {
       return topic;
     }
 
@@ -355,4 +252,5 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
       return producerProperties;
     }
   }
+
 }
