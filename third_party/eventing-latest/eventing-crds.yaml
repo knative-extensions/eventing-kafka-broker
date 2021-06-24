@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
-    eventing.knative.dev/release: "v20210618-b164d3c04"
+    eventing.knative.dev/release: "v20210624-2fcbc0ac5"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
@@ -231,7 +231,7 @@ kind: CustomResourceDefinition
 metadata:
   name: brokers.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210618-b164d3c04"
+    eventing.knative.dev/release: "v20210624-2fcbc0ac5"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
 spec:
@@ -304,6 +304,7 @@ spec:
                       description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
                       type: integer
                       format: int32
+                  x-kubernetes-preserve-unknown-fields: true # This is necessary to enable the experimental feature delivery-timeout
             status:
               description: Status represents the current state of the Broker. This data may be out of date.
               type: object
@@ -392,7 +393,7 @@ kind: CustomResourceDefinition
 metadata:
   name: channels.messaging.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210618-b164d3c04"
+    eventing.knative.dev/release: "v20210624-2fcbc0ac5"
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
@@ -477,6 +478,7 @@ spec:
                       description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
                       type: integer
                       format: int32
+                  x-kubernetes-preserve-unknown-fields: true # This is necessary to enable the experimental feature delivery-timeout
                 subscribers:
                   description: This is the list of subscriptions for this subscribable.
                   type: array
@@ -520,6 +522,7 @@ spec:
                             description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
                             type: integer
                             format: int32
+                        x-kubernetes-preserve-unknown-fields: true # This is necessary to enable the experimental feature
                       generation:
                         description: Generation of the origin of the subscriber with uid:UID.
                         type: integer
@@ -660,7 +663,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20210618-b164d3c04"
+    eventing.knative.dev/release: "v20210624-2fcbc0ac5"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
@@ -812,7 +815,7 @@ kind: CustomResourceDefinition
 metadata:
   name: eventtypes.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210618-b164d3c04"
+    eventing.knative.dev/release: "v20210624-2fcbc0ac5"
     knative.dev/crd-install: "true"
 spec:
   group: eventing.knative.dev
@@ -939,7 +942,7 @@ kind: CustomResourceDefinition
 metadata:
   name: parallels.flows.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210618-b164d3c04"
+    eventing.knative.dev/release: "v20210624-2fcbc0ac5"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
 spec:
@@ -1003,6 +1006,7 @@ spec:
                             description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
                             type: integer
                             format: int32
+                        x-kubernetes-preserve-unknown-fields: true # This is necessary to enable the experimental feature delivery-timeout
                       filter:
                         description: Filter is the expression guarding the branch
                         type: object
@@ -1191,7 +1195,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20210618-b164d3c04"
+    eventing.knative.dev/release: "v20210624-2fcbc0ac5"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
@@ -1380,7 +1384,7 @@ kind: CustomResourceDefinition
 metadata:
   name: sequences.flows.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210618-b164d3c04"
+    eventing.knative.dev/release: "v20210624-2fcbc0ac5"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
 spec:
@@ -1479,6 +1483,7 @@ spec:
                             description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
                             type: integer
                             format: int32
+                        x-kubernetes-preserve-unknown-fields: true # This is necessary to enable the experimental feature delivery-timeout
                       ref:
                         description: Ref points to an Addressable.
                         type: object
@@ -1698,7 +1703,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20210618-b164d3c04"
+    eventing.knative.dev/release: "v20210624-2fcbc0ac5"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
@@ -1888,7 +1893,7 @@ kind: CustomResourceDefinition
 metadata:
   name: subscriptions.messaging.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210618-b164d3c04"
+    eventing.knative.dev/release: "v20210624-2fcbc0ac5"
     knative.dev/crd-install: "true"
 spec:
   group: messaging.knative.dev
@@ -1919,6 +1924,7 @@ spec:
                     name:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                       type: string
+                  x-kubernetes-preserve-unknown-fields: true # This is necessary to enable the experimental feature
                 delivery:
                   description: Delivery configuration
                   type: object
@@ -1956,6 +1962,7 @@ spec:
                       description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
                       type: integer
                       format: int32
+                  x-kubernetes-preserve-unknown-fields: true # This is necessary to enable the experimental feature delivery-timeout
                 reply:
                   description: Reply specifies (optionally) how to handle events returned from the Subscriber target.
                   type: object
@@ -2096,7 +2103,7 @@ kind: CustomResourceDefinition
 metadata:
   name: triggers.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20210618-b164d3c04"
+    eventing.knative.dev/release: "v20210624-2fcbc0ac5"
     knative.dev/crd-install: "true"
 spec:
   group: eventing.knative.dev
