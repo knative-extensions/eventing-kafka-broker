@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.receiver.impl;
 
+import dev.knative.eventing.kafka.broker.receiver.RequestToRecordMapper;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
@@ -26,7 +27,7 @@ import io.vertx.kafka.client.producer.KafkaProducerRecord;
  * This class implements a strict {@link HttpServerRequest} to {@link KafkaProducerRecord} mapper.
  * The conversion will fail if the request does not contain a valid {@link CloudEvent}.
  * <p>
- * Instances of this class can be shared among verticles.
+ * This class is stateless, hence thread safe and shareable among verticles.
  */
 public class StrictRequestToRecordMapper implements RequestToRecordMapper {
 

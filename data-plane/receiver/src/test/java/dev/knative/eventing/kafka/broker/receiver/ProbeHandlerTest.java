@@ -15,8 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import dev.knative.eventing.kafka.broker.receiver.handler.SimpleProbeHandler;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
@@ -28,6 +27,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(VertxExtension.class)
 public class ProbeHandlerTest {
@@ -51,7 +52,7 @@ public class ProbeHandlerTest {
     this.webClient = WebClient.create(vertx);
 
     this.server = vertx.createHttpServer(httpServerOptions);
-    this.server.requestHandler(new SimpleProbeHandlerDecorator(
+    this.server.requestHandler(new SimpleProbeHandler(
       LIVENESS_PATH,
       READINESS_PATH,
       r -> r.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end()

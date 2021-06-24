@@ -23,7 +23,6 @@ import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
 import dev.knative.eventing.kafka.broker.core.utils.ReferenceCounter;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
-import dev.knative.eventing.kafka.broker.receiver.IngressProducerStore;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
@@ -40,12 +39,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class is an implementation of {@link IngressProducerStore} that can be reconciled
+ * This class implements a store of {@link IngressProducer} that can be reconciled
  * using it as {@link IngressReconcilerListener} of a {@link dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler}.
  * <p>
  * Because of its state associated to the specific verticles, this class cannot be shared among verticles.
  */
-public class IngressProducerReconcilableStore implements IngressProducerStore, IngressReconcilerListener {
+public class IngressProducerReconcilableStore implements IngressReconcilerListener {
 
   private final Properties producerConfigs;
   private final Function<Properties, KafkaProducer<String, CloudEvent>> producerFactory;
@@ -79,7 +78,6 @@ public class IngressProducerReconcilableStore implements IngressProducerStore, I
     this.pathMapper = new HashMap<>();
   }
 
-  @Override
   public IngressProducer resolve(String path) {
     return pathMapper.get(path);
   }

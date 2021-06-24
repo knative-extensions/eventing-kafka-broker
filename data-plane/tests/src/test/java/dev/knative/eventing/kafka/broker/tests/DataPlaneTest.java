@@ -23,9 +23,9 @@ import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcile
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
-import dev.knative.eventing.kafka.broker.receiver.ReceiverVerticle;
 import dev.knative.eventing.kafka.broker.receiver.RequestMapper;
-import dev.knative.eventing.kafka.broker.receiver.StrictRequestToRecordMapper;
+import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
+import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventV1;

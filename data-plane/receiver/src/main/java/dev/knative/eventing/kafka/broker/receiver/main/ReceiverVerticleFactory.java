@@ -17,16 +17,23 @@
 package dev.knative.eventing.kafka.broker.receiver.main;
 
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
-import dev.knative.eventing.kafka.broker.receiver.ReceiverVerticle;
-import dev.knative.eventing.kafka.broker.receiver.RequestMapper;
-import dev.knative.eventing.kafka.broker.receiver.SimpleProbeHandlerDecorator;
-import dev.knative.eventing.kafka.broker.receiver.StrictRequestToRecordMapper;
+import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
+import dev.knative.eventing.kafka.broker.receiver.handler.IngressRequestHandlerImpl;
+import dev.knative.eventing.kafka.broker.receiver.handler.MethodNotAllowedHandler;
+import dev.knative.eventing.kafka.broker.receiver.handler.SimpleProbeHandler;
+import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
+import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
+import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.vertx.core.Handler;
 import io.vertx.core.Verticle;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import java.util.List;
 import java.util.Properties;
 import java.util.function.Supplier;
 
@@ -34,9 +41,10 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
 
   private final ReceiverEnv env;
   private final Properties producerConfigs;
-  private final Counter badRequestCounter;
-  private final Counter produceEventsCounter;
   private final HttpServerOptions httpServerOptions;
+
+  private final Iterable<Handler<HttpServerRequest>> preHandlers;
+  private final IngressRequestHandler ingressRequestHandler;
 
   ReceiverVerticleFactory(final ReceiverEnv env,
                           final Properties producerConfigs,
@@ -47,28 +55,28 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     this.producerConfigs = producerConfigs;
     this.httpServerOptions = httpServerOptions;
 
-    // Resolve metrics counters
-    this.badRequestCounter = metricsRegistry.counter(Metrics.HTTP_REQUESTS_MALFORMED_COUNT);
-    this.produceEventsCounter = metricsRegistry.counter(Metrics.HTTP_REQUESTS_PRODUCE_COUNT);
+    this.preHandlers = List.of(
+      new SimpleProbeHandler(env.getLivenessProbePath(), env.getReadinessProbePath()),
+      MethodNotAllowedHandler.getInstance()
+    );
+    this.ingressRequestHandler = new IngressRequestHandlerImpl(
+      StrictRequestToRecordMapper.getInstance(),
+      metricsRegistry.counter(Metrics.HTTP_REQUESTS_MALFORMED_COUNT),
+    metricsRegistry.counter(Metrics.HTTP_REQUESTS_PRODUCE_COUNT)
+    );
   }
 
   @Override
   public Verticle get() {
     return new ReceiverVerticle(
       httpServerOptions,
-      v -> new RequestMapper(
+      v -> new IngressProducerReconcilableStore(
         AuthProvider.kubernetes(),
         producerConfigs,
-        StrictRequestToRecordMapper.getInstance(),
-        properties -> KafkaProducer.create(v, properties),
-        badRequestCounter,
-        produceEventsCounter
+        properties -> KafkaProducer.create(v, properties)
       ),
-      h -> new SimpleProbeHandlerDecorator(
-        env.getLivenessProbePath(),
-        env.getReadinessProbePath(),
-        h
-      )
+      this.preHandlers,
+      this.ingressRequestHandler
     );
   }
 }

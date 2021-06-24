@@ -18,6 +18,8 @@ package dev.knative.eventing.kafka.broker.receiver;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
+import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
+import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;

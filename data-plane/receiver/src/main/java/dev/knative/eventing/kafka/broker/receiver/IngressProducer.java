@@ -35,8 +35,6 @@ public interface IngressProducer {
     return getKafkaProducer().send(record);
   }
 
-  ;
-
   /**
    * @return the unwrapped kafka producer.
    */
