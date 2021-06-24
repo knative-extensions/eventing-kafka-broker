@@ -15,14 +15,13 @@
  */
 package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import io.vertx.core.Future;
-import org.junit.jupiter.api.Test;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import org.junit.jupiter.api.Test;
 
 import static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress;
 import static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter;
@@ -33,7 +32,7 @@ class ResourcesReconcilerImplTest {
 
   @Test
   void nullPointerExceptionWhenNoListenerIsProvided() {
-    assertThatThrownBy(() -> ResourcesReconcilerImpl.builder().build())
+    assertThatThrownBy(() -> ResourcesReconciler.builder().build())
       .isInstanceOf(NullPointerException.class);
   }
 

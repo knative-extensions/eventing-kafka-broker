@@ -15,18 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress1;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress2;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress3;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress4;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress5;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress6;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
+import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -41,6 +31,16 @@ import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress1;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress2;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress3;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress4;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress5;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.egress6;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(VertxExtension.class)
 @Execution(ExecutionMode.CONCURRENT)
@@ -70,7 +70,7 @@ public class ConsumerDeployerVerticleTest {
       .toCompletableFuture()
       .get();
 
-    final var reconciler = ResourcesReconcilerImpl
+    final var reconciler = ResourcesReconciler
       .builder()
       .watchEgress(consumerDeployer)
       .build();
@@ -107,7 +107,7 @@ public class ConsumerDeployerVerticleTest {
       .toCompletableFuture()
       .get();
 
-    final var reconciler = ResourcesReconcilerImpl
+    final var reconciler = ResourcesReconciler
       .builder()
       .watchEgress(consumerDeployer)
       .build();
@@ -156,7 +156,7 @@ public class ConsumerDeployerVerticleTest {
       .toCompletableFuture()
       .get();
 
-    final var reconciler = ResourcesReconcilerImpl
+    final var reconciler = ResourcesReconciler
       .builder()
       .watchEgress(consumerDeployer)
       .build();
@@ -226,7 +226,7 @@ public class ConsumerDeployerVerticleTest {
       .toCompletableFuture()
       .get();
 
-    final var reconciler = ResourcesReconcilerImpl
+    final var reconciler = ResourcesReconciler
       .builder()
       .watchEgress(consumerDeployer)
       .build();
@@ -307,7 +307,7 @@ public class ConsumerDeployerVerticleTest {
       .toCompletableFuture()
       .get();
 
-    final var reconciler = ResourcesReconcilerImpl
+    final var reconciler = ResourcesReconciler
       .builder()
       .watchEgress(consumerDeployer)
       .build();
@@ -380,7 +380,7 @@ public class ConsumerDeployerVerticleTest {
       .toCompletableFuture()
       .get();
 
-    final var reconciler = ResourcesReconcilerImpl
+    final var reconciler = ResourcesReconciler
       .builder()
       .watchEgress(consumerDeployer)
       .build();

@@ -15,20 +15,10 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
-import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
+import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
@@ -56,6 +46,16 @@ import java.util.function.BiConsumer;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.InstanceOfAssertFactories.map;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class RequestMapperTest {
@@ -114,7 +114,8 @@ public class RequestMapperTest {
       mock(Counter.class),
       mock(Counter.class)
     );
-    final var reconciler = ResourcesReconcilerImpl.builder()
+    final var reconciler = ResourcesReconciler
+      .builder()
       .watchIngress(handler)
       .build();
 
@@ -157,7 +158,8 @@ public class RequestMapperTest {
       mock(Counter.class),
       mock(Counter.class)
     );
-    final var reconciler = ResourcesReconcilerImpl.builder()
+    final var reconciler = ResourcesReconciler
+      .builder()
       .watchIngress(handler)
       .build();
 
@@ -428,7 +430,8 @@ public class RequestMapperTest {
       mock(Counter.class),
       mock(Counter.class)
     );
-    final var reconciler = ResourcesReconcilerImpl.builder()
+    final var reconciler = ResourcesReconciler
+      .builder()
       .watchIngress(handler)
       .build();
 

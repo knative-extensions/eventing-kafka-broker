@@ -15,8 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
-import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
+import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Handler;
@@ -26,7 +25,6 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
-
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -63,13 +61,10 @@ public class ReceiverVerticle extends AbstractVerticle {
   public void start(final Promise<Void> startPromise) {
     final var requestMapper = this.requestHandlerFactory.apply(vertx);
 
-    this.messageConsumer = ResourcesReconcilerMessageHandler.start(
-      vertx,
-      ResourcesReconcilerImpl
-        .builder()
-        .watchIngress(requestMapper)
-        .build()
-    );
+    this.messageConsumer = ResourcesReconciler
+      .builder()
+      .watchIngress(requestMapper)
+      .buildAndListen(vertx);
     this.server = vertx.createHttpServer(httpServerOptions);
 
     Handler<HttpServerRequest> requestHandler = requestMapper;

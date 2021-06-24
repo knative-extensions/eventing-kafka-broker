@@ -16,8 +16,8 @@
 package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import io.vertx.core.Future;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -127,7 +127,7 @@ public class ResourceReconcilerTestRunner {
     final var ingressListener = this.ingressReconcilerListener;
     final var egressListener = this.egressReconcilerListener;
 
-    final var reconcilerBuilder = ResourcesReconcilerImpl
+    final var reconcilerBuilder = ResourcesReconciler
       .builder();
 
     if (ingressListener != null) {
