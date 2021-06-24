@@ -97,7 +97,7 @@ public class ReceiverVerticleTest {
       vertx,
       null,
       new Properties(),
-      new CloudEventRequestToRecordMapper(),
+      StrictRequestToRecordMapper.getInstance(),
       properties -> producer,
       badRequestCount,
       produceRequestCount

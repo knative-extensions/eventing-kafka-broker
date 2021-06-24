@@ -21,13 +21,16 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
+import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
+import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.core.utils.ReferenceCounter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.micrometer.core.instrument.Counter;
-import io.vertx.core.CompositeFuture;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -121,30 +124,47 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
     }
 
     requestToRecordMapper
-      .recordFromRequest(request, ingressInfo.getTopic())
-      .onSuccess(record -> ingressInfo.getProducer().send(record)
-        .onSuccess(metadata -> {
-          request.response().setStatusCode(RECORD_PRODUCED).end();
-          produceEventsCounter.increment();
+      .requestToRecord(request, ingressInfo.getTopic())
+      .onSuccess(record -> {
+          if (logger.isDebugEnabled()) {
+            final var span = Span.fromContextOrNull(Context.current());
+            if (span != null) {
+              logger.debug("Received event {} {}",
+                keyValue("event", record.value()),
+                keyValue(TracingConfig.TRACE_ID_KEY, span.getSpanContext().getTraceId())
+              );
+            } else {
+              logger.debug("Received event {}", keyValue("event", record.value()));
+            }
+          }
 
-          logger.debug("Record produced {} {} {} {} {} {}",
-            keyValue("topic", record.topic()),
-            keyValue("partition", metadata.getPartition()),
-            keyValue("offset", metadata.getOffset()),
-            keyValue("value", record.value()),
-            keyValue("headers", record.headers()),
-            keyValue("path", request.path())
-          );
-        })
-        .onFailure(cause -> {
-          request.response().setStatusCode(FAILED_TO_PRODUCE).end();
+          // Decorate the span with event specific attributed
+          TracingSpan.decorateCurrentWithEvent(record.value());
 
-          logger.error("Failed to send record {} {}",
-            keyValue("topic", record.topic()),
-            keyValue("path", request.path()),
-            cause
-          );
-        })
+          ingressInfo.getProducer().send(record)
+            .onSuccess(metadata -> {
+              request.response().setStatusCode(RECORD_PRODUCED).end();
+              produceEventsCounter.increment();
+
+              logger.debug("Record produced {} {} {} {} {} {}",
+                keyValue("topic", record.topic()),
+                keyValue("partition", metadata.getPartition()),
+                keyValue("offset", metadata.getOffset()),
+                keyValue("value", record.value()),
+                keyValue("headers", record.headers()),
+                keyValue("path", request.path())
+              );
+            })
+            .onFailure(cause -> {
+              request.response().setStatusCode(FAILED_TO_PRODUCE).end();
+
+              logger.error("Failed to send record {} {}",
+                keyValue("topic", record.topic()),
+                keyValue("path", request.path()),
+                cause
+              );
+            });
+        }
       )
       .onFailure(cause -> {
         request.response().setStatusCode(MAPPER_FAILED).end();
