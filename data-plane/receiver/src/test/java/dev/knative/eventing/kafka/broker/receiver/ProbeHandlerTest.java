@@ -15,7 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import dev.knative.eventing.kafka.broker.receiver.handler.SimpleProbeHandler;
+import dev.knative.eventing.kafka.broker.receiver.handler.ProbeHandler;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
@@ -52,7 +52,7 @@ public class ProbeHandlerTest {
     this.webClient = WebClient.create(vertx);
 
     this.server = vertx.createHttpServer(httpServerOptions);
-    this.server.requestHandler(new SimpleProbeHandler(
+    this.server.requestHandler(new ProbeHandler(
       LIVENESS_PATH,
       READINESS_PATH,
       r -> r.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end()

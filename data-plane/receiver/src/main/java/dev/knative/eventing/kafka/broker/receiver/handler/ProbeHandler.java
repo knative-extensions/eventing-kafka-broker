@@ -25,7 +25,7 @@ import io.vertx.core.http.HttpServerRequest;
  * <p>
  * This class is stateless, hence thread safe and shareable among verticles.
  */
-public class SimpleProbeHandler implements Handler<HttpServerRequest> {
+public class ProbeHandler implements Handler<HttpServerRequest> {
 
   protected static final int STATUS_OK = HttpResponseStatus.OK.code();
 
@@ -38,7 +38,7 @@ public class SimpleProbeHandler implements Handler<HttpServerRequest> {
    * @param livenessPath  request path at which respond to liveness checks.
    * @param readinessPath request path at which respond to readiness checks.
    */
-  public SimpleProbeHandler(
+  public ProbeHandler(
     final String livenessPath,
     final String readinessPath
   ) {

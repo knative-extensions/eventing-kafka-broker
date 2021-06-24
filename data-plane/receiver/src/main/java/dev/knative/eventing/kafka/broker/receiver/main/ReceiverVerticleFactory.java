@@ -22,7 +22,7 @@ import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.handler.MethodNotAllowedHandler;
-import dev.knative.eventing.kafka.broker.receiver.handler.SimpleProbeHandler;
+import dev.knative.eventing.kafka.broker.receiver.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
 import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
 import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
@@ -53,7 +53,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     this.httpServerOptions = httpServerOptions;
 
     this.preHandlers = List.of(
-      new SimpleProbeHandler(env.getLivenessProbePath(), env.getReadinessProbePath()),
+      new ProbeHandler(env.getLivenessProbePath(), env.getReadinessProbePath()),
       MethodNotAllowedHandler.getInstance()
     );
     this.ingressRequestHandler = new IngressRequestHandlerImpl(
