@@ -460,7 +460,7 @@ public class RequestMapperTest {
   private static HttpServerRequest mockHttpServerRequest(Resource resource) {
     final var request = mock(HttpServerRequest.class);
     when(request.path()).thenReturn(resource.getIngress().getPath());
-    when(request.method()).thenReturn(new HttpMethod("POST"));
+    when(request.method()).thenReturn(HttpMethod.POST);
     when(request.host()).thenReturn("127.0.0.1");
     when(request.scheme()).thenReturn("http");
     when(request.headers()).thenReturn(new HeadersMultiMap());
