@@ -3,6 +3,7 @@ package dev.knative.eventing.kafka.broker.receiver.handler;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
@@ -55,8 +56,9 @@ public abstract class PreHandlerTest {
   protected void mustReceiveStatusCodeOnPath(
     final VertxTestContext context,
     final int expectedStatusCode,
+    final HttpMethod method,
     final String path) {
-    webClient.get(PORT, "localhost", path)
+    webClient.request(method, PORT, "localhost", path)
       .send()
       .onSuccess(response -> context.verify(() -> {
         assertThat(response.statusCode())

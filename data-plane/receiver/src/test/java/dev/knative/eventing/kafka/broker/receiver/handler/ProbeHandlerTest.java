@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.receiver.handler;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.Test;
@@ -29,17 +30,22 @@ public class ProbeHandlerTest extends PreHandlerTest {
 
   @Test
   public void testReadinessCheck(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, OK, READINESS_PATH);
+    mustReceiveStatusCodeOnPath(context, OK, HttpMethod.GET, READINESS_PATH);
   }
 
   @Test
   public void testLivenessCheck(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, OK, LIVENESS_PATH);
+    mustReceiveStatusCodeOnPath(context, OK, HttpMethod.GET, LIVENESS_PATH);
   }
 
   @Test
-  public void shouldForwardToNextHandler(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, "/does-not-exists-42");
+  public void notALivenessOrReadinessPath(final VertxTestContext context) {
+    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, HttpMethod.GET, "/does-not-exists-42");
+  }
+
+  @Test
+  public void notAGetRequest(final VertxTestContext context) {
+    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, HttpMethod.POST, "/does-not-exists-42");
   }
 
   @Override

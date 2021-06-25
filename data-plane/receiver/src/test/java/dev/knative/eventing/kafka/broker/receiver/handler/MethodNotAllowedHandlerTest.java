@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.receiver.handler;
 
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.Test;
@@ -26,12 +27,12 @@ public class MethodNotAllowedHandlerTest extends PreHandlerTest {
 
   @Test
   public void testBadMethod(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, METHOD_NOT_ALLOWED.code(), "/");
+    mustReceiveStatusCodeOnPath(context, METHOD_NOT_ALLOWED.code(), HttpMethod.GET, "/");
   }
 
   @Test
   public void testCorrectMethod(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, "/");
+    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, HttpMethod.POST, "/");
   }
 
   @Override

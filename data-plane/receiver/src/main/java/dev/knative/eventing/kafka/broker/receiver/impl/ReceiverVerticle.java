@@ -44,7 +44,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
  * <ul>
  *   <li>Starts an {@link HttpServer} listening for incoming events</li>
  *   <li>Starts a {@link ResourcesReconciler}, listen on the event bus for reconciliation events and keeps track of the {@link dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress} objects and their {@code path => (topic, producer)} mapping</li>
- *   <li>Implements a request handler that invokes a series of {@code preHandlers} and then a final {@link IngressRequestHandler} to publish the record to Kafka</li>
+ *   <li>Implements a request handler that invokes a series of {@code preHandlers} (which are assumed to complete synchronously) and then a final {@link IngressRequestHandler} to publish the record to Kafka</li>
  * </ul>
  */
 public class ReceiverVerticle extends AbstractVerticle {
