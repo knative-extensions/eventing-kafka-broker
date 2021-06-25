@@ -109,11 +109,11 @@ function data_plane_build_push() {
   local uuid=${UUID}
   if [ "${uuid}" = "latest" ]; then
     if [[ "$OSTYPE" == "darwin"* ]]; then
-			# MacOS
-			uuid="$(uuidgen)"
-		else
-    	uuid="$(uuidgen --time)"
-		fi
+      # MacOS
+      uuid="$(uuidgen)"
+    else
+      uuid="$(uuidgen --time)"
+    fi
   fi
 
   export KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${receiver}":"${uuid}"
