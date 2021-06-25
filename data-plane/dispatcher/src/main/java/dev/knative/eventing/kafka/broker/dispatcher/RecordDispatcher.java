@@ -21,7 +21,7 @@ import io.vertx.core.Future;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
 /**
- * This class performs the dispatch of consumed records.
+ * This interface performs the dispatch of consumed records.
  */
 public interface RecordDispatcher extends AsyncCloseable {
 
