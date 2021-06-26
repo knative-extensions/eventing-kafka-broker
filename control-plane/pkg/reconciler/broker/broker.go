@@ -215,7 +215,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	// To make sure that our receivers have got at least the first broker configuration, we probe our receivers pods
 	ingress := brokerResource.Ingress.IngressType.(*contract.Ingress_Path)
-	if err := r.ProbeReceivers(ingress.Path); err != nil {
+	if err := r.ProbeReceivers(broker, ingress.Path); err != nil {
 		statusConditionManager.ProbeFailed(err)
 		// When a probe fails, we don't return an error but we requeue our broker so that we can probe it again later.
 		r.EnqueueAfter(broker, time.Duration(r.Configs.ProbeFailureRequeueDelayMs)*time.Millisecond)

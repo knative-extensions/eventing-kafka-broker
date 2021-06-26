@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -31,6 +32,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/tracker"
 
@@ -82,6 +84,8 @@ type Reconciler struct {
 	ReceiverLabel   string
 
 	RequestProbeDoer func(r *http.Request) (*http.Response, error)
+	ProbeCache       prober.Cache
+	Enqueue          func(object metav1.Object)
 }
 
 func (r *Reconciler) IsReceiverRunning() bool {
@@ -311,7 +315,9 @@ func (r *Reconciler) OnDeleteObserver(obj interface{}) {
 	}
 }
 
-func (r *Reconciler) ProbeReceivers(path string) error {
+type EnqueueFunc func(object metav1.Object, duration time.Duration)
+
+func (r *Reconciler) ProbeReceivers(object metav1.Object, path string) error {
 	namespace := r.SystemNamespace
 
 	pods, err := r.PodLister.Pods(namespace).List(r.receiverSelector())
@@ -325,7 +331,7 @@ func (r *Reconciler) ProbeReceivers(path string) error {
 
 	for _, p := range pods {
 		if podIP := p.Status.PodIP; podIP != "" {
-			if err := r.probeReceiver(p.Namespace, p.Name, podIP, ReceiverPort, path); err != nil {
+			if err := r.probeReceiver(object, p.Namespace, p.Name, podIP, ReceiverPort, path); err != nil {
 				return err // probeReceiver already decorates err.
 			}
 		}
@@ -334,8 +340,13 @@ func (r *Reconciler) ProbeReceivers(path string) error {
 	return nil
 }
 
-func (r *Reconciler) probeReceiver(namespace, name, ip, port, path string) error {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s://%s:%s%s", ProbeProtocol, ip, port, path), nil)
+func (r *Reconciler) probeReceiver(object metav1.Object, namespace, name, ip, port, path string) error {
+	target := fmt.Sprintf("%s://%s:%s%s", ProbeProtocol, ip, port, path)
+	if r.ProbeCache.GetStatus(target) == prober.StatusReady {
+		return nil
+	}
+
+	req, err := http.NewRequest("GET", target, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
@@ -343,14 +354,25 @@ func (r *Reconciler) probeReceiver(namespace, name, ip, port, path string) error
 	req.Header.Add(network.ProbeHeaderName, "probe")
 	req.Header.Add(network.HashHeaderName, "hash")
 
-	response, err := r.RequestProbeDoer(req)
-	if err != nil {
-		return fmt.Errorf("failed to probe pod %s/%s with ip %s: %w", namespace, name, ip, err)
-	}
+	enqueue := func(key string, arg interface{}) { r.Enqueue(arg.(metav1.Object)) }
 
-	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("probe failed response status code %d from pod %s/%s with ip %s", response.StatusCode, namespace, name, ip)
-	}
+	go func() {
+		response, err := r.RequestProbeDoer(req)
+		if err != nil {
+			r.ProbeCache.UpdateStatus(target, prober.StatusUnknown, object, enqueue)
+			// TODO logger
+			// return fmt.Errorf("failed to probe pod %s/%s with ip %s: %w", namespace, name, ip, err)
+			return
+		}
+
+		if response.StatusCode != http.StatusOK {
+			r.ProbeCache.UpdateStatus(target, prober.StatusNotReady, object, enqueue)
+			// TODO logger
+			// return fmt.Errorf("probe failed response status code %d from pod %s/%s with ip %s", response.StatusCode, namespace, name, ip)
+			return
+		}
+		r.ProbeCache.UpdateStatus(target, prober.StatusReady, object, enqueue)
+	}()
 
 	return nil
 }

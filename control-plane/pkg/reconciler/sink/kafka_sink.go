@@ -197,7 +197,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	}
 
 	ingress := sinkConfig.Ingress.IngressType.(*contract.Ingress_Path)
-	if err := r.ProbeReceivers(ingress.Path); err != nil {
+	if err := r.ProbeReceivers(ingress.Path, nil); err != nil {
 		statusConditionManager.ProbeFailed(err)
 		// When a probe fails, we don't return an error but we requeue our sink so that we can probe it again later.
 		r.EnqueueAfter(ks, time.Duration(r.Configs.ProbeFailureRequeueDelayMs)*time.Millisecond)

@@ -290,7 +290,7 @@ func TestProbeReceivers(t *testing.T) {
 		ReceiverLabel:    base.BrokerReceiverLabel,
 	}
 
-	assert.Nil(t, r.ProbeReceivers("/hello/hello"))
+	assert.Nil(t, r.ProbeReceivers("/hello/hello", nil))
 }
 
 func TestProbeReceiversFailure(t *testing.T) {
@@ -325,7 +325,7 @@ func TestProbeReceiversFailure(t *testing.T) {
 				ReceiverLabel:    base.BrokerReceiverLabel,
 			}
 
-			assert.NotNil(t, r.ProbeReceivers(tc.path))
+			assert.NotNil(t, r.ProbeReceivers(tc.path, nil))
 		})
 	}
 }
