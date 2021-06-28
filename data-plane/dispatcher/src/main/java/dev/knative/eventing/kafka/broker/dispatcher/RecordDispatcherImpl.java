@@ -16,7 +16,6 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
-import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Context;
 import io.vertx.core.Future;

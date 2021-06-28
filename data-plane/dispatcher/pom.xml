@@ -76,6 +76,10 @@
       <groupId>io.cloudevents</groupId>
       <artifactId>cloudevents-json-jackson</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.cloudevents</groupId>
+      <artifactId>cloudevents-sql</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>

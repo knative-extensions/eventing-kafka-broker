@@ -15,7 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;

@@ -13,27 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.core.filter.impl;
+package dev.knative.eventing.kafka.broker.dispatcher;
 
-import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import io.cloudevents.CloudEvent;
-import java.util.Set;
+import java.util.function.Predicate;
 
-public class AllFilter implements Filter {
+/**
+ * This interface provides an abstraction for filtering {@link CloudEvent} instances.
+ */
+@FunctionalInterface
+public interface Filter extends Predicate<CloudEvent> {
 
-  private final Set<Filter> filters;
-
-  public AllFilter(Set<Filter> filters) {
-    this.filters = filters;
-  }
-
-  @Override
-  public boolean test(CloudEvent cloudEvent) {
-    for (Filter filter : filters) {
-      if (!filter.test(cloudEvent)) {
-        return false;
-      }
-    }
-    return true;
+  /**
+   * @return noop implementation that always returns true
+   */
+  static Filter noop() {
+    return ce -> true;
   }
 }
