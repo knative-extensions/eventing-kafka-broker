@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.core.filter.impl;
+package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
-import static java.time.format.DateTimeFormatter.ISO_INSTANT;
-
-import dev.knative.eventing.kafka.broker.core.filter.Filter;
+import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v03.CloudEventV03;
 import io.cloudevents.core.v1.CloudEventV1;
@@ -29,6 +27,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 
 public class AttributesFilter implements Filter {
 

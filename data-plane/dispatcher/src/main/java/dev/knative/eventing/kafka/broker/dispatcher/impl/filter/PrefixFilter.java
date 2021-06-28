@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.core.filter;
+package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
 import io.cloudevents.CloudEvent;
-import java.util.function.Predicate;
 
-/**
- * Filter interface abstract the filtering logic of broker.
- */
-@FunctionalInterface
-public interface Filter extends Predicate<CloudEvent> {
+public class PrefixFilter extends BaseStringFilter {
 
-  static Filter noop() {
-    return ce -> true;
+  public PrefixFilter(String attribute, String expectedValue) {
+    super(attribute, expectedValue);
+  }
+
+  @Override
+  public boolean test(CloudEvent cloudEvent) {
+    String value = this.extractor.apply(cloudEvent);
+    return value != null && value.startsWith(this.expectedValue);
   }
 }
