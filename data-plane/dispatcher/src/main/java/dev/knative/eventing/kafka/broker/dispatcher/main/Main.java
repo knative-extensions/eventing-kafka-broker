@@ -147,8 +147,7 @@ public class Main {
       final var fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
 
       // Gracefully clean up resources.
-      Runtime.getRuntime()
-        .addShutdownHook(new Thread(Shutdown.run(vertx, fw, publisher, openTelemetry.getSdkTracerProvider())));
+      Shutdown.registerHook(vertx, publisher, fw, openTelemetry.getSdkTracerProvider());
 
       fw.watch(); // block forever
 
@@ -157,7 +156,7 @@ public class Main {
     } catch (final Exception ex) {
       logger.error("Failed during filesystem watch", ex);
 
-      Shutdown.closeSync(vertx).run();
+      Shutdown.closeVertxSync(vertx);
       System.exit(1);
     }
   }

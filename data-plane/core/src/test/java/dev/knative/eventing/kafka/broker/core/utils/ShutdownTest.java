@@ -15,19 +15,16 @@
  */
 package dev.knative.eventing.kafka.broker.core.utils;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import java.io.Closeable;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
+
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class ShutdownTest {
 
@@ -36,31 +33,24 @@ public class ShutdownTest {
     final var vertx = mockVertxClose();
     final var closeable = mock(Closeable.class);
 
-    Shutdown.run(vertx, closeable).run();
+    Shutdown.createRunnable(vertx, closeable).run();
 
-    verify(vertx, times(1)).close(any());
+    verify(vertx, times(1)).close();
     verify(closeable).close();
   }
 
   @Test
-  public void closeSync() {
+  public void closeVertxSync() {
     final var vertx = mockVertxClose();
 
-    Shutdown.closeSync(vertx).run();
+    Shutdown.closeVertxSync(vertx);
 
-    verify(vertx).close(any());
+    verify(vertx).close();
   }
 
   private Vertx mockVertxClose() {
     final var vertx = mock(Vertx.class);
-
-    doAnswer(invocation -> {
-      final Handler<AsyncResult<Void>> callback = invocation.getArgument(0);
-      callback.handle(Future.succeededFuture());
-      return null;
-    })
-      .when(vertx).close(any());
-
+    doReturn(Future.succeededFuture()).when(vertx).close();
     return vertx;
   }
 }
