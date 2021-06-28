@@ -21,7 +21,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 
 /**
- * SinkResponseHandler is responsible for reading the response and acting on it based on its content.
+ * This class reads a sink response and acts on it based on its content.
  */
 public interface SinkResponseHandler extends AsyncCloseable {
 

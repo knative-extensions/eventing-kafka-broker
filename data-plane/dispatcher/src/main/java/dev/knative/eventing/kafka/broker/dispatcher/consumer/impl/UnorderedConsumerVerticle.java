@@ -32,7 +32,7 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
   @Override
   void startConsumer(Promise<Void> startPromise) {
     this.consumer.exceptionHandler(this::exceptionHandler);
-    this.consumer.handler(this.recordDispatcher);
+    this.consumer.handler(record -> this.recordDispatcher.dispatch(record));
     this.consumer.subscribe(this.topics, startPromise);
   }
 

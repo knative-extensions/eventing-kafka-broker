@@ -15,7 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.consumer.impl;
 
-import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
+import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherImpl;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -81,8 +81,8 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
     // Mock the record dispatcher to count down the latch and save the received records order
     CountDownLatch latch = new CountDownLatch(tasks);
     final Map<TopicPartition, List<Long>> receivedRecords = new HashMap<>(partitions);
-    final var recordDispatcher = mock(RecordDispatcher.class);
-    when(recordDispatcher.apply(any())).then(invocation -> {
+    final var recordDispatcher = mock(RecordDispatcherImpl.class);
+    when(recordDispatcher.dispatch(any())).then(invocation -> {
       final KafkaConsumerRecord<String, CloudEvent> record = invocation.getArgument(0);
       return recordDispatcherLogicMock(vertx, random, delay, latch, record, receivedRecords);
     });

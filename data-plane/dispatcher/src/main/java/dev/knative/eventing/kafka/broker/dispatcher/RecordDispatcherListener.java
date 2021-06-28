@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.consumer;
+package dev.knative.eventing.kafka.broker.dispatcher;
 
-import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
 /**
- * This class manages the offset of the record consumed by {@link RecordDispatcher}
+ * This class contains hooks for listening events through the {@link dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher} lifecycle.
  */
-public interface OffsetManager {
+public interface RecordDispatcherListener {
 
   /**
    * The given record has been received.
