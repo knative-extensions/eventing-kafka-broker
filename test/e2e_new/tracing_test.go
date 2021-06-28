@@ -23,12 +23,11 @@ import (
 	"testing"
 	"time"
 
-	"knative.dev/reconciler-test/pkg/environment"
-
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/pkg/system"
+	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
@@ -187,13 +186,13 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),
 		eventshub.AddTracing,
-		eventshub.SendMultipleEvents(10, time.Millisecond*100),
+		eventshub.SendMultipleEvents(5, time.Millisecond),
 	))
 
 	f.Assert("received event has traceparent header",
 		OnStore(sinkName).
 			Match(MatchKind(EventReceived), hasTraceparentHeader).
-			Exact(20),
+			Exact(10),
 	)
 
 	return f
