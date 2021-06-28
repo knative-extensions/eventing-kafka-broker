@@ -16,19 +16,55 @@
 package dev.knative.eventing.kafka.broker.core.utils;
 
 import io.vertx.core.Vertx;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 public class Shutdown {
 
   private static final Logger logger = LoggerFactory.getLogger(Shutdown.class);
 
-  public static Runnable run(final Vertx vertx, final AutoCloseable... closeables) {
+  private Shutdown() {
+  }
+
+  /**
+   * Register a set of {@link AutoCloseable} in the runtime shutdown hook.
+   * This is going to shutdown the set of provided autocloseable, and then the vertx instance.
+   *
+   * @param vertx      the vertx instance to shutdown
+   * @param closeables the set of auto closeable to shutdown
+   */
+  public static void registerHook(final Vertx vertx, final AutoCloseable... closeables) {
+    Runtime.getRuntime()
+      .addShutdownHook(new Thread(
+        Shutdown.createRunnable(vertx, closeables)
+      ));
+  }
+
+  /**
+   * Force closing the provided {@link Vertx} instance synchronously.
+   * This method is infallible and will log any eventual error.
+   *
+   * @param vertx the vertx instance to close
+   */
+  public static void closeVertxSync(final Vertx vertx) {
+    logger.info("Closing Vert.x");
+    try {
+      vertx.close()
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(2, TimeUnit.MINUTES);
+    } catch (TimeoutException e) {
+      logger.error("Timeout waiting for Vertx::close", e);
+    } catch (Throwable e) {
+      logger.error("Error while closing Vertx instance", e);
+    }
+  }
+
+  static Runnable createRunnable(final Vertx vertx, final AutoCloseable... closeables) {
     return () -> {
-      logger.info("Executing shutdown");
+      logger.info("Running shutdown hook");
       for (AutoCloseable closeable : closeables) {
         try {
           closeable.close();
@@ -36,20 +72,7 @@ public class Shutdown {
           logger.error("Failed to close", e);
         }
       }
-      closeSync(vertx).run();
-    };
-  }
-
-  public static Runnable closeSync(final Vertx vertx) {
-    return () -> {
-      logger.info("Closing Vert.x");
-      final var wait = new CountDownLatch(1);
-      vertx.close(ignore -> wait.countDown());
-      try {
-        wait.await(2, TimeUnit.MINUTES);
-      } catch (InterruptedException e) {
-        logger.error("Timeout waiting for vertx close", e);
-      }
+      closeVertxSync(vertx);
     };
   }
 }
