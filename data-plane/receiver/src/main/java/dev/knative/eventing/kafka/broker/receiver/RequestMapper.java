@@ -34,6 +34,7 @@ import io.opentelemetry.context.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.HashMap;
@@ -48,6 +49,7 @@ import org.slf4j.LoggerFactory;
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
 
@@ -115,9 +117,19 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
     if (ingressInfo == null) {
       request.response().setStatusCode(RESOURCE_NOT_FOUND).end();
 
-      logger.warn("resource not found {} {}",
+      logger.warn("Resource not found {} {}",
         keyValue("resources", pathMapper.keySet()),
         keyValue("path", request.path())
+      );
+
+      return;
+    }
+
+    if (request.method() != HttpMethod.POST) {
+      request.response().setStatusCode(METHOD_NOT_ALLOWED.code()).end();
+
+      logger.warn("Only POST method is allowed. Method not allowed: {}",
+        keyValue("method", request.method())
       );
 
       return;

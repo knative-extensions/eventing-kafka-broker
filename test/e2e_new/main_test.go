@@ -29,7 +29,10 @@ import (
 	"knative.dev/pkg/injection"
 	_ "knative.dev/pkg/system/testing"
 
+	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/reconciler-test/pkg/environment"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 // global is the singleton instance of GlobalEnvironment. It is used to parse
@@ -40,6 +43,9 @@ var global environment.GlobalEnvironment
 func init() {
 	// environment.InitFlags registers state and level filter flags.
 	environment.InitFlags(flag.CommandLine)
+
+	// Force the broker class to be configured properly
+	broker.EnvCfg.BrokerClass = kafka.BrokerClass
 }
 
 // TestMain is the first entry point for `go test`.

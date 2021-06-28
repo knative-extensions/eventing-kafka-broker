@@ -29,7 +29,6 @@ jobs:
           - "./third_party/eventing-latest/"
           - "./third_party/eventing-v0.23.0/"
           - "./third_party/eventing-v0.22.1/"
-          - "./third_party/eventing-v0.21.4/"
 
         test-suite:
           - ./test/e2e
