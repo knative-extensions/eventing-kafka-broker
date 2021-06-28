@@ -21,7 +21,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Shutdown {
+public final class Shutdown {
 
   private static final Logger logger = LoggerFactory.getLogger(Shutdown.class);
 
