@@ -30,7 +30,9 @@ public class Configurations {
   private static final Logger logger = LoggerFactory.getLogger(Configurations.class);
 
   /**
-   * Retrieve a properties file. Note: this method is blocking
+   * Retrieve a properties file.
+   * <p>
+   * Note: this method is blocking, thus it shouldn't be called on the event loop.
    */
   public static Properties readPropertiesSync(final String path) {
     if (path == null) {
@@ -48,7 +50,9 @@ public class Configurations {
   }
 
   /**
-   * Retrieve a properties file and translates it to json. Note: this method is blocking
+   * Retrieve a properties file and translates it to json.
+   * <p>
+   * Note: this method is blocking, thus it shouldn't be called on the event loop.
    */
   public static JsonObject readPropertiesAsJsonSync(final String path) {
     final var props = readPropertiesSync(path);
