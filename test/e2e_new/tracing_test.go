@@ -21,6 +21,7 @@ package e2e_new
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"knative.dev/eventing/test/rekt/resources/broker"
@@ -185,7 +186,7 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),
 		eventshub.AddTracing,
-		eventshub.SendMultipleEvents(5, 0),
+		eventshub.SendMultipleEvents(5, time.Millisecond),
 	))
 
 	f.Assert("received event has traceparent header",
