@@ -15,23 +15,25 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
-import io.cloudevents.CloudEvent;
-import io.vertx.core.Future;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 
-/**
- * This interface performs the dispatch of consumed records.
- */
-public interface RecordDispatcher extends AsyncCloseable {
-
+public enum DeliveryOrder {
   /**
-   * Handle the given record and returns a future that completes when the dispatch is completed and the offset is committed.
-   * This fails only if a catastrophic failure happened.
-   *
-   * @param record record to handle.
-   * @return the completion future.
+   * Ordered consumer is a per-partition blocking consumer that deliver messages in order.
    */
-  Future<Void> dispatch(KafkaConsumerRecord<String, CloudEvent> record);
+  ORDERED,
+  /**
+   * Unordered consumer is a non-blocking consumer that potentially deliver messages unordered, while preserving proper offset management.
+   */
+  UNORDERED;
 
+  public static DeliveryOrder fromContract(DataPlaneContract.DeliveryOrder deliveryOrder) {
+    if (deliveryOrder == null) {
+      return UNORDERED;
+    }
+    return switch (deliveryOrder) {
+      case ORDERED -> ORDERED;
+      case UNORDERED, UNRECOGNIZED -> UNORDERED;
+    };
+  }
 }

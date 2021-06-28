@@ -309,7 +309,7 @@ public class DataPlaneTest {
 
     final var producerConfigs = producerConfigs();
 
-    final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
+    final var consumerVerticleFactory = new ConsumerVerticleFactoryImpl(
       consumerConfigs,
       new WebClientOptions(),
       producerConfigs,
