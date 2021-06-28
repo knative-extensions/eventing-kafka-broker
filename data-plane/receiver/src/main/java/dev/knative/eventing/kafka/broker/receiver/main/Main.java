@@ -87,7 +87,7 @@ public class Main {
     // Instantiating an Encoder here we force it to include the class.
     new LogstashEncoder().getFieldNames();
 
-    final var producerConfigs = Configurations.getProperties(env.getProducerConfigFilePath());
+    final var producerConfigs = Configurations.readPropertiesSync(env.getProducerConfigFilePath());
 
     logger.info("Starting Receiver {}", keyValue("env", env));
 
@@ -111,7 +111,7 @@ public class Main {
       producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
       final var httpServerOptions = new HttpServerOptions(
-        Configurations.getPropertiesAsJson(env.getHttpServerConfigFilePath())
+        Configurations.readPropertiesAsJsonSync(env.getHttpServerConfigFilePath())
       );
       httpServerOptions.setPort(env.getIngressPort());
       httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);

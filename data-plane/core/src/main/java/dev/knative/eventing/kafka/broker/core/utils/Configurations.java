@@ -30,9 +30,11 @@ public class Configurations {
   private static final Logger logger = LoggerFactory.getLogger(Configurations.class);
 
   /**
-   * Retrieve a properties file. Note: this method is blocking
+   * Retrieve a properties file.
+   * <p>
+   * Note: this method is blocking, thus it shouldn't be called on the event loop.
    */
-  public static Properties getProperties(final String path) {
+  public static Properties readPropertiesSync(final String path) {
     if (path == null) {
       return new Properties();
     }
@@ -48,10 +50,12 @@ public class Configurations {
   }
 
   /**
-   * Retrieve a properties file and translates it to json. Note: this method is blocking
+   * Retrieve a properties file and translates it to json.
+   * <p>
+   * Note: this method is blocking, thus it shouldn't be called on the event loop.
    */
-  public static JsonObject getPropertiesAsJson(final String path) {
-    final var props = getProperties(path);
+  public static JsonObject readPropertiesAsJsonSync(final String path) {
+    final var props = readPropertiesSync(path);
 
     final JsonObject json = new JsonObject();
     props.stringPropertyNames().forEach(name -> json.put(name, convert(props.getProperty(name))));

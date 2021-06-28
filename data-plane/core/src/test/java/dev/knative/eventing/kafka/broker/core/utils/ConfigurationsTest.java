@@ -29,7 +29,7 @@ public class ConfigurationsTest {
   @Test
   public void shouldGetPropertiesFromFilePath() {
 
-    final var config = Configurations.getProperties(Objects.requireNonNull(
+    final var config = Configurations.readPropertiesSync(Objects.requireNonNull(
       getClass().getClassLoader().getResource(FILE_NAME)
     ).getFile());
 
@@ -43,7 +43,7 @@ public class ConfigurationsTest {
   @Test
   public void shouldGetPropertiesFromFilePathAsJsonObject() {
 
-    final var config = Configurations.getPropertiesAsJson(Objects.requireNonNull(
+    final var config = Configurations.readPropertiesAsJsonSync(Objects.requireNonNull(
       getClass().getClassLoader().getResource(FILE_NAME)
     ).getFile());
 
@@ -57,7 +57,7 @@ public class ConfigurationsTest {
   @Test
   public void shouldSetHttpServerOptions() {
 
-    final var config = Configurations.getPropertiesAsJson(Objects.requireNonNull(
+    final var config = Configurations.readPropertiesAsJsonSync(Objects.requireNonNull(
       getClass().getClassLoader().getResource(FILE_NAME)
     ).getFile());
 

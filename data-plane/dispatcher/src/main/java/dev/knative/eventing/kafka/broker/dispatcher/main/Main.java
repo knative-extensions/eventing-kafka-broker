@@ -98,12 +98,12 @@ public class Main {
       final var metricsRegistry = Metrics.getRegistry();
       final var eventsSentCounter = metricsRegistry.counter(HTTP_EVENTS_SENT_COUNT);
 
-      final var producerConfig = Configurations.getProperties(env.getProducerConfigFilePath());
+      final var producerConfig = Configurations.readPropertiesSync(env.getProducerConfigFilePath());
       producerConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
       producerConfig.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
-      final var consumerConfig = Configurations.getProperties(env.getConsumerConfigFilePath());
+      final var consumerConfig = Configurations.readPropertiesSync(env.getConsumerConfigFilePath());
       consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
-      final var webClientConfig = Configurations.getPropertiesAsJson(env.getWebClientConfigFilePath());
+      final var webClientConfig = Configurations.readPropertiesAsJsonSync(env.getWebClientConfigFilePath());
 
       logger.info("Configurations {} {} {}",
         keyValue("producerConfig", producerConfig),
