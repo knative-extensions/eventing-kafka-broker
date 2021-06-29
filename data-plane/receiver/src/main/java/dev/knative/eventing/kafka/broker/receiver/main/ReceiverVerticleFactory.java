@@ -16,12 +16,14 @@
 
 package dev.knative.eventing.kafka.broker.receiver.main;
 
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.receiver.ReceiverVerticle;
 import dev.knative.eventing.kafka.broker.receiver.RequestMapper;
 import dev.knative.eventing.kafka.broker.receiver.SimpleProbeHandlerDecorator;
 import dev.knative.eventing.kafka.broker.receiver.StrictRequestToRecordMapper;
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Verticle;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.kafka.client.producer.KafkaProducer;
@@ -38,15 +40,16 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
 
   ReceiverVerticleFactory(final ReceiverEnv env,
                           final Properties producerConfigs,
-                          final Counter badRequestCounter,
-                          final Counter produceEventsCounter,
+                          final MeterRegistry metricsRegistry,
                           final HttpServerOptions httpServerOptions) {
 
     this.env = env;
     this.producerConfigs = producerConfigs;
-    this.badRequestCounter = badRequestCounter;
-    this.produceEventsCounter = produceEventsCounter;
     this.httpServerOptions = httpServerOptions;
+
+    // Resolve metrics counters
+    this.badRequestCounter = metricsRegistry.counter(Metrics.HTTP_REQUESTS_MALFORMED_COUNT);
+    this.produceEventsCounter = metricsRegistry.counter(Metrics.HTTP_REQUESTS_PRODUCE_COUNT);
   }
 
   @Override

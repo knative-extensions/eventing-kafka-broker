@@ -37,9 +37,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.FileSystems;
-import java.util.concurrent.CountDownLatch;
+import java.nio.file.WatchService;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import net.logstash.logback.encoder.LogstashEncoder;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -58,15 +58,6 @@ public class Main {
   // dot notation names to the monitoring system’s recommended naming convention.
   // Additionally, this naming convention implementation sanitizes metric names and tags of special characters that
   // are disallowed by the monitoring system.
-  /**
-   * In prometheus format --> http_requests_malformed_total
-   */
-  public static final String HTTP_REQUESTS_MALFORMED_COUNT = "http.requests.malformed";
-
-  /**
-   * In prometheus format --> http_requests_produce_total
-   */
-  public static final String HTTP_REQUESTS_PRODUCE_COUNT = "http.requests.produce";
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
@@ -76,9 +67,9 @@ public class Main {
    * @param args command line arguments.
    */
   public static void main(final String[] args) throws IOException {
-    final var env = new ReceiverEnv(System::getenv);
+    ReceiverEnv env = new ReceiverEnv(System::getenv);
 
-    final OpenTelemetrySdk openTelemetry = TracingConfig.fromDir(env.getConfigTracingPath()).setup();
+    OpenTelemetrySdk openTelemetry = TracingConfig.fromDir(env.getConfigTracingPath()).setup();
 
     // HACK HACK HACK
     // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
@@ -87,68 +78,61 @@ public class Main {
     // Instantiating an Encoder here we force it to include the class.
     new LogstashEncoder().getFieldNames();
 
-    final var producerConfigs = Configurations.readPropertiesSync(env.getProducerConfigFilePath());
+    // Read producer properties and override some defaults
+    Properties producerConfigs = Configurations.getProperties(env.getProducerConfigFilePath());
+    producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+    producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
+    producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
     logger.info("Starting Receiver {}", keyValue("env", env));
 
-    final var vertx = Vertx.vertx(
+    // Start Vertx
+    Vertx vertx = Vertx.vertx(
       new VertxOptions()
         .setMetricsOptions(Metrics.getOptions(env))
         .setTracingOptions(new OpenTelemetryOptions(openTelemetry))
     );
 
+    // Register Contract message codec
+    ContractMessageCodec.register(vertx.eventBus());
+
+    // Read http server configuration and merge it with port from env
+    HttpServerOptions httpServerOptions = new HttpServerOptions(
+      Configurations.getPropertiesAsJson(env.getHttpServerConfigFilePath())
+    );
+    httpServerOptions.setPort(env.getIngressPort());
+    httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
+
+    // Configure the verticle to deploy and the deployment options
+    final Supplier<Verticle> verticle = new ReceiverVerticleFactory(
+      env,
+      producerConfigs,
+      Metrics.getRegistry(),
+      httpServerOptions
+    );
+    DeploymentOptions deploymentOptions = new DeploymentOptions()
+      .setInstances(Runtime.getRuntime().availableProcessors());
+
     try {
-
-      ContractMessageCodec.register(vertx.eventBus());
-
-      final var metricsRegistry = Metrics.getRegistry();
-
-      final var badRequestCounter = metricsRegistry.counter(HTTP_REQUESTS_MALFORMED_COUNT);
-      final var produceEventsCounter = metricsRegistry.counter(HTTP_REQUESTS_PRODUCE_COUNT);
-
-      producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-      producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
-      producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
-
-      final var httpServerOptions = new HttpServerOptions(
-        Configurations.readPropertiesAsJsonSync(env.getHttpServerConfigFilePath())
-      );
-      httpServerOptions.setPort(env.getIngressPort());
-      httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
-
-      final Supplier<Verticle> verticle = new ReceiverVerticleFactory(env, producerConfigs, badRequestCounter, produceEventsCounter, httpServerOptions);
-
-      final var deploymentOptions = new DeploymentOptions()
-        .setInstances(Runtime.getRuntime().availableProcessors());
-
-      final var waitVerticle = new CountDownLatch(1);
       vertx.deployVerticle(verticle, deploymentOptions)
-        .onSuccess(v -> {
-          logger.info("Receiver started");
-          waitVerticle.countDown();
-        })
-        .onFailure(t -> {
-          // This is a catastrophic failure, close the application
-          logger.error("Receiver not started", t);
-          vertx.close(v -> System.exit(1));
-        });
-      if (!waitVerticle.await(env.getWaitStartupSeconds(), TimeUnit.SECONDS)) {
-        throw new TimeoutException("Failed to deploy receiver verticle");
-      }
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(env.getWaitStartupSeconds(), TimeUnit.SECONDS);
+      logger.info("Receiver started");
 
-      final var publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
-      final var fs = FileSystems.getDefault().newWatchService();
-      var fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
+      ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
+      WatchService fs = FileSystems.getDefault().newWatchService();
+      FileWatcher fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
 
       // Gracefully clean up resources.
       Shutdown.registerHook(vertx, publisher, fw, openTelemetry.getSdkTracerProvider());
 
-      fw.watch(); // block forever
+      fw.watch(); // block forever until watch is stopped
 
     } catch (final ClosedWatchServiceException ignored) {
       // Do nothing, shutdown hook closed the watch service.
     } catch (final Exception ex) {
-      logger.error("Failed during filesystem watch", ex);
+      logger.error("Failed to startup the receiver", ex);
 
       Shutdown.closeVertxSync(vertx);
       System.exit(1);

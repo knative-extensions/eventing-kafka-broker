@@ -18,8 +18,6 @@ package dev.knative.eventing.kafka.broker.core.metrics;
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.metrics.MetricsOptions;
 import io.vertx.core.tracing.TracingPolicy;
@@ -34,6 +32,15 @@ import org.apache.kafka.clients.producer.Producer;
 public class Metrics {
 
   public static final String METRICS_REGISTRY_NAME = "metrics";
+
+  /**
+   * In prometheus format --> http_requests_malformed_total
+   */
+  public static final String HTTP_REQUESTS_MALFORMED_COUNT = "http.requests.malformed";
+  /**
+   * In prometheus format --> http_requests_produce_total
+   */
+  public static final String HTTP_REQUESTS_PRODUCE_COUNT = "http.requests.produce";
 
   /**
    * Get metrics options from the given metrics configurations.
