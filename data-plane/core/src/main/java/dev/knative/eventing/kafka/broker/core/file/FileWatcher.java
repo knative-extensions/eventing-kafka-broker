@@ -18,14 +18,13 @@ package dev.knative.eventing.kafka.broker.core.file;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
+import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -41,7 +40,7 @@ import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 /**
  * FileWatcher is the class responsible for watching a given file and reports update.
  */
-public class FileWatcher implements Closeable, AutoCloseable {
+public class FileWatcher implements Runnable {
 
   private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
 
@@ -49,7 +48,6 @@ public class FileWatcher implements Closeable, AutoCloseable {
 
   private final WatchService watcher;
   private final File toWatch;
-  private volatile boolean closed;
   private long lastContract;
 
   /**
@@ -85,27 +83,28 @@ public class FileWatcher implements Closeable, AutoCloseable {
     this.lastContract = -1;
   }
 
-  /**
-   * Start watching.
-   *
-   * @throws IOException          see {@link BufferedInputStream#readAllBytes()}.
-   * @throws InterruptedException see {@link WatchService#take()}
-   */
-  public void watch() throws IOException, InterruptedException {
+  @Override
+  public void run() {
     // If the container restarts, the mounted file never gets reconciled, so update as soon as we
     // start watching
     update();
 
-    while (true) {
+    while (!Thread.interrupted()) {
       var shouldUpdate = false;
 
       // Note: take() blocks
-      final var key = watcher.take();
-      logger.info("contract updates");
+      WatchKey key;
+      try {
+        key = watcher.take();
+        logger.debug("Contract updates");
+      } catch (InterruptedException e) {
+        logger.error("Fatal error while watching, closing the watch thread", e);
+        break;
+      }
 
       // this should be rare but it can actually happen so check watch key validity
       if (!key.isValid()) {
-        logger.warn("invalid key");
+        logger.warn("Invalid key");
         continue;
       }
 
@@ -130,10 +129,17 @@ public class FileWatcher implements Closeable, AutoCloseable {
       // reset the watch key, so that we receives new events
       key.reset();
     }
+
+    // Close the watcher
+    try {
+      this.watcher.close();
+    } catch (IOException e) {
+      logger.warn("Error while closing the file watcher", e);
+    }
   }
 
-  private void update() throws IOException {
-    if (closed) {
+  private void update() {
+    if (Thread.interrupted()) {
       return;
     }
     try (
@@ -154,6 +160,8 @@ public class FileWatcher implements Closeable, AutoCloseable {
         return;
       }
       contractConsumer.accept(contract);
+    } catch (IOException e) {
+      logger.warn("Error reading the contract file, retrying...", e);
     }
   }
 
@@ -169,11 +177,5 @@ public class FileWatcher implements Closeable, AutoCloseable {
       logger.debug("failed to parse from JSON", ex);
     }
     return null;
-  }
-
-  @Override
-  public void close() throws IOException {
-    closed = true;
-    this.watcher.close();
   }
 }
