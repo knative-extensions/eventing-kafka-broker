@@ -23,7 +23,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.nio.file.Path;
+import java.nio.file.FileSystems;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Objects;
@@ -38,53 +38,83 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
 /**
- * FileWatcher is the class responsible for watching a given file and reports update.
+ * This class is responsible for watching a given file and reports update.
+ * <p>
+ * Using {@link #start()}, this class will create a background thread running the file watcher.
+ * You can interrupt such thread with {@link #close()}
+ * <p>
+ * This class is thread safe, and it cannot start more than one watch at the time.
  */
-public class FileWatcher implements Runnable {
+public class FileWatcher implements AutoCloseable {
 
   private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
 
+  private final File toWatch;
   private final Consumer<DataPlaneContract.Contract> contractConsumer;
 
-  private final WatchService watcher;
-  private final File toWatch;
+  private Thread watcherThread;
+  private WatchService watcher;
   private long lastContract;
 
   /**
    * All args constructor.
    *
-   * @param watcher          watch service
    * @param contractConsumer updates receiver.
    * @param file             file to watch
-   * @throws IOException watch service cannot be registered.
    */
-  public FileWatcher(
-    final WatchService watcher,
-    final Consumer<DataPlaneContract.Contract> contractConsumer,
-    final File file)
-    throws IOException {
-
-    Objects.requireNonNull(contractConsumer, "provide consumer");
+  public FileWatcher(File file, Consumer<DataPlaneContract.Contract> contractConsumer) {
     Objects.requireNonNull(file, "provide file");
-
-    // register the given watch service.
-    // Note: this watch a directory and not the single file we're interested in, so that's the
-    // reason in #watch() we filter watch service events based on the updated file.
+    Objects.requireNonNull(contractConsumer, "provide consumer");
 
     this.contractConsumer = contractConsumer;
-    toWatch = file.getAbsoluteFile();
-    logger.info("start watching {}", toWatch);
-
-    Path toWatchParentPath = file.getParentFile().toPath();
-
-    this.watcher = watcher;
-
-    toWatchParentPath.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+    this.toWatch = file.getAbsoluteFile();
     this.lastContract = -1;
   }
 
+  /**
+   * Start the watcher thread.
+   * This is going to create a new deamon thread, which can be stopped using {@link #close()}.
+   *
+   * @throws IOException           if an error happened while starting to watch
+   * @throws IllegalStateException if the watcher is already running
+   */
+  public void start() throws IOException {
+    synchronized (this) {
+      if (this.watcherThread != null) {
+        throw new IllegalStateException("Watcher thread is already up and running");
+      }
+      // Start the watcher thread
+      this.watcherThread = new Thread(null, this::run, "contract-file-watcher");
+
+      // Start watching
+      this.watcher = FileSystems.getDefault().newWatchService();
+      toWatch.getParentFile().toPath().register(this.watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+    }
+
+    this.watcherThread.start();
+  }
+
   @Override
-  public void run() {
+  public synchronized void close() throws Exception {
+    if (this.watcherThread == null) {
+      throw new IllegalStateException("Watcher thread is not running");
+    }
+    this.watcherThread.interrupt();
+    this.watcherThread = null;
+  }
+
+  private void run() {
+    try {
+      // register the given watch service.
+      // Note: this watch a directory and not the single file we're interested in, so that's the
+      // reason in #watch() we filter watch service events based on the updated file.
+      this.toWatch.getParentFile().toPath().register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+    } catch (IOException e) {
+      logger.error("Error while starting watching the file", e);
+      return;
+    }
+    logger.info("Started watching {}", toWatch);
+
     // If the container restarts, the mounted file never gets reconciled, so update as soon as we
     // start watching
     update();
@@ -98,8 +128,7 @@ public class FileWatcher implements Runnable {
         key = watcher.take();
         logger.debug("Contract updates");
       } catch (InterruptedException e) {
-        logger.error("Fatal error while watching, closing the watch thread", e);
-        break;
+        break; // Looks good, this means Thread.interrupt was invoked
       }
 
       // this should be rare but it can actually happen so check watch key validity
@@ -167,12 +196,9 @@ public class FileWatcher implements Runnable {
 
   private DataPlaneContract.Contract parseFromJson(final Reader content) throws IOException {
     try {
-
       final var contract = DataPlaneContract.Contract.newBuilder();
       JsonFormat.parser().merge(content, contract);
-
       return contract.build();
-
     } catch (final InvalidProtocolBufferException ex) {
       logger.debug("failed to parse from JSON", ex);
     }

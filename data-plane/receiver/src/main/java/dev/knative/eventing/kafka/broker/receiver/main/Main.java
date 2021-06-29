@@ -37,7 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.FileSystems;
-import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import net.logstash.logback.encoder.LogstashEncoder;
@@ -112,19 +112,11 @@ public class Main {
         .get(env.getWaitStartupSeconds(), TimeUnit.SECONDS);
       logger.info("Receiver started");
 
-      // Start the contract file watcher
-      ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
-      FileWatcher fw = new FileWatcher(
-        FileSystems.getDefault().newWatchService(),
-        publisher,
-        new File(env.getDataPlaneConfigFilePath())
-      );
+      final var publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
+      FileWatcher fileWatcher = new FileWatcher(new File(env.getDataPlaneConfigFilePath()), publisher);
 
       // Gracefully clean up resources.
-      Shutdown.registerHook(vertx, publisher, fw, openTelemetry.getSdkTracerProvider());
-
-      // TODO file watcher should be in its own thread
-      fw.watch(); // block forever until watch is stopped
+      Shutdown.registerHook(vertx, publisher, fileWatcher, openTelemetry.getSdkTracerProvider());
 
     } catch (final ClosedWatchServiceException ignored) {
       // Do nothing, shutdown hook closed the watch service.
