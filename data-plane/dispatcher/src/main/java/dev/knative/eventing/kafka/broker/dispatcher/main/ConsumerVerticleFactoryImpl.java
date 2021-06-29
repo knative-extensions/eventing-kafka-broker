@@ -25,6 +25,7 @@ import dev.knative.eventing.kafka.broker.core.security.PlaintextCredentials;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
+import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.KafkaResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
@@ -34,6 +35,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsume
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedOffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedOffsetManager;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.circuitbreaker.CircuitBreaker;
