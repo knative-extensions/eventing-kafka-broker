@@ -37,7 +37,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.FileSystems;
-import java.nio.file.WatchService;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -79,7 +78,7 @@ public class Main {
     new LogstashEncoder().getFieldNames();
 
     // Read producer properties and override some defaults
-    Properties producerConfigs = Configurations.getProperties(env.getProducerConfigFilePath());
+    Properties producerConfigs = Configurations.readPropertiesSync(env.getProducerConfigFilePath());
     producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
     producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
@@ -98,13 +97,13 @@ public class Main {
 
     // Read http server configuration and merge it with port from env
     HttpServerOptions httpServerOptions = new HttpServerOptions(
-      Configurations.getPropertiesAsJson(env.getHttpServerConfigFilePath())
+      Configurations.readPropertiesAsJsonSync(env.getHttpServerConfigFilePath())
     );
     httpServerOptions.setPort(env.getIngressPort());
     httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
     // Configure the verticle to deploy and the deployment options
-    final Supplier<Verticle> verticle = new ReceiverVerticleFactory(
+    final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
       env,
       producerConfigs,
       Metrics.getRegistry(),
@@ -114,26 +113,31 @@ public class Main {
       .setInstances(Runtime.getRuntime().availableProcessors());
 
     try {
-      vertx.deployVerticle(verticle, deploymentOptions)
+      // Deploy the receiver verticles
+      vertx.deployVerticle(receiverVerticleFactory, deploymentOptions)
         .toCompletionStage()
         .toCompletableFuture()
         .get(env.getWaitStartupSeconds(), TimeUnit.SECONDS);
       logger.info("Receiver started");
 
+      // Start the contract file watcher
       ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
-      WatchService fs = FileSystems.getDefault().newWatchService();
-      FileWatcher fw = new FileWatcher(fs, publisher, new File(env.getDataPlaneConfigFilePath()));
+      FileWatcher fw = new FileWatcher(
+        FileSystems.getDefault().newWatchService(),
+        publisher,
+        new File(env.getDataPlaneConfigFilePath())
+      );
 
       // Gracefully clean up resources.
       Shutdown.registerHook(vertx, publisher, fw, openTelemetry.getSdkTracerProvider());
 
+      // TODO file watcher should be in its own thread
       fw.watch(); // block forever until watch is stopped
 
     } catch (final ClosedWatchServiceException ignored) {
       // Do nothing, shutdown hook closed the watch service.
     } catch (final Exception ex) {
       logger.error("Failed to startup the receiver", ex);
-
       Shutdown.closeVertxSync(vertx);
       System.exit(1);
     }
