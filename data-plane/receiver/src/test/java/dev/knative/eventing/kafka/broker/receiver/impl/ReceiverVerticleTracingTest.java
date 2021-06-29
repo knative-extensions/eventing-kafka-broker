@@ -61,7 +61,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-public class ReceiverTracingVerticleTest {
+public class ReceiverVerticleTracingTest {
 
   private static final int TIMEOUT = 10;
   private static final int PORT = 8083;

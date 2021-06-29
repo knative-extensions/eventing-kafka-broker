@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.receiver.impl;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
@@ -23,6 +24,8 @@ import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +43,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
-public class RequestMapperTest {
+public class IngressProducerReconcilableStoreTest {
+
+  static {
+    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+  }
 
   @Test
   public void shouldRecreateProducerWhenBootstrapServerChange(final Vertx vertx, final VertxTestContext context) {
