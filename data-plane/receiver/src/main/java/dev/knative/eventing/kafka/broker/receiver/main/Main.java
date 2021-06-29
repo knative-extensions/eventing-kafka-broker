@@ -50,14 +50,6 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public class Main {
 
-  // Micrometer employs a naming convention that separates lowercase words with a '.' (dot) character.
-  // Different monitoring systems have different recommendations regarding naming convention, and some naming
-  // conventions may be incompatible for one system and not another.
-  // Each Micrometer implementation for a monitoring system comes with a naming convention that transforms lowercase
-  // dot notation names to the monitoring system’s recommended naming convention.
-  // Additionally, this naming convention implementation sanitizes metric names and tags of special characters that
-  // are disallowed by the monitoring system.
-
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
   /**

@@ -33,6 +33,14 @@ public class Metrics {
 
   public static final String METRICS_REGISTRY_NAME = "metrics";
 
+  // Micrometer employs a naming convention that separates lowercase words with a '.' (dot) character.
+  // Different monitoring systems have different recommendations regarding naming convention, and some naming
+  // conventions may be incompatible for one system and not another.
+  // Each Micrometer implementation for a monitoring system comes with a naming convention that transforms lowercase
+  // dot notation names to the monitoring system’s recommended naming convention.
+  // Additionally, this naming convention implementation sanitizes metric names and tags of special characters that
+  // are disallowed by the monitoring system.
+
   /**
    * In prometheus format --> http_requests_malformed_total
    */
