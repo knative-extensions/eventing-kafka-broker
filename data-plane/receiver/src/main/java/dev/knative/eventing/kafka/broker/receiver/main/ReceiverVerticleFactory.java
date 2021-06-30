@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package dev.knative.eventing.kafka.broker.receiver.main;
 
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
@@ -26,7 +24,6 @@ import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapp
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Handler;
 import io.vertx.core.Verticle;
@@ -59,7 +56,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     this.ingressRequestHandler = new IngressRequestHandlerImpl(
       StrictRequestToRecordMapper.getInstance(),
       metricsRegistry.counter(Metrics.HTTP_REQUESTS_MALFORMED_COUNT),
-    metricsRegistry.counter(Metrics.HTTP_REQUESTS_PRODUCE_COUNT)
+      metricsRegistry.counter(Metrics.HTTP_REQUESTS_PRODUCE_COUNT)
     );
   }
 
