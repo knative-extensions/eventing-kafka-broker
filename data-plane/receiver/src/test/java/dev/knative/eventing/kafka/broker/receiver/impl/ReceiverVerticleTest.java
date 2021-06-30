@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.receiver.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.FloatNode;
@@ -24,6 +24,7 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
+import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
@@ -44,6 +45,7 @@ import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
@@ -58,6 +60,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -70,7 +75,7 @@ public class ReceiverVerticleTest {
   private static WebClient webClient;
 
   private static MockProducer<String, CloudEvent> mockProducer;
-  private static RequestMapper handler;
+  private static IngressProducerReconcilableStore store;
   private static Counter badRequestCount;
   private static Counter produceRequestCount;
 
@@ -93,14 +98,10 @@ public class ReceiverVerticleTest {
     badRequestCount = new CumulativeCounter(mock(Id.class));
     produceRequestCount = new CumulativeCounter(mock(Id.class));
 
-    handler = new RequestMapper(
-      vertx,
+    store = new IngressProducerReconcilableStore(
       null,
       new Properties(),
-      StrictRequestToRecordMapper.getInstance(),
-      properties -> producer,
-      badRequestCount,
-      produceRequestCount
+      properties -> producer
     );
 
     final var httpServerOptions = new HttpServerOptions();
@@ -108,7 +109,13 @@ public class ReceiverVerticleTest {
     httpServerOptions.setHost("localhost");
     final var verticle = new ReceiverVerticle(
       httpServerOptions,
-      v -> handler
+      v -> store,
+      Collections.emptyList(),
+      new IngressRequestHandlerImpl(
+        StrictRequestToRecordMapper.getInstance(),
+        badRequestCount,
+        produceRequestCount
+      )
     );
     vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));
   }
@@ -168,7 +175,7 @@ public class ReceiverVerticleTest {
           .withType("type")
           .withId("1234")
           .build()),
-        RequestMapper.RESOURCE_NOT_FOUND,
+        NOT_FOUND.code(),
         DataPlaneContract.Resource.newBuilder()
           .setUid("1")
           .addTopics("topic")
@@ -184,7 +191,7 @@ public class ReceiverVerticleTest {
           .withType("type")
           .withId("1234")
           .build()),
-        RequestMapper.RESOURCE_NOT_FOUND,
+        NOT_FOUND.code(),
         DataPlaneContract.Resource.newBuilder()
           .setUid("1")
           .addTopics("topic")
@@ -200,7 +207,7 @@ public class ReceiverVerticleTest {
           .withType("type")
           .withId("1234")
           .build()),
-        RequestMapper.RESOURCE_NOT_FOUND,
+        NOT_FOUND.code(),
         DataPlaneContract.Resource.newBuilder()
           .setUid("1")
           .addTopics("topic")
@@ -225,7 +232,7 @@ public class ReceiverVerticleTest {
           .withType("type")
           .withId("1234")
           .build()),
-        RequestMapper.RECORD_PRODUCED,
+        202,
         DataPlaneContract.Resource.newBuilder()
           .setUid("1")
           .addTopics("topic-name-1")
@@ -236,7 +243,7 @@ public class ReceiverVerticleTest {
         null,
         "/broker-ns/broker-name",
         request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
-        RequestMapper.MAPPER_FAILED,
+        BAD_REQUEST.code(),
         DataPlaneContract.Resource.newBuilder()
           .setUid("1")
           .addTopics("topic")
@@ -247,7 +254,7 @@ public class ReceiverVerticleTest {
         null,
         "/broker-ns/broker-name/hello",
         request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
-        RequestMapper.RESOURCE_NOT_FOUND,
+        NOT_FOUND.code(),
         DataPlaneContract.Resource.newBuilder()
           .setUid("1")
           .addTopics("topic")
@@ -265,7 +272,7 @@ public class ReceiverVerticleTest {
           request.headers().set("Content-Type", "application/json");
           return request.sendBuffer(Buffer.buffer(objectNode.toString()));
         },
-        RequestMapper.MAPPER_FAILED,
+        BAD_REQUEST.code(),
         DataPlaneContract.Resource.newBuilder()
           .setUid("1")
           .addTopics("topic")
@@ -285,7 +292,7 @@ public class ReceiverVerticleTest {
           request.headers().set("Content-Type", "application/json");
           return request.sendBuffer(Buffer.buffer(objectNode.toString()));
         },
-        RequestMapper.MAPPER_FAILED,
+        BAD_REQUEST.code(),
         DataPlaneContract.Resource.newBuilder()
           .setUid("1")
           .addTopics("topic")
@@ -310,7 +317,7 @@ public class ReceiverVerticleTest {
           .withType("type")
           .withId("1234")
           .build()),
-        RequestMapper.RECORD_PRODUCED,
+        ACCEPTED.code(),
         DataPlaneContract.Resource.newBuilder()
           .setUid("1")
           .addTopics("topic-name-42")
@@ -350,9 +357,9 @@ public class ReceiverVerticleTest {
 
       int badRequestCount = 0;
       int produceEventsCount = 0;
-      if (responseStatusCode == RequestMapper.MAPPER_FAILED) {
+      if (responseStatusCode == BAD_REQUEST.code()) {
         badRequestCount = 1;
-      } else if (responseStatusCode == RequestMapper.RECORD_PRODUCED) {
+      } else if (responseStatusCode == ACCEPTED.code()) {
         produceEventsCount = 1;
       }
 

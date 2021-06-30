@@ -13,31 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
-
-import static org.assertj.core.api.Assertions.assertThat;
+package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @ExtendWith(VertxExtension.class)
-public class ProbeHandlerTest {
+public abstract class PreHandlerTest {
 
   private static final int PORT = 43999;
-
-  private static final String LIVENESS_PATH = "/healthz";
-  private static final String READINESS_PATH = "/readyz";
-  private static final int OK = HttpResponseStatus.OK.code();
-  private static final int NEXT_HANDLER_STATUS_CODE = HttpResponseStatus.SERVICE_UNAVAILABLE.code();
+  protected static final int NEXT_HANDLER_STATUS_CODE = HttpResponseStatus.SERVICE_UNAVAILABLE.code();
 
   private WebClient webClient;
   private HttpServer server;
@@ -50,12 +48,16 @@ public class ProbeHandlerTest {
 
     this.webClient = WebClient.create(vertx);
 
+    Handler<HttpServerRequest> handler = createHandler();
+
     this.server = vertx.createHttpServer(httpServerOptions);
-    this.server.requestHandler(new SimpleProbeHandlerDecorator(
-      LIVENESS_PATH,
-      READINESS_PATH,
-      r -> r.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end()
-    ))
+    this.server.requestHandler(request -> {
+      handler.handle(request);
+
+      if (!request.isEnded()) {
+        request.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end();
+      }
+    })
       .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
       .onComplete(context.succeedingThenComplete());
   }
@@ -66,26 +68,12 @@ public class ProbeHandlerTest {
     this.server.close().onComplete(context.succeedingThenComplete());
   }
 
-  @Test
-  public void testReadinessCheck(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, OK, READINESS_PATH);
-  }
-
-  @Test
-  public void testLivenessCheck(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, OK, LIVENESS_PATH);
-  }
-
-  @Test
-  public void shouldForwardToNextHandler(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, "/does-not-exists-42");
-  }
-
-  private void mustReceiveStatusCodeOnPath(
+  protected void mustReceiveStatusCodeOnPath(
     final VertxTestContext context,
     final int expectedStatusCode,
+    final HttpMethod method,
     final String path) {
-    webClient.get(PORT, "localhost", path)
+    webClient.request(method, PORT, "localhost", path)
       .send()
       .onSuccess(response -> context.verify(() -> {
         assertThat(response.statusCode())
@@ -94,4 +82,7 @@ public class ProbeHandlerTest {
       }))
       .onFailure(context::failNow);
   }
+
+  public abstract Handler<HttpServerRequest> createHandler();
+
 }

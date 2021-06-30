@@ -23,9 +23,10 @@ import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcile
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
-import dev.knative.eventing.kafka.broker.receiver.ReceiverVerticle;
-import dev.knative.eventing.kafka.broker.receiver.RequestMapper;
-import dev.knative.eventing.kafka.broker.receiver.StrictRequestToRecordMapper;
+import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
+import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
+import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
+import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventV1;
@@ -47,12 +48,12 @@ import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collections;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.AfterAll;
@@ -332,20 +333,23 @@ public class DataPlaneTest {
     final Vertx vertx,
     final VertxTestContext context) throws InterruptedException {
 
-    final Function<Vertx, RequestMapper> handlerFactory = v -> new RequestMapper(
-      v,
-      null,
-      producerConfigs(),
-      StrictRequestToRecordMapper.getInstance(),
-      properties -> KafkaProducer.create(v, properties),
-      mock(Counter.class),
-      mock(Counter.class)
-    );
-
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(INGRESS_PORT);
 
-    final var verticle = new ReceiverVerticle(httpServerOptions, handlerFactory);
+    final var verticle = new ReceiverVerticle(
+      httpServerOptions,
+      v -> new IngressProducerReconcilableStore(
+        null,
+        producerConfigs(),
+        properties -> KafkaProducer.create(v, properties)
+      ),
+      Collections.emptyList(),
+      new IngressRequestHandlerImpl(
+        StrictRequestToRecordMapper.getInstance(),
+        mock(Counter.class),
+        mock(Counter.class)
+      )
+    );
 
     final CountDownLatch latch = new CountDownLatch(1);
     vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));

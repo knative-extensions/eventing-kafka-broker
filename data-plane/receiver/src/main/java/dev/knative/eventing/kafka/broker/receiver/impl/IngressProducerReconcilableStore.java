@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.receiver.impl;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
@@ -21,21 +21,13 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
-import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
-import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.core.utils.ReferenceCounter;
+import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
-import io.micrometer.core.instrument.Counter;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,147 +38,48 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
-import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
-import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
-
 /**
- * RequestHandler is responsible for mapping HTTP requests to Kafka records, sending records to Kafka through the Kafka
- * producer and terminating requests with the appropriate status code.
+ * This class implements a store of {@link IngressProducer} that can be reconciled
+ * using it as {@link IngressReconcilerListener} of a {@link dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler}.
+ * <p>
+ * Because of its state associated to the specific verticles, this class cannot be shared among verticles.
  */
-public class RequestMapper implements Handler<HttpServerRequest>, IngressReconcilerListener {
+public class IngressProducerReconcilableStore implements IngressReconcilerListener {
 
-  public static final int MAPPER_FAILED = BAD_REQUEST.code();
-  public static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
-  public static final int RECORD_PRODUCED = ACCEPTED.code();
-  public static final int RESOURCE_NOT_FOUND = NOT_FOUND.code();
-
-  private static final Logger logger = LoggerFactory.getLogger(RequestMapper.class);
+  private final Properties producerConfigs;
+  private final Function<Properties, KafkaProducer<String, CloudEvent>> producerFactory;
+  private final AuthProvider authProvider;
 
   // ingress uuid -> IngressInfo
   // This map is used to resolve the ingress info in the reconciler listener
-  private final Map<String, IngressInfo> ingressInfos;
+  private final Map<String, IngressProducerImpl> ingressInfos;
   // producerConfig -> producer
   // This map is used to count the references to the producer instantiated for each producerConfig
   private final Map<Properties, ReferenceCounter<ProducerHolder>> producerReferences;
   // path -> IngressInfo
   // We use this map on the hot path to directly resolve the producer from the path
-  private final Map<String, IngressInfo> pathMapper;
+  private final Map<String, IngressProducerImpl> pathMapper;
 
-  private final Properties producerConfigs;
-  private final RequestToRecordMapper requestToRecordMapper;
-  private final Function<Properties, KafkaProducer<String, CloudEvent>> producerFactory;
-  private final Counter badRequestCounter;
-  private final Counter produceEventsCounter;
-  private final Vertx vertx;
-  private final AuthProvider authProvider;
-
-  public RequestMapper(
-    final Vertx vertx,
+  public IngressProducerReconcilableStore(
     final AuthProvider authProvider,
     final Properties producerConfigs,
-    final RequestToRecordMapper requestToRecordMapper,
-    final Function<Properties, KafkaProducer<String, CloudEvent>> producerFactory,
-    final Counter badRequestCounter,
-    final Counter produceEventsCounter) {
+    final Function<Properties, KafkaProducer<String, CloudEvent>> producerFactory
+  ) {
 
-    Objects.requireNonNull(vertx, "provide vertx");
     Objects.requireNonNull(producerConfigs, "provide producerConfigs");
-    Objects.requireNonNull(requestToRecordMapper, "provide a mapper");
     Objects.requireNonNull(producerFactory, "provide producerCreator");
 
-    this.vertx = vertx;
     this.authProvider = authProvider;
     this.producerConfigs = producerConfigs;
-    this.requestToRecordMapper = requestToRecordMapper;
     this.producerFactory = producerFactory;
-    this.badRequestCounter = badRequestCounter;
-    this.produceEventsCounter = produceEventsCounter;
 
     this.ingressInfos = new HashMap<>();
     this.producerReferences = new HashMap<>();
     this.pathMapper = new HashMap<>();
   }
 
-  @Override
-  public void handle(final HttpServerRequest request) {
-    final var ingressInfo = pathMapper.get(request.path());
-    if (ingressInfo == null) {
-      request.response().setStatusCode(RESOURCE_NOT_FOUND).end();
-
-      logger.warn("Resource not found {} {}",
-        keyValue("resources", pathMapper.keySet()),
-        keyValue("path", request.path())
-      );
-
-      return;
-    }
-
-    if (request.method() != HttpMethod.POST) {
-      request.response().setStatusCode(METHOD_NOT_ALLOWED.code()).end();
-
-      logger.warn("Only POST method is allowed. Method not allowed: {}",
-        keyValue("method", request.method())
-      );
-
-      return;
-    }
-
-    requestToRecordMapper
-      .requestToRecord(request, ingressInfo.getTopic())
-      .onSuccess(record -> {
-          if (logger.isDebugEnabled()) {
-            final var span = Span.fromContextOrNull(Context.current());
-            if (span != null) {
-              logger.debug("Received event {} {}",
-                keyValue("event", record.value()),
-                keyValue(TracingConfig.TRACE_ID_KEY, span.getSpanContext().getTraceId())
-              );
-            } else {
-              logger.debug("Received event {}", keyValue("event", record.value()));
-            }
-          }
-
-          // Decorate the span with event specific attributed
-          TracingSpan.decorateCurrentWithEvent(record.value());
-
-          ingressInfo.getProducer().send(record)
-            .onSuccess(metadata -> {
-              request.response().setStatusCode(RECORD_PRODUCED).end();
-              produceEventsCounter.increment();
-
-              logger.debug("Record produced {} {} {} {} {} {}",
-                keyValue("topic", record.topic()),
-                keyValue("partition", metadata.getPartition()),
-                keyValue("offset", metadata.getOffset()),
-                keyValue("value", record.value()),
-                keyValue("headers", record.headers()),
-                keyValue("path", request.path())
-              );
-            })
-            .onFailure(cause -> {
-              request.response().setStatusCode(FAILED_TO_PRODUCE).end();
-
-              logger.error("Failed to send record {} {}",
-                keyValue("topic", record.topic()),
-                keyValue("path", request.path()),
-                cause
-              );
-            });
-        }
-      )
-      .onFailure(cause -> {
-        request.response().setStatusCode(MAPPER_FAILED).end();
-        badRequestCounter.increment();
-
-        logger.warn("Failed to send record {}",
-          keyValue("path", request.path()),
-          cause
-        );
-      });
+  public IngressProducer resolve(String path) {
+    return pathMapper.get(path);
   }
 
   @Override
@@ -225,7 +118,7 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
       });
       rc.increment();
 
-      final var ingressInfo = new IngressInfo(
+      final var ingressInfo = new IngressProducerImpl(
         rc.getValue().getProducer(),
         resource.getTopics(0),
         ingress.getPath(),
@@ -290,6 +183,8 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
 
   private static class ProducerHolder implements AsyncCloseable {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProducerHolder.class);
+
     private final KafkaProducer<String, CloudEvent> producer;
     private final AutoCloseable producerMeterBinder;
 
@@ -322,26 +217,28 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
     }
   }
 
-  private static class IngressInfo {
+  private static class IngressProducerImpl implements IngressProducer {
 
     private final KafkaProducer<String, CloudEvent> producer;
     private final String topic;
     private final String path;
     private final Properties producerProperties;
 
-    IngressInfo(final KafkaProducer<String, CloudEvent> producer, final String topic, final String path,
-                final Properties producerProperties) {
+    IngressProducerImpl(final KafkaProducer<String, CloudEvent> producer, final String topic, final String path,
+                        final Properties producerProperties) {
       this.producer = producer;
       this.topic = topic;
       this.path = path;
       this.producerProperties = producerProperties;
     }
 
-    KafkaProducer<String, CloudEvent> getProducer() {
+    @Override
+    public KafkaProducer<String, CloudEvent> getKafkaProducer() {
       return producer;
     }
 
-    String getTopic() {
+    @Override
+    public String getTopic() {
       return topic;
     }
 
@@ -353,4 +250,5 @@ public class RequestMapper implements Handler<HttpServerRequest>, IngressReconci
       return producerProperties;
     }
   }
+
 }
