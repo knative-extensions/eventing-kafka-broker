@@ -35,7 +35,6 @@ import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.debezium.kafka.KafkaCluster;
 import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.client.WebClient;
@@ -315,7 +314,7 @@ public class DataPlaneTest {
       new WebClientOptions(),
       producerConfigs,
       mock(AuthProvider.class),
-      mock(MeterRegistry.class)
+      Metrics.getRegistry()
     );
 
     final var verticle = new ConsumerDeployerVerticle(
