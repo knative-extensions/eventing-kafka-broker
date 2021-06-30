@@ -18,8 +18,6 @@ package dev.knative.eventing.kafka.broker.core.metrics;
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.metrics.MetricsOptions;
 import io.vertx.core.tracing.TracingPolicy;
@@ -34,6 +32,23 @@ import org.apache.kafka.clients.producer.Producer;
 public class Metrics {
 
   public static final String METRICS_REGISTRY_NAME = "metrics";
+
+  // Micrometer employs a naming convention that separates lowercase words with a '.' (dot) character.
+  // Different monitoring systems have different recommendations regarding naming convention, and some naming
+  // conventions may be incompatible for one system and not another.
+  // Each Micrometer implementation for a monitoring system comes with a naming convention that transforms lowercase
+  // dot notation names to the monitoring system’s recommended naming convention.
+  // Additionally, this naming convention implementation sanitizes metric names and tags of special characters that
+  // are disallowed by the monitoring system.
+
+  /**
+   * In prometheus format --> http_requests_malformed_total
+   */
+  public static final String HTTP_REQUESTS_MALFORMED_COUNT = "http.requests.malformed";
+  /**
+   * In prometheus format --> http_requests_produce_total
+   */
+  public static final String HTTP_REQUESTS_PRODUCE_COUNT = "http.requests.produce";
 
   /**
    * Get metrics options from the given metrics configurations.

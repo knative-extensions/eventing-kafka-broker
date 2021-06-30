@@ -16,8 +16,11 @@
 
 package dev.knative.eventing.kafka.broker.receiver.main;
 
-import io.micrometer.core.instrument.Counter;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 import java.util.Properties;
 import org.junit.jupiter.api.Test;
 
@@ -26,13 +29,16 @@ import static org.mockito.Mockito.mock;
 
 public class ReceiverVerticleFactoryTest {
 
+  static {
+    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+  }
+
   @Test
   public void shouldCreateMultipleReceiverVerticleInstances() {
     final var supplier = new ReceiverVerticleFactory(
       mock(ReceiverEnv.class),
       mock(Properties.class),
-      mock(Counter.class),
-      mock(Counter.class),
+      mock(MeterRegistry.class),
       mock(HttpServerOptions.class)
     );
 
