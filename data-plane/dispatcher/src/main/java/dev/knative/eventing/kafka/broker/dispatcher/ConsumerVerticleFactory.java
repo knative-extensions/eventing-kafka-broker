@@ -15,23 +15,20 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
-import io.cloudevents.CloudEvent;
-import io.vertx.core.Future;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import io.vertx.core.AbstractVerticle;
 
 /**
- * This interface performs the dispatch of consumed records.
+ * This class is responsible for instantiating consumer verticles.
  */
-public interface RecordDispatcher extends AsyncCloseable {
+@FunctionalInterface
+public interface ConsumerVerticleFactory {
 
   /**
-   * Handle the given record and returns a future that completes when the dispatch is completed and the offset is committed.
-   * This fails only if a catastrophic failure happened.
+   * Get a new consumer verticle.
    *
-   * @param record record to handle.
-   * @return the completion future.
+   * @param egress trigger data.
+   * @return a new consumer verticle.
    */
-  Future<Void> dispatch(KafkaConsumerRecord<String, CloudEvent> record);
-
+  AbstractVerticle get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress);
 }

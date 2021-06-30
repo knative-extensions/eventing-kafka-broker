@@ -24,8 +24,6 @@ import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
-import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.http.HttpConsumerVerticleFactory;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
@@ -114,7 +112,7 @@ public class Main {
       final var clientOptions = new WebClientOptions(webClientConfig);
       clientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
-      final var consumerVerticleFactory = new HttpConsumerVerticleFactory(
+      final var consumerVerticleFactory = new ConsumerVerticleFactoryImpl(
         consumerConfig,
         clientOptions,
         producerConfig,

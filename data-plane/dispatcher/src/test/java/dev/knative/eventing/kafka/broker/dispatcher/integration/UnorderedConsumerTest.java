@@ -15,11 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
-import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.contract;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
@@ -27,7 +22,7 @@ import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
-import dev.knative.eventing.kafka.broker.dispatcher.ConsumerDeployerVerticle;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerDeployerVerticle;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventBuilder;
@@ -58,6 +53,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.contract;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+
 @ExtendWith(VertxExtension.class)
 public class UnorderedConsumerTest {
 
@@ -78,7 +78,7 @@ public class UnorderedConsumerTest {
     final var producerConfigs = new Properties();
     final var consumerConfigs = new Properties();
 
-    final var consumerVerticleFactoryMock = new ConsumerVerticleFactoryMock(
+    final var consumerVerticleFactoryMock = new ConsumerVerticleFactoryImplMock(
       consumerConfigs,
       producerConfigs
     );

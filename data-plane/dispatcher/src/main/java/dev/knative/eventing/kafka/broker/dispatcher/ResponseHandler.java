@@ -16,22 +16,37 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
-import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
 
 /**
- * This interface performs the dispatch of consumed records.
+ * This interface describes a component that handles http responses.
  */
-public interface RecordDispatcher extends AsyncCloseable {
+public interface ResponseHandler extends AsyncCloseable {
 
   /**
-   * Handle the given record and returns a future that completes when the dispatch is completed and the offset is committed.
-   * This fails only if a catastrophic failure happened.
+   * Handle the response.
    *
-   * @param record record to handle.
-   * @return the completion future.
+   * @param response Response to handle.
+   * @return A succeeded or failed future.
    */
-  Future<Void> dispatch(KafkaConsumerRecord<String, CloudEvent> record);
+  Future<Void> handle(final HttpResponse<Buffer> response);
 
+  /**
+   * @return a noop response handler.
+   */
+  static ResponseHandler noop() {
+    return new ResponseHandler() {
+      @Override
+      public Future<Void> handle(HttpResponse<Buffer> response) {
+        return Future.succeededFuture();
+      }
+
+      @Override
+      public Future<Void> close() {
+        return Future.succeededFuture();
+      }
+    };
+  }
 }
