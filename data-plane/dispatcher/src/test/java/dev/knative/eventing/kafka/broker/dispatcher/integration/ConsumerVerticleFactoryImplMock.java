@@ -18,7 +18,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.integration;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
 import io.cloudevents.CloudEvent;
-import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
@@ -54,7 +54,7 @@ public class ConsumerVerticleFactoryImplMock extends ConsumerVerticleFactoryImpl
       new WebClientOptions(),
       producerConfigs,
       mock(AuthProvider.class),
-      mock(Counter.class)
+      mock(MeterRegistry.class)
     );
     mockProducer = new ConcurrentHashMap<>();
     mockConsumer = new ConcurrentHashMap<>();

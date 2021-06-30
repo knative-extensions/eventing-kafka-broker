@@ -38,6 +38,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedOffse
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
@@ -84,23 +85,23 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
   /**
    * All args constructor.
    *
-   * @param consumerConfigs   base consumer configurations.
-   * @param webClientOptions  web client options.
-   * @param producerConfigs   base producer configurations.
-   * @param authProvider      auth provider.
-   * @param eventsSentCounter events sent counter.
+   * @param consumerConfigs  base consumer configurations.
+   * @param webClientOptions web client options.
+   * @param producerConfigs  base producer configurations.
+   * @param authProvider     auth provider.
+   * @param metricsRegistry  meter registry to use to create metricsRegistry.
    */
   public ConsumerVerticleFactoryImpl(
     final Properties consumerConfigs,
     final WebClientOptions webClientOptions,
     final Properties producerConfigs,
     final AuthProvider authProvider,
-    final Counter eventsSentCounter) {
+    final MeterRegistry metricsRegistry) {
 
     Objects.requireNonNull(consumerConfigs, "provide consumerConfigs");
     Objects.requireNonNull(webClientOptions, "provide webClientOptions");
     Objects.requireNonNull(producerConfigs, "provide producerConfigs");
-    Objects.requireNonNull(eventsSentCounter, "provide eventsSentCounter");
+    Objects.requireNonNull(metricsRegistry, "provide metricsRegistry");
 
     this.consumerConfigs = consumerConfigs.entrySet()
       .stream()
@@ -112,7 +113,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
       .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     this.webClientOptions = webClientOptions;
     this.authProvider = authProvider;
-    this.eventsSentCounter = eventsSentCounter;
+    this.eventsSentCounter = metricsRegistry.counter(Metrics.HTTP_EVENTS_SENT_COUNT);
   }
 
   /**
