@@ -83,12 +83,13 @@ public class FileWatcher implements AutoCloseable {
       if (this.watcherThread != null) {
         throw new IllegalStateException("Watcher thread is already up and running");
       }
-      // Start the watcher thread
-      this.watcherThread = new Thread(null, this::run, "contract-file-watcher");
 
       // Start watching
       this.watcher = FileSystems.getDefault().newWatchService();
       toWatch.getParentFile().toPath().register(this.watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+
+      // Start the watcher thread
+      this.watcherThread = new Thread(null, this::run, "contract-file-watcher");
     }
 
     this.watcherThread.start();
