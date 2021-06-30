@@ -35,7 +35,6 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.ClosedWatchServiceException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -139,14 +138,13 @@ public class Main {
         throw new TimeoutException("Failed to deploy consumer deployer");
       }
 
-      final var publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
+      ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
       FileWatcher fileWatcher = new FileWatcher(new File(env.getDataPlaneConfigFilePath()), publisher);
+      fileWatcher.start();
 
-      // Gracefully clean up resources.
+      // Register shutdown hook for graceful shutdown.
       Shutdown.registerHook(vertx, publisher, fileWatcher, openTelemetry.getSdkTracerProvider());
 
-    } catch (final ClosedWatchServiceException ignored) {
-      // Do nothing, shutdown hook closed the watch service.
     } catch (final Exception ex) {
       logger.error("Failed during filesystem watch", ex);
 
