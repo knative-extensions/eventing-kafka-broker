@@ -23,7 +23,7 @@ import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
-import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
@@ -67,7 +67,7 @@ public class ConsumerVerticleFactoryImplTest {
       new WebClientOptions(),
       producerConfigs,
       mock(AuthProvider.class),
-      mock(Counter.class)
+      mock(MeterRegistry.class)
     );
 
     final var egress = DataPlaneContract.Egress.newBuilder()
@@ -111,7 +111,7 @@ public class ConsumerVerticleFactoryImplTest {
       new WebClientOptions(),
       producerConfigs,
       mock(AuthProvider.class),
-      mock(Counter.class)
+      mock(MeterRegistry.class)
     );
 
     final var egress = DataPlaneContract.Egress.newBuilder()

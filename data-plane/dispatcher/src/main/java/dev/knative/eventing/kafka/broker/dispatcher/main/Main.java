@@ -30,14 +30,14 @@ import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import net.logstash.logback.encoder.LogstashEncoder;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -48,18 +48,6 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public class Main {
 
-  // Micrometer employs a naming convention that separates lowercase words with a '.' (dot) character.
-  // Different monitoring systems have different recommendations regarding naming convention, and some naming
-  // conventions may be incompatible for one system and not another.
-  // Each Micrometer implementation for a monitoring system comes with a naming convention that transforms lowercase
-  // dot notation names to the monitoring system’s recommended naming convention.
-  // Additionally, this naming convention implementation sanitizes metric names and tags of special characters that
-  // are disallowed by the monitoring system.
-  /**
-   * In prometheus format --> http_events_sent_total
-   */
-  public static final String HTTP_EVENTS_SENT_COUNT = "http.events.sent";
-
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
   /**
@@ -68,75 +56,67 @@ public class Main {
    * @param args command line arguments.
    */
   public static void main(final String[] args) throws IOException {
+    DispatcherEnv env = new DispatcherEnv(System::getenv);
+
+    OpenTelemetrySdk openTelemetry = TracingConfig.fromDir(env.getConfigTracingPath()).setup();
+
     // HACK HACK HACK
     // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
     // dependency with scope `provided` nor `runtime`, and adding include rules to
     // maven-shade-plugin.
     // Instantiating an Encoder here we force it to include the class.
+    // TODO this requires some fix in our maven-shade-plugin usage
     new LogstashEncoder().getFieldNames();
 
-    final var env = new DispatcherEnv(System::getenv);
+    // Read consumer and producer kafka config
+    Properties producerConfig = Configurations.readPropertiesSync(env.getProducerConfigFilePath());
+    producerConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
+    producerConfig.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
+    Properties consumerConfig = Configurations.readPropertiesSync(env.getConsumerConfigFilePath());
+    consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
 
-    final OpenTelemetrySdk openTelemetry = TracingConfig.fromDir(env.getConfigTracingPath()).setup();
+    // Read WebClient config
+    JsonObject webClientConfig = Configurations.readPropertiesAsJsonSync(env.getWebClientConfigFilePath());
+    WebClientOptions webClientOptions = new WebClientOptions(webClientConfig);
+    webClientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
+    logger.info("Configurations {} {} {}",
+      keyValue("producerConfig", producerConfig),
+      keyValue("consumerConfig", consumerConfig),
+      keyValue("webClientConfig", webClientConfig)
+    );
     logger.info("Starting Dispatcher {}", keyValue("env", env));
 
-    final var vertx = Vertx.vertx(
+    // Start Vertx
+    Vertx vertx = Vertx.vertx(
       new VertxOptions()
         .setMetricsOptions(Metrics.getOptions(env))
         .setTracingOptions(new OpenTelemetryOptions(openTelemetry))
     );
 
+    // Register Contract message codec
+    ContractMessageCodec.register(vertx.eventBus());
+
     try {
-
-      ContractMessageCodec.register(vertx.eventBus());
-
-      final var metricsRegistry = Metrics.getRegistry();
-      final var eventsSentCounter = metricsRegistry.counter(HTTP_EVENTS_SENT_COUNT);
-
-      final var producerConfig = Configurations.readPropertiesSync(env.getProducerConfigFilePath());
-      producerConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
-      producerConfig.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
-      final var consumerConfig = Configurations.readPropertiesSync(env.getConsumerConfigFilePath());
-      consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
-      final var webClientConfig = Configurations.readPropertiesAsJsonSync(env.getWebClientConfigFilePath());
-
-      logger.info("Configurations {} {} {}",
-        keyValue("producerConfig", producerConfig),
-        keyValue("consumerConfig", consumerConfig),
-        keyValue("webClientConfig", webClientConfig)
-      );
-
-      final var clientOptions = new WebClientOptions(webClientConfig);
-      clientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
-
-      final var consumerVerticleFactory = new ConsumerVerticleFactoryImpl(
-        consumerConfig,
-        clientOptions,
-        producerConfig,
-        AuthProvider.kubernetes(),
-        eventsSentCounter
-      );
-
-      final var consumerDeployerVerticle = new ConsumerDeployerVerticle(
-        consumerVerticleFactory,
+      // Create the consumer deployer
+      ConsumerDeployerVerticle consumerDeployerVerticle = new ConsumerDeployerVerticle(
+        new ConsumerVerticleFactoryImpl(
+          consumerConfig,
+          webClientOptions,
+          producerConfig,
+          AuthProvider.kubernetes(),
+          Metrics.getRegistry()
+        ),
         env.getEgressesInitialCapacity()
       );
 
-      final var waitConsumerDeployer = new CountDownLatch(1);
+      // Deploy the consumer deployer
       vertx.deployVerticle(consumerDeployerVerticle)
-        .onSuccess(v -> {
-          logger.info("Consumer deployer started");
-          waitConsumerDeployer.countDown();
-        })
-        .onFailure(t -> {
-          // This is a catastrophic failure, close the application
-          logger.error("Consumer deployer not started", t);
-          vertx.close(v -> System.exit(1));
-        });
-      if (!waitConsumerDeployer.await(env.getWaitStartupSeconds(), TimeUnit.SECONDS)) {
-        throw new TimeoutException("Failed to deploy consumer deployer");
-      }
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(env.getWaitStartupSeconds(), TimeUnit.SECONDS);
+
+      logger.info("Consumer deployer started");
 
       ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
       FileWatcher fileWatcher = new FileWatcher(new File(env.getDataPlaneConfigFilePath()), publisher);
@@ -146,8 +126,7 @@ public class Main {
       Shutdown.registerHook(vertx, publisher, fileWatcher, openTelemetry.getSdkTracerProvider());
 
     } catch (final Exception ex) {
-      logger.error("Failed during filesystem watch", ex);
-
+      logger.error("Failed to startup the dispatcher", ex);
       Shutdown.closeVertxSync(vertx);
       System.exit(1);
     }

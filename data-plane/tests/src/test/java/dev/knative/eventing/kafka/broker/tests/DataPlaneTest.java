@@ -314,7 +314,7 @@ public class DataPlaneTest {
       new WebClientOptions(),
       producerConfigs,
       mock(AuthProvider.class),
-      mock(Counter.class)
+      Metrics.getRegistry()
     );
 
     final var verticle = new ConsumerDeployerVerticle(

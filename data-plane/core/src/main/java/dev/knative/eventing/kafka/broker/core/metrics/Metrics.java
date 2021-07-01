@@ -45,10 +45,16 @@ public class Metrics {
    * In prometheus format --> http_requests_malformed_total
    */
   public static final String HTTP_REQUESTS_MALFORMED_COUNT = "http.requests.malformed";
+
   /**
    * In prometheus format --> http_requests_produce_total
    */
   public static final String HTTP_REQUESTS_PRODUCE_COUNT = "http.requests.produce";
+
+  /**
+   * In prometheus format --> http_events_sent_total
+   */
+  public static final String HTTP_EVENTS_SENT_COUNT = "http.events.sent";
 
   /**
    * Get metrics options from the given metrics configurations.
