@@ -35,8 +35,6 @@ import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.ClosedWatchServiceException;
-import java.nio.file.FileSystems;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -112,22 +110,13 @@ public class Main {
         .get(env.getWaitStartupSeconds(), TimeUnit.SECONDS);
       logger.info("Receiver started");
 
-      // Start the contract file watcher
       ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
-      FileWatcher fw = new FileWatcher(
-        FileSystems.getDefault().newWatchService(),
-        publisher,
-        new File(env.getDataPlaneConfigFilePath())
-      );
+      FileWatcher fileWatcher = new FileWatcher(new File(env.getDataPlaneConfigFilePath()), publisher);
+      fileWatcher.start();
 
-      // Gracefully clean up resources.
-      Shutdown.registerHook(vertx, publisher, fw, openTelemetry.getSdkTracerProvider());
+      // Register shutdown hook for graceful shutdown.
+      Shutdown.registerHook(vertx, publisher, fileWatcher, openTelemetry.getSdkTracerProvider());
 
-      // TODO file watcher should be in its own thread
-      fw.watch(); // block forever until watch is stopped
-
-    } catch (final ClosedWatchServiceException ignored) {
-      // Do nothing, shutdown hook closed the watch service.
     } catch (final Exception ex) {
       logger.error("Failed to startup the receiver", ex);
       Shutdown.closeVertxSync(vertx);

@@ -32,16 +32,12 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-import java.io.IOException;
 import java.net.URI;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -71,8 +67,7 @@ public class UnorderedConsumerTest {
   private static final String TOPIC = "abc";
 
   @Test
-  public void testUnorderedConsumer(final Vertx vertx)
-    throws IOException, InterruptedException, ExecutionException {
+  public void testUnorderedConsumer(final Vertx vertx) throws Exception {
     ContractMessageCodec.register(vertx.eventBus());
 
     final var producerConfigs = new Properties();
@@ -117,19 +112,11 @@ public class UnorderedConsumerTest {
 
     final var file = Files.createTempFile("fw-", "-fw").toFile();
     final var fileWatcher = new FileWatcher(
-      FileSystems.getDefault().newWatchService(),
-      new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS),
-      file
+      file,
+      new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS)
     );
 
-    final var executorService = Executors.newFixedThreadPool(1);
-    executorService.submit(() -> {
-      try {
-        fileWatcher.watch();
-      } catch (IOException | InterruptedException e) {
-        e.printStackTrace();
-      }
-    });
+    fileWatcher.start();
 
     write(file, contract);
 
@@ -175,7 +162,6 @@ public class UnorderedConsumerTest {
     });
 
     fileWatcher.close();
-    executorService.shutdown();
   }
 
   private static void startServer(

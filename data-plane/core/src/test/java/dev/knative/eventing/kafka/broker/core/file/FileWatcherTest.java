@@ -17,28 +17,27 @@ package dev.knative.eventing.kafka.broker.core.file;
 
 import com.google.protobuf.util.JsonFormat;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
 import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class FileWatcherTest {
 
   @Test
   @Timeout(value = 5)
-  public void shouldReceiveUpdatesOnUpdate() throws IOException, InterruptedException {
+  public void shouldReceiveUpdatesOnUpdate() throws Exception {
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
     final var broker1 = DataPlaneContract.Contract.newBuilder()
@@ -65,29 +64,21 @@ public class FileWatcherTest {
       }
     };
 
-    final var fw = new FileWatcher(
-      FileSystems.getDefault().newWatchService(),
-      brokersConsumer,
-      file
-    );
+    try (FileWatcher fw = new FileWatcher(file, brokersConsumer)) {
+      fw.start();
 
-    final var thread1 = watch(fw);
-    final var thread2 = watch(fw); // the second time is no-op
+      write(file, broker1);
+      waitFirst.await();
 
-    write(file, broker1);
-    waitFirst.await();
-
-    write(file, broker2);
-    waitSecond.await();
-
-    thread1.interrupt();
-    thread2.interrupt();
+      write(file, broker2);
+      waitSecond.await();
+    }
   }
 
   @Test
   @Timeout(value = 5)
   public void shouldReadFileWhenStartWatchingWithoutUpdates()
-    throws IOException, InterruptedException {
+    throws Exception {
 
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
@@ -102,28 +93,29 @@ public class FileWatcherTest {
       waitBroker.countDown();
     };
 
-    final var fw = new FileWatcher(
-      FileSystems.getDefault().newWatchService(),
-      brokersConsumer,
-      file
-    );
+    try (FileWatcher fw = new FileWatcher(file, brokersConsumer)) {
+      fw.start();
 
-    final var thread = watch(fw);
-
-    waitBroker.await();
-
-    thread.interrupt();
+      waitBroker.await();
+    }
   }
 
-  private Thread watch(FileWatcher fw) {
-    final var thread = new Thread(() -> {
-      try {
-        fw.watch();
-      } catch (IOException | InterruptedException ignored) {
-      }
-    });
-    thread.start();
-    return thread;
+  @Test
+  @Timeout(value = 5)
+  public void shouldNotStartTwice() throws Exception {
+
+    final var file = Files.createTempFile("fw-", "-fw").toFile();
+
+    final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {
+    };
+
+    try (FileWatcher fw = new FileWatcher(file, brokersConsumer)) {
+      // Started once
+      fw.start();
+
+      // Now this should fail
+      assertThatThrownBy(fw::start).isInstanceOf(IllegalStateException.class);
+    }
   }
 
   public static void write(File file, DataPlaneContract.Contract contract) throws IOException {
