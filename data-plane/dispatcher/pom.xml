@@ -145,6 +145,12 @@
                   <artifact>*:*</artifact>
                   <excludeDefaults>false</excludeDefaults>
                 </filter>
+                <filter>
+                  <artifact>net.logstash.logback:logstash-logback-encoder</artifact>
+                  <includes>
+                    <include>**</include>
+                  </includes>
+                </filter>
               </filters>
             </configuration>
           </execution>
