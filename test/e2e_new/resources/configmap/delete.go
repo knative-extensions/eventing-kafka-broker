@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package utils
+package configmap
 
 import (
 	"context"
@@ -26,23 +26,15 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 )
 
-// LogContractConfigMap logs the broker config map
-func LogContractConfigMap(ctx context.Context, t feature.T) {
-	LogConfigMap("kafka-broker-brokers-triggers", knative.KnativeNamespaceFromContext(ctx))(ctx, t)
+// DeleteContract deletes the broker config map
+func DeleteContract(ctx context.Context, t feature.T) {
+	Delete("kafka-broker-brokers-triggers", knative.KnativeNamespaceFromContext(ctx))(ctx, t)
 }
 
-// LogConfigMap logs the provided config map
-func LogConfigMap(name string, namespace string) feature.StepFn {
+// Delete the provided config map
+func Delete(name string, namespace string) feature.StepFn {
 	return func(ctx context.Context, t feature.T) {
-		cm, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
+		err := kubeclient.Get(ctx).CoreV1().ConfigMaps(namespace).Delete(ctx, name, metav1.DeleteOptions{})
 		require.NoError(t, err)
-
-		t.Logf("Config map %s/%s", cm.Name, cm.Namespace)
-		for k, v := range cm.Data {
-			t.Logf("%s: %s", k, v)
-		}
-		for k, v := range cm.BinaryData {
-			t.Logf("%s: %s", k, string(v))
-		}
 	}
 }
