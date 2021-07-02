@@ -15,32 +15,32 @@
 apiVersion: eventing.knative.dev/v1alpha1
 kind: KafkaSink
 metadata:
-  name: { { .name } }
-  namespace: { { .namespace } }
-  { { if .annotations } }
+  name: {{ .name }}
+  namespace: {{ .namespace }}
+  {{ if .annotations }}
   annotations:
-  { { range $key, $value := .annotations } }
-  { { $key } }: "{{ $value }}"
-  { { end } }
-  { { end } }
+  {{ range $key, $value := .annotations }}
+    {{ $key }}: "{{ $value }}"
+  {{ end }}
+  {{ end }}
 spec:
   topic: "{{ .topic }}"
   bootstrapServers:
-  { { range $index, $value := .bootstrapServers } }
-  - "{{ $value }}"
-  { { end } }
-  { { if .contentMode } }
-  contentMode: { { .contentMode } }
-  { { end } }
-  { { if .numPartitions } }
-  numPartitions: { { .numPartitions } }
-  { { end } }
-  { { if .replicationFactor } }
-  replicationFactor: { { .replicationFactor } }
-  { { end } }
-  { { if .authSecretName } }
+  {{ range $index, $value := .bootstrapServers }}
+    - "{{ $value }}"
+  {{ end }}
+  {{ if .contentMode }}
+  contentMode: {{ .contentMode }}
+  {{ end }}
+  {{ if .numPartitions }}
+  numPartitions: {{ .numPartitions }}
+  {{ end }}
+  {{ if .replicationFactor }}
+  replicationFactor: {{ .replicationFactor }}
+  {{ end }}
+  {{ if .authSecretName }}
   auth:
     secret:
       ref:
-        name: { { .authSecretName } }
-  { { end } }
+        name: {{ .authSecretName }}
+  {{ end }}
