@@ -91,7 +91,7 @@ func BrokerDeleteContractConfigMap() *feature.Feature {
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),
 	))
-	f.Assert("receive event", OnStore(sinkName).MatchEvent(IsEqualTo(ev)).Exact(1))
+	f.Assert("receive event", OnStore(sinkName).MatchEvent(HasId(ev.ID())).Exact(1))
 
 	return f
 }
