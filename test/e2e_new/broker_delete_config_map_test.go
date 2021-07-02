@@ -19,6 +19,8 @@
 package e2e_new
 
 import (
+	"testing"
+
 	. "github.com/cloudevents/sdk-go/v2/test"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap"
@@ -32,7 +34,6 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/resources/svc"
-	"testing"
 )
 
 func TestBrokerDeleteContractConfigMap(t *testing.T) {
