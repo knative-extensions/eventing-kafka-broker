@@ -17,9 +17,10 @@ limitations under the License.
 package kafkasink_test
 
 import (
+	"os"
+
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/kafkasink"
-	"os"
 
 	"knative.dev/reconciler-test/pkg/manifest"
 )
