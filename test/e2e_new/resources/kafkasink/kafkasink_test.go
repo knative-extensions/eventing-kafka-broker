@@ -51,7 +51,7 @@ func Example_zero() {
 	// spec:
 	//   topic: "my-topic"
 	//   bootstrapServers:
-	//     - "my-bootstrap-server:80822
+	//     - "my-bootstrap-server:8082"
 }
 
 func Example_full() {
