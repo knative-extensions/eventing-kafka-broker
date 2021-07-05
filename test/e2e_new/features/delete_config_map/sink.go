@@ -32,30 +32,30 @@ func Sink() *feature.Feature {
 	f := feature.NewFeature()
 
 	sourceName := feature.MakeRandomK8sName("source")
-	sinkName := feature.MakeRandomK8sName("sink")
+	kafkaSinkName := feature.MakeRandomK8sName("kafkasink")
 	topicName := feature.MakeRandomK8sName("topic")
 
 	ev := FullEvent()
 
 	// Create the sink
 	f.Setup("install sink", kafkasink.Install(
-		sinkName,
+		kafkaSinkName,
 		topicName,
 		kafka.BootstrapServersPlaintextArray,
 		kafkasink.WithReplicationFactor(1),
 		kafkasink.WithNumPartitions(10),
 	))
-	f.Setup("sink is ready", kafkasink.IsReady(sinkName))
+	f.Setup("sink is ready", kafkasink.IsReady(kafkaSinkName))
 
 	// Let's delete the contract config map and then wait for it to be recreated
 	f.Setup("delete config map", configmap.DeleteFromKnativeNamespace(configMapName))
 	f.Setup("wait config map", configmap.ExistsInKnativeNamespace(configMapName))
-	f.Setup("sink is ready after deleting the contract config map", kafkasink.IsReady(sinkName))
+	f.Setup("sink is ready after deleting the contract config map", kafkasink.IsReady(kafkaSinkName))
 
 	// Let's send a message and check if it's received
 	f.Setup("install source", eventshub.Install(
 		sourceName,
-		eventshub.StartSenderToResource(kafkasink.GVR(), sinkName),
+		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSinkName),
 		eventshub.InputEvent(ev),
 	))
 
