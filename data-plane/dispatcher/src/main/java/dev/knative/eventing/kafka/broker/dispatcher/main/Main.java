@@ -38,7 +38,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import net.logstash.logback.encoder.LogstashEncoder;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
@@ -59,14 +58,6 @@ public class Main {
     DispatcherEnv env = new DispatcherEnv(System::getenv);
 
     OpenTelemetrySdk openTelemetry = TracingConfig.fromDir(env.getConfigTracingPath()).setup();
-
-    // HACK HACK HACK
-    // maven-shade-plugin doesn't include the LogstashEncoder class, neither by specifying the
-    // dependency with scope `provided` nor `runtime`, and adding include rules to
-    // maven-shade-plugin.
-    // Instantiating an Encoder here we force it to include the class.
-    // TODO this requires some fix in our maven-shade-plugin usage
-    new LogstashEncoder().getFieldNames();
 
     // Read consumer and producer kafka config
     Properties producerConfig = Configurations.readPropertiesSync(env.getProducerConfigFilePath());
