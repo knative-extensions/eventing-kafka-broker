@@ -29,9 +29,16 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 )
 
-// ExistsContract check that the broker contract config map exists
-func ExistsContract(ctx context.Context, t feature.T) {
+// ExistsBrokerContract check that the broker contract config map exists
+func ExistsBrokerContract(ctx context.Context, t feature.T) {
 	Exists("kafka-broker-brokers-triggers", knative.KnativeNamespaceFromContext(ctx))(ctx, t)
+}
+
+// ExistsInKnativeNamespace check that the provided config map exists
+func ExistsInKnativeNamespace(name string) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		Exists(name, knative.KnativeNamespaceFromContext(ctx))(ctx, t)
+	}
 }
 
 // Exists check that the provided config map exists

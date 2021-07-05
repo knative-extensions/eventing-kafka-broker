@@ -26,9 +26,16 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 )
 
-// DeleteContract deletes the broker config map
-func DeleteContract(ctx context.Context, t feature.T) {
+// DeleteBrokerContract deletes the broker config map
+func DeleteBrokerContract(ctx context.Context, t feature.T) {
 	Delete("kafka-broker-brokers-triggers", knative.KnativeNamespaceFromContext(ctx))(ctx, t)
+}
+
+// DeleteFromKnativeNamespace the provided config map
+func DeleteFromKnativeNamespace(name string) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		Delete(name, knative.KnativeNamespaceFromContext(ctx))(ctx, t)
+	}
 }
 
 // Delete the provided config map

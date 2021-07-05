@@ -1,5 +1,3 @@
-// +build deletecm
-
 /*
  * Copyright 2021 The Knative Authors
  *
@@ -16,41 +14,21 @@
  * limitations under the License.
  */
 
-package e2e_new
+package delete_config_map
 
 import (
-	"testing"
-
 	. "github.com/cloudevents/sdk-go/v2/test"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
-	"knative.dev/pkg/system"
-	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
-	"knative.dev/reconciler-test/pkg/k8s"
-	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/resources/svc"
 )
 
-func TestBrokerDeleteContractConfigMap(t *testing.T) {
-	t.Parallel()
-
-	ctx, env := global.Environment(
-		knative.WithKnativeNamespace(system.Namespace()),
-		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
-		k8s.WithEventListener,
-		environment.Managed(t),
-	)
-
-	env.Test(ctx, t, BrokerDeleteContractConfigMap())
-}
-
-func BrokerDeleteContractConfigMap() *feature.Feature {
+func Broker() *feature.Feature {
 	f := feature.NewFeature()
 
 	sourceName := feature.MakeRandomK8sName("source")
@@ -81,8 +59,8 @@ func BrokerDeleteContractConfigMap() *feature.Feature {
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
 	// Let's delete the contract config map and then wait for it to be recreated
-	f.Setup("delete config map", configmap.DeleteContract)
-	f.Setup("wait config map", configmap.ExistsContract)
+	f.Setup("delete config map", configmap.DeleteBrokerContract)
+	f.Setup("wait config map", configmap.ExistsBrokerContract)
 	f.Setup("trigger is ready after deleting the contract config map", trigger.IsReady(triggerName))
 
 	// Let's send a message and check if it's received

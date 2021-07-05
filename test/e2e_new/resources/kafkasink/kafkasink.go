@@ -30,7 +30,7 @@ import (
 //go:embed *.yaml
 var yaml embed.FS
 
-func gvr() schema.GroupVersionResource {
+func GVR() schema.GroupVersionResource {
 	return schema.GroupVersionResource{Group: "eventing.knative.dev", Version: "v1alpha1", Resource: "kafkasinks"}
 }
 
@@ -63,7 +63,7 @@ func WithAuthSecretName(name string) manifest.CfgFn {
 }
 
 // Install will create a Trigger resource, augmented with the config fn options.
-func Install(name, topic, bootstrapServers []string, opts ...manifest.CfgFn) feature.StepFn {
+func Install(name, topic string, bootstrapServers []string, opts ...manifest.CfgFn) feature.StepFn {
 	cfg := map[string]interface{}{
 		"name":             name,
 		"topic":            topic,
@@ -81,5 +81,5 @@ func Install(name, topic, bootstrapServers []string, opts ...manifest.CfgFn) fea
 
 // IsReady tests to see if a Trigger becomes ready within the time given.
 func IsReady(name string, timing ...time.Duration) feature.StepFn {
-	return k8s.IsReady(gvr(), name, timing...)
+	return k8s.IsReady(GVR(), name, timing...)
 }
