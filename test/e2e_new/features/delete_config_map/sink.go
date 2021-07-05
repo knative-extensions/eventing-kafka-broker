@@ -18,11 +18,12 @@ package delete_config_map
 
 import (
 	. "github.com/cloudevents/sdk-go/v2/test"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/kafkasink"
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
+
+	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/kafka"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/kafkasink"
 )
 
 func Sink() *feature.Feature {
@@ -40,7 +41,7 @@ func Sink() *feature.Feature {
 	f.Setup("install sink", kafkasink.Install(
 		sinkName,
 		topicName,
-		testingpkg.BootstrapServersPlaintextArr, // TODO should these variables be moved somewhere here and be configurable through envs?
+		kafka.BootstrapServersPlaintextArray,
 		kafkasink.WithReplicationFactor(1),
 		kafkasink.WithNumPartitions(10),
 	))
