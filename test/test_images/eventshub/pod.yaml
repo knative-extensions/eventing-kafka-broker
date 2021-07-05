@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: eventshub
+spec:
+  containers:
+    - name: eventshub
+      image: ko://knative.dev/eventing-kafka-broker/test/test_images/eventshub
