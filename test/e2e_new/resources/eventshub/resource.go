@@ -35,6 +35,7 @@ const (
 // WithKafkaEventsHub uses the kafka eventshub image when invoking eventshub.Install
 var WithKafkaEventsHub = eventshub.WithCustomImage(kafkaEventsHubImage)
 
+// StartKafkaConsumer starts a Kafka consumer in the eventshub image to read a topic
 func StartKafkaConsumer(bootstrapServers []string, topic string) eventshub.EventsHubOption {
 	return func(ctx context.Context, m map[string]string) error {
 		if generators, ok := m["EVENT_GENERATORS"]; ok {
