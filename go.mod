@@ -14,6 +14,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/xdg-go/scram v1.0.2
 	go.uber.org/zap v1.19.1
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/protobuf v1.27.1
 	k8s.io/api v0.21.4
 	k8s.io/apiextensions-apiserver v0.21.4
