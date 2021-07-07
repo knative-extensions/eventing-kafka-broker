@@ -19,9 +19,6 @@ package main
 import (
 	"context"
 	"encoding/base64"
-	"go.uber.org/zap"
-	"knative.dev/pkg/logging"
-	"knative.dev/reconciler-test/pkg/eventshub"
 	"sync/atomic"
 	"time"
 
@@ -30,6 +27,10 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
+	"go.uber.org/zap"
+
+	"knative.dev/pkg/logging"
+	"knative.dev/reconciler-test/pkg/eventshub"
 )
 
 type ConsumerConfig struct {

@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package eventshub
+package kafkaeventshub
 
 import (
 	"context"
+	"strings"
+
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
-	"strings"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func init() {
 }
 
 const (
-	testImagePackage    = "knative.dev/eventing-kafka-broker/test/test_images/eventshub"
+	testImagePackage    = "knative.dev/eventing-kafka-broker/test/test_images/kafkaeventshub"
 	kafkaEventsHubImage = "ko://" + testImagePackage
 )
 
