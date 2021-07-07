@@ -5,4 +5,4 @@ metadata:
 spec:
   containers:
     - name: eventshub
-      image: ko://knative.dev/eventing-kafka-broker/test/test_images/eventshub
+      image: ko://knative.dev/eventing-kafka-broker/test/test_images/kafkaeventshub
