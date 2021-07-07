@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"go.uber.org/zap"
 	"knative.dev/pkg/logging"
 	"knative.dev/reconciler-test/pkg/eventshub"
@@ -54,7 +55,7 @@ func StartConsumer(ctx context.Context, logs *eventshub.EventLogs) error {
 	}
 
 	handler := &kafkaConsumerHandler{
-		eventLogs: nil,
+		eventLogs: logs,
 		logger:    logging.FromContext(ctx),
 	}
 
@@ -121,7 +122,13 @@ func (h *kafkaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession,
 			Time:     time.Now(),
 			Sequence: s,
 			Kind:     eventshub.EventReceived,
-			// TODO add additional info with partition, offset and topic
+			AdditionalInfo: map[string]interface{}{
+				"topic":     message.Topic,
+				"key":       base64.StdEncoding.EncodeToString(message.Key),
+				"partition": message.Partition,
+				"offset":    message.Offset,
+				"timestamp": message.Timestamp.Format(time.RFC3339Nano),
+			},
 		}
 
 		if err := h.eventLogs.Vent(eventInfo); err != nil {
