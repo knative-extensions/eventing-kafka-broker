@@ -42,10 +42,8 @@ func main() {
 			eventshub.ReceiverEventGenerator: func(ctx context.Context, logs *eventshub.EventLogs) error {
 				return receiver.NewFromEnv(ctx, logs).Start(ctx, eventshub.WithTracing)
 			},
-			eventshub.SenderEventGenerator: func(ctx context.Context, logs *eventshub.EventLogs) error {
-				return sender.Start(ctx, logs)
-			},
-			"kafkaconsumer": StartConsumer,
+			eventshub.SenderEventGenerator: sender.Start,
+			"kafkaconsumer":                StartConsumer,
 		},
 	)
 }
