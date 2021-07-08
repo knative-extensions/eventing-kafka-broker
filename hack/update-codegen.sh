@@ -38,7 +38,7 @@ group "Kubernetes Codegen"
 #                  instead of the $GOPATH directly. For normal projects this can be dropped.
 ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
   knative.dev/eventing-kafka-broker/control-plane/pkg/client knative.dev/eventing-kafka-broker/control-plane/pkg/apis \
-  "eventing:v1alpha1" \
+  "eventing:v1alpha1 messaging:v1beta1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
 
 group "Knative Codegen"
@@ -46,7 +46,7 @@ group "Knative Codegen"
 # Knative Injection
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/eventing-kafka-broker/control-plane/pkg/client knative.dev/eventing-kafka-broker/control-plane/pkg/apis \
-  "eventing:v1alpha1" \
+  "eventing:v1alpha1 messaging:v1beta1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
 
 group "Update deps post-codegen"
