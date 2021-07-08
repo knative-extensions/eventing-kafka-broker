@@ -39,13 +39,9 @@ func (c *KafkaChannel) SetDefaults(ctx context.Context) {
 		c.Annotations = make(map[string]string)
 	}
 
-	// TODO this should be wrapped in a if to avoid conversion of ducks and let some other duck controller do that?!
-	//   BUT we need this hack to properly update from v1alpha1 to v1beta1, so:
-	//   * KEEP THIS FOR THE WHOLE 0.22 LIFECYCLE
-	//   * REMOVE THIS BEFORE 0.23 RELEASE
-	//if _, ok := c.Annotations[messaging.SubscribableDuckVersionAnnotation]; !ok {
-	c.Annotations[messaging.SubscribableDuckVersionAnnotation] = "v1"
-	//}
+	if _, ok := c.Annotations[messaging.SubscribableDuckVersionAnnotation]; !ok {
+		c.Annotations[messaging.SubscribableDuckVersionAnnotation] = "v1"
+	}
 
 	c.Spec.SetDefaults(ctx)
 }
