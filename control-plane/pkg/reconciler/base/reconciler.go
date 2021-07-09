@@ -354,24 +354,24 @@ func (r *Reconciler) probeReceiver(object metav1.Object, namespace, name, ip, po
 	req.Header.Add(network.ProbeHeaderName, "probe")
 	req.Header.Add(network.HashHeaderName, "hash")
 
-	enqueue := func(key string, arg interface{}) { r.Enqueue(arg.(metav1.Object)) }
+	onExpire := func(key string, arg interface{}) { r.Enqueue(arg.(metav1.Object)) }
 
 	go func() {
 		response, err := r.RequestProbeDoer(req)
 		if err != nil {
-			r.ProbeCache.UpdateStatus(target, prober.StatusUnknown, object, enqueue)
+			r.ProbeCache.UpsertStatus(target, prober.StatusUnknown, object, onExpire)
 			// TODO logger
 			// return fmt.Errorf("failed to probe pod %s/%s with ip %s: %w", namespace, name, ip, err)
 			return
 		}
 
 		if response.StatusCode != http.StatusOK {
-			r.ProbeCache.UpdateStatus(target, prober.StatusNotReady, object, enqueue)
+			r.ProbeCache.UpsertStatus(target, prober.StatusNotReady, object, onExpire)
 			// TODO logger
 			// return fmt.Errorf("probe failed response status code %d from pod %s/%s with ip %s", response.StatusCode, namespace, name, ip)
 			return
 		}
-		r.ProbeCache.UpdateStatus(target, prober.StatusReady, object, enqueue)
+		r.ProbeCache.UpsertStatus(target, prober.StatusReady, object, onExpire)
 	}()
 
 	return nil

@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	testinghttp "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing/http"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -288,9 +289,10 @@ func TestProbeReceivers(t *testing.T) {
 		RequestProbeDoer: testinghttp.Do(http.StatusOK),
 		PodLister:        podinformer.Get(ctx).Lister(),
 		ReceiverLabel:    base.BrokerReceiverLabel,
+		ProbeCache:       prober.NewInMemoryLocalCache(ctx, time.Second),
 	}
 
-	assert.Nil(t, r.ProbeReceivers("/hello/hello", nil))
+	assert.Nil(t, r.ProbeReceivers(&eventing.Broker{}, "/hello/hello"))
 }
 
 func TestProbeReceiversFailure(t *testing.T) {
@@ -323,9 +325,10 @@ func TestProbeReceiversFailure(t *testing.T) {
 				RequestProbeDoer: testinghttp.Do(tc.statusCode),
 				PodLister:        podinformer.Get(ctx).Lister(),
 				ReceiverLabel:    base.BrokerReceiverLabel,
+				ProbeCache:       prober.NewInMemoryLocalCache(ctx, time.Second),
 			}
 
-			assert.NotNil(t, r.ProbeReceivers(tc.path, nil))
+			assert.Nil(t, r.ProbeReceivers(&eventing.Broker{}, tc.path))
 		})
 	}
 }

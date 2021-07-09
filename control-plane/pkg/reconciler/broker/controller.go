@@ -147,9 +147,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 
 	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: kafka.BrokerClassFilter(),
-		Handler: cache.ResourceEventHandlerFuncs{
-			DeleteFunc: reconciler.OnDeleteObserver,
-		},
+		Handler:    cache.ResourceEventHandlerFuncs{DeleteFunc: reconciler.OnDeleteObserver},
 	})
 
 	cm, err := reconciler.KubeClient.CoreV1().ConfigMaps(configs.SystemNamespace).Get(ctx, configs.GeneralConfigMapName, metav1.GetOptions{})

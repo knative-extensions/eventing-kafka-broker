@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/utils/pointer"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/apis"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
@@ -1837,6 +1838,7 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,
 				RequestProbeDoer:            tesingthttp.Do(probeResponseStatusCode),
+				ProbeCache:                  prober.NewInMemoryLocalCache(ctx, time.Second),
 			},
 			KafkaDefaultTopicDetails:     defaultTopicDetail,
 			KafkaDefaultTopicDetailsLock: sync.RWMutex{},
@@ -1856,7 +1858,6 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 
 		reconciler.ConfigMapTracker = &FakeTracker{}
 		reconciler.SecretTracker = &FakeTracker{}
-		reconciler.EnqueueAfter = func(broker *eventing.Broker, duration time.Duration) {}
 
 		r := brokerreconciler.NewReconciler(
 			ctx,
