@@ -47,14 +47,14 @@
     <opentelemetry.version>1.3.0</opentelemetry.version>
     <jackson.version>2.12.3</jackson.version>
     <protobuf.version>3.17.2</protobuf.version>
-    <slf4j.version>1.7.31</slf4j.version>
+    <slf4j.version>1.7.32</slf4j.version>
     <ch.qos.logback.version>1.2.3</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>6.6</net.logstash.logback.encoder.version>
     <assertj.version>3.20.1</assertj.version>
     <awaitility.version>4.1.0</awaitility.version>
     <junit.jupiter.version>5.7.2</junit.jupiter.version>
     <mokito.junit.jupiter.version>3.11.1</mokito.junit.jupiter.version>
-    <fabric8.kubernetes.version>5.5.0</fabric8.kubernetes.version>
+    <fabric8.kubernetes.version>5.6.0</fabric8.kubernetes.version>
     <kafka.version>2.7.0</kafka.version>
     <debezium.version>1.6.0.Final</debezium.version>
   </properties>
