@@ -462,6 +462,30 @@ func TestMergeEgressConfig(t *testing.T) {
 				BackoffPolicy: 0,
 			},
 		},
+		{
+			name: "e0 retry priority (all config)",
+			e0: &contract.EgressConfig{
+				Retry:         42,
+				DeadLetter:    "e0",
+				Timeout:       100,
+				BackoffDelay:  4001,
+				BackoffPolicy: 0,
+			},
+			e1: &contract.EgressConfig{
+				Retry:         43,
+				DeadLetter:    "e1",
+				Timeout:       101,
+				BackoffDelay:  4000,
+				BackoffPolicy: 1,
+			},
+			expected: &contract.EgressConfig{
+				DeadLetter:    "e0",
+				Retry:         42,
+				Timeout:       100,
+				BackoffDelay:  4001,
+				BackoffPolicy: 0,
+			},
+		},
 	}
 
 	for _, tc := range tt {
