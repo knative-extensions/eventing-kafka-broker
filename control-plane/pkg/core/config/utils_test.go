@@ -23,6 +23,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/runtime/protoimpl"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -342,6 +345,160 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("EgressConfigFromDelivery() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMergeEgressConfig(t *testing.T) {
+
+	tt := []struct {
+		name     string
+		e0       *contract.EgressConfig
+		e1       *contract.EgressConfig
+		expected *contract.EgressConfig
+	}{
+		{
+			name: "e0 nil",
+			e1: &contract.EgressConfig{
+				Retry: 42,
+			},
+			expected: &contract.EgressConfig{
+				Retry: 42,
+			},
+		},
+		{
+			name: "e1 nil",
+			e0: &contract.EgressConfig{
+				Retry: 42,
+			},
+			expected: &contract.EgressConfig{
+				Retry: 42,
+			},
+		},
+		{
+			name: "e0 retry priority",
+			e0: &contract.EgressConfig{
+				Retry: 42,
+			},
+			e1: &contract.EgressConfig{
+				Retry: 43,
+			},
+			expected: &contract.EgressConfig{
+				Retry: 42,
+			},
+		},
+		{
+			name: "e0 dead letter priority",
+			e0: &contract.EgressConfig{
+				DeadLetter: "e0",
+			},
+			e1: &contract.EgressConfig{
+				Retry:      43,
+				DeadLetter: "e1",
+			},
+			expected: &contract.EgressConfig{
+				DeadLetter: "e0",
+				Retry:      43,
+			},
+		},
+		{
+			name: "e0 timeout priority",
+			e0: &contract.EgressConfig{
+				DeadLetter: "e0",
+				Timeout:    100,
+			},
+			e1: &contract.EgressConfig{
+				Retry:      43,
+				DeadLetter: "e1",
+				Timeout:    101,
+			},
+			expected: &contract.EgressConfig{
+				DeadLetter: "e0",
+				Retry:      43,
+				Timeout:    100,
+			},
+		},
+		{
+			name: "e0 backoff delay priority",
+			e0: &contract.EgressConfig{
+				DeadLetter:   "e0",
+				Timeout:      100,
+				BackoffDelay: 4001,
+			},
+			e1: &contract.EgressConfig{
+				Retry:        43,
+				DeadLetter:   "e1",
+				Timeout:      101,
+				BackoffDelay: 4000,
+			},
+			expected: &contract.EgressConfig{
+				DeadLetter:   "e0",
+				Retry:        43,
+				Timeout:      100,
+				BackoffDelay: 4001,
+			},
+		},
+		{
+			name: "e0 backoff policy priority",
+			e0: &contract.EgressConfig{
+				DeadLetter:    "e0",
+				Timeout:       100,
+				BackoffDelay:  4001,
+				BackoffPolicy: 0,
+			},
+			e1: &contract.EgressConfig{
+				Retry:         43,
+				DeadLetter:    "e1",
+				Timeout:       101,
+				BackoffDelay:  4000,
+				BackoffPolicy: 1,
+			},
+			expected: &contract.EgressConfig{
+				DeadLetter:    "e0",
+				Retry:         43,
+				Timeout:       100,
+				BackoffDelay:  4001,
+				BackoffPolicy: 0,
+			},
+		},
+		{
+			name: "e0 retry priority (all config)",
+			e0: &contract.EgressConfig{
+				Retry:         42,
+				DeadLetter:    "e0",
+				Timeout:       100,
+				BackoffDelay:  4001,
+				BackoffPolicy: 0,
+			},
+			e1: &contract.EgressConfig{
+				Retry:         43,
+				DeadLetter:    "e1",
+				Timeout:       101,
+				BackoffDelay:  4000,
+				BackoffPolicy: 1,
+			},
+			expected: &contract.EgressConfig{
+				DeadLetter:    "e0",
+				Retry:         42,
+				Timeout:       100,
+				BackoffDelay:  4001,
+				BackoffPolicy: 0,
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			opts := []cmp.Option{
+				cmpopts.IgnoreTypes(
+					protoimpl.MessageState{},
+					protoimpl.SizeCache(0),
+					protoimpl.UnknownFields{},
+				),
+			}
+			if diff := cmp.Diff(tc.expected, MergeEgressConfig(tc.e0, tc.e1), opts...); diff != "" {
+				t.Errorf("(-want, +got) %s", diff)
 			}
 		})
 	}

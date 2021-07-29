@@ -26,6 +26,7 @@ import (
 	"knative.dev/pkg/reconciler"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 )
 
 type statusConditionManager struct {
@@ -122,10 +123,22 @@ func (m *statusConditionManager) failedToUpdateDispatcherPodsAnnotation(err erro
 	)
 }
 
-func (m *statusConditionManager) subscriberResolved(details string) {
+func (m *statusConditionManager) subscriberResolved(egress *contract.Egress) {
 	m.Trigger.GetConditionSet().Manage(&m.Trigger.Status).MarkTrueWithReason(
 		eventing.TriggerConditionSubscriberResolved,
 		string(eventing.TriggerConditionSubscriberResolved),
-		details,
+		fmt.Sprintf("Subscriber will receive events with the delivery order: %s", egress.DeliveryOrder.String()),
 	)
+
+	if isDeadLetterSinkConfigured(egress.EgressConfig) {
+		m.Trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
+		uri, _ /* safe to ignore */ := apis.ParseURL(egress.EgressConfig.DeadLetter)
+		m.Trigger.Status.DeadLetterURI = uri
+	} else {
+		m.Trigger.Status.MarkDeadLetterSinkNotConfigured()
+	}
+}
+
+func isDeadLetterSinkConfigured(egressConfig *contract.EgressConfig) bool {
+	return egressConfig != nil && egressConfig.DeadLetter != ""
 }

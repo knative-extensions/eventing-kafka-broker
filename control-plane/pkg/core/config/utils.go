@@ -136,3 +136,41 @@ func DurationMillisFromISO8601String(durationStr *string, defaultDurationMillis 
 func IncrementContractGeneration(ct *contract.Contract) {
 	ct.Generation = (ct.Generation + 1) % (math.MaxUint64 - 1)
 }
+
+// MergeEgressConfig merges the 2 given egress configs into one egress config prioritizing e0 values.
+func MergeEgressConfig(e0, e1 *contract.EgressConfig) *contract.EgressConfig {
+	if e0 == nil {
+		return e1
+	}
+	if e1 == nil {
+		return e0
+	}
+	return &contract.EgressConfig{
+		DeadLetter:    mergeString(e0.GetDeadLetter(), e1.GetDeadLetter()),
+		Retry:         mergeUint32(e0.GetRetry(), e1.GetRetry()),
+		BackoffPolicy: e0.GetBackoffPolicy(),
+		BackoffDelay:  mergeUint64(e0.GetBackoffDelay(), e1.GetBackoffDelay()),
+		Timeout:       mergeUint64(e0.GetTimeout(), e1.GetTimeout()),
+	}
+}
+
+func mergeUint64(a, b uint64) uint64 {
+	if a == 0 {
+		return b
+	}
+	return a
+}
+
+func mergeUint32(a, b uint32) uint32 {
+	if a == 0 {
+		return b
+	}
+	return a
+}
+
+func mergeString(a, b string) string {
+	if a == "" {
+		return b
+	}
+	return a
+}

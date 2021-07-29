@@ -137,13 +137,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 	triggerIndex := coreconfig.FindEgress(ct.Resources[brokerIndex].Egresses, trigger.UID)
 
-	triggerConfig, err := r.getTriggerConfig(ctx, trigger)
+	triggerConfig, err := r.getTriggerConfig(ctx, broker, trigger)
 	if err != nil {
 		return statusConditionManager.failedToResolveTriggerConfig(err)
 	}
-	statusConditionManager.subscriberResolved(
-		fmt.Sprintf("Subscriber will receive events with the delivery order: %s", triggerConfig.DeliveryOrder.String()),
-	)
+	statusConditionManager.subscriberResolved(triggerConfig)
 
 	changed := coreconfig.AddOrUpdateEgressConfig(ct, brokerIndex, triggerConfig, triggerIndex)
 
@@ -266,7 +264,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	return nil
 }
 
-func (r *Reconciler) getTriggerConfig(ctx context.Context, trigger *eventing.Trigger) (*contract.Egress, error) {
+func (r *Reconciler) getTriggerConfig(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*contract.Egress, error) {
 	destination, err := r.Resolver.URIFromDestinationV1(ctx, trigger.Spec.Subscriber, trigger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve Trigger.Spec.Subscriber: %w", err)
@@ -285,11 +283,16 @@ func (r *Reconciler) getTriggerConfig(ctx context.Context, trigger *eventing.Tri
 		}
 	}
 
-	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, trigger, trigger.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
+	triggerEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, trigger, trigger.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("[trigger] %w", err)
 	}
-	egress.EgressConfig = egressConfig
+	brokerEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, broker, broker.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
+	if err != nil {
+		return nil, fmt.Errorf("[broker] %w", err)
+	}
+	// Merge Broker and Trigger egress configuration prioritizing the Trigger configuration.
+	egress.EgressConfig = coreconfig.MergeEgressConfig(triggerEgressConfig, brokerEgressConfig)
 
 	deliveryOrderAnnotationValue, ok := trigger.Annotations[deliveryOrderAnnotation]
 	if ok {
