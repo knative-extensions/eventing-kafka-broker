@@ -48,14 +48,16 @@ type flushable interface {
 	Flush()
 }
 
+type stoppable interface {
+	// StopMetricsExporter stops the exporter
+	StopMetricsExporter()
+}
+
 // ExporterOptions contains options for configuring the exporter.
 type ExporterOptions struct {
 	// Domain is the metrics domain. e.g. "knative.dev". Must be present.
-
-	// TODO - using this as a prefix is being discussed here:
-	//        https://github.com/knative/pkg/issues/2174
 	//
-	// OpenCensus uses the following format to construct full metric name:
+	// Stackdriver uses the following format to construct full metric name:
 	//    <domain>/<component>/<metric name from View>
 	// Prometheus uses the following format to construct full metric name:
 	//    <component>_<metric name from View>
@@ -166,8 +168,8 @@ func UpdateExporter(ctx context.Context, ops ExporterOptions, logger *zap.Sugare
 	return err
 }
 
-// isNewExporterRequired compares the non-nil newConfig against curMetricsConfig.
-// When backend changes, we need to update the metrics exporter.
+// isNewExporterRequired compares the non-nil newConfig against curMetricsConfig. When backend changes,
+// or stackdriver project ID changes for stackdriver backend, we need to update the metrics exporter.
 // This function must be called with the metricsMux reader (or writer) locked.
 func isNewExporterRequired(newConfig *metricsConfig) bool {
 	cc := curMetricsConfig
@@ -185,7 +187,7 @@ func isNewExporterRequired(newConfig *metricsConfig) bool {
 		return newConfig.prometheusHost != cc.prometheusHost || newConfig.prometheusPort != cc.prometheusPort
 	}
 
-	return false
+	return newConfig.backendDestination == stackdriver && newConfig.stackdriverClientConfig != cc.stackdriverClientConfig
 }
 
 // newMetricsExporter gets a metrics exporter based on the config.
@@ -194,9 +196,16 @@ func newMetricsExporter(config *metricsConfig, logger *zap.SugaredLogger) (view.
 	// If there is a Prometheus Exporter server running, stop it.
 	resetCurPromSrv()
 
+	// TODO(https://github.com/knative/pkg/issues/866): Move Stackdriver and Prometheus
+	// operations before stopping to an interface.
+	if se, ok := curMetricsExporter.(stoppable); ok {
+		se.StopMetricsExporter()
+	}
+
 	factory := map[metricsBackend]func(*metricsConfig, *zap.SugaredLogger) (view.Exporter, ResourceExporterFactory, error){
-		openCensus: newOpenCensusExporter,
-		prometheus: newPrometheusExporter,
+		stackdriver: newStackdriverExporter,
+		openCensus:  newOpenCensusExporter,
+		prometheus:  newPrometheusExporter,
 		none: func(*metricsConfig, *zap.SugaredLogger) (view.Exporter, ResourceExporterFactory, error) {
 			noneFactory := func(*resource.Resource) (view.Exporter, error) {
 				return &noneExporter{}, nil

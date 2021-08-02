@@ -26,13 +26,14 @@ import (
 	"time"
 
 	// Injection stuff
-
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	kubeinformerfactory "knative.dev/pkg/injection/clients/namespacedkube/informers/factory"
 	"knative.dev/pkg/network/handlers"
 
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	admissionv1 "k8s.io/api/admission/v1"
+	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
@@ -77,6 +78,7 @@ const (
 // Webhook implements the external webhook for validation of
 // resources and configuration.
 type Webhook struct {
+	Client  kubernetes.Interface
 	Options Options
 	Logger  *zap.SugaredLogger
 
@@ -104,6 +106,8 @@ func New(
 		}
 	}()
 
+	client := kubeclient.Get(ctx)
+
 	// Injection is too aggressive for this case because by simply linking this
 	// library we force consumers to have secret access.  If we require that one
 	// of the admission controllers' informers *also* require the secret
@@ -128,6 +132,7 @@ func New(
 	syncCtx, cancel := context.WithCancel(context.Background())
 
 	webhook = &Webhook{
+		Client:       client,
 		Options:      *opts,
 		secretlister: secretInformer.Lister(),
 		Logger:       logger,

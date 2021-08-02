@@ -259,11 +259,15 @@ func ConfigureServer(s *http.Server, conf *Server) error {
 
 	s.TLSConfig.PreferServerCipherSuites = true
 
-	if !strSliceContains(s.TLSConfig.NextProtos, NextProtoTLS) {
-		s.TLSConfig.NextProtos = append(s.TLSConfig.NextProtos, NextProtoTLS)
+	haveNPN := false
+	for _, p := range s.TLSConfig.NextProtos {
+		if p == NextProtoTLS {
+			haveNPN = true
+			break
+		}
 	}
-	if !strSliceContains(s.TLSConfig.NextProtos, "http/1.1") {
-		s.TLSConfig.NextProtos = append(s.TLSConfig.NextProtos, "http/1.1")
+	if !haveNPN {
+		s.TLSConfig.NextProtos = append(s.TLSConfig.NextProtos, NextProtoTLS)
 	}
 
 	if s.TLSNextProto == nil {

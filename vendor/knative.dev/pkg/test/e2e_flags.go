@@ -24,6 +24,7 @@ import (
 	"flag"
 	"text/template"
 
+	"k8s.io/client-go/tools/clientcmd"
 	env "knative.dev/pkg/environment"
 	testenv "knative.dev/pkg/test/environment"
 	"knative.dev/pkg/test/logging"
@@ -48,6 +49,13 @@ func initializeFlags() *EnvironmentFlags {
 
 	f.ClientConfig.InitFlags(flag.CommandLine)
 	f.TestClientConfig.InitFlags(flag.CommandLine)
+
+	// We want to do this defaulting for tests only. The flags are reused between tests
+	// and production code and we want to make sure that production code defaults to
+	// the in-cluster config correctly.
+	if f.Kubeconfig == "" {
+		f.Kubeconfig = clientcmd.RecommendedHomeFile
+	}
 
 	return f
 }
