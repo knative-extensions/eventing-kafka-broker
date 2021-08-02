@@ -20,7 +20,7 @@ import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 
-class ReceiverEnv extends BaseEnv {
+public class ReceiverEnv extends BaseEnv {
 
   public static final String INGRESS_PORT = "INGRESS_PORT";
   private final int ingressPort;
@@ -34,7 +34,7 @@ class ReceiverEnv extends BaseEnv {
   public static final String HTTPSERVER_CONFIG_FILE_PATH = "HTTPSERVER_CONFIG_FILE_PATH";
   private final String httpServerConfigFilePath;
 
-  ReceiverEnv(final Function<String, String> envProvider) {
+  public ReceiverEnv(final Function<String, String> envProvider) {
     super(envProvider);
 
     this.ingressPort = Integer.parseInt(envProvider.apply(INGRESS_PORT));

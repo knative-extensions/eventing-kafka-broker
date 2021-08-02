@@ -22,6 +22,8 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.Test;
 
+import static org.mockito.Mockito.mock;
+
 public class ProbeHandlerTest extends PreHandlerTest {
 
   private static final String LIVENESS_PATH = "/healthz";
@@ -49,7 +51,8 @@ public class ProbeHandlerTest extends PreHandlerTest {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Handler<HttpServerRequest> createHandler() {
-    return new ProbeHandler(LIVENESS_PATH, READINESS_PATH);
+    return new ProbeHandler(LIVENESS_PATH, READINESS_PATH, mock(Handler.class));
   }
 }

@@ -19,6 +19,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
+import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
@@ -44,12 +45,6 @@ import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
-import java.net.URI;
-import java.util.Collections;
-import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -57,9 +52,16 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
+import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ReceiverVerticleTracingTest {
 
@@ -108,13 +110,17 @@ public class ReceiverVerticleTracingTest {
       properties -> KafkaProducer.create(vertx, mockProducer)
     );
 
+    final var env = mock(ReceiverEnv.class);
+    when(env.getLivenessProbePath()).thenReturn("/healthz");
+    when(env.getReadinessProbePath()).thenReturn("/readyz");
+
     final var verticle = new ReceiverVerticle(
+      env,
       new HttpServerOptions()
         .setPort(PORT)
         .setHost("localhost")
         .setTracingPolicy(TracingPolicy.PROPAGATE),
       v -> store,
-      Collections.emptyList(),
       new IngressRequestHandlerImpl(
         StrictRequestToRecordMapper.getInstance(),
         new CumulativeCounter(mock(Id.class)),

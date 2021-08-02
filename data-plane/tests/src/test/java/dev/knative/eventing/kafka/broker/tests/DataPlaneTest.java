@@ -27,6 +27,7 @@ import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilab
 import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
 import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
+import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventV1;
@@ -70,6 +71,7 @@ import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class DataPlaneTest {
@@ -336,14 +338,18 @@ public class DataPlaneTest {
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(INGRESS_PORT);
 
+    final var env = mock(ReceiverEnv.class);
+    when(env.getLivenessProbePath()).thenReturn("/healthz");
+    when(env.getReadinessProbePath()).thenReturn("/readyz");
+
     final var verticle = new ReceiverVerticle(
+      env,
       httpServerOptions,
       v -> new IngressProducerReconcilableStore(
         null,
         producerConfigs(),
         properties -> KafkaProducer.create(v, properties)
       ),
-      Collections.emptyList(),
       new IngressRequestHandlerImpl(
         StrictRequestToRecordMapper.getInstance(),
         mock(Counter.class),

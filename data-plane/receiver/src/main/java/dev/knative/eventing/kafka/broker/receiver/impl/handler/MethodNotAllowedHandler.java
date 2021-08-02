@@ -33,12 +33,10 @@ public class MethodNotAllowedHandler implements Handler<HttpServerRequest> {
 
   private static final Logger logger = LoggerFactory.getLogger(MethodNotAllowedHandler.class);
 
-  private static class SingletonContainer {
-    private static final MethodNotAllowedHandler INSTANCE = new MethodNotAllowedHandler();
-  }
+  private final Handler<HttpServerRequest> next;
 
-  public static MethodNotAllowedHandler getInstance() {
-    return MethodNotAllowedHandler.SingletonContainer.INSTANCE;
+  public MethodNotAllowedHandler(final Handler<HttpServerRequest> next) {
+    this.next = next;
   }
 
   @Override
@@ -49,6 +47,8 @@ public class MethodNotAllowedHandler implements Handler<HttpServerRequest> {
       logger.warn("Only POST method is allowed. Method not allowed: {}",
         keyValue("method", request.method())
       );
+      return;
     }
+    this.next.handle(request);
   }
 }

@@ -36,23 +36,19 @@ import java.util.function.Supplier;
 
 class ReceiverVerticleFactory implements Supplier<Verticle> {
 
+  private ReceiverEnv env;
   private final Properties producerConfigs;
   private final HttpServerOptions httpServerOptions;
 
-  private final Iterable<Handler<HttpServerRequest>> preHandlers;
   private final IngressRequestHandler ingressRequestHandler;
 
   ReceiverVerticleFactory(final ReceiverEnv env,
                           final Properties producerConfigs,
                           final MeterRegistry metricsRegistry,
                           final HttpServerOptions httpServerOptions) {
+    this.env = env;
     this.producerConfigs = producerConfigs;
     this.httpServerOptions = httpServerOptions;
-
-    this.preHandlers = List.of(
-      new ProbeHandler(env.getLivenessProbePath(), env.getReadinessProbePath()),
-      MethodNotAllowedHandler.getInstance()
-    );
     this.ingressRequestHandler = new IngressRequestHandlerImpl(
       StrictRequestToRecordMapper.getInstance(),
       metricsRegistry.counter(Metrics.HTTP_REQUESTS_MALFORMED_COUNT),
@@ -63,13 +59,13 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
   @Override
   public Verticle get() {
     return new ReceiverVerticle(
+      env,
       httpServerOptions,
       v -> new IngressProducerReconcilableStore(
         AuthProvider.kubernetes(),
         producerConfigs,
         properties -> KafkaProducer.create(v, properties)
       ),
-      this.preHandlers,
       this.ingressRequestHandler
     );
   }
