@@ -18,6 +18,9 @@ package dev.knative.eventing.kafka.broker.receiver.impl;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
+import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
+import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
+import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Handler;
@@ -27,11 +30,11 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
+import java.util.function.Function;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
@@ -47,29 +50,30 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
  *   <li>Implements a request handler that invokes a series of {@code preHandlers} (which are assumed to complete synchronously) and then a final {@link IngressRequestHandler} to publish the record to Kafka</li>
  * </ul>
  */
-public class ReceiverVerticle extends AbstractVerticle {
+public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpServerRequest> {
 
   private static final Logger logger = LoggerFactory.getLogger(ReceiverVerticle.class);
 
   private final HttpServerOptions httpServerOptions;
   private final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory;
-  private final Iterable<Handler<HttpServerRequest>> preHandlers;
   private final IngressRequestHandler ingressRequestHandler;
+  private final ReceiverEnv env;
 
   private HttpServer server;
   private MessageConsumer<Object> messageConsumer;
   private IngressProducerReconcilableStore ingressProducerStore;
 
-  public ReceiverVerticle(HttpServerOptions httpServerOptions,
-                          Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
-                          Iterable<Handler<HttpServerRequest>> preHandlers,
-                          IngressRequestHandler ingressRequestHandler) {
+  public ReceiverVerticle(final ReceiverEnv env,
+                          final HttpServerOptions httpServerOptions,
+                          final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
+                          final IngressRequestHandler ingressRequestHandler) {
+    Objects.requireNonNull(env);
     Objects.requireNonNull(ingressProducerStoreFactory);
     Objects.requireNonNull(ingressRequestHandler);
 
+    this.env = env;
     this.httpServerOptions = httpServerOptions != null ? httpServerOptions : new HttpServerOptions();
     this.ingressProducerStoreFactory = ingressProducerStoreFactory;
-    this.preHandlers = preHandlers != null ? preHandlers : Collections.emptyList();
     this.ingressRequestHandler = ingressRequestHandler;
   }
 
@@ -84,7 +88,13 @@ public class ReceiverVerticle extends AbstractVerticle {
 
     this.server = vertx.createHttpServer(httpServerOptions);
 
-    this.server.requestHandler(this::handle)
+    final var handler = new ProbeHandler(
+      env.getLivenessProbePath(),
+      env.getReadinessProbePath(),
+      new MethodNotAllowedHandler(this)
+    );
+
+    this.server.requestHandler(handler)
       .exceptionHandler(startPromise::tryFail)
       .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
       .<Void>mapEmpty()
@@ -101,15 +111,8 @@ public class ReceiverVerticle extends AbstractVerticle {
       .onComplete(stopPromise);
   }
 
-  private void handle(HttpServerRequest request) {
-    // Run preHandlers
-    for (Handler<HttpServerRequest> preHandler : this.preHandlers) {
-      preHandler.handle(request);
-      // preHandler might end the request prematurely
-      if (request.isEnded()) {
-        return;
-      }
-    }
+  @Override
+  public void handle(HttpServerRequest request) {
 
     // Look up for the ingress producer
     IngressProducer producer = this.ingressProducerStore.resolve(request.path());

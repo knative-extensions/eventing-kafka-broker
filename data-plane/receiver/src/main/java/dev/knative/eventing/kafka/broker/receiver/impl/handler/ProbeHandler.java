@@ -20,6 +20,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 
+import java.util.Objects;
+
 /**
  * This class is an handler that respond to specified liveness and readiness probes.
  * <p>
@@ -31,26 +33,32 @@ public class ProbeHandler implements Handler<HttpServerRequest> {
 
   private final String livenessPath;
   private final String readinessPath;
+  private final Handler<HttpServerRequest> next;
 
   /**
    * All args constructor for creating a new instance of this class.
    *
    * @param livenessPath  request path at which respond to liveness checks.
    * @param readinessPath request path at which respond to readiness checks.
+   * @param next          next handler
    */
-  public ProbeHandler(
-    final String livenessPath,
-    final String readinessPath
-  ) {
+  public ProbeHandler(final String livenessPath,
+                      final String readinessPath,
+                      final Handler<HttpServerRequest> next) {
+    Objects.requireNonNull(next);
+
     this.livenessPath = livenessPath;
     this.readinessPath = readinessPath;
+    this.next = next;
   }
 
   @Override
   public void handle(final HttpServerRequest request) {
     if (isProbeRequest(request)) {
       request.response().setStatusCode(STATUS_OK).end();
+      return;
     }
+    this.next.handle(request);
   }
 
   private boolean isProbeRequest(final HttpServerRequest request) {

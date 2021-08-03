@@ -22,6 +22,7 @@ import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.Test;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
+import static org.mockito.Mockito.mock;
 
 public class MethodNotAllowedHandlerTest extends PreHandlerTest {
 
@@ -36,7 +37,8 @@ public class MethodNotAllowedHandlerTest extends PreHandlerTest {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Handler<HttpServerRequest> createHandler() {
-    return MethodNotAllowedHandler.getInstance();
+    return new MethodNotAllowedHandler(mock(Handler.class));
   }
 }
