@@ -58,7 +58,7 @@ if ! ${GITHUB_ACTIONS:-false}; then
   ${REPO_ROOT_DIR}/hack/generate-proto.sh
 
   # Update Java third party file
-#  mvn --file ${REPO_ROOT_DIR}/data-plane/pom.xml -Dlicense.outputDirectory=. license:aggregate-add-third-party
+  mvn --file ${REPO_ROOT_DIR}/data-plane/pom.xml -Dlicense.outputDirectory=. license:aggregate-add-third-party
 fi
 
 ${REPO_ROOT_DIR}/hack/update-deps.sh
