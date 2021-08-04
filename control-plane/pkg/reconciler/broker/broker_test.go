@@ -184,7 +184,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
-							EgressConfig:     &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
+							EgressConfig:     &contract.EgressConfig{DeadLetter: ServiceURL},
 						},
 					},
 					Generation: 2,
@@ -284,7 +284,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
-							EgressConfig:     &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
+							EgressConfig:     &contract.EgressConfig{DeadLetter: ServiceURL},
 						},
 					},
 					Generation: 1,
@@ -1061,7 +1061,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						{
 							Uid:          BrokerUUID,
 							Topics:       []string{BrokerTopic()},
-							EgressConfig: &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: ServiceURL},
 							Egresses: []*contract.Egress{
 								{
 									Filter: &contract.Filter{Attributes: map[string]string{
@@ -1127,7 +1127,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 									ConsumerGroup: TriggerUUID + "b",
 								},
 							},
-							EgressConfig:     &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
+							EgressConfig:     &contract.EgressConfig{DeadLetter: ServiceURL},
 							BootstrapServers: bootstrapServers,
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
@@ -1215,7 +1215,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
 							EgressConfig: &contract.EgressConfig{
-								DeadLetter:    "http://test-service.test-service-namespace.svc.cluster.local/",
+								DeadLetter:    ServiceURL,
 								Retry:         10,
 								BackoffPolicy: contract.BackoffPolicy_Exponential,
 								BackoffDelay:  2000,
@@ -1279,7 +1279,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
 							EgressConfig: &contract.EgressConfig{
-								DeadLetter:    "http://test-service.test-service-namespace.svc.cluster.local/",
+								DeadLetter:    ServiceURL,
 								Retry:         10,
 								BackoffPolicy: contract.BackoffPolicy_Linear,
 								BackoffDelay:  2000,
@@ -1343,7 +1343,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
 							EgressConfig: &contract.EgressConfig{
-								DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/",
+								DeadLetter: ServiceURL,
 							},
 						},
 					},
@@ -1404,7 +1404,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
 							EgressConfig: &contract.EgressConfig{
-								DeadLetter:    "http://test-service.test-service-namespace.svc.cluster.local/",
+								DeadLetter:    ServiceURL,
 								Retry:         10,
 								BackoffPolicy: contract.BackoffPolicy_Linear,
 								BackoffDelay:  configs.DefaultBackoffDelayMs,
@@ -1454,7 +1454,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
-							EgressConfig:     &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
+							EgressConfig:     &contract.EgressConfig{DeadLetter: ServiceURL},
 						},
 					},
 					Generation: 1,
@@ -1501,7 +1501,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 							Topics:           []string{BrokerTopic()},
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 							BootstrapServers: bootstrapServers,
-							EgressConfig:     &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
+							EgressConfig:     &contract.EgressConfig{DeadLetter: ServiceURL},
 						},
 					},
 					Generation: 1,
@@ -1600,7 +1600,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 							Uid:          BrokerUUID,
 							Topics:       []string{BrokerTopic()},
 							Ingress:      &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
-							EgressConfig: &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: ServiceURL},
 						},
 					},
 					Generation: 1,
@@ -1625,7 +1625,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 						{
 							Uid:          BrokerUUID,
 							Topics:       []string{BrokerTopic()},
-							EgressConfig: &contract.EgressConfig{DeadLetter: "http://test-service.test-service-namespace.svc.cluster.local/"},
+							EgressConfig: &contract.EgressConfig{DeadLetter: ServiceURL},
 						},
 					},
 					Generation: 1,

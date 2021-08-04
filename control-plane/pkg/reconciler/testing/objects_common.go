@@ -41,7 +41,7 @@ const (
 
 	serviceNamespace = "test-service-namespace"
 	serviceName      = "test-service"
-	ServiceURL       = "http://test-service.test-service-namespace.svc.cluster.local/"
+	ServiceURL       = "http://test-service.test-service-namespace.svc.cluster.local"
 
 	TriggerUUID = "e7185016-5d98-4b54-84e8-3b1cd4acc6b5"
 
