@@ -1,3 +1,4 @@
+//go:build e2e || deletecm
 // +build e2e deletecm
 
 /*
