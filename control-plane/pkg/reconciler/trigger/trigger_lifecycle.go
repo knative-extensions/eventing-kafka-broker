@@ -133,7 +133,7 @@ func (m *statusConditionManager) subscriberResolved(egress *contract.Egress) {
 	if isDeadLetterSinkConfigured(egress.EgressConfig) {
 		m.Trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
 		uri, _ /* safe to ignore */ := apis.ParseURL(egress.EgressConfig.DeadLetter)
-		m.Trigger.Status.DeadLetterURI = uri
+		m.Trigger.Status.DeadLetterSinkURI = uri
 	} else {
 		m.Trigger.Status.MarkDeadLetterSinkNotConfigured()
 	}
