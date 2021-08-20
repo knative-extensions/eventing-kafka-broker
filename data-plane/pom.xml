@@ -53,7 +53,7 @@
     <assertj.version>3.20.1</assertj.version>
     <awaitility.version>4.1.0</awaitility.version>
     <junit.jupiter.version>5.7.2</junit.jupiter.version>
-    <mokito.junit.jupiter.version>3.12.0</mokito.junit.jupiter.version>
+    <mokito.junit.jupiter.version>3.12.1</mokito.junit.jupiter.version>
     <fabric8.kubernetes.version>5.7.0</fabric8.kubernetes.version>
     <kafka.version>2.7.0</kafka.version>
     <debezium.version>1.6.1.Final</debezium.version>
