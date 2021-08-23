@@ -69,14 +69,6 @@ const (
 	KafkaChannelConditionConfigReady apis.ConditionType = "ConfigurationReady"
 )
 
-// RegisterAlternateKafkaChannelConditionSet register a different apis.ConditionSet.
-func RegisterAlternateKafkaChannelConditionSet(conditionSet apis.ConditionSet) {
-	channelCondSetLock.Lock()
-	defer channelCondSetLock.Unlock()
-
-	kc = conditionSet
-}
-
 // GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
 func (*KafkaChannel) GetConditionSet() apis.ConditionSet {
 	channelCondSetLock.RLock()

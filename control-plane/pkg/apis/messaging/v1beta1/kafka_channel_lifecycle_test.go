@@ -19,7 +19,6 @@ package v1beta1
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"knative.dev/pkg/apis"
 
 	"github.com/google/go-cmp/cmp"
@@ -434,16 +433,4 @@ func TestKafkaChannelStatus_SetAddressable(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestRegisterAlternateKafkaChannelConditionSet(t *testing.T) {
-
-	cs := apis.NewLivingConditionSet(apis.ConditionReady, "hello")
-
-	RegisterAlternateKafkaChannelConditionSet(cs)
-
-	kc := KafkaChannel{}
-
-	assert.Equal(t, cs, kc.GetConditionSet())
-	assert.Equal(t, cs, kc.Status.GetConditionSet())
 }
