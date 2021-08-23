@@ -24,6 +24,7 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 )
 
 // GenericInformer is type of SharedIndexInformer which will locate and delegate to other
@@ -55,6 +56,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=eventing.knative.dev, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("kafkasinks"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Eventing().V1alpha1().KafkaSinks().Informer()}, nil
+
+		// Group=messaging.knative.dev, Version=v1beta1
+	case v1beta1.SchemeGroupVersion.WithResource("kafkachannels"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Messaging().V1beta1().KafkaChannels().Informer()}, nil
 
 	}
 

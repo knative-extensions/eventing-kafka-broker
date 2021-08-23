@@ -14,23 +14,8 @@ linters:
     - prealloc
     - unconvert
     - unparam
-    - govet
-    - deadcode
-    - gosimple
-    - ineffassign
-    - staticcheck
-    - structcheck
-    - typecheck
-    - unconvert
-    - unused
-    - varcheck
+  disable:
     - errcheck
-    - godot
-    - goconst
-    - gofmt
-    - goimports
-    - gomnd
-    - exhaustive
 
 issues:
   exclude-rules:
@@ -38,5 +23,3 @@ issues:
       linters:
         - gosec
         - unparam
-        - gomnd
-        - godot
