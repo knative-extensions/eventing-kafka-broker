@@ -52,7 +52,7 @@ var (
 
 	_ runtime.Object = (*KafkaChannel)(nil)
 
-	// Check that we can create OwnerReferences to an this channel.
+	// Check that we can create OwnerReferences to a KafkaChannel.
 	_ kmeta.OwnerRefable = (*KafkaChannel)(nil)
 
 	// Check that the type conforms to the duck Knative Resource shape.
@@ -67,13 +67,13 @@ type KafkaChannelSpec struct {
 	// ReplicationFactor is the replication factor of a Kafka topic. By default, it is set to 1.
 	ReplicationFactor int16 `json:"replicationFactor"`
 
-	// Channel conforms to Duck type Channelable.
+	// Channel conforms to Duck type ChannelableStatus.
 	eventingduck.ChannelableSpec `json:",inline"`
 }
 
 // KafkaChannelStatus represents the current state of a KafkaChannel.
 type KafkaChannelStatus struct {
-	// Channel conforms to Duck type Channelable.
+	// Channel conforms to Duck type ChannelableStatus.
 	eventingduck.ChannelableStatus `json:",inline"`
 }
 
