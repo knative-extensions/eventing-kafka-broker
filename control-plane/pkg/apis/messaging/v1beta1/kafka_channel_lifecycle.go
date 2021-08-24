@@ -77,6 +77,22 @@ func (*KafkaChannel) GetConditionSet() apis.ConditionSet {
 	return kc
 }
 
+// IsReady returns true if the Status condition KafkaChannelConditionReady
+// is true and the latest spec has been observed.
+func (kc *KafkaChannel) IsReady() bool {
+	cs := kc.Status
+	return cs.ObservedGeneration == kc.Generation &&
+		cs.GetCondition(KafkaChannelConditionReady).IsTrue()
+}
+
+// IsFailed returns true if the resource has observed the latest generation
+// and ready is false.
+func (kc *KafkaChannel) IsFailed() bool {
+	kcs := kc.Status
+	return kcs.ObservedGeneration == kc.Generation &&
+		kcs.GetCondition(KafkaChannelConditionReady).IsFalse()
+}
+
 // GetConditionSet retrieves the condition set for this resource.
 func (*KafkaChannelStatus) GetConditionSet() apis.ConditionSet {
 	channelCondSetLock.RLock()
