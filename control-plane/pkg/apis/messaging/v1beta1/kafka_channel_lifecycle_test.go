@@ -329,7 +329,7 @@ func TestChannelIsReady(t *testing.T) {
 	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			cs := &KafkaChannelStatus{}
+			cs := KafkaChannelStatus{}
 			cs.InitializeConditions()
 			if test.markServiceReady {
 				cs.MarkServiceTrue()
@@ -364,7 +364,8 @@ func TestChannelIsReady(t *testing.T) {
 			} else {
 				cs.MarkTopicFailed("NotReadyTopic", "testing")
 			}
-			got := cs.IsReady()
+			kc := KafkaChannel{Status: cs}
+			got := kc.IsReady()
 			if test.wantReady != got {
 				t.Errorf("unexpected readiness: want %v, got %v", test.wantReady, got)
 			}
