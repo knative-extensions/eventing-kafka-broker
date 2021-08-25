@@ -84,7 +84,7 @@ func brokerAuth(t *testing.T, secretProvider SecretProvider, configProvider Conf
 		time.Sleep(time.Second * 30)
 		br, err := client.Eventing.EventingV1().Brokers(client.Namespace).Get(ctx, brokerName, metav1.GetOptions{})
 		assert.Nil(t, err)
-		assert.False(t, br.Status.IsReady(), "secret %s/%s doesn't exist, so broker must no be ready", client.Namespace, secretName)
+		assert.False(t, br.IsReady(), "secret %s/%s doesn't exist, so broker must no be ready", client.Namespace, secretName)
 
 		secretData := secretProvider(t, client)
 
