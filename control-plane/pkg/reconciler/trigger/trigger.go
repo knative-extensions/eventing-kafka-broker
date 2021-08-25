@@ -107,7 +107,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 	statusConditionManager.propagateBrokerCondition(broker)
 
-	if !broker.Status.IsReady() {
+	if !broker.IsReady() {
 		// Trigger will get re-queued once this broker is ready.
 		return nil
 	}
