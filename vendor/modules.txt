@@ -18,7 +18,7 @@ contrib.go.opencensus.io/exporter/zipkin
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 github.com/PuerkitoBio/urlesc
-# github.com/Shopify/sarama v1.28.0
+# github.com/Shopify/sarama v1.29.1
 ## explicit
 github.com/Shopify/sarama
 # github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
@@ -47,7 +47,7 @@ github.com/cloudevents/conformance/pkg/http
 # github.com/cloudevents/sdk-go/observability/opencensus/v2 v2.4.1
 github.com/cloudevents/sdk-go/observability/opencensus/v2/client
 github.com/cloudevents/sdk-go/observability/opencensus/v2/http
-# github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.2.0
+# github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.4.1
 ## explicit
 github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2
 # github.com/cloudevents/sdk-go/v2 v2.4.1
@@ -116,7 +116,7 @@ github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 github.com/golang/protobuf/ptypes/wrappers
-# github.com/golang/snappy v0.0.2
+# github.com/golang/snappy v0.0.3
 github.com/golang/snappy
 # github.com/google/go-cmp v0.5.6
 ## explicit
@@ -220,10 +220,9 @@ github.com/jstemmer/go-junit-report/parser
 # github.com/kelseyhightower/envconfig v1.4.0
 ## explicit
 github.com/kelseyhightower/envconfig
-# github.com/klauspost/compress v1.11.7
+# github.com/klauspost/compress v1.12.2
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
-github.com/klauspost/compress/snappy
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/konsorten/go-windows-terminal-sequences v1.0.3
@@ -296,10 +295,10 @@ github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/tsenart/vegeta/v12 v12.8.4
 github.com/tsenart/vegeta/v12/lib
-# github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
+# github.com/xdg/scram v1.0.3
 ## explicit
 github.com/xdg/scram
-# github.com/xdg/stringprep v1.0.0
+# github.com/xdg/stringprep v1.0.3
 github.com/xdg/stringprep
 # go.opencensus.io v0.23.0
 go.opencensus.io
@@ -347,7 +346,7 @@ go.uber.org/zap/internal/exit
 go.uber.org/zap/internal/ztest
 go.uber.org/zap/zapcore
 go.uber.org/zap/zaptest
-# golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
+# golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
 golang.org/x/crypto/cast5
 golang.org/x/crypto/md4
 golang.org/x/crypto/openpgp
@@ -387,7 +386,7 @@ golang.org/x/oauth2/jwt
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40
+# golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1
 golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
@@ -615,6 +614,7 @@ k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextension
 k8s.io/apiextensions-apiserver/pkg/client/listers/apiextensions/v1
 # k8s.io/apimachinery v0.20.7
 ## explicit
+k8s.io/apimachinery/pkg/api/apitesting/fuzzer
 k8s.io/apimachinery/pkg/api/equality
 k8s.io/apimachinery/pkg/api/errors
 k8s.io/apimachinery/pkg/api/meta
@@ -1062,6 +1062,41 @@ knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/request-sender
+# knative.dev/eventing-kafka v0.25.0
+## explicit
+knative.dev/eventing-kafka/pkg/apis/bindings
+knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
+knative.dev/eventing-kafka/pkg/apis/duck/v1alpha1
+knative.dev/eventing-kafka/pkg/apis/kafka
+knative.dev/eventing-kafka/pkg/apis/kafka/v1alpha1
+knative.dev/eventing-kafka/pkg/apis/messaging
+knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1
+knative.dev/eventing-kafka/pkg/apis/sources/v1beta1
+knative.dev/eventing-kafka/pkg/client/clientset/versioned
+knative.dev/eventing-kafka/pkg/client/clientset/versioned/scheme
+knative.dev/eventing-kafka/pkg/client/clientset/versioned/typed/bindings/v1beta1
+knative.dev/eventing-kafka/pkg/client/clientset/versioned/typed/kafka/v1alpha1
+knative.dev/eventing-kafka/pkg/client/clientset/versioned/typed/messaging/v1beta1
+knative.dev/eventing-kafka/pkg/client/clientset/versioned/typed/sources/v1beta1
+knative.dev/eventing-kafka/pkg/client/informers/externalversions
+knative.dev/eventing-kafka/pkg/client/informers/externalversions/bindings
+knative.dev/eventing-kafka/pkg/client/informers/externalversions/bindings/v1beta1
+knative.dev/eventing-kafka/pkg/client/informers/externalversions/internalinterfaces
+knative.dev/eventing-kafka/pkg/client/informers/externalversions/kafka
+knative.dev/eventing-kafka/pkg/client/informers/externalversions/kafka/v1alpha1
+knative.dev/eventing-kafka/pkg/client/informers/externalversions/messaging
+knative.dev/eventing-kafka/pkg/client/informers/externalversions/messaging/v1beta1
+knative.dev/eventing-kafka/pkg/client/informers/externalversions/sources
+knative.dev/eventing-kafka/pkg/client/informers/externalversions/sources/v1beta1
+knative.dev/eventing-kafka/pkg/client/injection/client
+knative.dev/eventing-kafka/pkg/client/injection/informers/factory
+knative.dev/eventing-kafka/pkg/client/injection/informers/messaging/v1beta1/kafkachannel
+knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel
+knative.dev/eventing-kafka/pkg/client/listers/bindings/v1beta1
+knative.dev/eventing-kafka/pkg/client/listers/kafka/v1alpha1
+knative.dev/eventing-kafka/pkg/client/listers/messaging/v1beta1
+knative.dev/eventing-kafka/pkg/client/listers/sources/v1beta1
+knative.dev/eventing-kafka/pkg/common/constants
 # knative.dev/hack v0.0.0-20210806075220-815cd312d65c
 ## explicit
 knative.dev/hack
@@ -1071,7 +1106,9 @@ knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
 knative.dev/pkg/apis/duck/ducktypes
 knative.dev/pkg/apis/duck/v1
+knative.dev/pkg/apis/duck/v1alpha1
 knative.dev/pkg/apis/duck/v1beta1
+knative.dev/pkg/apis/testing/fuzzer
 knative.dev/pkg/changeset
 knative.dev/pkg/client/injection/apiextensions/client
 knative.dev/pkg/client/injection/apiextensions/client/fake
