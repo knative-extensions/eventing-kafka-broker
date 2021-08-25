@@ -84,7 +84,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 		}
 	})
 
-	reconciler.Resolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
+	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
 	triggerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: filterTriggers(reconciler.BrokerLister),

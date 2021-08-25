@@ -42,6 +42,7 @@ import (
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/tracker"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
@@ -1844,7 +1845,7 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 			kafka.BrokerClass,
 		)
 
-		reconciler.Resolver = resolver.NewURIResolver(ctx, func(name types.NamespacedName) {})
+		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))
 
 		// periodically update default topic details to simulate concurrency.
 		go func() {

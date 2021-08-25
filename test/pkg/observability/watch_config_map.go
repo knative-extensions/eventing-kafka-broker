@@ -64,7 +64,7 @@ func WatchDataPlaneConfigMap(cm types.NamespacedName, format string) {
 
 		watcher.Watch(cm.Name, diffLogger.logDiff)
 
-		return controller.NewImplFull(
+		return controller.NewContext(ctx,
 			ReconcileFunc(func(ctx context.Context, key string) error { return nil }),
 			controller.ControllerOptions{WorkQueueName: component, Logger: logger.Sugar()},
 		)
