@@ -36,6 +36,7 @@ import (
 	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/tracker"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
@@ -251,7 +252,7 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 		{
 			name:                  "nil delivery",
 			ctx:                   ctx,
-			resolver:              resolver.NewURIResolver(ctx, func(name types.NamespacedName) {}),
+			resolver:              resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0)),
 			parent:                &eventing.KafkaSink{},
 			delivery:              nil,
 			defaultBackoffDelayMs: 0,
@@ -261,7 +262,7 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 		{
 			name:                  "nil retry and nil dls",
 			ctx:                   ctx,
-			resolver:              resolver.NewURIResolver(ctx, func(name types.NamespacedName) {}),
+			resolver:              resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0)),
 			parent:                &eventing.KafkaSink{},
 			delivery:              &eventingduck.DeliverySpec{},
 			defaultBackoffDelayMs: 0,
@@ -271,7 +272,7 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 		{
 			name:     "full delivery",
 			ctx:      ctx,
-			resolver: resolver.NewURIResolver(ctx, func(name types.NamespacedName) {}),
+			resolver: resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0)),
 			parent:   &eventing.KafkaSink{},
 			delivery: &eventingduck.DeliverySpec{
 				DeadLetterSink: &duckv1.Destination{URI: url},
@@ -293,7 +294,7 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 		{
 			name:     "only dls",
 			ctx:      ctx,
-			resolver: resolver.NewURIResolver(ctx, func(name types.NamespacedName) {}),
+			resolver: resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0)),
 			parent:   &eventing.KafkaSink{},
 			delivery: &eventingduck.DeliverySpec{
 				DeadLetterSink: &duckv1.Destination{URI: url},
@@ -307,7 +308,7 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 		{
 			name:     "only timeout",
 			ctx:      ctx,
-			resolver: resolver.NewURIResolver(ctx, func(name types.NamespacedName) {}),
+			resolver: resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0)),
 			parent:   &eventing.KafkaSink{},
 			delivery: &eventingduck.DeliverySpec{
 				Timeout: pointer.StringPtr("PT2S"),
@@ -321,7 +322,7 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 		{
 			name:     "only retry - use default backoff delay",
 			ctx:      ctx,
-			resolver: resolver.NewURIResolver(ctx, func(name types.NamespacedName) {}),
+			resolver: resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0)),
 			parent:   &eventing.KafkaSink{},
 			delivery: &eventingduck.DeliverySpec{
 				Retry:         pointer.Int32Ptr(3),

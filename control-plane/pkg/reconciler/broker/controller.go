@@ -32,7 +32,6 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
-	"knative.dev/pkg/tracker"
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
@@ -97,11 +96,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass)
 
-	reconciler.Resolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
+	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
 	brokerInformer := brokerinformer.Get(ctx)
-
-	logger.Info("Register event handlers")
 
 	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: kafka.BrokerClassFilter(),
@@ -124,10 +121,10 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 		},
 	})
 
-	reconciler.SecretTracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
+	reconciler.SecretTracker = impl.Tracker
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
 
-	reconciler.ConfigMapTracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
+	reconciler.ConfigMapTracker = impl.Tracker
 	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects
 		// coming through this path missing TypeMeta, so ensure it is properly

@@ -26,6 +26,7 @@ import (
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/tracker"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
@@ -2151,7 +2152,7 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 			Configs:        &configs.Env,
 		}
 
-		reconciler.Resolver = resolver.NewURIResolver(ctx, func(name types.NamespacedName) {})
+		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))
 
 		return triggerreconciler.NewReconciler(
 			ctx,
