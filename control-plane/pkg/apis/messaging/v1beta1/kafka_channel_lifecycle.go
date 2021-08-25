@@ -85,14 +85,6 @@ func (kc *KafkaChannel) IsReady() bool {
 		kcs.GetConditionSet().Manage(&kcs).IsHappy()
 }
 
-// IsFailed returns true if the resource has observed the latest generation
-// and ready is false.
-func (kc *KafkaChannel) IsFailed() bool {
-	kcs := kc.Status
-	return kcs.ObservedGeneration == kc.Generation &&
-		kcs.GetCondition(KafkaChannelConditionReady).IsFalse()
-}
-
 // GetConditionSet retrieves the condition set for this resource.
 func (*KafkaChannelStatus) GetConditionSet() apis.ConditionSet {
 	channelCondSetLock.RLock()
