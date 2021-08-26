@@ -86,12 +86,31 @@ rules:
       - patch
       - update
 
-  # Eventing resources and finalizers we care about.
+  # eventing.knative.dev resources and finalizers we care about.
   - apiGroups:
       - "eventing.knative.dev"
     resources:
       - "brokers/finalizers"
       - "triggers/finalizers"
       - "kafkasinks/finalizers"
+    verbs:
+      - update
+
+  # messaging.knative.dev resources and finalizers we care about.
+  - apiGroups:
+      - messaging.knative.dev
+    resources:
+      - kafkachannels
+      - kafkachannels/status
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+  - apiGroups:
+      - messaging.knative.dev
+    resources:
+      - kafkachannels/finalizers
     verbs:
       - update

@@ -95,7 +95,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 		topicConfig := topicConfigFromSinkSpec(&ks.Spec)
 
-		topic, err := r.ClusterAdmin.CreateTopic(logger, ks.Spec.Topic, topicConfig, securityOption)
+		topic, err := r.ClusterAdmin.CreateTopicIfDoesntExist(logger, ks.Spec.Topic, topicConfig, securityOption)
 		if err != nil {
 			return statusConditionManager.FailedToCreateTopic(topic, err)
 		}

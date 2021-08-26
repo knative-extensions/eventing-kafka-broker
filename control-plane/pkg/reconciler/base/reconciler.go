@@ -43,12 +43,18 @@ const (
 	// config map key of the contract config map.
 	ConfigMapDataKey = "data"
 
-	// label for selecting dispatcher pods.
+	// label for selecting broker dispatcher pods.
 	BrokerDispatcherLabel = "kafka-broker-dispatcher"
-	// label for selecting receiver pods.
+	// label for selecting broker receiver pods.
 	BrokerReceiverLabel = "kafka-broker-receiver"
-	// label for selecting receiver pods.
+
+	// label for selecting sink receiver pods.
 	SinkReceiverLabel = "kafka-sink-receiver"
+
+	// label for selecting channel dispatcher pods.
+	ChannelDispatcherLabel = "kafka-channel-dispatcher"
+	// label for selecting channel receiver pods.
+	ChannelReceiverLabel = "kafka-channel-receiver"
 
 	// volume generation annotation data plane pods.
 	VolumeGenerationAnnotationKey = "volumeGeneration"

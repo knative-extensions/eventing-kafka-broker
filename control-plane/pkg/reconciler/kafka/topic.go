@@ -62,12 +62,13 @@ func Topic(prefix string, obj metav1.Object) string {
 	return fmt.Sprintf("%s%s-%s", prefix, obj.GetNamespace(), obj.GetName())
 }
 
-// CreateTopic creates a topic with name 'topic' following the TopicConfig configuration passed as parameter.
+// CreateTopicIfDoesntExist creates a topic with name 'topic' following the TopicConfig configuration passed as parameter.
 //
 // It returns the topic name or an error.
 //
 // If the topic already exists, it will return no errors.
-func CreateTopic(admin sarama.ClusterAdmin, logger *zap.Logger, topic string, config *TopicConfig) (string, error) {
+// TODO: what happens if the topic exists but it has a different config?
+func CreateTopicIfDoesntExist(admin sarama.ClusterAdmin, logger *zap.Logger, topic string, config *TopicConfig) (string, error) {
 
 	topicDetail := &sarama.TopicDetail{
 		NumPartitions:     config.TopicDetail.NumPartitions,
@@ -102,7 +103,7 @@ func DeleteTopic(admin sarama.ClusterAdmin, topic string) (string, error) {
 	return topic, nil
 }
 
-func (f NewClusterAdminFunc) CreateTopic(logger *zap.Logger, topic string, config *TopicConfig, secOptions security.ConfigOption) (string, error) {
+func (f NewClusterAdminFunc) CreateTopicIfDoesntExist(logger *zap.Logger, topic string, config *TopicConfig, secOptions security.ConfigOption) (string, error) {
 
 	kafkaClusterAdmin, err := GetClusterAdmin(f, config.BootstrapServers, secOptions)
 	if err != nil {
@@ -110,7 +111,7 @@ func (f NewClusterAdminFunc) CreateTopic(logger *zap.Logger, topic string, confi
 	}
 	defer kafkaClusterAdmin.Close()
 
-	return CreateTopic(kafkaClusterAdmin, logger, topic, config)
+	return CreateTopicIfDoesntExist(kafkaClusterAdmin, logger, topic, config)
 }
 
 func (f NewClusterAdminFunc) DeleteTopic(topic string, bootstrapServers []string, secOptions security.ConfigOption) (string, error) {
