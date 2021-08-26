@@ -123,7 +123,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
-	topic, err := r.ClusterAdmin.CreateTopic(logger, kafka.Topic(TopicPrefix, broker), topicConfig, securityOption)
+	topic, err := r.ClusterAdmin.CreateTopicIfDoesntExist(logger, kafka.Topic(TopicPrefix, broker), topicConfig, securityOption)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topic, err)
 	}

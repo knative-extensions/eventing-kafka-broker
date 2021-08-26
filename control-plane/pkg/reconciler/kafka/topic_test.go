@@ -126,13 +126,13 @@ func TestCreateTopic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CreateTopic(tt.args.admin, tt.args.logger, tt.args.topic, tt.args.config)
+			got, err := CreateTopicIfDoesntExist(tt.args.admin, tt.args.logger, tt.args.topic, tt.args.config)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("createTopic() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("CreateTopicIfDoesntExist() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("createTopic() got = %v, want %v", got, tt.want)
+				t.Errorf("CreateTopicIfDoesntExist() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -313,7 +313,7 @@ func TestCreateTopicTopicAlreadyExists(t *testing.T) {
 		return ca, nil
 	}
 
-	topicRet, err := f.CreateTopic(zap.NewNop(), topic, &TopicConfig{}, security.NoOp)
+	topicRet, err := f.CreateTopicIfDoesntExist(zap.NewNop(), topic, &TopicConfig{}, security.NoOp)
 
 	assert.Equal(t, topicRet, topic, "expected topic %s go %s", topic, topicRet)
 	assert.Nil(t, err, "expected nil error on topic already exists")

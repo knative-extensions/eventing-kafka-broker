@@ -113,7 +113,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	// create the topic
-	topic, err := r.ClusterAdmin.CreateTopic(logger, topic(TopicPrefix, channel), topicConfig, saramaSecurityOption)
+	topic, err := r.ClusterAdmin.CreateTopicIfDoesntExist(logger, topic(TopicPrefix, channel), topicConfig, saramaSecurityOption)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topic, err)
 	}
