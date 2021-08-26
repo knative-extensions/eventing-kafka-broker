@@ -213,6 +213,18 @@ type saramaClientMock struct {
 	closed            bool
 }
 
+func (s saramaClientMock) DescribeUserScramCredentials(users []string) ([]*sarama.DescribeUserScramCredentialsResult, error) {
+	return nil, nil
+}
+
+func (s saramaClientMock) DeleteUserScramCredentials(delete []sarama.AlterUserScramCredentialsDelete) ([]*sarama.AlterUserScramCredentialsResult, error) {
+	return nil, nil
+}
+
+func (s saramaClientMock) UpsertUserScramCredentials(upsert []sarama.AlterUserScramCredentialsUpsert) ([]*sarama.AlterUserScramCredentialsResult, error) {
+	return nil, nil
+}
+
 func (s saramaClientMock) CreateTopic(topic string, _ *sarama.TopicDetail, _ bool) error {
 	s.hasTopic(topic)
 	return nil

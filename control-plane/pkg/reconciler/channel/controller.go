@@ -20,7 +20,7 @@ import (
 	"context"
 
 	"github.com/Shopify/sarama"
-	kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+	kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"

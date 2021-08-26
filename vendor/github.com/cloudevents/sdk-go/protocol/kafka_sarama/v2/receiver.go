@@ -32,11 +32,15 @@ func NewReceiver() *Receiver {
 	}
 }
 
-func (r *Receiver) Setup(sess sarama.ConsumerGroupSession) error {
+func (r *Receiver) Setup(sarama.ConsumerGroupSession) error {
 	return nil
 }
 
 func (r *Receiver) Cleanup(sarama.ConsumerGroupSession) error {
+	return nil
+}
+
+func (r *Receiver) Close(context.Context) error {
 	r.once.Do(func() {
 		close(r.incoming)
 	})
@@ -45,12 +49,13 @@ func (r *Receiver) Cleanup(sarama.ConsumerGroupSession) error {
 
 func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
-		m := NewMessageFromConsumerMessage(message)
+		msg := message
+		m := NewMessageFromConsumerMessage(msg)
 
 		r.incoming <- msgErr{
 			msg: binding.WithFinish(m, func(err error) {
 				if protocol.IsACK(err) {
-					session.MarkMessage(message, "")
+					session.MarkMessage(msg, "")
 				}
 			}),
 		}
@@ -71,6 +76,7 @@ func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 }
 
 var _ protocol.Receiver = (*Receiver)(nil)
+var _ protocol.Closer = (*Receiver)(nil)
 
 type Consumer struct {
 	Receiver
@@ -138,6 +144,7 @@ func (c *Consumer) OpenInbound(ctx context.Context) error {
 }
 
 func (c *Consumer) startConsumerGroupLoop(cg sarama.ConsumerGroup, ctx context.Context, errs chan<- error) {
+	defer c.Receiver.Close(ctx)
 	// Need to be wrapped in a for loop
 	// https://godoc.org/github.com/Shopify/sarama#ConsumerGroup
 	for {
@@ -152,7 +159,9 @@ func (c *Consumer) startConsumerGroupLoop(cg sarama.ConsumerGroup, ctx context.C
 			return
 		// Something else happened
 		default:
-			if err == nil || err == sarama.ErrClosedClient || err == sarama.ErrClosedConsumerGroup {
+			if err == nil {
+				continue
+			} else if err == sarama.ErrClosedClient || err == sarama.ErrClosedConsumerGroup {
 				// Consumer group closed correctly, we can close that loop
 				return
 			} else {
