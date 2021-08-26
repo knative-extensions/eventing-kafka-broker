@@ -67,6 +67,7 @@ func Topic(prefix string, obj metav1.Object) string {
 // It returns the topic name or an error.
 //
 // If the topic already exists, it will return no errors.
+// TODO: what happens if the topic exists but it has a different config?
 func CreateTopicIfDoesntExist(admin sarama.ClusterAdmin, logger *zap.Logger, topic string, config *TopicConfig) (string, error) {
 
 	topicDetail := &sarama.TopicDetail{
