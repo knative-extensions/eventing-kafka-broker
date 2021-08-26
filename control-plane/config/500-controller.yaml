@@ -55,25 +55,44 @@ spec:
           env:
             - name: BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE
               value: knative-eventing
+            - name: CHANNEL_DATA_PLANE_CONFIG_MAP_NAMESPACE
+              value: knative-eventing
             - name: SINK_DATA_PLANE_CONFIG_MAP_NAMESPACE
               value: knative-eventing
+
             - name: BROKER_DATA_PLANE_CONFIG_MAP_NAME
               value: kafka-broker-brokers-triggers
+            - name: CHANNEL_DATA_PLANE_CONFIG_MAP_NAME
+              value: kafka-channel-channels-subscriptions
             - name: SINK_DATA_PLANE_CONFIG_MAP_NAME
               value: kafka-sink-sinks
+
             - name: BROKER_DATA_PLANE_CONFIG_FORMAT
+              value: json
+            - name: CHANNEL_DATA_PLANE_CONFIG_FORMAT
               value: json
             - name: SINK_DATA_PLANE_CONFIG_FORMAT
               value: json
+
             - name: BROKER_INGRESS_NAME
               value: kafka-broker-ingress
+            - name: CHANNEL_INGRESS_NAME
+              value: kafka-channel-ingress
             - name: SINK_INGRESS_NAME
               value: kafka-sink-ingress
+
             - name: BROKER_GENERAL_CONFIG_MAP_NAME
+              value: kafka-broker-config
+            - name: CHANNEL_GENERAL_CONFIG_MAP_NAME
               value: kafka-broker-config
             - name: SINK_GENERAL_CONFIG_MAP_NAME
               value: kafka-broker-config
+
             - name: BROKER_SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: CHANNEL_SYSTEM_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
@@ -81,6 +100,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+
             - name: BROKER_DEFAULT_BACKOFF_DELAY_MS
               value: "1000" # 1 second
             - name: SYSTEM_NAMESPACE
