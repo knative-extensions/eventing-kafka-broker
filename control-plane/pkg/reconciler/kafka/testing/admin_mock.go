@@ -47,6 +47,18 @@ type MockKafkaClusterAdmin struct {
 	T *testing.T
 }
 
+func (m *MockKafkaClusterAdmin) DescribeUserScramCredentials(users []string) ([]*sarama.DescribeUserScramCredentialsResult, error) {
+	return nil, nil
+}
+
+func (m *MockKafkaClusterAdmin) DeleteUserScramCredentials(delete []sarama.AlterUserScramCredentialsDelete) ([]*sarama.AlterUserScramCredentialsResult, error) {
+	return nil, nil
+}
+
+func (m *MockKafkaClusterAdmin) UpsertUserScramCredentials(upsert []sarama.AlterUserScramCredentialsUpsert) ([]*sarama.AlterUserScramCredentialsResult, error) {
+	return nil, nil
+}
+
 func (m *MockKafkaClusterAdmin) CreateTopic(topic string, detail *sarama.TopicDetail, validateOnly bool) error {
 	if topic != m.ExpectedTopicName {
 		m.T.Errorf("expected topic %s got %s", m.ExpectedTopicName, topic)
