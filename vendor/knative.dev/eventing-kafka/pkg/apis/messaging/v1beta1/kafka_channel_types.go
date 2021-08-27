@@ -17,6 +17,9 @@ limitations under the License.
 package v1beta1
 
 import (
+	"time"
+
+	"github.com/rickb777/date/period"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -46,13 +49,13 @@ type KafkaChannel struct {
 }
 
 var (
-	// Check that this channel can be validated and defaulted.
+	// Check that this KafkaChannel can be validated and defaulted.
 	_ apis.Validatable = (*KafkaChannel)(nil)
 	_ apis.Defaultable = (*KafkaChannel)(nil)
 
 	_ runtime.Object = (*KafkaChannel)(nil)
 
-	// Check that we can create OwnerReferences to an this channel.
+	// Check that we can create OwnerReferences to a KafkaChannel.
 	_ kmeta.OwnerRefable = (*KafkaChannel)(nil)
 
 	// Check that the type conforms to the duck Knative Resource shape.
@@ -67,13 +70,31 @@ type KafkaChannelSpec struct {
 	// ReplicationFactor is the replication factor of a Kafka topic. By default, it is set to 1.
 	ReplicationFactor int16 `json:"replicationFactor"`
 
+	// RetentionDuration is the duration for which events will be retained in the Kafka Topic.
+	// By default, it is set to 168 hours, which is the precise form for 7 days.
+	// More information on Duration format:
+	//  - https://www.iso.org/iso-8601-date-and-time-format.html
+	//  - https://en.wikipedia.org/wiki/ISO_8601
+	RetentionDuration string `json:"retentionDuration"`
+
 	// Channel conforms to Duck type Channelable.
 	eventingduck.ChannelableSpec `json:",inline"`
 }
 
+// ParseRetentionDuration returns the parsed Offset Time if valid (RFC3339 format) or an error for invalid content.
+// Note - If the optional RetentionDuration field is not present, or is invalid, a Duration of "-1" will be returned.
+func (kcs *KafkaChannelSpec) ParseRetentionDuration() (time.Duration, error) {
+	retentionPeriod, err := period.Parse(kcs.RetentionDuration)
+	if err != nil {
+		return time.Duration(-1), err
+	}
+	retentionDuration, _ := retentionPeriod.Duration() // Ignore precision flag and accept ISO8601 estimation
+	return retentionDuration, nil
+}
+
 // KafkaChannelStatus represents the current state of a KafkaChannel.
 type KafkaChannelStatus struct {
-	// Channel conforms to Duck type Channelable.
+	// Channel conforms to Duck type ChannelableStatus.
 	eventingduck.ChannelableStatus `json:",inline"`
 }
 
@@ -88,11 +109,11 @@ type KafkaChannelList struct {
 }
 
 // GetGroupVersionKind returns GroupVersionKind for KafkaChannels
-func (c *KafkaChannel) GetGroupVersionKind() schema.GroupVersionKind {
+func (kc *KafkaChannel) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("KafkaChannel")
 }
 
 // GetStatus retrieves the duck status for this resource. Implements the KRShaped interface.
-func (k *KafkaChannel) GetStatus() *duckv1.Status {
-	return &k.Status.Status
+func (kc *KafkaChannel) GetStatus() *duckv1.Status {
+	return &kc.Status.Status
 }

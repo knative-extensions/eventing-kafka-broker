@@ -94,97 +94,97 @@ func (*KafkaChannelStatus) GetConditionSet() apis.ConditionSet {
 }
 
 // GetCondition returns the condition currently associated with the given type, or nil.
-func (cs *KafkaChannelStatus) GetCondition(t apis.ConditionType) *apis.Condition {
-	return cs.GetConditionSet().Manage(cs).GetCondition(t)
+func (kcs *KafkaChannelStatus) GetCondition(t apis.ConditionType) *apis.Condition {
+	return kcs.GetConditionSet().Manage(kcs).GetCondition(t)
 }
 
 // IsReady returns true if the resource is ready overall.
-func (cs *KafkaChannelStatus) IsReady() bool {
-	return cs.GetConditionSet().Manage(cs).IsHappy()
+func (kcs *KafkaChannelStatus) IsReady() bool {
+	return kcs.GetConditionSet().Manage(kcs).IsHappy()
 }
 
 // InitializeConditions sets relevant unset conditions to Unknown state.
-func (cs *KafkaChannelStatus) InitializeConditions() {
-	cs.GetConditionSet().Manage(cs).InitializeConditions()
+func (kcs *KafkaChannelStatus) InitializeConditions() {
+	kcs.GetConditionSet().Manage(kcs).InitializeConditions()
 }
 
 // SetAddress sets the address (as part of Addressable contract) and marks the correct condition.
-func (cs *KafkaChannelStatus) SetAddress(url *apis.URL) {
-	if cs.Address == nil {
-		cs.Address = &duckv1.Addressable{}
+func (kcs *KafkaChannelStatus) SetAddress(url *apis.URL) {
+	if kcs.Address == nil {
+		kcs.Address = &duckv1.Addressable{}
 	}
 	if url != nil {
-		cs.Address.URL = url
-		cs.GetConditionSet().Manage(cs).MarkTrue(KafkaChannelConditionAddressable)
+		kcs.Address.URL = url
+		kcs.GetConditionSet().Manage(kcs).MarkTrue(KafkaChannelConditionAddressable)
 	} else {
-		cs.Address.URL = nil
-		cs.GetConditionSet().Manage(cs).MarkFalse(KafkaChannelConditionAddressable, "EmptyURL", "URL is nil")
+		kcs.Address.URL = nil
+		kcs.GetConditionSet().Manage(kcs).MarkFalse(KafkaChannelConditionAddressable, "EmptyURL", "URL is nil")
 	}
 }
 
-func (cs *KafkaChannelStatus) MarkDispatcherFailed(reason, messageFormat string, messageA ...interface{}) {
-	cs.GetConditionSet().Manage(cs).MarkFalse(KafkaChannelConditionDispatcherReady, reason, messageFormat, messageA...)
+func (kcs *KafkaChannelStatus) MarkDispatcherFailed(reason, messageFormat string, messageA ...interface{}) {
+	kcs.GetConditionSet().Manage(kcs).MarkFalse(KafkaChannelConditionDispatcherReady, reason, messageFormat, messageA...)
 }
 
-func (cs *KafkaChannelStatus) MarkDispatcherUnknown(reason, messageFormat string, messageA ...interface{}) {
-	cs.GetConditionSet().Manage(cs).MarkUnknown(KafkaChannelConditionDispatcherReady, reason, messageFormat, messageA...)
+func (kcs *KafkaChannelStatus) MarkDispatcherUnknown(reason, messageFormat string, messageA ...interface{}) {
+	kcs.GetConditionSet().Manage(kcs).MarkUnknown(KafkaChannelConditionDispatcherReady, reason, messageFormat, messageA...)
 }
 
 // TODO: Unify this with the ones from Eventing. Say: Broker, Trigger.
-func (cs *KafkaChannelStatus) PropagateDispatcherStatus(ds *appsv1.DeploymentStatus) {
+func (kcs *KafkaChannelStatus) PropagateDispatcherStatus(ds *appsv1.DeploymentStatus) {
 	for _, cond := range ds.Conditions {
 		if cond.Type == appsv1.DeploymentAvailable {
 			if cond.Status == corev1.ConditionTrue {
-				cs.GetConditionSet().Manage(cs).MarkTrue(KafkaChannelConditionDispatcherReady)
+				kcs.GetConditionSet().Manage(kcs).MarkTrue(KafkaChannelConditionDispatcherReady)
 			} else if cond.Status == corev1.ConditionFalse {
-				cs.MarkDispatcherFailed("DispatcherDeploymentFalse", "The status of Dispatcher Deployment is False: %s : %s", cond.Reason, cond.Message)
+				kcs.MarkDispatcherFailed("DispatcherDeploymentFalse", "The status of Dispatcher Deployment is False: %s : %s", cond.Reason, cond.Message)
 			} else if cond.Status == corev1.ConditionUnknown {
-				cs.MarkDispatcherUnknown("DispatcherDeploymentUnknown", "The status of Dispatcher Deployment is Unknown: %s : %s", cond.Reason, cond.Message)
+				kcs.MarkDispatcherUnknown("DispatcherDeploymentUnknown", "The status of Dispatcher Deployment is Unknown: %s : %s", cond.Reason, cond.Message)
 			}
 		}
 	}
 }
 
-func (cs *KafkaChannelStatus) MarkServiceFailed(reason, messageFormat string, messageA ...interface{}) {
-	cs.GetConditionSet().Manage(cs).MarkFalse(KafkaChannelConditionServiceReady, reason, messageFormat, messageA...)
+func (kcs *KafkaChannelStatus) MarkServiceFailed(reason, messageFormat string, messageA ...interface{}) {
+	kcs.GetConditionSet().Manage(kcs).MarkFalse(KafkaChannelConditionServiceReady, reason, messageFormat, messageA...)
 }
 
-func (cs *KafkaChannelStatus) MarkServiceUnknown(reason, messageFormat string, messageA ...interface{}) {
-	cs.GetConditionSet().Manage(cs).MarkUnknown(KafkaChannelConditionServiceReady, reason, messageFormat, messageA...)
+func (kcs *KafkaChannelStatus) MarkServiceUnknown(reason, messageFormat string, messageA ...interface{}) {
+	kcs.GetConditionSet().Manage(kcs).MarkUnknown(KafkaChannelConditionServiceReady, reason, messageFormat, messageA...)
 }
 
-func (cs *KafkaChannelStatus) MarkServiceTrue() {
-	cs.GetConditionSet().Manage(cs).MarkTrue(KafkaChannelConditionServiceReady)
+func (kcs *KafkaChannelStatus) MarkServiceTrue() {
+	kcs.GetConditionSet().Manage(kcs).MarkTrue(KafkaChannelConditionServiceReady)
 }
 
-func (cs *KafkaChannelStatus) MarkChannelServiceFailed(reason, messageFormat string, messageA ...interface{}) {
-	cs.GetConditionSet().Manage(cs).MarkFalse(KafkaChannelConditionChannelServiceReady, reason, messageFormat, messageA...)
+func (kcs *KafkaChannelStatus) MarkChannelServiceFailed(reason, messageFormat string, messageA ...interface{}) {
+	kcs.GetConditionSet().Manage(kcs).MarkFalse(KafkaChannelConditionChannelServiceReady, reason, messageFormat, messageA...)
 }
 
-func (cs *KafkaChannelStatus) MarkChannelServiceTrue() {
-	cs.GetConditionSet().Manage(cs).MarkTrue(KafkaChannelConditionChannelServiceReady)
+func (kcs *KafkaChannelStatus) MarkChannelServiceTrue() {
+	kcs.GetConditionSet().Manage(kcs).MarkTrue(KafkaChannelConditionChannelServiceReady)
 }
 
-func (cs *KafkaChannelStatus) MarkEndpointsFailed(reason, messageFormat string, messageA ...interface{}) {
-	cs.GetConditionSet().Manage(cs).MarkFalse(KafkaChannelConditionEndpointsReady, reason, messageFormat, messageA...)
+func (kcs *KafkaChannelStatus) MarkEndpointsFailed(reason, messageFormat string, messageA ...interface{}) {
+	kcs.GetConditionSet().Manage(kcs).MarkFalse(KafkaChannelConditionEndpointsReady, reason, messageFormat, messageA...)
 }
 
-func (cs *KafkaChannelStatus) MarkEndpointsTrue() {
-	cs.GetConditionSet().Manage(cs).MarkTrue(KafkaChannelConditionEndpointsReady)
+func (kcs *KafkaChannelStatus) MarkEndpointsTrue() {
+	kcs.GetConditionSet().Manage(kcs).MarkTrue(KafkaChannelConditionEndpointsReady)
 }
 
-func (cs *KafkaChannelStatus) MarkTopicTrue() {
-	cs.GetConditionSet().Manage(cs).MarkTrue(KafkaChannelConditionTopicReady)
+func (kcs *KafkaChannelStatus) MarkTopicTrue() {
+	kcs.GetConditionSet().Manage(kcs).MarkTrue(KafkaChannelConditionTopicReady)
 }
 
-func (cs *KafkaChannelStatus) MarkTopicFailed(reason, messageFormat string, messageA ...interface{}) {
-	cs.GetConditionSet().Manage(cs).MarkFalse(KafkaChannelConditionTopicReady, reason, messageFormat, messageA...)
+func (kcs *KafkaChannelStatus) MarkTopicFailed(reason, messageFormat string, messageA ...interface{}) {
+	kcs.GetConditionSet().Manage(kcs).MarkFalse(KafkaChannelConditionTopicReady, reason, messageFormat, messageA...)
 }
 
-func (cs *KafkaChannelStatus) MarkConfigTrue() {
-	cs.GetConditionSet().Manage(cs).MarkTrue(KafkaChannelConditionConfigReady)
+func (kcs *KafkaChannelStatus) MarkConfigTrue() {
+	kcs.GetConditionSet().Manage(kcs).MarkTrue(KafkaChannelConditionConfigReady)
 }
 
-func (cs *KafkaChannelStatus) MarkConfigFailed(reason, messageFormat string, messageA ...interface{}) {
-	cs.GetConditionSet().Manage(cs).MarkFalse(KafkaChannelConditionConfigReady, reason, messageFormat, messageA...)
+func (kcs *KafkaChannelStatus) MarkConfigFailed(reason, messageFormat string, messageA ...interface{}) {
+	kcs.GetConditionSet().Manage(kcs).MarkFalse(KafkaChannelConditionConfigReady, reason, messageFormat, messageA...)
 }

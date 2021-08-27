@@ -36,4 +36,8 @@ func (k *KafkaSource) SetDefaults(ctx context.Context) {
 	if k.Spec.Consumers == nil {
 		k.Spec.Consumers = pointer.Int32Ptr(1)
 	}
+
+	if k.Spec.InitialOffset == "" {
+		k.Spec.InitialOffset = OffsetLatest
+	}
 }

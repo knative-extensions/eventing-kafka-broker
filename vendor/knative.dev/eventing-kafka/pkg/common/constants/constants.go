@@ -16,12 +16,21 @@ limitations under the License.
 
 package constants
 
+import "time"
+
 const (
 
 	// DefaultNumPartitions is the KafkaChannel Spec default for the number of partitions
 	DefaultNumPartitions = 1
+
 	// DefaultReplicationFactor is the KafkaChannel Spec default for the replication factor
 	DefaultReplicationFactor = 1
+
+	// DefaultRetentionISO8601Duration is the KafkaChannel Spec default for the retention duration as an ISO-8601 string
+	DefaultRetentionISO8601Duration = "PT168H" // Precise 7 Days
+
+	// DefaultRetentionDuration is the time.Duration equivalent of the DefaultRetentionISO8601Duration
+	DefaultRetentionDuration = 7 * 24 * time.Hour // Precise 7 Days
 
 	// SettingsConfigMapName is the name of the configmap used to hold eventing-kafka settings
 	SettingsConfigMapName = "config-kafka"
