@@ -90,7 +90,7 @@ type ResetOffsetSpec struct {
 //       in order to support specifying explicit offset (int64) values for each Partition.
 type OffsetSpec struct {
 
-	// Time is an string representing the desired offset position to which all partitions
+	// Time is a string representing the desired offset position to which all partitions
 	// will be reset.  Supported values include "earliest", "latest", or a valid date / time
 	// string in the time.RFC3339 format. The "earliest" and "latest" values indicate the
 	// beginning and end, respectively, of the persistence window of the Topic.  There is no

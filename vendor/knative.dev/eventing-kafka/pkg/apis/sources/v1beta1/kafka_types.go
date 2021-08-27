@@ -72,6 +72,11 @@ type KafkaSourceSpec struct {
 	// +optional
 	ConsumerGroup string `json:"consumerGroup,omitempty"`
 
+	// InitialOffset is the Initial Offset for the consumer group.
+	// should be earliest or latest
+	// +optional
+	InitialOffset Offset `json:"initialOffset,omitempty"`
+
 	// inherits duck/v1 SourceSpec, which currently provides:
 	// * Sink - a reference to an object that will resolve to a domain name or
 	//   a URI directly to use as the sink.
@@ -80,11 +85,19 @@ type KafkaSourceSpec struct {
 	duckv1.SourceSpec `json:",inline"`
 }
 
+type Offset string
+
 const (
 	// KafkaEventType is the Kafka CloudEvent type.
 	KafkaEventType = "dev.knative.kafka.event"
 
 	KafkaKeyTypeLabel = "kafkasources.sources.knative.dev/key-type"
+
+	// OffsetEarliest denotes the earliest offset in the kafka partition
+	OffsetEarliest Offset = "earliest"
+
+	// OffsetLatest denotes the latest offset in the kafka partition
+	OffsetLatest Offset = "latest"
 )
 
 var KafkaKeyTypeAllowed = []string{"string", "int", "float", "byte-array"}
