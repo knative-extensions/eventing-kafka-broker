@@ -32,6 +32,11 @@ func (k *KafkaSource) GetVReplicas() int32 {
 	if k.Spec.Consumers == nil {
 		return 1
 	}
+	if k.Status.MaxAllowedVReplicas != nil {
+		if *k.Spec.Consumers > *k.Status.MaxAllowedVReplicas {
+			return *k.Status.MaxAllowedVReplicas
+		}
+	}
 	return *k.Spec.Consumers
 }
 
