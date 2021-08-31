@@ -36,7 +36,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
-	kafkabrokerlogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
@@ -79,7 +79,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 }
 
 func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
-	logger := kafkabrokerlogging.CreateReconcileMethodLogger(ctx, broker)
+	logger := kafkalogging.CreateReconcileMethodLogger(ctx, broker)
 
 	statusConditionManager := base.StatusConditionManager{
 		Object:     broker,
@@ -219,7 +219,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 }
 
 func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
-	logger := kafkabrokerlogging.CreateFinalizeMethodLogger(ctx, broker)
+	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, broker)
 
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
