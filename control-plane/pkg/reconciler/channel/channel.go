@@ -34,7 +34,7 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
-	kafkabrokerlogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
@@ -69,7 +69,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 }
 
 func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
-	logger := kafkabrokerlogging.CreateReconcileMethodLogger(ctx, channel)
+	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
 
 	statusConditionManager := base.StatusConditionManager{
 		Object:     channel,
