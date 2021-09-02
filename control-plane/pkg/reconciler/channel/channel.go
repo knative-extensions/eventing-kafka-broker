@@ -19,18 +19,24 @@ package channel
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
+	commonconfig "knative.dev/eventing-kafka/pkg/common/config"
+	"knative.dev/eventing-kafka/pkg/common/constants"
+	commonsarama "knative.dev/eventing-kafka/pkg/common/kafka/sarama"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/system"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
@@ -59,6 +65,8 @@ type Reconciler struct {
 	// mock the function used during the reconciliation loop.
 	ClusterAdmin kafka.NewClusterAdminFunc
 
+	ConfigMapLister corelisters.ConfigMapLister
+
 	Configs *Configs
 }
 
@@ -84,8 +92,22 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	statusConditionManager.DataPlaneAvailable()
 
+	// get the channel configmap
+	channelConfigMap, err := r.channelConfigMap()
+	if err != nil {
+		return statusConditionManager.FailedToResolveConfig(err)
+	}
+	logger.Debug("configmap read", zap.Any("configmap", channelConfigMap))
+
+	// parse the config
+	eventingKafkaSettings, err := commonsarama.LoadEventingKafkaSettings(channelConfigMap.Data)
+	if err != nil {
+		return statusConditionManager.FailedToResolveConfig(err)
+	}
+	logger.Debug("config parsed", zap.Any("eventingKafkaSettings", eventingKafkaSettings))
+
 	// get topic config
-	topicConfig, err := r.topicConfig()
+	topicConfig, err := r.topicConfig(eventingKafkaSettings)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -203,8 +225,20 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	return nil
 }
 
+func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
+	// TODO: do we want to support namespaced channels? they're not supported at the moment.
+
+	namespace := system.Namespace()
+	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(constants.SettingsConfigMapName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, constants.SettingsConfigMapName, err)
+	}
+
+	return cm, nil
+}
+
 //nolint
-func (r *Reconciler) topicConfig() (*kafka.TopicConfig, error) {
+func (r *Reconciler) topicConfig(eventingKafkaConfig *commonconfig.EventingKafkaConfig) (*kafka.TopicConfig, error) {
 	// TODO: all hardcoded for now
 	return &kafka.TopicConfig{
 		TopicDetail: sarama.TopicDetail{
@@ -213,7 +247,7 @@ func (r *Reconciler) topicConfig() (*kafka.TopicConfig, error) {
 			ReplicaAssignment: nil,
 			ConfigEntries:     nil,
 		},
-		BootstrapServers: []string{"my-cluster-kafka-bootstrap.kafka:9092"},
+		BootstrapServers: strings.Split(eventingKafkaConfig.Kafka.Brokers, ","),
 	}, nil
 }
 

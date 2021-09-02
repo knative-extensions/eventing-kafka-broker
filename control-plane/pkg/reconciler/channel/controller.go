@@ -22,6 +22,7 @@ import (
 	"github.com/Shopify/sarama"
 	kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
@@ -32,6 +33,8 @@ import (
 )
 
 func NewController(ctx context.Context, watcher configmap.Watcher, configs *Configs) *controller.Impl {
+
+	configmapInformer := configmapinformer.Get(ctx)
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
@@ -45,8 +48,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			DispatcherLabel:             base.ChannelDispatcherLabel,
 			ReceiverLabel:               base.ChannelReceiverLabel,
 		},
-		ClusterAdmin: sarama.NewClusterAdmin,
-		Configs:      configs,
+		ClusterAdmin:    sarama.NewClusterAdmin,
+		Configs:         configs,
+		ConfigMapLister: configmapInformer.Lister(),
 	}
 
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)
