@@ -275,7 +275,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	if ks.GetStatus().Annotations[base.TopicOwnerAnnotation] == ControllerTopicOwner {
 		secret, err := security.Secret(ctx, &SecretLocator{KafkaSink: ks}, r.SecretProviderFunc())
 		if err != nil {
-			return fmt.Errorf("failed to create security (auth) option: %w", err)
+			return fmt.Errorf("failed to get secret: %w", err)
 		}
 		if secret != nil {
 			logger.Debug("Secret reference",
