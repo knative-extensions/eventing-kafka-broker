@@ -4,9 +4,6 @@ on:
   pull_request:
     branches: [ 'main', 'release-*' ]
 
-  schedule:
-    - cron: '0 */6 * * *'
-
 defaults:
   run:
     shell: bash
