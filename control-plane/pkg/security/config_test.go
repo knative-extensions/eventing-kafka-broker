@@ -50,7 +50,7 @@ func (sp *SecretProviderFuncMock) F(ctx context.Context, namespace, name string)
 	return sp.secret, sp.err
 }
 
-func TestSecret(t *testing.T) {
+func TestNewSaramaSecurityOptionFromSecret(t *testing.T) {
 
 	tests := []struct {
 		name               string
@@ -129,7 +129,7 @@ func TestSecret(t *testing.T) {
 				return
 			}
 			if diff := cmp.Diff(tt.wantSecret, secret); diff != "" {
-				t.Errorf("NewOptionFromSecret() secret = %v, want %v diff: %s", secret, tt.wantSecret, diff)
+				t.Errorf("NewSaramaSecurityOptionFromSecret() secret = %v, want %v diff: %s", secret, tt.wantSecret, diff)
 			}
 		})
 	}
