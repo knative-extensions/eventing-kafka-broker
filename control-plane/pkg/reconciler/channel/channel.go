@@ -112,11 +112,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	// get topic config
-	topicConfig, err := r.topicConfig(eventingKafkaSettings)
-	if err != nil {
-		return statusConditionManager.FailedToResolveConfig(err)
-	}
-	logger.Debug("config resolved", zap.Any("config", topicConfig))
+	topicConfig := r.topicConfig(eventingKafkaSettings, channel)
+	logger.Debug("topic config resolved", zap.Any("config", topicConfig))
 	statusConditionManager.ConfigResolved()
 
 	// get the secret to access Kafka
@@ -243,18 +240,15 @@ func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
 	return cm, nil
 }
 
-//nolint
-func (r *Reconciler) topicConfig(eventingKafkaConfig *commonconfig.EventingKafkaConfig) (*kafka.TopicConfig, error) {
-	// TODO: all hardcoded for now
+func (r *Reconciler) topicConfig(eventingKafkaConfig *commonconfig.EventingKafkaConfig, channel *messagingv1beta1.KafkaChannel) *kafka.TopicConfig {
 	return &kafka.TopicConfig{
 		TopicDetail: sarama.TopicDetail{
-			NumPartitions:     1,
-			ReplicationFactor: 1,
-			ReplicaAssignment: nil,
-			ConfigEntries:     nil,
+			NumPartitions:     channel.Spec.NumPartitions,
+			ReplicationFactor: channel.Spec.ReplicationFactor,
+			// TODO: retention period from the spec is not used
 		},
 		BootstrapServers: strings.Split(eventingKafkaConfig.Kafka.Brokers, ","),
-	}, nil
+	}
 }
 
 func (r *Reconciler) secret(ctx context.Context, channelConfig *corev1.ConfigMap) (*corev1.Secret, error) {
