@@ -20,14 +20,17 @@ import (
 	"context"
 
 	"github.com/Shopify/sarama"
-	kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+	corev1 "k8s.io/api/core/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
-	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
-	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
-	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/tracker"
+
+	kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
+	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
+	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
@@ -56,6 +59,20 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
+
+	reconciler.SecretTracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
+
+	reconciler.ConfigMapTracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
+	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
+		// Call the tracker's OnChanged method, but we've seen the objects
+		// coming through this path missing TypeMeta, so ensure it is properly
+		// populated.
+		controller.EnsureTypeMeta(
+			reconciler.ConfigMapTracker.OnChanged,
+			corev1.SchemeGroupVersion.WithKind("ConfigMap"),
+		),
+	))
 
 	return impl
 }
