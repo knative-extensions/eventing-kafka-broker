@@ -46,31 +46,37 @@ type SecretLocator interface {
 // SecretProviderFunc provides a secret given a namespace/name pair.
 type SecretProviderFunc func(ctx context.Context, namespace, name string) (*corev1.Secret, error)
 
-func NewOptionFromSecret(ctx context.Context, config SecretLocator, secretProviderFunc SecretProviderFunc) (ConfigOption, *corev1.Secret, error) {
+func NewOptionFromSecret(secret *corev1.Secret) ConfigOption {
+	if secret == nil {
+		return NoOp
+	}
+	return secretData(secret.Data)
+}
 
+func Secret(ctx context.Context, config SecretLocator, secretProviderFunc SecretProviderFunc) (*corev1.Secret, error) {
 	name, ok, err := config.SecretName()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	if !ok {
-		// No auth config, return a no-op config option.
-		return NoOp, nil, nil
+		// No auth config, will later use a no-op config option.
+		return nil, nil
 	}
 	ns, ok, err := config.SecretNamespace()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	if !ok {
-		// No auth config, return a no-op config option.
-		return NoOp, nil, nil
+		// No auth config, will later use a no-op config option.
+		return nil, nil
 	}
 
 	secret, err := secretProviderFunc(ctx, ns, name)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return secretData(secret.Data), secret, nil
+	return secret, nil
 }
 
 // DefaultSecretProviderFunc is a secret provider that uses the local cache for getting the secret and when the secret

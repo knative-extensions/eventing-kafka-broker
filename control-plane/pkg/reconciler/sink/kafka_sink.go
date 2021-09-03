@@ -80,10 +80,21 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		ks.GetStatus().Annotations = make(map[string]string, 1)
 	}
 
-	securityOption, secret, err := security.NewOptionFromSecret(ctx, &SecretLocator{KafkaSink: ks}, r.SecretProviderFunc())
+	secret, err := security.Secret(ctx, &SecretLocator{KafkaSink: ks}, r.SecretProviderFunc())
 	if err != nil {
-		return fmt.Errorf("failed to create auth option: %w", err)
+		return fmt.Errorf("failed to get secret: %w", err)
 	}
+	if secret != nil {
+		logger.Debug("Secret reference",
+			zap.String("apiVersion", secret.APIVersion),
+			zap.String("name", secret.Name),
+			zap.String("namespace", secret.Namespace),
+			zap.String("kind", secret.Kind),
+		)
+	}
+
+	// get security option for Sarama with secret info in it
+	securityOption := security.NewOptionFromSecret(secret)
 
 	if err := r.TrackSecret(secret, ks); err != nil {
 		return fmt.Errorf("failed to track secret: %w", err)
@@ -262,10 +273,22 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
 
 	if ks.GetStatus().Annotations[base.TopicOwnerAnnotation] == ControllerTopicOwner {
-		securityOption, _, err := security.NewOptionFromSecret(ctx, &SecretLocator{KafkaSink: ks}, r.SecretProviderFunc())
+		secret, err := security.Secret(ctx, &SecretLocator{KafkaSink: ks}, r.SecretProviderFunc())
 		if err != nil {
-			return fmt.Errorf("failed to create security (auth) option: %w", err)
+			return fmt.Errorf("failed to get secret: %w", err)
 		}
+		if secret != nil {
+			logger.Debug("Secret reference",
+				zap.String("apiVersion", secret.APIVersion),
+				zap.String("name", secret.Name),
+				zap.String("namespace", secret.Namespace),
+				zap.String("kind", secret.Kind),
+			)
+		}
+
+		// get security option for Sarama with secret info in it
+		securityOption := security.NewOptionFromSecret(secret)
+
 		topic, err := r.ClusterAdmin.DeleteTopic(ks.Spec.Topic, ks.Spec.BootstrapServers, securityOption)
 		if err != nil {
 			return err
