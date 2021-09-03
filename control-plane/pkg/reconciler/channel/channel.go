@@ -29,6 +29,7 @@ import (
 	"k8s.io/client-go/util/retry"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	commonconfig "knative.dev/eventing-kafka/pkg/common/config"
 	"knative.dev/eventing-kafka/pkg/common/constants"
@@ -99,6 +100,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("configmap read", zap.Any("configmap", channelConfigMap))
 
+	// TODO: configmap tracking
+
 	// parse the config
 	eventingKafkaSettings, err := commonsarama.LoadEventingKafkaSettings(channelConfigMap.Data)
 	if err != nil {
@@ -115,7 +118,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	statusConditionManager.ConfigResolved()
 
 	// get the secret to access Kafka
-	secret, err := r.secret()
+	secret, err := r.secret(ctx, channelConfigMap)
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -129,10 +132,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	// get security option for Sarama with secret info in it
-	saramaSecurityOption, err := r.saramaSecurityOption()
-	if err != nil {
-		return fmt.Errorf("failed to create security (auth) option: %w", err)
-	}
+	saramaSecurityOption := security.NewOptionFromSecret(secret)
+
+	// TODO: secret tracking
 
 	// create the topic
 	topic, err := r.ClusterAdmin.CreateTopicIfDoesntExist(logger, topic(TopicPrefix, channel), topicConfig, saramaSecurityOption)
@@ -251,18 +253,8 @@ func (r *Reconciler) topicConfig(eventingKafkaConfig *commonconfig.EventingKafka
 	}, nil
 }
 
-//nolint
-func (r *Reconciler) secret() (*corev1.Secret, error) {
-	// TODO: no secrets for now
-	return nil, nil
-}
-
-//nolint
-func (r *Reconciler) saramaSecurityOption() (func(config *sarama.Config) error, error) {
-	// TODO: no security for now
-	return func(config *sarama.Config) error {
-		return nil
-	}, nil
+func (r *Reconciler) secret(ctx context.Context, channelConfig *corev1.ConfigMap) (*corev1.Secret, error) {
+	return security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfig}, r.SecretProviderFunc())
 }
 
 func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
