@@ -82,7 +82,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	secret, err := security.Secret(ctx, &SecretLocator{KafkaSink: ks}, r.SecretProviderFunc())
 	if err != nil {
-		return fmt.Errorf("failed to create auth option: %w", err)
+		return fmt.Errorf("failed to get secret: %w", err)
 	}
 	if secret != nil {
 		logger.Debug("Secret reference",
