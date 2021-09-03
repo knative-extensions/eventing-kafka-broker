@@ -50,16 +50,14 @@ func (sp *SecretProviderFuncMock) F(ctx context.Context, namespace, name string)
 	return sp.secret, sp.err
 }
 
-func TestNewOptionFromSecret(t *testing.T) {
+func TestSecret(t *testing.T) {
 
 	tests := []struct {
 		name               string
 		ctx                context.Context
 		config             SecretLocator
 		secretProviderFunc SecretProviderFunc
-		want               ConfigOption
 		wantSecret         *corev1.Secret
-		wantConfigOption   bool
 		wantErr            bool
 	}{
 		{
@@ -87,7 +85,6 @@ func TestNewOptionFromSecret(t *testing.T) {
 				wantNamespace: "my-ns",
 				t:             t,
 			}).F,
-			wantConfigOption: true,
 			wantSecret: &corev1.Secret{
 				Data: map[string][]byte{
 					ProtocolKey: []byte(ProtocolPlaintext),
@@ -120,20 +117,16 @@ func TestNewOptionFromSecret(t *testing.T) {
 				wantNamespace: "my-ns",
 				t:             t,
 			}).F,
-			wantConfigOption: false,
-			wantSecret:       nil,
-			wantErr:          true,
+			wantSecret: nil,
+			wantErr:    true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			configOption, secret, err := NewOptionFromSecret(tt.ctx, tt.config, tt.secretProviderFunc)
+			secret, err := Secret(tt.ctx, tt.config, tt.secretProviderFunc)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NewOptionFromSecret() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Secret() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if (configOption != nil) != tt.wantConfigOption {
-				t.Errorf("NewOptionFromSecret() configOption want %v got %p", tt.wantConfigOption, configOption)
 			}
 			if diff := cmp.Diff(tt.wantSecret, secret); diff != "" {
 				t.Errorf("NewOptionFromSecret() secret = %v, want %v diff: %s", secret, tt.wantSecret, diff)
