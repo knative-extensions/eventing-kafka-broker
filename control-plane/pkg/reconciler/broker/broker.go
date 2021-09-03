@@ -105,11 +105,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger.Debug("config resolved", zap.Any("config", topicConfig))
 
-	securityOption, secret, err := security.NewOptionFromSecret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig}, r.SecretProviderFunc())
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig}, r.SecretProviderFunc())
 	if err != nil {
 		return fmt.Errorf("failed to create security (auth) option: %w", err)
 	}
-
 	if secret != nil {
 		logger.Debug("Secret reference",
 			zap.String("apiVersion", secret.APIVersion),
@@ -118,6 +117,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 			zap.String("kind", secret.Kind),
 		)
 	}
+
+	// get security option for Sarama with secret info in it
+	securityOption := security.NewOptionFromSecret(secret)
 
 	if err := r.TrackSecret(secret, broker); err != nil {
 		return fmt.Errorf("failed to track secret: %w", err)
@@ -279,11 +281,21 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return fmt.Errorf("failed to resolve broker config: %w", err)
 	}
 
-	authProvider := &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig}
-	securityOption, _, err := security.NewOptionFromSecret(ctx, authProvider, r.SecretProviderFunc())
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig}, r.SecretProviderFunc())
 	if err != nil {
 		return fmt.Errorf("failed to create security (auth) option: %w", err)
 	}
+	if secret != nil {
+		logger.Debug("Secret reference",
+			zap.String("apiVersion", secret.APIVersion),
+			zap.String("name", secret.Name),
+			zap.String("namespace", secret.Namespace),
+			zap.String("kind", secret.Kind),
+		)
+	}
+
+	// get security option for Sarama with secret info in it
+	securityOption := security.NewOptionFromSecret(secret)
 
 	topic, err := r.ClusterAdmin.DeleteTopic(kafka.Topic(TopicPrefix, broker), topicConfig.BootstrapServers, securityOption)
 	if err != nil {
