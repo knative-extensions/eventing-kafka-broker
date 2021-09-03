@@ -323,14 +323,10 @@ github.com/tsenart/vegeta/v12/lib
 # github.com/xdg-go/pbkdf2 v1.0.0
 github.com/xdg-go/pbkdf2
 # github.com/xdg-go/scram v1.0.2
+## explicit
 github.com/xdg-go/scram
 # github.com/xdg-go/stringprep v1.0.2
 github.com/xdg-go/stringprep
-# github.com/xdg/scram v1.0.3
-## explicit
-github.com/xdg/scram
-# github.com/xdg/stringprep v1.0.3
-github.com/xdg/stringprep
 # go.opencensus.io v0.23.0
 go.opencensus.io
 go.opencensus.io/internal

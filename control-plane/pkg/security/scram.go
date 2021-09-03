@@ -22,7 +22,7 @@ import (
 	"hash"
 
 	"github.com/Shopify/sarama"
-	"github.com/xdg/scram"
+	"github.com/xdg-go/scram"
 )
 
 var (
