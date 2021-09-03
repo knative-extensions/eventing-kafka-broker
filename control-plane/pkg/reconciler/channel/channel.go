@@ -132,7 +132,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	// get security option for Sarama with secret info in it
-	saramaSecurityOption := security.NewOptionFromSecret(secret)
+	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
 	// TODO: secret tracking
 

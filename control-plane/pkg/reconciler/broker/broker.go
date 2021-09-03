@@ -119,7 +119,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 
 	// get security option for Sarama with secret info in it
-	securityOption := security.NewOptionFromSecret(secret)
+	securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
 	if err := r.TrackSecret(secret, broker); err != nil {
 		return fmt.Errorf("failed to track secret: %w", err)
@@ -295,7 +295,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	}
 
 	// get security option for Sarama with secret info in it
-	securityOption := security.NewOptionFromSecret(secret)
+	securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
 	topic, err := r.ClusterAdmin.DeleteTopic(kafka.Topic(TopicPrefix, broker), topicConfig.BootstrapServers, securityOption)
 	if err != nil {

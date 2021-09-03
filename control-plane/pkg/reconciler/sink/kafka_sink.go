@@ -94,7 +94,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	}
 
 	// get security option for Sarama with secret info in it
-	securityOption := security.NewOptionFromSecret(secret)
+	securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
 	if err := r.TrackSecret(secret, ks); err != nil {
 		return fmt.Errorf("failed to track secret: %w", err)
@@ -287,7 +287,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 		}
 
 		// get security option for Sarama with secret info in it
-		securityOption := security.NewOptionFromSecret(secret)
+		securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
 		topic, err := r.ClusterAdmin.DeleteTopic(ks.Spec.Topic, ks.Spec.BootstrapServers, securityOption)
 		if err != nil {

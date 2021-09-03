@@ -46,7 +46,7 @@ type SecretLocator interface {
 // SecretProviderFunc provides a secret given a namespace/name pair.
 type SecretProviderFunc func(ctx context.Context, namespace, name string) (*corev1.Secret, error)
 
-func NewOptionFromSecret(secret *corev1.Secret) ConfigOption {
+func NewSaramaSecurityOptionFromSecret(secret *corev1.Secret) ConfigOption {
 	if secret == nil {
 		return NoOp
 	}
