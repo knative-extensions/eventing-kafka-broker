@@ -100,14 +100,16 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("configmap read", zap.Any("configmap", channelConfigMap))
 
-	// TODO: configmap tracking
-
 	// parse the config
 	eventingKafkaSettings, err := commonsarama.LoadEventingKafkaSettings(channelConfigMap.Data)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 	logger.Debug("config parsed", zap.Any("eventingKafkaSettings", eventingKafkaSettings))
+
+	if err := r.TrackConfigMap(channelConfigMap, channel); err != nil {
+		return fmt.Errorf("failed to track broker config: %w", err)
+	}
 
 	// get topic config
 	topicConfig, err := r.topicConfig(eventingKafkaSettings)
@@ -134,7 +136,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	// get security option for Sarama with secret info in it
 	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
-	// TODO: secret tracking
+	if err := r.TrackSecret(secret, channel); err != nil {
+		return fmt.Errorf("failed to track secret: %w", err)
+	}
 
 	// create the topic
 	topic, err := r.ClusterAdmin.CreateTopicIfDoesntExist(logger, topic(TopicPrefix, channel), topicConfig, saramaSecurityOption)
