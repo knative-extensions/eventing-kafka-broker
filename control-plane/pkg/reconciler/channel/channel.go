@@ -19,6 +19,7 @@ package channel
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Shopify/sarama"
@@ -112,7 +113,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	// get topic config
-	topicConfig := r.topicConfig(eventingKafkaSettings, channel)
+	topicConfig := r.topicConfig(logger, eventingKafkaSettings, channel)
 	logger.Debug("topic config resolved", zap.Any("config", topicConfig))
 	statusConditionManager.ConfigResolved()
 
@@ -297,7 +298,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	logger.Debug("config parsed", zap.Any("eventingKafkaSettings", eventingKafkaSettings))
 
 	// get topic config
-	topicConfig := r.topicConfig(eventingKafkaSettings, channel)
+	topicConfig := r.topicConfig(logger, eventingKafkaSettings, channel)
 	logger.Debug("topic config resolved", zap.Any("config", topicConfig))
 
 	// get the secret to access Kafka
@@ -339,12 +340,23 @@ func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
 	return cm, nil
 }
 
-func (r *Reconciler) topicConfig(eventingKafkaConfig *commonconfig.EventingKafkaConfig, channel *messagingv1beta1.KafkaChannel) *kafka.TopicConfig {
+func (r *Reconciler) topicConfig(logger *zap.Logger, eventingKafkaConfig *commonconfig.EventingKafkaConfig, channel *messagingv1beta1.KafkaChannel) *kafka.TopicConfig {
+	// Parse & Format the RetentionDuration into Sarama retention.ms string
+	retentionDuration, err := channel.Spec.ParseRetentionDuration()
+	if err != nil {
+		// Should never happen with webhook defaulting and validation in place.
+		logger.Error("Error parsing RetentionDuration, using default instead", zap.String("RetentionDuration", channel.Spec.RetentionDuration), zap.Error(err))
+		retentionDuration = constants.DefaultRetentionDuration
+	}
+	retentionMillisString := strconv.FormatInt(retentionDuration.Milliseconds(), 10)
+
 	return &kafka.TopicConfig{
 		TopicDetail: sarama.TopicDetail{
 			NumPartitions:     channel.Spec.NumPartitions,
 			ReplicationFactor: channel.Spec.ReplicationFactor,
-			// TODO: retention period from the spec is not used
+			ConfigEntries: map[string]*string{
+				constants.KafkaTopicConfigRetentionMs: &retentionMillisString,
+			},
 		},
 		BootstrapServers: strings.Split(eventingKafkaConfig.Kafka.Brokers, ","),
 	}
