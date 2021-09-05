@@ -12,7 +12,7 @@ require (
 	github.com/pierdipi/sacura v0.0.0-20210302185533-982357fc042b
 	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.7.0
-	github.com/xdg/scram v1.0.3
+	github.com/xdg-go/scram v1.0.2
 	go.uber.org/zap v1.19.0
 	google.golang.org/protobuf v1.27.1
 	k8s.io/api v0.21.4
