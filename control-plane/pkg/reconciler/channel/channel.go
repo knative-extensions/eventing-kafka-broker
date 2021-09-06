@@ -222,9 +222,108 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	return statusConditionManager.Reconciled()
 }
 
-//nolint
 func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
-	// TODO: noop for now
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		return r.finalizeKind(ctx, channel)
+	})
+}
+
+func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
+	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, channel)
+
+	// Get contract config map.
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get contract config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
+	}
+	logger.Debug("Got contract config map")
+
+	// Get contract data.
+	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
+	if err != nil {
+		return fmt.Errorf("failed to get contract: %w", err)
+	}
+	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
+
+	channelIndex := coreconfig.FindResource(ct, channel.UID)
+	if channelIndex != coreconfig.NoResource {
+		coreconfig.DeleteResource(ct, channelIndex)
+
+		logger.Debug("Channel deleted", zap.Int("index", channelIndex))
+
+		// Resource changed, increment contract generation.
+		coreconfig.IncrementContractGeneration(ct)
+
+		// Update the configuration map with the new contract data.
+		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
+			return err
+		}
+		logger.Debug("Contract config map updated")
+	}
+
+	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
+	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
+	// to update anyway remaining annotations with the contract generation that was saved in the CM.
+	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
+
+	// Update volume generation annotation of receiver pods
+	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+		return err
+	}
+	// Update volume generation annotation of dispatcher pods
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+		return err
+	}
+
+	// TODO probe (as in #974) and check if status code is 404 otherwise requeue and return.
+	//  Rationale: after deleting a topic closing a producer ends up blocking and requesting metadata for max.block.ms
+	//  because topic metadata aren't available anymore.
+	// 	See (under discussions KIPs, unlikely to be accepted as they are):
+	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
+	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
+
+	// get the channel configmap
+	channelConfigMap, err := r.channelConfigMap()
+	if err != nil {
+		return err
+	}
+	logger.Debug("configmap read", zap.Any("configmap", channelConfigMap))
+
+	// parse the config
+	eventingKafkaSettings, err := commonsarama.LoadEventingKafkaSettings(channelConfigMap.Data)
+	if err != nil {
+		return err
+	}
+	logger.Debug("config parsed", zap.Any("eventingKafkaSettings", eventingKafkaSettings))
+
+	// get topic config
+	topicConfig := r.topicConfig(eventingKafkaSettings, channel)
+	logger.Debug("topic config resolved", zap.Any("config", topicConfig))
+
+	// get the secret to access Kafka
+	secret, err := r.secret(ctx, channelConfigMap)
+	if err != nil {
+		return fmt.Errorf("failed to get secret: %w", err)
+	}
+	if secret != nil {
+		logger.Debug("Secret reference",
+			zap.String("apiVersion", secret.APIVersion),
+			zap.String("name", secret.Name),
+			zap.String("namespace", secret.Namespace),
+			zap.String("kind", secret.Kind),
+		)
+	}
+
+	// get security option for Sarama with secret info in it
+	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(secret)
+
+	topic, err := r.ClusterAdmin.DeleteTopic(kafka.Topic(TopicPrefix, channel), topicConfig.BootstrapServers, saramaSecurityOption)
+	if err != nil {
+		return err
+	}
+
+	logger.Debug("Topic deleted", zap.String("topic", topic))
+
 	return nil
 }
 
