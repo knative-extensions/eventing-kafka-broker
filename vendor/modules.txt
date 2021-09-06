@@ -1020,7 +1020,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.25.1-0.20210901132733-0b5e37d8cce8
+# knative.dev/eventing v0.25.1-0.20210905153942-158f18974796
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck
@@ -1128,7 +1128,7 @@ knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/request-sender
-# knative.dev/eventing-kafka v0.25.1-0.20210902092205-5e810111c342
+# knative.dev/eventing-kafka v0.25.1-0.20210903091657-acf06a29bf44
 ## explicit
 knative.dev/eventing-kafka/pkg/apis/bindings
 knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
@@ -1170,7 +1170,7 @@ knative.dev/eventing-kafka/pkg/common/kafka/sarama
 # knative.dev/hack v0.0.0-20210806075220-815cd312d65c
 ## explicit
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20210901171133-f39ea04a4865
+# knative.dev/pkg v0.0.0-20210903055557-dec98b426132
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1260,6 +1260,7 @@ knative.dev/pkg/version
 knative.dev/pkg/webhook
 knative.dev/pkg/webhook/certificates
 knative.dev/pkg/webhook/certificates/resources
+knative.dev/pkg/webhook/json
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
