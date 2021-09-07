@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   name: kafkachannels.messaging.knative.dev
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: "v20210905-acf06a29b"
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
@@ -28,7 +28,7 @@ spec:
       served: true
       storage: true
       subresources:
-        status: { }
+        status: {}
       schema:
         openAPIV3Schema:
           description: 'KafkaChannel is a resource representing a Channel that is backed by a topic of an Apache Kafka cluster.'
@@ -147,6 +147,8 @@ spec:
             status:
               description: Status represents the current state of the KafkaChannel. This data may be out of date.
               type: object
+              required:
+                - address
               properties:
                 address:
                   type: object
@@ -253,8 +255,10 @@ spec:
   conversion:
     strategy: Webhook
     webhook:
-      conversionReviewVersions: [ "v1", "v1beta1" ]
+      conversionReviewVersions: ["v1", "v1beta1"]
       clientConfig:
         service:
           name: kafka-webhook
           namespace: knative-eventing
+
+---
