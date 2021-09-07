@@ -31,6 +31,7 @@ export EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT="eventing-kafka-controller.yaml"
 export EVENTING_KAFKA_SOURCE_ARTIFACT="eventing-kafka-source.yaml"
 export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
 export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
+export EVENTING_KAFKA_CHANNEL_ARTIFACT="eventing-kafka-channel.yaml"
 
 # The number of control plane replicas to run.
 readonly REPLICAS=${REPLICAS:-1}
@@ -90,6 +91,7 @@ function build_components_from_source() {
   [ -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SOURCE_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" ] && rm "${EVENTING_KAFKA_BROKER_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_SINK_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SINK_ARTIFACT}"
+  [ -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" ] && rm "${EVENTING_KAFKA_CHANNEL_ARTIFACT}"
 
   header "Data plane setup"
   data_plane_setup || fail_test "Failed to set up data plane components"
@@ -127,6 +129,9 @@ function test_setup() {
 
   wait_until_pods_running knative-eventing || fail_test "System did not come up"
 
+  kubectl apply -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_CHANNEL_ARTIFACT}"
+  wait_until_pods_running knative-eventing || fail_test "Channel data plane did not come up"
+
   # Apply test configurations, and restart data plane components (we don't have hot reload)
   ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
 
@@ -134,12 +139,15 @@ function test_setup() {
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
+  kubectl rollout restart deployment -n knative-eventing kafka-channel-receiver
+  kubectl rollout restart deployment -n knative-eventing kafka-channel-dispatcher
 }
 
 function test_teardown() {
   kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || fail_test "Failed to tear down control plane"
   kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to tear down kafka broker"
   kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to tear down kafka sink"
+  kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || fail_test "Failed to tear down kafka channel"
 }
 
 function scale_controlplane() {
@@ -195,5 +203,6 @@ function save_release_artifacts() {
   # building the project from source.
   cp "${EVENTING_KAFKA_BROKER_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
   cp "${EVENTING_KAFKA_SINK_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
+  cp "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
   cp "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
 }
