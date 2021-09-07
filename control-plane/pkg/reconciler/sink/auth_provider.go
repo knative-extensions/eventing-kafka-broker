@@ -24,13 +24,13 @@ type SecretLocator struct {
 	*eventing.KafkaSink
 }
 
-func (ks *SecretLocator) SecretName() (string, bool, error) {
+func (ks *SecretLocator) SecretName() (string, bool) {
 	if !ks.Spec.HasAuthConfig() {
-		return "", false, nil
+		return "", false
 	}
-	return ks.Spec.Auth.Secret.Ref.Name, true, nil
+	return ks.Spec.Auth.Secret.Ref.Name, true
 }
 
-func (ks *SecretLocator) SecretNamespace() (string, bool, error) {
-	return ks.Namespace, true, nil
+func (ks *SecretLocator) SecretNamespace() (string, bool) {
+	return ks.Namespace, ks.Spec.HasAuthConfig()
 }
