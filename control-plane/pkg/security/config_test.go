@@ -97,7 +97,6 @@ func TestSecret(t *testing.T) {
 			ctx:        context.Background(),
 			config:     &MTConfigMapSecretLocator{nil},
 			wantSecret: nil,
-			wantErr:    false,
 		},
 		{
 			name: "no secret in MTConfigMapSecretLocator",
@@ -113,7 +112,6 @@ func TestSecret(t *testing.T) {
 				},
 			},
 			wantSecret: nil,
-			wantErr:    false,
 		},
 		{
 			name: "secret provider error",
