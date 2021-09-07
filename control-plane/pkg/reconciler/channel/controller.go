@@ -20,9 +20,16 @@ import (
 	"context"
 
 	"github.com/Shopify/sarama"
-	corev1 "k8s.io/api/core/v1"
+	"go.uber.org/zap"
 
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/tools/cache"
+	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	"knative.dev/pkg/logging"
+
+	kafkachannelinformer "knative.dev/eventing-kafka/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
 	kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
@@ -36,6 +43,10 @@ import (
 )
 
 func NewController(ctx context.Context, watcher configmap.Watcher, configs *Configs) *controller.Impl {
+
+	eventing.RegisterConditionSet(base.ConditionSet)
+
+	logger := logging.FromContext(ctx)
 
 	configmapInformer := configmapinformer.Get(ctx)
 
@@ -56,7 +67,19 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 		ConfigMapLister: configmapInformer.Lister(),
 	}
 
+	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		logger.Fatal("Failed to get or create data plane config map",
+			zap.String("configmap", configs.DataPlaneConfigMapAsString()),
+			zap.Error(err),
+		)
+	}
+
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)
+
+	channelInformer := kafkachannelinformer.Get(ctx)
+
+	channelInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
@@ -73,6 +96,10 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			corev1.SchemeGroupVersion.WithKind("ConfigMap"),
 		),
 	))
+
+	channelInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		DeleteFunc: reconciler.OnDeleteObserver,
+	})
 
 	return impl
 }

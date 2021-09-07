@@ -38,6 +38,12 @@ readonly SINK_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/sink
 readonly KAFKA_SINK_DATA_PLANE_CONFIG_TEMPLATE_DIR=${SINK_DATA_PLANE_CONFIG_DIR}/template
 readonly KAFKA_SINK_RECEIVER_TEMPLATE_FILE=${KAFKA_SINK_DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-receiver.yaml
 
+# Channel config
+readonly CHANNEL_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/channel
+readonly KAFKA_CHANNEL_DATA_PLANE_CONFIG_TEMPLATE_DIR=${CHANNEL_DATA_PLANE_CONFIG_DIR}/template # no trailing slash
+readonly KAFKA_CHANNEL_DISPATCHER_TEMPLATE_FILE=${KAFKA_CHANNEL_DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-dispatcher.yaml
+readonly KAFKA_CHANNEL_RECEIVER_TEMPLATE_FILE=${KAFKA_CHANNEL_DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-receiver.yaml
+
 readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-knative-kafka-broker-receiver}"
 readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-knative-kafka-broker-dispatcher}"
 
@@ -117,22 +123,26 @@ function data_plane_build_push() {
   fi
 
   export KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${receiver}":"${uuid}"
+  export KNATIVE_KAFKA_SINK_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${receiver}":"${uuid}"
+  export KNATIVE_KAFKA_CHANNEL_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${receiver}":"${uuid}"
 
   export KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE="${KO_DOCKER_REPO}"/"${dispatcher}":"${uuid}"
-
-  export KNATIVE_KAFKA_SINK_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${receiver}":"${uuid}"
+  export KNATIVE_KAFKA_CHANNEL_DISPATCHER_IMAGE="${KO_DOCKER_REPO}"/"${dispatcher}":"${uuid}"
 
   receiver_build_push || receiver_build_push || fail_test "failed to build receiver"
   dispatcher_build_push || dispatcher_build_push || fail_test "failed to build dispatcher"
 }
 
 function k8s() {
-  echo "dispatcher image ---> ${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}"
-  echo "receiver image   ---> ${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}"
-  echo "receiver image   ---> ${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}"
+  echo "broker  dispatcher image   ---> ${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}"
+  echo "broker  receiver   image   ---> ${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}"
+  echo "sink    receiver   image   ---> ${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}"
+  echo "channel dispatcher image   ---> ${KNATIVE_KAFKA_CHANNEL_DISPATCHER_IMAGE}"
+  echo "channel receiver   image   ---> ${KNATIVE_KAFKA_CHANNEL_RECEIVER_IMAGE}"
 
   ko resolve ${KO_FLAGS} -f ${BROKER_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}"
   ko resolve ${KO_FLAGS} -f ${SINK_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SINK_ARTIFACT}"
+  ko resolve ${KO_FLAGS} -f ${CHANNEL_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_CHANNEL_ARTIFACT}"
 
   sed "s|\${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|g" ${KAFKA_BROKER_DISPATCHER_TEMPLATE_FILE} |
     "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to append ${KAFKA_BROKER_DISPATCHER_TEMPLATE_FILE}"
@@ -142,6 +152,12 @@ function k8s() {
 
   sed "s|\${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}|${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}|g" ${KAFKA_SINK_RECEIVER_TEMPLATE_FILE} |
     "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to append ${KAFKA_SINK_RECEIVER_TEMPLATE_FILE}"
+
+	sed "s|\${KNATIVE_KAFKA_CHANNEL_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_CHANNEL_DISPATCHER_IMAGE}|g" ${KAFKA_CHANNEL_DISPATCHER_TEMPLATE_FILE} |
+    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || fail_test "Failed to append ${KAFKA_CHANNEL_DISPATCHER_TEMPLATE_FILE}"
+
+  sed "s|\${KNATIVE_KAFKA_CHANNEL_RECEIVER_IMAGE}|${KNATIVE_KAFKA_CHANNEL_RECEIVER_IMAGE}|g" ${KAFKA_CHANNEL_RECEIVER_TEMPLATE_FILE} |
+    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || fail_test "Failed to append ${KAFKA_CHANNEL_RECEIVER_TEMPLATE_FILE}"
 }
 
 function data_plane_unit_tests() {

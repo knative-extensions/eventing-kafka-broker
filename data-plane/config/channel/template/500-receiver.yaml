@@ -1,0 +1,181 @@
+---
+
+# Copyright 2021 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-channel-receiver
+  namespace: knative-eventing
+  labels:
+    app: kafka-channel-receiver
+    kafka.eventing.knative.dev/release: devel
+spec:
+  selector:
+    matchLabels:
+      app: kafka-channel-receiver
+  template:
+    metadata:
+      name: kafka-channel-receiver
+      labels:
+        app: kafka-channel-receiver
+        kafka.eventing.knative.dev/release: devel
+    spec:
+      serviceAccountName: knative-kafka-data-plane
+      securityContext:
+        runAsNonRoot: true
+      # To avoid node becoming SPOF, spread our replicas to different nodes.
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: kafka-channel-receiver
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+      containers:
+        - name: kafka-channel-receiver
+          image: ${KNATIVE_KAFKA_CHANNEL_RECEIVER_IMAGE}
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /etc/config
+              name: config-kafka-channel-data-plane
+              readOnly: true
+            - mountPath: /etc/channels-subscriptions
+              name: kafka-channel-channels-subscriptions
+              readOnly: true
+            - mountPath: /tmp
+              name: cache
+            - mountPath: /etc/logging
+              name: kafka-channel-config-logging
+              readOnly: true
+            - mountPath: /etc/tracing
+              name: config-tracing
+              readOnly: true
+          ports:
+            - containerPort: 9090
+              name: http-metrics
+              protocol: TCP
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          env:
+            - name: SERVICE_NAME
+              value: "kafka-channel-receiver"
+            - name: SERVICE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: INGRESS_PORT
+              value: "8080"
+            - name: PRODUCER_CONFIG_FILE_PATH
+              value: /etc/config/config-kafka-channel-producer.properties
+            - name: HTTPSERVER_CONFIG_FILE_PATH
+              value: /etc/config/config-kafka-channel-httpserver.properties
+            - name: DATA_PLANE_CONFIG_FILE_PATH
+              value: /etc/channels-subscriptions/data
+            - name: LIVENESS_PROBE_PATH
+              value: /healthz
+            - name: READINESS_PROBE_PATH
+              value: /readyz
+            - name: METRICS_PATH
+              value: /metrics
+            - name: METRICS_PORT
+              value: "9090"
+            - name: METRICS_PUBLISH_QUANTILES
+              value: "false"
+            - name: METRICS_JVM_ENABLED
+              value: "false"
+            - name: CONFIG_TRACING_PATH
+              value: "/etc/tracing"
+            # https://github.com/fabric8io/kubernetes-client/issues/2212
+            - name: HTTP2_DISABLE
+              value: "true"
+            # This should be set according to initial delay seconds
+            - name: WAIT_STARTUP_SECONDS
+              value: "8"
+          command:
+            - "java"
+          args:
+            - "-Dlogback.configurationFile=/etc/logging/config.xml"
+            - "-jar"
+            - "/app/app.jar"
+          # TODO set resources (limits and requests)
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              port: 8080
+              path: /healthz
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              port: 8080
+              path: /readyz
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+          terminationMessagePolicy: FallbackToLogsOnError
+          terminationMessagePath: /dev/temination-log
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+      volumes:
+        - name: kafka-channel-channels-subscriptions
+          configMap:
+            name: kafka-channel-channels-subscriptions
+        - name: config-kafka-channel-data-plane
+          configMap:
+            name: config-kafka-channel-data-plane
+        - name: cache
+          emptyDir: { }
+        - name: kafka-channel-config-logging
+          configMap:
+            name: kafka-config-logging
+        - name: config-tracing
+          configMap:
+            name: config-tracing
+      restartPolicy: Always
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-channel-ingress
+  namespace: knative-eventing
+  labels:
+    app: kafka-channel-receiver
+    kafka.eventing.knative.dev/release: devel
+spec:
+  selector:
+    app: kafka-channel-receiver
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+    - name: http-metrics
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
+---
