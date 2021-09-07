@@ -20,6 +20,7 @@ import (
 	"context"
 	"log"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/sharedmain"
@@ -40,6 +41,11 @@ func main() {
 	brokerEnv, err := config.GetEnvConfig("BROKER", broker.ValidateDefaultBackoffDelayMs)
 	if err != nil {
 		log.Fatal("cannot process environment variables with prefix BROKER", err)
+	}
+
+	channelEnv, err := config.GetEnvConfig("CHANNEL")
+	if err != nil {
+		log.Fatal("cannot process environment variables with prefix CHANNEL", err)
 	}
 
 	sinkEnv, err := config.GetEnvConfig("SINK")
@@ -63,6 +69,10 @@ func main() {
 		// Trigger controller
 		func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 			return trigger.NewController(ctx, watcher, brokerEnv)
+		},
+
+		func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
+			return channel.NewController(ctx, watcher, &channel.Configs{Env: *channelEnv})
 		},
 
 		// KafkaSink controller
