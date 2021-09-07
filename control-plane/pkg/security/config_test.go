@@ -50,7 +50,7 @@ func (sp *SecretProviderFuncMock) F(ctx context.Context, namespace, name string)
 	return sp.secret, sp.err
 }
 
-func TestNewSaramaSecurityOptionFromSecret(t *testing.T) {
+func TestSecret(t *testing.T) {
 
 	tests := []struct {
 		name               string
@@ -93,6 +93,29 @@ func TestNewSaramaSecurityOptionFromSecret(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name:       "no secret in MTConfigMapSecretLocator config",
+			ctx:        context.Background(),
+			config:     &MTConfigMapSecretLocator{nil},
+			wantSecret: nil,
+			wantErr:    false,
+		},
+		{
+			name: "no secret in MTConfigMapSecretLocator",
+			ctx:  context.Background(),
+			config: &MTConfigMapSecretLocator{
+				&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "my-ns",
+						Name:      "my-name",
+					},
+					// No ref to secret here
+					Data: map[string]string{},
+				},
+			},
+			wantSecret: nil,
+			wantErr:    false,
+		},
+		{
 			name: "secret provider error",
 			ctx:  context.Background(),
 			config: &MTConfigMapSecretLocator{
@@ -129,7 +152,7 @@ func TestNewSaramaSecurityOptionFromSecret(t *testing.T) {
 				return
 			}
 			if diff := cmp.Diff(tt.wantSecret, secret); diff != "" {
-				t.Errorf("NewSaramaSecurityOptionFromSecret() secret = %v, want %v diff: %s", secret, tt.wantSecret, diff)
+				t.Errorf("Secret() secret = %v, want %v diff: %s", secret, tt.wantSecret, diff)
 			}
 		})
 	}

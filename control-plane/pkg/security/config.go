@@ -36,11 +36,11 @@ const (
 type SecretLocator interface {
 	// SecretName returns the secret name.
 	// It returns true if the name should be used and false if should be ignored.
-	SecretName() (string, bool, error)
+	SecretName() (string, bool)
 
 	// SecretNamespace returns the secret name.
 	// It returns true if the namespace should be used and false if should be ignored.
-	SecretNamespace() (string, bool, error)
+	SecretNamespace() (string, bool)
 }
 
 // SecretProviderFunc provides a secret given a namespace/name pair.
@@ -54,18 +54,12 @@ func NewSaramaSecurityOptionFromSecret(secret *corev1.Secret) ConfigOption {
 }
 
 func Secret(ctx context.Context, config SecretLocator, secretProviderFunc SecretProviderFunc) (*corev1.Secret, error) {
-	name, ok, err := config.SecretName()
-	if err != nil {
-		return nil, err
-	}
+	name, ok := config.SecretName()
 	if !ok {
 		// No auth config, will later use a no-op config option.
 		return nil, nil
 	}
-	ns, ok, err := config.SecretNamespace()
-	if err != nil {
-		return nil, err
-	}
+	ns, ok := config.SecretNamespace()
 	if !ok {
 		// No auth config, will later use a no-op config option.
 		return nil, nil
@@ -113,14 +107,14 @@ type MTConfigMapSecretLocator struct {
 	*corev1.ConfigMap
 }
 
-func (cmp *MTConfigMapSecretLocator) SecretName() (string, bool, error) {
+func (cmp *MTConfigMapSecretLocator) SecretName() (string, bool) {
 	if cmp.ConfigMap == nil {
-		return "", false, nil
+		return "", false
 	}
 	v, ok := cmp.Data[AuthSecretNameKey]
-	return v, ok, nil
+	return v, ok
 }
 
-func (cmp *MTConfigMapSecretLocator) SecretNamespace() (string, bool, error) {
-	return cmp.Namespace, true, nil
+func (cmp *MTConfigMapSecretLocator) SecretNamespace() (string, bool) {
+	return cmp.Namespace, true
 }
