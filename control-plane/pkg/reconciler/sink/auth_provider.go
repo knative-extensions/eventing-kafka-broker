@@ -32,8 +32,5 @@ func (ks *SecretLocator) SecretName() (string, bool) {
 }
 
 func (ks *SecretLocator) SecretNamespace() (string, bool) {
-	if !ks.Spec.HasAuthConfig() {
-		return "", false
-	}
-	return ks.Namespace, true
+	return ks.Namespace, ks.Spec.HasAuthConfig()
 }
