@@ -46,6 +46,8 @@ var callbacks = map[schema.GroupVersionKind]validation.Callback{}
 
 func NewDefaultingAdmissionController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 
+	// TODO: need something here for the channel
+
 	// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
 	ctxFunc := func(ctx context.Context) context.Context {
 		return ctx

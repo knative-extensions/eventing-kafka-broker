@@ -52,12 +52,6 @@ const (
 	TopicPrefix = "knative-messaging-kafka"
 )
 
-type Configs struct {
-	config.Env
-
-	BootstrapServers string
-}
-
 type Reconciler struct {
 	*base.Reconciler
 
@@ -69,7 +63,7 @@ type Reconciler struct {
 
 	ConfigMapLister corelisters.ConfigMapLister
 
-	Configs *Configs
+	Configs *config.Env
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
@@ -84,7 +78,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	statusConditionManager := base.StatusConditionManager{
 		Object:     channel,
 		SetAddress: channel.Status.SetAddress,
-		Configs:    &r.Configs.Env,
+		Configs:    r.Configs,
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
