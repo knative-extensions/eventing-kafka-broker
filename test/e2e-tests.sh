@@ -41,14 +41,14 @@ header "Running tests"
 
 export_logs_continuously "kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver"
 
-go_test_e2e -timeout=30m ./test/e2e_new/... || fail_test "E2E (new) suite failed"
-go_test_e2e -timeout=30m ./test/e2e/... || fail_test "E2E suite failed"
+go_test_e2e -v -timeout=30m ./test/e2e_new/... || fail_test "E2E (new) suite failed"
+go_test_e2e -v -timeout=30m ./test/e2e/... || fail_test "E2E suite failed"
 
-go_test_e2e -tags=deletecm ./test/e2e/... || fail_test "E2E (deletecm) suite failed"
-go_test_e2e -tags=deletecm ./test/e2e_new/... || fail_test "E2E (new deletecm) suite failed"
+go_test_e2e -v -tags=deletecm ./test/e2e/... || fail_test "E2E (deletecm) suite failed"
+go_test_e2e -v -tags=deletecm ./test/e2e_new/... || fail_test "E2E (new deletecm) suite failed"
 
 if ! ${LOCAL_DEVELOPMENT}; then
-  go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E (sacura) suite failed"
+  go_test_e2e -v -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E (sacura) suite failed"
 fi
 
 success
