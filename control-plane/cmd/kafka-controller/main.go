@@ -66,7 +66,7 @@ func main() {
 		},
 
 		func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-			return channel.NewController(ctx, watcher, &channel.Configs{Env: *channelEnv})
+			return channel.NewController(ctx, watcher, channelEnv)
 		},
 
 		// KafkaSink controller
