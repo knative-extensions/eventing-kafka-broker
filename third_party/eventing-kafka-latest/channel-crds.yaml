@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   name: kafkachannels.messaging.knative.dev
   labels:
-    kafka.eventing.knative.dev/release: "v20210905-acf06a29b"
+    kafka.eventing.knative.dev/release: "v20210907-464ebbd85"
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
@@ -147,8 +147,6 @@ spec:
             status:
               description: Status represents the current state of the KafkaChannel. This data may be out of date.
               type: object
-              required:
-                - address
               properties:
                 address:
                   type: object
