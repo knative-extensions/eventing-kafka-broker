@@ -32,10 +32,11 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/resolver"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
-func NewController(ctx context.Context, watcher configmap.Watcher, configs *Configs) *controller.Impl {
+func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
 
 	configmapInformer := configmapinformer.Get(ctx)
 
