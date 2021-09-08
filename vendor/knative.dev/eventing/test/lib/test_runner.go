@@ -48,7 +48,7 @@ import (
 const (
 	podLogsDir         = "pod-logs"
 	testPullSecretName = "kn-eventing-test-pull-secret"
-	MaxNamespaceSkip   = 50
+	MaxNamespaceSkip   = 100
 	MaxRetries         = 5
 	RetrySleepDuration = 2 * time.Second
 )
@@ -199,6 +199,7 @@ func CreateNamespacedClient(t ginkgo.GinkgoTInterface) (*Client, error) {
 	// development cycles when namespaces from previous runs were not cleaned properly.
 	for i := 0; i < MaxNamespaceSkip; i++ {
 		ns = NextNamespace()
+		t.Log("Trying namespace ", ns)
 		client, err := NewClient(
 			pkgTest.Flags.Kubeconfig,
 			pkgTest.Flags.Cluster,
