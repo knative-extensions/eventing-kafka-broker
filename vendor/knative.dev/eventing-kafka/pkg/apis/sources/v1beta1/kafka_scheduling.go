@@ -46,3 +46,7 @@ func (k *KafkaSource) GetPlacements() []v1alpha1.Placement {
 	}
 	return k.Status.Placeable.Placement
 }
+
+func (k *KafkaSource) GetResourceVersion() string {
+	return k.ObjectMeta.ResourceVersion
+}

@@ -18,13 +18,23 @@ package v1beta1
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/google/uuid"
 	"k8s.io/utils/pointer"
+
+	"knative.dev/eventing-kafka/pkg/apis/sources/config"
 )
 
 const (
 	uuidPrefix = "knative-kafka-source-"
+
+	classAnnotation             = "autoscaling.knative.dev/class"
+	minScaleAnnotation          = "autoscaling.knative.dev/minScale"
+	maxScaleAnnotation          = "autoscaling.knative.dev/maxScale"
+	pollingIntervalAnnotation   = "keda.autoscaling.knative.dev/pollingInterval"
+	cooldownPeriodAnnotation    = "keda.autoscaling.knative.dev/cooldownPeriod"
+	kafkaLagThresholdAnnotation = "keda.autoscaling.knative.dev/kafkaLagThreshold"
 )
 
 // SetDefaults ensures KafkaSource reflects the default values.
@@ -39,5 +49,21 @@ func (k *KafkaSource) SetDefaults(ctx context.Context) {
 
 	if k.Spec.InitialOffset == "" {
 		k.Spec.InitialOffset = OffsetLatest
+	}
+
+	kafkaConfig := config.FromContextOrDefaults(ctx)
+	kafkaDefaults := kafkaConfig.KafkaSourceDefaults
+	if kafkaDefaults.AutoscalingClass == config.KedaAutoscalingClass {
+		if k.Annotations == nil {
+			k.Annotations = map[string]string{}
+		}
+		k.Annotations[classAnnotation] = kafkaDefaults.AutoscalingClass
+
+		// Set all annotations regardless of defaults
+		k.Annotations[minScaleAnnotation] = strconv.FormatInt(kafkaDefaults.MinScale, 10)
+		k.Annotations[maxScaleAnnotation] = strconv.FormatInt(kafkaDefaults.MaxScale, 10)
+		k.Annotations[pollingIntervalAnnotation] = strconv.FormatInt(kafkaDefaults.PollingInterval, 10)
+		k.Annotations[cooldownPeriodAnnotation] = strconv.FormatInt(kafkaDefaults.CooldownPeriod, 10)
+		k.Annotations[kafkaLagThresholdAnnotation] = strconv.FormatInt(kafkaDefaults.KafkaLagThreshold, 10)
 	}
 }
