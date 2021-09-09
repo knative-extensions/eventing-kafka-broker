@@ -51,9 +51,6 @@ type Placement struct {
 	// PodName is the name of the pod where the resource is placed
 	PodName string `json:"podName,omitempty"`
 
-	// ZoneName is the name of the zone where the pod is located
-	ZoneName string `json:"zoneName,omitempty"`
-
 	// VReplicas is the number of virtual replicas assigned to in the pod
 	VReplicas int32 `json:"vreplicas,omitempty"`
 }

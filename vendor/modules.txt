@@ -1128,7 +1128,7 @@ knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/request-sender
-# knative.dev/eventing-kafka v0.25.1-0.20210906124343-464ebbd85153
+# knative.dev/eventing-kafka v0.25.1-0.20210908205657-91e1becd4005
 ## explicit
 knative.dev/eventing-kafka/pkg/apis/bindings
 knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
@@ -1137,6 +1137,7 @@ knative.dev/eventing-kafka/pkg/apis/kafka
 knative.dev/eventing-kafka/pkg/apis/kafka/v1alpha1
 knative.dev/eventing-kafka/pkg/apis/messaging
 knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1
+knative.dev/eventing-kafka/pkg/apis/sources/config
 knative.dev/eventing-kafka/pkg/apis/sources/v1beta1
 knative.dev/eventing-kafka/pkg/channel/distributed/common/kafka/constants
 knative.dev/eventing-kafka/pkg/client/clientset/versioned
@@ -1170,7 +1171,7 @@ knative.dev/eventing-kafka/pkg/common/kafka/sarama
 # knative.dev/hack v0.0.0-20210806075220-815cd312d65c
 ## explicit
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20210906105443-bb433c98147d
+# knative.dev/pkg v0.0.0-20210909102158-d569db39a812
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
