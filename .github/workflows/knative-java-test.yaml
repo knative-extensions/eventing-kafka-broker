@@ -38,16 +38,11 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
+          cache: 'maven'
           java-version: ${{ matrix.java-version }}
-
-      - name: Cache Maven packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          distribution: 'temurin' # Eclipse Temurin, the new home for AdoptOpenJDK
 
       - name: Check for .codecov.yaml
         id: codecov-enabled
