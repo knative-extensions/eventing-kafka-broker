@@ -77,7 +77,7 @@ func NewDeletedBroker(options ...reconcilertesting.BrokerOption) runtime.Object 
 	)
 }
 
-func WithDelivery() func(*eventing.Broker) {
+func WithDelivery(mutations ...func(spec *eventingduck.DeliverySpec)) func(*eventing.Broker) {
 	service := NewService()
 
 	return func(broker *eventing.Broker) {
@@ -92,6 +92,15 @@ func WithDelivery() func(*eventing.Broker) {
 				APIVersion: service.APIVersion,
 			},
 		}
+		for _, mut := range mutations {
+			mut(broker.Spec.Delivery)
+		}
+	}
+}
+
+func WithNoDeadLetterSinkNamespace(spec *eventingduck.DeliverySpec) {
+	if spec.DeadLetterSink != nil && spec.DeadLetterSink.Ref != nil {
+		spec.DeadLetterSink.Ref.Namespace = ""
 	}
 }
 

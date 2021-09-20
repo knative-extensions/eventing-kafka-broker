@@ -17,6 +17,7 @@
 package testing
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -39,9 +40,8 @@ const (
 	ConfigMapNamespace = "test-namespace-config-map"
 	ConfigMapName      = "test-config-cm"
 
-	serviceNamespace = "test-service-namespace"
-	serviceName      = "test-service"
-	ServiceURL       = "http://test-service.test-service-namespace.svc.cluster.local"
+	ServiceNamespace = "test-service-namespace"
+	ServiceName      = "test-service"
 
 	TriggerUUID = "e7185016-5d98-4b54-84e8-3b1cd4acc6b5"
 
@@ -51,19 +51,35 @@ const (
 
 var (
 	Formats = []string{base.Protobuf, base.Json}
+
+	ServiceURL = ServiceURLFrom(ServiceNamespace, ServiceName)
 )
 
-func NewService() *corev1.Service {
-	return &corev1.Service{
+func NewService(mutations ...func(*corev1.Service)) *corev1.Service {
+	s := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      serviceName,
-			Namespace: serviceNamespace,
+			Name:      ServiceName,
+			Namespace: ServiceNamespace,
 		},
 	}
+	for _, mut := range mutations {
+		mut(s)
+	}
+	return s
+}
+
+func WithServiceNamespace(ns string) func(s *corev1.Service) {
+	return func(s *corev1.Service) {
+		s.Namespace = ns
+	}
+}
+
+func ServiceURLFrom(ns, name string) string {
+	return fmt.Sprintf("http://%s.%s.svc.cluster.local", name, ns)
 }
 
 func NewConfigMap(configs *Configs, data []byte) runtime.Object {
