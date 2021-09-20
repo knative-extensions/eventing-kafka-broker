@@ -217,6 +217,63 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			},
 		},
 		{
+			Name: "Reconciled normal - with DLS - no DLS ref namespace",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithDelivery(WithNoDeadLetterSinkNamespace),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Generation: 1,
+				}, &configs),
+				NewService(WithServiceNamespace(BrokerNamespace)),
+				BrokerReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "3"}),
+				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "1"}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							BootstrapServers: bootstrapServers,
+							EgressConfig:     &contract.EgressConfig{DeadLetter: ServiceURLFrom(BrokerNamespace, ServiceName)},
+						},
+					},
+					Generation: 2,
+				}),
+				BrokerReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithDelivery(WithNoDeadLetterSinkNamespace),
+						reconcilertesting.WithInitBrokerConditions,
+						BrokerConfigMapUpdatedReady(&configs),
+						BrokerDataPlaneAvailable,
+						BrokerTopicReady,
+						BrokerConfigParsed,
+						BrokerAddressable(&configs),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+			},
+		},
+		{
 			Name: "Failed to create topic",
 			Objects: []runtime.Object{
 				NewBroker(),
