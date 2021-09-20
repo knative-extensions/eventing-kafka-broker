@@ -41,7 +41,7 @@
     <mycila.license.plugin.version>4.1</mycila.license.plugin.version>
 
     <!-- dependencies version -->
-    <vertx.version>4.1.3</vertx.version>
+    <vertx.version>4.1.4</vertx.version>
     <cloudevents.sdk.version>2.2.0</cloudevents.sdk.version>
     <micrometer.version>1.7.4</micrometer.version>
     <opentelemetry.version>1.5.0</opentelemetry.version>
