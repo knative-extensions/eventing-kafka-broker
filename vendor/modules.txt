@@ -1128,7 +1128,7 @@ knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/request-sender
-# knative.dev/eventing-kafka v0.25.1-0.20210917095531-7e435ad41a26
+# knative.dev/eventing-kafka v0.26.0
 ## explicit
 knative.dev/eventing-kafka/pkg/apis/bindings
 knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
