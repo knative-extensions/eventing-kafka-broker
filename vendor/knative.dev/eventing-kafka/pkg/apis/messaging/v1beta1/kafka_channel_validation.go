@@ -20,8 +20,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/pkg/apis"
+	"knative.dev/pkg/kmp"
 )
 
 func (kc *KafkaChannel) Validate(ctx context.Context) *apis.FieldError {
@@ -36,6 +38,11 @@ func (kc *KafkaChannel) Validate(ctx context.Context) *apis.FieldError {
 				errs = errs.Also(iv.ViaFieldKey("annotations", eventing.ScopeAnnotationKey).ViaField("metadata"))
 			}
 		}
+	}
+
+	if apis.IsInUpdate(ctx) {
+		original := apis.GetBaseline(ctx).(*KafkaChannel)
+		errs = errs.Also(kc.CheckImmutableFields(ctx, original))
 	}
 
 	return errs
@@ -68,4 +75,27 @@ func (kcs *KafkaChannelSpec) Validate(ctx context.Context) *apis.FieldError {
 		}
 	}
 	return errs
+}
+
+func (kc *KafkaChannel) CheckImmutableFields(_ context.Context, original *KafkaChannel) *apis.FieldError {
+	if original == nil {
+		return nil
+	}
+
+	ignoreArguments := cmpopts.IgnoreFields(KafkaChannelSpec{}, "ChannelableSpec")
+	if diff, err := kmp.ShortDiff(original.Spec, kc.Spec, ignoreArguments); err != nil {
+		return &apis.FieldError{
+			Message: "Failed to diff KafkaChannel",
+			Paths:   []string{"spec"},
+			Details: err.Error(),
+		}
+	} else if diff != "" {
+		return &apis.FieldError{
+			Message: "Immutable fields changed (-old +new)",
+			Paths:   []string{"spec"},
+			Details: diff,
+		}
+	}
+
+	return nil
 }
