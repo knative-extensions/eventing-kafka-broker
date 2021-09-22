@@ -21,11 +21,19 @@ import (
 	"time"
 
 	"knative.dev/pkg/apis"
+	"knative.dev/pkg/kmp"
 )
 
 // Validate verifies the ResetOffset and returns errors for any invalid fields.
 func (ro *ResetOffset) Validate(ctx context.Context) *apis.FieldError {
-	return ro.Spec.Validate(ctx).ViaField("spec")
+	errs := ro.Spec.Validate(ctx).ViaField("spec")
+
+	if apis.IsInUpdate(ctx) {
+		original := apis.GetBaseline(ctx).(*ResetOffset)
+		errs = errs.Also(ro.CheckImmutableFields(ctx, original))
+	}
+
+	return errs
 }
 
 // Validate verifies the ResetOffsetSpec and returns errors for an invalid fields.
@@ -45,4 +53,27 @@ func (ros *ResetOffsetSpec) Validate(ctx context.Context) *apis.FieldError {
 	errs = errs.Also(ros.Ref.Validate(ctx))
 
 	return errs
+}
+
+// CheckImmutableFields verifies the immutable spec fields have not been changed from the original.
+func (ro *ResetOffset) CheckImmutableFields(_ context.Context, original *ResetOffset) *apis.FieldError {
+	if original == nil {
+		return nil
+	}
+
+	if diff, err := kmp.ShortDiff(original.Spec, ro.Spec); err != nil {
+		return &apis.FieldError{
+			Message: "Failed to diff ResetOffset",
+			Paths:   []string{"spec"},
+			Details: err.Error(),
+		}
+	} else if diff != "" {
+		return &apis.FieldError{
+			Message: "Immutable fields changed (-old +new)",
+			Paths:   []string{"spec"},
+			Details: diff,
+		}
+	}
+
+	return nil
 }
