@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# TODO work around networking issues, see https://github.com/kubernetes/test-infra/issues/23741
+iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+
 # variables used:
 # - SKIP_INITIALIZE (default: false) - skip cluster creation.
 # - LOCAL_DEVELOPMENT (default: false) - skip heavy workloads installation like load and chaos generators.
