@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"knative.dev/eventing/pkg/apis/messaging"
+	"knative.dev/pkg/apis"
 
 	"knative.dev/eventing-kafka/pkg/common/constants"
 )
@@ -38,6 +39,7 @@ func (kc *KafkaChannel) SetDefaults(ctx context.Context) {
 		kc.Annotations[messaging.SubscribableDuckVersionAnnotation] = "v1"
 	}
 
+	ctx = apis.WithinParent(ctx, kc.ObjectMeta)
 	kc.Spec.SetDefaults(ctx)
 }
 
@@ -51,4 +53,5 @@ func (kcs *KafkaChannelSpec) SetDefaults(ctx context.Context) {
 	if len(kcs.RetentionDuration) <= 0 {
 		kcs.RetentionDuration = constants.DefaultRetentionISO8601Duration
 	}
+	kcs.Delivery.SetDefaults(ctx)
 }
