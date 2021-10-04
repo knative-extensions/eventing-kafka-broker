@@ -19,6 +19,7 @@ import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.Backend;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -39,12 +40,15 @@ public class TracingConfigTest {
     write(dir, "/backend", " zipkin ");
     write(dir, "/sample-rate", " 0.1 ");
     write(dir, "/zipkin-endpoint", "  http://localhost:9241/v2/api/spans/     ");
+    write(dir, "/trace-propagation-format", "w3c, b3");
 
     final var config = TracingConfig.fromDir(dir.toAbsolutePath().toString());
 
     assertThat(config.getBackend()).isEqualTo(Backend.ZIPKIN);
     assertThat(config.getSamplingRate()).isEqualTo(0.1F);
     assertThat(config.getUrl()).isEqualTo("http://localhost:9241/v2/api/spans/");
+    assertThat(config.getTracePropagationFormat())
+      .containsExactlyInAnyOrder(TracingConfig.TracePropagationFormat.W3C, TracingConfig.TracePropagationFormat.B3);
   }
 
   @Test
@@ -55,6 +59,7 @@ public class TracingConfigTest {
     write(dir, "/backend", " 1234 ");
     write(dir, "/sample-rate", " 0.1 ");
     write(dir, "/zipkin-endpoint", "  http://localhost:9241/v2/api/spans/     ");
+    write(dir, "/trace-propagation-format", "w3c, b3");
 
     final var config = TracingConfig.fromDir(dir.toAbsolutePath().toString());
 
@@ -105,7 +110,8 @@ public class TracingConfigTest {
 
   @Test
   public void setupShouldNotFailWhenBackendIsUnknown() {
-    assertThatNoException().isThrownBy(() -> new TracingConfig(Backend.UNKNOWN, null, 0F).setup());
+    assertThatNoException()
+      .isThrownBy(() -> new TracingConfig(Backend.UNKNOWN, null, 0F, Collections.emptyList()).setup());
   }
 
   private static void write(final Path root, final String name, final String s) throws IOException {
