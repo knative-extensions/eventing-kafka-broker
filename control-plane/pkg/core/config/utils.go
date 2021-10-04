@@ -62,6 +62,10 @@ func EgressConfigFromDelivery(
 	egressConfig := &contract.EgressConfig{}
 
 	if delivery.DeadLetterSink != nil {
+		destination := *delivery.DeadLetterSink // Do not update object Spec, so copy destination.
+		if destination.Ref != nil && destination.Ref.Namespace == "" {
+			destination.Ref.Namespace = parent.GetNamespace()
+		}
 		deadLetterSinkURL, err := resolver.URIFromDestinationV1(ctx, *delivery.DeadLetterSink, parent)
 		if err != nil {
 			return nil, fmt.Errorf("failed to resolve Spec.Delivery.DeadLetterSink: %w", err)
