@@ -1028,7 +1028,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.26.1-0.20210930102845-5b9ac948cefc
+# knative.dev/eventing v0.26.1-0.20211004070826-2c059b24fae2
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck
@@ -1136,7 +1136,7 @@ knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/request-sender
-# knative.dev/eventing-kafka v0.26.1-0.20210930095545-c8c9c1782910
+# knative.dev/eventing-kafka v0.26.1-0.20211004133027-7b363a206b73
 ## explicit
 knative.dev/eventing-kafka/pkg/apis/bindings
 knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
@@ -1179,7 +1179,7 @@ knative.dev/eventing-kafka/pkg/common/kafka/sarama
 # knative.dev/hack v0.0.0-20210806075220-815cd312d65c
 ## explicit
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20210929111822-2267a4cbebb8
+# knative.dev/pkg v0.0.0-20211004133827-74ac82a333a4
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
