@@ -64,7 +64,7 @@ func MatchKey(want []byte) eventshub.EventInfoMatcher {
 				}
 			}
 		}
-		if bytes.Compare(actual, want) != 0 {
+		if !bytes.Equal(actual, want) {
 			return fmt.Errorf("event key don't match. Expected: '%s', Actual: '%s'", want, actual)
 		}
 		return nil
