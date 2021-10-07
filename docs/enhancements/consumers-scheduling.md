@@ -99,8 +99,6 @@ To mark a resource, identified by `<resource_namespace>/<resource_name>`, as rea
    `kafka.eventing.knative.dev/scheduler.placeable.Placements.<resource_namespace>/<resource_name> >= resource.status.ObservedGeneration`
 1. To make sure that there are no further changes to the scheduled resource, we need to check that: `metadata.generation == resource.status.ObservedGeneration`
 
-In other words, the `Pod` reconciler has seen the `Trigger` reconciler scheduling decision.
-
 ## Known Issues and TODOs:
 
 - Current scheduler implementation in `eventing-kafka` depends on `StatefulSet`
@@ -111,12 +109,3 @@ In other words, the `Pod` reconciler has seen the `Trigger` reconciler schedulin
 - KafkaChannel:
     - How to embed `N` placeables one per subscription in `KafkaChannel` status
     - How to get `Subscription` replicas
-
-## PoC status
-
-- branch: https://github.com/pierDipi/eventing-kafka-broker/tree/poc-scheduling
-  - Important files to look at:
-    - trigger_v2.go
-    - trigger_v2_pod_controller.go
-    - trigger_v2_vpod.go
-    - controller_v2.go
