@@ -36,7 +36,7 @@ import (
 	. "knative.dev/pkg/reconciler/testing"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing"
-	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
@@ -78,7 +78,7 @@ var (
 
 func TestSinkReconciler(t *testing.T) {
 
-	v1alpha1.RegisterConditionSet(base.ConditionSet)
+	v1alpha1.RegisterConditionSet(base.IngressConditionSet)
 
 	t.Parallel()
 
@@ -821,7 +821,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 
 func TestSinkFinalizer(t *testing.T) {
 
-	v1alpha1.RegisterConditionSet(base.ConditionSet)
+	v1alpha1.RegisterConditionSet(base.IngressConditionSet)
 
 	t.Parallel()
 

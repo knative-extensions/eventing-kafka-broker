@@ -85,7 +85,7 @@ var (
 )
 
 func TestBrokerReconciler(t *testing.T) {
-	eventing.RegisterAlternateBrokerConditionSet(base.ConditionSet)
+	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
 
 	t.Parallel()
 

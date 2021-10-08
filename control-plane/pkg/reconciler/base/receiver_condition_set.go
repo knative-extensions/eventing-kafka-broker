@@ -39,8 +39,15 @@ const (
 	ConditionConfigParsed       apis.ConditionType = "ConfigParsed"
 )
 
-var ConditionSet = apis.NewLivingConditionSet(
+var IngressConditionSet = apis.NewLivingConditionSet(
 	ConditionAddressable,
+	ConditionDataPlaneAvailable,
+	ConditionTopicReady,
+	ConditionConfigMapUpdated,
+	ConditionConfigParsed,
+)
+
+var EgressConditionSet = apis.NewLivingConditionSet(
 	ConditionDataPlaneAvailable,
 	ConditionTopicReady,
 	ConditionConfigMapUpdated,
@@ -170,14 +177,16 @@ func (manager *StatusConditionManager) TopicReady(topic string) {
 
 func (manager *StatusConditionManager) Reconciled() reconciler.Event {
 
-	object := manager.Object
+	if manager.SetAddress != nil {
+		object := manager.Object
 
-	manager.SetAddress(&apis.URL{
-		Scheme: "http",
-		Host:   network.GetServiceHostname(manager.Configs.IngressName, manager.Configs.SystemNamespace),
-		Path:   fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName()),
-	})
-	object.GetConditionSet().Manage(object.GetStatus()).MarkTrue(ConditionAddressable)
+		manager.SetAddress(&apis.URL{
+			Scheme: "http",
+			Host:   network.GetServiceHostname(manager.Configs.IngressName, manager.Configs.SystemNamespace),
+			Path:   fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName()),
+		})
+		object.GetConditionSet().Manage(object.GetStatus()).MarkTrue(ConditionAddressable)
+	}
 
 	return nil
 }
