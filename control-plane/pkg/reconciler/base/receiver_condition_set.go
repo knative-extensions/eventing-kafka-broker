@@ -51,7 +51,6 @@ var EgressConditionSet = apis.NewLivingConditionSet(
 	ConditionDataPlaneAvailable,
 	ConditionTopicReady,
 	ConditionConfigMapUpdated,
-	ConditionConfigParsed,
 )
 
 const (

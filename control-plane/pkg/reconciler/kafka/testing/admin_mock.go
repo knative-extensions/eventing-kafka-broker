@@ -21,6 +21,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/google/go-cmp/cmp"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 var _ sarama.ClusterAdmin = &MockKafkaClusterAdmin{}
@@ -77,8 +78,8 @@ func (m *MockKafkaClusterAdmin) ListTopics() (map[string]sarama.TopicDetail, err
 
 func (m *MockKafkaClusterAdmin) DescribeTopics(topics []string) (metadata []*sarama.TopicMetadata, err error) {
 
-	if diff := cmp.Diff(topics, m.ExpectedTopics); diff != "" {
-		m.T.Errorf("unexpected topics (-want, +got) %s", diff)
+	if !sets.NewString(m.ExpectedTopics...).HasAll(topics...) {
+		m.T.Errorf("unexpected topics %v", topics)
 	}
 
 	return m.ExpectedTopicsMetadataOnDescribeTopics, m.ExpectedErrorOnDescribeTopics

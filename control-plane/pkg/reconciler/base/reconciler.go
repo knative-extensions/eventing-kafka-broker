@@ -51,6 +51,9 @@ const (
 	// label for selecting sink receiver pods.
 	SinkReceiverLabel = "kafka-sink-receiver"
 
+	// label for selecting source dipsatcher pods.
+	SourceDispatcherLabel = "kafka-source-dispatcher"
+
 	// label for selecting channel dispatcher pods.
 	ChannelDispatcherLabel = "kafka-channel-dispatcher"
 	// label for selecting channel receiver pods.

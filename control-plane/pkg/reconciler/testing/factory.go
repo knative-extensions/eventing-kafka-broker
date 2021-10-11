@@ -35,7 +35,9 @@ import (
 	"knative.dev/pkg/reconciler"
 	. "knative.dev/pkg/reconciler/testing"
 
-	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
+	fakeeventingkafkakafkaclient "knative.dev/eventing-kafka/pkg/client/injection/client/fake"
+
+	fakeeventingkafkabrokerclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -71,7 +73,8 @@ func NewFactory(configs *broker.Configs, ctor Ctor) Factory {
 		ctx := context.Background()
 
 		ctx, eventingClient := fakeeventingclient.With(ctx, listers.GetEventingObjects()...)
-		ctx, eventingKafkaClient := fakeeventingkafkaclient.With(ctx, listers.GetEventingKafkaObjects()...)
+		ctx, sourcesKafkaClient := fakeeventingkafkakafkaclient.With(ctx, listers.GetEventingKafkaObjects()...)
+		ctx, eventingKafkaClient := fakeeventingkafkabrokerclient.With(ctx, listers.GetEventingKafkaBrokerObjects()...)
 		ctx, kubeClient := fakekubeclient.With(ctx, listers.GetKubeObjects()...)
 
 		ctx, dynamicClient := fakedynamicclient.With(ctx,
@@ -107,6 +110,7 @@ func NewFactory(configs *broker.Configs, ctor Ctor) Factory {
 			dynamicClient.PrependReactor("*", "*", reactor)
 			eventingClient.PrependReactor("*", "*", reactor)
 			eventingKafkaClient.PrependReactor("*", "*", reactor)
+			sourcesKafkaClient.PrependReactor("*", "*", reactor)
 		}
 
 		actionRecorderList := ActionRecorderList{
@@ -114,6 +118,7 @@ func NewFactory(configs *broker.Configs, ctor Ctor) Factory {
 			kubeClient,
 			eventingClient,
 			eventingKafkaClient,
+			sourcesKafkaClient,
 		}
 
 		eventList := EventList{
