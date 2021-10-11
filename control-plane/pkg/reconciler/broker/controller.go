@@ -55,7 +55,7 @@ const (
 
 func NewController(ctx context.Context, watcher configmap.Watcher, configs *Configs) *controller.Impl {
 
-	eventing.RegisterAlternateBrokerConditionSet(base.ConditionSet)
+	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
 
 	configmapInformer := configmapinformer.Get(ctx)
 
