@@ -41,7 +41,7 @@ import (
 
 func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env) *controller.Impl {
 
-	eventing.RegisterConditionSet(base.ConditionSet)
+	eventing.RegisterConditionSet(base.IngressConditionSet)
 
 	logger := logging.FromContext(ctx)
 

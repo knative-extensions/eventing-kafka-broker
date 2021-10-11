@@ -44,7 +44,7 @@ import (
 
 func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
 
-	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.ConditionSet)
+	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.IngressConditionSet)
 
 	configmapInformer := configmapinformer.Get(ctx)
 

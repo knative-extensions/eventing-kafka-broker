@@ -78,7 +78,7 @@ var (
 
 func TestSinkReconciler(t *testing.T) {
 
-	v1alpha1.RegisterConditionSet(base.ConditionSet)
+	v1alpha1.RegisterConditionSet(base.IngressConditionSet)
 
 	t.Parallel()
 
@@ -821,7 +821,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 
 func TestSinkFinalizer(t *testing.T) {
 
-	v1alpha1.RegisterConditionSet(base.ConditionSet)
+	v1alpha1.RegisterConditionSet(base.IngressConditionSet)
 
 	t.Parallel()
 
