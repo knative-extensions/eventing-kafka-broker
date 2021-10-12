@@ -92,7 +92,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 
 	// Ignore Triggers that are associated with a Broker we don't own.
-	if isOur, brokerClass := isOurBroker(broker); !isOur {
+	if isKnativeKafkaBroker, brokerClass := isKnativeKafkaBroker(broker); !isKnativeKafkaBroker {
 		logger.Debug("Ignoring Trigger", zap.String(eventing.BrokerClassAnnotationKey, brokerClass))
 		return nil
 	}
@@ -317,7 +317,7 @@ func deleteTrigger(egresses []*contract.Egress, index int) []*contract.Egress {
 	return egresses[:len(egresses)-1]
 }
 
-func isOurBroker(broker *eventing.Broker) (bool, string) {
+func isKnativeKafkaBroker(broker *eventing.Broker) (bool, string) {
 	brokerClass := broker.GetAnnotations()[eventing.BrokerClassAnnotationKey]
 	return brokerClass == kafka.BrokerClass, brokerClass
 }
