@@ -146,7 +146,7 @@ function k8s() {
 
 function data_plane_unit_tests() {
   pushd ${DATA_PLANE_DIR} || fail_test
-  ./mvnw clean verify -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.count=6 --no-transfer-progress
+  strace -f ./mvnw clean verify -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.count=6 --no-transfer-progress
   mvn_output=$?
 
   echo "Copy test reports in ${ARTIFACTS}"
