@@ -23,8 +23,12 @@ import io.cloudevents.kafka.impl.KafkaBinaryMessageReaderImpl;
 import io.cloudevents.kafka.impl.KafkaHeaders;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 /**
  * CloudEventDeserializer is the deserializer used for deserializing {@link CloudEvent}.
@@ -36,6 +40,8 @@ import java.util.Map;
  * typically done by a {@link org.apache.kafka.clients.consumer.ConsumerInterceptor}.
  */
 public class CloudEventDeserializer implements Deserializer<CloudEvent> {
+
+  private static final Logger logger = LoggerFactory.getLogger(CloudEventDeserializer.class);
 
   public static final String INVALID_CE_WRAPPER_ENABLED = "cloudevent.invalid.transformer.enabled";
 
@@ -52,6 +58,10 @@ public class CloudEventDeserializer implements Deserializer<CloudEvent> {
     if (configs.containsKey(INVALID_CE_WRAPPER_ENABLED)) {
       isInvalidLogicEnabled = Boolean.parseBoolean(configs.get(INVALID_CE_WRAPPER_ENABLED).toString());
     }
+
+    logger.info("Deserializer config {}",
+      keyValue("isInvalidLogicEnabled", isInvalidLogicEnabled)
+    );
   }
 
   @Override

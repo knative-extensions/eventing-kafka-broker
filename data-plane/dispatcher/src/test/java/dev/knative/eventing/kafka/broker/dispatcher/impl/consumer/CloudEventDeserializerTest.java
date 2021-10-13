@@ -58,7 +58,7 @@ public class CloudEventDeserializerTest {
     final var record = KafkaMessageFactory.createWriter(topic).writeBinary(event);
 
     final var deserializer = new CloudEventDeserializer();
-    CloudEvent outEvent = deserializer.deserialize(topic, record.headers(), record.value());
+    final var outEvent = deserializer.deserialize(topic, record.headers(), record.value());
 
     assertThat(outEvent).isEqualTo(event);
   }
@@ -87,30 +87,27 @@ public class CloudEventDeserializerTest {
     configs.put(CloudEventDeserializer.INVALID_CE_WRAPPER_ENABLED, "true");
     deserializer.configure(configs, false);
 
-    CloudEvent outEvent = deserializer.deserialize(
-      topic,
-      headers,
-      new byte[]{1, 4}
-    );
+    final var event = deserializer.deserialize(topic, headers, new byte[]{1, 4});
 
-    assertThat(outEvent).isInstanceOf(InvalidCloudEvent.class);
+    assertThat(event).isInstanceOf(InvalidCloudEvent.class);
 
-    final var invalid = (InvalidCloudEvent) outEvent;
+    assertThat(event).isInstanceOf(InvalidCloudEvent.class);
+    assertOnInvalidCloudEvent((InvalidCloudEvent) event);
+  }
 
-    assertThatThrownBy(invalid::getData);
-    assertThatThrownBy(invalid::getDataContentType);
-    assertThatThrownBy(invalid::getSource);
-    assertThatThrownBy(invalid::getSubject);
-    assertThatThrownBy(invalid::getId);
-    assertThatThrownBy(invalid::getTime);
-    assertThatThrownBy(invalid::getExtensionNames);
-    assertThatThrownBy(() -> invalid.getExtension("a"));
-    assertThatThrownBy(invalid::getDataSchema);
-    assertThatThrownBy(invalid::getType);
-    assertThatThrownBy(invalid::getSpecVersion);
-    assertThatThrownBy(() -> invalid.getAttribute("type"));
+  @Test
+  public void shouldDeserializeInvalidCloudWithoutHeadersEventWhenEnabled() {
+    final var topic = "test";
 
-    assertDoesNotThrow(invalid::data);
+    final var deserializer = new CloudEventDeserializer();
+    final var configs = new HashMap<String, String>();
+    configs.put(CloudEventDeserializer.INVALID_CE_WRAPPER_ENABLED, "true");
+    deserializer.configure(configs, false);
+
+    final var event = deserializer.deserialize(topic, new byte[]{1, 4});
+
+    assertThat(event).isInstanceOf(InvalidCloudEvent.class);
+    assertOnInvalidCloudEvent((InvalidCloudEvent) event);
   }
 
   @Test
@@ -125,10 +122,23 @@ public class CloudEventDeserializerTest {
     final var configs = new HashMap<String, String>();
     deserializer.configure(configs, false);
 
-    assertThatThrownBy(() -> deserializer.deserialize(
-      topic,
-      headers,
-      new byte[]{1, 4}
-    ));
+    assertThatThrownBy(() -> deserializer.deserialize(topic, headers, new byte[]{1, 4}));
+    assertThatThrownBy(() -> deserializer.deserialize(topic, new byte[]{1, 4}));
+  }
+
+  private void assertOnInvalidCloudEvent(InvalidCloudEvent invalid) {
+    assertThatThrownBy(invalid::getData);
+    assertThatThrownBy(invalid::getDataContentType);
+    assertThatThrownBy(invalid::getSource);
+    assertThatThrownBy(invalid::getSubject);
+    assertThatThrownBy(invalid::getId);
+    assertThatThrownBy(invalid::getTime);
+    assertThatThrownBy(invalid::getExtensionNames);
+    assertThatThrownBy(() -> invalid.getExtension("a"));
+    assertThatThrownBy(invalid::getDataSchema);
+    assertThatThrownBy(invalid::getType);
+    assertThatThrownBy(invalid::getSpecVersion);
+    assertThatThrownBy(() -> invalid.getAttribute("type"));
+    assertDoesNotThrow(invalid::data);
   }
 }
