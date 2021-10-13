@@ -24,9 +24,6 @@ ARG APP_JAR
 
 WORKDIR /build
 
-# https://github.com/AdoptOpenJDK/openjdk-docker/issues/260
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y binutils
-
 COPY pom.xml .
 COPY .editorconfig .
 COPY core/pom.xml core/pom.xml
