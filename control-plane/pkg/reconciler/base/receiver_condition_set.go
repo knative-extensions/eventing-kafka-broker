@@ -47,6 +47,13 @@ var IngressConditionSet = apis.NewLivingConditionSet(
 	ConditionConfigParsed,
 )
 
+var EgressConditionSet = apis.NewLivingConditionSet(
+	ConditionDataPlaneAvailable,
+	ConditionTopicReady,
+	ConditionConfigMapUpdated,
+	ConditionConfigParsed,
+)
+
 const (
 	TopicOwnerAnnotation = "eventing.knative.dev/topic.owner"
 
