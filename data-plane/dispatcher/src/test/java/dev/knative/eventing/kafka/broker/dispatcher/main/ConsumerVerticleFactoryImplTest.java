@@ -28,6 +28,8 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
@@ -180,5 +182,38 @@ public class ConsumerVerticleFactoryImplTest {
     final var delay = policy.apply(Double.valueOf(Math.random()).intValue());
 
     assertThat(delay).isEqualTo(0);
+  }
+
+  @Test
+  public void getNoopResponseHandler() {
+    final var counter = new AtomicInteger(0);
+    final var egress = DataPlaneContract.Egress.newBuilder()
+      .setDiscardReply(DataPlaneContract.Empty.newBuilder().build())
+      .build();
+
+    final var r = ConsumerVerticleFactoryImpl.getNoopResponseHandlerOrDefault(egress, () -> {
+      counter.incrementAndGet();
+      return null;
+    });
+
+    assertThat(r).isNotNull();
+    assertThat(counter.get()).isEqualTo(0);
+  }
+
+  @Test
+  public void getKafkaResponseHandler() {
+    final var counter = new AtomicInteger(0);
+
+    final var egress = DataPlaneContract.Egress.newBuilder()
+      .setReplyToOriginalTopic(DataPlaneContract.Empty.newBuilder().build())
+      .build();
+
+    final var r = ConsumerVerticleFactoryImpl.getNoopResponseHandlerOrDefault(egress, () -> {
+      counter.incrementAndGet();
+      return null;
+    });
+
+    assertThat(r).isNull();
+    assertThat(counter.get()).isEqualTo(1);
   }
 }

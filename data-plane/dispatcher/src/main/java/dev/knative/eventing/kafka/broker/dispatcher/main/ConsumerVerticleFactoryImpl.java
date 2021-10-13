@@ -27,7 +27,9 @@ import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
+import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.KafkaResponseHandler;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.WebClientCloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.BaseConsumerVerticle;
@@ -62,6 +64,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -145,8 +148,6 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
         KafkaConsumer<String, CloudEvent> consumer = createConsumer(vertx, consumerConfigs);
         AutoCloseable metricsCloser = Metrics.register(consumer.unwrap());
 
-        KafkaProducer<String, CloudEvent> producer = createProducer(vertx, producerConfigs);
-
         final var egressConfig =
           egress.hasEgressConfig() ?
             egress.getEgressConfig() :
@@ -166,11 +167,13 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
           new AttributesFilter(egress.getFilter().getAttributesMap()) :
           Filter.noop();
 
+        final var responseHandler = getNoopResponseHandlerOrDefault(egress, () -> getKafkaResponseHandler(vertx, producerConfigs, resource));
+
         final RecordDispatcherImpl recordDispatcher = new RecordDispatcherImpl(
           filter,
           egressSubscriberSender,
           egressDeadLetterSender,
-          new KafkaResponseHandler(producer, resource.getTopics(0)),
+          responseHandler,
           getOffsetManager(deliveryOrder, consumer, eventsSentCounter::increment),
           ConsumerTracer.create(
             ((VertxInternal) vertx).tracer(),
@@ -189,6 +192,21 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
         .mapEmpty();
 
     return getConsumerVerticle(deliveryOrder, initializer, new HashSet<>(resource.getTopicsList()));
+  }
+
+  static ResponseHandler getNoopResponseHandlerOrDefault(final DataPlaneContract.Egress egress,
+                                                         final Supplier<ResponseHandler> defaultSupplier) {
+    if (egress.hasDiscardReply()) {
+      return new NoopResponseHandler();
+    }
+    return defaultSupplier.get();
+  }
+
+  private KafkaResponseHandler getKafkaResponseHandler(final Vertx vertx,
+                                                       final Map<String, Object> producerConfigs,
+                                                       final DataPlaneContract.Resource resource) {
+    final KafkaProducer<String, CloudEvent> producer = createProducer(vertx, producerConfigs);
+    return new KafkaResponseHandler(producer, resource.getTopics(0));
   }
 
   protected KafkaProducer<String, CloudEvent> createProducer(final Vertx vertx,
