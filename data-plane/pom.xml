@@ -36,7 +36,7 @@
     <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
     <maven.editorconfig.plugin.version>0.1.1</maven.editorconfig.plugin.version>
     <maven.jacoco.plugin.version>0.8.7</maven.jacoco.plugin.version>
-    <maven.enforcer.plugin.version>3.0.0-M3</maven.enforcer.plugin.version>
+    <maven.enforcer.plugin.version>3.0.0</maven.enforcer.plugin.version>
     <maven.license.plugin.version>2.0.0</maven.license.plugin.version>
     <mycila.license.plugin.version>4.1</mycila.license.plugin.version>
 
@@ -165,6 +165,10 @@
           <exclusion>
             <artifactId>okhttp</artifactId>
             <groupId>com.squareup.okhttp3</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>builder-annotations</artifactId>
+            <groupId>io.sundr</groupId>
           </exclusion>
         </exclusions>
       </dependency>
