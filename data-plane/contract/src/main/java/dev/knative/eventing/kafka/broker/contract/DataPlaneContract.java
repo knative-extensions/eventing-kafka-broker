@@ -2796,6 +2796,33 @@ public final class DataPlaneContract {
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getReplyToOriginalTopicOrBuilder();
 
     /**
+     * <pre>
+     * Discard response.
+     * </pre>
+     *
+     * <code>.Empty discardReply = 9;</code>
+     * @return Whether the discardReply field is set.
+     */
+    boolean hasDiscardReply();
+    /**
+     * <pre>
+     * Discard response.
+     * </pre>
+     *
+     * <code>.Empty discardReply = 9;</code>
+     * @return The discardReply.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty getDiscardReply();
+    /**
+     * <pre>
+     * Discard response.
+     * </pre>
+     *
+     * <code>.Empty discardReply = 9;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getDiscardReplyOrBuilder();
+
+    /**
      * <code>.Filter filter = 5;</code>
      * @return Whether the filter field is set.
      */
@@ -3004,6 +3031,20 @@ public final class DataPlaneContract {
               deliveryOrder_ = rawValue;
               break;
             }
+            case 74: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder subBuilder = null;
+              if (replyStrategyCase_ == 9) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_).toBuilder();
+              }
+              replyStrategy_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_);
+                replyStrategy_ = subBuilder.buildPartial();
+              }
+              replyStrategyCase_ = 9;
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -3043,6 +3084,7 @@ public final class DataPlaneContract {
             com.google.protobuf.AbstractMessage.InternalOneOfEnum {
       REPLYURL(3),
       REPLYTOORIGINALTOPIC(4),
+      DISCARDREPLY(9),
       REPLYSTRATEGY_NOT_SET(0);
       private final int value;
       private ReplyStrategyCase(int value) {
@@ -3062,6 +3104,7 @@ public final class DataPlaneContract {
         switch (value) {
           case 3: return REPLYURL;
           case 4: return REPLYTOORIGINALTOPIC;
+          case 9: return DISCARDREPLY;
           case 0: return REPLYSTRATEGY_NOT_SET;
           default: return null;
         }
@@ -3276,6 +3319,49 @@ public final class DataPlaneContract {
       return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
     }
 
+    public static final int DISCARDREPLY_FIELD_NUMBER = 9;
+    /**
+     * <pre>
+     * Discard response.
+     * </pre>
+     *
+     * <code>.Empty discardReply = 9;</code>
+     * @return Whether the discardReply field is set.
+     */
+    @java.lang.Override
+    public boolean hasDiscardReply() {
+      return replyStrategyCase_ == 9;
+    }
+    /**
+     * <pre>
+     * Discard response.
+     * </pre>
+     *
+     * <code>.Empty discardReply = 9;</code>
+     * @return The discardReply.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty getDiscardReply() {
+      if (replyStrategyCase_ == 9) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+    }
+    /**
+     * <pre>
+     * Discard response.
+     * </pre>
+     *
+     * <code>.Empty discardReply = 9;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getDiscardReplyOrBuilder() {
+      if (replyStrategyCase_ == 9) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+    }
+
     public static final int FILTER_FIELD_NUMBER = 5;
     private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter filter_;
     /**
@@ -3458,6 +3544,9 @@ public final class DataPlaneContract {
       if (deliveryOrder_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.UNORDERED.getNumber()) {
         output.writeEnum(8, deliveryOrder_);
       }
+      if (replyStrategyCase_ == 9) {
+        output.writeMessage(9, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -3494,6 +3583,10 @@ public final class DataPlaneContract {
       if (deliveryOrder_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.UNORDERED.getNumber()) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(8, deliveryOrder_);
+      }
+      if (replyStrategyCase_ == 9) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(9, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -3537,6 +3630,10 @@ public final class DataPlaneContract {
           if (!getReplyToOriginalTopic()
               .equals(other.getReplyToOriginalTopic())) return false;
           break;
+        case 9:
+          if (!getDiscardReply()
+              .equals(other.getDiscardReply())) return false;
+          break;
         case 0:
         default:
       }
@@ -3575,6 +3672,10 @@ public final class DataPlaneContract {
         case 4:
           hash = (37 * hash) + REPLYTOORIGINALTOPIC_FIELD_NUMBER;
           hash = (53 * hash) + getReplyToOriginalTopic().hashCode();
+          break;
+        case 9:
+          hash = (37 * hash) + DISCARDREPLY_FIELD_NUMBER;
+          hash = (53 * hash) + getDiscardReply().hashCode();
           break;
         case 0:
         default:
@@ -3772,6 +3873,13 @@ public final class DataPlaneContract {
             result.replyStrategy_ = replyToOriginalTopicBuilder_.build();
           }
         }
+        if (replyStrategyCase_ == 9) {
+          if (discardReplyBuilder_ == null) {
+            result.replyStrategy_ = replyStrategy_;
+          } else {
+            result.replyStrategy_ = discardReplyBuilder_.build();
+          }
+        }
         if (filterBuilder_ == null) {
           result.filter_ = filter_;
         } else {
@@ -3863,6 +3971,10 @@ public final class DataPlaneContract {
           }
           case REPLYTOORIGINALTOPIC: {
             mergeReplyToOriginalTopic(other.getReplyToOriginalTopic());
+            break;
+          }
+          case DISCARDREPLY: {
+            mergeDiscardReply(other.getDiscardReply());
             break;
           }
           case REPLYSTRATEGY_NOT_SET: {
@@ -4401,6 +4513,183 @@ public final class DataPlaneContract {
         replyStrategyCase_ = 4;
         onChanged();;
         return replyToOriginalTopicBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder> discardReplyBuilder_;
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 9;</code>
+       * @return Whether the discardReply field is set.
+       */
+      @java.lang.Override
+      public boolean hasDiscardReply() {
+        return replyStrategyCase_ == 9;
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 9;</code>
+       * @return The discardReply.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty getDiscardReply() {
+        if (discardReplyBuilder_ == null) {
+          if (replyStrategyCase_ == 9) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+        } else {
+          if (replyStrategyCase_ == 9) {
+            return discardReplyBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 9;</code>
+       */
+      public Builder setDiscardReply(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty value) {
+        if (discardReplyBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          replyStrategy_ = value;
+          onChanged();
+        } else {
+          discardReplyBuilder_.setMessage(value);
+        }
+        replyStrategyCase_ = 9;
+        return this;
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 9;</code>
+       */
+      public Builder setDiscardReply(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder builderForValue) {
+        if (discardReplyBuilder_ == null) {
+          replyStrategy_ = builderForValue.build();
+          onChanged();
+        } else {
+          discardReplyBuilder_.setMessage(builderForValue.build());
+        }
+        replyStrategyCase_ = 9;
+        return this;
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 9;</code>
+       */
+      public Builder mergeDiscardReply(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty value) {
+        if (discardReplyBuilder_ == null) {
+          if (replyStrategyCase_ == 9 &&
+              replyStrategy_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance()) {
+            replyStrategy_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            replyStrategy_ = value;
+          }
+          onChanged();
+        } else {
+          if (replyStrategyCase_ == 9) {
+            discardReplyBuilder_.mergeFrom(value);
+          }
+          discardReplyBuilder_.setMessage(value);
+        }
+        replyStrategyCase_ = 9;
+        return this;
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 9;</code>
+       */
+      public Builder clearDiscardReply() {
+        if (discardReplyBuilder_ == null) {
+          if (replyStrategyCase_ == 9) {
+            replyStrategyCase_ = 0;
+            replyStrategy_ = null;
+            onChanged();
+          }
+        } else {
+          if (replyStrategyCase_ == 9) {
+            replyStrategyCase_ = 0;
+            replyStrategy_ = null;
+          }
+          discardReplyBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 9;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder getDiscardReplyBuilder() {
+        return getDiscardReplyFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 9;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getDiscardReplyOrBuilder() {
+        if ((replyStrategyCase_ == 9) && (discardReplyBuilder_ != null)) {
+          return discardReplyBuilder_.getMessageOrBuilder();
+        } else {
+          if (replyStrategyCase_ == 9) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 9;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder> 
+          getDiscardReplyFieldBuilder() {
+        if (discardReplyBuilder_ == null) {
+          if (!(replyStrategyCase_ == 9)) {
+            replyStrategy_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+          }
+          discardReplyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_,
+                  getParentForChildren(),
+                  isClean());
+          replyStrategy_ = null;
+        }
+        replyStrategyCase_ = 9;
+        onChanged();;
+        return discardReplyBuilder_;
       }
 
       private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter filter_;
@@ -11368,31 +11657,31 @@ public final class DataPlaneContract {
       "e\030\002 \001(\t:\0028\001\"\177\n\014EgressConfig\022\022\n\ndeadLette" +
       "r\030\001 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030" +
       "\003 \001(\0162\016.BackoffPolicy\022\024\n\014backoffDelay\030\004 " +
-      "\001(\004\022\017\n\007timeout\030\005 \001(\004\"\363\001\n\006Egress\022\025\n\rconsu" +
+      "\001(\004\022\017\n\007timeout\030\005 \001(\004\"\223\002\n\006Egress\022\025\n\rconsu" +
       "merGroup\030\001 \001(\t\022\023\n\013destination\030\002 \001(\t\022\022\n\010r" +
       "eplyUrl\030\003 \001(\tH\000\022&\n\024replyToOriginalTopic\030" +
-      "\004 \001(\0132\006.EmptyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter" +
-      "\022\013\n\003uid\030\006 \001(\t\022#\n\014egressConfig\030\007 \001(\0132\r.Eg" +
-      "ressConfig\022%\n\rdeliveryOrder\030\010 \001(\0162\016.Deli" +
-      "veryOrderB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n" +
-      "\013contentMode\030\001 \001(\0162\014.ContentMode\022\016\n\004path" +
-      "\030\002 \001(\tH\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"" +
-      "K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030" +
-      "\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"\344\001\n" +
-      "\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030" +
-      "\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(" +
-      "\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.Egre" +
-      "ssConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\na" +
-      "bsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030" +
-      "\010 \001(\0132\n.ReferenceH\000B\006\n\004Auth\"<\n\010Contract\022" +
-      "\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t" +
-      ".Resource*,\n\rBackoffPolicy\022\017\n\013Exponentia" +
-      "l\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r\n\tUNOR" +
-      "DERED\020\000\022\013\n\007ORDERED\020\001*)\n\013ContentMode\022\n\n\006B" +
-      "INARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knative.e" +
-      "venting.kafka.broker.contractB\021DataPlane" +
-      "ContractZ\032control-plane/pkg/contractb\006pr" +
-      "oto3"
+      "\004 \001(\0132\006.EmptyH\000\022\036\n\014discardReply\030\t \001(\0132\006." +
+      "EmptyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030" +
+      "\006 \001(\t\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConf" +
+      "ig\022%\n\rdeliveryOrder\030\010 \001(\0162\016.DeliveryOrde" +
+      "rB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n\013content" +
+      "Mode\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH\000" +
+      "\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"K\n\tRefer" +
+      "ence\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n" +
+      "\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"\344\001\n\010Resourc" +
+      "e\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootst" +
+      "rapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingr" +
+      "ess\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig" +
+      "\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAut" +
+      "h\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n." +
+      "ReferenceH\000B\006\n\004Auth\"<\n\010Contract\022\022\n\ngener" +
+      "ation\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t.Resourc" +
+      "e*,\n\rBackoffPolicy\022\017\n\013Exponential\020\000\022\n\n\006L" +
+      "inear\020\001*+\n\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022" +
+      "\013\n\007ORDERED\020\001*)\n\013ContentMode\022\n\n\006BINARY\020\000\022" +
+      "\016\n\nSTRUCTURED\020\001B[\n*dev.knative.eventing." +
+      "kafka.broker.contractB\021DataPlaneContract" +
+      "Z\032control-plane/pkg/contractb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -11427,7 +11716,7 @@ public final class DataPlaneContract {
     internal_static_Egress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Egress_descriptor,
-        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "ReplyStrategy", });
+        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "ReplyStrategy", });
     internal_static_Ingress_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_Ingress_fieldAccessorTable = new
