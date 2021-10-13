@@ -146,8 +146,7 @@ function k8s() {
 
 function data_plane_unit_tests() {
   pushd ${DATA_PLANE_DIR} || fail_test
-  apt-get install -y strace
-  strace -f ./mvnw clean verify -Dmaven.wagon.http.retryHandler.count=6 --no-transfer-progress
+  ./mvnw clean verify -Dmaven.wagon.http.retryHandler.count=6 --no-transfer-progress
   mvn_output=$?
 
   echo "Copy test reports in ${ARTIFACTS}"
