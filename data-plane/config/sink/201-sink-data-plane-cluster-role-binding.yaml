@@ -17,7 +17,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: knative-kafka-data-plane
+  name: knative-kafka-sink-data-plane
   labels:
     kafka.eventing.knative.dev/release: devel
 subjects:
