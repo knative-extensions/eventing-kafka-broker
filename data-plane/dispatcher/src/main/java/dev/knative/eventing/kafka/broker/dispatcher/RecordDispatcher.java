@@ -32,6 +32,6 @@ public interface RecordDispatcher extends AsyncCloseable {
    * @param record record to handle.
    * @return the completion future.
    */
-  Future<Void> dispatch(KafkaConsumerRecord<String, CloudEvent> record);
+  Future<Void> dispatch(KafkaConsumerRecord<Object, CloudEvent> record);
 
 }

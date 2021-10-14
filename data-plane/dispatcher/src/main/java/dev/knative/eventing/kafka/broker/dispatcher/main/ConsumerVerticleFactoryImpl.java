@@ -145,7 +145,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
         KafkaClientsAuth.attachCredentials(consumerConfigs, credentials);
         KafkaClientsAuth.attachCredentials(producerConfigs, credentials);
 
-        KafkaConsumer<String, CloudEvent> consumer = createConsumer(vertx, consumerConfigs);
+        final KafkaConsumer<Object, CloudEvent> consumer = createConsumer(vertx, consumerConfigs);
         AutoCloseable metricsCloser = Metrics.register(consumer.unwrap());
 
         final var egressConfig =
@@ -216,7 +216,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     return KafkaProducer.create(vertx, producerProperties);
   }
 
-  protected KafkaConsumer<String, CloudEvent> createConsumer(final Vertx vertx,
+  protected KafkaConsumer<Object, CloudEvent> createConsumer(final Vertx vertx,
                                                              final Map<String, Object> consumerConfigs) {
     return KafkaConsumer.create(
       vertx,

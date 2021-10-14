@@ -71,9 +71,9 @@ public class ConsumerVerticleFactoryImplMock extends ConsumerVerticleFactoryImpl
   }
 
   @Override
-  protected KafkaConsumer<String, CloudEvent> createConsumer(Vertx vertx,
+  protected KafkaConsumer<Object, CloudEvent> createConsumer(Vertx vertx,
                                                              Map<String, Object> consumerConfigs) {
-    final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
+    final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
 
     consumer.schedulePollTask(() -> {
       consumer.unsubscribe();

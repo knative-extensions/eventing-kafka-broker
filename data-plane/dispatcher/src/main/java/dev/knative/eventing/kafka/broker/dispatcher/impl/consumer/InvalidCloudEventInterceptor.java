@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
-import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -39,6 +38,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import static io.cloudevents.kafka.PartitionKeyExtensionInterceptor.PARTITION_KEY_EXTENSION;
 
 /**
  * The {@link InvalidCloudEventInterceptor} is a {@link ConsumerInterceptor}.
@@ -51,7 +51,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
  * <p>
  * For this reason this interceptor is capable of creating a CloudEvent from {@link ConsumerRecord} metadata and data.
  */
-public class InvalidCloudEventInterceptor implements ConsumerInterceptor<String, CloudEvent> {
+public class InvalidCloudEventInterceptor implements ConsumerInterceptor<Object, CloudEvent> {
 
   private static final Logger logger = LoggerFactory.getLogger(InvalidCloudEventInterceptor.class);
 
@@ -60,6 +60,8 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<String,
   public static final String SOURCE_NAME_CONFIG = "cloudevent.invalid.source.name";
 
   public static final String TYPE = "dev.knative.kafka.event";
+
+  private static final String KEY_EXTENSION = "key";
 
   private String kindPlural;
   private String sourceNamespace;
@@ -95,12 +97,12 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<String,
   }
 
   @Override
-  public ConsumerRecords<String, CloudEvent> onConsume(final ConsumerRecords<String, CloudEvent> records) {
+  public ConsumerRecords<Object, CloudEvent> onConsume(final ConsumerRecords<Object, CloudEvent> records) {
     if (!this.isEnabled || records == null || records.isEmpty()) {
       return records;
     }
 
-    final Map<TopicPartition, List<ConsumerRecord<String, CloudEvent>>> validRecords = new HashMap<>(records.count());
+    final Map<TopicPartition, List<ConsumerRecord<Object, CloudEvent>>> validRecords = new HashMap<>(records.count());
     for (final var record : records) {
       final var tp = new TopicPartition(record.topic(), record.partition());
       if (!validRecords.containsKey(tp)) {
@@ -128,7 +130,7 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<String,
     return null;
   }
 
-  private ConsumerRecord<String, CloudEvent> validRecord(final ConsumerRecord<String, CloudEvent> record) {
+  private ConsumerRecord<Object, CloudEvent> validRecord(final ConsumerRecord<Object, CloudEvent> record) {
     if (!(record.value() instanceof InvalidCloudEvent)) {
       return record; // Valid CloudEvent
     }
@@ -141,8 +143,9 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<String,
       .withTime(time(record))
       .withType(type())
       .withSource(source(record))
-      .withSubject(subject(record))
-      .withExtension(PartitionKeyExtensionInterceptor.PARTITION_KEY_EXTENSION, record.key());
+      .withSubject(subject(record));
+
+    setKey(value, record.key());
 
     if (invalidEvent.data() != null) {
       value.withData(invalidEvent.data());
@@ -166,6 +169,24 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<String,
       record.headers(),
       record.leaderEpoch()
     );
+  }
+
+  private static void setKey(CloudEventBuilder value, final Object key) {
+    if (key instanceof String) {
+      final var keyCasted = (String) key;
+      value.withExtension(PARTITION_KEY_EXTENSION, keyCasted);
+      value.withExtension(KEY_EXTENSION, keyCasted);
+    } else if (key instanceof Number) {
+      final var keyCasted = (Number) key;
+      value.withExtension(PARTITION_KEY_EXTENSION, keyCasted);
+      value.withExtension(KEY_EXTENSION, keyCasted);
+    } else if (key instanceof byte[]) {
+      final var keyCasted = (byte[]) key;
+      value.withExtension(PARTITION_KEY_EXTENSION, keyCasted);
+      value.withExtension(KEY_EXTENSION, keyCasted);
+    } else {
+      throw new IllegalStateException("Unknown key type: " + key);
+    }
   }
 
   private static String replaceBadChars(String value) {
@@ -193,11 +214,11 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<String,
     return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
   }
 
-  private static String subject(final ConsumerRecord<String, CloudEvent> record) {
+  private static String subject(final ConsumerRecord<Object, CloudEvent> record) {
     return "partition:" + record.partition() + "#" + record.offset();
   }
 
-  private URI source(final ConsumerRecord<String, CloudEvent> record) {
+  private URI source(final ConsumerRecord<Object, CloudEvent> record) {
     return URI.create(
       "/apis/v1/namespaces/" +
         this.sourceNamespace +
@@ -214,11 +235,11 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<String,
     return TYPE;
   }
 
-  private static OffsetDateTime time(final ConsumerRecord<String, CloudEvent> record) {
+  private static OffsetDateTime time(final ConsumerRecord<Object, CloudEvent> record) {
     return OffsetDateTime.ofInstant(Instant.ofEpochMilli(record.timestamp()), ZoneId.of("UTC"));
   }
 
-  private static String id(final ConsumerRecord<String, CloudEvent> record) {
+  private static String id(final ConsumerRecord<Object, CloudEvent> record) {
     return "partition:" + record.partition() + "/offset:" + record.offset();
   }
 

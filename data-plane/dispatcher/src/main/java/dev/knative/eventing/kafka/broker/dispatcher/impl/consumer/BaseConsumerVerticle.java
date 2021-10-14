@@ -39,7 +39,7 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
   private final Initializer initializer;
   final Set<String> topics;
 
-  KafkaConsumer<String, CloudEvent> consumer;
+  KafkaConsumer<Object, CloudEvent> consumer;
   RecordDispatcher recordDispatcher;
   private AsyncCloseable closeable;
 
@@ -74,7 +74,7 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
     ).close(stopPromise);
   }
 
-  public void setConsumer(KafkaConsumer<String, CloudEvent> consumer) {
+  public void setConsumer(KafkaConsumer<Object, CloudEvent> consumer) {
     this.consumer = consumer;
   }
 

@@ -57,6 +57,13 @@ enum DeliveryOrder {
   ORDERED = 1;
 }
 
+enum KeyType {
+  String = 0;
+  Integer = 1;
+  Double = 2;
+  ByteArray = 3;
+}
+
 message Egress {
   // consumer group name
   string consumerGroup = 1;
