@@ -27,6 +27,11 @@ readonly UUID=${UUID:-${TAG:-latest}}
 readonly DATA_PLANE_DIR=data-plane
 readonly DATA_PLANE_CONFIG_DIR=${DATA_PLANE_DIR}/config
 
+# Source config
+readonly SOURCE_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/source
+readonly KAFKA_SOURCE_DATA_PLANE_CONFIG_TEMPLATE_DIR=${SOURCE_DATA_PLANE_CONFIG_DIR}/template # no trailing slash
+readonly KAFKA_SOURCE_DISPATCHER_TEMPLATE_FILE=${KAFKA_SOURCE_DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-dispatcher.yaml
+
 # Broker config
 readonly BROKER_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/broker
 readonly KAFKA_BROKER_DATA_PLANE_CONFIG_TEMPLATE_DIR=${BROKER_DATA_PLANE_CONFIG_DIR}/template # no trailing slash
@@ -116,6 +121,8 @@ function data_plane_build_push() {
     fi
   fi
 
+  export KNATIVE_KAFKA_SOURCE_DISPATCHER_IMAGE="${KO_DOCKER_REPO}"/"${dispatcher}":"${uuid}"
+
   export KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${receiver}":"${uuid}"
 
   export KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE="${KO_DOCKER_REPO}"/"${dispatcher}":"${uuid}"
@@ -127,12 +134,17 @@ function data_plane_build_push() {
 }
 
 function k8s() {
-  echo "dispatcher image ---> ${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}"
-  echo "receiver image   ---> ${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}"
-  echo "receiver image   ---> ${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}"
+  echo "source dispatcher image ---> ${KNATIVE_KAFKA_SOURCE_DISPATCHER_IMAGE}"
+  echo "broker dispatcher image ---> ${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}"
+  echo "broker receiver image   ---> ${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}"
+  echo "sink receiver image   ---> ${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}"
 
+  ko resolve ${KO_FLAGS} -f ${SOURCE_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SOURCE_ARTIFACT}"
   ko resolve ${KO_FLAGS} -f ${BROKER_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}"
   ko resolve ${KO_FLAGS} -f ${SINK_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SINK_ARTIFACT}"
+
+  sed "s|\${KNATIVE_KAFKA_SOURCE_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_SOURCE_DISPATCHER_IMAGE}|g" ${KAFKA_SOURCE_DISPATCHER_TEMPLATE_FILE} |
+    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SOURCE_ARTIFACT}" || fail_test "Failed to append ${KAFKA_SOURCE_DISPATCHER_TEMPLATE_FILE}"
 
   sed "s|\${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|g" ${KAFKA_BROKER_DISPATCHER_TEMPLATE_FILE} |
     "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to append ${KAFKA_BROKER_DISPATCHER_TEMPLATE_FILE}"
