@@ -29,6 +29,7 @@ data-plane/**/build/
 
 ## Ignore released file
 eventing-kafka-controller.yaml
+eventing-kafka-source.yaml
 eventing-kafka-broker.yaml
 eventing-kafka-sink.yaml
 

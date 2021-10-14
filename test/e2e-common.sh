@@ -24,6 +24,7 @@ readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
 
 export EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT="eventing-kafka-controller.yaml"
+export EVENTING_KAFKA_SOURCE_ARTIFACT="eventing-kafka-source.yaml"
 export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
 export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
 
@@ -77,6 +78,7 @@ function knative_eventing() {
 function build_components_from_source() {
 
   [ -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
+  [ -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SOURCE_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" ] && rm "${EVENTING_KAFKA_BROKER_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_SINK_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SINK_ARTIFACT}"
 
@@ -95,6 +97,9 @@ function test_setup() {
 
   kubectl apply -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
   wait_until_pods_running knative-eventing || fail_test "Control plane did not come up"
+
+  kubectl apply -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_SOURCE_ARTIFACT}"
+  wait_until_pods_running knative-eventing || fail_test "Source data plane did not come up"
 
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_BROKER_ARTIFACT}"
   wait_until_pods_running knative-eventing || fail_test "Broker data plane did not come up"
