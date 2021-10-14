@@ -28,7 +28,7 @@ import (
 // Each pair represents the assignment of virtual replicas to a pod
 type Placeable struct {
 	MaxAllowedVReplicas *int32      `json:"maxAllowedVReplicas,omitempty"`
-	Placement           []Placement `json:"placements,omitempty"`
+	Placements          []Placement `json:"placements,omitempty"`
 }
 
 // PlaceableType is a skeleton type wrapping Placeable in the manner we expect
@@ -67,7 +67,7 @@ func (*Placeable) GetFullType() duck.Populatable {
 
 // Populate implements duck.Populatable
 func (t *PlaceableType) Populate() {
-	t.Status.Placement = []Placement{{PodName: "pod-0", VReplicas: int32(1)}}
+	t.Status.Placements = []Placement{{PodName: "pod-0", VReplicas: int32(1)}}
 }
 
 // GetListType implements apis.Listable

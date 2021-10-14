@@ -32,8 +32,8 @@ func (in *Placeable) DeepCopyInto(out *Placeable) {
 		*out = new(int32)
 		**out = **in
 	}
-	if in.Placement != nil {
-		in, out := &in.Placement, &out.Placement
+	if in.Placements != nil {
+		in, out := &in.Placements, &out.Placements
 		*out = make([]Placement, len(*in))
 		copy(*out, *in)
 	}
