@@ -43,8 +43,11 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 /**
  * The {@link InvalidCloudEventInterceptor} is a {@link ConsumerInterceptor}.
  * <p>
- * Consumers might need to deal with invalid {@link ConsumerRecord}s to make progress that don't contain
- * valid {@link CloudEvent}s.
+ * This interceptor is capable of building a valid {@link CloudEvent} from a message that doesn't follow the Kafka
+ * protocol binding for CloudEvents.
+ * <p>
+ * The {@link CloudEventDeserializer} wraps invalid {@link CloudEvent}s in an instance of {@link InvalidCloudEvent}
+ * so that this interceptor can build a valid {@link CloudEvent} from {@link ConsumerRecord}'s metadata and data.
  * <p>
  * For this reason this interceptor is capable of creating a CloudEvent from {@link ConsumerRecord} metadata and data.
  */
