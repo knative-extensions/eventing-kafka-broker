@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/controller"
@@ -35,6 +36,19 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+)
+
+var (
+	DefaultEgressConfig = contract.EgressConfig{
+		Retry:         10,
+		BackoffPolicy: contract.BackoffPolicy_Exponential,
+		BackoffDelay:  10000, // 10 seconds
+		Timeout:       0,
+	}
+)
+
+const (
+	DefaultDeliveryOrder = contract.DeliveryOrder_ORDERED
 )
 
 type Reconciler struct {
@@ -57,6 +71,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		Configs:  r.Env,
 		Recorder: controller.GetEventRecorder(ctx),
 	}
+
+	if !r.IsDispatcherRunning() {
+		return statusConditionManager.DataPlaneNotAvailable()
+	}
+	statusConditionManager.DataPlaneAvailable()
 
 	secret, err := security.Secret(ctx, &SecretLocator{KafkaSource: ks}, r.SecretProviderFunc())
 	if err != nil {
@@ -84,6 +103,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 			return fmt.Errorf("failed to verify topic validity: %w", err)
 		}
 	}
+	statusConditionManager.TopicReady(strings.Join(ks.Spec.Topics, ", "))
 
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
@@ -156,21 +176,14 @@ func (r *Reconciler) getResource(ctx context.Context, ks *sources.KafkaSource, s
 		return nil, fmt.Errorf("failed to resolve destination: %w", err)
 	}
 
+	egressConfig := proto.Clone(&DefaultEgressConfig).(*contract.EgressConfig)
+
 	egress := &contract.Egress{
 		ConsumerGroup: ks.Spec.ConsumerGroup,
 		Destination:   destination.String(),
 		Uid:           string(ks.GetUID()),
-		EgressConfig: &contract.EgressConfig{
-			// TODO hardcoded retry num
-			Retry:         10,
-			BackoffPolicy: contract.BackoffPolicy_Exponential,
-			// TODO hardcoded backoff delay
-			BackoffDelay: 10000, // 10 seconds
-			// TODO set timeout
-			Timeout: 0,
-		},
-		// TODO delivery ordering
-		DeliveryOrder: contract.DeliveryOrder_ORDERED,
+		EgressConfig:  egressConfig,
+		DeliveryOrder: DefaultDeliveryOrder,
 	}
 	resource := &contract.Resource{
 		Uid:              string(ks.GetUID()),
