@@ -23,6 +23,11 @@ import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
+/**
+ * This class wraps the value of a Kafka Message that doesn't follow the Kafka protocol binding for CloudEvents.
+ * <p>
+ * See {@link InvalidCloudEventInterceptor} and {@link CloudEventDeserializer} for more details.
+ */
 class InvalidCloudEvent implements CloudEvent {
 
   private final byte[] data;
