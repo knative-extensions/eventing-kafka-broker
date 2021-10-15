@@ -137,7 +137,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 	triggerIndex := coreconfig.FindEgress(ct.Resources[brokerIndex].Egresses, trigger.UID)
 
-	triggerConfig, err := r.getTriggerConfig(ctx, broker, trigger)
+	triggerConfig, err := r.reconcileTriggerEgress(ctx, broker, trigger)
 	if err != nil {
 		return statusConditionManager.failedToResolveTriggerConfig(err)
 	}
@@ -264,7 +264,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	return nil
 }
 
-func (r *Reconciler) getTriggerConfig(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*contract.Egress, error) {
+func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*contract.Egress, error) {
 	destination, err := r.Resolver.URIFromDestinationV1(ctx, trigger.Spec.Subscriber, trigger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve Trigger.Spec.Subscriber: %w", err)
