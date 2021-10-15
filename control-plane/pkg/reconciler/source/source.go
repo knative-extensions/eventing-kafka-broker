@@ -185,6 +185,7 @@ func (r *Reconciler) getResource(ctx context.Context, ks *sources.KafkaSource, s
 		EgressConfig:  egressConfig,
 		DeliveryOrder: DefaultDeliveryOrder,
 	}
+	// Set key type hint (if any).
 	if keyType, ok := ks.Labels[sources.KafkaKeyTypeLabel]; ok {
 		egress.KeyType = coreconfig.KeyTypeFromString(keyType)
 	}

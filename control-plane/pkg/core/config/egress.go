@@ -65,6 +65,7 @@ func AddOrUpdateEgressConfig(ct *contract.Contract, brokerIndex int, egress *con
 	return EgressChanged
 }
 
+// KeyTypeFromString returns the contract.KeyType associated to a given string.
 func KeyTypeFromString(s string) contract.KeyType {
 	switch s {
 	case "byte-array":
