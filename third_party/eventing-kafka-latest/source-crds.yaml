@@ -16,7 +16,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    kafka.eventing.knative.dev/release: "v20211013-3a73c372a"
+    kafka.eventing.knative.dev/release: "v20211014-ef12c4533"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
   name: kafkabindings.bindings.knative.dev
@@ -86,7 +86,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    kafka.eventing.knative.dev/release: "v20211013-3a73c372a"
+    kafka.eventing.knative.dev/release: "v20211014-ef12c4533"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
