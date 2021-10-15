@@ -185,6 +185,9 @@ func (r *Reconciler) getResource(ctx context.Context, ks *sources.KafkaSource, s
 		EgressConfig:  egressConfig,
 		DeliveryOrder: DefaultDeliveryOrder,
 	}
+	if keyType, ok := ks.Labels[sources.KafkaKeyTypeLabel]; ok {
+		egress.KeyType = coreconfig.KeyTypeFromString(keyType)
+	}
 	resource := &contract.Resource{
 		Uid:              string(ks.GetUID()),
 		Topics:           ks.Spec.Topics,

@@ -64,3 +64,18 @@ func AddOrUpdateEgressConfig(ct *contract.Contract, brokerIndex int, egress *con
 
 	return EgressChanged
 }
+
+func KeyTypeFromString(s string) contract.KeyType {
+	switch s {
+	case "byte-array":
+		return contract.KeyType_ByteArray
+	case "string":
+		return contract.KeyType_String
+	case "int":
+		return contract.KeyType_Integer
+	case "float":
+		return contract.KeyType_Double
+	default:
+		return contract.KeyType_String
+	}
+}

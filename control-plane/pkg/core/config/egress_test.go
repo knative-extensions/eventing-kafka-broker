@@ -218,3 +218,38 @@ func TestAddOrUpdateEgressConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestKeyTypeFromString(t *testing.T) {
+	tests := []struct {
+		s    string
+		want contract.KeyType
+	}{
+		{
+			s:    "int",
+			want: contract.KeyType_Integer,
+		},
+		{
+			s:    "float",
+			want: contract.KeyType_Double,
+		},
+		{
+			s:    "byte-array",
+			want: contract.KeyType_ByteArray,
+		},
+		{
+			s:    "string",
+			want: contract.KeyType_String,
+		},
+		{
+			s:    "unknown",
+			want: contract.KeyType_String,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.s, func(t *testing.T) {
+			if got := KeyTypeFromString(tt.s); got != tt.want {
+				t.Errorf("KeyTypeFromString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
