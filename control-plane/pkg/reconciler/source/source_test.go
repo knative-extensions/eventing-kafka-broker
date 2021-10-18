@@ -79,6 +79,7 @@ func TestReconcileKind(t *testing.T) {
 									Uid:           SourceUUID,
 									EgressConfig:  &DefaultEgressConfig,
 									DeliveryOrder: DefaultDeliveryOrder,
+									ReplyStrategy: &contract.Egress_DiscardReply{},
 								},
 							},
 							Auth: &contract.Resource_AbsentAuth{},

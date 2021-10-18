@@ -181,6 +181,7 @@ func (r *Reconciler) getResource(ctx context.Context, ks *sources.KafkaSource, s
 	egress := &contract.Egress{
 		ConsumerGroup: ks.Spec.ConsumerGroup,
 		Destination:   destination.String(),
+		ReplyStrategy: &contract.Egress_DiscardReply{},
 		Uid:           string(ks.GetUID()),
 		EgressConfig:  egressConfig,
 		DeliveryOrder: DefaultDeliveryOrder,
