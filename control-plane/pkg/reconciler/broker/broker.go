@@ -150,7 +150,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
 	// Get resource configuration.
-	brokerResource, err := r.getBrokerResource(ctx, topic, broker, secret, topicConfig)
+	brokerResource, err := r.reconcilerBrokerResource(ctx, topic, broker, secret, topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToGetConfig(err)
 	}
@@ -359,7 +359,7 @@ func (r *Reconciler) defaultConfig() (*kafka.TopicConfig, error) {
 	}, nil
 }
 
-func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
+func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
 	resource := &contract.Resource{
 		Uid:    string(broker.UID),
 		Topics: []string{topic},
