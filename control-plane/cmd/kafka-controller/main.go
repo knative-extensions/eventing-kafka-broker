@@ -27,6 +27,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 )
 
@@ -42,6 +43,11 @@ func main() {
 	}
 
 	sinkEnv, err := config.GetEnvConfig("SINK")
+	if err != nil {
+		log.Fatal("cannot process environment variables with prefix SINK", err)
+	}
+
+	sourceEnv, err := config.GetEnvConfig("SOURCE")
 	if err != nil {
 		log.Fatal("cannot process environment variables with prefix SINK", err)
 	}
@@ -62,6 +68,11 @@ func main() {
 		// KafkaSink controller
 		func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 			return sink.NewController(ctx, watcher, sinkEnv)
+		},
+
+		// KafkaSource controller
+		func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
+			return source.NewController(ctx, watcher, sourceEnv)
 		},
 	)
 }

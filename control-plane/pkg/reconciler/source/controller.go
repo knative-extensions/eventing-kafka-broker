@@ -20,13 +20,17 @@ import (
 	"context"
 
 	"github.com/Shopify/sarama"
+	"go.uber.org/zap"
+	"k8s.io/client-go/tools/cache"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
 	kafkainformer "knative.dev/eventing-kafka/pkg/client/injection/informers/sources/v1beta1/kafkasource"
@@ -34,6 +38,7 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env) *controller.Impl {
@@ -64,6 +69,44 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 	kafkaInformer := kafkainformer.Get(ctx)
 
 	kafkaInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+
+	logger := logging.FromContext(ctx)
+
+	globalResync := func(_ interface{}) {
+		impl.GlobalResync(kafkaInformer.Informer())
+	}
+
+	_, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		logger.Fatal("Failed to get or create data plane config map",
+			zap.String("configmap", configs.DataPlaneConfigMapAsString()),
+			zap.Error(err),
+		)
+	}
+
+	configmapInformer := configmapinformer.Get(ctx)
+
+	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
+		Handler: cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				globalResync(obj)
+			},
+			DeleteFunc: func(obj interface{}) {
+				globalResync(obj)
+			},
+		},
+	})
+
+	r.SecretTracker = impl.Tracker
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(r.SecretTracker.OnChanged))
+
+	kafkaInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: kafka.BrokerClassFilter(),
+		Handler: cache.ResourceEventHandlerFuncs{
+			DeleteFunc: r.OnDeleteObserver,
+		},
+	})
 
 	return impl
 }
