@@ -20,8 +20,7 @@ set -o pipefail
 
 source $(dirname $0)/../vendor/knative.dev/hack/codegen-library.sh
 
-# If we run with -mod=vendor here, then generate-groups.sh looks for vendor files in the wrong place.
-export GOFLAGS=-mod=
+export PATH="$GOBIN:$PATH"
 
 echo "=== Update Codegen for $MODULE_NAME"
 
@@ -58,7 +57,9 @@ if ! ${GITHUB_ACTIONS:-false}; then
   ${REPO_ROOT_DIR}/hack/generate-proto.sh
 
   # Update Java third party file
-  mvn --file ${REPO_ROOT_DIR}/data-plane/pom.xml -Dlicense.outputDirectory=. license:aggregate-add-third-party
+  pushd data-plane
+  ./mvnw -Dlicense.outputDirectory=. license:aggregate-add-third-party
+  popd
 fi
 
 ${REPO_ROOT_DIR}/hack/update-deps.sh
