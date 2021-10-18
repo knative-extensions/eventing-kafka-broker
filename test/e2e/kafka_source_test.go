@@ -1,3 +1,4 @@
+//go:build e2e
 // +build e2e
 
 /*
@@ -30,15 +31,8 @@ func TestKafkaSourceUpdate(t *testing.T) {
 	testingpkg.RunMultiple(t, eventingkafkahelpers.TestKafkaSourceUpdate)
 }
 
-func TestKafkaSourceClaims(t *testing.T) {
-	testingpkg.RunMultiple(t, eventingkafkahelpers.TestKafkaSourceClaims)
-}
-
-func TestAssureKafkaSourceIsOperational(t *testing.T) {
+func TestKafkaSourceAssureIsOperational(t *testing.T) {
 	testingpkg.RunMultiple(t, func(t *testing.T) {
-		eventingkafkahelpers.AssureKafkaSourceIsOperational(t, func(auth, testCase, version string) bool {
-			// TODO return true when TLS and SASL implementation is complete.
-			return auth == "plain"
-		})
+		eventingkafkahelpers.AssureKafkaSourceIsOperational(t, func(auth, testCase, version string) bool { return true })
 	})
 }
