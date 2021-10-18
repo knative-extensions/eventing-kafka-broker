@@ -63,6 +63,9 @@ func NewSource(options ...SourceOption) *sources.KafkaSource {
 				Sink: NewSourceSinkReference(),
 			},
 		},
+		Status: sources.KafkaSourceStatus{
+			Claims: "unknown",
+		},
 	}
 	for _, opt := range options {
 		opt(s)

@@ -167,6 +167,9 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
+	// TODO(pierDipi) Claims feature is complex, figure out if we really need this.
+	ks.Status.Claims = "unknown"
+
 	return statusConditionManager.Reconciled()
 }
 
