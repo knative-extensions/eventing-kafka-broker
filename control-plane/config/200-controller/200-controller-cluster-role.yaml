@@ -114,3 +114,22 @@ rules:
       - kafkachannels/finalizers
     verbs:
       - update
+
+  # sources.knative.dev resources and finalizers we care about.
+  - apiGroups:
+      - sources.knative.dev
+    resources:
+      - kafkasources
+      - kafkasources/status
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+  - apiGroups:
+      - sources.knative.dev
+    resources:
+      - kafkasources/finalizers
+    verbs:
+      - update
