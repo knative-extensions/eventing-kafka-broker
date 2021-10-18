@@ -31,7 +31,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.KafkaResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.WebClientCloudEventSender;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.BaseConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedOffsetManager;

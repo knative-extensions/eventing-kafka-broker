@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
+import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
