@@ -22,9 +22,9 @@ metadata:
     kafka.eventing.knative.dev/release: devel
 subjects:
   - kind: ServiceAccount
-    name: knative-kafka-data-plane
+    name: knative-kafka-sink-data-plane
     namespace: knative-eventing
 roleRef:
   kind: ClusterRole
-  name: knative-kafka-data-plane
+  name: knative-kafka-sink-data-plane
   apiGroup: rbac.authorization.k8s.io
