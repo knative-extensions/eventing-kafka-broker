@@ -23,10 +23,6 @@ readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
 # Vendored eventing test images.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
 
-readonly CHAOS_CONFIG="test/config/chaos/chaosduck.yaml"
-# Vendored pkg test images.
-readonly VENDOR_PKG_TEST_IMAGES="vendor/knative.dev/pkg/leaderelection/chaosduck"
-
 export EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT="eventing-kafka-controller.yaml"
 export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
 export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
@@ -69,20 +65,10 @@ function knative_eventing() {
 
   # Publish test images.
   echo ">> Publishing test images from eventing"
-  # We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
-  # path has to be a GOPATH.
-  sed -i 's@knative.dev/eventing/test/test_images@knative.dev/eventing-kafka-broker/vendor/knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"*/*.yaml
   ./test/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
-  sed -i 's@knative.dev/eventing-kafka-broker/vendor/knative.dev/eventing/test/test_images@knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"*/*.yaml
 
   # Publish test images from pkg.
   echo ">> Publishing test images from pkg"
-  # We vendor test image code from pkg, in order to use ko to resolve them into Docker images, the
-  # path has to be a GOPATH.
-  sed -i 's@knative.dev/pkg/leaderelection/chaosduck@knative.dev/eventing-kafka-broker/vendor/knative.dev/pkg/leaderelection/chaosduck@g' "${CHAOS_CONFIG}"
-  ./test/upload-test-images.sh ${VENDOR_PKG_TEST_IMAGES} e2e || fail_test "Error uploading test images"
-  sed -i 's@knative.dev/eventing-kafka-broker/vendor/knative.dev/pkg/leaderelection/chaosduck@knative.dev/pkg/leaderelection/chaosduck@g' "${CHAOS_CONFIG}"
-
   ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 
   ./test/kafka/kafka_setup.sh || fail_test "Failed to set up Kafka cluster"
