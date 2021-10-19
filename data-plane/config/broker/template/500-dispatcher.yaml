@@ -33,7 +33,7 @@ spec:
         app: kafka-broker-dispatcher
         kafka.eventing.knative.dev/release: devel
     spec:
-      serviceAccountName: knative-kafka-data-plane
+      serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
         runAsNonRoot: true
       containers:

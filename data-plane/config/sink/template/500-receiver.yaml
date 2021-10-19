@@ -33,7 +33,7 @@ spec:
         app: kafka-sink-receiver
         kafka.eventing.knative.dev/release: devel
     spec:
-      serviceAccountName: knative-kafka-data-plane
+      serviceAccountName: knative-kafka-sink-data-plane
       securityContext:
         runAsNonRoot: true
       # To avoid node becoming SPOF, spread our replicas to different nodes.
