@@ -230,6 +230,7 @@ func (r *Reconciler) reconcileKafkaSourceResource(ctx context.Context, ks *sourc
 	egress := &contract.Egress{
 		ConsumerGroup: ks.Spec.ConsumerGroup,
 		Destination:   destination.String(),
+		ReplyStrategy: &contract.Egress_DiscardReply{},
 		Uid:           string(ks.GetUID()),
 		EgressConfig:  egressConfig,
 		DeliveryOrder: DefaultDeliveryOrder,
