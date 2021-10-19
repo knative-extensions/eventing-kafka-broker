@@ -312,11 +312,11 @@ func (r *Reconciler) OnDeleteObserver(obj interface{}) {
 }
 
 func (r *Reconciler) DeleteResource(ctx context.Context, logger *zap.Logger, uuid types.UID, ct *contract.Contract, contractConfigMap *corev1.ConfigMap) error {
-	kafkaSourceIndex := coreconfig.FindResource(ct, uuid)
-	if kafkaSourceIndex != coreconfig.NoResource {
-		coreconfig.DeleteResource(ct, kafkaSourceIndex)
+	resourceIndex := coreconfig.FindResource(ct, uuid)
+	if resourceIndex != coreconfig.NoResource {
+		coreconfig.DeleteResource(ct, resourceIndex)
 
-		logger.Debug("Resource deleted", zap.Int("index", kafkaSourceIndex))
+		logger.Debug("Resource deleted", zap.Int("index", resourceIndex))
 
 		// Resource changed, increment contract generation.
 		coreconfig.IncrementContractGeneration(ct)
