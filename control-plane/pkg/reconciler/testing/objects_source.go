@@ -19,6 +19,7 @@ package testing
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -68,6 +69,17 @@ func NewSource(options ...SourceOption) *sources.KafkaSource {
 		opt(s)
 	}
 	return s
+}
+
+func NewDeletedSource(options ...SourceOption) runtime.Object {
+	return NewSource(
+		append(
+			options,
+			func(source *sources.KafkaSource) {
+				source.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+			},
+		)...,
+	)
 }
 
 func WithKeyType(keyType string) SourceOption {
