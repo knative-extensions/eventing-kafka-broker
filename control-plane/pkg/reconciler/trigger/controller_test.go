@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	"knative.dev/pkg/configmap"
@@ -34,6 +35,7 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 func TestNewController(t *testing.T) {
@@ -48,11 +50,124 @@ func TestNewController(t *testing.T) {
 func TestFilterTriggers(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
-	pass := filterTriggers(brokerinformer.Get(ctx).Lister())(&eventing.Trigger{
-		Spec: eventing.TriggerSpec{
-			Broker: "not-exists",
+	tt := []struct {
+		name    string
+		trigger interface{}
+		pass    bool
+		brokers []*eventing.Broker
+	}{
+		{
+			name:    "unknown type",
+			trigger: &eventing.Broker{},
+			pass:    false,
 		},
-	})
+		{
+			name: "non existing broker",
+			trigger: &eventing.Trigger{
+				Spec: eventing.TriggerSpec{
+					Broker: "not-exists",
+				},
+			},
+			pass: false,
+		},
+		{
+			name: "non existing broker and trigger with kafka broker finalizer",
+			trigger: &eventing.Trigger{
+				ObjectMeta: metav1.ObjectMeta{
+					Finalizers: []string{FinalizerName},
+				},
+				Spec: eventing.TriggerSpec{
+					Broker: "not-exists",
+				},
+			},
+			pass: true,
+		},
+		{
+			name: "exiting kafka broker",
+			trigger: &eventing.Trigger{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace:  "ns",
+					Name:       "tr",
+					Finalizers: []string{FinalizerName},
+				},
+				Spec: eventing.TriggerSpec{
+					Broker: "br",
+				},
+			},
+			brokers: []*eventing.Broker{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "ns",
+						Name:      "br",
+						Annotations: map[string]string{
+							eventing.BrokerClassAnnotationKey: kafka.BrokerClass,
+						},
+					},
+				},
+			},
+			pass: true,
+		},
+		{
+			name: "exiting non kafka broker",
+			trigger: &eventing.Trigger{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "ns",
+					Name:      "tr",
+				},
+				Spec: eventing.TriggerSpec{
+					Broker: "br",
+				},
+			},
+			brokers: []*eventing.Broker{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "ns",
+						Name:      "br",
+						Annotations: map[string]string{
+							eventing.BrokerClassAnnotationKey: kafka.BrokerClass + "-boh",
+						},
+					},
+				},
+			},
+			pass: false,
+		},
+		{
+			name: "exiting non kafka broker - trigger with kafka broker finalizer",
+			trigger: &eventing.Trigger{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace:  "ns",
+					Name:       "tr",
+					Finalizers: []string{FinalizerName},
+				},
+				Spec: eventing.TriggerSpec{
+					Broker: "br",
+				},
+			},
+			brokers: []*eventing.Broker{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "ns",
+						Name:      "br",
+						Annotations: map[string]string{
+							eventing.BrokerClassAnnotationKey: kafka.BrokerClass + "-boh",
+						},
+					},
+				},
+			},
+			pass: true,
+		},
+	}
 
-	assert.False(t, pass)
+	for _, tc := range tt {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			brokerInformer := brokerinformer.Get(ctx)
+			for _, obj := range tc.brokers {
+				_ = brokerInformer.Informer().GetStore().Add(obj)
+			}
+			filter := filterTriggers(brokerInformer.Lister())
+			pass := filter(tc.trigger)
+			assert.Equal(t, tc.pass, pass)
+		})
+	}
 }
