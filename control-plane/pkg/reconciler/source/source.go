@@ -122,7 +122,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
 	// Get resource configuration.
-	resource, err := r.getResource(ctx, ks, secret)
+	resource, err := r.reconcileKafkaSourceResource(ctx, ks, secret)
 	if err != nil {
 		return statusConditionManager.FailedToGetConfig(err)
 	}
@@ -170,7 +170,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 	return statusConditionManager.Reconciled()
 }
 
-func (r *Reconciler) getResource(ctx context.Context, ks *sources.KafkaSource, secret *corev1.Secret) (*contract.Resource, error) {
+func (r *Reconciler) reconcileKafkaSourceResource(ctx context.Context, ks *sources.KafkaSource, secret *corev1.Secret) (*contract.Resource, error) {
 	destination, err := r.Resolver.URIFromDestinationV1(ctx, ks.Spec.Sink, ks)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve destination: %w", err)
