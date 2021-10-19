@@ -24,6 +24,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/util/retry"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
@@ -63,6 +64,12 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		return r.reconcileKind(ctx, ks)
+	})
+}
+
+func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
 
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, ks)
 
@@ -171,6 +178,12 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		return r.finalizeKind(ctx, ks)
+	})
+}
+
+func (r *Reconciler) finalizeKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, ks)
 
 	// Get contract config map.
