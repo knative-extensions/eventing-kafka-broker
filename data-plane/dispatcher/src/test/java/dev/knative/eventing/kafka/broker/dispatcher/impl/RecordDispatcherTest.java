@@ -231,7 +231,7 @@ public class RecordDispatcherTest {
       }));
   }
 
-  private static KafkaConsumerRecord<String, CloudEvent> record() {
+  private static KafkaConsumerRecord<Object, CloudEvent> record() {
     return new KafkaConsumerRecordImpl<>(new ConsumerRecord<>("", 0, 0L, "", CoreObjects.event()));
   }
 

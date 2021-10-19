@@ -104,6 +104,214 @@ func TestReconcileKind(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name: "Reconciled normal - key type string",
+			Objects: []runtime.Object{
+				NewSourceSinkObject(),
+				NewSource(WithKeyType("string")),
+				SourceDispatcherPod(configs.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              SourceUUID,
+							Topics:           SourceTopics,
+							BootstrapServers: SourceBootstrapServers,
+							Egresses: []*contract.Egress{
+								{
+									ConsumerGroup: SourceConsumerGroup,
+									Destination:   ServiceURL,
+									Uid:           SourceUUID,
+									EgressConfig:  &DefaultEgressConfig,
+									DeliveryOrder: DefaultDeliveryOrder,
+									KeyType:       contract.KeyType_String,
+								},
+							},
+							Auth: &contract.Resource_AbsentAuth{},
+						},
+					},
+				}),
+				SourceDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMap(&configs, nil),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						WithKeyType("string"),
+						SourceConfigMapUpdatedReady(&configs),
+						SourceTopicsReady,
+						SourceDataPlaneAvailable,
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - key type int",
+			Objects: []runtime.Object{
+				NewSourceSinkObject(),
+				NewSource(WithKeyType("int")),
+				SourceDispatcherPod(configs.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              SourceUUID,
+							Topics:           SourceTopics,
+							BootstrapServers: SourceBootstrapServers,
+							Egresses: []*contract.Egress{
+								{
+									ConsumerGroup: SourceConsumerGroup,
+									Destination:   ServiceURL,
+									Uid:           SourceUUID,
+									EgressConfig:  &DefaultEgressConfig,
+									DeliveryOrder: DefaultDeliveryOrder,
+									KeyType:       contract.KeyType_Integer,
+								},
+							},
+							Auth: &contract.Resource_AbsentAuth{},
+						},
+					},
+				}),
+				SourceDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMap(&configs, nil),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						WithKeyType("int"),
+						SourceConfigMapUpdatedReady(&configs),
+						SourceTopicsReady,
+						SourceDataPlaneAvailable,
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - key type byte-array",
+			Objects: []runtime.Object{
+				NewSourceSinkObject(),
+				NewSource(WithKeyType("byte-array")),
+				SourceDispatcherPod(configs.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              SourceUUID,
+							Topics:           SourceTopics,
+							BootstrapServers: SourceBootstrapServers,
+							Egresses: []*contract.Egress{
+								{
+									ConsumerGroup: SourceConsumerGroup,
+									Destination:   ServiceURL,
+									Uid:           SourceUUID,
+									EgressConfig:  &DefaultEgressConfig,
+									DeliveryOrder: DefaultDeliveryOrder,
+									KeyType:       contract.KeyType_ByteArray,
+								},
+							},
+							Auth: &contract.Resource_AbsentAuth{},
+						},
+					},
+				}),
+				SourceDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMap(&configs, nil),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						WithKeyType("byte-array"),
+						SourceConfigMapUpdatedReady(&configs),
+						SourceTopicsReady,
+						SourceDataPlaneAvailable,
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - key type float",
+			Objects: []runtime.Object{
+				NewSourceSinkObject(),
+				NewSource(WithKeyType("float")),
+				SourceDispatcherPod(configs.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              SourceUUID,
+							Topics:           SourceTopics,
+							BootstrapServers: SourceBootstrapServers,
+							Egresses: []*contract.Egress{
+								{
+									ConsumerGroup: SourceConsumerGroup,
+									Destination:   ServiceURL,
+									Uid:           SourceUUID,
+									EgressConfig:  &DefaultEgressConfig,
+									DeliveryOrder: DefaultDeliveryOrder,
+									KeyType:       contract.KeyType_Double,
+								},
+							},
+							Auth: &contract.Resource_AbsentAuth{},
+						},
+					},
+				}),
+				SourceDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMap(&configs, nil),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						WithKeyType("float"),
+						SourceConfigMapUpdatedReady(&configs),
+						SourceTopicsReady,
+						SourceDataPlaneAvailable,
+					),
+				},
+			},
+		},
 	}
 
 	table.Test(t, NewFactory(&configs, func(ctx context.Context, listers *Listers, configs *broker.Configs, row *TableRow) controller.Reconciler {

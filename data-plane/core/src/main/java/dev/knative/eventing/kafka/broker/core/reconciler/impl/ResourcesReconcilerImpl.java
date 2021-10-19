@@ -22,6 +22,7 @@ import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.core.utils.CollectionsUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -243,7 +245,8 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       && Objects.equals(e1.getReplyUrl(), e2.getReplyUrl())
       && Objects.equals(e1.getReplyToOriginalTopic(), e2.getReplyToOriginalTopic())
       && Objects.equals(e1.getEgressConfig(), e2.getEgressConfig())
-      && Objects.equals(e1.getFilter(), e2.getFilter());
+      && Objects.equals(e1.getFilter(), e2.getFilter())
+      && Objects.equals(e1.getKeyType(), e2.getKeyType());
   }
 
   private static void logFailure(final String msg, final DataPlaneContract.Egress egress, final Throwable cause) {

@@ -46,8 +46,8 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   private static final Logger logger = LoggerFactory.getLogger(RecordDispatcherImpl.class);
 
   private final Filter filter;
-  private final Function<KafkaConsumerRecord<String, CloudEvent>, Future<Void>> subscriberSender;
-  private final Function<KafkaConsumerRecord<String, CloudEvent>, Future<Void>> dlsSender;
+  private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<Void>> subscriberSender;
+  private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<Void>> dlsSender;
   private final RecordDispatcherListener recordDispatcherListener;
   private final AsyncCloseable closeable;
   private final ConsumerTracer consumerTracer;
@@ -89,7 +89,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
    * @param record record to handle.
    */
   @Override
-  public Future<Void> dispatch(KafkaConsumerRecord<String, CloudEvent> record) {
+  public Future<Void> dispatch(KafkaConsumerRecord<Object, CloudEvent> record) {
     Promise<Void> promise = Promise.promise();
 
     /*
@@ -119,7 +119,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     return promise.future();
   }
 
-  private void onRecordReceived(final KafkaConsumerRecord<String, CloudEvent> record, Promise<Void> finalProm) {
+  private void onRecordReceived(final KafkaConsumerRecord<Object, CloudEvent> record, Promise<Void> finalProm) {
     logDebug("Handling record", record);
 
     // Trace record received event
@@ -151,35 +151,35 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       .onFailure(finalProm::fail); // This should really never happen
   }
 
-  private void onFilterMatching(final KafkaConsumerRecord<String, CloudEvent> record, final Promise<Void> finalProm) {
+  private void onFilterMatching(final KafkaConsumerRecord<Object, CloudEvent> record, final Promise<Void> finalProm) {
     logDebug("Record match filtering", record);
     subscriberSender.apply(record)
       .onSuccess(res -> onSubscriberSuccess(record, finalProm))
       .onFailure(ex -> onSubscriberFailure(record, finalProm));
   }
 
-  private void onFilterNotMatching(final KafkaConsumerRecord<String, CloudEvent> record,
+  private void onFilterNotMatching(final KafkaConsumerRecord<Object, CloudEvent> record,
                                    final Promise<Void> finalProm) {
     logDebug("Record doesn't match filtering", record);
     recordDispatcherListener.recordDiscarded(record)
       .onComplete(finalProm);
   }
 
-  private void onSubscriberSuccess(final KafkaConsumerRecord<String, CloudEvent> record,
+  private void onSubscriberSuccess(final KafkaConsumerRecord<Object, CloudEvent> record,
                                    final Promise<Void> finalProm) {
     logDebug("Successfully sent event to subscriber", record);
     recordDispatcherListener.successfullySentToSubscriber(record)
       .onComplete(finalProm);
   }
 
-  private void onSubscriberFailure(final KafkaConsumerRecord<String, CloudEvent> record,
+  private void onSubscriberFailure(final KafkaConsumerRecord<Object, CloudEvent> record,
                                    final Promise<Void> finalProm) {
     dlsSender.apply(record)
       .onSuccess(v -> onDeadLetterSinkSuccess(record, finalProm))
       .onFailure(ex -> onDeadLetterSinkFailure(record, ex, finalProm));
   }
 
-  private void onDeadLetterSinkSuccess(final KafkaConsumerRecord<String, CloudEvent> record,
+  private void onDeadLetterSinkSuccess(final KafkaConsumerRecord<Object, CloudEvent> record,
                                        final Promise<Void> finalProm) {
     logDebug("Successfully sent event to the dead letter sink", record);
     recordDispatcherListener.successfullySentToDeadLetterSink(record)
@@ -187,13 +187,13 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   }
 
 
-  private void onDeadLetterSinkFailure(final KafkaConsumerRecord<String, CloudEvent> record, final Throwable exception,
+  private void onDeadLetterSinkFailure(final KafkaConsumerRecord<Object, CloudEvent> record, final Throwable exception,
                                        final Promise<Void> finalProm) {
     recordDispatcherListener.failedToSendToDeadLetterSink(record, exception)
       .onComplete(finalProm);
   }
 
-  private static Function<KafkaConsumerRecord<String, CloudEvent>, Future<Void>> composeSenderAndSinkHandler(
+  private static Function<KafkaConsumerRecord<Object, CloudEvent>, Future<Void>> composeSenderAndSinkHandler(
     CloudEventSender sender, ResponseHandler sinkHandler, String senderType) {
     return rec -> sender.send(rec.value())
       .onFailure(ex -> logError("Failed to send event to " + senderType, rec, ex))
@@ -205,7 +205,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private static void logError(
     final String msg,
-    final KafkaConsumerRecord<String, CloudEvent> record,
+    final KafkaConsumerRecord<Object, CloudEvent> record,
     final Throwable cause) {
 
     if (logger.isDebugEnabled()) {
@@ -229,13 +229,14 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private static void logDebug(
     final String msg,
-    final KafkaConsumerRecord<String, CloudEvent> record) {
+    final KafkaConsumerRecord<Object, CloudEvent> record) {
 
-    logger.debug(msg + " {} {} {} {} {}",
+    logger.debug(msg + " {} {} {} {} {} {}",
       keyValue("topic", record.topic()),
       keyValue("partition", record.partition()),
       keyValue("headers", record.headers()),
       keyValue("offset", record.offset()),
+      keyValue("key", record.key()),
       keyValue("event", record.value())
     );
   }

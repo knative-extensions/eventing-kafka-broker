@@ -33,6 +33,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.BaseConsumerVerticle;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedOffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
@@ -131,6 +132,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     final var consumerConfigs = new HashMap<>(this.consumerConfigs);
     consumerConfigs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
     consumerConfigs.put(ConsumerConfig.GROUP_ID_CONFIG, egress.getConsumerGroup());
+    consumerConfigs.put(KeyDeserializer.KEY_TYPE, egress.getKeyType());
 
     final var producerConfigs = new HashMap<>(this.producerConfigs);
     producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
@@ -145,7 +147,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
         KafkaClientsAuth.attachCredentials(consumerConfigs, credentials);
         KafkaClientsAuth.attachCredentials(producerConfigs, credentials);
 
-        KafkaConsumer<String, CloudEvent> consumer = createConsumer(vertx, consumerConfigs);
+        final KafkaConsumer<Object, CloudEvent> consumer = createConsumer(vertx, consumerConfigs);
         AutoCloseable metricsCloser = Metrics.register(consumer.unwrap());
 
         final var egressConfig =
@@ -216,7 +218,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     return KafkaProducer.create(vertx, producerProperties);
   }
 
-  protected KafkaConsumer<String, CloudEvent> createConsumer(final Vertx vertx,
+  protected KafkaConsumer<Object, CloudEvent> createConsumer(final Vertx vertx,
                                                              final Map<String, Object> consumerConfigs) {
     return KafkaConsumer.create(
       vertx,

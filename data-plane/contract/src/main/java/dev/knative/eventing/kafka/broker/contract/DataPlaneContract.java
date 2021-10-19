@@ -255,6 +255,132 @@ public final class DataPlaneContract {
   }
 
   /**
+   * Protobuf enum {@code KeyType}
+   */
+  public enum KeyType
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>String = 0;</code>
+     */
+    String(0),
+    /**
+     * <code>Integer = 1;</code>
+     */
+    Integer(1),
+    /**
+     * <code>Double = 2;</code>
+     */
+    Double(2),
+    /**
+     * <code>ByteArray = 3;</code>
+     */
+    ByteArray(3),
+    UNRECOGNIZED(-1),
+    ;
+
+    /**
+     * <code>String = 0;</code>
+     */
+    public static final int String_VALUE = 0;
+    /**
+     * <code>Integer = 1;</code>
+     */
+    public static final int Integer_VALUE = 1;
+    /**
+     * <code>Double = 2;</code>
+     */
+    public static final int Double_VALUE = 2;
+    /**
+     * <code>ByteArray = 3;</code>
+     */
+    public static final int ByteArray_VALUE = 3;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static KeyType valueOf(int value) {
+      return forNumber(value);
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
+    public static KeyType forNumber(int value) {
+      switch (value) {
+        case 0: return String;
+        case 1: return Integer;
+        case 2: return Double;
+        case 3: return ByteArray;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<KeyType>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        KeyType> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<KeyType>() {
+            public KeyType findValueByNumber(int number) {
+              return KeyType.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalStateException(
+            "Can't get the descriptor of an unrecognized enum value.");
+      }
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(2);
+    }
+
+    private static final KeyType[] VALUES = values();
+
+    public static KeyType valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private KeyType(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:KeyType)
+  }
+
+  /**
    * <pre>
    * CloudEvent content mode
    * </pre>
@@ -340,7 +466,7 @@ public final class DataPlaneContract {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(2);
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(3);
     }
 
     private static final ContentMode[] VALUES = values();
@@ -2910,6 +3036,25 @@ public final class DataPlaneContract {
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder getDeliveryOrder();
 
+    /**
+     * <pre>
+     * Kafka record key type.
+     * </pre>
+     *
+     * <code>.KeyType keyType = 10;</code>
+     * @return The enum numeric value on the wire for keyType.
+     */
+    int getKeyTypeValue();
+    /**
+     * <pre>
+     * Kafka record key type.
+     * </pre>
+     *
+     * <code>.KeyType keyType = 10;</code>
+     * @return The keyType.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType getKeyType();
+
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.ReplyStrategyCase getReplyStrategyCase();
   }
   /**
@@ -2929,6 +3074,7 @@ public final class DataPlaneContract {
       destination_ = "";
       uid_ = "";
       deliveryOrder_ = 0;
+      keyType_ = 0;
     }
 
     @java.lang.Override
@@ -3043,6 +3189,12 @@ public final class DataPlaneContract {
                 replyStrategy_ = subBuilder.buildPartial();
               }
               replyStrategyCase_ = 9;
+              break;
+            }
+            case 80: {
+              int rawValue = input.readEnum();
+
+              keyType_ = rawValue;
               break;
             }
             default: {
@@ -3506,6 +3658,33 @@ public final class DataPlaneContract {
       return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.UNRECOGNIZED : result;
     }
 
+    public static final int KEYTYPE_FIELD_NUMBER = 10;
+    private int keyType_;
+    /**
+     * <pre>
+     * Kafka record key type.
+     * </pre>
+     *
+     * <code>.KeyType keyType = 10;</code>
+     * @return The enum numeric value on the wire for keyType.
+     */
+    @java.lang.Override public int getKeyTypeValue() {
+      return keyType_;
+    }
+    /**
+     * <pre>
+     * Kafka record key type.
+     * </pre>
+     *
+     * <code>.KeyType keyType = 10;</code>
+     * @return The keyType.
+     */
+    @java.lang.Override public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType getKeyType() {
+      @SuppressWarnings("deprecation")
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.valueOf(keyType_);
+      return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.UNRECOGNIZED : result;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -3546,6 +3725,9 @@ public final class DataPlaneContract {
       }
       if (replyStrategyCase_ == 9) {
         output.writeMessage(9, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_);
+      }
+      if (keyType_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.String.getNumber()) {
+        output.writeEnum(10, keyType_);
       }
       unknownFields.writeTo(output);
     }
@@ -3588,6 +3770,10 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(9, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_);
       }
+      if (keyType_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.String.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(10, keyType_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -3620,6 +3806,7 @@ public final class DataPlaneContract {
             .equals(other.getEgressConfig())) return false;
       }
       if (deliveryOrder_ != other.deliveryOrder_) return false;
+      if (keyType_ != other.keyType_) return false;
       if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
       switch (replyStrategyCase_) {
         case 3:
@@ -3664,6 +3851,8 @@ public final class DataPlaneContract {
       }
       hash = (37 * hash) + DELIVERYORDER_FIELD_NUMBER;
       hash = (53 * hash) + deliveryOrder_;
+      hash = (37 * hash) + KEYTYPE_FIELD_NUMBER;
+      hash = (53 * hash) + keyType_;
       switch (replyStrategyCase_) {
         case 3:
           hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
@@ -3833,6 +4022,8 @@ public final class DataPlaneContract {
         }
         deliveryOrder_ = 0;
 
+        keyType_ = 0;
+
         replyStrategyCase_ = 0;
         replyStrategy_ = null;
         return this;
@@ -3892,6 +4083,7 @@ public final class DataPlaneContract {
           result.egressConfig_ = egressConfigBuilder_.build();
         }
         result.deliveryOrder_ = deliveryOrder_;
+        result.keyType_ = keyType_;
         result.replyStrategyCase_ = replyStrategyCase_;
         onBuilt();
         return result;
@@ -3961,6 +4153,9 @@ public final class DataPlaneContract {
         }
         if (other.deliveryOrder_ != 0) {
           setDeliveryOrderValue(other.getDeliveryOrderValue());
+        }
+        if (other.keyType_ != 0) {
+          setKeyTypeValue(other.getKeyTypeValue());
         }
         switch (other.getReplyStrategyCase()) {
           case REPLYURL: {
@@ -5151,6 +5346,80 @@ public final class DataPlaneContract {
       public Builder clearDeliveryOrder() {
         
         deliveryOrder_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int keyType_ = 0;
+      /**
+       * <pre>
+       * Kafka record key type.
+       * </pre>
+       *
+       * <code>.KeyType keyType = 10;</code>
+       * @return The enum numeric value on the wire for keyType.
+       */
+      @java.lang.Override public int getKeyTypeValue() {
+        return keyType_;
+      }
+      /**
+       * <pre>
+       * Kafka record key type.
+       * </pre>
+       *
+       * <code>.KeyType keyType = 10;</code>
+       * @param value The enum numeric value on the wire for keyType to set.
+       * @return This builder for chaining.
+       */
+      public Builder setKeyTypeValue(int value) {
+        
+        keyType_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Kafka record key type.
+       * </pre>
+       *
+       * <code>.KeyType keyType = 10;</code>
+       * @return The keyType.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType getKeyType() {
+        @SuppressWarnings("deprecation")
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.valueOf(keyType_);
+        return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.UNRECOGNIZED : result;
+      }
+      /**
+       * <pre>
+       * Kafka record key type.
+       * </pre>
+       *
+       * <code>.KeyType keyType = 10;</code>
+       * @param value The keyType to set.
+       * @return This builder for chaining.
+       */
+      public Builder setKeyType(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        
+        keyType_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Kafka record key type.
+       * </pre>
+       *
+       * <code>.KeyType keyType = 10;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearKeyType() {
+        
+        keyType_ = 0;
         onChanged();
         return this;
       }
@@ -11657,31 +11926,34 @@ public final class DataPlaneContract {
       "e\030\002 \001(\t:\0028\001\"\177\n\014EgressConfig\022\022\n\ndeadLette" +
       "r\030\001 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030" +
       "\003 \001(\0162\016.BackoffPolicy\022\024\n\014backoffDelay\030\004 " +
-      "\001(\004\022\017\n\007timeout\030\005 \001(\004\"\223\002\n\006Egress\022\025\n\rconsu" +
+      "\001(\004\022\017\n\007timeout\030\005 \001(\004\"\256\002\n\006Egress\022\025\n\rconsu" +
       "merGroup\030\001 \001(\t\022\023\n\013destination\030\002 \001(\t\022\022\n\010r" +
       "eplyUrl\030\003 \001(\tH\000\022&\n\024replyToOriginalTopic\030" +
       "\004 \001(\0132\006.EmptyH\000\022\036\n\014discardReply\030\t \001(\0132\006." +
       "EmptyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030" +
       "\006 \001(\t\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConf" +
       "ig\022%\n\rdeliveryOrder\030\010 \001(\0162\016.DeliveryOrde" +
-      "rB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n\013content" +
-      "Mode\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH\000" +
-      "\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"K\n\tRefer" +
-      "ence\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n" +
-      "\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"\344\001\n\010Resourc" +
-      "e\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootst" +
-      "rapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingr" +
-      "ess\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig" +
-      "\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAut" +
-      "h\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n." +
-      "ReferenceH\000B\006\n\004Auth\"<\n\010Contract\022\022\n\ngener" +
-      "ation\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t.Resourc" +
-      "e*,\n\rBackoffPolicy\022\017\n\013Exponential\020\000\022\n\n\006L" +
-      "inear\020\001*+\n\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022" +
-      "\013\n\007ORDERED\020\001*)\n\013ContentMode\022\n\n\006BINARY\020\000\022" +
-      "\016\n\nSTRUCTURED\020\001B[\n*dev.knative.eventing." +
-      "kafka.broker.contractB\021DataPlaneContract" +
-      "Z\032control-plane/pkg/contractb\006proto3"
+      "r\022\031\n\007keyType\030\n \001(\0162\010.KeyTypeB\017\n\rreplyStr" +
+      "ategy\"[\n\007Ingress\022!\n\013contentMode\030\001 \001(\0162\014." +
+      "ContentMode\022\016\n\004path\030\002 \001(\tH\000\022\016\n\004host\030\003 \001(" +
+      "\tH\000B\r\n\013ingressType\"K\n\tReference\022\014\n\004uuid\030" +
+      "\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017" +
+      "\n\007version\030\004 \001(\t\"\344\001\n\010Resource\022\013\n\003uid\030\001 \001(" +
+      "\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrapServers\030\003 " +
+      "\001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress\022#\n\014egress" +
+      "Config\030\005 \001(\0132\r.EgressConfig\022\031\n\010egresses\030" +
+      "\006 \003(\0132\007.Egress\022\034\n\nabsentAuth\030\007 \001(\0132\006.Emp" +
+      "tyH\000\022 \n\nauthSecret\030\010 \001(\0132\n.ReferenceH\000B\006" +
+      "\n\004Auth\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034" +
+      "\n\tresources\030\002 \003(\0132\t.Resource*,\n\rBackoffP" +
+      "olicy\022\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n\rDe" +
+      "liveryOrder\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*" +
+      "=\n\007KeyType\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006D" +
+      "ouble\020\002\022\r\n\tByteArray\020\003*)\n\013ContentMode\022\n\n" +
+      "\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knative" +
+      ".eventing.kafka.broker.contractB\021DataPla" +
+      "neContractZ\032control-plane/pkg/contractb\006" +
+      "proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -11716,7 +11988,7 @@ public final class DataPlaneContract {
     internal_static_Egress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Egress_descriptor,
-        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "ReplyStrategy", });
+        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "KeyType", "ReplyStrategy", });
     internal_static_Ingress_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_Ingress_fieldAccessorTable = new

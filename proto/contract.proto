@@ -57,6 +57,13 @@ enum DeliveryOrder {
   ORDERED = 1;
 }
 
+enum KeyType {
+  String = 0;
+  Integer = 1;
+  Double = 2;
+  ByteArray = 3;
+}
+
 message Egress {
   // consumer group name
   string consumerGroup = 1;
@@ -88,6 +95,9 @@ message Egress {
   // Delivery guarantee to use
   // Empty defaults to unordered
   DeliveryOrder deliveryOrder = 8;
+
+  // Kafka record key type.
+  KeyType keyType = 10;
 }
 
 // CloudEvent content mode

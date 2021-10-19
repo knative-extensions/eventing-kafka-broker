@@ -70,6 +70,15 @@ func NewSource(options ...SourceOption) *sources.KafkaSource {
 	return s
 }
 
+func WithKeyType(keyType string) SourceOption {
+	return func(ks *sources.KafkaSource) {
+		if ks.Labels == nil {
+			ks.Labels = make(map[string]string, 1)
+		}
+		ks.Labels[sources.KafkaKeyTypeLabel] = keyType
+	}
+}
+
 func NewSourceSinkObject() *corev1.Service {
 	return NewService()
 }

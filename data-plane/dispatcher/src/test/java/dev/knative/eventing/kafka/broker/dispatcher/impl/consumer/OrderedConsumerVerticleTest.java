@@ -76,7 +76,7 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
                               final Vertx vertx) throws InterruptedException {
     final var topic = "topic1";
     final Random random = new Random();
-    final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
+    final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
 
     // Mock the record dispatcher to count down the latch and save the received records order
     CountDownLatch latch = new CountDownLatch(tasks);
@@ -165,7 +165,7 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
     return new OrderedConsumerVerticle(initializer, topics);
   }
 
-  protected static ConsumerRecord<String, CloudEvent> record(String topic, int partition, long offset) {
+  protected static ConsumerRecord<Object, CloudEvent> record(String topic, int partition, long offset) {
     return new ConsumerRecord<>(
       topic,
       partition,

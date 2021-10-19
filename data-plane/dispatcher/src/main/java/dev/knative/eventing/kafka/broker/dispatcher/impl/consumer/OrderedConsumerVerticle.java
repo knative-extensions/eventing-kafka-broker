@@ -110,17 +110,17 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     super.stop(stopPromise);
   }
 
-  void recordsHandler(KafkaConsumerRecords<String, CloudEvent> records) {
+  void recordsHandler(KafkaConsumerRecords<Object, CloudEvent> records) {
     // Put records in queues
     // I assume the records are ordered per topic-partition
     for (int i = 0; i < records.size(); i++) {
       this.pendingRecords++;
-      KafkaConsumerRecord<String, CloudEvent> record = records.recordAt(i);
+      KafkaConsumerRecord<Object, CloudEvent> record = records.recordAt(i);
       this.enqueueRecord(new TopicPartition(record.topic(), record.partition()), record);
     }
   }
 
-  void enqueueRecord(TopicPartition topicPartition, KafkaConsumerRecord<String, CloudEvent> record) {
+  void enqueueRecord(TopicPartition topicPartition, KafkaConsumerRecord<Object, CloudEvent> record) {
     this.recordDispatcherExecutors.computeIfAbsent(topicPartition, (tp) -> new OrderedAsyncExecutor())
       .offer(() -> this.recordDispatcher.dispatch(record).onComplete(v -> this.pendingRecords--));
   }

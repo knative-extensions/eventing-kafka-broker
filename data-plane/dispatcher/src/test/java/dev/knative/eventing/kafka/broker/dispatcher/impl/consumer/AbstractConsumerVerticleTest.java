@@ -52,9 +52,8 @@ import static org.mockito.Mockito.when;
 public abstract class AbstractConsumerVerticleTest {
 
   @Test
-  @SuppressWarnings("unchecked")
   public void subscribedToTopic(final Vertx vertx, final VertxTestContext context) {
-    final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
+    final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
     final var recordDispatcher = new RecordDispatcherImpl(
       value -> false,
       CloudEventSender.noop("subscriber send called"),
@@ -88,9 +87,8 @@ public abstract class AbstractConsumerVerticleTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void stop(final Vertx vertx, final VertxTestContext context) {
-    final var consumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
+    final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
     final var recordDispatcher = new RecordDispatcherImpl(
       value -> false,
       CloudEventSender.noop("subscriber send called"),
@@ -132,7 +130,7 @@ public abstract class AbstractConsumerVerticleTest {
   @SuppressWarnings("unchecked")
   public void shouldCloseEverything(final Vertx vertx, final VertxTestContext context) {
     final var topics = new String[] {"a"};
-    final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
+    final KafkaConsumer<Object, CloudEvent> consumer = mock(KafkaConsumer.class);
 
     when(consumer.close()).thenReturn(Future.succeededFuture());
     when(consumer.subscribe((Set<String>) any(), any())).then(answer -> {
@@ -149,7 +147,7 @@ public abstract class AbstractConsumerVerticleTest {
         return promise.future();
       });
 
-    final var mockConsumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.LATEST);
+    final var mockConsumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
     when(consumer.unwrap()).thenReturn(mockConsumer);
 
     mockConsumer.schedulePollTask(() -> {

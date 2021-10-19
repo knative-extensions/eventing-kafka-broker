@@ -178,7 +178,7 @@ public class InvalidCloudEventInterceptorTest {
     for (final var r : input) {
       var tp = new TopicPartition(r.topic(), r.partition());
       var inputRecords = input.records(tp);
-      var expected = new ArrayList<ConsumerRecord<String, CloudEvent>>();
+      var expected = new ArrayList<ConsumerRecord<Object, CloudEvent>>();
       for (var i : inputRecords) {
         var value = CloudEventBuilder.v1()
           .withId(String.format("partition:%d/offset:%d", i.partition(), i.offset()))
@@ -193,10 +193,11 @@ public class InvalidCloudEventInterceptorTest {
           ))
           .withSubject(String.format("partition:%d#%d", i.partition(), i.offset()))
           .withType("dev.knative.kafka.event")
-          .withExtension("partitionkey", i.key())
           .withData(BytesCloudEventData.wrap(new byte[]{1}));
 
         i.headers().forEach(h -> value.withExtension(h.key(), h.value()));
+
+        setKeys(value, i);
 
         expected.add(new ConsumerRecord<>(
           i.topic(),
@@ -221,7 +222,23 @@ public class InvalidCloudEventInterceptorTest {
     }
   }
 
-  private void assertConsumerRecordEquals(ConsumerRecord<String, CloudEvent> actual, ConsumerRecord<String, CloudEvent> expected) {
+  private void setKeys(io.cloudevents.core.v1.CloudEventBuilder value, ConsumerRecord<Object, CloudEvent> i) {
+    if (i.key() instanceof Number) {
+      value.withExtension("partitionkey", (Number) i.key());
+      value.withExtension("key", (Number) i.key());
+    } else if (i.key() instanceof String) {
+      value.withExtension("partitionkey", i.key().toString());
+      value.withExtension("key", i.key().toString());
+    } else if (i.key() instanceof byte[]) {
+      value.withExtension("partitionkey", (byte[]) i.key());
+      value.withExtension("key", (byte[]) i.key());
+    } else {
+      throw new IllegalArgumentException("unknown type for key: " + i.key());
+    }
+  }
+
+  private void assertConsumerRecordEquals(final ConsumerRecord<Object, CloudEvent> actual,
+                                          final ConsumerRecord<Object, CloudEvent> expected) {
     assertThat(actual.topic()).isEqualTo(expected.topic());
     assertThat(actual.partition()).isEqualTo(expected.partition());
     assertThat(actual.offset()).isEqualTo(expected.offset());
@@ -257,19 +274,21 @@ public class InvalidCloudEventInterceptorTest {
     assertDoesNotThrow(interceptor::close);
   }
 
-  private static ConsumerRecords<String, CloudEvent> mockValidRecords() {
+  private static ConsumerRecords<Object, CloudEvent> mockValidRecords() {
     return new ConsumerRecords<>(Map.of(
       new TopicPartition("t1", 0),
       List.of(new ConsumerRecord<>("t1", 0, 0, "a", event))
     ));
   }
 
-  private static ConsumerRecords<String, CloudEvent> mockInvalidRecords() {
+  private static ConsumerRecords<Object, CloudEvent> mockInvalidRecords() {
     return new ConsumerRecords<>(Map.of(
       new TopicPartition("t1", 0),
       List.of(
         new ConsumerRecord<>("t1", 0, 0, "a", new InvalidCloudEvent(new byte[]{1})),
-        new ConsumerRecord<>("t1", 0, 1, "a", new InvalidCloudEvent(new byte[]{1}))
+        new ConsumerRecord<>("t1", 0, 1, "a", new InvalidCloudEvent(new byte[]{1})),
+        new ConsumerRecord<>("t1", 0, 1, new byte[]{1, 2, 3, 4}, new InvalidCloudEvent(new byte[]{1})),
+        new ConsumerRecord<>("t1", 0, 1, 4, new InvalidCloudEvent(new byte[]{1}))
       ),
       new TopicPartition("t1", 1),
       List.of(new ConsumerRecord<>(
