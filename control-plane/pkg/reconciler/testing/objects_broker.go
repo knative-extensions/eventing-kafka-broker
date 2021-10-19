@@ -222,6 +222,12 @@ func BrokerAddressable(configs *Configs) func(broker *eventing.Broker) {
 	}
 }
 
+func BrokerDLSResolved(uri string) func(broker *eventing.Broker) {
+	return func(broker *eventing.Broker) {
+		broker.Status.DeadLetterSinkURI, _ = apis.ParseURL(uri)
+	}
+}
+
 func BrokerFailedToCreateTopic(broker *eventing.Broker) {
 
 	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(

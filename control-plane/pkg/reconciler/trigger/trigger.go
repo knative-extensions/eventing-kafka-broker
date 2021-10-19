@@ -143,6 +143,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 	statusConditionManager.subscriberResolved(triggerConfig)
 
+	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&trigger.Status.DeliveryStatus, triggerConfig.EgressConfig)
+
 	changed := coreconfig.AddOrUpdateEgressConfig(ct, brokerIndex, triggerConfig, triggerIndex)
 
 	coreconfig.IncrementContractGeneration(ct)

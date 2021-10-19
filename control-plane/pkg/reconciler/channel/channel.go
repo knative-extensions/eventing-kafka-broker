@@ -28,9 +28,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	commonconfig "knative.dev/eventing-kafka/pkg/common/config"
 	"knative.dev/eventing-kafka/pkg/common/constants"
@@ -39,6 +36,10 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
@@ -159,6 +160,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	if err != nil {
 		return statusConditionManager.FailedToGetConfig(err)
 	}
+	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&channel.Status.DeliveryStatus, channelResource.EgressConfig)
 
 	// Update contract data with the new contract configuration
 	channelIndex := coreconfig.FindResource(ct, channel.UID)
