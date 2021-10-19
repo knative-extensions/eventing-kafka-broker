@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -44,6 +45,18 @@ import (
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
+)
+
+const (
+	finalizerName = "kafkasources.sources.knative.dev"
+)
+
+var (
+	finalizerUpdatedEvent = Eventf(
+		corev1.EventTypeNormal,
+		"FinalizerUpdate",
+		fmt.Sprintf(`Updated %q finalizers`, SourceName),
+	)
 )
 
 func TestReconcileKind(t *testing.T) {
@@ -103,6 +116,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal - key type string",
@@ -154,6 +173,12 @@ func TestReconcileKind(t *testing.T) {
 						SourceDataPlaneAvailable,
 					),
 				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 		},
 		{
@@ -207,6 +232,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal - key type byte-array",
@@ -258,6 +289,12 @@ func TestReconcileKind(t *testing.T) {
 						SourceDataPlaneAvailable,
 					),
 				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 		},
 		{
@@ -311,9 +348,19 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 	}
 
+	useTable(t, table, configs)
+}
+
+func useTable(t *testing.T, table TableTest, configs broker.Configs) {
 	table.Test(t, NewFactory(&configs, func(ctx context.Context, listers *Listers, configs *broker.Configs, row *TableRow) controller.Reconciler {
 
 		reconciler := &Reconciler{
@@ -361,6 +408,50 @@ func TestReconcileKind(t *testing.T) {
 	}))
 }
 
+func TestFinalizeKind(t *testing.T) {
+
+	sources.RegisterAlternateKafkaConditionSet(base.EgressConditionSet)
+
+	configs := *DefaultConfigs
+	testKey := fmt.Sprintf("%s/%s", SourceNamespace, SourceName)
+
+	table := TableTest{
+		{
+			Name: "Finalize normal - no auth",
+			Objects: []runtime.Object{
+				NewDeletedSource(),
+				NewConfigMapFromContract(&contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              SourceUUID,
+							Topics:           SourceTopics,
+							BootstrapServers: SourceBootstrapServers,
+						},
+					},
+				}, &configs),
+				SourceDispatcherPod(configs.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Generation: 2,
+					Resources:  []*contract.Resource{},
+				}),
+				SourceDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "2",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
+		},
+	}
+
+	useTable(t, table, configs)
+}
+
 func SourceDispatcherPodUpdate(namespace string, annotations map[string]string) clientgotesting.UpdateActionImpl {
 	return clientgotesting.NewUpdateAction(
 		schema.GroupVersionResource{
@@ -371,4 +462,13 @@ func SourceDispatcherPodUpdate(namespace string, annotations map[string]string) 
 		namespace,
 		SourceDispatcherPod(namespace, annotations),
 	)
+}
+
+func patchFinalizers() clientgotesting.PatchActionImpl {
+	action := clientgotesting.PatchActionImpl{}
+	action.Name = SourceName
+	action.Namespace = SourceNamespace
+	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
+	action.Patch = []byte(patch)
+	return action
 }

@@ -238,21 +238,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 		zap.Any("contract", ct),
 	)
 
-	sinkIndex := coreconfig.FindResource(ct, ks.UID)
-	if sinkIndex != coreconfig.NoResource {
-		coreconfig.DeleteResource(ct, sinkIndex)
-
-		logger.Debug("Sink deleted", zap.Int("index", sinkIndex))
-
-		// Resource changed, increment contract generation.
-		coreconfig.IncrementContractGeneration(ct)
-
-		// Update the configuration map with the new contract data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-			return err
-		}
-
-		logger.Debug("Sinks config map updated")
+	if err := r.DeleteResource(ctx, logger, ks.GetUID(), ct, contractConfigMap); err != nil {
+		return err
 	}
 
 	// We update receiver pods annotation regardless of our contract changed or not due to the fact  that in a previous

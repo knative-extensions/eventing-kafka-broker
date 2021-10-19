@@ -24,6 +24,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/util/retry"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
@@ -63,6 +64,12 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		return r.reconcileKind(ctx, ks)
+	})
+}
+
+func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
 
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, ks)
 
@@ -168,6 +175,48 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 	}
 
 	return statusConditionManager.Reconciled()
+}
+
+func (r *Reconciler) FinalizeKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		return r.finalizeKind(ctx, ks)
+	})
+}
+
+func (r *Reconciler) finalizeKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
+	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, ks)
+
+	// Get contract config map.
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get contract config map %s: %w", r.Env.DataPlaneConfigMapAsString(), err)
+	}
+
+	logger.Debug("Got contract config map")
+
+	// Get contract data.
+	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
+	if err != nil {
+		return fmt.Errorf("failed to get contract: %w", err)
+	}
+
+	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
+
+	if err := r.DeleteResource(ctx, logger, ks.GetUID(), ct, contractConfigMap); err != nil {
+		return err
+	}
+
+	// We update dispatcher pods annotation regardless of our contract changed or not due to the fact
+	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
+	// to update anyway remaining annotations with the contract generation that was saved in the CM.
+	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
+
+	// Update volume generation annotation of dispatcher pods
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *Reconciler) reconcileKafkaSourceResource(ctx context.Context, ks *sources.KafkaSource, secret *corev1.Secret) (*contract.Resource, error) {
