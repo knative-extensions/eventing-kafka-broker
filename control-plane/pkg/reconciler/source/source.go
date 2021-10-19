@@ -202,20 +202,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *sources.KafkaSource) 
 
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
-	kafkaSourceIndex := coreconfig.FindResource(ct, ks.GetUID())
-	if kafkaSourceIndex != coreconfig.NoResource {
-		coreconfig.DeleteResource(ct, kafkaSourceIndex)
-
-		logger.Debug("KafkaSource deleted", zap.Int("index", kafkaSourceIndex))
-
-		// Resource changed, increment contract generation.
-		coreconfig.IncrementContractGeneration(ct)
-
-		// Update the configuration map with the new contract data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-			return err
-		}
-		logger.Debug("Contract config map updated")
+	if err := r.DeleteResource(ctx, logger, ks.GetUID(), ct, contractConfigMap); err != nil {
+		return err
 	}
 
 	// We update dispatcher pods annotation regardless of our contract changed or not due to the fact

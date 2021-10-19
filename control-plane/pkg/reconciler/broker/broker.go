@@ -239,20 +239,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
-	brokerIndex := coreconfig.FindResource(ct, broker.UID)
-	if brokerIndex != coreconfig.NoResource {
-		coreconfig.DeleteResource(ct, brokerIndex)
-
-		logger.Debug("Broker deleted", zap.Int("index", brokerIndex))
-
-		// Resource changed, increment contract generation.
-		coreconfig.IncrementContractGeneration(ct)
-
-		// Update the configuration map with the new contract data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-			return err
-		}
-		logger.Debug("Contract config map updated")
+	if err := r.DeleteResource(ctx, logger, broker.GetUID(), ct, contractConfigMap); err != nil {
+		return err
 	}
 
 	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact

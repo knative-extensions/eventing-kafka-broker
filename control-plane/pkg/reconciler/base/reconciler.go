@@ -28,11 +28,13 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"knative.dev/pkg/tracker"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
@@ -307,4 +309,23 @@ func (r *Reconciler) OnDeleteObserver(obj interface{}) {
 	if r.SecretTracker != nil {
 		r.SecretTracker.OnDeletedObserver(obj)
 	}
+}
+
+func (r *Reconciler) DeleteResource(ctx context.Context, logger *zap.Logger, uuid types.UID, ct *contract.Contract, contractConfigMap *corev1.ConfigMap) error {
+	kafkaSourceIndex := coreconfig.FindResource(ct, uuid)
+	if kafkaSourceIndex != coreconfig.NoResource {
+		coreconfig.DeleteResource(ct, kafkaSourceIndex)
+
+		logger.Debug("Resource deleted", zap.Int("index", kafkaSourceIndex))
+
+		// Resource changed, increment contract generation.
+		coreconfig.IncrementContractGeneration(ct)
+
+		// Update the configuration map with the new contract data.
+		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
+			return err
+		}
+		logger.Debug("Contract config map updated")
+	}
+	return nil
 }
