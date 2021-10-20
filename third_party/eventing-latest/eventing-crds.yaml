@@ -17,11 +17,11 @@ kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
-    eventing.knative.dev/release: "v20211018-5f69768e8"
+    eventing.knative.dev/release: "v20211019-e05267a8c"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20211018-5f69768e8"
+    app.kubernetes.io/version: "20211019-e05267a8c"
     app.kubernetes.io/part-of: knative-eventing
   annotations:
     # TODO add schemas and descriptions
@@ -233,10 +233,10 @@ kind: CustomResourceDefinition
 metadata:
   name: brokers.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20211018-5f69768e8"
+    eventing.knative.dev/release: "v20211019-e05267a8c"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20211018-5f69768e8"
+    app.kubernetes.io/version: "20211019-e05267a8c"
     app.kubernetes.io/part-of: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -350,6 +350,9 @@ spec:
                       type:
                         description: 'Type of condition.'
                         type: string
+                deadLetterSinkUri:
+                  description: DeadLetterSinkURI is the resolved URI of the dead letter sink that will be used as a fallback when not specified by Triggers.
+                  type: string
                 observedGeneration:
                   description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.
                   type: integer
@@ -397,11 +400,11 @@ kind: CustomResourceDefinition
 metadata:
   name: channels.messaging.knative.dev
   labels:
-    eventing.knative.dev/release: "v20211018-5f69768e8"
+    eventing.knative.dev/release: "v20211019-e05267a8c"
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20211018-5f69768e8"
+    app.kubernetes.io/version: "20211019-e05267a8c"
     app.kubernetes.io/part-of: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -669,11 +672,11 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20211018-5f69768e8"
+    eventing.knative.dev/release: "v20211019-e05267a8c"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20211018-5f69768e8"
+    app.kubernetes.io/version: "20211019-e05267a8c"
     app.kubernetes.io/part-of: knative-eventing
   name: containersources.sources.knative.dev
 spec:
@@ -823,9 +826,9 @@ kind: CustomResourceDefinition
 metadata:
   name: eventtypes.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20211018-5f69768e8"
+    eventing.knative.dev/release: "v20211019-e05267a8c"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20211018-5f69768e8"
+    app.kubernetes.io/version: "20211019-e05267a8c"
     app.kubernetes.io/part-of: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -952,10 +955,10 @@ kind: CustomResourceDefinition
 metadata:
   name: parallels.flows.knative.dev
   labels:
-    eventing.knative.dev/release: "v20211018-5f69768e8"
+    eventing.knative.dev/release: "v20211019-e05267a8c"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20211018-5f69768e8"
+    app.kubernetes.io/version: "20211019-e05267a8c"
     app.kubernetes.io/part-of: knative-eventing
 spec:
   group: flows.knative.dev
@@ -1207,11 +1210,11 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20211018-5f69768e8"
+    eventing.knative.dev/release: "v20211019-e05267a8c"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20211018-5f69768e8"
+    app.kubernetes.io/version: "20211019-e05267a8c"
     app.kubernetes.io/part-of: knative-eventing
   annotations:
     # TODO add schemas and descriptions
@@ -1398,10 +1401,10 @@ kind: CustomResourceDefinition
 metadata:
   name: sequences.flows.knative.dev
   labels:
-    eventing.knative.dev/release: "v20211018-5f69768e8"
+    eventing.knative.dev/release: "v20211019-e05267a8c"
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20211018-5f69768e8"
+    app.kubernetes.io/version: "20211019-e05267a8c"
     app.kubernetes.io/part-of: knative-eventing
 spec:
   group: flows.knative.dev
@@ -1719,12 +1722,12 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    eventing.knative.dev/release: "v20211018-5f69768e8"
+    eventing.knative.dev/release: "v20211019-e05267a8c"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20211018-5f69768e8"
+    app.kubernetes.io/version: "20211019-e05267a8c"
     app.kubernetes.io/part-of: knative-eventing
   name: sinkbindings.sources.knative.dev
 spec:
@@ -1911,9 +1914,9 @@ kind: CustomResourceDefinition
 metadata:
   name: subscriptions.messaging.knative.dev
   labels:
-    eventing.knative.dev/release: "v20211018-5f69768e8"
+    eventing.knative.dev/release: "v20211019-e05267a8c"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20211018-5f69768e8"
+    app.kubernetes.io/version: "20211019-e05267a8c"
     app.kubernetes.io/part-of: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -2123,9 +2126,9 @@ kind: CustomResourceDefinition
 metadata:
   name: triggers.eventing.knative.dev
   labels:
-    eventing.knative.dev/release: "v20211018-5f69768e8"
+    eventing.knative.dev/release: "v20211019-e05267a8c"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20211018-5f69768e8"
+    app.kubernetes.io/version: "20211019-e05267a8c"
     app.kubernetes.io/part-of: knative-eventing
 spec:
   group: eventing.knative.dev
