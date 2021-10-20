@@ -227,7 +227,10 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       && Objects.equals(r1.getBootstrapServers(), r2.getBootstrapServers())
       && Objects.equals(r1.getIngress(), r2.getIngress())
       && Objects.equals(r1.hasAbsentAuth(), r2.hasAbsentAuth())
+      && Objects.equals(r1.hasAuthSecret(), r2.hasAuthSecret())
       && Objects.equals(r1.getAuthSecret(), r2.getAuthSecret())
+      && Objects.equals(r1.hasMultiAuthSecret(), r2.hasMultiAuthSecret())
+      && Objects.equals(r1.getMultiAuthSecret(), r2.getMultiAuthSecret())
       // In the case of ingress reconcile, do we really care about this one?
       && Objects.equals(r1.getEgressConfig(), r2.getEgressConfig());
   }

@@ -492,6 +492,276 @@ public final class DataPlaneContract {
     // @@protoc_insertion_point(enum_scope:ContentMode)
   }
 
+  /**
+   * Protobuf enum {@code SecretField}
+   */
+  public enum SecretField
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>SASL_MECHANISM = 0;</code>
+     */
+    SASL_MECHANISM(0),
+    /**
+     * <code>CA_CRT = 1;</code>
+     */
+    CA_CRT(1),
+    /**
+     * <code>USER_CRT = 2;</code>
+     */
+    USER_CRT(2),
+    /**
+     * <code>USER_KEY = 3;</code>
+     */
+    USER_KEY(3),
+    /**
+     * <code>USER = 4;</code>
+     */
+    USER(4),
+    /**
+     * <code>PASSWORD = 5;</code>
+     */
+    PASSWORD(5),
+    UNRECOGNIZED(-1),
+    ;
+
+    /**
+     * <code>SASL_MECHANISM = 0;</code>
+     */
+    public static final int SASL_MECHANISM_VALUE = 0;
+    /**
+     * <code>CA_CRT = 1;</code>
+     */
+    public static final int CA_CRT_VALUE = 1;
+    /**
+     * <code>USER_CRT = 2;</code>
+     */
+    public static final int USER_CRT_VALUE = 2;
+    /**
+     * <code>USER_KEY = 3;</code>
+     */
+    public static final int USER_KEY_VALUE = 3;
+    /**
+     * <code>USER = 4;</code>
+     */
+    public static final int USER_VALUE = 4;
+    /**
+     * <code>PASSWORD = 5;</code>
+     */
+    public static final int PASSWORD_VALUE = 5;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static SecretField valueOf(int value) {
+      return forNumber(value);
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
+    public static SecretField forNumber(int value) {
+      switch (value) {
+        case 0: return SASL_MECHANISM;
+        case 1: return CA_CRT;
+        case 2: return USER_CRT;
+        case 3: return USER_KEY;
+        case 4: return USER;
+        case 5: return PASSWORD;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<SecretField>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        SecretField> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<SecretField>() {
+            public SecretField findValueByNumber(int number) {
+              return SecretField.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalStateException(
+            "Can't get the descriptor of an unrecognized enum value.");
+      }
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(4);
+    }
+
+    private static final SecretField[] VALUES = values();
+
+    public static SecretField valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private SecretField(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:SecretField)
+  }
+
+  /**
+   * Protobuf enum {@code Protocol}
+   */
+  public enum Protocol
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>PLAINTEXT = 0;</code>
+     */
+    PLAINTEXT(0),
+    /**
+     * <code>SASL_PLAINTEXT = 1;</code>
+     */
+    SASL_PLAINTEXT(1),
+    /**
+     * <code>SSL = 2;</code>
+     */
+    SSL(2),
+    /**
+     * <code>SASL_SSL = 3;</code>
+     */
+    SASL_SSL(3),
+    UNRECOGNIZED(-1),
+    ;
+
+    /**
+     * <code>PLAINTEXT = 0;</code>
+     */
+    public static final int PLAINTEXT_VALUE = 0;
+    /**
+     * <code>SASL_PLAINTEXT = 1;</code>
+     */
+    public static final int SASL_PLAINTEXT_VALUE = 1;
+    /**
+     * <code>SSL = 2;</code>
+     */
+    public static final int SSL_VALUE = 2;
+    /**
+     * <code>SASL_SSL = 3;</code>
+     */
+    public static final int SASL_SSL_VALUE = 3;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static Protocol valueOf(int value) {
+      return forNumber(value);
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
+    public static Protocol forNumber(int value) {
+      switch (value) {
+        case 0: return PLAINTEXT;
+        case 1: return SASL_PLAINTEXT;
+        case 2: return SSL;
+        case 3: return SASL_SSL;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<Protocol>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        Protocol> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<Protocol>() {
+            public Protocol findValueByNumber(int number) {
+              return Protocol.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalStateException(
+            "Can't get the descriptor of an unrecognized enum value.");
+      }
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(5);
+    }
+
+    private static final Protocol[] VALUES = values();
+
+    public static Protocol valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private Protocol(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:Protocol)
+  }
+
   public interface EmptyOrBuilder extends
       // @@protoc_insertion_point(interface_extends:Empty)
       com.google.protobuf.MessageOrBuilder {
@@ -7768,6 +8038,2969 @@ public final class DataPlaneContract {
 
   }
 
+  public interface SecretReferenceOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:SecretReference)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * Secret reference.
+     * </pre>
+     *
+     * <code>.Reference reference = 1;</code>
+     * @return Whether the reference field is set.
+     */
+    boolean hasReference();
+    /**
+     * <pre>
+     * Secret reference.
+     * </pre>
+     *
+     * <code>.Reference reference = 1;</code>
+     * @return The reference.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getReference();
+    /**
+     * <pre>
+     * Secret reference.
+     * </pre>
+     *
+     * <code>.Reference reference = 1;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder();
+
+    /**
+     * <pre>
+     * Multiple key-field references.
+     * </pre>
+     *
+     * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+     */
+    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference> 
+        getKeyFieldReferencesList();
+    /**
+     * <pre>
+     * Multiple key-field references.
+     * </pre>
+     *
+     * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference getKeyFieldReferences(int index);
+    /**
+     * <pre>
+     * Multiple key-field references.
+     * </pre>
+     *
+     * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+     */
+    int getKeyFieldReferencesCount();
+    /**
+     * <pre>
+     * Multiple key-field references.
+     * </pre>
+     *
+     * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+     */
+    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder> 
+        getKeyFieldReferencesOrBuilderList();
+    /**
+     * <pre>
+     * Multiple key-field references.
+     * </pre>
+     *
+     * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder getKeyFieldReferencesOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code SecretReference}
+   */
+  public static final class SecretReference extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:SecretReference)
+      SecretReferenceOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use SecretReference.newBuilder() to construct.
+    private SecretReference(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private SecretReference() {
+      keyFieldReferences_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SecretReference();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SecretReference(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder subBuilder = null;
+              if (reference_ != null) {
+                subBuilder = reference_.toBuilder();
+              }
+              reference_ = input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(reference_);
+                reference_ = subBuilder.buildPartial();
+              }
+
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                keyFieldReferences_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              keyFieldReferences_.add(
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.parser(), extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          keyFieldReferences_ = java.util.Collections.unmodifiableList(keyFieldReferences_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_SecretReference_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_SecretReference_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder.class);
+    }
+
+    public static final int REFERENCE_FIELD_NUMBER = 1;
+    private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference reference_;
+    /**
+     * <pre>
+     * Secret reference.
+     * </pre>
+     *
+     * <code>.Reference reference = 1;</code>
+     * @return Whether the reference field is set.
+     */
+    @java.lang.Override
+    public boolean hasReference() {
+      return reference_ != null;
+    }
+    /**
+     * <pre>
+     * Secret reference.
+     * </pre>
+     *
+     * <code>.Reference reference = 1;</code>
+     * @return The reference.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getReference() {
+      return reference_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance() : reference_;
+    }
+    /**
+     * <pre>
+     * Secret reference.
+     * </pre>
+     *
+     * <code>.Reference reference = 1;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder() {
+      return getReference();
+    }
+
+    public static final int KEYFIELDREFERENCES_FIELD_NUMBER = 2;
+    private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference> keyFieldReferences_;
+    /**
+     * <pre>
+     * Multiple key-field references.
+     * </pre>
+     *
+     * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+     */
+    @java.lang.Override
+    public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference> getKeyFieldReferencesList() {
+      return keyFieldReferences_;
+    }
+    /**
+     * <pre>
+     * Multiple key-field references.
+     * </pre>
+     *
+     * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder> 
+        getKeyFieldReferencesOrBuilderList() {
+      return keyFieldReferences_;
+    }
+    /**
+     * <pre>
+     * Multiple key-field references.
+     * </pre>
+     *
+     * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+     */
+    @java.lang.Override
+    public int getKeyFieldReferencesCount() {
+      return keyFieldReferences_.size();
+    }
+    /**
+     * <pre>
+     * Multiple key-field references.
+     * </pre>
+     *
+     * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference getKeyFieldReferences(int index) {
+      return keyFieldReferences_.get(index);
+    }
+    /**
+     * <pre>
+     * Multiple key-field references.
+     * </pre>
+     *
+     * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder getKeyFieldReferencesOrBuilder(
+        int index) {
+      return keyFieldReferences_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (reference_ != null) {
+        output.writeMessage(1, getReference());
+      }
+      for (int i = 0; i < keyFieldReferences_.size(); i++) {
+        output.writeMessage(2, keyFieldReferences_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (reference_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getReference());
+      }
+      for (int i = 0; i < keyFieldReferences_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, keyFieldReferences_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference) obj;
+
+      if (hasReference() != other.hasReference()) return false;
+      if (hasReference()) {
+        if (!getReference()
+            .equals(other.getReference())) return false;
+      }
+      if (!getKeyFieldReferencesList()
+          .equals(other.getKeyFieldReferencesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasReference()) {
+        hash = (37 * hash) + REFERENCE_FIELD_NUMBER;
+        hash = (53 * hash) + getReference().hashCode();
+      }
+      if (getKeyFieldReferencesCount() > 0) {
+        hash = (37 * hash) + KEYFIELDREFERENCES_FIELD_NUMBER;
+        hash = (53 * hash) + getKeyFieldReferencesList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code SecretReference}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:SecretReference)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_SecretReference_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_SecretReference_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getKeyFieldReferencesFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (referenceBuilder_ == null) {
+          reference_ = null;
+        } else {
+          reference_ = null;
+          referenceBuilder_ = null;
+        }
+        if (keyFieldReferencesBuilder_ == null) {
+          keyFieldReferences_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          keyFieldReferencesBuilder_.clear();
+        }
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_SecretReference_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference(this);
+        int from_bitField0_ = bitField0_;
+        if (referenceBuilder_ == null) {
+          result.reference_ = reference_;
+        } else {
+          result.reference_ = referenceBuilder_.build();
+        }
+        if (keyFieldReferencesBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0)) {
+            keyFieldReferences_ = java.util.Collections.unmodifiableList(keyFieldReferences_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.keyFieldReferences_ = keyFieldReferences_;
+        } else {
+          result.keyFieldReferences_ = keyFieldReferencesBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.getDefaultInstance()) return this;
+        if (other.hasReference()) {
+          mergeReference(other.getReference());
+        }
+        if (keyFieldReferencesBuilder_ == null) {
+          if (!other.keyFieldReferences_.isEmpty()) {
+            if (keyFieldReferences_.isEmpty()) {
+              keyFieldReferences_ = other.keyFieldReferences_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureKeyFieldReferencesIsMutable();
+              keyFieldReferences_.addAll(other.keyFieldReferences_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.keyFieldReferences_.isEmpty()) {
+            if (keyFieldReferencesBuilder_.isEmpty()) {
+              keyFieldReferencesBuilder_.dispose();
+              keyFieldReferencesBuilder_ = null;
+              keyFieldReferences_ = other.keyFieldReferences_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              keyFieldReferencesBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getKeyFieldReferencesFieldBuilder() : null;
+            } else {
+              keyFieldReferencesBuilder_.addAllMessages(other.keyFieldReferences_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference reference_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> referenceBuilder_;
+      /**
+       * <pre>
+       * Secret reference.
+       * </pre>
+       *
+       * <code>.Reference reference = 1;</code>
+       * @return Whether the reference field is set.
+       */
+      public boolean hasReference() {
+        return referenceBuilder_ != null || reference_ != null;
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * </pre>
+       *
+       * <code>.Reference reference = 1;</code>
+       * @return The reference.
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getReference() {
+        if (referenceBuilder_ == null) {
+          return reference_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance() : reference_;
+        } else {
+          return referenceBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * </pre>
+       *
+       * <code>.Reference reference = 1;</code>
+       */
+      public Builder setReference(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
+        if (referenceBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          reference_ = value;
+          onChanged();
+        } else {
+          referenceBuilder_.setMessage(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * </pre>
+       *
+       * <code>.Reference reference = 1;</code>
+       */
+      public Builder setReference(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder builderForValue) {
+        if (referenceBuilder_ == null) {
+          reference_ = builderForValue.build();
+          onChanged();
+        } else {
+          referenceBuilder_.setMessage(builderForValue.build());
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * </pre>
+       *
+       * <code>.Reference reference = 1;</code>
+       */
+      public Builder mergeReference(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
+        if (referenceBuilder_ == null) {
+          if (reference_ != null) {
+            reference_ =
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.newBuilder(reference_).mergeFrom(value).buildPartial();
+          } else {
+            reference_ = value;
+          }
+          onChanged();
+        } else {
+          referenceBuilder_.mergeFrom(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * </pre>
+       *
+       * <code>.Reference reference = 1;</code>
+       */
+      public Builder clearReference() {
+        if (referenceBuilder_ == null) {
+          reference_ = null;
+          onChanged();
+        } else {
+          reference_ = null;
+          referenceBuilder_ = null;
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * </pre>
+       *
+       * <code>.Reference reference = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder getReferenceBuilder() {
+        
+        onChanged();
+        return getReferenceFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * </pre>
+       *
+       * <code>.Reference reference = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder() {
+        if (referenceBuilder_ != null) {
+          return referenceBuilder_.getMessageOrBuilder();
+        } else {
+          return reference_ == null ?
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance() : reference_;
+        }
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * </pre>
+       *
+       * <code>.Reference reference = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> 
+          getReferenceFieldBuilder() {
+        if (referenceBuilder_ == null) {
+          referenceBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder>(
+                  getReference(),
+                  getParentForChildren(),
+                  isClean());
+          reference_ = null;
+        }
+        return referenceBuilder_;
+      }
+
+      private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference> keyFieldReferences_ =
+        java.util.Collections.emptyList();
+      private void ensureKeyFieldReferencesIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          keyFieldReferences_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference>(keyFieldReferences_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder> keyFieldReferencesBuilder_;
+
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference> getKeyFieldReferencesList() {
+        if (keyFieldReferencesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(keyFieldReferences_);
+        } else {
+          return keyFieldReferencesBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public int getKeyFieldReferencesCount() {
+        if (keyFieldReferencesBuilder_ == null) {
+          return keyFieldReferences_.size();
+        } else {
+          return keyFieldReferencesBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference getKeyFieldReferences(int index) {
+        if (keyFieldReferencesBuilder_ == null) {
+          return keyFieldReferences_.get(index);
+        } else {
+          return keyFieldReferencesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public Builder setKeyFieldReferences(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference value) {
+        if (keyFieldReferencesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureKeyFieldReferencesIsMutable();
+          keyFieldReferences_.set(index, value);
+          onChanged();
+        } else {
+          keyFieldReferencesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public Builder setKeyFieldReferences(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder builderForValue) {
+        if (keyFieldReferencesBuilder_ == null) {
+          ensureKeyFieldReferencesIsMutable();
+          keyFieldReferences_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          keyFieldReferencesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public Builder addKeyFieldReferences(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference value) {
+        if (keyFieldReferencesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureKeyFieldReferencesIsMutable();
+          keyFieldReferences_.add(value);
+          onChanged();
+        } else {
+          keyFieldReferencesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public Builder addKeyFieldReferences(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference value) {
+        if (keyFieldReferencesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureKeyFieldReferencesIsMutable();
+          keyFieldReferences_.add(index, value);
+          onChanged();
+        } else {
+          keyFieldReferencesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public Builder addKeyFieldReferences(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder builderForValue) {
+        if (keyFieldReferencesBuilder_ == null) {
+          ensureKeyFieldReferencesIsMutable();
+          keyFieldReferences_.add(builderForValue.build());
+          onChanged();
+        } else {
+          keyFieldReferencesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public Builder addKeyFieldReferences(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder builderForValue) {
+        if (keyFieldReferencesBuilder_ == null) {
+          ensureKeyFieldReferencesIsMutable();
+          keyFieldReferences_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          keyFieldReferencesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public Builder addAllKeyFieldReferences(
+          java.lang.Iterable<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference> values) {
+        if (keyFieldReferencesBuilder_ == null) {
+          ensureKeyFieldReferencesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, keyFieldReferences_);
+          onChanged();
+        } else {
+          keyFieldReferencesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public Builder clearKeyFieldReferences() {
+        if (keyFieldReferencesBuilder_ == null) {
+          keyFieldReferences_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          keyFieldReferencesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public Builder removeKeyFieldReferences(int index) {
+        if (keyFieldReferencesBuilder_ == null) {
+          ensureKeyFieldReferencesIsMutable();
+          keyFieldReferences_.remove(index);
+          onChanged();
+        } else {
+          keyFieldReferencesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder getKeyFieldReferencesBuilder(
+          int index) {
+        return getKeyFieldReferencesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder getKeyFieldReferencesOrBuilder(
+          int index) {
+        if (keyFieldReferencesBuilder_ == null) {
+          return keyFieldReferences_.get(index);  } else {
+          return keyFieldReferencesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder> 
+           getKeyFieldReferencesOrBuilderList() {
+        if (keyFieldReferencesBuilder_ != null) {
+          return keyFieldReferencesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(keyFieldReferences_);
+        }
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder addKeyFieldReferencesBuilder() {
+        return getKeyFieldReferencesFieldBuilder().addBuilder(
+            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder addKeyFieldReferencesBuilder(
+          int index) {
+        return getKeyFieldReferencesFieldBuilder().addBuilder(
+            index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Multiple key-field references.
+       * </pre>
+       *
+       * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
+       */
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder> 
+           getKeyFieldReferencesBuilderList() {
+        return getKeyFieldReferencesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder> 
+          getKeyFieldReferencesFieldBuilder() {
+        if (keyFieldReferencesBuilder_ == null) {
+          keyFieldReferencesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder>(
+                  keyFieldReferences_,
+                  ((bitField0_ & 0x00000001) != 0),
+                  getParentForChildren(),
+                  isClean());
+          keyFieldReferences_ = null;
+        }
+        return keyFieldReferencesBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:SecretReference)
+    }
+
+    // @@protoc_insertion_point(class_scope:SecretReference)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<SecretReference>
+        PARSER = new com.google.protobuf.AbstractParser<SecretReference>() {
+      @java.lang.Override
+      public SecretReference parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SecretReference(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<SecretReference> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SecretReference> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface KeyFieldReferenceOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:KeyFieldReference)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * Key in the secret.
+     * </pre>
+     *
+     * <code>string secretKey = 2;</code>
+     * @return The secretKey.
+     */
+    java.lang.String getSecretKey();
+    /**
+     * <pre>
+     * Key in the secret.
+     * </pre>
+     *
+     * <code>string secretKey = 2;</code>
+     * @return The bytes for secretKey.
+     */
+    com.google.protobuf.ByteString
+        getSecretKeyBytes();
+
+    /**
+     * <pre>
+     * Field name.
+     * </pre>
+     *
+     * <code>.SecretField field = 3;</code>
+     * @return The enum numeric value on the wire for field.
+     */
+    int getFieldValue();
+    /**
+     * <pre>
+     * Field name.
+     * </pre>
+     *
+     * <code>.SecretField field = 3;</code>
+     * @return The field.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField getField();
+  }
+  /**
+   * Protobuf type {@code KeyFieldReference}
+   */
+  public static final class KeyFieldReference extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:KeyFieldReference)
+      KeyFieldReferenceOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use KeyFieldReference.newBuilder() to construct.
+    private KeyFieldReference(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private KeyFieldReference() {
+      secretKey_ = "";
+      field_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new KeyFieldReference();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private KeyFieldReference(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 18: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              secretKey_ = s;
+              break;
+            }
+            case 24: {
+              int rawValue = input.readEnum();
+
+              field_ = rawValue;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_KeyFieldReference_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_KeyFieldReference_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder.class);
+    }
+
+    public static final int SECRETKEY_FIELD_NUMBER = 2;
+    private volatile java.lang.Object secretKey_;
+    /**
+     * <pre>
+     * Key in the secret.
+     * </pre>
+     *
+     * <code>string secretKey = 2;</code>
+     * @return The secretKey.
+     */
+    @java.lang.Override
+    public java.lang.String getSecretKey() {
+      java.lang.Object ref = secretKey_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        secretKey_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Key in the secret.
+     * </pre>
+     *
+     * <code>string secretKey = 2;</code>
+     * @return The bytes for secretKey.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getSecretKeyBytes() {
+      java.lang.Object ref = secretKey_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        secretKey_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int FIELD_FIELD_NUMBER = 3;
+    private int field_;
+    /**
+     * <pre>
+     * Field name.
+     * </pre>
+     *
+     * <code>.SecretField field = 3;</code>
+     * @return The enum numeric value on the wire for field.
+     */
+    @java.lang.Override public int getFieldValue() {
+      return field_;
+    }
+    /**
+     * <pre>
+     * Field name.
+     * </pre>
+     *
+     * <code>.SecretField field = 3;</code>
+     * @return The field.
+     */
+    @java.lang.Override public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField getField() {
+      @SuppressWarnings("deprecation")
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField.valueOf(field_);
+      return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField.UNRECOGNIZED : result;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (!getSecretKeyBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, secretKey_);
+      }
+      if (field_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField.SASL_MECHANISM.getNumber()) {
+        output.writeEnum(3, field_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (!getSecretKeyBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, secretKey_);
+      }
+      if (field_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField.SASL_MECHANISM.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(3, field_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference) obj;
+
+      if (!getSecretKey()
+          .equals(other.getSecretKey())) return false;
+      if (field_ != other.field_) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + SECRETKEY_FIELD_NUMBER;
+      hash = (53 * hash) + getSecretKey().hashCode();
+      hash = (37 * hash) + FIELD_FIELD_NUMBER;
+      hash = (53 * hash) + field_;
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code KeyFieldReference}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:KeyFieldReference)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_KeyFieldReference_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_KeyFieldReference_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        secretKey_ = "";
+
+        field_ = 0;
+
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_KeyFieldReference_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference(this);
+        result.secretKey_ = secretKey_;
+        result.field_ = field_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.getDefaultInstance()) return this;
+        if (!other.getSecretKey().isEmpty()) {
+          secretKey_ = other.secretKey_;
+          onChanged();
+        }
+        if (other.field_ != 0) {
+          setFieldValue(other.getFieldValue());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private java.lang.Object secretKey_ = "";
+      /**
+       * <pre>
+       * Key in the secret.
+       * </pre>
+       *
+       * <code>string secretKey = 2;</code>
+       * @return The secretKey.
+       */
+      public java.lang.String getSecretKey() {
+        java.lang.Object ref = secretKey_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          secretKey_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Key in the secret.
+       * </pre>
+       *
+       * <code>string secretKey = 2;</code>
+       * @return The bytes for secretKey.
+       */
+      public com.google.protobuf.ByteString
+          getSecretKeyBytes() {
+        java.lang.Object ref = secretKey_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          secretKey_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Key in the secret.
+       * </pre>
+       *
+       * <code>string secretKey = 2;</code>
+       * @param value The secretKey to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSecretKey(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        secretKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Key in the secret.
+       * </pre>
+       *
+       * <code>string secretKey = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearSecretKey() {
+        
+        secretKey_ = getDefaultInstance().getSecretKey();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Key in the secret.
+       * </pre>
+       *
+       * <code>string secretKey = 2;</code>
+       * @param value The bytes for secretKey to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSecretKeyBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        secretKey_ = value;
+        onChanged();
+        return this;
+      }
+
+      private int field_ = 0;
+      /**
+       * <pre>
+       * Field name.
+       * </pre>
+       *
+       * <code>.SecretField field = 3;</code>
+       * @return The enum numeric value on the wire for field.
+       */
+      @java.lang.Override public int getFieldValue() {
+        return field_;
+      }
+      /**
+       * <pre>
+       * Field name.
+       * </pre>
+       *
+       * <code>.SecretField field = 3;</code>
+       * @param value The enum numeric value on the wire for field to set.
+       * @return This builder for chaining.
+       */
+      public Builder setFieldValue(int value) {
+        
+        field_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Field name.
+       * </pre>
+       *
+       * <code>.SecretField field = 3;</code>
+       * @return The field.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField getField() {
+        @SuppressWarnings("deprecation")
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField.valueOf(field_);
+        return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField.UNRECOGNIZED : result;
+      }
+      /**
+       * <pre>
+       * Field name.
+       * </pre>
+       *
+       * <code>.SecretField field = 3;</code>
+       * @param value The field to set.
+       * @return This builder for chaining.
+       */
+      public Builder setField(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        
+        field_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Field name.
+       * </pre>
+       *
+       * <code>.SecretField field = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearField() {
+        
+        field_ = 0;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:KeyFieldReference)
+    }
+
+    // @@protoc_insertion_point(class_scope:KeyFieldReference)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<KeyFieldReference>
+        PARSER = new com.google.protobuf.AbstractParser<KeyFieldReference>() {
+      @java.lang.Override
+      public KeyFieldReference parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new KeyFieldReference(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<KeyFieldReference> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<KeyFieldReference> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface MultiSecretReferenceOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:MultiSecretReference)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * Protocol.
+     * </pre>
+     *
+     * <code>.Protocol protocol = 1;</code>
+     * @return The enum numeric value on the wire for protocol.
+     */
+    int getProtocolValue();
+    /**
+     * <pre>
+     * Protocol.
+     * </pre>
+     *
+     * <code>.Protocol protocol = 1;</code>
+     * @return The protocol.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol getProtocol();
+
+    /**
+     * <pre>
+     * Secret references.
+     * </pre>
+     *
+     * <code>repeated .SecretReference references = 2;</code>
+     */
+    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference> 
+        getReferencesList();
+    /**
+     * <pre>
+     * Secret references.
+     * </pre>
+     *
+     * <code>repeated .SecretReference references = 2;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference getReferences(int index);
+    /**
+     * <pre>
+     * Secret references.
+     * </pre>
+     *
+     * <code>repeated .SecretReference references = 2;</code>
+     */
+    int getReferencesCount();
+    /**
+     * <pre>
+     * Secret references.
+     * </pre>
+     *
+     * <code>repeated .SecretReference references = 2;</code>
+     */
+    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder> 
+        getReferencesOrBuilderList();
+    /**
+     * <pre>
+     * Secret references.
+     * </pre>
+     *
+     * <code>repeated .SecretReference references = 2;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder getReferencesOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code MultiSecretReference}
+   */
+  public static final class MultiSecretReference extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:MultiSecretReference)
+      MultiSecretReferenceOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use MultiSecretReference.newBuilder() to construct.
+    private MultiSecretReference(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private MultiSecretReference() {
+      protocol_ = 0;
+      references_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new MultiSecretReference();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private MultiSecretReference(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8: {
+              int rawValue = input.readEnum();
+
+              protocol_ = rawValue;
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                references_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              references_.add(
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.parser(), extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          references_ = java.util.Collections.unmodifiableList(references_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_MultiSecretReference_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_MultiSecretReference_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.Builder.class);
+    }
+
+    public static final int PROTOCOL_FIELD_NUMBER = 1;
+    private int protocol_;
+    /**
+     * <pre>
+     * Protocol.
+     * </pre>
+     *
+     * <code>.Protocol protocol = 1;</code>
+     * @return The enum numeric value on the wire for protocol.
+     */
+    @java.lang.Override public int getProtocolValue() {
+      return protocol_;
+    }
+    /**
+     * <pre>
+     * Protocol.
+     * </pre>
+     *
+     * <code>.Protocol protocol = 1;</code>
+     * @return The protocol.
+     */
+    @java.lang.Override public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol getProtocol() {
+      @SuppressWarnings("deprecation")
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol.valueOf(protocol_);
+      return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol.UNRECOGNIZED : result;
+    }
+
+    public static final int REFERENCES_FIELD_NUMBER = 2;
+    private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference> references_;
+    /**
+     * <pre>
+     * Secret references.
+     * </pre>
+     *
+     * <code>repeated .SecretReference references = 2;</code>
+     */
+    @java.lang.Override
+    public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference> getReferencesList() {
+      return references_;
+    }
+    /**
+     * <pre>
+     * Secret references.
+     * </pre>
+     *
+     * <code>repeated .SecretReference references = 2;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder> 
+        getReferencesOrBuilderList() {
+      return references_;
+    }
+    /**
+     * <pre>
+     * Secret references.
+     * </pre>
+     *
+     * <code>repeated .SecretReference references = 2;</code>
+     */
+    @java.lang.Override
+    public int getReferencesCount() {
+      return references_.size();
+    }
+    /**
+     * <pre>
+     * Secret references.
+     * </pre>
+     *
+     * <code>repeated .SecretReference references = 2;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference getReferences(int index) {
+      return references_.get(index);
+    }
+    /**
+     * <pre>
+     * Secret references.
+     * </pre>
+     *
+     * <code>repeated .SecretReference references = 2;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder getReferencesOrBuilder(
+        int index) {
+      return references_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (protocol_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol.PLAINTEXT.getNumber()) {
+        output.writeEnum(1, protocol_);
+      }
+      for (int i = 0; i < references_.size(); i++) {
+        output.writeMessage(2, references_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (protocol_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol.PLAINTEXT.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, protocol_);
+      }
+      for (int i = 0; i < references_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, references_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) obj;
+
+      if (protocol_ != other.protocol_) return false;
+      if (!getReferencesList()
+          .equals(other.getReferencesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + PROTOCOL_FIELD_NUMBER;
+      hash = (53 * hash) + protocol_;
+      if (getReferencesCount() > 0) {
+        hash = (37 * hash) + REFERENCES_FIELD_NUMBER;
+        hash = (53 * hash) + getReferencesList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code MultiSecretReference}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:MultiSecretReference)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReferenceOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_MultiSecretReference_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_MultiSecretReference_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getReferencesFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        protocol_ = 0;
+
+        if (referencesBuilder_ == null) {
+          references_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          referencesBuilder_.clear();
+        }
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_MultiSecretReference_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference(this);
+        int from_bitField0_ = bitField0_;
+        result.protocol_ = protocol_;
+        if (referencesBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0)) {
+            references_ = java.util.Collections.unmodifiableList(references_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.references_ = references_;
+        } else {
+          result.references_ = referencesBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.getDefaultInstance()) return this;
+        if (other.protocol_ != 0) {
+          setProtocolValue(other.getProtocolValue());
+        }
+        if (referencesBuilder_ == null) {
+          if (!other.references_.isEmpty()) {
+            if (references_.isEmpty()) {
+              references_ = other.references_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureReferencesIsMutable();
+              references_.addAll(other.references_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.references_.isEmpty()) {
+            if (referencesBuilder_.isEmpty()) {
+              referencesBuilder_.dispose();
+              referencesBuilder_ = null;
+              references_ = other.references_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              referencesBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getReferencesFieldBuilder() : null;
+            } else {
+              referencesBuilder_.addAllMessages(other.references_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int protocol_ = 0;
+      /**
+       * <pre>
+       * Protocol.
+       * </pre>
+       *
+       * <code>.Protocol protocol = 1;</code>
+       * @return The enum numeric value on the wire for protocol.
+       */
+      @java.lang.Override public int getProtocolValue() {
+        return protocol_;
+      }
+      /**
+       * <pre>
+       * Protocol.
+       * </pre>
+       *
+       * <code>.Protocol protocol = 1;</code>
+       * @param value The enum numeric value on the wire for protocol to set.
+       * @return This builder for chaining.
+       */
+      public Builder setProtocolValue(int value) {
+        
+        protocol_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Protocol.
+       * </pre>
+       *
+       * <code>.Protocol protocol = 1;</code>
+       * @return The protocol.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol getProtocol() {
+        @SuppressWarnings("deprecation")
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol.valueOf(protocol_);
+        return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol.UNRECOGNIZED : result;
+      }
+      /**
+       * <pre>
+       * Protocol.
+       * </pre>
+       *
+       * <code>.Protocol protocol = 1;</code>
+       * @param value The protocol to set.
+       * @return This builder for chaining.
+       */
+      public Builder setProtocol(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        
+        protocol_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Protocol.
+       * </pre>
+       *
+       * <code>.Protocol protocol = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearProtocol() {
+        
+        protocol_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference> references_ =
+        java.util.Collections.emptyList();
+      private void ensureReferencesIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          references_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference>(references_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder> referencesBuilder_;
+
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference> getReferencesList() {
+        if (referencesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(references_);
+        } else {
+          return referencesBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public int getReferencesCount() {
+        if (referencesBuilder_ == null) {
+          return references_.size();
+        } else {
+          return referencesBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference getReferences(int index) {
+        if (referencesBuilder_ == null) {
+          return references_.get(index);
+        } else {
+          return referencesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public Builder setReferences(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference value) {
+        if (referencesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureReferencesIsMutable();
+          references_.set(index, value);
+          onChanged();
+        } else {
+          referencesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public Builder setReferences(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder builderForValue) {
+        if (referencesBuilder_ == null) {
+          ensureReferencesIsMutable();
+          references_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          referencesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public Builder addReferences(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference value) {
+        if (referencesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureReferencesIsMutable();
+          references_.add(value);
+          onChanged();
+        } else {
+          referencesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public Builder addReferences(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference value) {
+        if (referencesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureReferencesIsMutable();
+          references_.add(index, value);
+          onChanged();
+        } else {
+          referencesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public Builder addReferences(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder builderForValue) {
+        if (referencesBuilder_ == null) {
+          ensureReferencesIsMutable();
+          references_.add(builderForValue.build());
+          onChanged();
+        } else {
+          referencesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public Builder addReferences(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder builderForValue) {
+        if (referencesBuilder_ == null) {
+          ensureReferencesIsMutable();
+          references_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          referencesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public Builder addAllReferences(
+          java.lang.Iterable<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference> values) {
+        if (referencesBuilder_ == null) {
+          ensureReferencesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, references_);
+          onChanged();
+        } else {
+          referencesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public Builder clearReferences() {
+        if (referencesBuilder_ == null) {
+          references_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          referencesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public Builder removeReferences(int index) {
+        if (referencesBuilder_ == null) {
+          ensureReferencesIsMutable();
+          references_.remove(index);
+          onChanged();
+        } else {
+          referencesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder getReferencesBuilder(
+          int index) {
+        return getReferencesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder getReferencesOrBuilder(
+          int index) {
+        if (referencesBuilder_ == null) {
+          return references_.get(index);  } else {
+          return referencesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder> 
+           getReferencesOrBuilderList() {
+        if (referencesBuilder_ != null) {
+          return referencesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(references_);
+        }
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder addReferencesBuilder() {
+        return getReferencesFieldBuilder().addBuilder(
+            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder addReferencesBuilder(
+          int index) {
+        return getReferencesFieldBuilder().addBuilder(
+            index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Secret references.
+       * </pre>
+       *
+       * <code>repeated .SecretReference references = 2;</code>
+       */
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder> 
+           getReferencesBuilderList() {
+        return getReferencesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder> 
+          getReferencesFieldBuilder() {
+        if (referencesBuilder_ == null) {
+          referencesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder>(
+                  references_,
+                  ((bitField0_ & 0x00000001) != 0),
+                  getParentForChildren(),
+                  isClean());
+          references_ = null;
+        }
+        return referencesBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:MultiSecretReference)
+    }
+
+    // @@protoc_insertion_point(class_scope:MultiSecretReference)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<MultiSecretReference>
+        PARSER = new com.google.protobuf.AbstractParser<MultiSecretReference>() {
+      @java.lang.Override
+      public MultiSecretReference parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new MultiSecretReference(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<MultiSecretReference> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<MultiSecretReference> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface ResourceOrBuilder extends
       // @@protoc_insertion_point(interface_extends:Resource)
       com.google.protobuf.MessageOrBuilder {
@@ -8101,6 +11334,33 @@ public final class DataPlaneContract {
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getAuthSecretOrBuilder();
 
+    /**
+     * <pre>
+     * Multiple secrets reference.
+     * </pre>
+     *
+     * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+     * @return Whether the multiAuthSecret field is set.
+     */
+    boolean hasMultiAuthSecret();
+    /**
+     * <pre>
+     * Multiple secrets reference.
+     * </pre>
+     *
+     * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+     * @return The multiAuthSecret.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference getMultiAuthSecret();
+    /**
+     * <pre>
+     * Multiple secrets reference.
+     * </pre>
+     *
+     * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReferenceOrBuilder getMultiAuthSecretOrBuilder();
+
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.AuthCase getAuthCase();
   }
   /**
@@ -8237,6 +11497,20 @@ public final class DataPlaneContract {
               authCase_ = 8;
               break;
             }
+            case 74: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.Builder subBuilder = null;
+              if (authCase_ == 9) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) auth_).toBuilder();
+              }
+              auth_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) auth_);
+                auth_ = subBuilder.buildPartial();
+              }
+              authCase_ = 9;
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -8282,6 +11556,7 @@ public final class DataPlaneContract {
             com.google.protobuf.AbstractMessage.InternalOneOfEnum {
       ABSENTAUTH(7),
       AUTHSECRET(8),
+      MULTIAUTHSECRET(9),
       AUTH_NOT_SET(0);
       private final int value;
       private AuthCase(int value) {
@@ -8301,6 +11576,7 @@ public final class DataPlaneContract {
         switch (value) {
           case 7: return ABSENTAUTH;
           case 8: return AUTHSECRET;
+          case 9: return MULTIAUTHSECRET;
           case 0: return AUTH_NOT_SET;
           default: return null;
         }
@@ -8777,6 +12053,49 @@ public final class DataPlaneContract {
       return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance();
     }
 
+    public static final int MULTIAUTHSECRET_FIELD_NUMBER = 9;
+    /**
+     * <pre>
+     * Multiple secrets reference.
+     * </pre>
+     *
+     * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+     * @return Whether the multiAuthSecret field is set.
+     */
+    @java.lang.Override
+    public boolean hasMultiAuthSecret() {
+      return authCase_ == 9;
+    }
+    /**
+     * <pre>
+     * Multiple secrets reference.
+     * </pre>
+     *
+     * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+     * @return The multiAuthSecret.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference getMultiAuthSecret() {
+      if (authCase_ == 9) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) auth_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.getDefaultInstance();
+    }
+    /**
+     * <pre>
+     * Multiple secrets reference.
+     * </pre>
+     *
+     * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReferenceOrBuilder getMultiAuthSecretOrBuilder() {
+      if (authCase_ == 9) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) auth_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.getDefaultInstance();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -8814,6 +12133,9 @@ public final class DataPlaneContract {
       }
       if (authCase_ == 8) {
         output.writeMessage(8, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_);
+      }
+      if (authCase_ == 9) {
+        output.writeMessage(9, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) auth_);
       }
       unknownFields.writeTo(output);
     }
@@ -8858,6 +12180,10 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(8, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_);
       }
+      if (authCase_ == 9) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(9, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) auth_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -8901,6 +12227,10 @@ public final class DataPlaneContract {
           if (!getAuthSecret()
               .equals(other.getAuthSecret())) return false;
           break;
+        case 9:
+          if (!getMultiAuthSecret()
+              .equals(other.getMultiAuthSecret())) return false;
+          break;
         case 0:
         default:
       }
@@ -8943,6 +12273,10 @@ public final class DataPlaneContract {
         case 8:
           hash = (37 * hash) + AUTHSECRET_FIELD_NUMBER;
           hash = (53 * hash) + getAuthSecret().hashCode();
+          break;
+        case 9:
+          hash = (37 * hash) + MULTIAUTHSECRET_FIELD_NUMBER;
+          hash = (53 * hash) + getMultiAuthSecret().hashCode();
           break;
         case 0:
         default:
@@ -9174,6 +12508,13 @@ public final class DataPlaneContract {
             result.auth_ = authSecretBuilder_.build();
           }
         }
+        if (authCase_ == 9) {
+          if (multiAuthSecretBuilder_ == null) {
+            result.auth_ = auth_;
+          } else {
+            result.auth_ = multiAuthSecretBuilder_.build();
+          }
+        }
         result.authCase_ = authCase_;
         onBuilt();
         return result;
@@ -9280,6 +12621,10 @@ public final class DataPlaneContract {
           }
           case AUTHSECRET: {
             mergeAuthSecret(other.getAuthSecret());
+            break;
+          }
+          case MULTIAUTHSECRET: {
+            mergeMultiAuthSecret(other.getMultiAuthSecret());
             break;
           }
           case AUTH_NOT_SET: {
@@ -10924,6 +14269,183 @@ public final class DataPlaneContract {
         onChanged();;
         return authSecretBuilder_;
       }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReferenceOrBuilder> multiAuthSecretBuilder_;
+      /**
+       * <pre>
+       * Multiple secrets reference.
+       * </pre>
+       *
+       * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+       * @return Whether the multiAuthSecret field is set.
+       */
+      @java.lang.Override
+      public boolean hasMultiAuthSecret() {
+        return authCase_ == 9;
+      }
+      /**
+       * <pre>
+       * Multiple secrets reference.
+       * </pre>
+       *
+       * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+       * @return The multiAuthSecret.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference getMultiAuthSecret() {
+        if (multiAuthSecretBuilder_ == null) {
+          if (authCase_ == 9) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) auth_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.getDefaultInstance();
+        } else {
+          if (authCase_ == 9) {
+            return multiAuthSecretBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Multiple secrets reference.
+       * </pre>
+       *
+       * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+       */
+      public Builder setMultiAuthSecret(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference value) {
+        if (multiAuthSecretBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          auth_ = value;
+          onChanged();
+        } else {
+          multiAuthSecretBuilder_.setMessage(value);
+        }
+        authCase_ = 9;
+        return this;
+      }
+      /**
+       * <pre>
+       * Multiple secrets reference.
+       * </pre>
+       *
+       * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+       */
+      public Builder setMultiAuthSecret(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.Builder builderForValue) {
+        if (multiAuthSecretBuilder_ == null) {
+          auth_ = builderForValue.build();
+          onChanged();
+        } else {
+          multiAuthSecretBuilder_.setMessage(builderForValue.build());
+        }
+        authCase_ = 9;
+        return this;
+      }
+      /**
+       * <pre>
+       * Multiple secrets reference.
+       * </pre>
+       *
+       * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+       */
+      public Builder mergeMultiAuthSecret(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference value) {
+        if (multiAuthSecretBuilder_ == null) {
+          if (authCase_ == 9 &&
+              auth_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.getDefaultInstance()) {
+            auth_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) auth_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            auth_ = value;
+          }
+          onChanged();
+        } else {
+          if (authCase_ == 9) {
+            multiAuthSecretBuilder_.mergeFrom(value);
+          }
+          multiAuthSecretBuilder_.setMessage(value);
+        }
+        authCase_ = 9;
+        return this;
+      }
+      /**
+       * <pre>
+       * Multiple secrets reference.
+       * </pre>
+       *
+       * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+       */
+      public Builder clearMultiAuthSecret() {
+        if (multiAuthSecretBuilder_ == null) {
+          if (authCase_ == 9) {
+            authCase_ = 0;
+            auth_ = null;
+            onChanged();
+          }
+        } else {
+          if (authCase_ == 9) {
+            authCase_ = 0;
+            auth_ = null;
+          }
+          multiAuthSecretBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Multiple secrets reference.
+       * </pre>
+       *
+       * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.Builder getMultiAuthSecretBuilder() {
+        return getMultiAuthSecretFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Multiple secrets reference.
+       * </pre>
+       *
+       * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReferenceOrBuilder getMultiAuthSecretOrBuilder() {
+        if ((authCase_ == 9) && (multiAuthSecretBuilder_ != null)) {
+          return multiAuthSecretBuilder_.getMessageOrBuilder();
+        } else {
+          if (authCase_ == 9) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) auth_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Multiple secrets reference.
+       * </pre>
+       *
+       * <code>.MultiSecretReference multiAuthSecret = 9;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReferenceOrBuilder> 
+          getMultiAuthSecretFieldBuilder() {
+        if (multiAuthSecretBuilder_ == null) {
+          if (!(authCase_ == 9)) {
+            auth_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.getDefaultInstance();
+          }
+          multiAuthSecretBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReferenceOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) auth_,
+                  getParentForChildren(),
+                  isClean());
+          auth_ = null;
+        }
+        authCase_ = 9;
+        onChanged();;
+        return multiAuthSecretBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -11902,6 +15424,21 @@ public final class DataPlaneContract {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Reference_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_SecretReference_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_SecretReference_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_KeyFieldReference_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_KeyFieldReference_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_MultiSecretReference_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_MultiSecretReference_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Resource_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -11938,22 +15475,34 @@ public final class DataPlaneContract {
       "ContentMode\022\016\n\004path\030\002 \001(\tH\000\022\016\n\004host\030\003 \001(" +
       "\tH\000B\r\n\013ingressType\"K\n\tReference\022\014\n\004uuid\030" +
       "\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017" +
-      "\n\007version\030\004 \001(\t\"\344\001\n\010Resource\022\013\n\003uid\030\001 \001(" +
-      "\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrapServers\030\003 " +
-      "\001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress\022#\n\014egress" +
-      "Config\030\005 \001(\0132\r.EgressConfig\022\031\n\010egresses\030" +
-      "\006 \003(\0132\007.Egress\022\034\n\nabsentAuth\030\007 \001(\0132\006.Emp" +
-      "tyH\000\022 \n\nauthSecret\030\010 \001(\0132\n.ReferenceH\000B\006" +
-      "\n\004Auth\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034" +
-      "\n\tresources\030\002 \003(\0132\t.Resource*,\n\rBackoffP" +
-      "olicy\022\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n\rDe" +
-      "liveryOrder\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*" +
-      "=\n\007KeyType\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006D" +
-      "ouble\020\002\022\r\n\tByteArray\020\003*)\n\013ContentMode\022\n\n" +
-      "\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knative" +
-      ".eventing.kafka.broker.contractB\021DataPla" +
-      "neContractZ\032control-plane/pkg/contractb\006" +
-      "proto3"
+      "\n\007version\030\004 \001(\t\"`\n\017SecretReference\022\035\n\tre" +
+      "ference\030\001 \001(\0132\n.Reference\022.\n\022keyFieldRef" +
+      "erences\030\002 \003(\0132\022.KeyFieldReference\"C\n\021Key" +
+      "FieldReference\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005fie" +
+      "ld\030\003 \001(\0162\014.SecretField\"Y\n\024MultiSecretRef" +
+      "erence\022\033\n\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nr" +
+      "eferences\030\002 \003(\0132\020.SecretReference\"\226\002\n\010Re" +
+      "source\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020b" +
+      "ootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010" +
+      ".Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.EgressC" +
+      "onfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabse" +
+      "ntAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001" +
+      "(\0132\n.ReferenceH\000\0220\n\017multiAuthSecret\030\t \001(" +
+      "\0132\025.MultiSecretReferenceH\000B\006\n\004Auth\"<\n\010Co" +
+      "ntract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030" +
+      "\002 \003(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Exp" +
+      "onential\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022" +
+      "\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n" +
+      "\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tB" +
+      "yteArray\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n" +
+      "\nSTRUCTURED\020\001*a\n\013SecretField\022\022\n\016SASL_MEC" +
+      "HANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010US" +
+      "ER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Prot" +
+      "ocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022" +
+      "\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.ev" +
+      "enting.kafka.broker.contractB\021DataPlaneC" +
+      "ontractZ\032control-plane/pkg/contractb\006pro" +
+      "to3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -12001,14 +15550,32 @@ public final class DataPlaneContract {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Reference_descriptor,
         new java.lang.String[] { "Uuid", "Namespace", "Name", "Version", });
-    internal_static_Resource_descriptor =
+    internal_static_SecretReference_descriptor =
       getDescriptor().getMessageTypes().get(6);
+    internal_static_SecretReference_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_SecretReference_descriptor,
+        new java.lang.String[] { "Reference", "KeyFieldReferences", });
+    internal_static_KeyFieldReference_descriptor =
+      getDescriptor().getMessageTypes().get(7);
+    internal_static_KeyFieldReference_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_KeyFieldReference_descriptor,
+        new java.lang.String[] { "SecretKey", "Field", });
+    internal_static_MultiSecretReference_descriptor =
+      getDescriptor().getMessageTypes().get(8);
+    internal_static_MultiSecretReference_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_MultiSecretReference_descriptor,
+        new java.lang.String[] { "Protocol", "References", });
+    internal_static_Resource_descriptor =
+      getDescriptor().getMessageTypes().get(9);
     internal_static_Resource_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Resource_descriptor,
-        new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", "AbsentAuth", "AuthSecret", "Auth", });
+        new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", "AbsentAuth", "AuthSecret", "MultiAuthSecret", "Auth", });
     internal_static_Contract_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_Contract_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Contract_descriptor,

@@ -137,6 +137,47 @@ message Reference {
   string version = 4;
 }
 
+enum SecretField {
+  SASL_MECHANISM = 0;
+  CA_CRT = 1;
+  USER_CRT = 2;
+  USER_KEY = 3;
+  USER = 4;
+  PASSWORD = 5;
+}
+
+message SecretReference {
+  // Secret reference.
+  Reference reference = 1;
+
+  // Multiple key-field references.
+  repeated KeyFieldReference keyFieldReferences = 2;
+}
+
+message KeyFieldReference {
+  // Key in the secret.
+  string secretKey = 2;
+
+  // Field name.
+  SecretField field = 3;
+}
+
+enum Protocol {
+  PLAINTEXT = 0;
+  SASL_PLAINTEXT = 1;
+  SSL = 2;
+  SASL_SSL = 3;
+}
+
+message MultiSecretReference {
+
+  // Protocol.
+  Protocol protocol = 1;
+
+  // Secret references.
+  repeated SecretReference references = 2;
+}
+
 message Resource {
   // Id of the resource
   // It's the same as the Kubernetes resource uid
@@ -197,6 +238,9 @@ message Resource {
     //       - user
     //       - password
     Reference authSecret = 8;
+
+    // Multiple secrets reference.
+    MultiSecretReference multiAuthSecret = 9;
   }
 }
 

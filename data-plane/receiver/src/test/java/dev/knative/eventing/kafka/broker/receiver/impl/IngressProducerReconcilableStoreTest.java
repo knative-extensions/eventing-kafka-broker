@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.receiver.impl;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
+import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -286,7 +287,7 @@ public class IngressProducerReconcilableStoreTest {
     final var producerFactoryInvocations = new AtomicInteger(0);
 
     final var store = new IngressProducerReconcilableStore(
-      null,
+      AuthProvider.noAuth(),
       new Properties(),
       properties -> {
         producerFactoryInvocations.incrementAndGet();
