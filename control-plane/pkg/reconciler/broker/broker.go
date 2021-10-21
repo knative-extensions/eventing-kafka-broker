@@ -287,7 +287,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(securityOption)
 	if err != nil {
-		logger.Error("error getting cluster admin sarama config", zap.Any("broker", broker), zap.Error(err))
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
 		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
@@ -295,7 +294,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 	kafkaClusterAdmin, err := r.ClusterAdmin(topicConfig.BootstrapServers, saramaConfig)
 	if err != nil {
-		logger.Error("cannot obtain Kafka cluster admin", zap.Any("broker", broker), zap.Error(err))
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
