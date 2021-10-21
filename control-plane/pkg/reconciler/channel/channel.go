@@ -132,8 +132,23 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
+	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(saramaSecurityOption)
+	if err != nil {
+		// even in error case, we return `normal`, since we are fine with leaving the
+		// topic undeleted e.g. when we lose connection
+		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
+	}
+
+	kafkaClusterAdmin, err := r.ClusterAdmin(topicConfig.BootstrapServers, saramaConfig)
+	if err != nil {
+		// even in error case, we return `normal`, since we are fine with leaving the
+		// topic undeleted e.g. when we lose connection
+		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+	}
+	defer kafkaClusterAdmin.Close()
+
 	// create the topic
-	topic, err := r.ClusterAdmin.CreateTopicIfDoesntExist(logger, topic(TopicPrefix, channel), topicConfig, saramaSecurityOption)
+	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdmin, logger, topic(TopicPrefix, channel), topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topic, err)
 	}

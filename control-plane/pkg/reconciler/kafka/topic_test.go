@@ -296,8 +296,6 @@ func TestCreateTopicTopicAlreadyExists(t *testing.T) {
 	topic := Topic("", b)
 	errMsg := "topic already exists"
 
-	var f NewClusterAdminFunc
-
 	ca := &kafkatesting.MockKafkaClusterAdmin{
 		ExpectedTopicName:   topic,
 		ExpectedTopicDetail: sarama.TopicDetail{},
@@ -308,15 +306,10 @@ func TestCreateTopicTopicAlreadyExists(t *testing.T) {
 		T: t,
 	}
 
-	f = func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
-		return ca, nil
-	}
-
-	topicRet, err := f.CreateTopicIfDoesntExist(zap.NewNop(), topic, &TopicConfig{}, security.NoOp)
+	topicRet, err := CreateTopicIfDoesntExist(ca, zap.NewNop(), topic, &TopicConfig{})
 
 	assert.Equal(t, topicRet, topic, "expected topic %s go %s", topic, topicRet)
 	assert.Nil(t, err, "expected nil error on topic already exists")
-	assert.True(t, ca.ExpectedClose, "expected call to Close() on ClusterAdmin")
 }
 
 func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
