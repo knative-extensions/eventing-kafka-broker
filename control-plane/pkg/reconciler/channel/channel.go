@@ -312,7 +312,24 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	// get security option for Sarama with secret info in it
 	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
-	topic, err := r.ClusterAdmin.DeleteTopic(kafka.Topic(TopicPrefix, channel), topicConfig.BootstrapServers, saramaSecurityOption)
+	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(saramaSecurityOption)
+	if err != nil {
+		logger.Error("error getting cluster admin sarama config", zap.Any("channel", channel), zap.Error(err))
+		// even in error case, we return `normal`, since we are fine with leaving the
+		// topic undeleted e.g. when we lose connection
+		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
+	}
+
+	kafkaClusterAdmin, err := r.ClusterAdmin(topicConfig.BootstrapServers, saramaConfig)
+	if err != nil {
+		logger.Error("cannot obtain Kafka cluster admin", zap.Any("channel", channel), zap.Error(err))
+		// even in error case, we return `normal`, since we are fine with leaving the
+		// topic undeleted e.g. when we lose connection
+		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+	}
+	defer kafkaClusterAdmin.Close()
+
+	topic, err := kafka.DeleteTopic(kafkaClusterAdmin, kafka.Topic(TopicPrefix, channel))
 	if err != nil {
 		return err
 	}

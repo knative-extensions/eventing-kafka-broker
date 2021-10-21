@@ -25,10 +25,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 )
 
 func TestCreateTopic(t *testing.T) {
@@ -317,32 +316,6 @@ func TestCreateTopicTopicAlreadyExists(t *testing.T) {
 
 	assert.Equal(t, topicRet, topic, "expected topic %s go %s", topic, topicRet)
 	assert.Nil(t, err, "expected nil error on topic already exists")
-	assert.True(t, ca.ExpectedClose, "expected call to Close() on ClusterAdmin")
-}
-
-func TestNewClusterAdminFuncDeleteTopicCloseClusterAdmin(t *testing.T) {
-
-	topic := "topic-name-1"
-
-	ca := &kafkatesting.MockKafkaClusterAdmin{
-		ExpectedTopicName: topic,
-		ExpectedClose:     true,
-		T:                 t,
-	}
-
-	f := NewClusterAdminFunc(func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
-		return ca, nil
-	})
-
-	got, err := f.DeleteTopic("topic-name-1", []string{}, security.NoOp)
-	if err != nil {
-		t.Errorf("DeleteTopic() error = %v, wantErr %v", err, false)
-		return
-	}
-	if got != topic {
-		t.Errorf("DeleteTopic() got = %v, want %v", got, topic)
-	}
-
 	assert.True(t, ca.ExpectedClose, "expected call to Close() on ClusterAdmin")
 }
 

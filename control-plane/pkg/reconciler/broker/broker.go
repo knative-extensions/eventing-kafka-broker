@@ -285,7 +285,24 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	// get security option for Sarama with secret info in it
 	securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
-	topic, err := r.ClusterAdmin.DeleteTopic(kafka.Topic(TopicPrefix, broker), topicConfig.BootstrapServers, securityOption)
+	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(securityOption)
+	if err != nil {
+		logger.Error("error getting cluster admin sarama config", zap.Any("broker", broker), zap.Error(err))
+		// even in error case, we return `normal`, since we are fine with leaving the
+		// topic undeleted e.g. when we lose connection
+		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
+	}
+
+	kafkaClusterAdmin, err := r.ClusterAdmin(topicConfig.BootstrapServers, saramaConfig)
+	if err != nil {
+		logger.Error("cannot obtain Kafka cluster admin", zap.Any("broker", broker), zap.Error(err))
+		// even in error case, we return `normal`, since we are fine with leaving the
+		// topic undeleted e.g. when we lose connection
+		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+	}
+	defer kafkaClusterAdmin.Close()
+
+	topic, err := kafka.DeleteTopic(kafkaClusterAdmin, kafka.Topic(TopicPrefix, broker))
 	if err != nil {
 		return err
 	}
