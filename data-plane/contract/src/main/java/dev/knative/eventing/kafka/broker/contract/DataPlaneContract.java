@@ -11001,6 +11001,752 @@ public final class DataPlaneContract {
 
   }
 
+  public interface CloudEventOverridesOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:CloudEventOverrides)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>map&lt;string, string&gt; extensions = 1;</code>
+     */
+    int getExtensionsCount();
+    /**
+     * <code>map&lt;string, string&gt; extensions = 1;</code>
+     */
+    boolean containsExtensions(
+        java.lang.String key);
+    /**
+     * Use {@link #getExtensionsMap()} instead.
+     */
+    @java.lang.Deprecated
+    java.util.Map<java.lang.String, java.lang.String>
+    getExtensions();
+    /**
+     * <code>map&lt;string, string&gt; extensions = 1;</code>
+     */
+    java.util.Map<java.lang.String, java.lang.String>
+    getExtensionsMap();
+    /**
+     * <code>map&lt;string, string&gt; extensions = 1;</code>
+     */
+
+    java.lang.String getExtensionsOrDefault(
+        java.lang.String key,
+        java.lang.String defaultValue);
+    /**
+     * <code>map&lt;string, string&gt; extensions = 1;</code>
+     */
+
+    java.lang.String getExtensionsOrThrow(
+        java.lang.String key);
+  }
+  /**
+   * <pre>
+   * CloudEvent overrides.
+   * </pre>
+   *
+   * Protobuf type {@code CloudEventOverrides}
+   */
+  public static final class CloudEventOverrides extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:CloudEventOverrides)
+      CloudEventOverridesOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use CloudEventOverrides.newBuilder() to construct.
+    private CloudEventOverrides(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private CloudEventOverrides() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CloudEventOverrides();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private CloudEventOverrides(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                extensions_ = com.google.protobuf.MapField.newMapField(
+                    ExtensionsDefaultEntryHolder.defaultEntry);
+                mutable_bitField0_ |= 0x00000001;
+              }
+              com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
+              extensions__ = input.readMessage(
+                  ExtensionsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+              extensions_.getMutableMap().put(
+                  extensions__.getKey(), extensions__.getValue());
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CloudEventOverrides_descriptor;
+    }
+
+    @SuppressWarnings({"rawtypes"})
+    @java.lang.Override
+    protected com.google.protobuf.MapField internalGetMapField(
+        int number) {
+      switch (number) {
+        case 1:
+          return internalGetExtensions();
+        default:
+          throw new RuntimeException(
+              "Invalid map field number: " + number);
+      }
+    }
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CloudEventOverrides_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.Builder.class);
+    }
+
+    public static final int EXTENSIONS_FIELD_NUMBER = 1;
+    private static final class ExtensionsDefaultEntryHolder {
+      static final com.google.protobuf.MapEntry<
+          java.lang.String, java.lang.String> defaultEntry =
+              com.google.protobuf.MapEntry
+              .<java.lang.String, java.lang.String>newDefaultInstance(
+                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CloudEventOverrides_ExtensionsEntry_descriptor, 
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "",
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "");
+    }
+    private com.google.protobuf.MapField<
+        java.lang.String, java.lang.String> extensions_;
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+    internalGetExtensions() {
+      if (extensions_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(
+            ExtensionsDefaultEntryHolder.defaultEntry);
+      }
+      return extensions_;
+    }
+
+    public int getExtensionsCount() {
+      return internalGetExtensions().getMap().size();
+    }
+    /**
+     * <code>map&lt;string, string&gt; extensions = 1;</code>
+     */
+
+    @java.lang.Override
+    public boolean containsExtensions(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      return internalGetExtensions().getMap().containsKey(key);
+    }
+    /**
+     * Use {@link #getExtensionsMap()} instead.
+     */
+    @java.lang.Override
+    @java.lang.Deprecated
+    public java.util.Map<java.lang.String, java.lang.String> getExtensions() {
+      return getExtensionsMap();
+    }
+    /**
+     * <code>map&lt;string, string&gt; extensions = 1;</code>
+     */
+    @java.lang.Override
+
+    public java.util.Map<java.lang.String, java.lang.String> getExtensionsMap() {
+      return internalGetExtensions().getMap();
+    }
+    /**
+     * <code>map&lt;string, string&gt; extensions = 1;</code>
+     */
+    @java.lang.Override
+
+    public java.lang.String getExtensionsOrDefault(
+        java.lang.String key,
+        java.lang.String defaultValue) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, java.lang.String> map =
+          internalGetExtensions().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /**
+     * <code>map&lt;string, string&gt; extensions = 1;</code>
+     */
+    @java.lang.Override
+
+    public java.lang.String getExtensionsOrThrow(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, java.lang.String> map =
+          internalGetExtensions().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
+      }
+      return map.get(key);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      com.google.protobuf.GeneratedMessageV3
+        .serializeStringMapTo(
+          output,
+          internalGetExtensions(),
+          ExtensionsDefaultEntryHolder.defaultEntry,
+          1);
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (java.util.Map.Entry<java.lang.String, java.lang.String> entry
+           : internalGetExtensions().getMap().entrySet()) {
+        com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
+        extensions__ = ExtensionsDefaultEntryHolder.defaultEntry.newBuilderForType()
+            .setKey(entry.getKey())
+            .setValue(entry.getValue())
+            .build();
+        size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(1, extensions__);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides) obj;
+
+      if (!internalGetExtensions().equals(
+          other.internalGetExtensions())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (!internalGetExtensions().getMap().isEmpty()) {
+        hash = (37 * hash) + EXTENSIONS_FIELD_NUMBER;
+        hash = (53 * hash) + internalGetExtensions().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * CloudEvent overrides.
+     * </pre>
+     *
+     * Protobuf type {@code CloudEventOverrides}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:CloudEventOverrides)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverridesOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CloudEventOverrides_descriptor;
+      }
+
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMapField(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetExtensions();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMutableMapField(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetMutableExtensions();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CloudEventOverrides_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        internalGetMutableExtensions().clear();
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CloudEventOverrides_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides(this);
+        int from_bitField0_ = bitField0_;
+        result.extensions_ = internalGetExtensions();
+        result.extensions_.makeImmutable();
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.getDefaultInstance()) return this;
+        internalGetMutableExtensions().mergeFrom(
+            other.internalGetExtensions());
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.MapField<
+          java.lang.String, java.lang.String> extensions_;
+      private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+      internalGetExtensions() {
+        if (extensions_ == null) {
+          return com.google.protobuf.MapField.emptyMapField(
+              ExtensionsDefaultEntryHolder.defaultEntry);
+        }
+        return extensions_;
+      }
+      private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+      internalGetMutableExtensions() {
+        onChanged();;
+        if (extensions_ == null) {
+          extensions_ = com.google.protobuf.MapField.newMapField(
+              ExtensionsDefaultEntryHolder.defaultEntry);
+        }
+        if (!extensions_.isMutable()) {
+          extensions_ = extensions_.copy();
+        }
+        return extensions_;
+      }
+
+      public int getExtensionsCount() {
+        return internalGetExtensions().getMap().size();
+      }
+      /**
+       * <code>map&lt;string, string&gt; extensions = 1;</code>
+       */
+
+      @java.lang.Override
+      public boolean containsExtensions(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        return internalGetExtensions().getMap().containsKey(key);
+      }
+      /**
+       * Use {@link #getExtensionsMap()} instead.
+       */
+      @java.lang.Override
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.String> getExtensions() {
+        return getExtensionsMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; extensions = 1;</code>
+       */
+      @java.lang.Override
+
+      public java.util.Map<java.lang.String, java.lang.String> getExtensionsMap() {
+        return internalGetExtensions().getMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; extensions = 1;</code>
+       */
+      @java.lang.Override
+
+      public java.lang.String getExtensionsOrDefault(
+          java.lang.String key,
+          java.lang.String defaultValue) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, java.lang.String> map =
+            internalGetExtensions().getMap();
+        return map.containsKey(key) ? map.get(key) : defaultValue;
+      }
+      /**
+       * <code>map&lt;string, string&gt; extensions = 1;</code>
+       */
+      @java.lang.Override
+
+      public java.lang.String getExtensionsOrThrow(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, java.lang.String> map =
+            internalGetExtensions().getMap();
+        if (!map.containsKey(key)) {
+          throw new java.lang.IllegalArgumentException();
+        }
+        return map.get(key);
+      }
+
+      public Builder clearExtensions() {
+        internalGetMutableExtensions().getMutableMap()
+            .clear();
+        return this;
+      }
+      /**
+       * <code>map&lt;string, string&gt; extensions = 1;</code>
+       */
+
+      public Builder removeExtensions(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableExtensions().getMutableMap()
+            .remove(key);
+        return this;
+      }
+      /**
+       * Use alternate mutation accessors instead.
+       */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.String>
+      getMutableExtensions() {
+        return internalGetMutableExtensions().getMutableMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; extensions = 1;</code>
+       */
+      public Builder putExtensions(
+          java.lang.String key,
+          java.lang.String value) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        if (value == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableExtensions().getMutableMap()
+            .put(key, value);
+        return this;
+      }
+      /**
+       * <code>map&lt;string, string&gt; extensions = 1;</code>
+       */
+
+      public Builder putAllExtensions(
+          java.util.Map<java.lang.String, java.lang.String> values) {
+        internalGetMutableExtensions().getMutableMap()
+            .putAll(values);
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:CloudEventOverrides)
+    }
+
+    // @@protoc_insertion_point(class_scope:CloudEventOverrides)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<CloudEventOverrides>
+        PARSER = new com.google.protobuf.AbstractParser<CloudEventOverrides>() {
+      @java.lang.Override
+      public CloudEventOverrides parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new CloudEventOverrides(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<CloudEventOverrides> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CloudEventOverrides> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface ResourceOrBuilder extends
       // @@protoc_insertion_point(interface_extends:Resource)
       com.google.protobuf.MessageOrBuilder {
@@ -11361,6 +12107,21 @@ public final class DataPlaneContract {
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReferenceOrBuilder getMultiAuthSecretOrBuilder();
 
+    /**
+     * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+     * @return Whether the cloudEventOverrides field is set.
+     */
+    boolean hasCloudEventOverrides();
+    /**
+     * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+     * @return The cloudEventOverrides.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides getCloudEventOverrides();
+    /**
+     * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverridesOrBuilder getCloudEventOverridesOrBuilder();
+
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.AuthCase getAuthCase();
   }
   /**
@@ -11509,6 +12270,19 @@ public final class DataPlaneContract {
                 auth_ = subBuilder.buildPartial();
               }
               authCase_ = 9;
+              break;
+            }
+            case 82: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.Builder subBuilder = null;
+              if (cloudEventOverrides_ != null) {
+                subBuilder = cloudEventOverrides_.toBuilder();
+              }
+              cloudEventOverrides_ = input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(cloudEventOverrides_);
+                cloudEventOverrides_ = subBuilder.buildPartial();
+              }
+
               break;
             }
             default: {
@@ -12096,6 +12870,32 @@ public final class DataPlaneContract {
       return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.getDefaultInstance();
     }
 
+    public static final int CLOUDEVENTOVERRIDES_FIELD_NUMBER = 10;
+    private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides cloudEventOverrides_;
+    /**
+     * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+     * @return Whether the cloudEventOverrides field is set.
+     */
+    @java.lang.Override
+    public boolean hasCloudEventOverrides() {
+      return cloudEventOverrides_ != null;
+    }
+    /**
+     * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+     * @return The cloudEventOverrides.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides getCloudEventOverrides() {
+      return cloudEventOverrides_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.getDefaultInstance() : cloudEventOverrides_;
+    }
+    /**
+     * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverridesOrBuilder getCloudEventOverridesOrBuilder() {
+      return getCloudEventOverrides();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -12136,6 +12936,9 @@ public final class DataPlaneContract {
       }
       if (authCase_ == 9) {
         output.writeMessage(9, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) auth_);
+      }
+      if (cloudEventOverrides_ != null) {
+        output.writeMessage(10, getCloudEventOverrides());
       }
       unknownFields.writeTo(output);
     }
@@ -12184,6 +12987,10 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(9, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference) auth_);
       }
+      if (cloudEventOverrides_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(10, getCloudEventOverrides());
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -12217,6 +13024,11 @@ public final class DataPlaneContract {
       }
       if (!getEgressesList()
           .equals(other.getEgressesList())) return false;
+      if (hasCloudEventOverrides() != other.hasCloudEventOverrides()) return false;
+      if (hasCloudEventOverrides()) {
+        if (!getCloudEventOverrides()
+            .equals(other.getCloudEventOverrides())) return false;
+      }
       if (!getAuthCase().equals(other.getAuthCase())) return false;
       switch (authCase_) {
         case 7:
@@ -12264,6 +13076,10 @@ public final class DataPlaneContract {
       if (getEgressesCount() > 0) {
         hash = (37 * hash) + EGRESSES_FIELD_NUMBER;
         hash = (53 * hash) + getEgressesList().hashCode();
+      }
+      if (hasCloudEventOverrides()) {
+        hash = (37 * hash) + CLOUDEVENTOVERRIDES_FIELD_NUMBER;
+        hash = (53 * hash) + getCloudEventOverrides().hashCode();
       }
       switch (authCase_) {
         case 7:
@@ -12439,6 +13255,12 @@ public final class DataPlaneContract {
         } else {
           egressesBuilder_.clear();
         }
+        if (cloudEventOverridesBuilder_ == null) {
+          cloudEventOverrides_ = null;
+        } else {
+          cloudEventOverrides_ = null;
+          cloudEventOverridesBuilder_ = null;
+        }
         authCase_ = 0;
         auth_ = null;
         return this;
@@ -12514,6 +13336,11 @@ public final class DataPlaneContract {
           } else {
             result.auth_ = multiAuthSecretBuilder_.build();
           }
+        }
+        if (cloudEventOverridesBuilder_ == null) {
+          result.cloudEventOverrides_ = cloudEventOverrides_;
+        } else {
+          result.cloudEventOverrides_ = cloudEventOverridesBuilder_.build();
         }
         result.authCase_ = authCase_;
         onBuilt();
@@ -12613,6 +13440,9 @@ public final class DataPlaneContract {
               egressesBuilder_.addAllMessages(other.egresses_);
             }
           }
+        }
+        if (other.hasCloudEventOverrides()) {
+          mergeCloudEventOverrides(other.getCloudEventOverrides());
         }
         switch (other.getAuthCase()) {
           case ABSENTAUTH: {
@@ -14446,6 +15276,125 @@ public final class DataPlaneContract {
         onChanged();;
         return multiAuthSecretBuilder_;
       }
+
+      private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides cloudEventOverrides_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverridesOrBuilder> cloudEventOverridesBuilder_;
+      /**
+       * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+       * @return Whether the cloudEventOverrides field is set.
+       */
+      public boolean hasCloudEventOverrides() {
+        return cloudEventOverridesBuilder_ != null || cloudEventOverrides_ != null;
+      }
+      /**
+       * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+       * @return The cloudEventOverrides.
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides getCloudEventOverrides() {
+        if (cloudEventOverridesBuilder_ == null) {
+          return cloudEventOverrides_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.getDefaultInstance() : cloudEventOverrides_;
+        } else {
+          return cloudEventOverridesBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+       */
+      public Builder setCloudEventOverrides(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides value) {
+        if (cloudEventOverridesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          cloudEventOverrides_ = value;
+          onChanged();
+        } else {
+          cloudEventOverridesBuilder_.setMessage(value);
+        }
+
+        return this;
+      }
+      /**
+       * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+       */
+      public Builder setCloudEventOverrides(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.Builder builderForValue) {
+        if (cloudEventOverridesBuilder_ == null) {
+          cloudEventOverrides_ = builderForValue.build();
+          onChanged();
+        } else {
+          cloudEventOverridesBuilder_.setMessage(builderForValue.build());
+        }
+
+        return this;
+      }
+      /**
+       * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+       */
+      public Builder mergeCloudEventOverrides(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides value) {
+        if (cloudEventOverridesBuilder_ == null) {
+          if (cloudEventOverrides_ != null) {
+            cloudEventOverrides_ =
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.newBuilder(cloudEventOverrides_).mergeFrom(value).buildPartial();
+          } else {
+            cloudEventOverrides_ = value;
+          }
+          onChanged();
+        } else {
+          cloudEventOverridesBuilder_.mergeFrom(value);
+        }
+
+        return this;
+      }
+      /**
+       * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+       */
+      public Builder clearCloudEventOverrides() {
+        if (cloudEventOverridesBuilder_ == null) {
+          cloudEventOverrides_ = null;
+          onChanged();
+        } else {
+          cloudEventOverrides_ = null;
+          cloudEventOverridesBuilder_ = null;
+        }
+
+        return this;
+      }
+      /**
+       * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.Builder getCloudEventOverridesBuilder() {
+        
+        onChanged();
+        return getCloudEventOverridesFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverridesOrBuilder getCloudEventOverridesOrBuilder() {
+        if (cloudEventOverridesBuilder_ != null) {
+          return cloudEventOverridesBuilder_.getMessageOrBuilder();
+        } else {
+          return cloudEventOverrides_ == null ?
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.getDefaultInstance() : cloudEventOverrides_;
+        }
+      }
+      /**
+       * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverridesOrBuilder> 
+          getCloudEventOverridesFieldBuilder() {
+        if (cloudEventOverridesBuilder_ == null) {
+          cloudEventOverridesBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverridesOrBuilder>(
+                  getCloudEventOverrides(),
+                  getParentForChildren(),
+                  isClean());
+          cloudEventOverrides_ = null;
+        }
+        return cloudEventOverridesBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -15439,6 +16388,16 @@ public final class DataPlaneContract {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_MultiSecretReference_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_CloudEventOverrides_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_CloudEventOverrides_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_CloudEventOverrides_ExtensionsEntry_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_CloudEventOverrides_ExtensionsEntry_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Resource_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -15481,28 +16440,32 @@ public final class DataPlaneContract {
       "FieldReference\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005fie" +
       "ld\030\003 \001(\0162\014.SecretField\"Y\n\024MultiSecretRef" +
       "erence\022\033\n\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nr" +
-      "eferences\030\002 \003(\0132\020.SecretReference\"\226\002\n\010Re" +
-      "source\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020b" +
-      "ootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010" +
-      ".Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.EgressC" +
-      "onfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabse" +
-      "ntAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001" +
-      "(\0132\n.ReferenceH\000\0220\n\017multiAuthSecret\030\t \001(" +
-      "\0132\025.MultiSecretReferenceH\000B\006\n\004Auth\"<\n\010Co" +
-      "ntract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030" +
-      "\002 \003(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Exp" +
-      "onential\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022" +
-      "\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n" +
-      "\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tB" +
-      "yteArray\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n" +
-      "\nSTRUCTURED\020\001*a\n\013SecretField\022\022\n\016SASL_MEC" +
-      "HANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010US" +
-      "ER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Prot" +
-      "ocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022" +
-      "\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.ev" +
-      "enting.kafka.broker.contractB\021DataPlaneC" +
-      "ontractZ\032control-plane/pkg/contractb\006pro" +
-      "to3"
+      "eferences\030\002 \003(\0132\020.SecretReference\"\202\001\n\023Cl" +
+      "oudEventOverrides\0228\n\nextensions\030\001 \003(\0132$." +
+      "CloudEventOverrides.ExtensionsEntry\0321\n\017E" +
+      "xtensionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001" +
+      "(\t:\0028\001\"\311\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topi" +
+      "cs\030\002 \003(\t\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007in" +
+      "gress\030\004 \001(\0132\010.Ingress\022#\n\014egressConfig\030\005 " +
+      "\001(\0132\r.EgressConfig\022\031\n\010egresses\030\006 \003(\0132\007.E" +
+      "gress\022\034\n\nabsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\na" +
+      "uthSecret\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAu" +
+      "thSecret\030\t \001(\0132\025.MultiSecretReferenceH\000\022" +
+      "1\n\023cloudEventOverrides\030\n \001(\0132\024.CloudEven" +
+      "tOverridesB\006\n\004Auth\"<\n\010Contract\022\022\n\ngenera" +
+      "tion\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t.Resource" +
+      "*,\n\rBackoffPolicy\022\017\n\013Exponential\020\000\022\n\n\006Li" +
+      "near\020\001*+\n\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022\013" +
+      "\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006String\020\000\022\013\n\007In" +
+      "teger\020\001\022\n\n\006Double\020\002\022\r\n\tByteArray\020\003*)\n\013Co" +
+      "ntentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001*a\n" +
+      "\013SecretField\022\022\n\016SASL_MECHANISM\020\000\022\n\n\006CA_C" +
+      "RT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER" +
+      "\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol\022\r\n\tPLAINTEX" +
+      "T\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL" +
+      "_SSL\020\003B[\n*dev.knative.eventing.kafka.bro" +
+      "ker.contractB\021DataPlaneContractZ\032control" +
+      "-plane/pkg/contractb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -15568,14 +16531,26 @@ public final class DataPlaneContract {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_MultiSecretReference_descriptor,
         new java.lang.String[] { "Protocol", "References", });
-    internal_static_Resource_descriptor =
+    internal_static_CloudEventOverrides_descriptor =
       getDescriptor().getMessageTypes().get(9);
+    internal_static_CloudEventOverrides_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_CloudEventOverrides_descriptor,
+        new java.lang.String[] { "Extensions", });
+    internal_static_CloudEventOverrides_ExtensionsEntry_descriptor =
+      internal_static_CloudEventOverrides_descriptor.getNestedTypes().get(0);
+    internal_static_CloudEventOverrides_ExtensionsEntry_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_CloudEventOverrides_ExtensionsEntry_descriptor,
+        new java.lang.String[] { "Key", "Value", });
+    internal_static_Resource_descriptor =
+      getDescriptor().getMessageTypes().get(10);
     internal_static_Resource_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Resource_descriptor,
-        new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", "AbsentAuth", "AuthSecret", "MultiAuthSecret", "Auth", });
+        new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", "AbsentAuth", "AuthSecret", "MultiAuthSecret", "CloudEventOverrides", "Auth", });
     internal_static_Contract_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(11);
     internal_static_Contract_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Contract_descriptor,

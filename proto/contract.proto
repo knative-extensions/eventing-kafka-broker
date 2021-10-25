@@ -178,6 +178,11 @@ message MultiSecretReference {
   repeated SecretReference references = 2;
 }
 
+// CloudEvent overrides.
+message CloudEventOverrides {
+  map<string, string> extensions = 1;
+}
+
 message Resource {
   // Id of the resource
   // It's the same as the Kubernetes resource uid
@@ -242,6 +247,8 @@ message Resource {
     // Multiple secrets reference.
     MultiSecretReference multiAuthSecret = 9;
   }
+
+  CloudEventOverrides cloudEventOverrides = 10;
 }
 
 message Contract {
