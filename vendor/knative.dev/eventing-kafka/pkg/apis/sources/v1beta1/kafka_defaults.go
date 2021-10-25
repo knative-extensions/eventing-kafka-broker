@@ -22,6 +22,7 @@ import (
 
 	"github.com/google/uuid"
 	"k8s.io/utils/pointer"
+	"knative.dev/pkg/apis"
 
 	"knative.dev/eventing-kafka/pkg/apis/sources/config"
 )
@@ -39,6 +40,8 @@ const (
 
 // SetDefaults ensures KafkaSource reflects the default values.
 func (k *KafkaSource) SetDefaults(ctx context.Context) {
+	ctx = apis.WithinParent(ctx, k.ObjectMeta)
+
 	if k.Spec.ConsumerGroup == "" {
 		k.Spec.ConsumerGroup = uuidPrefix + uuid.New().String()
 	}
@@ -66,4 +69,6 @@ func (k *KafkaSource) SetDefaults(ctx context.Context) {
 		k.Annotations[cooldownPeriodAnnotation] = strconv.FormatInt(kafkaDefaults.CooldownPeriod, 10)
 		k.Annotations[kafkaLagThresholdAnnotation] = strconv.FormatInt(kafkaDefaults.KafkaLagThreshold, 10)
 	}
+
+	k.Spec.Sink.SetDefaults(ctx)
 }
