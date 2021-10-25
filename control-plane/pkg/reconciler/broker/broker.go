@@ -125,20 +125,20 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
+	topicName := kafka.Topic(TopicPrefix, broker)
+
 	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(securityOption)
 	if err != nil {
-		topic := kafka.Topic(TopicPrefix, broker)
-		return statusConditionManager.FailedToCreateTopic(topic, fmt.Errorf("error getting cluster admin config: %w", err))
+		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin config: %w", err))
 	}
 
 	kafkaClusterAdmin, err := r.ClusterAdmin(topicConfig.BootstrapServers, saramaConfig)
 	if err != nil {
-		topic := kafka.Topic(TopicPrefix, broker)
-		return statusConditionManager.FailedToCreateTopic(topic, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
+		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
 	}
 	defer kafkaClusterAdmin.Close()
 
-	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdmin, logger, kafka.Topic(TopicPrefix, broker), topicConfig)
+	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdmin, logger, topicName, topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topic, err)
 	}
@@ -302,16 +302,14 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
-		logger.Warn("error getting cluster admin sarama config", zap.Error(err))
-		return nil
+		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
 	}
 
 	kafkaClusterAdmin, err := r.ClusterAdmin(topicConfig.BootstrapServers, saramaConfig)
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
-		logger.Warn("cannot obtain Kafka cluster admin", zap.Error(err))
-		return nil
+		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
 	defer kafkaClusterAdmin.Close()
 
