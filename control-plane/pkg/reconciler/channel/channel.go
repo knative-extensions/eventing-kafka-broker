@@ -133,8 +133,21 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
+	topicName := topic(TopicPrefix, channel)
+
+	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(saramaSecurityOption)
+	if err != nil {
+		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
+	}
+
+	kafkaClusterAdmin, err := r.ClusterAdmin(topicConfig.BootstrapServers, saramaConfig)
+	if err != nil {
+		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
+	}
+	defer kafkaClusterAdmin.Close()
+
 	// create the topic
-	topic, err := r.ClusterAdmin.CreateTopicIfDoesntExist(logger, topic(TopicPrefix, channel), topicConfig, saramaSecurityOption)
+	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdmin, logger, topicName, topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topic, err)
 	}
@@ -237,7 +250,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 
 	// Get contract data.
 	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
-	if err != nil {
+	if err != nil && ct == nil {
 		return fmt.Errorf("failed to get contract: %w", err)
 	}
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
@@ -329,7 +342,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 	defer kafkaClusterAdmin.Close()
 
-	topic, err := kafka.DeleteTopic(kafkaClusterAdmin, kafka.Topic(TopicPrefix, channel))
+	topic, err := kafka.DeleteTopic(kafkaClusterAdmin, topic(TopicPrefix, channel))
 	if err != nil {
 		return err
 	}

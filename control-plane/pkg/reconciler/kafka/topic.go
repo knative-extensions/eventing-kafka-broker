@@ -103,17 +103,6 @@ func DeleteTopic(admin sarama.ClusterAdmin, topic string) (string, error) {
 	return topic, nil
 }
 
-func (f NewClusterAdminFunc) CreateTopicIfDoesntExist(logger *zap.Logger, topic string, config *TopicConfig, secOptions security.ConfigOption) (string, error) {
-
-	kafkaClusterAdmin, err := GetClusterAdmin(f, config.BootstrapServers, secOptions)
-	if err != nil {
-		return topic, err
-	}
-	defer kafkaClusterAdmin.Close()
-
-	return CreateTopicIfDoesntExist(kafkaClusterAdmin, logger, topic, config)
-}
-
 func (f NewClusterAdminFunc) IsTopicPresentAndValid(topic string, bootstrapServers []string, secOptions security.ConfigOption) (bool, error) {
 
 	kafkaClusterAdmin, err := GetClusterAdmin(f, bootstrapServers, secOptions)
