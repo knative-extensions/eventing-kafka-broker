@@ -21,6 +21,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/pkg/apis"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
@@ -249,6 +251,39 @@ func TestKeyTypeFromString(t *testing.T) {
 		t.Run(tt.s, func(t *testing.T) {
 			if got := KeyTypeFromString(tt.s); got != tt.want {
 				t.Errorf("KeyTypeFromString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSetDeadLetterSinkURIFromEgressConfig(t *testing.T) {
+	t.Parallel()
+
+	uri, _ := apis.ParseURL("https://localhost:433")
+	tests := []struct {
+		name         string
+		got          *eventingduck.DeliveryStatus
+		want         *eventingduck.DeliveryStatus
+		egressConfig *contract.EgressConfig
+	}{
+		{
+			name: "nil egressConfig",
+			got:  &eventingduck.DeliveryStatus{DeadLetterSinkURI: uri},
+			want: &eventingduck.DeliveryStatus{DeadLetterSinkURI: uri},
+		},
+		{
+			name:         "nil DeadLetterSink",
+			got:          &eventingduck.DeliveryStatus{DeadLetterSinkURI: nil},
+			want:         &eventingduck.DeliveryStatus{DeadLetterSinkURI: uri},
+			egressConfig: &contract.EgressConfig{DeadLetter: uri.String()},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			SetDeadLetterSinkURIFromEgressConfig(tt.got, tt.egressConfig)
+			if diff := cmp.Diff(tt.want, tt.got); diff != "" {
+				t.Error("(-want, +got)", diff)
 			}
 		})
 	}

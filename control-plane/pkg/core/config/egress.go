@@ -19,6 +19,8 @@ package config
 import (
 	"google.golang.org/protobuf/proto"
 	"k8s.io/apimachinery/pkg/types"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/pkg/apis"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 )
@@ -79,4 +81,12 @@ func KeyTypeFromString(s string) contract.KeyType {
 	default:
 		return contract.KeyType_String
 	}
+}
+
+// SetDeadLetterSinkURIFromEgressConfig sets eventingduck.DeliveryStatus.DeadLetterSinkURI from a provided contract.EgressConfig.
+func SetDeadLetterSinkURIFromEgressConfig(dStatus *eventingduck.DeliveryStatus, egressConfig *contract.EgressConfig) {
+	if egressConfig == nil {
+		return
+	}
+	dStatus.DeadLetterSinkURI, _ = apis.ParseURL(egressConfig.DeadLetter)
 }
