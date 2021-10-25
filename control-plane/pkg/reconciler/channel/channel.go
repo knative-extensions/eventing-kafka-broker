@@ -134,16 +134,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 
 	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(saramaSecurityOption)
 	if err != nil {
-		// even in error case, we return `normal`, since we are fine with leaving the
-		// topic undeleted e.g. when we lose connection
-		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
+		topic := kafka.Topic(TopicPrefix, channel)
+		return statusConditionManager.FailedToCreateTopic(topic, fmt.Errorf("error getting cluster admin sarama config: %w", err))
 	}
 
 	kafkaClusterAdmin, err := r.ClusterAdmin(topicConfig.BootstrapServers, saramaConfig)
 	if err != nil {
-		// even in error case, we return `normal`, since we are fine with leaving the
-		// topic undeleted e.g. when we lose connection
-		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+		topic := kafka.Topic(TopicPrefix, channel)
+		return statusConditionManager.FailedToCreateTopic(topic, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
 	}
 	defer kafkaClusterAdmin.Close()
 
@@ -241,17 +239,24 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, channel)
 
+	statusConditionManager := base.StatusConditionManager{
+		Object:     channel,
+		SetAddress: channel.Status.SetAddress,
+		Configs:    r.Configs,
+		Recorder:   controller.GetEventRecorder(ctx),
+	}
+
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get contract config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
+		return statusConditionManager.FailedToGetConfigMap(err)
 	}
 	logger.Debug("Got contract config map")
 
 	// Get contract data.
 	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
-	if err != nil {
-		return fmt.Errorf("failed to get contract: %w", err)
+	if err != nil && ct == nil {
+		return statusConditionManager.FailedToGetDataFromConfigMap(err)
 	}
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
@@ -331,14 +336,16 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
-		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
+		logger.Warn("error getting cluster admin sarama config", zap.Error(err))
+		return nil
 	}
 
 	kafkaClusterAdmin, err := r.ClusterAdmin(topicConfig.BootstrapServers, saramaConfig)
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
-		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+		logger.Warn("cannot obtain Kafka cluster admin", zap.Error(err))
+		return nil
 	}
 	defer kafkaClusterAdmin.Close()
 
