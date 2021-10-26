@@ -25,6 +25,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
+	kafkachannelclient "knative.dev/eventing-kafka/pkg/client/injection/client"
 	kafkachannelinformer "knative.dev/eventing-kafka/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
 	kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 
@@ -60,6 +61,10 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DispatcherLabel:             base.ChannelDispatcherLabel,
 			ReceiverLabel:               base.ChannelReceiverLabel,
 		},
+		// TODO: expose, like others
+		kafkaClientSet: kafkachannelclient.Get(ctx),
+		// TODO: rename
+		KafkaClient:          sarama.NewClient,
 		NewKafkaClusterAdmin: sarama.NewClusterAdmin,
 		Configs:              configs,
 		ConfigMapLister:      configmapInformer.Lister(),
