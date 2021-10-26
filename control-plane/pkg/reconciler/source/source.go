@@ -115,11 +115,12 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 	}
 	defer kafkaClusterAdmin.Close()
 
-	for _, t := range ks.Spec.Topics {
-		_, err := kafka.IsTopicPresentAndValid(kafkaClusterAdmin, t)
-		if err != nil {
-			return fmt.Errorf("failed to verify topic validity: %w", err)
-		}
+	isValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdmin, ks.Spec.Topics...)
+	if err != nil {
+		return statusConditionManager.TopicsNotPresentOrInvalidErr(ks.Spec.Topics, err)
+	}
+	if !isValid {
+		return statusConditionManager.TopicsNotPresentOrInvalid(ks.Spec.Topics)
 	}
 	statusConditionManager.TopicReady(strings.Join(ks.Spec.Topics, ", "))
 
