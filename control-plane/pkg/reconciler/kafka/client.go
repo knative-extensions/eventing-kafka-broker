@@ -21,6 +21,9 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
+// NewClusterAdminFunc creates new sarama.ClusterAdmin.
+type NewClusterAdminFunc func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error)
+
 // GetClusterAdminSaramaConfig returns Kafka Admin configurations that the ConfigOptions are applied to
 func GetClusterAdminSaramaConfig(secOptions security.ConfigOption) (*sarama.Config, error) {
 	config := sarama.NewConfig()
