@@ -101,7 +101,7 @@ func DeleteTopic(admin sarama.ClusterAdmin, topic string) (string, error) {
 	return topic, nil
 }
 
-func IsTopicPresentAndValid(kafkaClusterAdmin sarama.ClusterAdmin, topic string, bootstrapServers []string, secOptions ConfigOption) (bool, error) {
+func IsTopicPresentAndValid(kafkaClusterAdmin sarama.ClusterAdmin, topic string) (bool, error) {
 	metadata, err := kafkaClusterAdmin.DescribeTopics([]string{topic})
 	if err != nil {
 		return false, fmt.Errorf("failed to describe topic %s: %w", topic, err)
