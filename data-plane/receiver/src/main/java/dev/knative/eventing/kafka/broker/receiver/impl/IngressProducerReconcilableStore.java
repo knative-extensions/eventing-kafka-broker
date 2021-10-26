@@ -29,11 +29,13 @@ import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.producer.KafkaProducer;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
+
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,12 +94,10 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
 
     // Compute the properties
     final var producerProps = (Properties) this.producerConfigs.clone();
-    if (resource.hasAuthSecret()) {
-      return authProvider.getCredentials(resource.getAuthSecret().getNamespace(), resource.getAuthSecret().getName())
-        .map(credentials -> KafkaClientsAuth.attachCredentials(producerProps, credentials))
-        .compose(configs -> onNewIngress(resource, ingress, configs));
-    }
-    return onNewIngress(resource, ingress, producerProps);
+
+    return authProvider.getCredentials(resource)
+      .map(credentials -> KafkaClientsAuth.attachCredentials(producerProps, credentials))
+      .compose(configs -> onNewIngress(resource, ingress, configs));
   }
 
   private Future<Void> onNewIngress(final DataPlaneContract.Resource resource,

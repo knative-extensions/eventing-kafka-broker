@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.core.security;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.vertx.core.Future;
 
@@ -28,10 +29,14 @@ public interface AuthProvider {
     return new KubernetesAuthProvider(new DefaultKubernetesClient());
   }
 
+  static AuthProvider noAuth() {
+    return resource -> Future.succeededFuture(new PlaintextCredentials());
+  }
+
   /**
-   * Get credentials from given a location represented by namespace and name.
+   * Get credentials from given a resource.
    *
    * @return A failed or succeeded future with valid credentials.
    */
-  Future<Credentials> getCredentials(final String namespace, final String name);
+  Future<Credentials> getCredentials(final DataPlaneContract.Resource resource);
 }

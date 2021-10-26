@@ -23,6 +23,7 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
+import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
@@ -101,7 +102,7 @@ public class ReceiverVerticleTest {
     produceRequestCount = new CumulativeCounter(mock(Id.class));
 
     store = new IngressProducerReconcilableStore(
-      null,
+      AuthProvider.noAuth(),
       new Properties(),
       properties -> producer
     );
@@ -358,7 +359,8 @@ public class ReceiverVerticleTest {
       this.requestSender = requestSender;
       this.responseStatusCode = responseStatusCode;
       this.record = record;
-      this.resource = resource;
+      this.resource = DataPlaneContract.Resource.newBuilder(resource)
+        .build();
 
       int badRequestCount = 0;
       int produceEventsCount = 0;

@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Base64;
+import java.util.Map;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -53,6 +54,11 @@ class KubernetesCredentials implements Credentials {
 
   KubernetesCredentials(final Secret secret) {
     this.secret = secret;
+  }
+
+  KubernetesCredentials(final Map<String, String> secretData) {
+    this.secret = new Secret();
+    this.secret.setData(secretData);
   }
 
   @Override
@@ -152,7 +158,7 @@ class KubernetesCredentials implements Credentials {
         return null;
       }
       this.SASLMechanism = switch (new String(Base64.getDecoder().decode(SASLMechanism))) {
-        case "PLAIN"         -> "PLAIN";
+        case "PLAIN" -> "PLAIN";
         case "SCRAM-SHA-256" -> "SCRAM-SHA-256";
         case "SCRAM-SHA-512" -> "SCRAM-SHA-512";
         default -> null;

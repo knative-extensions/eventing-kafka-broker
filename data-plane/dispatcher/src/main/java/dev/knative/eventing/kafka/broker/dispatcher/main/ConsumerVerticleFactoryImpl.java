@@ -20,6 +20,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
+import dev.knative.eventing.kafka.broker.core.security.Credentials;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
 import dev.knative.eventing.kafka.broker.core.security.PlaintextCredentials;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
@@ -140,10 +141,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     final DeliveryOrder deliveryOrder = DeliveryOrder.fromContract(egress.getDeliveryOrder());
 
     final BaseConsumerVerticle.Initializer initializer = (vertx, consumerVerticle) ->
-      (resource.hasAuthSecret() ?
-        authProvider.getCredentials(resource.getAuthSecret().getNamespace(), resource.getAuthSecret().getName()) :
-        Future.succeededFuture(new PlaintextCredentials())
-      ).onSuccess(credentials -> {
+      authProvider.getCredentials(resource).onSuccess(credentials -> {
         KafkaClientsAuth.attachCredentials(consumerConfigs, credentials);
         KafkaClientsAuth.attachCredentials(producerConfigs, credentials);
 

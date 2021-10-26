@@ -46,15 +46,16 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collections;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.AfterAll;
@@ -315,7 +316,7 @@ public class DataPlaneTest {
       consumerConfigs,
       new WebClientOptions(),
       producerConfigs,
-      mock(AuthProvider.class),
+      AuthProvider.noAuth(),
       Metrics.getRegistry()
     );
 
@@ -346,7 +347,7 @@ public class DataPlaneTest {
       env,
       httpServerOptions,
       v -> new IngressProducerReconcilableStore(
-        null,
+        AuthProvider.noAuth(),
         producerConfigs(),
         properties -> KafkaProducer.create(v, properties)
       ),

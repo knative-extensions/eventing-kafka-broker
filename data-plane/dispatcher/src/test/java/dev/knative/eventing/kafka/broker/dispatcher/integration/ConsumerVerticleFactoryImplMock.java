@@ -23,12 +23,14 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
@@ -53,7 +55,7 @@ public class ConsumerVerticleFactoryImplMock extends ConsumerVerticleFactoryImpl
       consumerConfigs,
       new WebClientOptions(),
       producerConfigs,
-      mock(AuthProvider.class),
+      AuthProvider.noAuth(),
       Metrics.getRegistry()
     );
     mockProducer = new ConcurrentHashMap<>();
