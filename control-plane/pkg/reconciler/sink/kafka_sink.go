@@ -100,22 +100,22 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
+	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(securityOption)
+	if err != nil {
+		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
+	}
+
+	kafkaClusterAdmin, err := r.ClusterAdmin(ks.Spec.BootstrapServers, saramaConfig)
+	if err != nil {
+		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+	}
+	defer kafkaClusterAdmin.Close()
+
 	if ks.Spec.NumPartitions != nil && ks.Spec.ReplicationFactor != nil {
 
 		ks.GetStatus().Annotations[base.TopicOwnerAnnotation] = ControllerTopicOwner
 
 		topicConfig := topicConfigFromSinkSpec(&ks.Spec)
-
-		saramaConfig, err := kafka.GetClusterAdminSaramaConfig(securityOption)
-		if err != nil {
-			return fmt.Errorf("error getting cluster admin sarama config: %w", err)
-		}
-
-		kafkaClusterAdmin, err := r.ClusterAdmin(ks.Spec.BootstrapServers, saramaConfig)
-		if err != nil {
-			return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
-		}
-		defer kafkaClusterAdmin.Close()
 
 		topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdmin, logger, ks.Spec.Topic, topicConfig)
 		if err != nil {
@@ -124,10 +124,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	} else {
 
 		// If the topic is externally managed, we need to make sure that the topic exists and it's valid.
-
 		ks.GetStatus().Annotations[base.TopicOwnerAnnotation] = ExternalTopicOwner
 
-		isPresentAndValid, err := r.ClusterAdmin.IsTopicPresentAndValid(ks.Spec.Topic, ks.Spec.BootstrapServers, securityOption)
+		isPresentAndValid, err := kafka.IsTopicPresentAndValid(kafkaClusterAdmin, ks.Spec.Topic, ks.Spec.BootstrapServers, securityOption)
 		if err != nil {
 			return statusConditionManager.TopicNotPresentOrInvalidErr(err)
 		}

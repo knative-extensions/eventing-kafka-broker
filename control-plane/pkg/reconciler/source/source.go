@@ -104,8 +104,19 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
+	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(securityOption)
+	if err != nil {
+		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
+	}
+
+	kafkaClusterAdmin, err := r.ClusterAdmin(ks.Spec.BootstrapServers, saramaConfig)
+	if err != nil {
+		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+	}
+	defer kafkaClusterAdmin.Close()
+
 	for _, t := range ks.Spec.Topics {
-		_, err := r.ClusterAdmin.IsTopicPresentAndValid(t, ks.Spec.BootstrapServers, securityOption)
+		_, err := kafka.IsTopicPresentAndValid(kafkaClusterAdmin, t, ks.Spec.BootstrapServers, securityOption)
 		if err != nil {
 			return fmt.Errorf("failed to verify topic validity: %w", err)
 		}
