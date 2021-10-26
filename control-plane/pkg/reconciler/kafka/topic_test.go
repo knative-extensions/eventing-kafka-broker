@@ -318,25 +318,23 @@ func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
 		bootstrapServers []string
 	}
 	tests := []struct {
-		name    string
-		f       NewClusterAdminFunc
-		args    args
-		want    bool
-		wantErr bool
+		name         string
+		clusterAdmin sarama.ClusterAdmin
+		args         args
+		want         bool
+		wantErr      bool
 	}{
 		{
 			name: "topic exists",
-			f: func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
-				return &kafkatesting.MockKafkaClusterAdmin{
-					ExpectedTopics: []string{"topic-name-1"},
-					ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
-						{
-							Name:       "topic-name-1",
-							IsInternal: false,
-						},
+			clusterAdmin: &kafkatesting.MockKafkaClusterAdmin{
+				ExpectedTopics: []string{"topic-name-1"},
+				ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
+					{
+						Name:       "topic-name-1",
+						IsInternal: false,
 					},
-					T: t,
-				}, nil
+				},
+				T: t,
 			},
 			args: args{
 				topic:            "topic-name-1",
@@ -347,17 +345,15 @@ func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
 		},
 		{
 			name: "topic exists - internal topic",
-			f: func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
-				return &kafkatesting.MockKafkaClusterAdmin{
-					ExpectedTopics: []string{"topic-name-1"},
-					ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
-						{
-							Name:       "topic-name-1",
-							IsInternal: true,
-						},
+			clusterAdmin: &kafkatesting.MockKafkaClusterAdmin{
+				ExpectedTopics: []string{"topic-name-1"},
+				ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
+					{
+						Name:       "topic-name-1",
+						IsInternal: true,
 					},
-					T: t,
-				}, nil
+				},
+				T: t,
 			},
 			args: args{
 				topic:            "topic-name-1",
@@ -368,12 +364,10 @@ func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
 		},
 		{
 			name: "DescribeTopics returns error",
-			f: func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
-				return &kafkatesting.MockKafkaClusterAdmin{
-					ExpectedTopics:                []string{"topic-name-1"},
-					ExpectedErrorOnDescribeTopics: fmt.Errorf("error"),
-					T:                             t,
-				}, nil
+			clusterAdmin: &kafkatesting.MockKafkaClusterAdmin{
+				ExpectedTopics:                []string{"topic-name-1"},
+				ExpectedErrorOnDescribeTopics: fmt.Errorf("error"),
+				T:                             t,
 			},
 			args: args{
 				topic:            "topic-name-1",
@@ -385,7 +379,7 @@ func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.f.IsTopicPresentAndValid(tt.args.topic, tt.args.bootstrapServers, security.NoOp)
+			got, err := IsTopicPresentAndValid(tt.clusterAdmin, tt.args.topic, tt.args.bootstrapServers, security.NoOp)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("IsTopicPresentAndValid() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -395,31 +389,6 @@ func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestNewClusterAdminFuncIsTopicPresentCloseClusterAdmin(t *testing.T) {
-
-	ca := &kafkatesting.MockKafkaClusterAdmin{
-		ExpectedTopics: []string{"topic-name-1"},
-		ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
-			{
-				Name:       "topic-name-1",
-				IsInternal: false,
-			},
-		},
-		ExpectedClose: false,
-		T:             t,
-	}
-
-	f := NewClusterAdminFunc(func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
-		return ca, nil
-	})
-
-	got, err := f.IsTopicPresentAndValid("topic-name-1", []string{}, security.NoOp)
-
-	assert.Nil(t, err, "IsTopicPresentAndValid() error = %v, wantErr %v", err, false)
-	assert.True(t, got, "IsTopicPresentAndValid() got = %v, want %v", got, true)
-	assert.True(t, ca.ExpectedClose, "expected call to Close() on ClusterAdmin")
 }
 
 func TestBootstrapServersArray(t *testing.T) {
