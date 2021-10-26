@@ -48,7 +48,7 @@ type SecretProviderFunc func(ctx context.Context, namespace, name string) (*core
 
 func NewSaramaSecurityOptionFromSecret(secret *corev1.Secret) kafka.ConfigOption {
 	if secret == nil {
-		return kafka.NoOp
+		return kafka.NoOpConfigOption
 	}
 	return secretData(secret.Data)
 }

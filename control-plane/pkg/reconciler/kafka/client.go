@@ -31,8 +31,8 @@ func Options(config *sarama.Config, options ...ConfigOption) error {
 	return nil
 }
 
-// NoOp is a no-op ConfigOption.
-func NoOp(*sarama.Config) error {
+// NoOpConfigOption is a no-op ConfigOption.
+func NoOpConfigOption(*sarama.Config) error {
 	return nil
 }
 

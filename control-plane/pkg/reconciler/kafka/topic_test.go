@@ -378,7 +378,7 @@ func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := IsTopicPresentAndValid(tt.clusterAdmin, tt.args.topic, tt.args.bootstrapServers, NoOp)
+			got, err := IsTopicPresentAndValid(tt.clusterAdmin, tt.args.topic, tt.args.bootstrapServers, NoOpConfigOption)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("IsTopicPresentAndValid() error = %v, wantErr %v", err, tt.wantErr)
 				return
