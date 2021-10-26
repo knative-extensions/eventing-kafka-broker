@@ -58,9 +58,9 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 			SystemNamespace:             configs.SystemNamespace,
 			ReceiverLabel:               base.SinkReceiverLabel,
 		},
-		ConfigMapLister: configmapInformer.Lister(),
-		ClusterAdmin:    sarama.NewClusterAdmin,
-		Configs:         configs,
+		ConfigMapLister:      configmapInformer.Lister(),
+		NewKafkaClusterAdmin: sarama.NewClusterAdmin,
+		Configs:              configs,
 	}
 
 	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)

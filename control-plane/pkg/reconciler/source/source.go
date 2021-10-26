@@ -58,9 +58,9 @@ type Reconciler struct {
 
 	Resolver *resolver.URIResolver
 
-	// ClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// NewKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	ClusterAdmin kafka.NewClusterAdminFunc
+	NewKafkaClusterAdmin kafka.NewClusterAdminFunc
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
@@ -109,7 +109,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
 	}
 
-	kafkaClusterAdmin, err := r.ClusterAdmin(ks.Spec.BootstrapServers, saramaConfig)
+	kafkaClusterAdmin, err := r.NewKafkaClusterAdmin(ks.Spec.BootstrapServers, saramaConfig)
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
