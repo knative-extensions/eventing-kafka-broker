@@ -231,6 +231,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       && Objects.equals(r1.getAuthSecret(), r2.getAuthSecret())
       && Objects.equals(r1.hasMultiAuthSecret(), r2.hasMultiAuthSecret())
       && Objects.equals(r1.getMultiAuthSecret(), r2.getMultiAuthSecret())
+      && Objects.equals(r1.getCloudEventOverrides(), r2.getCloudEventOverrides())
       // In the case of ingress reconcile, do we really care about this one?
       && Objects.equals(r1.getEgressConfig(), r2.getEgressConfig());
   }

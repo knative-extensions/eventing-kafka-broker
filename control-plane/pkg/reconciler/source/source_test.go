@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
@@ -111,6 +112,71 @@ func TestReconcileKind(t *testing.T) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
+						SourceConfigMapUpdatedReady(&configs),
+						SourceTopicsReady,
+						SourceDataPlaneAvailable,
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		},
+		{
+			Name: "Reconciled normal - ce overrides",
+			Objects: []runtime.Object{
+				NewSourceSinkObject(),
+				NewSource(WithCloudEventOverrides(&duckv1.CloudEventOverrides{
+					Extensions: map[string]string{"a": "foo", "b": "foo"},
+				})),
+				SourceDispatcherPod(configs.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&configs, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              SourceUUID,
+							Topics:           SourceTopics,
+							BootstrapServers: SourceBootstrapServers,
+							CloudEventOverrides: &contract.CloudEventOverrides{
+								Extensions: map[string]string{"a": "foo", "b": "foo"},
+							},
+							Egresses: []*contract.Egress{
+								{
+									ConsumerGroup: SourceConsumerGroup,
+									Destination:   ServiceURL,
+									Uid:           SourceUUID,
+									EgressConfig:  &DefaultEgressConfig,
+									DeliveryOrder: DefaultDeliveryOrder,
+									ReplyStrategy: &contract.Egress_DiscardReply{},
+								},
+							},
+							Auth: &contract.Resource_AbsentAuth{},
+						},
+					},
+				}),
+				SourceDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMap(&configs, nil),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						WithCloudEventOverrides(&duckv1.CloudEventOverrides{
+							Extensions: map[string]string{"a": "foo", "b": "foo"},
+						}),
 						SourceConfigMapUpdatedReady(&configs),
 						SourceTopicsReady,
 						SourceDataPlaneAvailable,

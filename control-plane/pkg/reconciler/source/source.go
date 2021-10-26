@@ -257,6 +257,11 @@ func (r *Reconciler) reconcileKafkaSourceResource(ctx context.Context, ks *sourc
 		Egresses:         []*contract.Egress{egress},
 		Auth:             &contract.Resource_AbsentAuth{},
 	}
+	if ks.Spec.CloudEventOverrides != nil {
+		resource.CloudEventOverrides = &contract.CloudEventOverrides{
+			Extensions: ks.Spec.CloudEventOverrides.Extensions,
+		}
+	}
 	if secret != nil {
 		resource.Auth = &contract.Resource_AuthSecret{
 			AuthSecret: &contract.Reference{

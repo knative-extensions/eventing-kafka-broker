@@ -91,6 +91,12 @@ func WithKeyType(keyType string) SourceOption {
 	}
 }
 
+func WithCloudEventOverrides(overrides *duckv1.CloudEventOverrides) SourceOption {
+	return func(ks *sources.KafkaSource) {
+		ks.Spec.CloudEventOverrides = overrides
+	}
+}
+
 func NewSourceSinkObject() *corev1.Service {
 	return NewService()
 }
