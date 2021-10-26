@@ -26,7 +26,6 @@ import (
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 )
 
@@ -379,7 +378,7 @@ func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := IsTopicPresentAndValid(tt.clusterAdmin, tt.args.topic, tt.args.bootstrapServers, security.NoOp)
+			got, err := IsTopicPresentAndValid(tt.clusterAdmin, tt.args.topic, tt.args.bootstrapServers, NoOp)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("IsTopicPresentAndValid() error = %v, wantErr %v", err, tt.wantErr)
 				return
