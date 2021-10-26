@@ -59,7 +59,7 @@ const (
 	ReasonDataPlaneNotAvailable  = "Data plane not available"
 	MessageDataPlaneNotAvailable = "Did you install the data plane for this component?"
 
-	ReasonTopicNotPresent = "Topic is not present"
+	ReasonTopicNotPresentOrInvalid = "Topic is not present or invalid"
 )
 
 type Object interface {
@@ -229,24 +229,24 @@ func (manager *StatusConditionManager) ConfigResolved() {
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrue(ConditionConfigParsed)
 }
 
-func (manager *StatusConditionManager) TopicNotPresentOrInvalidErr(err error) error {
+func (manager *StatusConditionManager) TopicsNotPresentOrInvalidErr(topics []string, err error) error {
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
 		ConditionTopicReady,
-		ReasonTopicNotPresent,
+		ReasonTopicNotPresentOrInvalid,
+		"topics %v: %s",
+		topics,
 		err.Error(),
 	)
 
-	return fmt.Errorf("topic is not present: %w", err)
+	return fmt.Errorf("topics %v not present or invalid: %w", topics, err)
 }
 
-func (manager *StatusConditionManager) TopicNotPresentOrInvalid() error {
-
+func (manager *StatusConditionManager) TopicsNotPresentOrInvalid(topics []string) error {
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
 		ConditionTopicReady,
-		ReasonTopicNotPresent,
-		"Check topic configuration",
+		ReasonTopicNotPresentOrInvalid,
+		"Check topics %v configuration",
+		topics,
 	)
-
-	return fmt.Errorf("topic is not present: check topic configuration")
-
+	return fmt.Errorf("topics %v not present or invalid: check topic configuration", topics)
 }

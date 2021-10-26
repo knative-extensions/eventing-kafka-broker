@@ -101,15 +101,38 @@ func DeleteTopic(admin sarama.ClusterAdmin, topic string) (string, error) {
 	return topic, nil
 }
 
-func IsTopicPresentAndValid(kafkaClusterAdmin sarama.ClusterAdmin, topic string) (bool, error) {
-	metadata, err := kafkaClusterAdmin.DescribeTopics([]string{topic})
-	if err != nil {
-		return false, fmt.Errorf("failed to describe topic %s: %w", topic, err)
+func AreTopicsPresentAndValid(kafkaClusterAdmin sarama.ClusterAdmin, topics ...string) (bool, error) {
+	if len(topics) == 0 {
+		return false, fmt.Errorf("expected at least one topic, got 0")
 	}
 
-	return isValidSingleTopicMetadata(metadata, topic), nil
+	metadata, err := kafkaClusterAdmin.DescribeTopics(topics)
+	if err != nil {
+		return false, fmt.Errorf("failed to describe topics %v: %w", topics, err)
+	}
+
+	metadataByTopic := make(map[string]*sarama.TopicMetadata, len(metadata))
+	for _, m := range metadata {
+		metadataByTopic[m.Name] = m
+	}
+
+	for _, t := range topics {
+		m, ok := metadataByTopic[t]
+		if !ok || !isValidSingleTopicMetadata(m, t) {
+			return false, InvalidOrNotPresentTopic{Topic: t}
+		}
+	}
+	return true, nil
 }
 
-func isValidSingleTopicMetadata(metadata []*sarama.TopicMetadata, topic string) bool {
-	return len(metadata) == 1 && metadata[0].Name == topic && !metadata[0].IsInternal
+func isValidSingleTopicMetadata(metadata *sarama.TopicMetadata, topic string) bool {
+	return len(metadata.Partitions) > 0 && metadata.Name == topic && !metadata.IsInternal
+}
+
+type InvalidOrNotPresentTopic struct {
+	Topic string
+}
+
+func (it InvalidOrNotPresentTopic) Error() string {
+	return fmt.Sprintf("invalid topic %s", it.Topic)
 }

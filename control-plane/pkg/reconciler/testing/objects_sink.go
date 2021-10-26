@@ -45,7 +45,7 @@ const (
 	SinkNumPartitions     = 10
 	SinkReplicationFactor = 3
 
-	SinkNotPresentErrFormat = "failed to describe topic %s: %v"
+	SinkNotPresentErrFormat = "failed to describe topics %v: %v"
 
 	topicPrefix = "knative-sink-"
 )
@@ -149,8 +149,8 @@ func SinkTopicNotPresentErr(topic string, err error) func(sink *eventing.KafkaSi
 	return func(sink *eventing.KafkaSink) {
 		sink.GetConditionSet().Manage(sink.GetStatus()).MarkFalse(
 			base.ConditionTopicReady,
-			base.ReasonTopicNotPresent,
-			fmt.Sprintf(SinkNotPresentErrFormat, topic, err),
+			base.ReasonTopicNotPresentOrInvalid,
+			fmt.Sprintf("topics %v: "+SinkNotPresentErrFormat, []string{topic}, []string{topic}, err),
 		)
 	}
 }

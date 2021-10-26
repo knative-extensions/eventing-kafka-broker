@@ -434,6 +434,11 @@ func TestReconcileKind(t *testing.T) {
 func useTable(t *testing.T, table TableTest, configs broker.Configs) {
 	table.Test(t, NewFactory(&configs, func(ctx context.Context, listers *Listers, configs *broker.Configs, row *TableRow) controller.Reconciler {
 
+		var topicMetadata []*sarama.TopicMetadata
+		for _, t := range SourceTopics {
+			topicMetadata = append(topicMetadata, &sarama.TopicMetadata{Name: t, Partitions: []*sarama.PartitionMetadata{{}}})
+		}
+
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
@@ -456,7 +461,7 @@ func useTable(t *testing.T, table TableTest, configs broker.Configs) {
 					ExpectedCloseError:                     nil,
 					ExpectedTopics:                         SourceTopics,
 					ExpectedErrorOnDescribeTopics:          nil,
-					ExpectedTopicsMetadataOnDescribeTopics: nil,
+					ExpectedTopicsMetadataOnDescribeTopics: topicMetadata,
 					T:                                      t,
 				}, nil
 			},

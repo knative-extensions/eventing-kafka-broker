@@ -295,8 +295,8 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"topic is not present: "+SinkNotPresentErrFormat,
-					SinkTopic(), io.EOF,
+					"topics %v not present or invalid: "+SinkNotPresentErrFormat,
+					[]string{SinkTopic()}, []string{SinkTopic()}, io.EOF,
 				),
 			},
 			WantErr: true,
@@ -1069,6 +1069,7 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 				metadata = append(metadata, &sarama.TopicMetadata{
 					Name:       topic,
 					IsInternal: false,
+					Partitions: []*sarama.PartitionMetadata{{}},
 				})
 			}
 		}
@@ -1097,8 +1098,8 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 					ErrorOnCreateTopic:                     onCreateTopicError,
 					ErrorOnDeleteTopic:                     onDeleteTopicError,
 					ExpectedTopics:                         expectedTopicsOnDescribeTopics,
-					ExpectedTopicsMetadataOnDescribeTopics: metadata,
 					ExpectedErrorOnDescribeTopics:          errorOnDescribeTopics,
+					ExpectedTopicsMetadataOnDescribeTopics: metadata,
 					T:                                      t,
 				}, nil
 			},

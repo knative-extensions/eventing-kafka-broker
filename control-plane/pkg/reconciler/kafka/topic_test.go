@@ -25,8 +25,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+
+	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 )
 
 func TestCreateTopic(t *testing.T) {
@@ -312,14 +313,10 @@ func TestCreateTopicTopicAlreadyExists(t *testing.T) {
 }
 
 func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
-	type args struct {
-		topic            string
-		bootstrapServers []string
-	}
 	tests := []struct {
 		name         string
 		clusterAdmin sarama.ClusterAdmin
-		args         args
+		topics       []string
 		want         bool
 		wantErr      bool
 	}{
@@ -331,14 +328,12 @@ func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
 					{
 						Name:       "topic-name-1",
 						IsInternal: false,
+						Partitions: []*sarama.PartitionMetadata{{}},
 					},
 				},
 				T: t,
 			},
-			args: args{
-				topic:            "topic-name-1",
-				bootstrapServers: []string{},
-			},
+			topics:  []string{"topic-name-1"},
 			want:    true,
 			wantErr: false,
 		},
@@ -354,12 +349,32 @@ func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
 				},
 				T: t,
 			},
-			args: args{
-				topic:            "topic-name-1",
-				bootstrapServers: []string{},
-			},
+			topics:  []string{"topic-name-1"},
 			want:    false,
-			wantErr: false,
+			wantErr: true,
+		},
+		{
+			name: "topic exists - no partitions",
+			clusterAdmin: &kafkatesting.MockKafkaClusterAdmin{
+				ExpectedTopics: []string{"topic-name-1"},
+				ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
+					{
+						Name:       "topic-name-1",
+						IsInternal: false,
+						Partitions: []*sarama.PartitionMetadata{},
+					},
+				},
+				T: t,
+			},
+			topics:  []string{"topic-name-1"},
+			want:    false,
+			wantErr: true,
+		},
+		{
+			name:    "no topics given",
+			topics:  []string{},
+			want:    false,
+			wantErr: true,
 		},
 		{
 			name: "DescribeTopics returns error",
@@ -368,26 +383,29 @@ func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
 				ExpectedErrorOnDescribeTopics: fmt.Errorf("error"),
 				T:                             t,
 			},
-			args: args{
-				topic:            "topic-name-1",
-				bootstrapServers: []string{},
-			},
+			topics:  []string{"topic-name-1"},
 			want:    false,
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := IsTopicPresentAndValid(tt.clusterAdmin, tt.args.topic)
+			got, err := AreTopicsPresentAndValid(tt.clusterAdmin, tt.topics...)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("IsTopicPresentAndValid() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("AreTopicsPresentAndValid() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("IsTopicPresentAndValid() got = %v, want %v", got, tt.want)
+				t.Errorf("AreTopicsPresentAndValid() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
+}
+
+func TestInvalidOrNotPresentTopic(t *testing.T) {
+	err := &InvalidOrNotPresentTopic{Topic: "topic"}
+
+	require.Contains(t, err.Error(), err.Topic)
 }
 
 func TestBootstrapServersArray(t *testing.T) {
