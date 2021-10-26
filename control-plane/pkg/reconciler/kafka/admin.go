@@ -17,45 +17,8 @@
 package kafka
 
 import (
-	"fmt"
-
 	"github.com/Shopify/sarama"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 // NewClusterAdminFunc creates new sarama.ClusterAdmin.
 type NewClusterAdminFunc func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error)
-
-// AdminConfig returns Kafka Admin configurations.
-func AdminConfig() *sarama.Config {
-	config := sarama.NewConfig()
-	config.Version = sarama.MaxVersion
-
-	return config
-}
-
-// GetClusterAdmin creates a new sarama.ClusterAdmin.
-//
-// The caller is responsible for closing the sarama.ClusterAdmin.
-func GetClusterAdmin(adminFunc NewClusterAdminFunc, bootstrapServers []string, secOptions security.ConfigOption) (sarama.ClusterAdmin, error) {
-	return GetClusterAdminFromConfig(adminFunc, AdminConfig(), bootstrapServers, secOptions)
-}
-
-// GetClusterAdminFromConfig creates a new sarama.ClusterAdmin.
-//
-// The caller is responsible for closing the sarama.ClusterAdmin.
-func GetClusterAdminFromConfig(adminFunc NewClusterAdminFunc, config *sarama.Config, bootstrapServers []string, secOptions security.ConfigOption) (sarama.ClusterAdmin, error) {
-
-	err := secOptions(config)
-	if err != nil {
-		return nil, err
-	}
-
-	kafkaClusterAdmin, err := adminFunc(bootstrapServers, config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create cluster admin: %w", err)
-	}
-
-	return kafkaClusterAdmin, nil
-}
