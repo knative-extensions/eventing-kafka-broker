@@ -60,9 +60,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DispatcherLabel:             base.ChannelDispatcherLabel,
 			ReceiverLabel:               base.ChannelReceiverLabel,
 		},
-		ClusterAdmin:    sarama.NewClusterAdmin,
-		Configs:         configs,
-		ConfigMapLister: configmapInformer.Lister(),
+		NewKafkaClusterAdmin: sarama.NewClusterAdmin,
+		Configs:              configs,
+		ConfigMapLister:      configmapInformer.Lister(),
 	}
 
 	logger := logging.FromContext(ctx)
