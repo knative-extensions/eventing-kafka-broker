@@ -232,7 +232,7 @@ public class InvalidCloudEventInterceptorTest {
     } else if (i.key() instanceof byte[]) {
       value.withExtension("partitionkey", (byte[]) i.key());
       value.withExtension("key", (byte[]) i.key());
-    } else {
+    } else if (i.key() != null) {
       throw new IllegalArgumentException("unknown type for key: " + i.key());
     }
   }
@@ -288,7 +288,8 @@ public class InvalidCloudEventInterceptorTest {
         new ConsumerRecord<>("t1", 0, 0, "a", new InvalidCloudEvent(new byte[]{1})),
         new ConsumerRecord<>("t1", 0, 1, "a", new InvalidCloudEvent(new byte[]{1})),
         new ConsumerRecord<>("t1", 0, 1, new byte[]{1, 2, 3, 4}, new InvalidCloudEvent(new byte[]{1})),
-        new ConsumerRecord<>("t1", 0, 1, 4, new InvalidCloudEvent(new byte[]{1}))
+        new ConsumerRecord<>("t1", 0, 1, 4, new InvalidCloudEvent(new byte[]{1})),
+        new ConsumerRecord<>("t1", 0, 1, null, new InvalidCloudEvent(new byte[]{1}))
       ),
       new TopicPartition("t1", 1),
       List.of(new ConsumerRecord<>(

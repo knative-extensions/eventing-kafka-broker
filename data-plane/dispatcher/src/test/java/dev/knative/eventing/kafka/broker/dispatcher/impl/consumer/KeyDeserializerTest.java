@@ -165,4 +165,30 @@ public class KeyDeserializerTest {
     assertThat(got).isInstanceOf(byte[].class);
     assertThat(got).isEqualTo(data);
   }
+
+  @Test
+  public void shouldDeserializeNullKey() {
+    final var deserializer = new KeyDeserializer();
+
+    final var configs = new HashMap<String, Object>();
+    configs.put(KEY_TYPE, DataPlaneContract.KeyType.ByteArray);
+    deserializer.configure(configs, true);
+
+    final var got = deserializer.deserialize("t1", null);
+
+    assertThat(got).isNull();
+  }
+
+  @Test
+  public void shouldDeserializeEmptyKey() {
+    final var deserializer = new KeyDeserializer();
+
+    final var configs = new HashMap<String, Object>();
+    configs.put(KEY_TYPE, DataPlaneContract.KeyType.ByteArray);
+    deserializer.configure(configs, true);
+
+    final var got = deserializer.deserialize("t1", new byte[0]);
+
+    assertThat(got).isNull();
+  }
 }

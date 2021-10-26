@@ -249,6 +249,9 @@ message Resource {
   }
 
   CloudEventOverrides cloudEventOverrides = 10;
+
+  // Resource reference.
+  Reference reference = 11;
 }
 
 message Contract {

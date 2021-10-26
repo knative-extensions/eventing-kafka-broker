@@ -134,6 +134,9 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<Object,
     if (!(record.value() instanceof InvalidCloudEvent)) {
       return record; // Valid CloudEvent
     }
+
+    logger.debug("Transforming invalid CloudEvent for topic {}", record.topic());
+
     final var invalidEvent = (InvalidCloudEvent) record.value();
     // Handle invalid CloudEvents.
     // Create CloudEvent from the record metadata (topic, partition, offset, etc) and use received data as data field.
@@ -184,7 +187,7 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<Object,
       final var keyCasted = (byte[]) key;
       value.withExtension(PARTITION_KEY_EXTENSION, keyCasted);
       value.withExtension(KEY_EXTENSION, keyCasted);
-    } else {
+    } else if (key != null) {
       throw new IllegalStateException("Unknown key type: " + key);
     }
   }

@@ -75,6 +75,9 @@ public class KeyDeserializer implements Deserializer<Object> {
 
   @Override
   public Object deserialize(final String topic, final byte[] data) {
+    if (data == null || data.length == 0) {
+      return null;
+    }
     if (keyType == null) {
       return stringDeserializer.deserialize(topic, data);
     }

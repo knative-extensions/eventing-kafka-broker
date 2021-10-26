@@ -35,6 +35,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherMutatorChain;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.BaseConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventOverridesMutator;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedOffsetManager;
@@ -137,6 +138,10 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     consumerConfigs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
     consumerConfigs.put(ConsumerConfig.GROUP_ID_CONFIG, egress.getConsumerGroup());
     consumerConfigs.put(KeyDeserializer.KEY_TYPE, egress.getKeyType());
+    if (isResourceReferenceDefined(resource.getReference())) {
+      consumerConfigs.put(InvalidCloudEventInterceptor.SOURCE_NAME_CONFIG, resource.getReference().getName());
+      consumerConfigs.put(InvalidCloudEventInterceptor.SOURCE_NAMESPACE_CONFIG, resource.getReference().getNamespace());
+    }
 
     final var producerConfigs = new HashMap<>(this.producerConfigs);
     producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
@@ -313,5 +318,9 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
       case ORDERED -> new OrderedConsumerVerticle(initializer, topics);
       case UNORDERED -> new UnorderedConsumerVerticle(initializer, topics);
     };
+  }
+
+  private static boolean isResourceReferenceDefined(DataPlaneContract.Reference resource) {
+    return resource != null && !resource.getNamespace().isBlank() && !resource.getName().isBlank();
   }
 }
