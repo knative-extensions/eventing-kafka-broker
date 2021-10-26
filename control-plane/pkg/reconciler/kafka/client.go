@@ -18,15 +18,33 @@ package kafka
 
 import (
 	"github.com/Shopify/sarama"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
+type ConfigOption func(config *sarama.Config) error
+
+func Options(config *sarama.Config, options ...ConfigOption) error {
+	for _, opt := range options {
+		if err := opt(config); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// NoOpConfigOption is a no-op ConfigOption.
+func NoOpConfigOption(*sarama.Config) error {
+	return nil
+}
+
+// NewClusterAdminFunc creates new sarama.ClusterAdmin.
+type NewClusterAdminFunc func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error)
+
 // GetClusterAdminSaramaConfig returns Kafka Admin configurations that the ConfigOptions are applied to
-func GetClusterAdminSaramaConfig(secOptions security.ConfigOption) (*sarama.Config, error) {
+func GetClusterAdminSaramaConfig(configOption ConfigOption) (*sarama.Config, error) {
 	config := sarama.NewConfig()
 	config.Version = sarama.MaxVersion
 
-	err := secOptions(config)
+	err := configOption(config)
 	if err != nil {
 		return nil, err
 	}

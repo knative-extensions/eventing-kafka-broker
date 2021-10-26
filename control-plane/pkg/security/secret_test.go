@@ -22,12 +22,14 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 func TestNoProtocol(t *testing.T) {
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(map[string][]byte{}))
+	err := kafka.Options(config, secretData(map[string][]byte{}))
 
 	assert.NotNil(t, err)
 }
@@ -38,7 +40,7 @@ func TestUnsupportedProtocol(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.NotNil(t, err)
 }
@@ -49,7 +51,7 @@ func TestPlaintext(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.Nil(t, err)
 }
@@ -63,7 +65,7 @@ func TestSASLPlain(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.SASL.Enable)
@@ -82,7 +84,7 @@ func TestSASLPlainLSCRAM256(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.SASL.Enable)
@@ -102,7 +104,7 @@ func TestSASLPlainLSCRAM512(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.SASL.Enable)
@@ -122,7 +124,7 @@ func TestSASLPlainSCRAM513(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.NotNil(t, err)
 }
@@ -136,7 +138,7 @@ func TestSASLPlainLSCRAM512NoUser(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.NotNil(t, err)
 }
@@ -150,7 +152,7 @@ func TestSASLPlainLSCRAM512NoPassword(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.NotNil(t, err)
 }
@@ -166,7 +168,7 @@ func TestSSL(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
@@ -185,7 +187,7 @@ func TestSSLNoUserKey(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.NotNil(t, err)
 }
@@ -200,7 +202,7 @@ func TestSSLNoUserCert(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.NotNil(t, err)
 }
@@ -216,7 +218,7 @@ func TestSSLInvalidKeyPair(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.NotNil(t, err)
 }
@@ -231,7 +233,7 @@ func TestSSLNoClientAuth(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
@@ -249,7 +251,7 @@ func TestSSLNoClientAuthInvalidFlag(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.NotNil(t, err)
 }
@@ -268,7 +270,7 @@ func TestSASLPLainSSL(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
@@ -296,7 +298,7 @@ func TestSASLSCRAM256SSL(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
@@ -324,7 +326,7 @@ func TestSASLSCRAM512SSL(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
@@ -352,7 +354,7 @@ func TestSASLSCRAM512SSLInvalidCaCert(t *testing.T) {
 	}
 	config := sarama.NewConfig()
 
-	err := options(config, secretData(secret))
+	err := kafka.Options(config, secretData(secret))
 
 	assert.NotNil(t, err)
 }

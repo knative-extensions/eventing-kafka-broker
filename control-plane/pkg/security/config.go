@@ -20,12 +20,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 const (
@@ -46,9 +46,9 @@ type SecretLocator interface {
 // SecretProviderFunc provides a secret given a namespace/name pair.
 type SecretProviderFunc func(ctx context.Context, namespace, name string) (*corev1.Secret, error)
 
-func NewSaramaSecurityOptionFromSecret(secret *corev1.Secret) ConfigOption {
+func NewSaramaSecurityOptionFromSecret(secret *corev1.Secret) kafka.ConfigOption {
 	if secret == nil {
-		return NoOp
+		return kafka.NoOpConfigOption
 	}
 	return secretData(secret.Data)
 }
@@ -92,11 +92,6 @@ func DefaultSecretProviderFunc(lister corelisters.SecretLister, kc kubernetes.In
 
 		return secret, nil
 	}
-}
-
-// NoOp is a no-op ConfigOption.
-func NoOp(*sarama.Config) error {
-	return nil
 }
 
 // MTConfigMapSecretLocator is a SecretLocator that locates a secret using a reference in a ConfigMap.

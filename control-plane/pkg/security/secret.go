@@ -23,6 +23,7 @@ import (
 	"strconv"
 
 	"github.com/Shopify/sarama"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 const (
@@ -55,18 +56,7 @@ var supportedProtocols = fmt.Sprintf("%v", []string{
 	ProtocolSASLSSL,
 })
 
-type ConfigOption func(config *sarama.Config) error
-
-func options(config *sarama.Config, options ...ConfigOption) error {
-	for _, opt := range options {
-		if err := opt(config); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func secretData(data map[string][]byte) ConfigOption {
+func secretData(data map[string][]byte) kafka.ConfigOption {
 	return func(config *sarama.Config) error {
 
 		protocolBytes, ok := data[ProtocolKey]
@@ -80,19 +70,19 @@ func secretData(data map[string][]byte) ConfigOption {
 		}
 
 		if protocol == ProtocolSASLPlaintext {
-			return options(config,
+			return kafka.Options(config,
 				saslConfig(protocol, data),
 			)
 		}
 
 		if protocol == ProtocolSSL {
-			return options(config,
+			return kafka.Options(config,
 				sslConfig(protocol, data),
 			)
 		}
 
 		if protocol == ProtocolSASLSSL {
-			return options(config,
+			return kafka.Options(config,
 				saslConfig(protocol, data),
 				sslConfig(protocol, data),
 			)
@@ -102,7 +92,7 @@ func secretData(data map[string][]byte) ConfigOption {
 	}
 }
 
-func saslConfig(protocol string, data map[string][]byte) ConfigOption {
+func saslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 	return func(config *sarama.Config) error {
 
 		// Supported mechanism SASL/PLAIN or SASL/SCRAM.
@@ -148,7 +138,7 @@ func saslConfig(protocol string, data map[string][]byte) ConfigOption {
 	}
 }
 
-func sslConfig(protocol string, data map[string][]byte) ConfigOption {
+func sslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 	return func(config *sarama.Config) error {
 
 		// If there is no CaCertificateKey, we assume that we can use system's root CA set.
