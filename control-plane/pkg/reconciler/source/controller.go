@@ -50,8 +50,8 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 			SystemNamespace:             configs.SystemNamespace,
 			DispatcherLabel:             base.SourceDispatcherLabel,
 		},
-		Env:          configs,
-		ClusterAdmin: sarama.NewClusterAdmin,
+		Env:                  configs,
+		NewKafkaClusterAdmin: sarama.NewClusterAdmin,
 	}
 
 	impl := kafkasource.NewImpl(ctx, r)
