@@ -12,3 +12,7 @@
 /pkg/**/testing/** coverage-excluded=true
 /vendor/** coverage-excluded=true
 /test/** coverage-excluded=true
+
+# ignore-lint is an attribute to explicitly exclude a patch from being linted.
+/control-plane/pkg/contract/*.pb.go ignore-lint=true
+/data-plane/contract/src/main/java/** ignore-lint=true
