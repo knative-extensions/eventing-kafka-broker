@@ -42,7 +42,7 @@ public class CloudEventDeserializerTest {
     .withSource(URI.create("/api/some-source"))
     .withSubject("a-subject-42")
     .withType("type")
-    .withDataContentType("application/proto")
+    .withDataContentType("application/protobuf")
     .withData(new byte[]{1})
     .withTime(OffsetDateTime.of(
       1985, 4, 12,

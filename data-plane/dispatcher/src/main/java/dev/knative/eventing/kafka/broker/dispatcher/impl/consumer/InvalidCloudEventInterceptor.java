@@ -66,6 +66,7 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<Object,
   private static final String CONTENT_TYPE_HEADER_KEY = "content-type";
 
   private static final String KEY_EXTENSION = "key";
+  private static final String KAFKA_HEADER_EXTENSION_PREFIX = "kafkaheader";
 
   private String kindPlural;
   private String sourceNamespace;
@@ -162,7 +163,7 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<Object,
         contentTypeHeader = h;
         continue;
       }
-      value.withExtension("kafkaheader" + replaceBadChars(h.key()), new String(h.value(), StandardCharsets.UTF_8));
+      value.withExtension(KAFKA_HEADER_EXTENSION_PREFIX + replaceBadChars(h.key()), new String(h.value(), StandardCharsets.UTF_8));
     }
     if (contentTypeHeader != null) {
       value.withDataContentType(new String(contentTypeHeader.value(), StandardCharsets.UTF_8).toLowerCase());
