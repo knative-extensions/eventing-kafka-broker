@@ -473,7 +473,7 @@ func (r *Reconciler) reconcileSubscriber(ctx context.Context, kafkaClient sarama
 		logger.Error("reconcile failed to initial offset for subscription. Marking the subscription not ready", zap.String("channel", fmt.Sprintf("%s.%s", channel.Namespace, channel.Name)), zap.Any("subscription", subscriberSpec), zap.Error(err))
 		return fmt.Errorf("initial offset cannot be committed: %v", err)
 	}
-	logger.Debug("Reconciled initial offset for subscription. ", zap.String("channel", fmt.Sprintf("%s.%s", channel.Namespace, channel.Name)), zap.Any("subscription", subscriberSpec))
+	logger.Debug("Reconciled initial offset for subscription. ", zap.Any("subscription", subscriberSpec))
 
 	subscriberIndex := coreconfig.FindEgress(ct.Resources[channelIndex].Egresses, subscriberSpec.UID)
 	subscriberConfig, err := r.getSubscriberConfig(ctx, channel, &subscriberSpec)
