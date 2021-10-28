@@ -139,6 +139,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     consumerConfigs.put(ConsumerConfig.GROUP_ID_CONFIG, egress.getConsumerGroup());
     consumerConfigs.put(KeyDeserializer.KEY_TYPE, egress.getKeyType());
     if (isResourceReferenceDefined(resource.getReference())) {
+      // Set the resource reference so that when the interceptor gets a record that is not a CloudEvent, it can set
+      // CloudEvents context attributes accordingly (see InvalidCloudEventInterceptor for more information).
       consumerConfigs.put(InvalidCloudEventInterceptor.SOURCE_NAME_CONFIG, resource.getReference().getName());
       consumerConfigs.put(InvalidCloudEventInterceptor.SOURCE_NAMESPACE_CONFIG, resource.getReference().getNamespace());
     }
