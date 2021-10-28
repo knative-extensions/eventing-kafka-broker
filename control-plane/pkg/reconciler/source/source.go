@@ -23,7 +23,6 @@ import (
 
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/retry"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/controller"
@@ -84,7 +83,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 	}
 	statusConditionManager.DataPlaneAvailable()
 
-	secret, err := security.Secret(ctx, &SecretLocator{KafkaSource: ks}, r.SecretProviderFunc())
+	authContext, err := security.ResolveAuthContextFromNetSpec(r.SecretLister, ks.GetNamespace(), ks.Spec.Net)
+	if err != nil {
+		return fmt.Errorf("failed to create auth context: %w", err)
+	}
+	secret, err := security.Secret(ctx, &SecretLocator{KafkaSource: ks}, security.NetSpecSecretProviderFunc(authContext))
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -141,7 +144,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
 	// Get resource configuration.
-	resource, err := r.reconcileKafkaSourceResource(ctx, ks, secret)
+	resource, err := r.reconcileKafkaSourceResource(ctx, ks, authContext.MultiSecretReference)
 	if err != nil {
 		return statusConditionManager.FailedToGetConfig(err)
 	}
@@ -231,8 +234,13 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *sources.KafkaSource) 
 	return nil
 }
 
-func (r *Reconciler) reconcileKafkaSourceResource(ctx context.Context, ks *sources.KafkaSource, secret *corev1.Secret) (*contract.Resource, error) {
-	destination, err := r.Resolver.URIFromDestinationV1(ctx, ks.Spec.Sink, ks)
+func (r *Reconciler) reconcileKafkaSourceResource(ctx context.Context, ks *sources.KafkaSource, multiSecretReference *contract.MultiSecretReference) (*contract.Resource, error) {
+	destinationSpec := ks.Spec.Sink
+	if ks.Spec.Sink.Ref != nil && ks.Spec.Sink.Ref.Namespace == "" {
+		ks.Spec.Sink.DeepCopyInto(&destinationSpec)
+		destinationSpec.Ref.Namespace = ks.GetNamespace()
+	}
+	destination, err := r.Resolver.URIFromDestinationV1(ctx, destinationSpec, ks)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve destination: %w", err)
 	}
@@ -267,15 +275,8 @@ func (r *Reconciler) reconcileKafkaSourceResource(ctx context.Context, ks *sourc
 			Extensions: ks.Spec.CloudEventOverrides.Extensions,
 		}
 	}
-	if secret != nil {
-		resource.Auth = &contract.Resource_AuthSecret{
-			AuthSecret: &contract.Reference{
-				Uuid:      string(secret.GetUID()),
-				Namespace: secret.GetNamespace(),
-				Name:      secret.GetName(),
-				Version:   secret.GetResourceVersion(),
-			},
-		}
+	if multiSecretReference != nil && len(multiSecretReference.References) > 0 {
+		resource.Auth = &contract.Resource_MultiAuthSecret{MultiAuthSecret: multiSecretReference}
 	}
 	return resource, nil
 }
