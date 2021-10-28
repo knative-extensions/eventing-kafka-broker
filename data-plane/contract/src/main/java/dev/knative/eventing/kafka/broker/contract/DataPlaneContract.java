@@ -12125,6 +12125,10 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+     * - tagging metrics
      * </pre>
      *
      * <code>.Reference reference = 11;</code>
@@ -12134,6 +12138,10 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+     * - tagging metrics
      * </pre>
      *
      * <code>.Reference reference = 11;</code>
@@ -12143,6 +12151,10 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+     * - tagging metrics
      * </pre>
      *
      * <code>.Reference reference = 11;</code>
@@ -12941,6 +12953,10 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+     * - tagging metrics
      * </pre>
      *
      * <code>.Reference reference = 11;</code>
@@ -12953,6 +12969,10 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+     * - tagging metrics
      * </pre>
      *
      * <code>.Reference reference = 11;</code>
@@ -12965,6 +12985,10 @@ public final class DataPlaneContract {
     /**
      * <pre>
      * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+     * - tagging metrics
      * </pre>
      *
      * <code>.Reference reference = 11;</code>
@@ -15510,6 +15534,10 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
        * </pre>
        *
        * <code>.Reference reference = 11;</code>
@@ -15521,6 +15549,10 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
        * </pre>
        *
        * <code>.Reference reference = 11;</code>
@@ -15536,6 +15568,10 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
        * </pre>
        *
        * <code>.Reference reference = 11;</code>
@@ -15556,6 +15592,10 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
        * </pre>
        *
        * <code>.Reference reference = 11;</code>
@@ -15574,6 +15614,10 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
        * </pre>
        *
        * <code>.Reference reference = 11;</code>
@@ -15596,6 +15640,10 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
        * </pre>
        *
        * <code>.Reference reference = 11;</code>
@@ -15614,6 +15662,10 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
        * </pre>
        *
        * <code>.Reference reference = 11;</code>
@@ -15626,6 +15678,10 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
        * </pre>
        *
        * <code>.Reference reference = 11;</code>
@@ -15641,6 +15697,10 @@ public final class DataPlaneContract {
       /**
        * <pre>
        * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
        * </pre>
        *
        * <code>.Reference reference = 11;</code>

@@ -1087,6 +1087,11 @@ type Resource struct {
 	Auth                isResource_Auth      `protobuf_oneof:"Auth"`
 	CloudEventOverrides *CloudEventOverrides `protobuf:"bytes,10,opt,name=cloudEventOverrides,proto3" json:"cloudEventOverrides,omitempty"`
 	// Resource reference.
+	//
+	// This reference is used to reference the associated resource for data plane
+	// activities such as:
+	// - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+	// - tagging metrics
 	Reference *Reference `protobuf:"bytes,11,opt,name=reference,proto3" json:"reference,omitempty"`
 }
 
