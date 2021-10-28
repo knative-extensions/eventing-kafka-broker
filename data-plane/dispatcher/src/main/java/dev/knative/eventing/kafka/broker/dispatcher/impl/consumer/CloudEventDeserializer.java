@@ -17,10 +17,6 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import io.cloudevents.CloudEvent;
-import io.cloudevents.core.message.impl.GenericStructuredMessageReader;
-import io.cloudevents.core.message.impl.MessageUtils;
-import io.cloudevents.kafka.impl.KafkaBinaryMessageReaderImpl;
-import io.cloudevents.kafka.impl.KafkaHeaders;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.slf4j.Logger;
@@ -46,6 +42,11 @@ public class CloudEventDeserializer implements Deserializer<CloudEvent> {
   public static final String INVALID_CE_WRAPPER_ENABLED = "cloudevent.invalid.transformer.enabled";
 
   private boolean isInvalidLogicEnabled = false;
+  private final io.cloudevents.kafka.CloudEventDeserializer internalDeserializer;
+
+  public CloudEventDeserializer() {
+    internalDeserializer = new io.cloudevents.kafka.CloudEventDeserializer();
+  }
 
   /**
    * Configure this class.
@@ -55,6 +56,8 @@ public class CloudEventDeserializer implements Deserializer<CloudEvent> {
    */
   @Override
   public void configure(Map<String, ?> configs, boolean isKey) {
+    internalDeserializer.configure(configs, isKey);
+
     if (configs.containsKey(INVALID_CE_WRAPPER_ENABLED)) {
       isInvalidLogicEnabled = Boolean.parseBoolean(configs.get(INVALID_CE_WRAPPER_ENABLED).toString());
     }
@@ -84,31 +87,19 @@ public class CloudEventDeserializer implements Deserializer<CloudEvent> {
    */
   @Override
   public CloudEvent deserialize(final String topic, final Headers headers, byte[] data) {
-
-    String ctHeader = null;
-    final var specVersionHeader = KafkaHeaders.getParsedKafkaHeader(headers, KafkaHeaders.SPEC_VERSION);
-    if (specVersionHeader == null) {
-      ctHeader = KafkaHeaders.getParsedKafkaHeader(headers, KafkaHeaders.CONTENT_TYPE);
+    if (!isInvalidLogicEnabled) {
+      return internalDeserializer.deserialize(topic, headers, data);
     }
-    if (ctHeader == null && specVersionHeader == null) {
-      if (!isInvalidLogicEnabled) {
-        throw new IllegalStateException("Invalid CloudEvent for topic: " + topic);
-      }
-      // Record is not in binary nor structured format.
-      logger.debug("Found invalid CloudEvent for topic {}", topic);
+
+    try {
+      return internalDeserializer.deserialize(topic, headers, data);
+    } catch (final Throwable ignored) {
       return new InvalidCloudEvent(data);
     }
-
-    final var contentTypeHeader = ctHeader; // Make content type header final.
-
-    final var reader = MessageUtils.parseStructuredOrBinaryMessage(
-      () -> contentTypeHeader,
-      format -> new GenericStructuredMessageReader(format, data),
-      () -> specVersionHeader,
-      sv -> new KafkaBinaryMessageReaderImpl(sv, headers, data)
-    );
-
-    return reader.toEvent();
   }
 
+  @Override
+  public void close() {
+    internalDeserializer.close();
+  }
 }
