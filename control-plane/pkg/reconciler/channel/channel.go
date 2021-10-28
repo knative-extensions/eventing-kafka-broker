@@ -177,6 +177,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	logger.Debug("Topic created", zap.Any("topic", topic))
 	statusConditionManager.TopicReady(topic)
 
+	err = r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, statusConditionManager)
+	if err != nil {
+		return fmt.Errorf("error reconciling subscribers %v", err)
+	}
+
 	// Get contract config map to write into it.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
@@ -250,11 +255,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		statusConditionManager.FailedToUpdateDispatcherPodsAnnotation(err)
 	} else {
 		logger.Debug("Updated dispatcher pod annotation")
-	}
-
-	err = r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, statusConditionManager, topicConfig, saramaSecurityOption)
-	if err != nil {
-		return fmt.Errorf("error reconciling subscribers %v", err)
 	}
 
 	return statusConditionManager.Reconciled()
@@ -380,7 +380,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	return nil
 }
 
-func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, statusConditionManager base.StatusConditionManager, topicConfig *kafka.TopicConfig, saramaConfigOption kafka.ConfigOption) error {
+func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, statusConditionManager base.StatusConditionManager) error {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
 
 	// Get data plane config map.
