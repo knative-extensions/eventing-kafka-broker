@@ -27,6 +27,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -83,6 +84,54 @@ public class ConsumerVerticleFactoryImplTest {
       .setBootstrapServers("0.0.0.0:9092")
       .addTopics("t1")
       .setEgressConfig(DataPlaneContract.EgressConfig.newBuilder()
+        .setBackoffDelay(1000)
+        .setBackoffPolicy(BackoffPolicy.Exponential)
+        .setRetry(10)
+        .setDeadLetter("http://localhost:43257")
+      )
+      .addEgresses(egress)
+      .build();
+
+    assertDoesNotThrow(() -> verticleFactory.get(resource, egress));
+  }
+
+  @Test
+  public void shouldAlwaysSucceedWhenPassingResourceReference() {
+
+    final var consumerProperties = new Properties();
+    consumerProperties.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
+    consumerProperties.setProperty(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    consumerProperties.setProperty(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
+
+    final var producerConfigs = new Properties();
+    producerConfigs.setProperty(BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
+    producerConfigs.setProperty(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+    producerConfigs.setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
+    producerConfigs.setProperty(INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
+
+    final var verticleFactory = new ConsumerVerticleFactoryImpl(
+      consumerProperties,
+      new WebClientOptions(),
+      producerConfigs,
+      mock(AuthProvider.class),
+      mock(MeterRegistry.class)
+    );
+
+    final var egress = DataPlaneContract.Egress.newBuilder()
+      .setConsumerGroup("1234")
+      .setUid("1234")
+      .setDestination("http://localhost:43256")
+      .setReplyToOriginalTopic(DataPlaneContract.Empty.newBuilder().build())
+      .build();
+    final var resource = DataPlaneContract.Resource.newBuilder()
+      .setUid("123456")
+      .setBootstrapServers("0.0.0.0:9092")
+      .addTopics("t1")
+      .setReference(DataPlaneContract.Reference.newBuilder()
+        .setName("name")
+        .setNamespace("ns")
+        .build())
+      .setEgressConfig(EgressConfig.newBuilder()
         .setBackoffDelay(1000)
         .setBackoffPolicy(BackoffPolicy.Exponential)
         .setRetry(10)

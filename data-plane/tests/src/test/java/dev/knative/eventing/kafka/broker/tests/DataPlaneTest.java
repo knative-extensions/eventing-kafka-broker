@@ -21,6 +21,8 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDeserializer;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerDeployerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
@@ -32,7 +34,6 @@ import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventV1;
 import io.cloudevents.http.vertx.VertxMessageFactory;
-import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.debezium.kafka.KafkaCluster;
 import io.micrometer.core.instrument.Counter;
@@ -56,7 +57,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -307,7 +307,7 @@ public class DataPlaneTest {
 
     final var consumerConfigs = new Properties();
     consumerConfigs.put(BOOTSTRAP_SERVERS_CONFIG, format("localhost:%d", KAFKA_PORT));
-    consumerConfigs.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    consumerConfigs.put(KEY_DESERIALIZER_CLASS_CONFIG, KeyDeserializer.class.getName());
     consumerConfigs.put(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
 
     final var producerConfigs = producerConfigs();

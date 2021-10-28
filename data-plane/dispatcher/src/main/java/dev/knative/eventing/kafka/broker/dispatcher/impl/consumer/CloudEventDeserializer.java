@@ -69,6 +69,7 @@ public class CloudEventDeserializer implements Deserializer<CloudEvent> {
     if (!this.isInvalidLogicEnabled) {
       throw new UnsupportedOperationException("CloudEventDeserializer supports only the signature deserialize(String, Headers, byte[])");
     }
+    logger.debug("Found invalid CloudEvent for topic {}", topic);
     return new InvalidCloudEvent(data);
   }
 
@@ -94,6 +95,7 @@ public class CloudEventDeserializer implements Deserializer<CloudEvent> {
         throw new IllegalStateException("Invalid CloudEvent for topic: " + topic);
       }
       // Record is not in binary nor structured format.
+      logger.debug("Found invalid CloudEvent for topic {}", topic);
       return new InvalidCloudEvent(data);
     }
 

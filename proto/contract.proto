@@ -249,6 +249,14 @@ message Resource {
   }
 
   CloudEventOverrides cloudEventOverrides = 10;
+
+  // Resource reference.
+  //
+  // This reference is used to reference the associated resource for data plane
+  // activities such as:
+  // - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+  // - tagging metrics
+  Reference reference = 11;
 }
 
 message Contract {

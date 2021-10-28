@@ -12122,6 +12122,45 @@ public final class DataPlaneContract {
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverridesOrBuilder getCloudEventOverridesOrBuilder();
 
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     * @return Whether the reference field is set.
+     */
+    boolean hasReference();
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     * @return The reference.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getReference();
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder();
+
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.AuthCase getAuthCase();
   }
   /**
@@ -12281,6 +12320,19 @@ public final class DataPlaneContract {
               if (subBuilder != null) {
                 subBuilder.mergeFrom(cloudEventOverrides_);
                 cloudEventOverrides_ = subBuilder.buildPartial();
+              }
+
+              break;
+            }
+            case 90: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder subBuilder = null;
+              if (reference_ != null) {
+                subBuilder = reference_.toBuilder();
+              }
+              reference_ = input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(reference_);
+                reference_ = subBuilder.buildPartial();
               }
 
               break;
@@ -12896,6 +12948,56 @@ public final class DataPlaneContract {
       return getCloudEventOverrides();
     }
 
+    public static final int REFERENCE_FIELD_NUMBER = 11;
+    private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference reference_;
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     * @return Whether the reference field is set.
+     */
+    @java.lang.Override
+    public boolean hasReference() {
+      return reference_ != null;
+    }
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     * @return The reference.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getReference() {
+      return reference_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance() : reference_;
+    }
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder() {
+      return getReference();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -12939,6 +13041,9 @@ public final class DataPlaneContract {
       }
       if (cloudEventOverrides_ != null) {
         output.writeMessage(10, getCloudEventOverrides());
+      }
+      if (reference_ != null) {
+        output.writeMessage(11, getReference());
       }
       unknownFields.writeTo(output);
     }
@@ -12991,6 +13096,10 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(10, getCloudEventOverrides());
       }
+      if (reference_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(11, getReference());
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -13028,6 +13137,11 @@ public final class DataPlaneContract {
       if (hasCloudEventOverrides()) {
         if (!getCloudEventOverrides()
             .equals(other.getCloudEventOverrides())) return false;
+      }
+      if (hasReference() != other.hasReference()) return false;
+      if (hasReference()) {
+        if (!getReference()
+            .equals(other.getReference())) return false;
       }
       if (!getAuthCase().equals(other.getAuthCase())) return false;
       switch (authCase_) {
@@ -13080,6 +13194,10 @@ public final class DataPlaneContract {
       if (hasCloudEventOverrides()) {
         hash = (37 * hash) + CLOUDEVENTOVERRIDES_FIELD_NUMBER;
         hash = (53 * hash) + getCloudEventOverrides().hashCode();
+      }
+      if (hasReference()) {
+        hash = (37 * hash) + REFERENCE_FIELD_NUMBER;
+        hash = (53 * hash) + getReference().hashCode();
       }
       switch (authCase_) {
         case 7:
@@ -13261,6 +13379,12 @@ public final class DataPlaneContract {
           cloudEventOverrides_ = null;
           cloudEventOverridesBuilder_ = null;
         }
+        if (referenceBuilder_ == null) {
+          reference_ = null;
+        } else {
+          reference_ = null;
+          referenceBuilder_ = null;
+        }
         authCase_ = 0;
         auth_ = null;
         return this;
@@ -13341,6 +13465,11 @@ public final class DataPlaneContract {
           result.cloudEventOverrides_ = cloudEventOverrides_;
         } else {
           result.cloudEventOverrides_ = cloudEventOverridesBuilder_.build();
+        }
+        if (referenceBuilder_ == null) {
+          result.reference_ = reference_;
+        } else {
+          result.reference_ = referenceBuilder_.build();
         }
         result.authCase_ = authCase_;
         onBuilt();
@@ -13443,6 +13572,9 @@ public final class DataPlaneContract {
         }
         if (other.hasCloudEventOverrides()) {
           mergeCloudEventOverrides(other.getCloudEventOverrides());
+        }
+        if (other.hasReference()) {
+          mergeReference(other.getReference());
         }
         switch (other.getAuthCase()) {
           case ABSENTAUTH: {
@@ -15395,6 +15527,197 @@ public final class DataPlaneContract {
         }
         return cloudEventOverridesBuilder_;
       }
+
+      private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference reference_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> referenceBuilder_;
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       * @return Whether the reference field is set.
+       */
+      public boolean hasReference() {
+        return referenceBuilder_ != null || reference_ != null;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       * @return The reference.
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getReference() {
+        if (referenceBuilder_ == null) {
+          return reference_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance() : reference_;
+        } else {
+          return referenceBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public Builder setReference(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
+        if (referenceBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          reference_ = value;
+          onChanged();
+        } else {
+          referenceBuilder_.setMessage(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public Builder setReference(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder builderForValue) {
+        if (referenceBuilder_ == null) {
+          reference_ = builderForValue.build();
+          onChanged();
+        } else {
+          referenceBuilder_.setMessage(builderForValue.build());
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public Builder mergeReference(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
+        if (referenceBuilder_ == null) {
+          if (reference_ != null) {
+            reference_ =
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.newBuilder(reference_).mergeFrom(value).buildPartial();
+          } else {
+            reference_ = value;
+          }
+          onChanged();
+        } else {
+          referenceBuilder_.mergeFrom(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public Builder clearReference() {
+        if (referenceBuilder_ == null) {
+          reference_ = null;
+          onChanged();
+        } else {
+          reference_ = null;
+          referenceBuilder_ = null;
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder getReferenceBuilder() {
+        
+        onChanged();
+        return getReferenceFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder() {
+        if (referenceBuilder_ != null) {
+          return referenceBuilder_.getMessageOrBuilder();
+        } else {
+          return reference_ == null ?
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance() : reference_;
+        }
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> 
+          getReferenceFieldBuilder() {
+        if (referenceBuilder_ == null) {
+          referenceBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder>(
+                  getReference(),
+                  getParentForChildren(),
+                  isClean());
+          reference_ = null;
+        }
+        return referenceBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -16444,7 +16767,7 @@ public final class DataPlaneContract {
       "oudEventOverrides\0228\n\nextensions\030\001 \003(\0132$." +
       "CloudEventOverrides.ExtensionsEntry\0321\n\017E" +
       "xtensionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001" +
-      "(\t:\0028\001\"\311\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topi" +
+      "(\t:\0028\001\"\350\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topi" +
       "cs\030\002 \003(\t\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007in" +
       "gress\030\004 \001(\0132\010.Ingress\022#\n\014egressConfig\030\005 " +
       "\001(\0132\r.EgressConfig\022\031\n\010egresses\030\006 \003(\0132\007.E" +
@@ -16452,20 +16775,21 @@ public final class DataPlaneContract {
       "uthSecret\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAu" +
       "thSecret\030\t \001(\0132\025.MultiSecretReferenceH\000\022" +
       "1\n\023cloudEventOverrides\030\n \001(\0132\024.CloudEven" +
-      "tOverridesB\006\n\004Auth\"<\n\010Contract\022\022\n\ngenera" +
-      "tion\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t.Resource" +
-      "*,\n\rBackoffPolicy\022\017\n\013Exponential\020\000\022\n\n\006Li" +
-      "near\020\001*+\n\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022\013" +
-      "\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006String\020\000\022\013\n\007In" +
-      "teger\020\001\022\n\n\006Double\020\002\022\r\n\tByteArray\020\003*)\n\013Co" +
-      "ntentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001*a\n" +
-      "\013SecretField\022\022\n\016SASL_MECHANISM\020\000\022\n\n\006CA_C" +
-      "RT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER" +
-      "\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol\022\r\n\tPLAINTEX" +
-      "T\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL" +
-      "_SSL\020\003B[\n*dev.knative.eventing.kafka.bro" +
-      "ker.contractB\021DataPlaneContractZ\032control" +
-      "-plane/pkg/contractb\006proto3"
+      "tOverrides\022\035\n\treference\030\013 \001(\0132\n.Referenc" +
+      "eB\006\n\004Auth\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(" +
+      "\004\022\034\n\tresources\030\002 \003(\0132\t.Resource*,\n\rBacko" +
+      "ffPolicy\022\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n" +
+      "\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED" +
+      "\020\001*=\n\007KeyType\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n" +
+      "\n\006Double\020\002\022\r\n\tByteArray\020\003*)\n\013ContentMode" +
+      "\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013SecretFi" +
+      "eld\022\022\n\016SASL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010U" +
+      "SER_CRT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PAS" +
+      "SWORD\020\005*D\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SA" +
+      "SL_PLAINTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n" +
+      "*dev.knative.eventing.kafka.broker.contr" +
+      "actB\021DataPlaneContractZ\032control-plane/pk" +
+      "g/contractb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -16548,7 +16872,7 @@ public final class DataPlaneContract {
     internal_static_Resource_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Resource_descriptor,
-        new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", "AbsentAuth", "AuthSecret", "MultiAuthSecret", "CloudEventOverrides", "Auth", });
+        new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", "AbsentAuth", "AuthSecret", "MultiAuthSecret", "CloudEventOverrides", "Reference", "Auth", });
     internal_static_Contract_descriptor =
       getDescriptor().getMessageTypes().get(11);
     internal_static_Contract_fieldAccessorTable = new
