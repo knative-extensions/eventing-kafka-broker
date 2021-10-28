@@ -15,7 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
-import com.google.common.base.Charsets;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import org.apache.kafka.common.serialization.DoubleDeserializer;
 import org.apache.kafka.common.serialization.FloatDeserializer;
@@ -23,6 +22,7 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 import static dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer.KEY_TYPE;
@@ -41,7 +41,7 @@ public class KeyDeserializerTest {
     final var got = deserializer.deserialize("t1", data);
 
     assertThat(got).isInstanceOf(String.class);
-    assertThat(got.toString()).isEqualTo(new String(data, Charsets.UTF_8));
+    assertThat(got.toString()).isEqualTo(new String(data, StandardCharsets.UTF_8));
   }
 
   @Test
@@ -56,7 +56,7 @@ public class KeyDeserializerTest {
     final var got = deserializer.deserialize("t1", data);
 
     assertThat(got).isInstanceOf(String.class);
-    assertThat(got).isEqualTo(new String(data, Charsets.UTF_8));
+    assertThat(got).isEqualTo(new String(data, StandardCharsets.UTF_8));
   }
 
   @Test
@@ -71,7 +71,7 @@ public class KeyDeserializerTest {
     final var got = deserializer.deserialize("t1", data);
 
     assertThat(got).isInstanceOf(String.class);
-    assertThat(got).isEqualTo(new String(data, Charsets.UTF_8));
+    assertThat(got).isEqualTo(new String(data, StandardCharsets.UTF_8));
   }
 
   @Test

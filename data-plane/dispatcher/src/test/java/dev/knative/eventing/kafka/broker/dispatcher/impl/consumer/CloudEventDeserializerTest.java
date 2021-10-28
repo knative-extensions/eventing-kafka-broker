@@ -36,13 +36,13 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 public class CloudEventDeserializerTest {
 
-  private final static CloudEvent event = CloudEventBuilder.v1()
+  final static CloudEvent event = CloudEventBuilder.v1()
     .withId("123-42")
-    .withDataContentType("application/cloudevents+json")
     .withDataSchema(URI.create("/api/schema"))
     .withSource(URI.create("/api/some-source"))
     .withSubject("a-subject-42")
     .withType("type")
+    .withDataContentType("application/protobuf")
     .withData(new byte[]{1})
     .withTime(OffsetDateTime.of(
       1985, 4, 12,

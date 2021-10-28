@@ -29,6 +29,7 @@ import org.apache.kafka.common.record.TimestampType;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -195,7 +196,7 @@ public class InvalidCloudEventInterceptorTest {
           .withType("dev.knative.kafka.event")
           .withData(BytesCloudEventData.wrap(new byte[]{1}));
 
-        i.headers().forEach(h -> value.withExtension(h.key(), h.value()));
+        i.headers().forEach(h -> value.withExtension("kafkaheader" + h.key(), new String(h.value(), StandardCharsets.UTF_8)));
 
         setKeys(value, i);
 

@@ -23,10 +23,12 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -61,7 +63,10 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<Object,
 
   public static final String TYPE = "dev.knative.kafka.event";
 
+  private static final String CONTENT_TYPE_HEADER_KEY = "content-type";
+
   private static final String KEY_EXTENSION = "key";
+  private static final String KAFKA_HEADER_EXTENSION_PREFIX = "kafkaheader";
 
   private String kindPlural;
   private String sourceNamespace;
@@ -150,12 +155,23 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<Object,
 
     setKey(value, record.key());
 
+    // Put headers as event extensions.
+    Header contentTypeHeader = null;
+    for (Header h : record.headers()) {
+      if (h.key().equalsIgnoreCase(CONTENT_TYPE_HEADER_KEY)) {
+        // Let's skip the content-type, we already transport it with datacontenttype field.
+        contentTypeHeader = h;
+        continue;
+      }
+      value.withExtension(KAFKA_HEADER_EXTENSION_PREFIX + replaceBadChars(h.key()), new String(h.value(), StandardCharsets.UTF_8));
+    }
+    if (contentTypeHeader != null) {
+      value.withDataContentType(new String(contentTypeHeader.value(), StandardCharsets.UTF_8).toLowerCase());
+    }
+
     if (invalidEvent.data() != null) {
       value.withData(invalidEvent.data());
     }
-
-    // Put headers as event extensions.
-    record.headers().forEach(header -> value.withExtension(replaceBadChars(header.key()), header.value()));
 
     // Copy consumer record and set value to a valid CloudEvent.
     return new ConsumerRecord<>(
