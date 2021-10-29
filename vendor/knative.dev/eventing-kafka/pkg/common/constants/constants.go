@@ -73,8 +73,4 @@ const (
 
 	// KafkaTopicConfigRetentionMs is the key in the Sarama TopicDetail ConfigEntries map for retention time (in ms)
 	KafkaTopicConfigRetentionMs = "retention.ms"
-
-	// PodAnnotationKey is an annotation used by the scheduler to be informed of pods
-	// being evicted and not use it for placing vreplicas
-	PodAnnotationKey = "eventing.knative.dev/unschedulable"
 )
