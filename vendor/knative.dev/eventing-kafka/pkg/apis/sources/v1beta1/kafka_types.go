@@ -19,7 +19,7 @@ package v1beta1
 import (
 	"fmt"
 
-	"knative.dev/eventing-kafka/pkg/apis/duck/v1alpha1"
+	"knative.dev/eventing/pkg/apis/duck/v1alpha1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
