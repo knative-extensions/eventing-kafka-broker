@@ -14,13 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+set -euo pipefail
 
 source $(dirname $0)/../../vendor/knative.dev/hack/e2e-tests.sh
 
-kubectl create namespace kafka --dry-run -o yaml | kubectl apply -f -
+CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}
+SYSTEM_NAMESPACE=${SYSTEM_NAMESPACE:-"knative-eventing"}
 
-sleep 5
+kubectl create namespace kafka --dry-run -o yaml | kubectl apply -f -
 
 header "Applying Strimzi Cluster Operator file"
 cat $(dirname $0)/strimzi-cluster-operator.yaml | sed "s/cluster.local/${CLUSTER_SUFFIX}/g" | kubectl apply -n kafka -f -
@@ -35,6 +36,75 @@ kubectl apply -n kafka -f $(dirname $0)/user-tls.yaml
 echo "Create SASL SCRUM 512 user"
 kubectl apply -n kafka -f $(dirname $0)/user-sasl-scram-512.yaml
 
-sleep 5
+# Waits until the given object exists.
+# Parameters: $1 - the kind of the object.
+#             $2 - object's name.
+#             $3 - namespace (optional).
+function wait_until_object_exists() {
+  local KUBECTL_ARGS="get $1 $2"
+  local DESCRIPTION="$1 $2"
+
+  if [[ -n $3 ]]; then
+    KUBECTL_ARGS="get -n $3 $1 $2"
+    DESCRIPTION="$1 $3/$2"
+  fi
+  echo -n "Waiting until ${DESCRIPTION} exists"
+  for i in {1..150}; do  # timeout after 5 minutes
+    if kubectl ${KUBECTL_ARGS} > /dev/null 2>&1; then
+      echo -e "\n${DESCRIPTION} exists"
+      return 0
+    fi
+    echo -n "."
+    sleep 2
+  done
+  echo -e "\n\nERROR: timeout waiting for ${DESCRIPTION} to exist"
+  kubectl ${KUBECTL_ARGS}
+  return 1
+}
+
+function create_tls_secrets() {
+  ca_cert_secret="my-cluster-cluster-ca-cert"
+  tls_user="my-tls-user"
+
+  echo "Waiting until secrets: ${ca_cert_secret}, ${tls_user} don't exist"
+  wait_until_object_exists secret ${ca_cert_secret} kafka
+  wait_until_object_exists secret ${tls_user} kafka
+
+  echo "Creating TLS Kafka secret"
+
+  STRIMZI_CRT=$(kubectl -n kafka get secret "${ca_cert_secret}" --template='{{index .data "ca.crt"}}' | base64 --decode )
+  TLSUSER_CRT=$(kubectl -n kafka get secret "${tls_user}" --template='{{index .data "user.crt"}}' | base64 --decode )
+  TLSUSER_KEY=$(kubectl -n kafka get secret "${tls_user}" --template='{{index .data "user.key"}}' | base64 --decode )
+
+  kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-tls-secret \
+    --from-literal=ca.crt="$STRIMZI_CRT" \
+    --from-literal=user.crt="$TLSUSER_CRT" \
+    --from-literal=user.key="$TLSUSER_KEY" \
+    --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
+}
+
+function create_sasl_secrets() {
+  ca_cert_secret="my-cluster-cluster-ca-cert"
+  sasl_user="my-sasl-user"
+
+  echo "Waiting until secrets: ${ca_cert_secret}, ${sasl_user} don't exist"
+  wait_until_object_exists secret ${ca_cert_secret} kafka
+  wait_until_object_exists secret ${sasl_user} kafka
+
+  echo "Creating SASL Kafka secret"
+
+  STRIMZI_CRT=$(kubectl -n kafka get secret ${ca_cert_secret} --template='{{index .data "ca.crt"}}' | base64 --decode )
+  SASL_PASSWD=$(kubectl -n kafka get secret ${sasl_user} --template='{{index .data "password"}}' | base64 --decode )
+
+  kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-sasl-secret \
+    --from-literal=ca.crt="$STRIMZI_CRT" \
+    --from-literal=password="$SASL_PASSWD" \
+    --from-literal=saslType="SCRAM-SHA-512" \
+    --from-literal=user="my-sasl-user" \
+    --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
+}
 
 wait_until_pods_running kafka || fail_test "Failed to start up a Kafka cluster"
+
+create_sasl_secrets || fail_test "Failed to create SASL secrets"
+create_tls_secrets || fail_test "Failed to create TLS secrets"
