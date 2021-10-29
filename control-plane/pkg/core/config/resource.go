@@ -46,6 +46,12 @@ const (
 	ResourceUnchanged
 )
 
+func SetResourceEgressesFromContract(contract *contract.Contract, resource *contract.Resource, index int) {
+	if index != NoResource {
+		resource.Egresses = contract.Resources[index].Egresses
+	}
+}
+
 // AddOrUpdateResourceConfig adds or updates the given resourceConfig to the given resources at the specified index.
 func AddOrUpdateResourceConfig(contract *contract.Contract, resource *contract.Resource, index int, logger *zap.Logger) int {
 
@@ -53,7 +59,6 @@ func AddOrUpdateResourceConfig(contract *contract.Contract, resource *contract.R
 		logger.Debug("Resource exists", zap.Int("index", index))
 
 		prev := contract.Resources[index]
-		resource.Egresses = contract.Resources[index].Egresses
 		contract.Resources[index] = resource
 
 		if proto.Equal(prev, resource) {

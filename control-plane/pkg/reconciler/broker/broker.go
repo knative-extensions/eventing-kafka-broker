@@ -171,6 +171,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	brokerIndex := coreconfig.FindResource(ct, broker.UID)
 	// Update contract data with the new contract configuration
+	coreconfig.SetResourceEgressesFromContract(ct, brokerResource, brokerIndex)
 	changed := coreconfig.AddOrUpdateResourceConfig(ct, brokerResource, brokerIndex, logger)
 
 	logger.Debug("Change detector", zap.Int("changed", changed))

@@ -141,9 +141,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		return statusConditionManager.FailedToGetConfig(err)
 	}
 
-	brokerIndex := coreconfig.FindResource(ct, ks.GetUID())
+	sourceIndex := coreconfig.FindResource(ct, ks.GetUID())
 	// Update contract data with the new contract configuration
-	changed := coreconfig.AddOrUpdateResourceConfig(ct, resource, brokerIndex, logger)
+	changed := coreconfig.AddOrUpdateResourceConfig(ct, resource, sourceIndex, logger)
 
 	logger.Debug("Change detector", zap.Int("changed", changed))
 
