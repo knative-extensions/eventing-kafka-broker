@@ -18,7 +18,7 @@ package v1beta1
 
 import (
 	"k8s.io/apimachinery/pkg/types"
-	"knative.dev/eventing-kafka/pkg/apis/duck/v1alpha1"
+	"knative.dev/eventing/pkg/apis/duck/v1alpha1"
 )
 
 func (k *KafkaSource) GetKey() types.NamespacedName {
