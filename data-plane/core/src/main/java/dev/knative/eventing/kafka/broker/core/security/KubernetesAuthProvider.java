@@ -104,8 +104,7 @@ class KubernetesAuthProvider implements AuthProvider {
     return kubernetesClient.secrets()
       .inNamespace(secretReference.getNamespace())
       .withName(secretReference.getName())
-      .withResourceVersion(secretReference.getVersion())
-      .waitUntilReady(5, TimeUnit.SECONDS);
+      .get();
   }
 
   private static String protocolContractToSecurityProtocol(final DataPlaneContract.Protocol protocol) {
