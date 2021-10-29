@@ -39,7 +39,7 @@ func TrackNetSpecSecrets(secretsTracker tracker.Interface, netSpec bindings.Kafk
 				APIVersion: "v1",
 				Kind:       "Secret",
 				Namespace:  parent.GetNamespace(),
-				Name:       parent.GetName(),
+				Name:       s.SecretKeyRef.Name,
 			}
 			if err := secretsTracker.TrackReference(ref, parent); err != nil {
 				return err
