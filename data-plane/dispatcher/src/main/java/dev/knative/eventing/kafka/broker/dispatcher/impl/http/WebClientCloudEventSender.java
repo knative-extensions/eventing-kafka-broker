@@ -26,8 +26,10 @@ import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+
 import java.net.URI;
 import java.util.Objects;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +64,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
   @Override
   public Future<HttpResponse<Buffer>> send(CloudEvent event) {
+    logger.debug("Sending event {} {}", keyValue("id", event.getId()), keyValue("subscriberURI", target));
+
     TracingSpan.decorateCurrentWithEvent(event);
 
     return circuitBreaker.execute(breaker -> {
@@ -78,7 +82,10 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     VertxMessageFactory
       .createWriter(client.postAbs(target))
       .writeBinary(event)
-      .onFailure(breaker::tryFail)
+      .onFailure(ex -> {
+        logError(event, ex);
+        breaker.tryFail(ex);
+      })
       .onSuccess(response -> {
 
         if (response.statusCode() >= 300 || response.statusCode() < 200) {
@@ -105,6 +112,14 @@ public final class WebClientCloudEventSender implements CloudEventSender {
         keyValue("target", target),
         keyValue("statusCode", response.statusCode())
       );
+    }
+  }
+
+  private void logError(final CloudEvent event, Throwable ex) {
+    if (logger.isDebugEnabled()) {
+      logger.error("failed to send event to subscriber {} {}", keyValue("target", target), keyValue("event", event), ex);
+    } else {
+      logger.error("failed to send event to subscriber {}", keyValue("target", target), ex);
     }
   }
 
