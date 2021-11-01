@@ -60,8 +60,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DispatcherLabel:             base.ChannelDispatcherLabel,
 			ReceiverLabel:               base.ChannelReceiverLabel,
 		},
-		// TODO: rename
-		KafkaClient:          sarama.NewClient,
+		NewKafkaClient:       sarama.NewClient,
 		NewKafkaClusterAdmin: sarama.NewClusterAdmin,
 		Configs:              configs,
 		ConfigMapLister:      configmapInformer.Lister(),

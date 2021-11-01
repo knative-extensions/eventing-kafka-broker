@@ -65,8 +65,9 @@ type Reconciler struct {
 	// mock the function used during the reconciliation loop.
 	NewKafkaClusterAdmin kafka.NewClusterAdminFunc
 
-	// TODO: rename
-	KafkaClient kafka.NewClientFunc
+	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
+	// mock the function used during the reconciliation loop.
+	NewKafkaClient kafka.NewClientFunc
 
 	ConfigMapLister corelisters.ConfigMapLister
 
@@ -157,7 +158,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	defer kafkaClusterAdmin.Close()
 
-	kafkaClient, err := r.KafkaClient(topicConfig.BootstrapServers, kafkaClientSaramaConfig)
+	kafkaClient, err := r.NewKafkaClient(topicConfig.BootstrapServers, kafkaClientSaramaConfig)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting sarama config: %w", err))
 	}
