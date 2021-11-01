@@ -191,10 +191,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToResolveConfig(errors.New("missing channel in contract"))
 	}
 
-	err = r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, ct, channelIndex, contractConfigMap)
-	if err != nil {
-		return fmt.Errorf("error reconciling subscribers %v", err)
-	}
+	contractChanged := r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, ct, channelIndex)
 
 	// Get resource configuration
 	channelResource, err := r.getChannelContractResource(ctx, topic, channel, secret, topicConfig)
@@ -202,6 +199,32 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToGetConfig(err)
 	}
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&channel.Status.DeliveryStatus, channelResource.EgressConfig)
+
+	if contractChanged {
+		logger.Debug("Egress config to be changed in contract")
+		coreconfig.IncrementContractGeneration(ct)
+		// Update the configuration map with the new dataPlaneConfig data.
+		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
+			logger.Error("failed to update dataplane configMap", zap.Error(err))
+			return fmt.Errorf("failed to update dataplane configMap: %v", zap.Error(err))
+		}
+		logger.Debug("Updated dataplane configMap")
+
+		// Update volume generation annotation of dispatcher pods
+		if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+			// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
+			// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
+			// ready. So, log out the error and move on to the next step.
+			logger.Warn(
+				"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
+				zap.Error(err),
+			)
+
+			logger.Error("failed to update dispatcher pods annotation", zap.Error(err))
+			return fmt.Errorf("failed to update dispatcher pods annotation: %v", zap.Error(err))
+		}
+		logger.Debug("Updated dispatcher pod annotation")
+	}
 
 	// Update contract data with the new contract configuration
 	changed := coreconfig.AddOrUpdateResourceConfig(ct, channelResource, channelIndex, logger)
@@ -379,7 +402,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	return nil
 }
 
-func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, ct *contract.Contract, channelIndex int, contractConfigMap *corev1.ConfigMap) error {
+func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, ct *contract.Contract, channelIndex int) bool {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
 
 	contractChanged := false
@@ -408,32 +431,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient saram
 		}
 	}
 
-	if contractChanged {
-		logger.Debug("Egress config to be changed in contract")
-		coreconfig.IncrementContractGeneration(ct)
-		// Update the configuration map with the new dataPlaneConfig data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-			logger.Error("failed to update dataplane configMap", zap.Error(err))
-			return fmt.Errorf("failed to update dataplane configMap: %v", zap.Error(err))
-		}
-		logger.Debug("Updated dataplane configMap")
-
-		// Update volume generation annotation of dispatcher pods
-		if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-			// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-			// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
-			// ready. So, log out the error and move on to the next step.
-			logger.Warn(
-				"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-				zap.Error(err),
-			)
-
-			logger.Error("failed to update dispatcher pods annotation", zap.Error(err))
-			return fmt.Errorf("failed to update dispatcher pods annotation: %v", zap.Error(err))
-		}
-		logger.Debug("Updated dispatcher pod annotation")
-	}
-	return nil
+	return contractChanged
 }
 
 func (r *Reconciler) reconcileSubscriber(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, subscriberSpec v1.SubscriberSpec, ct *contract.Contract, channelIndex int) (bool, error) {
