@@ -428,7 +428,7 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messag
 	}
 
 	topicName := topic(TopicPrefix, channel)
-	groupID := fmt.Sprintf("kafka.%s.%s.%s", channel.Namespace, channel.Name, string(sub.UID))
+	groupID := consumerGroup(channel, sub)
 	_, err := offset.InitOffsets(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID)
 	if err != nil {
 		logger := logging.FromContext(ctx)
@@ -523,10 +523,15 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 	return resource, nil
 }
 
-// Topic returns a topic name given a topic prefix and a generic object.
+// topic returns a topic name given a topic prefix and a generic object.
 // This function uses a different format than the kafkatopic.Topic function
 func topic(prefix string, obj metav1.Object) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, obj.GetNamespace(), obj.GetName())
+}
+
+// consumerGroup returns a consumerGroup name for the given channel and subscription
+func consumerGroup(channel *messagingv1beta1.KafkaChannel, sub v1.SubscriberSpec) string {
+	return fmt.Sprintf("kafka.%s.%s.%s", channel.Namespace, channel.Name, string(sub.UID))
 }
 
 func findSubscriptionStatus(kc *messagingv1beta1.KafkaChannel, subUID types.UID) *v1.SubscriberStatus {
