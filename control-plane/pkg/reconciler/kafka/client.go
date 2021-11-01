@@ -44,26 +44,11 @@ func DisableOffsetAutoCommitConfigOption(config *sarama.Config) error {
 // NewClusterAdminFunc creates new sarama.ClusterAdmin.
 type NewClusterAdminFunc func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error)
 
-// GetClusterAdminSaramaConfig returns Kafka Admin configurations that the ConfigOptions are applied to
-func GetClusterAdminSaramaConfig(configOptions ...ConfigOption) (*sarama.Config, error) {
-	config := sarama.NewConfig()
-	config.Version = sarama.MaxVersion
-
-	err := Options(config, configOptions...)
-	if err != nil {
-		return nil, err
-	}
-
-	return config, nil
-}
-
 // NewClientFunc creates new sarama.Client.
 type NewClientFunc func(addrs []string, config *sarama.Config) (sarama.Client, error)
 
-// TODO unify once the hardcoded config below is converted to an option
-
-// GetClientSaramaConfig returns Kafka Client configurations.
-func GetClientSaramaConfig(configOptions ...ConfigOption) (*sarama.Config, error) {
+// GetSaramaConfig returns Kafka Client configuration with the given options applied.
+func GetSaramaConfig(configOptions ...ConfigOption) (*sarama.Config, error) {
 	config := sarama.NewConfig()
 	config.Version = sarama.MaxVersion
 

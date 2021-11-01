@@ -127,7 +127,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	topicName := kafka.Topic(TopicPrefix, broker)
 
-	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(securityOption)
+	saramaConfig, err := kafka.GetSaramaConfig(securityOption)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin config: %w", err))
 	}
@@ -299,7 +299,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	// get security option for Sarama with secret info in it
 	securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
-	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(securityOption)
+	saramaConfig, err := kafka.GetSaramaConfig(securityOption)
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection

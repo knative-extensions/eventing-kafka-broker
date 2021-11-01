@@ -100,7 +100,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
-	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(securityOption)
+	saramaConfig, err := kafka.GetSaramaConfig(securityOption)
 	if err != nil {
 		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
 	}
@@ -286,7 +286,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 		// get security option for Sarama with secret info in it
 		securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
-		saramaConfig, err := kafka.GetClusterAdminSaramaConfig(securityOption)
+		saramaConfig, err := kafka.GetSaramaConfig(securityOption)
 		if err != nil {
 			// even in error case, we return `normal`, since we are fine with leaving the
 			// topic undeleted e.g. when we lose connection

@@ -142,7 +142,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 
 	topicName := topic(TopicPrefix, channel)
 
-	kafkaClusterAdminSaramaConfig, err := kafka.GetClusterAdminSaramaConfig(saramaSecurityOption)
+	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
 	}
@@ -150,7 +150,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	// Manually commit the offsets in KafkaChannel controller.
 	// That's because we want to make sure we initialize the offsets within the controller
 	// before dispatcher actually starts consuming messages.
-	kafkaClientSaramaConfig, err := kafka.GetClientSaramaConfig(saramaSecurityOption, kafka.DisableOffsetAutoCommitConfigOption)
+	kafkaClientSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption, kafka.DisableOffsetAutoCommitConfigOption)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
 	}
@@ -350,7 +350,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	// get security option for Sarama with secret info in it
 	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
-	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(saramaSecurityOption)
+	saramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
