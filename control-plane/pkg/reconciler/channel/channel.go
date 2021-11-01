@@ -196,7 +196,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToResolveConfig(errors.New("missing channel in contract"))
 	}
 
-	err = r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, statusConditionManager, ct, channelIndex, contractConfigMap)
+	err = r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, ct, channelIndex, contractConfigMap)
 	if err != nil {
 		return fmt.Errorf("error reconciling subscribers %v", err)
 	}
@@ -384,7 +384,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	return nil
 }
 
-func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, statusConditionManager base.StatusConditionManager, ct *contract.Contract, channelIndex int, contractConfigMap *corev1.ConfigMap) error {
+func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, ct *contract.Contract, channelIndex int, contractConfigMap *corev1.ConfigMap) error {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
 
 	after := channel.DeepCopy()
