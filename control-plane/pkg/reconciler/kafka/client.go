@@ -40,11 +40,11 @@ func NoOpConfigOption(*sarama.Config) error {
 type NewClusterAdminFunc func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error)
 
 // GetClusterAdminSaramaConfig returns Kafka Admin configurations that the ConfigOptions are applied to
-func GetClusterAdminSaramaConfig(configOption ConfigOption) (*sarama.Config, error) {
+func GetClusterAdminSaramaConfig(configOptions ...ConfigOption) (*sarama.Config, error) {
 	config := sarama.NewConfig()
 	config.Version = sarama.MaxVersion
 
-	err := configOption(config)
+	err := Options(config, configOptions...)
 	if err != nil {
 		return nil, err
 	}
@@ -58,11 +58,11 @@ type NewClientFunc func(addrs []string, config *sarama.Config) (sarama.Client, e
 // TODO unify once the hardcoded config below is converted to an option
 
 // GetClientSaramaConfig returns Kafka Client configurations.
-func GetClientSaramaConfig(configOption ConfigOption) (*sarama.Config, error) {
+func GetClientSaramaConfig(configOptions ...ConfigOption) (*sarama.Config, error) {
 	config := sarama.NewConfig()
 	config.Version = sarama.MaxVersion
 
-	err := configOption(config)
+	err := Options(config, configOptions...)
 	if err != nil {
 		return nil, err
 	}
