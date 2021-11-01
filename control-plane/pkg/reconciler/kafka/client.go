@@ -36,6 +36,11 @@ func NoOpConfigOption(*sarama.Config) error {
 	return nil
 }
 
+func DisableOffsetAutoCommitConfigOption(config *sarama.Config) error {
+	config.Consumer.Offsets.AutoCommit.Enable = false
+	return nil
+}
+
 // NewClusterAdminFunc creates new sarama.ClusterAdmin.
 type NewClusterAdminFunc func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error)
 
@@ -66,12 +71,6 @@ func GetClientSaramaConfig(configOptions ...ConfigOption) (*sarama.Config, error
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: convert to option
-	// Manually commit the offsets in KafkaChannel controller.
-	// That's because we want to make sure we initialize the offsets within the controller
-	// before dispatcher actually starts consuming messages.
-	config.Consumer.Offsets.AutoCommit.Enable = false
 
 	return config, nil
 }

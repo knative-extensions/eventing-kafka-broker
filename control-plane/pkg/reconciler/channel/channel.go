@@ -147,7 +147,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
 	}
 
-	kafkaClientSaramaConfig, err := kafka.GetClientSaramaConfig(saramaSecurityOption)
+	// Manually commit the offsets in KafkaChannel controller.
+	// That's because we want to make sure we initialize the offsets within the controller
+	// before dispatcher actually starts consuming messages.
+	kafkaClientSaramaConfig, err := kafka.GetClientSaramaConfig(saramaSecurityOption, kafka.DisableOffsetAutoCommitConfigOption)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
 	}
