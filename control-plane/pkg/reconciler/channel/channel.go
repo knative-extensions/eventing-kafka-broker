@@ -18,7 +18,6 @@ package channel
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -186,13 +185,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
-	channelIndex := coreconfig.FindResource(ct, channel.UID)
-	if channelIndex == coreconfig.NoResource {
-		return statusConditionManager.FailedToResolveConfig(errors.New("missing channel in contract"))
-	}
-
-	contractChanged := r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, ct, channelIndex)
-
 	// Get resource configuration
 	channelResource, err := r.getChannelContractResource(ctx, topic, channel, secret, topicConfig)
 	if err != nil {
@@ -200,33 +192,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&channel.Status.DeliveryStatus, channelResource.EgressConfig)
 
-	if contractChanged {
-		logger.Debug("Egress config to be changed in contract")
-		coreconfig.IncrementContractGeneration(ct)
-		// Update the configuration map with the new dataPlaneConfig data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-			logger.Error("failed to update dataplane configMap", zap.Error(err))
-			return fmt.Errorf("failed to update dataplane configMap: %v", zap.Error(err))
-		}
-		logger.Debug("Updated dataplane configMap")
+	r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, channelResource)
 
-		// Update volume generation annotation of dispatcher pods
-		if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-			// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-			// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
-			// ready. So, log out the error and move on to the next step.
-			logger.Warn(
-				"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-				zap.Error(err),
-			)
-
-			logger.Error("failed to update dispatcher pods annotation", zap.Error(err))
-			return fmt.Errorf("failed to update dispatcher pods annotation: %v", zap.Error(err))
-		}
-		logger.Debug("Updated dispatcher pod annotation")
-	}
-
-	// Update contract data with the new contract configuration
+	// Update contract data with the new contract configuration (add/update channel resource)
+	channelIndex := coreconfig.FindResource(ct, channel.UID)
 	changed := coreconfig.AddOrUpdateResourceConfig(ct, channelResource, channelIndex, logger)
 	logger.Debug("Change detector", zap.Int("changed", changed))
 
@@ -402,17 +371,12 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	return nil
 }
 
-func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, ct *contract.Contract, channelIndex int) bool {
+func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, channelContractResource *contract.Resource) {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
-
-	contractChanged := false
 
 	channel.Status.Subscribers = make([]v1.SubscriberStatus, 0)
 	for _, s := range channel.Spec.Subscribers {
-		changed, err := r.reconcileSubscriber(ctx, kafkaClient, kafkaClusterAdmin, channel, s, ct, channelIndex)
-		if !contractChanged && changed {
-			contractChanged = true
-		}
+		err := r.reconcileSubscriber(ctx, kafkaClient, kafkaClusterAdmin, channel, s, channelContractResource)
 		if err != nil {
 			logger.Error("error reconciling subscription. marking subscription as not ready. ", zap.String("channel", fmt.Sprintf("%s.%s", channel.Namespace, channel.Name)), zap.Any("subscription", s))
 			channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
@@ -430,32 +394,30 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient saram
 			})
 		}
 	}
-
-	return contractChanged
 }
 
-func (r *Reconciler) reconcileSubscriber(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, subscriberSpec v1.SubscriberSpec, ct *contract.Contract, channelIndex int) (bool, error) {
+func (r *Reconciler) reconcileSubscriber(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, subscriberSpec v1.SubscriberSpec, channelContractResource *contract.Resource) error {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
 
 	logger.Debug("Reconciling initial offset for subscription", zap.Any("subscription", subscriberSpec), zap.Any("channel", channel))
 	err := r.reconcileInitialOffset(ctx, channel, subscriberSpec, kafkaClient, kafkaClusterAdmin)
 	if err != nil {
 		logger.Error("reconcile failed to initial offset for subscription. Marking the subscription not ready", zap.String("channel", fmt.Sprintf("%s.%s", channel.Namespace, channel.Name)), zap.Any("subscription", subscriberSpec), zap.Error(err))
-		return false, fmt.Errorf("initial offset cannot be committed: %v", err)
+		return fmt.Errorf("initial offset cannot be committed: %v", err)
 	}
 	logger.Debug("Reconciled initial offset for subscription. ", zap.Any("subscription", subscriberSpec))
 
-	subscriberIndex := coreconfig.FindEgress(ct.Resources[channelIndex].Egresses, subscriberSpec.UID)
+	subscriberIndex := coreconfig.FindEgress(channelContractResource.Egresses, subscriberSpec.UID)
 	subscriberConfig, err := r.getSubscriberConfig(ctx, channel, &subscriberSpec)
 	if err != nil {
-		return false, fmt.Errorf("failed to resolve subscriber config: %v", zap.Error(err))
+		return fmt.Errorf("failed to resolve subscriber config: %v", zap.Error(err))
 	}
 
-	changed := coreconfig.AddOrUpdateEgressConfig(ct, channelIndex, subscriberConfig, subscriberIndex)
+	changed := coreconfig.AddOrUpdateEgressConfigForResource(channelContractResource, subscriberConfig, subscriberIndex)
 
 	logger.Debug("Egress changes", zap.Int("changed", changed))
 
-	return changed == coreconfig.EgressChanged, nil
+	return nil
 }
 
 func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messagingv1beta1.KafkaChannel, sub v1.SubscriberSpec, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin) error {

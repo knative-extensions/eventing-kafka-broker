@@ -67,6 +67,24 @@ func AddOrUpdateEgressConfig(ct *contract.Contract, resourceIndex int, egress *c
 	return EgressChanged
 }
 
+// AddOrUpdateEgressConfigForResource adds or updates the given egress to the given contract at the specified indexes.
+func AddOrUpdateEgressConfigForResource(resource *contract.Resource, egress *contract.Egress, egressIndex int) int {
+
+	if egressIndex != NoEgress {
+		prev := resource.Egresses[egressIndex]
+		resource.Egresses[egressIndex] = egress
+
+		if proto.Equal(prev, egress) {
+			return EgressUnchanged
+		}
+		return EgressChanged
+	}
+
+	resource.Egresses = append(resource.Egresses, egress)
+
+	return EgressChanged
+}
+
 // KeyTypeFromString returns the contract.KeyType associated to a given string.
 func KeyTypeFromString(s string) contract.KeyType {
 	switch s {
