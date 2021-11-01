@@ -47,11 +47,11 @@ const (
 )
 
 // AddOrUpdateEgressConfig adds or updates the given egress to the given contract at the specified indexes.
-func AddOrUpdateEgressConfig(ct *contract.Contract, brokerIndex int, egress *contract.Egress, egressIndex int) int {
+func AddOrUpdateEgressConfig(ct *contract.Contract, resourceIndex int, egress *contract.Egress, egressIndex int) int {
 
 	if egressIndex != NoEgress {
-		prev := ct.Resources[brokerIndex].Egresses[egressIndex]
-		ct.Resources[brokerIndex].Egresses[egressIndex] = egress
+		prev := ct.Resources[resourceIndex].Egresses[egressIndex]
+		ct.Resources[resourceIndex].Egresses[egressIndex] = egress
 
 		if proto.Equal(prev, egress) {
 			return EgressUnchanged
@@ -59,8 +59,8 @@ func AddOrUpdateEgressConfig(ct *contract.Contract, brokerIndex int, egress *con
 		return EgressChanged
 	}
 
-	ct.Resources[brokerIndex].Egresses = append(
-		ct.Resources[brokerIndex].Egresses,
+	ct.Resources[resourceIndex].Egresses = append(
+		ct.Resources[resourceIndex].Egresses,
 		egress,
 	)
 
