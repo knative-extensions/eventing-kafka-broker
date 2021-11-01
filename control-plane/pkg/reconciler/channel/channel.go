@@ -450,16 +450,6 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 	}
 	egress.EgressConfig = egressConfig
 
-	// TODO do we need such thing here?
-	//deliveryOrderAnnotationValue, ok := subscriber.Annotations[deliveryOrderAnnotation]
-	//if ok {
-	//	deliveryOrder, err := deliveryOrderFromString(deliveryOrderAnnotationValue)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	egress.DeliveryOrder = deliveryOrder
-	//}
-
 	return egress, nil
 }
 
