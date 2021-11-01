@@ -35,13 +35,11 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
-	kafkaclientset "knative.dev/eventing-kafka/pkg/client/clientset/versioned"
 	commonconfig "knative.dev/eventing-kafka/pkg/common/config"
 	"knative.dev/eventing-kafka/pkg/common/constants"
 	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
 	commonsarama "knative.dev/eventing-kafka/pkg/common/kafka/sarama"
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
-	"knative.dev/pkg/apis/duck"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
@@ -74,9 +72,6 @@ type Reconciler struct {
 	ConfigMapLister corelisters.ConfigMapLister
 
 	Configs *config.Env
-
-	// TODO: expose
-	kafkaClientSet kafkaclientset.Interface
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
@@ -389,8 +384,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient saram
 
 	contractChanged := false
 
-	after := channel.DeepCopy()
-	after.Status.Subscribers = make([]v1.SubscriberStatus, 0)
+	channel.Status.Subscribers = make([]v1.SubscriberStatus, 0)
 	for _, s := range channel.Spec.Subscribers {
 		changed, err := r.reconcileSubscriber(ctx, kafkaClient, kafkaClusterAdmin, channel, s, ct, channelIndex)
 		if !contractChanged && changed {
@@ -398,7 +392,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient saram
 		}
 		if err != nil {
 			logger.Error("error reconciling subscription. marking subscription as not ready. ", zap.String("channel", fmt.Sprintf("%s.%s", channel.Namespace, channel.Name)), zap.Any("subscription", s))
-			after.Status.Subscribers = append(after.Status.Subscribers, v1.SubscriberStatus{
+			channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
 				UID:                s.UID,
 				ObservedGeneration: s.Generation,
 				Ready:              corev1.ConditionFalse,
@@ -406,7 +400,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient saram
 			})
 		} else {
 			logger.Debug("marking subscription as ready. ", zap.String("channel", fmt.Sprintf("%s.%s", channel.Namespace, channel.Name)), zap.Any("subscription", s))
-			after.Status.Subscribers = append(after.Status.Subscribers, v1.SubscriberStatus{
+			channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
 				UID:                s.UID,
 				ObservedGeneration: s.Generation,
 				Ready:              corev1.ConditionTrue,
@@ -439,30 +433,6 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient saram
 		}
 		logger.Debug("Updated dispatcher pod annotation")
 	}
-
-	jsonPatch, err := duck.CreatePatch(channel, after)
-	if err != nil {
-		return fmt.Errorf("creating JSON patch: %w", err)
-	}
-	// If there is nothing to patch, we are good, just return.
-	// Empty patch is [], hence we check for that.
-	if len(jsonPatch) == 0 {
-		logger.Debug("Patch for KafkaChannel subscriber status is empty")
-		return nil
-	}
-
-	logger.Debug("Patch for KafkaChannel subscriber status is not empty")
-
-	patch, err := jsonPatch.MarshalJSON()
-	if err != nil {
-		return fmt.Errorf("marshaling JSON patch: %w", err)
-	}
-	patched, err := r.kafkaClientSet.MessagingV1beta1().KafkaChannels(channel.Namespace).Patch(ctx, channel.Name, types.JSONPatchType, patch, metav1.PatchOptions{}, "status")
-
-	if err != nil {
-		return fmt.Errorf("failed patching: %w", err)
-	}
-	logging.FromContext(ctx).Debugw("Patched resource", zap.Any("patch", patch), zap.Any("patched", patched))
 	return nil
 }
 
