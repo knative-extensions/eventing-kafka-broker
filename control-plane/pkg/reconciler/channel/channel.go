@@ -177,24 +177,29 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	logger.Debug("Topic created", zap.Any("topic", topic))
 	statusConditionManager.TopicReady(topic)
 
-	err = r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, statusConditionManager)
-	if err != nil {
-		return fmt.Errorf("error reconciling subscribers %v", err)
-	}
-
-	// Get contract config map to write into it.
+	// Get data plane config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
-		return statusConditionManager.FailedToGetConfigMap(err)
+		return statusConditionManager.FailedToGetConfig(err)
 	}
 	logger.Debug("Got contract config map")
 
-	// Get contract data
+	// Get data plane config data.
 	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
-	if err != nil && ct == nil {
+	if err != nil || ct == nil {
 		return statusConditionManager.FailedToGetDataFromConfigMap(err)
 	}
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
+
+	channelIndex := coreconfig.FindResource(ct, channel.UID)
+	if channelIndex == coreconfig.NoResource {
+		return statusConditionManager.FailedToResolveConfig(errors.New("missing channel in contract"))
+	}
+
+	err = r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, statusConditionManager, ct, channelIndex, contractConfigMap)
+	if err != nil {
+		return fmt.Errorf("error reconciling subscribers %v", err)
+	}
 
 	// Get resource configuration
 	channelResource, err := r.getChannelContractResource(ctx, topic, channel, secret, topicConfig)
@@ -204,7 +209,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&channel.Status.DeliveryStatus, channelResource.EgressConfig)
 
 	// Update contract data with the new contract configuration
-	channelIndex := coreconfig.FindResource(ct, channel.UID)
 	changed := coreconfig.AddOrUpdateResourceConfig(ct, channelResource, channelIndex, logger)
 	logger.Debug("Change detector", zap.Int("changed", changed))
 
@@ -380,41 +384,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	return nil
 }
 
-func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, statusConditionManager base.StatusConditionManager) error {
+func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, statusConditionManager base.StatusConditionManager, ct *contract.Contract, channelIndex int, contractConfigMap *corev1.ConfigMap) error {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
-
-	// Get data plane config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
-	if err != nil {
-		// In case of errors like this, which is not related,
-		// to a single subscription, we should still set the error
-		// on the KafkaChannel status.
-		// For problems about the subscription, we should set it on the
-		// subscriber.
-		// However, core eventing-controller is setting the status
-		// of individual subscriptions, we cannot set the status of
-		// the subscription itself. We can set it on the
-		// channel.Spec.Subscribers though.
-		return statusConditionManager.FailedToGetConfig(err)
-	}
-
-	logger.Debug("Got contract config map")
-
-	// Get data plane config data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
-	if err != nil || ct == nil {
-		return statusConditionManager.FailedToGetDataFromConfigMap(err)
-	}
-
-	logger.Debug(
-		"Got contract data from config map",
-		zap.Any(base.ContractLogKey, ct),
-	)
-
-	channelIndex := coreconfig.FindResource(ct, channel.UID)
-	if channelIndex == coreconfig.NoResource {
-		return statusConditionManager.FailedToResolveConfig(errors.New("missing channel in contract"))
-	}
 
 	after := channel.DeepCopy()
 	after.Status.Subscribers = make([]v1.SubscriberStatus, 0)
