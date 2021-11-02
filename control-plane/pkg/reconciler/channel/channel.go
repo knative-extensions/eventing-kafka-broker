@@ -438,7 +438,7 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messag
 func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messagingv1beta1.KafkaChannel, subscriber *v1.SubscriberSpec) (*contract.Egress, error) {
 	egress := &contract.Egress{
 		Destination:   subscriber.SubscriberURI.String(),
-		ConsumerGroup: string(subscriber.UID),
+		ConsumerGroup: consumerGroup(channel, subscriber),
 		Uid:           string(subscriber.UID),
 	}
 
