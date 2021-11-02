@@ -454,11 +454,17 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 		Uid:           string(subscriber.UID),
 	}
 
-	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, subscriber.Delivery, r.Configs.DefaultBackoffDelayMs)
+	subscriptionEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, subscriber.Delivery, r.Configs.DefaultBackoffDelayMs)
 	if err != nil {
 		return nil, err
 	}
-	egress.EgressConfig = egressConfig
+	channelEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
+	if err != nil {
+		return nil, err
+	}
+
+	// Merge Channel and Subscription egress configuration prioritizing the Subscription configuration.
+	egress.EgressConfig = coreconfig.MergeEgressConfig(subscriptionEgressConfig, channelEgressConfig)
 
 	return egress, nil
 }
