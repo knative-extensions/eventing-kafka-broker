@@ -13,6 +13,7 @@ require (
 	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.7.0
 	github.com/xdg-go/scram v1.0.2
+	go.uber.org/multierr v1.6.0
 	go.uber.org/zap v1.19.1
 	google.golang.org/protobuf v1.27.1
 	k8s.io/api v0.21.4

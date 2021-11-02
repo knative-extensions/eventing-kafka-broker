@@ -99,7 +99,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		return fmt.Errorf("failed to track secrets: %w", err)
 	}
 
-	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(securityOption)
+	saramaConfig, err := kafka.GetSaramaConfig(securityOption)
 	if err != nil {
 		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
 	}

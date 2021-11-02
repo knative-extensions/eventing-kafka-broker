@@ -359,6 +359,7 @@ go.uber.org/automaxprocs/internal/cgroups
 go.uber.org/automaxprocs/internal/runtime
 go.uber.org/automaxprocs/maxprocs
 # go.uber.org/multierr v1.6.0
+## explicit
 go.uber.org/multierr
 # go.uber.org/zap v1.19.1
 ## explicit
@@ -1187,6 +1188,7 @@ knative.dev/eventing-kafka/pkg/client/listers/sources/v1beta1
 knative.dev/eventing-kafka/pkg/common/client
 knative.dev/eventing-kafka/pkg/common/config
 knative.dev/eventing-kafka/pkg/common/constants
+knative.dev/eventing-kafka/pkg/common/kafka/offset
 knative.dev/eventing-kafka/pkg/common/kafka/sarama
 # knative.dev/hack v0.0.0-20211028194650-b96d65a5ff5e
 ## explicit

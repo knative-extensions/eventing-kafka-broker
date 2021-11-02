@@ -221,6 +221,96 @@ func TestAddOrUpdateEgressConfig(t *testing.T) {
 	}
 }
 
+func TestAddOrUpdateEgressConfigForResource(t *testing.T) {
+	tests := []struct {
+		name        string
+		givenRes    *contract.Resource
+		egress      *contract.Egress
+		egressIndex int
+		changed     int
+		wantRes     *contract.Resource
+	}{
+		{
+			name: "Egress found - changed",
+			givenRes: &contract.Resource{
+				Egresses: []*contract.Egress{
+					{
+						Uid: "xyz",
+					},
+				},
+			},
+			egress: &contract.Egress{
+				Uid: "abc",
+			},
+			egressIndex: 0,
+			wantRes: &contract.Resource{
+				Egresses: []*contract.Egress{
+					{
+						Uid: "abc",
+					},
+				},
+			},
+		},
+		{
+			name: "Egress found - unchanged",
+			givenRes: &contract.Resource{
+				Egresses: []*contract.Egress{
+					{
+						Uid: "abc",
+					},
+				},
+			},
+			egress: &contract.Egress{
+				Uid: "abc",
+			},
+			egressIndex: 0,
+			wantRes: &contract.Resource{
+				Egresses: []*contract.Egress{
+					{
+						Uid: "abc",
+					},
+				},
+			},
+			changed: EgressUnchanged,
+		},
+		{
+			name: "Egress not found",
+			givenRes: &contract.Resource{
+				Egresses: []*contract.Egress{
+					{
+						Uid: "abc",
+					},
+				},
+			},
+			egress: &contract.Egress{
+				Uid: "abc",
+			},
+			egressIndex: NoEgress,
+			wantRes: &contract.Resource{
+				Egresses: []*contract.Egress{
+					{
+						Uid: "abc",
+					},
+					{
+						Uid: "abc",
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AddOrUpdateEgressConfigForResource(tt.givenRes, tt.egress, tt.egressIndex); got != tt.changed {
+				t.Errorf("AddOrUpdateEgressConfig() = %v, want %v", got, tt.changed)
+			}
+
+			if diff := cmp.Diff(tt.wantRes, tt.givenRes, protocmp.Transform()); diff != "" {
+				t.Errorf("(-want, +got) %s", diff)
+			}
+		})
+	}
+}
+
 func TestKeyTypeFromString(t *testing.T) {
 	tests := []struct {
 		s    string
