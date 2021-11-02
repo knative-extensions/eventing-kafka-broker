@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/Shopify/sarama"
+	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -195,7 +196,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&channel.Status.DeliveryStatus, channelResource.EgressConfig)
 
-	r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, channelResource)
+	// we still update the contract configMap even though there's an error.
+	// however, we record this error to make the reconciler try again.
+	subscriptionError := r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, channelResource)
 
 	// Update contract data with the new contract configuration (add/update channel resource)
 	channelIndex := coreconfig.FindResource(ct, channel.UID)
@@ -249,6 +252,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		statusConditionManager.FailedToUpdateDispatcherPodsAnnotation(err)
 	} else {
 		logger.Debug("Updated dispatcher pod annotation")
+	}
+
+	if subscriptionError != nil {
+		logger.Error("Error reconciling subscriptions. Going to try again.", zap.Error(subscriptionError))
+		return subscriptionError
 	}
 
 	return statusConditionManager.Reconciled()
@@ -374,22 +382,25 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	return nil
 }
 
-func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, channelContractResource *contract.Resource) {
+func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, channelContractResource *contract.Resource) error {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
 
 	channel.Status.Subscribers = make([]v1.SubscriberStatus, 0)
+	var globalErr error
 	for _, s := range channel.Spec.Subscribers {
+		logger = logger.With(zap.Any("subscription", s))
 		err := r.reconcileSubscriber(ctx, kafkaClient, kafkaClusterAdmin, channel, &s, channelContractResource)
 		if err != nil {
-			logger.Error("error reconciling subscription. marking subscription as not ready. ", zap.String("channel", fmt.Sprintf("%s.%s", channel.Namespace, channel.Name)), zap.Any("subscription", s))
+			logger.Error("error reconciling subscription. marking subscription as not ready", zap.Error(err))
 			channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
 				UID:                s.UID,
 				ObservedGeneration: s.Generation,
 				Ready:              corev1.ConditionFalse,
-				Message:            fmt.Sprintf("Subscription not ready: %v", err),
+				Message:            fmt.Sprint("Subscription not ready", err),
 			})
+			globalErr = multierr.Append(globalErr, err)
 		} else {
-			logger.Debug("marking subscription as ready. ", zap.String("channel", fmt.Sprintf("%s.%s", channel.Namespace, channel.Name)), zap.Any("subscription", s))
+			logger.Debug("marking subscription as ready")
 			channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
 				UID:                s.UID,
 				ObservedGeneration: s.Generation,
@@ -397,6 +408,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient saram
 			})
 		}
 	}
+	return globalErr
 }
 
 func (r *Reconciler) reconcileSubscriber(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, subscriberSpec *v1.SubscriberSpec, channelContractResource *contract.Resource) error {
