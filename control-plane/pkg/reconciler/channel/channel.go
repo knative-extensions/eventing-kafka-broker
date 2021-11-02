@@ -380,7 +380,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient saram
 
 	channel.Status.Subscribers = make([]v1.SubscriberStatus, 0)
 	for _, s := range channel.Spec.Subscribers {
-		err := r.reconcileSubscriber(ctx, kafkaClient, kafkaClusterAdmin, channel, s, channelContractResource)
+		err := r.reconcileSubscriber(ctx, kafkaClient, kafkaClusterAdmin, channel, &s, channelContractResource)
 		if err != nil {
 			logger.Error("error reconciling subscription. marking subscription as not ready. ", zap.String("channel", fmt.Sprintf("%s.%s", channel.Namespace, channel.Name)), zap.Any("subscription", s))
 			channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
@@ -400,7 +400,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient saram
 	}
 }
 
-func (r *Reconciler) reconcileSubscriber(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, subscriberSpec v1.SubscriberSpec, channelContractResource *contract.Resource) error {
+func (r *Reconciler) reconcileSubscriber(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, subscriberSpec *v1.SubscriberSpec, channelContractResource *contract.Resource) error {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
 
 	logger.Debug("Reconciling initial offset for subscription", zap.Any("subscription", subscriberSpec), zap.Any("channel", channel))
@@ -412,7 +412,7 @@ func (r *Reconciler) reconcileSubscriber(ctx context.Context, kafkaClient sarama
 	logger.Debug("Reconciled initial offset for subscription. ", zap.Any("subscription", subscriberSpec))
 
 	subscriberIndex := coreconfig.FindEgress(channelContractResource.Egresses, subscriberSpec.UID)
-	subscriberConfig, err := r.getSubscriberConfig(ctx, channel, &subscriberSpec)
+	subscriberConfig, err := r.getSubscriberConfig(ctx, channel, subscriberSpec)
 	if err != nil {
 		return fmt.Errorf("failed to resolve subscriber config: %v", zap.Error(err))
 	}
@@ -424,7 +424,7 @@ func (r *Reconciler) reconcileSubscriber(ctx context.Context, kafkaClient sarama
 	return nil
 }
 
-func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messagingv1beta1.KafkaChannel, sub v1.SubscriberSpec, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin) error {
+func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messagingv1beta1.KafkaChannel, sub *v1.SubscriberSpec, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin) error {
 	subscriptionStatus := findSubscriptionStatus(channel, sub.UID)
 	if subscriptionStatus != nil && subscriptionStatus.Ready == corev1.ConditionTrue {
 		// subscription is ready, the offsets must have been initialized already
@@ -534,7 +534,7 @@ func topic(prefix string, obj metav1.Object) string {
 }
 
 // consumerGroup returns a consumerGroup name for the given channel and subscription
-func consumerGroup(channel *messagingv1beta1.KafkaChannel, sub v1.SubscriberSpec) string {
+func consumerGroup(channel *messagingv1beta1.KafkaChannel, sub *v1.SubscriberSpec) string {
 	return fmt.Sprintf("kafka.%s.%s.%s", channel.Namespace, channel.Name, string(sub.UID))
 }
 
