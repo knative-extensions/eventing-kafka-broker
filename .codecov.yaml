@@ -6,3 +6,5 @@ ignore:
   - "data-plane/contract"
   - "hack"
   - "test"
+  - "control-plane/pkg/reconciler/kafka/testing"
+  - "control-plane/pkg/reconciler/testing"
