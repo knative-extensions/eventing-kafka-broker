@@ -427,10 +427,7 @@ func (r *Reconciler) reconcileSubscriber(ctx context.Context, kafkaClient sarama
 		return fmt.Errorf("failed to resolve subscriber config: %v", zap.Error(err))
 	}
 
-	changed := coreconfig.AddOrUpdateEgressConfigForResource(channelContractResource, subscriberConfig, subscriberIndex)
-
-	logger.Debug("Egress changes", zap.Int("changed", changed))
-
+	coreconfig.AddOrUpdateEgressConfigForResource(channelContractResource, subscriberConfig, subscriberIndex)
 	return nil
 }
 
