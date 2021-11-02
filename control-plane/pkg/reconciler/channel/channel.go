@@ -387,7 +387,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient saram
 
 	channel.Status.Subscribers = make([]v1.SubscriberStatus, 0)
 	var globalErr error
-	for i, _ := range channel.Spec.Subscribers {
+	for i := range channel.Spec.Subscribers {
 		s := &channel.Spec.Subscribers[i]
 		logger = logger.With(zap.Any("subscription", s))
 		err := r.reconcileSubscriber(ctx, kafkaClient, kafkaClusterAdmin, channel, s, channelContractResource)
