@@ -2,6 +2,12 @@
   Knative + Apache Kafka
 </h1>
 
+<p>
+  <strong><a href="https://github.com/knative/community/tree/main/mechanics/MATURITY-LEVELS.md">
+    These components are BETA
+  </a></strong>
+</p>
+
 <p align="center">
   <a href="https://goreportcard.com/report/knative-sandbox/eventing-kafka-broker">
     <img src="https://goreportcard.com/badge/knative-sandbox/eventing-kafka-broker" alt="Go-Report">
