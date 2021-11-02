@@ -457,7 +457,7 @@ func useTable(t *testing.T, table TableTest, configs broker.Configs) {
 				DispatcherLabel:             base.SourceDispatcherLabel,
 			},
 			Env: &configs.Env,
-			NewKafkaClusterAdmin: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName:                      "",
 					ExpectedTopicDetail:                    sarama.TopicDetail{},

@@ -71,7 +71,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
-		NewKafkaClusterAdmin: sarama.NewClusterAdmin,
+		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 		KafkaDefaultTopicDetails: sarama.TopicDetail{
 			NumPartitions:     DefaultNumPartitions,
 			ReplicationFactor: DefaultReplicationFactor,

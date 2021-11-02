@@ -41,8 +41,8 @@ func DisableOffsetAutoCommitConfigOption(config *sarama.Config) error {
 	return nil
 }
 
-// NewClusterAdminFunc creates new sarama.ClusterAdmin.
-type NewClusterAdminFunc func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error)
+// NewClusterAdminClientFunc creates new sarama.ClusterAdmin.
+type NewClusterAdminClientFunc func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error)
 
 // NewClientFunc creates new sarama.Client.
 type NewClientFunc func(addrs []string, config *sarama.Config) (sarama.Client, error)

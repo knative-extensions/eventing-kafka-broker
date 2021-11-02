@@ -312,7 +312,7 @@ func TestCreateTopicTopicAlreadyExists(t *testing.T) {
 	assert.Nil(t, err, "expected nil error on topic already exists")
 }
 
-func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
+func TestNewClusterAdminClientFuncIsTopicPresent(t *testing.T) {
 	tests := []struct {
 		name         string
 		clusterAdmin sarama.ClusterAdmin

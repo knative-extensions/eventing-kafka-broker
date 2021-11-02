@@ -61,9 +61,9 @@ type Reconciler struct {
 
 	Resolver *resolver.URIResolver
 
-	// NewKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdmin kafka.NewClusterAdminFunc
+	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
 
 	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
@@ -155,11 +155,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
 	}
 
-	kafkaClusterAdmin, err := r.NewKafkaClusterAdmin(topicConfig.BootstrapServers, kafkaClusterAdminSaramaConfig)
+	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(topicConfig.BootstrapServers, kafkaClusterAdminSaramaConfig)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
 	}
-	defer kafkaClusterAdmin.Close()
+	defer kafkaClusterAdminClient.Close()
 
 	kafkaClient, err := r.NewKafkaClient(topicConfig.BootstrapServers, kafkaClientSaramaConfig)
 	if err != nil {
@@ -168,7 +168,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	defer kafkaClient.Close()
 
 	// create the topic
-	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdmin, logger, topicName, topicConfig)
+	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topic, err)
 	}
@@ -198,7 +198,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 
 	// we still update the contract configMap even though there's an error.
 	// however, we record this error to make the reconciler try again.
-	subscriptionError := r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, channelResource)
+	subscriptionError := r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdminClient, channel, channelResource)
 
 	// Update contract data with the new contract configuration (add/update channel resource)
 	channelIndex := coreconfig.FindResource(ct, channel.UID)
@@ -364,15 +364,15 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
 	}
 
-	kafkaClusterAdmin, err := r.NewKafkaClusterAdmin(topicConfig.BootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(topicConfig.BootstrapServers, saramaConfig)
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
-	defer kafkaClusterAdmin.Close()
+	defer kafkaClusterAdminClient.Close()
 
-	topic, err := kafka.DeleteTopic(kafkaClusterAdmin, topic(TopicPrefix, channel))
+	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, topic(TopicPrefix, channel))
 	if err != nil {
 		return err
 	}
