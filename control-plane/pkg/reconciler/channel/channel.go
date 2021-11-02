@@ -387,9 +387,10 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient saram
 
 	channel.Status.Subscribers = make([]v1.SubscriberStatus, 0)
 	var globalErr error
-	for _, s := range channel.Spec.Subscribers {
+	for i, _ := range channel.Spec.Subscribers {
+		s := &channel.Spec.Subscribers[i]
 		logger = logger.With(zap.Any("subscription", s))
-		err := r.reconcileSubscriber(ctx, kafkaClient, kafkaClusterAdmin, channel, &s, channelContractResource)
+		err := r.reconcileSubscriber(ctx, kafkaClient, kafkaClusterAdmin, channel, s, channelContractResource)
 		if err != nil {
 			logger.Error("error reconciling subscription. marking subscription as not ready", zap.Error(err))
 			channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
