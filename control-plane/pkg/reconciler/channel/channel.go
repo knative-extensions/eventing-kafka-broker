@@ -40,7 +40,6 @@ import (
 	commonsarama "knative.dev/eventing-kafka/pkg/common/kafka/sarama"
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
@@ -406,7 +405,6 @@ func (r *Reconciler) reconcileSubscriber(ctx context.Context, kafkaClient sarama
 	logger.Debug("Reconciling initial offset for subscription", zap.Any("subscription", subscriberSpec), zap.Any("channel", channel))
 	err := r.reconcileInitialOffset(ctx, channel, subscriberSpec, kafkaClient, kafkaClusterAdmin)
 	if err != nil {
-		logger.Error("reconcile failed to initial offset for subscription. Marking the subscription not ready", zap.String("channel", fmt.Sprintf("%s.%s", channel.Namespace, channel.Name)), zap.Any("subscription", subscriberSpec), zap.Error(err))
 		return fmt.Errorf("initial offset cannot be committed: %v", err)
 	}
 	logger.Debug("Reconciled initial offset for subscription. ", zap.Any("subscription", subscriberSpec))
@@ -434,10 +432,6 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messag
 	topicName := topic(TopicPrefix, channel)
 	groupID := consumerGroup(channel, sub)
 	_, err := offset.InitOffsets(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID)
-	if err != nil {
-		logger := logging.FromContext(ctx)
-		logger.Errorw("error reconciling initial offset", zap.String("channel", fmt.Sprintf("%s.%s", channel.Namespace, channel.Name)), zap.Any("subscription", sub), zap.Error(err))
-	}
 	return err
 }
 
