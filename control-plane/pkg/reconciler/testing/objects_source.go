@@ -131,6 +131,10 @@ func SourceTopicsReady(source *sources.KafkaSource) {
 	)
 }
 
+func InitialOffsetsCommitted(source *sources.KafkaSource) {
+	source.GetConditionSet().Manage(source.GetStatus()).MarkTrue(base.ConditionInitialOffsetsCommitted)
+}
+
 func SourceDataPlaneAvailable(source *sources.KafkaSource) {
 	source.GetConditionSet().Manage(source.GetStatus()).MarkTrue(base.ConditionDataPlaneAvailable)
 }

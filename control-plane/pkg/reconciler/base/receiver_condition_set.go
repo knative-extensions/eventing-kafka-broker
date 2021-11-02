@@ -32,11 +32,12 @@ import (
 )
 
 const (
-	ConditionAddressable        apis.ConditionType = "Addressable"
-	ConditionDataPlaneAvailable apis.ConditionType = "DataPlaneAvailable"
-	ConditionTopicReady         apis.ConditionType = "TopicReady"
-	ConditionConfigMapUpdated   apis.ConditionType = "ConfigMapUpdated"
-	ConditionConfigParsed       apis.ConditionType = "ConfigParsed"
+	ConditionAddressable             apis.ConditionType = "Addressable"
+	ConditionDataPlaneAvailable      apis.ConditionType = "DataPlaneAvailable"
+	ConditionTopicReady              apis.ConditionType = "TopicReady"
+	ConditionConfigMapUpdated        apis.ConditionType = "ConfigMapUpdated"
+	ConditionConfigParsed            apis.ConditionType = "ConfigParsed"
+	ConditionInitialOffsetsCommitted apis.ConditionType = "InitialOffsetsCommitted"
 )
 
 var IngressConditionSet = apis.NewLivingConditionSet(
@@ -51,6 +52,7 @@ var EgressConditionSet = apis.NewLivingConditionSet(
 	ConditionDataPlaneAvailable,
 	ConditionTopicReady,
 	ConditionConfigMapUpdated,
+	ConditionInitialOffsetsCommitted,
 )
 
 const (
@@ -249,4 +251,17 @@ func (manager *StatusConditionManager) TopicsNotPresentOrInvalid(topics []string
 		topics,
 	)
 	return fmt.Errorf("topics %v not present or invalid: check topic configuration", topics)
+}
+
+func (manager *StatusConditionManager) InitialOffsetNotCommitted(err error) error {
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
+		ConditionInitialOffsetsCommitted,
+		"InitialOffsetNotCommitted",
+		err.Error(),
+	)
+	return err
+}
+
+func (manager *StatusConditionManager) InitialOffsetsCommitted() {
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrue(ConditionInitialOffsetsCommitted)
 }

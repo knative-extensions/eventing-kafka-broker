@@ -116,6 +116,7 @@ func TestReconcileKind(t *testing.T) {
 						SourceConfigMapUpdatedReady(&configs),
 						SourceTopicsReady,
 						SourceDataPlaneAvailable,
+						InitialOffsetsCommitted,
 					),
 				},
 			},
@@ -182,6 +183,7 @@ func TestReconcileKind(t *testing.T) {
 						SourceConfigMapUpdatedReady(&configs),
 						SourceTopicsReady,
 						SourceDataPlaneAvailable,
+						InitialOffsetsCommitted,
 					),
 				},
 			},
@@ -242,6 +244,7 @@ func TestReconcileKind(t *testing.T) {
 						SourceConfigMapUpdatedReady(&configs),
 						SourceTopicsReady,
 						SourceDataPlaneAvailable,
+						InitialOffsetsCommitted,
 					),
 				},
 			},
@@ -302,6 +305,7 @@ func TestReconcileKind(t *testing.T) {
 						SourceConfigMapUpdatedReady(&configs),
 						SourceTopicsReady,
 						SourceDataPlaneAvailable,
+						InitialOffsetsCommitted,
 					),
 				},
 			},
@@ -362,6 +366,7 @@ func TestReconcileKind(t *testing.T) {
 						SourceConfigMapUpdatedReady(&configs),
 						SourceTopicsReady,
 						SourceDataPlaneAvailable,
+						InitialOffsetsCommitted,
 					),
 				},
 			},
@@ -422,6 +427,7 @@ func TestReconcileKind(t *testing.T) {
 						SourceConfigMapUpdatedReady(&configs),
 						SourceTopicsReady,
 						SourceDataPlaneAvailable,
+						InitialOffsetsCommitted,
 					),
 				},
 			},
@@ -457,6 +463,12 @@ func useTable(t *testing.T, table TableTest, configs broker.Configs) {
 				DispatcherLabel:             base.SourceDispatcherLabel,
 			},
 			Env: &configs.Env,
+			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
+				return 1, nil
+			},
+			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
+				return &kafkatesting.MockKafkaClient{}, nil
+			},
 			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName:                      "",

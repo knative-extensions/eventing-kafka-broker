@@ -57,9 +57,16 @@ type Reconciler struct {
 
 	Resolver *resolver.URIResolver
 
+	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
+	// mock the function used during the reconciliation loop.
+	NewKafkaClient kafka.NewClientFunc
 	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
 	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
+	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
+	// It's convenient to add this as Reconciler field so that we can mock the function used during the
+	// reconciliation loop.
+	InitOffsetsFunc kafka.InitOffsetsFunc
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
@@ -104,9 +111,15 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
 	}
 
+	kafkaClient, err := r.NewKafkaClient(ks.Spec.BootstrapServers, saramaConfig)
+	if err != nil {
+		return statusConditionManager.TopicsNotPresentOrInvalidErr(ks.Spec.Topics, fmt.Errorf("error getting sarama config: %w", err))
+	}
+	defer kafkaClient.Close()
+
 	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(ks.Spec.BootstrapServers, saramaConfig)
 	if err != nil {
-		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+		return statusConditionManager.TopicsNotPresentOrInvalidErr(ks.Spec.Topics, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
 	}
 	defer kafkaClusterAdminClient.Close()
 
@@ -118,6 +131,20 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		return statusConditionManager.TopicsNotPresentOrInvalid(ks.Spec.Topics)
 	}
 	statusConditionManager.TopicReady(strings.Join(ks.Spec.Topics, ", "))
+
+	if ks.Spec.InitialOffset == sources.OffsetLatest {
+		logger.Debug("Initializing initial offset",
+			zap.String("initialOffset", string(ks.Spec.InitialOffset)),
+			zap.String("consumerGroup", ks.Spec.ConsumerGroup),
+			zap.Strings("topics", ks.Spec.Topics),
+		)
+		if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdminClient, ks.Spec.Topics, ks.Spec.ConsumerGroup); err != nil {
+			return statusConditionManager.InitialOffsetNotCommitted(
+				fmt.Errorf("unable to initialize consumer group %s offsets: %w", ks.Spec.ConsumerGroup, err),
+			)
+		}
+	}
+	statusConditionManager.InitialOffsetsCommitted()
 
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
