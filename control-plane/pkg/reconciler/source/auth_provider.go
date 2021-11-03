@@ -28,23 +28,21 @@ func (ks *SecretLocator) SecretName() (string, bool) {
 	if !hasAuthConfig(ks.KafkaSource) {
 		return "", false
 	}
-	return getName(ks.KafkaSource), hasAuthConfig(ks.KafkaSource)
+	// KafkaSource uses a secret provider `security.NetSpecSecretProviderFunc` that ignores name and namespace.
+	// so there is no need to return a name here.
+	return "", hasAuthConfig(ks.KafkaSource)
 }
 
 func (ks *SecretLocator) SecretNamespace() (string, bool) {
 	return ks.Namespace, hasAuthConfig(ks.KafkaSource)
 }
 
-func getName(ks *sources.KafkaSource) string {
-	return ""
-}
-
 func hasAuthConfig(ks *sources.KafkaSource) bool {
-	// TODO handle secrets
-	//return (ks.Spec.KafkaAuthSpec.Net.TLS.Enable || ks.Spec.KafkaAuthSpec.Net.SASL.Enable) &&
-	//	(ks.Spec.KafkaAuthSpec.Net.TLS.Cert.SecretKeyRef != nil ||
-	//		ks.Spec.KafkaAuthSpec.Net.SASL.User.SecretKeyRef != nil ||
-	//		ks.Spec.KafkaAuthSpec.Net.SASL.Password.SecretKeyRef != nil ||
-	//		ks.Spec.KafkaAuthSpec.Net.SASL.Type.SecretKeyRef != nil)
-	return false
+	return (ks.Spec.KafkaAuthSpec.Net.TLS.Enable || ks.Spec.KafkaAuthSpec.Net.SASL.Enable) &&
+		(ks.Spec.KafkaAuthSpec.Net.TLS.Cert.SecretKeyRef != nil ||
+			ks.Spec.KafkaAuthSpec.Net.TLS.CACert.SecretKeyRef != nil ||
+			ks.Spec.KafkaAuthSpec.Net.TLS.Key.SecretKeyRef != nil ||
+			ks.Spec.KafkaAuthSpec.Net.SASL.User.SecretKeyRef != nil ||
+			ks.Spec.KafkaAuthSpec.Net.SASL.Password.SecretKeyRef != nil ||
+			ks.Spec.KafkaAuthSpec.Net.SASL.Type.SecretKeyRef != nil)
 }
