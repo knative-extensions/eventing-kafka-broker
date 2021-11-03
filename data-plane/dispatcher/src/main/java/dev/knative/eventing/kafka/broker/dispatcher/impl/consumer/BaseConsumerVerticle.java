@@ -23,9 +23,11 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
+
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +92,11 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
     // TODO Add context (consumer group, resource id, etc)
     // TODO Send message on event bus
     logger.error("Consumer exception", cause);
-    this.context.exceptionHandler().handle(cause); // TODO why that?
+
+    // Propagate exception to the verticle exception handler.
+    if (context.exceptionHandler() != null) {
+      this.context.exceptionHandler().handle(cause);
+    }
   }
 
 }
