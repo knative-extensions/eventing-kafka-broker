@@ -52,6 +52,8 @@ data:
     # transaction.timeout.ms=60000
     # transactional.id=null
   config-kafka-source-consumer.properties: |
+    cloudevent.invalid.transformer.enabled=true
+    cloudevent.invalid.kind.plural=kafkasources
     key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
     value.deserializer=io.cloudevents.kafka.CloudEventDeserializer
     fetch.min.bytes=1
