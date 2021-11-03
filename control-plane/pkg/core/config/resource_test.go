@@ -233,7 +233,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 					{
 						Filter: &contract.Filter{
 							Attributes: map[string]string{
-								"source": "source2",
+								"source": "source1",
 							},
 						},
 						Destination:   "http://localhost:8080",
@@ -485,6 +485,32 @@ func TestDeleteResource(t *testing.T) {
 			DeleteResource(tests[i].ct, tests[i].index)
 
 			assert.Equal(t, tests[i].ct, &tests[i].want)
+		})
+	}
+}
+
+func TestSetResourceEgressesFromContract(t *testing.T) {
+	tests := []struct {
+		name         string
+		contract     *contract.Contract
+		resource     *contract.Resource
+		wantResource *contract.Resource
+		index        int
+	}{
+		{
+			name:         "copy egresses",
+			contract:     &contract.Contract{Resources: []*contract.Resource{{Uid: "aaa", Egresses: []*contract.Egress{{Uid: "bbb"}}}}},
+			resource:     &contract.Resource{Uid: "aaa"},
+			wantResource: &contract.Resource{Uid: "aaa", Egresses: []*contract.Egress{{Uid: "bbb"}}},
+			index:        0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			SetResourceEgressesFromContract(tt.contract, tt.resource, tt.index)
+			if diff := cmp.Diff(tt.wantResource, tt.resource, protocmp.Transform()); diff != "" {
+				t.Error("(-want, +got)", diff)
+			}
 		})
 	}
 }
