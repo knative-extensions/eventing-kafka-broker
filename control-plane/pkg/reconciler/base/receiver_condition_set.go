@@ -256,7 +256,7 @@ func (manager *StatusConditionManager) TopicsNotPresentOrInvalid(topics []string
 func (manager *StatusConditionManager) InitialOffsetNotCommitted(err error) error {
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
 		ConditionInitialOffsetsCommitted,
-		"InitialOffsetNotCommitted",
+		"InitialOffsetsNotCommitted",
 		err.Error(),
 	)
 	return err
