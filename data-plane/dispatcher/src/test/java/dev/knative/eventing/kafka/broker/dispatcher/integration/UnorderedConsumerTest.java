@@ -40,6 +40,8 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -72,6 +74,7 @@ public class UnorderedConsumerTest {
 
     final var producerConfigs = new Properties();
     final var consumerConfigs = new Properties();
+    consumerConfigs.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 100L);
 
     final var consumerVerticleFactoryMock = new ConsumerVerticleFactoryImplMock(
       consumerConfigs,
