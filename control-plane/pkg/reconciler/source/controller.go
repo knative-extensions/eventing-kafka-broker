@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/Shopify/sarama"
+	"go.uber.org/zap"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -27,6 +28,7 @@ import (
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
 	kafkainformer "knative.dev/eventing-kafka/pkg/client/injection/informers/sources/v1beta1/kafkasource"
@@ -64,6 +66,16 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 	kafkaInformer := kafkainformer.Get(ctx)
 
 	kafkaInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+
+	logger := logging.FromContext(ctx)
+
+	_, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		logger.Fatal("Failed to get or create data plane config map",
+			zap.String("configmap", configs.DataPlaneConfigMapAsString()),
+			zap.Error(err),
+		)
+	}
 
 	return impl
 }
