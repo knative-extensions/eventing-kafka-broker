@@ -21,6 +21,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
@@ -51,7 +52,9 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 			DispatcherLabel:             base.SourceDispatcherLabel,
 		},
 		Env:                        configs,
+		NewKafkaClient:             sarama.NewClient,
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
+		InitOffsetsFunc:            offset.InitOffsets,
 	}
 
 	impl := kafkasource.NewImpl(ctx, r)
