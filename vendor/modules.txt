@@ -1190,6 +1190,9 @@ knative.dev/eventing-kafka/pkg/common/config
 knative.dev/eventing-kafka/pkg/common/constants
 knative.dev/eventing-kafka/pkg/common/kafka/offset
 knative.dev/eventing-kafka/pkg/common/kafka/sarama
+knative.dev/eventing-kafka/test/e2e/helpers
+knative.dev/eventing-kafka/test/lib
+knative.dev/eventing-kafka/test/lib/resources
 # knative.dev/hack v0.0.0-20211101195839-11d193bf617b
 ## explicit
 knative.dev/hack

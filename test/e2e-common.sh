@@ -24,6 +24,7 @@ readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
 
 export EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT="eventing-kafka-controller.yaml"
+export EVENTING_KAFKA_SOURCE_ARTIFACT="eventing-kafka-source.yaml"
 export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
 export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
 
@@ -77,6 +78,7 @@ function knative_eventing() {
 function build_components_from_source() {
 
   [ -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
+  [ -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SOURCE_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" ] && rm "${EVENTING_KAFKA_BROKER_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_SINK_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SINK_ARTIFACT}"
 
@@ -96,6 +98,9 @@ function test_setup() {
   kubectl apply -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
   wait_until_pods_running knative-eventing || fail_test "Control plane did not come up"
 
+  kubectl apply -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_SOURCE_ARTIFACT}"
+  wait_until_pods_running knative-eventing || fail_test "Source data plane did not come up"
+
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_BROKER_ARTIFACT}"
   wait_until_pods_running knative-eventing || fail_test "Broker data plane did not come up"
 
@@ -105,6 +110,7 @@ function test_setup() {
   # Apply test configurations, and restart data plane components (we don't have hot reload)
   ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
 
+  kubectl rollout restart deployment -n knative-eventing kafka-source-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
@@ -140,7 +146,11 @@ function apply_sacura() {
   ko apply -f ./test/config/sacura/100-broker-config.yaml || return $?
   ko apply -f ./test/config/sacura/101-broker.yaml || return $?
 
-  kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || return $?
+  kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || {
+    local ret=$?
+    kubectl get -n sacura broker/broker -oyaml
+    return ${ret}
+  }
 
   ko apply -f ./test/config/sacura || return $?
 }
