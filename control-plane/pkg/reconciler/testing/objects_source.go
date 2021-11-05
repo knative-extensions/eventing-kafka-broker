@@ -30,7 +30,6 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
 
 const (

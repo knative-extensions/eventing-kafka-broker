@@ -45,14 +45,13 @@ const (
 
 type Reconciler struct {
 	*base.Reconciler
+	*config.Env
 
 	ConfigMapLister corelisters.ConfigMapLister
 
 	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
 	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
-
-	Env *config.Env
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *eventing.KafkaSink) reconciler.Event {
@@ -232,7 +231,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get contract config map %s: %w", r.Env.DataPlaneConfigMapAsString(), err)
+		return fmt.Errorf("failed to get contract config map %s: %w", r.DataPlaneConfigMapAsString(), err)
 	}
 
 	logger.Debug("Got contract config map")

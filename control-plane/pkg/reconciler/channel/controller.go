@@ -62,7 +62,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		},
 		NewKafkaClient:             sarama.NewClient,
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		Configs:                    configs,
+		Env:                        configs,
 		ConfigMapLister:            configmapInformer.Lister(),
 	}
 

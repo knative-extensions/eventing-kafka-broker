@@ -34,7 +34,6 @@ import (
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
 
 const (
