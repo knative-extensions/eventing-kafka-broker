@@ -271,6 +271,10 @@ function apply_sacura() {
   ko apply ${KO_FLAGS} -f ./test/config/sacura || return $?
 }
 
+function apply_sacura_sink_source_broker_channel() {
+  ko apply -Rf ./test/config/sacura-sink-source-broker-channel || return $?
+}
+
 function delete_sacura() {
   kubectl delete --ignore-not-found -f ./test/config/sacura/101-broker.yaml || return $?
   kubectl delete --ignore-not-found -f ./test/config/sacura/100-broker-config.yaml || return $?

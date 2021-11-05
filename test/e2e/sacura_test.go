@@ -32,6 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/utils/pointer"
 	testlib "knative.dev/eventing/test/lib"
 
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
@@ -40,16 +41,45 @@ import (
 
 const (
 	app                            = "sacura"
-	namespace                      = "sacura"
 	sacuraVerifyCommittedOffsetJob = "verify-committed-offset"
 	sacuraTriggerName              = "trigger"
-	sacuraTopic                    = "knative-broker-sacura-sacura"
 
 	pollTimeout  = 30 * time.Minute
 	pollInterval = 10 * time.Second
 )
 
+type SacuraTestConfig struct {
+	// Namespace is the test namespace.
+	Namespace string
+
+	// BrokerTopic is the expected Broker topic.
+	// It's used to verify the committed offset.
+	BrokerTopic *string
+
+	// ChannelTopic is the expected Channel topic.
+	// It's used to verify the committed offset.
+	ChannelTopic *string
+
+	// SourceTopic is the Source topic.
+	// It's used to verify the committed offset.
+	SourceTopic *string
+}
+
 func TestSacuraJob(t *testing.T) {
+	runSacuraTest(t, SacuraTestConfig{
+		Namespace:   "sacura",
+		BrokerTopic: pointer.StringPtr("knative-broker-sacura-sacura"),
+	})
+}
+
+func TestSacuraSinkSourceBrokerChannelJob(t *testing.T) {
+	runSacuraTest(t, SacuraTestConfig{
+		Namespace:   "sacura-sink-source-broker-channel",
+		BrokerTopic: pointer.StringPtr("knative-broker-sacura-sink-source-broker-channel-broker"),
+	})
+}
+
+func runSacuraTest(t *testing.T, config SacuraTestConfig) {
 
 	c := testlib.Setup(t, false)
 	defer testlib.TearDown(c)
@@ -57,41 +87,43 @@ func TestSacuraJob(t *testing.T) {
 	ctx := context.Background()
 
 	jobPollError := wait.Poll(pollInterval, pollTimeout, func() (done bool, err error) {
-		job, err := c.Kube.BatchV1().Jobs(namespace).Get(ctx, app, metav1.GetOptions{})
+		job, err := c.Kube.BatchV1().Jobs(config.Namespace).Get(ctx, app, metav1.GetOptions{})
 		assert.Nil(t, err)
 
 		return isJobSucceeded(job)
 	})
 
-	pkgtesting.LogJobOutput(t, ctx, c.Kube, namespace, app)
+	pkgtesting.LogJobOutput(t, ctx, c.Kube, config.Namespace, app)
 
 	if jobPollError != nil {
 		t.Fatal(jobPollError)
 	}
 
-	t.Log(strings.Repeat("-", 30))
-	t.Log("Verify committed offset")
-	t.Log(strings.Repeat("-", 30))
+	if config.BrokerTopic != nil {
+		t.Run("verify committed offset", func(t *testing.T) {
+			t.Log(strings.Repeat("-", 30))
+			t.Log("Verify committed offset")
+			t.Log(strings.Repeat("-", 30))
 
-	trigger, err := c.Eventing.EventingV1().Triggers(namespace).Get(ctx, sacuraTriggerName, metav1.GetOptions{})
-	require.Nil(t, err, "Failed to get trigger %s/%s: %v", namespace, sacuraTriggerName)
+			trigger, err := c.Eventing.EventingV1().Triggers(config.Namespace).Get(ctx, sacuraTriggerName, metav1.GetOptions{})
+			require.Nil(t, err, "Failed to get trigger %s/%s: %v", config.Namespace, sacuraTriggerName)
 
-	t.Run("verify committed offset", func(t *testing.T) {
-		err = kafkatest.VerifyCommittedOffset(
-			c.Kube,
-			c.Tracker,
-			types.NamespacedName{
-				Namespace: namespace,
-				Name:      sacuraVerifyCommittedOffsetJob,
-			},
-			&kafkatest.AdminConfig{
-				BootstrapServers: pkgtesting.BootstrapServersPlaintext,
-				Topic:            sacuraTopic,
-				Group:            string(trigger.UID),
-			},
-		)
-		require.Nil(t, err, "Failed to verify committed offset")
-	})
+			err = kafkatest.VerifyCommittedOffset(
+				c.Kube,
+				c.Tracker,
+				types.NamespacedName{
+					Namespace: config.Namespace,
+					Name:      sacuraVerifyCommittedOffsetJob,
+				},
+				&kafkatest.AdminConfig{
+					BootstrapServers: pkgtesting.BootstrapServersPlaintext,
+					Topic:            *config.BrokerTopic,
+					Group:            string(trigger.UID),
+				},
+			)
+			require.Nil(t, err, "Failed to verify committed offset")
+		})
+	}
 }
 
 func isJobSucceeded(job *batchv1.Job) (bool, error) {

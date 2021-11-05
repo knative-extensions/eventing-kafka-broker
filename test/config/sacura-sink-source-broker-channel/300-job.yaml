@@ -1,0 +1,72 @@
+# Copyright 2021 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sacura
+  namespace: sacura-sink-source-broker-channel
+  labels:
+    app: sacura
+spec:
+  backoffLimit: 0
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: sacura
+    spec:
+
+      securityContext:
+        runAsNonRoot: true
+
+      # To avoid scheduling the Job on the same node of the receiver
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: kafka-sink-receiver
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+
+      containers:
+        - name: sacura
+          image: ko://github.com/pierdipi/sacura/cmd/sacura
+          args:
+            - "--config"
+            - "/etc/sacura/sacura.yaml"
+          securityContext:
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - mountPath: /etc/sacura
+              name: config
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 4Gi
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: receiver
+      volumes:
+        - name: config
+          configMap:
+            name: config-sacura
+      restartPolicy: Never
