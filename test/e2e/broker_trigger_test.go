@@ -142,7 +142,7 @@ func TestBrokerTrigger(t *testing.T) {
 			BootstrapServers:  testingpkg.BootstrapServersPlaintext,
 			ReplicationFactor: defaultReplicationFactor,
 			NumPartitions:     defaultNumPartitions,
-			Topic:             kafka.Topic(broker.TopicPrefix, br),
+			Topic:             kafka.BrokerTopic(broker.TopicPrefix, br),
 		}
 
 		err := kafkatest.VerifyNumPartitionAndReplicationFactor(
@@ -253,7 +253,7 @@ func TestBrokerWithConfig(t *testing.T) {
 			BootstrapServers:  testingpkg.BootstrapServersPlaintext,
 			ReplicationFactor: replicationFactor,
 			NumPartitions:     numPartitions,
-			Topic:             kafka.Topic(broker.TopicPrefix, br),
+			Topic:             kafka.BrokerTopic(broker.TopicPrefix, br),
 		}
 
 		err := kafkatest.VerifyNumPartitionAndReplicationFactor(

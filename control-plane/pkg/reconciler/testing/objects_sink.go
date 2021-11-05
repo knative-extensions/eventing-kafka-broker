@@ -33,7 +33,6 @@ import (
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 )
 
@@ -46,8 +45,6 @@ const (
 	SinkReplicationFactor = 3
 
 	SinkNotPresentErrFormat = "failed to describe topics %v: %v"
-
-	topicPrefix = "knative-sink-"
 )
 
 var (
@@ -92,10 +89,7 @@ func NewDeletedSink(options ...SinkOption) runtime.Object {
 }
 
 func SinkTopic() string {
-	return kafka.Topic(topicPrefix, &metav1.ObjectMeta{
-		Name:      SinkName,
-		Namespace: SinkNamespace,
-	})
+	return fmt.Sprintf("knative-sink-%s-%s", SinkNamespace, SinkName)
 }
 
 func BootstrapServers(bootstrapServers []string) func(sink *eventing.KafkaSink) {
