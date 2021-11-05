@@ -26,7 +26,6 @@ import (
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
@@ -140,7 +139,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
-	topicName := topic(TopicPrefix, channel)
+	topicName := kafka.ChannelTopic(TopicPrefix, channel)
 
 	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
@@ -372,7 +371,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 	defer kafkaClusterAdminClient.Close()
 
-	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, topic(TopicPrefix, channel))
+	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, kafka.ChannelTopic(TopicPrefix, channel))
 	if err != nil {
 		return err
 	}
@@ -439,7 +438,7 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messag
 		return nil
 	}
 
-	topicName := topic(TopicPrefix, channel)
+	topicName := kafka.ChannelTopic(TopicPrefix, channel)
 	groupID := consumerGroup(channel, sub)
 	_, err := offset.InitOffsets(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID)
 	return err
@@ -535,12 +534,6 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 	resource.EgressConfig = egressConfig
 
 	return resource, nil
-}
-
-// topic returns a topic name given a topic prefix and a generic object.
-// This function uses a different format than the kafkatopic.Topic function
-func topic(prefix string, obj metav1.Object) string {
-	return fmt.Sprintf("%s.%s.%s", prefix, obj.GetNamespace(), obj.GetName())
 }
 
 // consumerGroup returns a consumerGroup name for the given channel and subscription

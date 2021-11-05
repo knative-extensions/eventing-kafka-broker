@@ -125,7 +125,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
-	topicName := kafka.Topic(TopicPrefix, broker)
+	topicName := kafka.BrokerTopic(TopicPrefix, broker)
 
 	saramaConfig, err := kafka.GetSaramaConfig(securityOption)
 	if err != nil {
@@ -315,7 +315,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	}
 	defer kafkaClusterAdminClient.Close()
 
-	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, kafka.Topic(TopicPrefix, broker))
+	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, kafka.BrokerTopic(TopicPrefix, broker))
 	if err != nil {
 		return err
 	}

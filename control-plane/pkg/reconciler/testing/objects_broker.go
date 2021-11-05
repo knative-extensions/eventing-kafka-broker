@@ -46,7 +46,7 @@ const (
 
 func BrokerTopic() string {
 	broker := NewBroker().(metav1.Object)
-	return kafka.Topic(TopicPrefix, broker)
+	return kafka.BrokerTopic(TopicPrefix, broker)
 }
 
 // NewBroker creates a new Broker with broker class equals to kafka.BrokerClass.
@@ -181,7 +181,7 @@ func BrokerConfigMapUpdatedReady(configs *Configs) func(broker *eventing.Broker)
 func BrokerTopicReady(broker *eventing.Broker) {
 	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrueWithReason(
 		base.ConditionTopicReady,
-		fmt.Sprintf("Topic %s created", kafka.Topic(TopicPrefix, broker)),
+		fmt.Sprintf("Topic %s created", kafka.BrokerTopic(TopicPrefix, broker)),
 		"",
 	)
 }
