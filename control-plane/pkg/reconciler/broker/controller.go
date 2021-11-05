@@ -53,7 +53,7 @@ const (
 	DefaultReplicationFactor = 1
 )
 
-func NewController(ctx context.Context, watcher configmap.Watcher, configs *Configs) *controller.Impl {
+func NewController(ctx context.Context, watcher configmap.Watcher, env *config.Env, bootstrapServers string) *controller.Impl {
 
 	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
 
@@ -64,10 +64,10 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			KubeClient:                  kubeclient.Get(ctx),
 			PodLister:                   podinformer.Get(ctx).Lister(),
 			SecretLister:                secretinformer.Get(ctx).Lister(),
-			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
-			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
-			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
-			SystemNamespace:             configs.SystemNamespace,
+			DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
+			DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
+			DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
+			SystemNamespace:             env.SystemNamespace,
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
@@ -77,7 +77,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			ReplicationFactor: DefaultReplicationFactor,
 		},
 		ConfigMapLister: configmapInformer.Lister(),
-		Configs:         configs,
+		Env:             env,
 	}
 
 	logger := logging.FromContext(ctx)
@@ -85,13 +85,13 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		logger.Fatal("Failed to get or create data plane config map",
-			zap.String("configmap", configs.DataPlaneConfigMapAsString()),
+			zap.String("configmap", env.DataPlaneConfigMapAsString()),
 			zap.Error(err),
 		)
 	}
 
-	if configs.BootstrapServers != "" {
-		reconciler.SetBootstrapServers(configs.BootstrapServers)
+	if bootstrapServers != "" {
+		reconciler.SetBootstrapServers(bootstrapServers)
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass)
@@ -110,7 +110,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 	}
 
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
+		FilterFunc: controller.FilterWithNameAndNamespace(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName),
 		Handler: cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				globalResync(obj)
@@ -142,14 +142,14 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 		},
 	})
 
-	cm, err := reconciler.KubeClient.CoreV1().ConfigMaps(configs.SystemNamespace).Get(ctx, configs.GeneralConfigMapName, metav1.GetOptions{})
+	cm, err := reconciler.KubeClient.CoreV1().ConfigMaps(env.SystemNamespace).Get(ctx, env.GeneralConfigMapName, metav1.GetOptions{})
 	if err != nil {
-		panic(fmt.Errorf("failed to get config map %s/%s: %w", configs.SystemNamespace, configs.GeneralConfigMapName, err))
+		panic(fmt.Errorf("failed to get config map %s/%s: %w", env.SystemNamespace, env.GeneralConfigMapName, err))
 	}
 
 	reconciler.ConfigMapUpdated(ctx)(cm)
 
-	watcher.Watch(configs.GeneralConfigMapName, reconciler.ConfigMapUpdated(ctx))
+	watcher.Watch(env.GeneralConfigMapName, reconciler.ConfigMapUpdated(ctx))
 
 	return impl
 }

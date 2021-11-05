@@ -60,7 +60,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 		},
 		ConfigMapLister:            configmapInformer.Lister(),
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		Configs:                    configs,
+		Env:                        configs,
 	}
 
 	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)

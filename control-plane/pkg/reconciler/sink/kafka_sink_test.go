@@ -22,6 +22,7 @@ import (
 	"io"
 	"testing"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/Shopify/sarama"
@@ -41,7 +42,6 @@ import (
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
@@ -83,15 +83,15 @@ func TestSinkReconciler(t *testing.T) {
 	t.Parallel()
 
 	for _, f := range Formats {
-		sinkReconciliation(t, f, *DefaultConfigs)
+		sinkReconciliation(t, f, *DefaultEnv)
 	}
 }
 
-func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
+func sinkReconciliation(t *testing.T, format string, env config.Env) {
 
 	testKey := fmt.Sprintf("%s/%s", SinkNamespace, SinkName)
 
-	configs.DataPlaneConfigFormat = format
+	env.DataPlaneConfigFormat = format
 
 	table := TableTest{
 		{
@@ -100,8 +100,8 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				NewSink(
 					SinkControllerOwnsTopic,
 				),
-				NewConfigMap(&configs, nil),
-				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+				NewConfigMap(&env, nil),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
 			},
@@ -110,7 +110,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -121,7 +121,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 					},
 					Generation: 1,
 				}),
-				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
@@ -137,10 +137,10 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						SinkConfigMapUpdatedReady(&configs.Env),
+						SinkConfigMapUpdatedReady(&env),
 						SinkTopicReady,
 						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
-						SinkAddressable(&configs.Env),
+						SinkAddressable(&env),
 					),
 				},
 			},
@@ -153,8 +153,8 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 					SinkAuthSecretRef("secret-1"),
 				),
 				NewSSLSecret(SinkNamespace, "secret-1"),
-				NewConfigMap(&configs, nil),
-				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+				NewConfigMap(&env, nil),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
@@ -164,7 +164,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -183,7 +183,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 					},
 					Generation: 1,
 				}),
-				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
@@ -200,10 +200,10 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						SinkConfigMapUpdatedReady(&configs.Env),
+						SinkConfigMapUpdatedReady(&env),
 						SinkTopicReady,
 						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
-						SinkAddressable(&configs.Env),
+						SinkAddressable(&env),
 					),
 				},
 			},
@@ -218,8 +218,8 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						sink.Spec.NumPartitions = nil
 					},
 				),
-				NewConfigMap(&configs, nil),
-				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+				NewConfigMap(&env, nil),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
@@ -229,7 +229,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -245,7 +245,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 					},
 					Generation: 1,
 				}),
-				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
@@ -265,10 +265,10 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						SinkConfigMapUpdatedReady(&configs.Env),
+						SinkConfigMapUpdatedReady(&env),
 						SinkTopicReady,
 						SinkTopicReadyWithOwner(SinkTopic(), sink.ExternalTopicOwner),
-						SinkAddressable(&configs.Env),
+						SinkAddressable(&env),
 					),
 				},
 			},
@@ -283,8 +283,8 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						sink.Spec.NumPartitions = nil
 					},
 				),
-				NewConfigMap(&configs, nil),
-				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+				NewConfigMap(&env, nil),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
@@ -331,8 +331,8 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						sink.Spec.BootstrapServers = []string{"kafka-broker:10000"}
 					},
 				),
-				NewConfigMap(&configs, nil),
-				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+				NewConfigMap(&env, nil),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
@@ -342,7 +342,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -353,7 +353,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 					},
 					Generation: 1,
 				}),
-				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
@@ -374,8 +374,8 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						SinkConfigParsed,
 						BootstrapServers([]string{"kafka-broker:10000"}),
 						SinkTopicReadyWithOwner("my-topic-1", sink.ControllerTopicOwner),
-						SinkConfigMapUpdatedReady(&configs.Env),
-						SinkAddressable(&configs.Env),
+						SinkConfigMapUpdatedReady(&env),
+						SinkAddressable(&env),
 					),
 				},
 			},
@@ -390,7 +390,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 					SinkControllerOwnsTopic,
 					BootstrapServers(bootstrapServersArr),
 				),
-				SinkReceiverPod(configs.SystemNamespace, nil),
+				SinkReceiverPod(env.SystemNamespace, nil),
 			},
 			Key:     testKey,
 			WantErr: true,
@@ -429,11 +429,11 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewService(),
-				SinkReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
 				&corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
-						Namespace: configs.DataPlaneConfigMapNamespace,
-						Name:      configs.DataPlaneConfigMapName + "a", // Use a different name
+						Namespace: env.DataPlaneConfigMapNamespace,
+						Name:      env.DataPlaneConfigMapName + "a", // Use a different name
 					},
 				},
 			},
@@ -443,10 +443,10 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&configs, nil),
+				NewConfigMap(&env, nil),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -457,7 +457,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 					},
 					Generation: 1,
 				}),
-				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -472,10 +472,10 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						SinkConfigMapUpdatedReady(&configs.Env),
+						SinkConfigMapUpdatedReady(&env),
 						SinkTopicReady,
 						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
-						SinkAddressable(&configs.Env),
+						SinkAddressable(&env),
 					),
 				},
 			},
@@ -487,15 +487,15 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 					SinkControllerOwnsTopic,
 					BootstrapServers(bootstrapServersArr),
 				),
-				NewConfigMap(&configs, []byte(`{"hello": "world"}`)),
-				SinkReceiverPod(configs.SystemNamespace, nil),
+				NewConfigMap(&env, []byte(`{"hello": "world"}`)),
+				SinkReceiverPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -506,7 +506,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 					},
 					Generation: 1,
 				}),
-				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -521,10 +521,10 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						SinkConfigMapUpdatedReady(&configs.Env),
+						SinkConfigMapUpdatedReady(&env),
 						SinkTopicReady,
 						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
-						SinkAddressable(&configs.Env),
+						SinkAddressable(&env),
 					),
 				},
 			},
@@ -548,8 +548,8 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 							Topics: []string{"my-existing-topic-b"},
 						},
 					},
-				}, &configs),
-				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+				}, &env),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
 			},
@@ -558,7 +558,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
@@ -578,7 +578,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 					},
 					Generation: 1,
 				}),
-				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -593,10 +593,10 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						SinkConfigMapUpdatedReady(&configs.Env),
+						SinkConfigMapUpdatedReady(&env),
 						SinkTopicReady,
 						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
-						SinkAddressable(&configs.Env),
+						SinkAddressable(&env),
 					),
 				},
 			},
@@ -622,8 +622,8 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED},
 						},
 					},
-				}, &configs),
-				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+				}, &env),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
 			},
@@ -632,7 +632,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
@@ -648,7 +648,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 					},
 					Generation: 1,
 				}),
-				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -663,9 +663,9 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						SinkConfigMapUpdatedReady(&configs.Env),
+						SinkConfigMapUpdatedReady(&env),
 						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
-						SinkAddressable(&configs.Env),
+						SinkAddressable(&env),
 					),
 				},
 			},
@@ -723,8 +723,8 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						},
 					},
 					Generation: 1,
-				}, &configs),
-				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+				}, &env),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -743,10 +743,10 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						SinkConfigMapUpdatedReady(&configs.Env),
+						SinkConfigMapUpdatedReady(&env),
 						SinkTopicReady,
 						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
-						SinkAddressable(&configs.Env),
+						SinkAddressable(&env),
 					),
 				},
 			},
@@ -777,8 +777,8 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						},
 					},
 					Generation: 1,
-				}, &configs),
-				SinkReceiverPod(configs.SystemNamespace, map[string]string{
+				}, &env),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 				}),
 			},
@@ -787,7 +787,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				SinkReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -802,10 +802,10 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 						SinkDataPlaneAvailable,
 						SinkConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						SinkConfigMapUpdatedReady(&configs.Env),
+						SinkConfigMapUpdatedReady(&env),
 						SinkTopicReady,
 						SinkTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
-						SinkAddressable(&configs.Env),
+						SinkAddressable(&env),
 					),
 				},
 			},
@@ -816,7 +816,7 @@ func sinkReconciliation(t *testing.T, format string, configs broker.Configs) {
 		table[i].Name = table[i].Name + " - " + format
 	}
 
-	useTable(t, table, &configs)
+	useTable(t, table, &env)
 }
 
 func TestSinkFinalizer(t *testing.T) {
@@ -826,15 +826,15 @@ func TestSinkFinalizer(t *testing.T) {
 	t.Parallel()
 
 	for _, f := range Formats {
-		sinkFinalization(t, f, *DefaultConfigs)
+		sinkFinalization(t, f, *DefaultEnv)
 	}
 }
 
-func sinkFinalization(t *testing.T, format string, configs broker.Configs) {
+func sinkFinalization(t *testing.T, format string, env config.Env) {
 
 	testKey := fmt.Sprintf("%s/%s", SinkNamespace, SinkName)
 
-	configs.DataPlaneConfigFormat = format
+	env.DataPlaneConfigFormat = format
 
 	table := TableTest{
 		{
@@ -870,11 +870,11 @@ func sinkFinalization(t *testing.T, format string, configs broker.Configs) {
 						},
 					},
 					Generation: 1,
-				}, &configs),
+				}, &env),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:    SinkUUID + "a",
@@ -924,11 +924,11 @@ func sinkFinalization(t *testing.T, format string, configs broker.Configs) {
 						},
 					},
 					Generation: 1,
-				}, &configs),
+				}, &env),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:    SinkUUID + "a",
@@ -981,7 +981,7 @@ func sinkFinalization(t *testing.T, format string, configs broker.Configs) {
 						},
 					},
 					Generation: 1,
-				}, &configs),
+				}, &env),
 			},
 			Key:     testKey,
 			WantErr: true,
@@ -994,7 +994,7 @@ func sinkFinalization(t *testing.T, format string, configs broker.Configs) {
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:    SinkUUID + "a",
@@ -1022,12 +1022,12 @@ func sinkFinalization(t *testing.T, format string, configs broker.Configs) {
 		table[i].Name = table[i].Name + " - " + format
 	}
 
-	useTable(t, table, &configs)
+	useTable(t, table, &env)
 }
 
-func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
+func useTable(t *testing.T, table TableTest, env *config.Env) {
 
-	table.Test(t, NewFactory(configs, func(ctx context.Context, listers *Listers, configs *broker.Configs, row *TableRow) controller.Reconciler {
+	table.Test(t, NewFactory(env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		expectedTopicName := fmt.Sprintf("%s%s-%s", TopicPrefix, SinkNamespace, SinkName)
 		if want, ok := row.OtherTestData[wantTopicName]; ok {
@@ -1084,10 +1084,10 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 				KubeClient:                  kubeclient.Get(ctx),
 				PodLister:                   listers.GetPodLister(),
 				SecretLister:                listers.GetSecretLister(),
-				DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
-				SystemNamespace:             configs.SystemNamespace,
+				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
+				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
+				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
+				SystemNamespace:             env.SystemNamespace,
 				ReceiverLabel:               base.SinkReceiverLabel,
 			},
 			ConfigMapLister: listers.GetConfigMapLister(),
@@ -1103,7 +1103,7 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 					T:                                      t,
 				}, nil
 			},
-			Configs: &configs.Env,
+			Env: env,
 		}
 
 		reconciler.SecretTracker = &FakeTracker{}

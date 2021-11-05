@@ -24,6 +24,7 @@ import (
 
 	"google.golang.org/protobuf/testing/protocmp"
 	"k8s.io/utils/pointer"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/tracker"
@@ -49,7 +50,6 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 )
 
@@ -82,15 +82,15 @@ func TestTriggerReconciler(t *testing.T) {
 	t.Parallel()
 
 	for _, f := range Formats {
-		triggerReconciliation(t, f, *DefaultConfigs)
+		triggerReconciliation(t, f, *DefaultEnv)
 	}
 }
 
-func triggerReconciliation(t *testing.T, format string, configs broker.Configs) {
+func triggerReconciliation(t *testing.T, format string, env config.Env) {
 
 	testKey := fmt.Sprintf("%s/%s", triggerNamespace, triggerName)
 
-	configs.DataPlaneConfigFormat = format
+	env.DataPlaneConfigFormat = format
 
 	table := TableTest{
 		{
@@ -109,8 +109,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
 					},
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -120,7 +120,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -137,7 +137,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					Generation: 1,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -172,8 +172,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
 					},
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -183,7 +183,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -201,7 +201,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					Generation: 1,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -235,8 +235,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
 					},
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -246,7 +246,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -270,7 +270,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					Generation: 1,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -305,8 +305,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
 					},
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -316,7 +316,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -334,7 +334,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					Generation: 1,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -369,8 +369,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
 					},
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -380,7 +380,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -398,7 +398,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					Generation: 1,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -433,8 +433,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
 						},
 					},
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -444,7 +444,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -468,7 +468,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					Generation: 1,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -535,8 +535,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 					},
 					Generation: 2,
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -546,7 +546,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID + "z",
@@ -583,7 +583,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					Generation: 3,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "3",
 				}),
 			},
@@ -617,7 +617,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 			WantErr:                 true,
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&configs, nil),
+				NewConfigMap(&env, nil),
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
@@ -626,7 +626,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					"InternalError",
 					fmt.Sprintf(
 						"broker not found in data plane config map %s",
-						configs.DataPlaneConfigMapAsString(),
+						env.DataPlaneConfigMapAsString(),
 					),
 				),
 			},
@@ -636,7 +636,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerBrokerFailed(
 							"Broker not found in data plane map",
-							fmt.Sprintf("config map: %s", configs.DataPlaneConfigMapAsString()),
+							fmt.Sprintf("config map: %s", env.DataPlaneConfigMapAsString()),
 						),
 					),
 				},
@@ -648,7 +648,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				NewBroker(BrokerReady),
 				newTrigger(),
 				NewService(),
-				NewConfigMap(&configs, nil),
+				NewConfigMap(&env, nil),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -662,7 +662,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					"InternalError",
 					fmt.Sprintf(
 						"broker not found in data plane config map %s",
-						configs.DataPlaneConfigMapAsString(),
+						env.DataPlaneConfigMapAsString(),
 					),
 				),
 			},
@@ -672,7 +672,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerBrokerFailed(
 							"Broker not found in data plane map",
-							fmt.Sprintf("config map: %s", configs.DataPlaneConfigMapAsString()),
+							fmt.Sprintf("config map: %s", env.DataPlaneConfigMapAsString()),
 						),
 					),
 				},
@@ -730,7 +730,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				NewDeletedBroker(),
 				NewConfigMapFromContract(&contract.Contract{
 					Generation: 8,
-				}, &configs),
+				}, &env),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -760,7 +760,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 					},
 					Generation: 8,
-				}, &configs),
+				}, &env),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -802,8 +802,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 						},
 					},
 					Generation: 8,
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -813,7 +813,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:    BrokerUUID,
@@ -829,7 +829,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					Generation: 9,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "9",
 				}),
 			},
@@ -871,8 +871,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 							},
 						},
 					},
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -980,8 +980,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 							},
 						},
 					},
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -991,7 +991,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -1065,7 +1065,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					Generation: 1,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -1162,8 +1162,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 							},
 						},
 					},
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -1173,7 +1173,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID + "a",
@@ -1247,7 +1247,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					Generation: 1,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -1381,8 +1381,8 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 							},
 						},
 					},
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -1392,7 +1392,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID + "a",
@@ -1496,7 +1496,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 					},
 					Generation: 1,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -1545,7 +1545,7 @@ func triggerReconciliation(t *testing.T, format string, configs broker.Configs) 
 		table[i].Name = table[i].Name + " - " + format
 	}
 
-	useTable(t, table, &configs)
+	useTable(t, table, &env)
 }
 
 func withDelivery(trigger *eventing.Trigger) {
@@ -1563,16 +1563,16 @@ func TestTriggerFinalizer(t *testing.T) {
 	t.Parallel()
 
 	for _, f := range Formats {
-		triggerFinalizer(t, f, *DefaultConfigs)
+		triggerFinalizer(t, f, *DefaultEnv)
 	}
 
 }
 
-func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
+func triggerFinalizer(t *testing.T, format string, env config.Env) {
 
 	testKey := fmt.Sprintf("%s/%s", triggerNamespace, triggerName)
 
-	configs.DataPlaneConfigFormat = format
+	env.DataPlaneConfigFormat = format
 
 	table := TableTest{
 		{
@@ -1600,8 +1600,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 						},
 					},
 					Generation: 8,
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -1611,7 +1611,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:    BrokerUUID,
@@ -1627,7 +1627,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					},
 					Generation: 9,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "9",
 				}),
 			},
@@ -1652,7 +1652,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 						},
 					},
 					Generation: 8,
-				}, &configs),
+				}, &env),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -1676,7 +1676,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				NewDeletedBroker(),
 				NewConfigMapFromContract(&contract.Contract{
 					Generation: 8,
-				}, &configs),
+				}, &env),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -1770,8 +1770,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 							},
 						},
 					},
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -1781,7 +1781,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -1847,7 +1847,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					},
 					Generation: 1,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -1936,8 +1936,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 							},
 						},
 					},
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -1947,7 +1947,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID + "a",
@@ -2013,7 +2013,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					},
 					Generation: 1,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -2135,8 +2135,8 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 							},
 						},
 					},
-				}, &configs),
-				BrokerDispatcherPod(configs.SystemNamespace, nil),
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -2146,7 +2146,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID + "a",
@@ -2245,7 +2245,7 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 					},
 					Generation: 1,
 				}),
-				BrokerDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
@@ -2259,12 +2259,12 @@ func triggerFinalizer(t *testing.T, format string, configs broker.Configs) {
 		},
 	}
 
-	useTable(t, table, &configs)
+	useTable(t, table, &env)
 }
 
-func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
+func useTable(t *testing.T, table TableTest, env *config.Env) {
 
-	table.Test(t, NewFactory(configs, func(ctx context.Context, listers *Listers, configs *broker.Configs, row *TableRow) controller.Reconciler {
+	table.Test(t, NewFactory(env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		logger := logging.FromContext(ctx)
 
@@ -2273,17 +2273,17 @@ func useTable(t *testing.T, table TableTest, configs *broker.Configs) {
 				KubeClient:                  kubeclient.Get(ctx),
 				PodLister:                   listers.GetPodLister(),
 				SecretLister:                listers.GetSecretLister(),
-				DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
-				SystemNamespace:             configs.SystemNamespace,
+				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
+				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
+				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
+				SystemNamespace:             env.SystemNamespace,
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,
 			},
 			BrokerLister:   listers.GetBrokerLister(),
 			EventingClient: eventingclient.Get(ctx),
 			Resolver:       nil,
-			Configs:        &configs.Env,
+			Env:            env,
 		}
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))

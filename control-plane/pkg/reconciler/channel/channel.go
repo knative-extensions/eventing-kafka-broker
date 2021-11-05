@@ -85,7 +85,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	statusConditionManager := base.StatusConditionManager{
 		Object:     channel,
 		SetAddress: channel.Status.SetAddress,
-		Configs:    r.Configs,
+		Env:        r.Configs,
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 

@@ -24,6 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -113,11 +114,11 @@ func NewSourceSinkReference() duckv1.Destination {
 	}
 }
 
-func SourceConfigMapUpdatedReady(configs *Configs) func(source *sources.KafkaSource) {
+func SourceConfigMapUpdatedReady(env *config.Env) func(source *sources.KafkaSource) {
 	return func(source *sources.KafkaSource) {
 		source.GetConditionSet().Manage(source.GetStatus()).MarkTrueWithReason(
 			base.ConditionConfigMapUpdated,
-			fmt.Sprintf("Config map %s updated", configs.DataPlaneConfigMapAsString()),
+			fmt.Sprintf("Config map %s updated", env.DataPlaneConfigMapAsString()),
 			"",
 		)
 	}

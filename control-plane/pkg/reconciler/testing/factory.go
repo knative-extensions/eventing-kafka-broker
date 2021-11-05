@@ -40,7 +40,6 @@ import (
 	fakeeventingkafkabrokerclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
 
 const (
@@ -49,24 +48,19 @@ const (
 	recorderBufferSize = 20
 )
 
-var DefaultConfigs = &broker.Configs{
-
-	Env: config.Env{
-		DataPlaneConfigMapNamespace: "knative-eventing",
-		DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
-		IngressName:                 "kafka-broker-receiver",
-		SystemNamespace:             "knative-eventing",
-		DataPlaneConfigFormat:       base.Json,
-		DefaultBackoffDelayMs:       1000,
-	},
-
-	BootstrapServers: "",
+var DefaultEnv = &config.Env{
+	DataPlaneConfigMapNamespace: "knative-eventing",
+	DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
+	IngressName:                 "kafka-broker-receiver",
+	SystemNamespace:             "knative-eventing",
+	DataPlaneConfigFormat:       base.Json,
+	DefaultBackoffDelayMs:       1000,
 }
 
 // Ctor functions create a k8s controller with given params.
-type Ctor func(ctx context.Context, listers *Listers, configs *broker.Configs, row *TableRow) pkgcontroller.Reconciler
+type Ctor func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) pkgcontroller.Reconciler
 
-func NewFactory(configs *broker.Configs, ctor Ctor) Factory {
+func NewFactory(env *config.Env, ctor Ctor) Factory {
 	return func(t *testing.T, row *TableRow) (pkgcontroller.Reconciler, ActionRecorderList, EventList) {
 
 		listers := newListers(row.Objects)
@@ -99,7 +93,7 @@ func NewFactory(configs *broker.Configs, ctor Ctor) Factory {
 
 		ctx = addressable.WithDuck(ctx)
 
-		controller := ctor(ctx, listers, configs, row)
+		controller := ctor(ctx, listers, env, row)
 
 		if la, ok := controller.(reconciler.LeaderAware); ok {
 			_ = la.Promote(reconciler.UniversalBucket(), func(reconciler.Bucket, types.NamespacedName) {})
