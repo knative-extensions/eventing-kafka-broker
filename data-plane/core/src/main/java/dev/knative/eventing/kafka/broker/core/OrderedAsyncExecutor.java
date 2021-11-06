@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.core;
 
 import io.vertx.core.Future;
+
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.function.Supplier;
@@ -30,10 +31,12 @@ public class OrderedAsyncExecutor {
   private final Queue<Supplier<Future<?>>> queue;
 
   private boolean isStopped;
+  private boolean inFlight;
 
   public OrderedAsyncExecutor() {
     this.queue = new ArrayDeque<>();
     this.isStopped = false;
+    inFlight = false;
   }
 
   /**
@@ -49,31 +52,30 @@ public class OrderedAsyncExecutor {
     }
   }
 
-  /**
-   * Stop the executor. This won't stop the actual task on-fly, but it will prevent queued tasks to be executed.
-   */
-  public void stop() {
-    this.isStopped = true;
-  }
-
-  void consume() {
-    if (this.isStopped) {
+  private void consume() {
+    if (this.isStopped || queue.isEmpty() || inFlight) {
       return;
     }
-    Supplier<Future<?>> task = this.queue.peek();
-    if (task == null) {
-      return; // No task to process
-    }
-    task.get()
+    inFlight = true;
+    this.queue
+      .remove()
+      .get()
       .onComplete(ar -> {
-        // We don't actually care about the result,
-        // the task should have the failure handling by itself
-
-        // Remove the element from the queue
-        queue.poll();
-
+        inFlight = false;
         consume();
       });
   }
 
+  public boolean isWaitingForTasks() {
+    // TODO To perform this flag would be nice to take into account also the time that it takes for a sink to process a
+    //  message so that we can fetch records in advance and keep queues busy.
+    return queue.size() == 0;
+  }
+
+  /**
+   * Stop the executor. This won't stop the actual in-flight task, but it will prevent queued tasks to be executed.
+   */
+  public void stop() {
+    this.isStopped = true;
+  }
 }
