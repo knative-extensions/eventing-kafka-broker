@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.core.OrderedAsyncExecutor;
 import io.cloudevents.CloudEvent;
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
@@ -32,27 +33,17 @@ import java.util.Set;
 public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private static final Logger logger = LoggerFactory.getLogger(OrderedConsumerVerticle.class);
-  private static final Duration POLLING_TIMEOUT = Duration.ofMillis(100);
 
-  // poll wait ms = (POLL_WAIT_RECORD_FACTOR * pendingRecords) / (partitions - POLL_WAIT_PARTITION_FACTOR * Math.sqrt(partitions))
-  // Each record takes 10 ms to be processed
-  private static final double POLL_WAIT_RECORD_FACTOR = 10;
-  // This is used to take in account how much the parallelism is effective
-  private static final double POLL_WAIT_PARTITION_FACTOR = 1 / (double) Runtime.getRuntime().availableProcessors();
-  private static final long MAX_POLL_WAIT = 10 * 1000;
-  private static final int MIN_POLL_WAIT = 100;
+  private static final long POLLING_MS = 1000L;
+  private static final Duration POLLING_TIMEOUT = Duration.ofMillis(5000L);
 
   private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
 
-  private int pendingRecords;
   private boolean stopPolling;
 
   public OrderedConsumerVerticle(Initializer initializer, Set<String> topics) {
     super(initializer, topics);
-
     this.recordDispatcherExecutors = new HashMap<>();
-
-    this.pendingRecords = 0;
     this.stopPolling = false;
   }
 
@@ -63,41 +54,25 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       .onFailure(startPromise::fail)
       .onSuccess(v -> {
         startPromise.complete();
-
-        logger.debug("Starting polling");
         this.poll();
       });
   }
 
-  public void poll() {
+  private void poll() {
     if (this.stopPolling) {
       return;
     }
+    logger.debug("Polling for records");
     this.consumer.poll(POLLING_TIMEOUT)
+      .onSuccess(this::recordsHandler)
       .onFailure(t -> {
         if (this.stopPolling) {
           // The failure might have been caused by stopping the consumer, so we just ignore it
           return;
         }
-        this.exceptionHandler(t);
-        this.schedulePoll();
-      })
-      .onSuccess(records -> {
-        this.recordsHandler(records);
-        this.schedulePoll();
+        exceptionHandler(t);
+        poll(); // Keep polling.
       });
-  }
-
-  void schedulePoll() {
-    // Check if we need to poll immediately, or wait a bit for the queues to free
-    long pollWait = pollWaitMs();
-
-    if (pollWait > MIN_POLL_WAIT) {
-      vertx.setTimer(pollWaitMs(), v -> this.poll());
-    } else {
-      // Poll immediately
-      this.poll();
-    }
   }
 
   @Override
@@ -105,36 +80,43 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     // Stop the executors
     this.stopPolling = true;
     this.recordDispatcherExecutors.values().forEach(OrderedAsyncExecutor::stop);
-
     // Stop the consumer
     super.stop(stopPromise);
   }
 
   void recordsHandler(KafkaConsumerRecords<Object, CloudEvent> records) {
-    if (records == null) {
+    if (records == null || records.size() == 0) {
+      vertx.setTimer(POLLING_MS, l -> poll());
       return;
     }
     // Put records in queues
     // I assume the records are ordered per topic-partition
     for (int i = 0; i < records.size(); i++) {
-      this.pendingRecords++;
-      KafkaConsumerRecord<Object, CloudEvent> record = records.recordAt(i);
-      this.enqueueRecord(new TopicPartition(record.topic(), record.partition()), record);
+      final var record = records.recordAt(i);
+      final var executor = executorFor(new TopicPartition(record.topic(), record.partition()));
+      executor.offer(() -> dispatch(record, executor));
     }
   }
 
-  void enqueueRecord(TopicPartition topicPartition, KafkaConsumerRecord<Object, CloudEvent> record) {
-    this.recordDispatcherExecutors.computeIfAbsent(topicPartition, (tp) -> new OrderedAsyncExecutor())
-      .offer(() -> this.recordDispatcher.dispatch(record).onComplete(v -> this.pendingRecords--));
+  private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record,
+                                final OrderedAsyncExecutor executor) {
+    return this.recordDispatcher.dispatch(record)
+      .onComplete(v -> maybePoll(executor));
   }
 
-  long pollWaitMs() {
-    double partitions = this.recordDispatcherExecutors.size();
-    long computed = Math.round(
-      (POLL_WAIT_RECORD_FACTOR * pendingRecords) /
-        (partitions - (POLL_WAIT_PARTITION_FACTOR * Math.sqrt(partitions)))
-    );
-    return Math.min(computed, MAX_POLL_WAIT);
+  private OrderedAsyncExecutor executorFor(final TopicPartition topicPartition) {
+    var executor = this.recordDispatcherExecutors.get(topicPartition);
+    if (executor != null) {
+      return executor;
+    }
+    executor = new OrderedAsyncExecutor();
+    this.recordDispatcherExecutors.put(topicPartition, executor);
+    return executor;
   }
 
+  private void maybePoll(final OrderedAsyncExecutor executor) {
+    if (executor.isWaitingForTasks()) {
+      poll();
+    }
+  }
 }
