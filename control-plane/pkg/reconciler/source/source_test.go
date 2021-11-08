@@ -52,6 +52,15 @@ const (
 	finalizerName = "kafkasources.sources.knative.dev"
 )
 
+var DefaultEnv = &config.Env{
+	DataPlaneConfigMapNamespace: "knative-eventing",
+	DataPlaneConfigMapName:      "kafka-source-sources",
+	GeneralConfigMapName:        "kafka-broker-config",
+	IngressName:                 "kafka-source-ingress",
+	SystemNamespace:             "knative-eventing",
+	DataPlaneConfigFormat:       base.Json,
+}
+
 var (
 	finalizerUpdatedEvent = Eventf(
 		corev1.EventTypeNormal,

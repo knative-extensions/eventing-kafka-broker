@@ -39,7 +39,6 @@ import (
 
 	fakeeventingkafkabrokerclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
 const (
@@ -47,15 +46,6 @@ const (
 	// can be buffered during reconciliation.
 	recorderBufferSize = 20
 )
-
-var DefaultEnv = &config.Env{
-	DataPlaneConfigMapNamespace: "knative-eventing",
-	DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
-	IngressName:                 "kafka-broker-receiver",
-	SystemNamespace:             "knative-eventing",
-	DataPlaneConfigFormat:       base.Json,
-	DefaultBackoffDelayMs:       1000,
-}
 
 // Ctor functions create a k8s controller with given params.
 type Ctor func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) pkgcontroller.Reconciler

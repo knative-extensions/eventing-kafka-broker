@@ -76,6 +76,15 @@ var (
 	deleteTopicError = fmt.Errorf("failed to delete topic")
 )
 
+var DefaultEnv = &config.Env{
+	DataPlaneConfigMapNamespace: "knative-eventing",
+	DataPlaneConfigMapName:      "kafka-sink-sinks",
+	GeneralConfigMapName:        "kafka-broker-config",
+	IngressName:                 "kafka-sink-ingress",
+	SystemNamespace:             "knative-eventing",
+	DataPlaneConfigFormat:       base.Json,
+}
+
 func TestSinkReconciler(t *testing.T) {
 
 	v1alpha1.RegisterConditionSet(base.IngressConditionSet)

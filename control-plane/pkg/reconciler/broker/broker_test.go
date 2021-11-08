@@ -85,6 +85,16 @@ var (
 	exponential = eventingduck.BackoffPolicyExponential
 )
 
+var DefaultEnv = &config.Env{
+	DataPlaneConfigMapNamespace: "knative-eventing",
+	DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
+	GeneralConfigMapName:        "kafka-broker-config",
+	IngressName:                 "kafka-broker-ingress",
+	SystemNamespace:             "knative-eventing",
+	DataPlaneConfigFormat:       base.Json,
+	DefaultBackoffDelayMs:       1000,
+}
+
 func TestBrokerReconciler(t *testing.T) {
 	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
 
