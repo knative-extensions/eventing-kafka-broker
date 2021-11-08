@@ -21,7 +21,7 @@ source $(dirname $0)/../../vendor/knative.dev/hack/e2e-tests.sh
 CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}
 SYSTEM_NAMESPACE=${SYSTEM_NAMESPACE:-"knative-eventing"}
 
-kubectl create namespace kafka --dry-run -o yaml | kubectl apply -f -
+kubectl create namespace kafka --dry-run=client -o yaml | kubectl apply -f -
 
 header "Applying Strimzi Cluster Operator file"
 cat $(dirname $0)/strimzi-cluster-operator.yaml | sed "s/cluster.local/${CLUSTER_SUFFIX}/g" | kubectl apply -n kafka -f -
