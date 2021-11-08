@@ -68,6 +68,19 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
   }
 
   @Test
+  public void shouldCommitAfterSendingEventsOrderedOnTheSamePartitionLongPeriod() {
+    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+      for (long i = 0; i < 2_000_051; i++) {
+
+        var rec = record("aaa", 0, i);
+        offsetStrategy.recordReceived(rec);
+        offsetStrategy.successfullySentToSubscriber(rec);
+      }
+    })
+      .containsEntry(new TopicPartition("aaa", 0), 2_000_051L);
+  }
+
+  @Test
   public void shouldNotCommitAfterSendingEventsOrderedOnTheSamePartitionBrokenSequence() {
     assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
       // start number is odd number
