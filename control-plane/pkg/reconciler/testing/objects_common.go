@@ -20,10 +20,6 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
@@ -31,7 +27,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
@@ -162,4 +162,96 @@ func loadCerts() (ca, userKey, userCert []byte) {
 	}
 
 	return ca, userKey, userCert
+}
+
+type KRShapedOption func(obj duckv1.KRShaped)
+
+// TODO: rename funcs to StatusXXX
+
+func ConfigParsed(obj duckv1.KRShaped) {
+	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionConfigParsed)
+}
+
+func ConfigNotParsed(obj duckv1.KRShaped, reason string) {
+	obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(base.ConditionConfigParsed, reason, "")
+}
+
+func ConfigMapUpdatedReady(env *config.Env) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrueWithReason(
+			base.ConditionConfigMapUpdated,
+			fmt.Sprintf("Config map %s updated", env.DataPlaneConfigMapAsString()),
+			"",
+		)
+	}
+}
+
+func TopicReadyWithName(topic string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrueWithReason(
+			base.ConditionTopicReady,
+			fmt.Sprintf("Topic %s created", topic),
+			"",
+		)
+	}
+}
+
+func TopicReadyWithOwner(topic, owner string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrueWithReason(
+			base.ConditionTopicReady,
+			fmt.Sprintf("Topic %s (owner %s)", topic, owner),
+			"",
+		)
+	}
+}
+
+func ControllerOwnsTopic(topicOwner string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		allocateStatusAnnotations(obj)
+		obj.GetStatus().Annotations[base.TopicOwnerAnnotation] = topicOwner
+	}
+}
+
+func TopicNotPresentErr(topic string, err error) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
+			base.ConditionTopicReady,
+			base.ReasonTopicNotPresentOrInvalid,
+			fmt.Sprintf("topics %v: "+SinkNotPresentErrFormat, []string{topic}, []string{topic}, err),
+		)
+	}
+}
+
+func FailedToCreateTopic(topicName string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
+			base.ConditionTopicReady,
+			fmt.Sprintf("Failed to create topic: %s", topicName),
+			"%v",
+			fmt.Errorf("failed to create topic"),
+		)
+	}
+}
+
+//func InitialOffsetsCommitted(obj duckv1.KRShaped) {
+//	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionInitialOffsetsCommitted)
+//}
+
+func DataPlaneAvailable(obj duckv1.KRShaped) {
+	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionDataPlaneAvailable)
+}
+
+func DataPlaneNotAvailable(obj duckv1.KRShaped) {
+	obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
+		base.ConditionDataPlaneAvailable,
+		base.ReasonDataPlaneNotAvailable,
+		base.MessageDataPlaneNotAvailable,
+	)
+}
+
+func allocateStatusAnnotations(obj duckv1.KRShaped) {
+	if obj.GetStatus().Annotations == nil {
+		obj.GetStatus().Annotations = make(map[string]string, 1)
+	}
 }

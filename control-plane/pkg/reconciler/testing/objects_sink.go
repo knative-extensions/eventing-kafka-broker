@@ -104,71 +104,40 @@ func InitSinkConditions(sink *eventing.KafkaSink) {
 
 func SinkConfigMapUpdatedReady(configs *config.Env) func(sink *eventing.KafkaSink) {
 	return func(sink *eventing.KafkaSink) {
-		sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrueWithReason(
-			base.ConditionConfigMapUpdated,
-			fmt.Sprintf("Config map %s updated", configs.DataPlaneConfigMapAsString()),
-			"",
-		)
-	}
-}
-
-func SinkTopicReadyWithName(topic string) func(sink *eventing.KafkaSink) {
-	return func(sink *eventing.KafkaSink) {
-		sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrueWithReason(
-			base.ConditionTopicReady,
-			fmt.Sprintf("Topic %s created", topic),
-			"",
-		)
+		ConfigMapUpdatedReady(configs)(sink)
 	}
 }
 
 func SinkTopicReadyWithOwner(topic, owner string) func(sink *eventing.KafkaSink) {
 	return func(sink *eventing.KafkaSink) {
-		sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrueWithReason(
-			base.ConditionTopicReady,
-			fmt.Sprintf("Topic %s (owner %s)", topic, owner),
-			"",
-		)
+		TopicReadyWithOwner(topic, owner)(sink)
 	}
-}
-func SinkTopicReady(sink *eventing.KafkaSink) {
-	SinkTopicReadyWithName(SinkTopic())(sink)
 }
 
 func SinkConfigParsed(sink *eventing.KafkaSink) {
-	sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrue(base.ConditionConfigParsed)
+	ConfigParsed(sink)
 }
 
 func SinkTopicNotPresentErr(topic string, err error) func(sink *eventing.KafkaSink) {
 	return func(sink *eventing.KafkaSink) {
-		sink.GetConditionSet().Manage(sink.GetStatus()).MarkFalse(
-			base.ConditionTopicReady,
-			base.ReasonTopicNotPresentOrInvalid,
-			fmt.Sprintf("topics %v: "+SinkNotPresentErrFormat, []string{topic}, []string{topic}, err),
-		)
+		TopicNotPresentErr(topic, err)(sink)
 	}
 }
 
 func SinkDataPlaneAvailable(sink *eventing.KafkaSink) {
-	sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrue(base.ConditionDataPlaneAvailable)
+	DataPlaneAvailable(sink)
 }
 
 func SinkDataPlaneNotAvailable(sink *eventing.KafkaSink) {
-	sink.GetConditionSet().Manage(sink.GetStatus()).MarkFalse(
-		base.ConditionDataPlaneAvailable,
-		base.ReasonDataPlaneNotAvailable,
-		base.MessageDataPlaneNotAvailable,
-	)
+	DataPlaneNotAvailable(sink)
 }
 
 func SinkControllerOwnsTopic(sink *eventing.KafkaSink) {
-	allocateStatusAnnotations(sink)
-	sink.GetStatus().Annotations[base.TopicOwnerAnnotation] = sinkreconciler.ControllerTopicOwner
+	ControllerOwnsTopic(sinkreconciler.ControllerTopicOwner)(sink)
 }
 
 func SinkControllerDontOwnTopic(sink *eventing.KafkaSink) {
-	allocateStatusAnnotations(sink)
-	sink.GetStatus().Annotations[base.TopicOwnerAnnotation] = sinkreconciler.ExternalTopicOwner
+	ControllerOwnsTopic(sinkreconciler.ExternalTopicOwner)(sink)
 }
 
 func SinkAuthSecretRef(name string) func(sink *eventing.KafkaSink) {
@@ -180,12 +149,6 @@ func SinkAuthSecretRef(name string) func(sink *eventing.KafkaSink) {
 				},
 			},
 		}
-	}
-}
-
-func allocateStatusAnnotations(sink *eventing.KafkaSink) {
-	if sink.GetStatus().Annotations == nil {
-		sink.GetStatus().Annotations = make(map[string]string, 1)
 	}
 }
 
@@ -205,28 +168,7 @@ func SinkAddressable(configs *config.Env) func(sink *eventing.KafkaSink) {
 
 func SinkFailedToCreateTopic(sink *eventing.KafkaSink) {
 
-	sink.GetConditionSet().Manage(sink.GetStatus()).MarkFalse(
-		base.ConditionTopicReady,
-		fmt.Sprintf("Failed to create topic: %s", SinkTopic()),
-		"%v",
-		fmt.Errorf("failed to create topic"),
-	)
-
-}
-
-func SinkFailedToGetConfigMap(configs *config.Env) func(sink *eventing.KafkaSink) {
-
-	return func(sink *eventing.KafkaSink) {
-
-		sink.GetConditionSet().Manage(sink.GetStatus()).MarkFalse(
-			base.ConditionConfigMapUpdated,
-			fmt.Sprintf(
-				"Failed to get ConfigMap: %s",
-				configs.DataPlaneConfigMapAsString(),
-			),
-			`configmaps "knative-eventing" not found`,
-		)
-	}
+	FailedToCreateTopic(SinkTopic())(sink)
 
 }
 
