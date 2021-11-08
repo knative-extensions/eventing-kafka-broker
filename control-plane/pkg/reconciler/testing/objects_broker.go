@@ -240,22 +240,6 @@ func BrokerFailedToCreateTopic(broker *eventing.Broker) {
 
 }
 
-func BrokerFailedToGetConfigMap(env *config.Env) func(broker *eventing.Broker) {
-
-	return func(broker *eventing.Broker) {
-
-		broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
-			base.ConditionConfigMapUpdated,
-			fmt.Sprintf(
-				"Failed to get ConfigMap: %s",
-				env.DataPlaneConfigMapAsString(),
-			),
-			`configmaps "knative-eventing" not found`,
-		)
-	}
-
-}
-
 func BrokerDispatcherPod(namespace string, annotations map[string]string) runtime.Object {
 	return &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{
