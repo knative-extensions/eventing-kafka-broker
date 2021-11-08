@@ -37,7 +37,10 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeRequestUtil.PROBE_HASH_HEADER_NAME;
+import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeRequestUtil.isProbeRequest;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
 /**
  * This verticle is responsible for implementing the logic of the receiver.
@@ -118,10 +121,14 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     IngressProducer producer = this.ingressProducerStore.resolve(request.path());
     if (producer == null) {
       request.response().setStatusCode(NOT_FOUND.code()).end();
+      logger.warn("Resource not found {}", keyValue("path", request.path()));
+      return;
+    }
 
-      logger.warn("Resource not found {}",
-        keyValue("path", request.path())
-      );
+    if (isProbeRequest(request)) {
+      request.response()
+        .putHeader(PROBE_HASH_HEADER_NAME, request.getHeader(PROBE_HASH_HEADER_NAME))
+        .setStatusCode(OK.code()).end();
       return;
     }
 
