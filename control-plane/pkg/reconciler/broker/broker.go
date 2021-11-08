@@ -48,14 +48,9 @@ const (
 	TopicPrefix = "knative-broker-"
 )
 
-type Configs struct {
-	config.Env
-
-	BootstrapServers string
-}
-
 type Reconciler struct {
 	*base.Reconciler
+	*config.Env
 
 	Resolver *resolver.URIResolver
 
@@ -69,7 +64,7 @@ type Reconciler struct {
 	// mock the function used during the reconciliation loop.
 	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
 
-	Configs *Configs
+	BootstrapServers string
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -84,7 +79,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	statusConditionManager := base.StatusConditionManager{
 		Object:     broker,
 		SetAddress: broker.Status.SetAddress,
-		Configs:    &r.Configs.Env,
+		Env:        r.Env,
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
@@ -241,7 +236,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get contract config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
+		return fmt.Errorf("failed to get contract config map %s: %w", r.DataPlaneConfigMapAsString(), err)
 	}
 
 	logger.Debug("Got contract config map")
@@ -400,7 +395,7 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 		}
 	}
 
-	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, broker, broker.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
+	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, broker, broker.Spec.Delivery, r.DefaultBackoffDelayMs)
 	if err != nil {
 		return nil, err
 	}

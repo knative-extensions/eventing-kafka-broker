@@ -57,6 +57,7 @@ const (
 
 type Reconciler struct {
 	*base.Reconciler
+	*config.Env
 
 	Resolver *resolver.URIResolver
 
@@ -69,8 +70,6 @@ type Reconciler struct {
 	NewKafkaClient kafka.NewClientFunc
 
 	ConfigMapLister corelisters.ConfigMapLister
-
-	Configs *config.Env
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
@@ -85,7 +84,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	statusConditionManager := base.StatusConditionManager{
 		Object:     channel,
 		SetAddress: channel.Status.SetAddress,
-		Configs:    r.Configs,
+		Env:        r.Env,
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
@@ -273,7 +272,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get contract config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
+		return fmt.Errorf("failed to get contract config map %s: %w", r.DataPlaneConfigMapAsString(), err)
 	}
 	logger.Debug("Got contract config map")
 
@@ -451,11 +450,11 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 		Uid:           string(subscriber.UID),
 	}
 
-	subscriptionEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, subscriber.Delivery, r.Configs.DefaultBackoffDelayMs)
+	subscriptionEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, subscriber.Delivery, r.DefaultBackoffDelayMs)
 	if err != nil {
 		return nil, err
 	}
-	channelEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
+	channelEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.DefaultBackoffDelayMs)
 	if err != nil {
 		return nil, err
 	}
@@ -527,7 +526,7 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		}
 	}
 
-	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
+	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.DefaultBackoffDelayMs)
 	if err != nil {
 		return nil, err
 	}

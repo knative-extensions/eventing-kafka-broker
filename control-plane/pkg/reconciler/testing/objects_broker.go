@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
@@ -168,11 +169,11 @@ func BrokerReady(broker *eventing.Broker) {
 	}
 }
 
-func BrokerConfigMapUpdatedReady(configs *Configs) func(broker *eventing.Broker) {
+func BrokerConfigMapUpdatedReady(env *config.Env) func(broker *eventing.Broker) {
 	return func(broker *eventing.Broker) {
 		broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrueWithReason(
 			base.ConditionConfigMapUpdated,
-			fmt.Sprintf("Config map %s updated", configs.DataPlaneConfigMapAsString()),
+			fmt.Sprintf("Config map %s updated", env.DataPlaneConfigMapAsString()),
 			"",
 		)
 	}
@@ -208,13 +209,13 @@ func BrokerConfigNotParsed(reason string) func(broker *eventing.Broker) {
 	}
 }
 
-func BrokerAddressable(configs *Configs) func(broker *eventing.Broker) {
+func BrokerAddressable(env *config.Env) func(broker *eventing.Broker) {
 
 	return func(broker *eventing.Broker) {
 
 		broker.Status.Address.URL = &apis.URL{
 			Scheme: "http",
-			Host:   network.GetServiceHostname(configs.IngressName, configs.SystemNamespace),
+			Host:   network.GetServiceHostname(env.IngressName, env.SystemNamespace),
 			Path:   fmt.Sprintf("/%s/%s", broker.Namespace, broker.Name),
 		}
 
@@ -239,7 +240,7 @@ func BrokerFailedToCreateTopic(broker *eventing.Broker) {
 
 }
 
-func BrokerFailedToGetConfigMap(configs *Configs) func(broker *eventing.Broker) {
+func BrokerFailedToGetConfigMap(env *config.Env) func(broker *eventing.Broker) {
 
 	return func(broker *eventing.Broker) {
 
@@ -247,7 +248,7 @@ func BrokerFailedToGetConfigMap(configs *Configs) func(broker *eventing.Broker) 
 			base.ConditionConfigMapUpdated,
 			fmt.Sprintf(
 				"Failed to get ConfigMap: %s",
-				configs.DataPlaneConfigMapAsString(),
+				env.DataPlaneConfigMapAsString(),
 			),
 			`configmaps "knative-eventing" not found`,
 		)

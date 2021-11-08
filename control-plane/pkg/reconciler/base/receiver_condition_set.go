@@ -74,7 +74,8 @@ type StatusConditionManager struct {
 
 	SetAddress func(u *apis.URL)
 
-	Configs *config.Env
+	Env              *config.Env
+	BootstrapServers string
 
 	Recorder record.EventRecorder
 }
@@ -100,13 +101,13 @@ func (manager *StatusConditionManager) FailedToGetConfigMap(err error) reconcile
 		ConditionConfigMapUpdated,
 		fmt.Sprintf(
 			"Failed to get ConfigMap: %s",
-			manager.Configs.DataPlaneConfigMapAsString(),
+			manager.Env.DataPlaneConfigMapAsString(),
 		),
 		"%v",
 		err,
 	)
 
-	return fmt.Errorf("failed to get contract config map %s: %w", manager.Configs.DataPlaneConfigMapAsString(), err)
+	return fmt.Errorf("failed to get contract config map %s: %w", manager.Env.DataPlaneConfigMapAsString(), err)
 }
 
 func (manager *StatusConditionManager) FailedToGetDataFromConfigMap(err error) reconciler.Event {
@@ -115,32 +116,32 @@ func (manager *StatusConditionManager) FailedToGetDataFromConfigMap(err error) r
 		ConditionConfigMapUpdated,
 		fmt.Sprintf(
 			"Failed to get contract data from ConfigMap: %s",
-			manager.Configs.DataPlaneConfigMapAsString(),
+			manager.Env.DataPlaneConfigMapAsString(),
 		),
 		"%v",
 		err,
 	)
 
-	return fmt.Errorf("failed to get broker and triggers data from config map %s: %w", manager.Configs.DataPlaneConfigMapAsString(), err)
+	return fmt.Errorf("failed to get broker and triggers data from config map %s: %w", manager.Env.DataPlaneConfigMapAsString(), err)
 }
 
 func (manager *StatusConditionManager) FailedToUpdateConfigMap(err error) reconciler.Event {
 
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
 		ConditionConfigMapUpdated,
-		fmt.Sprintf("Failed to update ConfigMap: %s", manager.Configs.DataPlaneConfigMapAsString()),
+		fmt.Sprintf("Failed to update ConfigMap: %s", manager.Env.DataPlaneConfigMapAsString()),
 		"%s",
 		err,
 	)
 
-	return fmt.Errorf("failed to update contract config map %s: %w", manager.Configs.DataPlaneConfigMapAsString(), err)
+	return fmt.Errorf("failed to update contract config map %s: %w", manager.Env.DataPlaneConfigMapAsString(), err)
 }
 
 func (manager *StatusConditionManager) ConfigMapUpdated() {
 
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrueWithReason(
 		ConditionConfigMapUpdated,
-		fmt.Sprintf("Config map %s updated", manager.Configs.DataPlaneConfigMapAsString()),
+		fmt.Sprintf("Config map %s updated", manager.Env.DataPlaneConfigMapAsString()),
 		"",
 	)
 }
@@ -183,7 +184,7 @@ func (manager *StatusConditionManager) Reconciled() reconciler.Event {
 
 		manager.SetAddress(&apis.URL{
 			Scheme: "http",
-			Host:   network.GetServiceHostname(manager.Configs.IngressName, manager.Configs.SystemNamespace),
+			Host:   network.GetServiceHostname(manager.Env.IngressName, manager.Env.SystemNamespace),
 			Path:   fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName()),
 		})
 		object.GetConditionSet().Manage(object.GetStatus()).MarkTrue(ConditionAddressable)

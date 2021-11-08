@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
@@ -33,7 +34,6 @@ import (
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
 
 const (
@@ -82,10 +82,10 @@ func ServiceURLFrom(ns, name string) string {
 	return fmt.Sprintf("http://%s.%s.svc.cluster.local", name, ns)
 }
 
-func NewConfigMap(configs *Configs, data []byte) runtime.Object {
+func NewConfigMap(env *config.Env, data []byte) runtime.Object {
 	return reconcilertesting.NewConfigMap(
-		configs.DataPlaneConfigMapName,
-		configs.DataPlaneConfigMapNamespace,
+		env.DataPlaneConfigMapName,
+		env.DataPlaneConfigMapNamespace,
 		func(configMap *corev1.ConfigMap) {
 			if configMap.BinaryData == nil {
 				configMap.BinaryData = make(map[string][]byte, 1)
@@ -98,10 +98,10 @@ func NewConfigMap(configs *Configs, data []byte) runtime.Object {
 	)
 }
 
-func NewConfigMapFromContract(contract *contract.Contract, configs *Configs) runtime.Object {
+func NewConfigMapFromContract(contract *contract.Contract, env *config.Env) runtime.Object {
 	var data []byte
 	var err error
-	if configs.DataPlaneConfigFormat == base.Protobuf {
+	if env.DataPlaneConfigFormat == base.Protobuf {
 		data, err = proto.Marshal(contract)
 	} else {
 		data, err = protojson.Marshal(contract)
@@ -110,18 +110,18 @@ func NewConfigMapFromContract(contract *contract.Contract, configs *Configs) run
 		panic(err)
 	}
 
-	return NewConfigMap(configs, data)
+	return NewConfigMap(env, data)
 }
 
-func ConfigMapUpdate(configs *Configs, contract *contract.Contract) clientgotesting.UpdateActionImpl {
+func ConfigMapUpdate(env *config.Env, contract *contract.Contract) clientgotesting.UpdateActionImpl {
 	return clientgotesting.NewUpdateAction(
 		schema.GroupVersionResource{
 			Group:    "*",
 			Version:  "v1",
 			Resource: "ConfigMap",
 		},
-		configs.DataPlaneConfigMapNamespace,
-		NewConfigMapFromContract(contract, configs),
+		env.DataPlaneConfigMapNamespace,
+		NewConfigMapFromContract(contract, env),
 	)
 }
 

@@ -81,7 +81,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 
 	statusConditionManager := base.StatusConditionManager{
 		Object:   ks,
-		Configs:  r.Env,
+		Env:      r.Env,
 		Recorder: controller.GetEventRecorder(ctx),
 	}
 
