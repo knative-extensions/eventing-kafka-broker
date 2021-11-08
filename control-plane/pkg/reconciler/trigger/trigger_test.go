@@ -60,6 +60,16 @@ const (
 	triggerNamespace = "test-namespace"
 )
 
+var DefaultEnv = &config.Env{
+	DataPlaneConfigMapNamespace: "knative-eventing",
+	DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
+	GeneralConfigMapName:        "kafka-broker-config",
+	IngressName:                 "kafka-broker-ingress",
+	SystemNamespace:             "knative-eventing",
+	DataPlaneConfigFormat:       base.Json,
+	DefaultBackoffDelayMs:       1000,
+}
+
 var (
 	finalizerUpdatedEvent = Eventf(
 		corev1.EventTypeNormal,
