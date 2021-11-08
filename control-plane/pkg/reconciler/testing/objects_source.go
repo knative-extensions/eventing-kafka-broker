@@ -17,7 +17,6 @@
 package testing
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -115,28 +114,20 @@ func NewSourceSinkReference() duckv1.Destination {
 
 func SourceConfigMapUpdatedReady(env *config.Env) func(source *sources.KafkaSource) {
 	return func(source *sources.KafkaSource) {
-		source.GetConditionSet().Manage(source.GetStatus()).MarkTrueWithReason(
-			base.ConditionConfigMapUpdated,
-			fmt.Sprintf("Config map %s updated", env.DataPlaneConfigMapAsString()),
-			"",
-		)
+		ConfigMapUpdatedReady(env)(source)
 	}
 }
 
 func SourceTopicsReady(source *sources.KafkaSource) {
-	source.GetConditionSet().Manage(source.GetStatus()).MarkTrueWithReason(
-		base.ConditionTopicReady,
-		fmt.Sprintf("Topic %s created", strings.Join(SourceTopics, ", ")),
-		"",
-	)
+	TopicReadyWithName(strings.Join(SourceTopics, ", "))(source)
 }
 
-func InitialOffsetsCommitted(source *sources.KafkaSource) {
-	source.GetConditionSet().Manage(source.GetStatus()).MarkTrue(base.ConditionInitialOffsetsCommitted)
+func SourceInitialOffsetsCommitted(source *sources.KafkaSource) {
+	InitialOffsetsCommitted(source)
 }
 
 func SourceDataPlaneAvailable(source *sources.KafkaSource) {
-	source.GetConditionSet().Manage(source.GetStatus()).MarkTrue(base.ConditionDataPlaneAvailable)
+	DataPlaneAvailable(source)
 }
 
 func SourceDispatcherPod(namespace string, annotations map[string]string) runtime.Object {

@@ -234,9 +234,9 @@ func FailedToCreateTopic(topicName string) func(obj duckv1.KRShaped) {
 	}
 }
 
-//func InitialOffsetsCommitted(obj duckv1.KRShaped) {
-//	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionInitialOffsetsCommitted)
-//}
+func InitialOffsetsCommitted(obj duckv1.KRShaped) {
+	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionInitialOffsetsCommitted)
+}
 
 func DataPlaneAvailable(obj duckv1.KRShaped) {
 	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionDataPlaneAvailable)
