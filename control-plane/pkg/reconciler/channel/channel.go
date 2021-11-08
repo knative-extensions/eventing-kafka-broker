@@ -29,10 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	commonconfig "knative.dev/eventing-kafka/pkg/common/config"
 	"knative.dev/eventing-kafka/pkg/common/constants"
@@ -43,6 +39,11 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
@@ -447,6 +448,7 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 	egress := &contract.Egress{
 		Destination:   subscriber.SubscriberURI.String(),
 		ConsumerGroup: consumerGroup(channel, subscriber),
+		DeliveryOrder: contract.DeliveryOrder_ORDERED,
 		Uid:           string(subscriber.UID),
 	}
 
