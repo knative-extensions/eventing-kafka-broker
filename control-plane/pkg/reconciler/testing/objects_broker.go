@@ -171,41 +171,29 @@ func BrokerReady(broker *eventing.Broker) {
 
 func BrokerConfigMapUpdatedReady(env *config.Env) func(broker *eventing.Broker) {
 	return func(broker *eventing.Broker) {
-		broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrueWithReason(
-			base.ConditionConfigMapUpdated,
-			fmt.Sprintf("Config map %s updated", env.DataPlaneConfigMapAsString()),
-			"",
-		)
+		ConfigMapUpdatedReady(env)(broker)
 	}
 }
 
 func BrokerTopicReady(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrueWithReason(
-		base.ConditionTopicReady,
-		fmt.Sprintf("Topic %s created", kafka.BrokerTopic(TopicPrefix, broker)),
-		"",
-	)
+	TopicReadyWithName(kafka.BrokerTopic(TopicPrefix, broker))(broker)
 }
 
 func BrokerDataPlaneAvailable(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionDataPlaneAvailable)
+	DataPlaneAvailable(broker)
 }
 
 func BrokerDataPlaneNotAvailable(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
-		base.ConditionDataPlaneAvailable,
-		base.ReasonDataPlaneNotAvailable,
-		base.MessageDataPlaneNotAvailable,
-	)
+	DataPlaneNotAvailable(broker)
 }
 
 func BrokerConfigParsed(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionConfigParsed)
+	ConfigParsed(broker)
 }
 
 func BrokerConfigNotParsed(reason string) func(broker *eventing.Broker) {
 	return func(broker *eventing.Broker) {
-		broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(base.ConditionConfigParsed, reason, "")
+		ConfigNotParsed(broker, reason)
 	}
 }
 
@@ -231,12 +219,7 @@ func BrokerDLSResolved(uri string) func(broker *eventing.Broker) {
 
 func BrokerFailedToCreateTopic(broker *eventing.Broker) {
 
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
-		base.ConditionTopicReady,
-		fmt.Sprintf("Failed to create topic: %s", BrokerTopic()),
-		"%v",
-		fmt.Errorf("failed to create topic"),
-	)
+	FailedToCreateTopic(BrokerTopic())(broker)
 
 }
 
