@@ -72,6 +72,11 @@ function knative_eventing() {
   echo ">> Publishing test images from pkg"
   ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 
+  kafka_setup
+}
+
+function kafka_setup() {
+  echo ">> Prepare to deploy Strimzi"
   ./test/kafka/kafka_setup.sh || fail_test "Failed to set up Kafka cluster"
 }
 

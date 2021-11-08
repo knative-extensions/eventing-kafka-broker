@@ -16,6 +16,7 @@ function usage() {
   echo "command:"
   echo "   deploy-infra                                            Deploy eventing, Kafka (Strimzi), publish test images"
   echo "   teardown-infra                                          Remove eventing, Kafka (Strimzi)"
+  echo "   deploy-kafka                                            Deploy Kafka (Strimzi)"
   echo "   deploy                                                  Deploy eventing-kafka-broker"
   echo "   teardown                                                Remove eventing-kafka-broker"
   echo "   unit-tests, unit-test                                   Run unit tests"
@@ -36,6 +37,8 @@ if [[ "$action" == "deploy-infra" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && knative_setup
 elif [[ "${action}" == "teardown-infra" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && knative_teardown
+elif [[ "${action}" == "deploy-kafka" ]]; then
+  source "${ROOT_DIR}"/test/e2e-common.sh && kafka_setup
 elif [[ "${action}" == "deploy" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && test_setup
 elif [[ "${action}" == "teardown" ]]; then
