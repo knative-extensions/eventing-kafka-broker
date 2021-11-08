@@ -213,6 +213,18 @@ type saramaClientMock struct {
 	closed            bool
 }
 
+func (s saramaClientMock) DeleteConsumerGroupOffset(group string, topic string, partition int32) error {
+	panic("implement me")
+}
+
+func (s saramaClientMock) DescribeClientQuotas(components []sarama.QuotaFilterComponent, strict bool) ([]sarama.DescribeClientQuotasEntry, error) {
+	panic("implement me")
+}
+
+func (s saramaClientMock) AlterClientQuotas(entity []sarama.QuotaEntityComponent, op sarama.ClientQuotasOp, validateOnly bool) error {
+	panic("implement me")
+}
+
 func (s saramaClientMock) DescribeUserScramCredentials(users []string) ([]*sarama.DescribeUserScramCredentialsResult, error) {
 	return nil, nil
 }
