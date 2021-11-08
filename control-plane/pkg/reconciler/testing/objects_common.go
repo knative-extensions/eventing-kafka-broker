@@ -166,17 +166,15 @@ func loadCerts() (ca, userKey, userCert []byte) {
 
 type KRShapedOption func(obj duckv1.KRShaped)
 
-// TODO: rename funcs to StatusXXX
-
-func ConfigParsed(obj duckv1.KRShaped) {
+func StatusConfigParsed(obj duckv1.KRShaped) {
 	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionConfigParsed)
 }
 
-func ConfigNotParsed(obj duckv1.KRShaped, reason string) {
+func StatusConfigNotParsed(obj duckv1.KRShaped, reason string) {
 	obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(base.ConditionConfigParsed, reason, "")
 }
 
-func ConfigMapUpdatedReady(env *config.Env) func(obj duckv1.KRShaped) {
+func StatusConfigMapUpdatedReady(env *config.Env) func(obj duckv1.KRShaped) {
 	return func(obj duckv1.KRShaped) {
 		obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrueWithReason(
 			base.ConditionConfigMapUpdated,
@@ -186,7 +184,7 @@ func ConfigMapUpdatedReady(env *config.Env) func(obj duckv1.KRShaped) {
 	}
 }
 
-func TopicReadyWithName(topic string) func(obj duckv1.KRShaped) {
+func StatusTopicReadyWithName(topic string) func(obj duckv1.KRShaped) {
 	return func(obj duckv1.KRShaped) {
 		obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrueWithReason(
 			base.ConditionTopicReady,
@@ -196,7 +194,7 @@ func TopicReadyWithName(topic string) func(obj duckv1.KRShaped) {
 	}
 }
 
-func TopicReadyWithOwner(topic, owner string) func(obj duckv1.KRShaped) {
+func StatusTopicReadyWithOwner(topic, owner string) func(obj duckv1.KRShaped) {
 	return func(obj duckv1.KRShaped) {
 		obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrueWithReason(
 			base.ConditionTopicReady,
@@ -206,14 +204,14 @@ func TopicReadyWithOwner(topic, owner string) func(obj duckv1.KRShaped) {
 	}
 }
 
-func ControllerOwnsTopic(topicOwner string) func(obj duckv1.KRShaped) {
+func StatusControllerOwnsTopic(topicOwner string) func(obj duckv1.KRShaped) {
 	return func(obj duckv1.KRShaped) {
 		allocateStatusAnnotations(obj)
 		obj.GetStatus().Annotations[base.TopicOwnerAnnotation] = topicOwner
 	}
 }
 
-func TopicNotPresentErr(topic string, err error) func(obj duckv1.KRShaped) {
+func StatusTopicNotPresentErr(topic string, err error) func(obj duckv1.KRShaped) {
 	return func(obj duckv1.KRShaped) {
 		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
 			base.ConditionTopicReady,
@@ -223,7 +221,7 @@ func TopicNotPresentErr(topic string, err error) func(obj duckv1.KRShaped) {
 	}
 }
 
-func FailedToCreateTopic(topicName string) func(obj duckv1.KRShaped) {
+func StatusFailedToCreateTopic(topicName string) func(obj duckv1.KRShaped) {
 	return func(obj duckv1.KRShaped) {
 		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
 			base.ConditionTopicReady,
@@ -234,15 +232,15 @@ func FailedToCreateTopic(topicName string) func(obj duckv1.KRShaped) {
 	}
 }
 
-func InitialOffsetsCommitted(obj duckv1.KRShaped) {
+func StatusInitialOffsetsCommitted(obj duckv1.KRShaped) {
 	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionInitialOffsetsCommitted)
 }
 
-func DataPlaneAvailable(obj duckv1.KRShaped) {
+func StatusDataPlaneAvailable(obj duckv1.KRShaped) {
 	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionDataPlaneAvailable)
 }
 
-func DataPlaneNotAvailable(obj duckv1.KRShaped) {
+func StatusDataPlaneNotAvailable(obj duckv1.KRShaped) {
 	obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
 		base.ConditionDataPlaneAvailable,
 		base.ReasonDataPlaneNotAvailable,

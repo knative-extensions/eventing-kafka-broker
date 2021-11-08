@@ -70,6 +70,7 @@ func NewDeletedSource(options ...KRShapedOption) runtime.Object {
 	return NewSource(
 		append(
 			options,
+			//TODO reuse
 			func(obj duckv1.KRShaped) {
 				source := obj.(*sources.KafkaSource)
 				source.DeletionTimestamp = &metav1.Time{Time: time.Now()}

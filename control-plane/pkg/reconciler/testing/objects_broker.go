@@ -169,34 +169,35 @@ func BrokerReady(broker *eventing.Broker) {
 	}
 }
 
-func BrokerConfigMapUpdatedReady(env *config.Env) func(broker *eventing.Broker) {
+func StatusBrokerConfigMapUpdatedReady(env *config.Env) func(broker *eventing.Broker) {
 	return func(broker *eventing.Broker) {
-		ConfigMapUpdatedReady(env)(broker)
+		StatusConfigMapUpdatedReady(env)(broker)
 	}
 }
 
-func BrokerTopicReady(broker *eventing.Broker) {
-	TopicReadyWithName(kafka.BrokerTopic(TopicPrefix, broker))(broker)
+func StatusBrokerTopicReady(broker *eventing.Broker) {
+	StatusTopicReadyWithName(kafka.BrokerTopic(TopicPrefix, broker))(broker)
 }
 
-func BrokerDataPlaneAvailable(broker *eventing.Broker) {
-	DataPlaneAvailable(broker)
+func StatusBrokerDataPlaneAvailable(broker *eventing.Broker) {
+	StatusDataPlaneAvailable(broker)
 }
 
-func BrokerDataPlaneNotAvailable(broker *eventing.Broker) {
-	DataPlaneNotAvailable(broker)
+func StatusBrokerDataPlaneNotAvailable(broker *eventing.Broker) {
+	StatusDataPlaneNotAvailable(broker)
 }
 
-func BrokerConfigParsed(broker *eventing.Broker) {
-	ConfigParsed(broker)
+func StatusBrokerConfigParsed(broker *eventing.Broker) {
+	StatusConfigParsed(broker)
 }
 
-func BrokerConfigNotParsed(reason string) func(broker *eventing.Broker) {
+func StatusBrokerConfigNotParsed(reason string) func(broker *eventing.Broker) {
 	return func(broker *eventing.Broker) {
-		ConfigNotParsed(broker, reason)
+		StatusConfigNotParsed(broker, reason)
 	}
 }
 
+// TODO: extract and reuse
 func BrokerAddressable(env *config.Env) func(broker *eventing.Broker) {
 
 	return func(broker *eventing.Broker) {
@@ -217,9 +218,9 @@ func BrokerDLSResolved(uri string) func(broker *eventing.Broker) {
 	}
 }
 
-func BrokerFailedToCreateTopic(broker *eventing.Broker) {
+func StatusBrokerFailedToCreateTopic(broker *eventing.Broker) {
 
-	FailedToCreateTopic(BrokerTopic())(broker)
+	StatusFailedToCreateTopic(BrokerTopic())(broker)
 
 }
 

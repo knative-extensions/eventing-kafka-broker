@@ -123,10 +123,10 @@ func TestReconcileKind(t *testing.T) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithName(strings.Join(SourceTopics, ", ")),
-						DataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -190,10 +190,10 @@ func TestReconcileKind(t *testing.T) {
 						WithCloudEventOverrides(&duckv1.CloudEventOverrides{
 							Extensions: map[string]string{"a": "foo", "b": "foo"},
 						}),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithName(strings.Join(SourceTopics, ", ")),
-						DataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -251,10 +251,10 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: NewSource(
 						WithKeyType("string"),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithName(strings.Join(SourceTopics, ", ")),
-						DataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -312,10 +312,10 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: NewSource(
 						WithKeyType("int"),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithName(strings.Join(SourceTopics, ", ")),
-						DataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -373,10 +373,10 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: NewSource(
 						WithKeyType("byte-array"),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithName(strings.Join(SourceTopics, ", ")),
-						DataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -434,10 +434,10 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: NewSource(
 						WithKeyType("float"),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithName(strings.Join(SourceTopics, ", ")),
-						DataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},

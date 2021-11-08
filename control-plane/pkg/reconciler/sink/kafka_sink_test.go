@@ -109,7 +109,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal",
 			Objects: []runtime.Object{
 				NewSink(
-					ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 				),
 				NewConfigMap(&env, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
@@ -143,13 +143,13 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 						InitSinkConditions,
-						DataPlaneAvailable,
-						ConfigParsed,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 					),
 				},
@@ -159,7 +159,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - with auth config",
 			Objects: []runtime.Object{
 				NewSink(
-					ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 					SinkAuthSecretRef("secret-1"),
 				),
 				NewSSLSecret(SinkNamespace, "secret-1"),
@@ -204,14 +204,14 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 						SinkAuthSecretRef("secret-1"),
 						InitSinkConditions,
-						DataPlaneAvailable,
-						ConfigParsed,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 					),
 				},
@@ -221,7 +221,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - no topic owner",
 			Objects: []runtime.Object{
 				NewSink(
-					ControllerOwnsTopic(reconciler.ExternalTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ExternalTopicOwner),
 					func(obj duckv1.KRShaped) {
 						s := obj.(*v1alpha1.KafkaSink)
 						s.Spec.ReplicationFactor = nil
@@ -266,18 +266,18 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						ControllerOwnsTopic(reconciler.ExternalTopicOwner),
+						StatusControllerOwnsTopic(reconciler.ExternalTopicOwner),
 						func(obj duckv1.KRShaped) {
 							s := obj.(*v1alpha1.KafkaSink)
 							s.Spec.ReplicationFactor = nil
 							s.Spec.NumPartitions = nil
 						},
 						InitSinkConditions,
-						DataPlaneAvailable,
-						ConfigParsed,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithOwner(SinkTopic(), sink.ExternalTopicOwner),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ExternalTopicOwner),
 						SinkAddressable(&env),
 					),
 				},
@@ -287,7 +287,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "No topic owner - topic present err",
 			Objects: []runtime.Object{
 				NewSink(
-					ControllerOwnsTopic(reconciler.ExternalTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ExternalTopicOwner),
 					func(obj duckv1.KRShaped) {
 						s := obj.(*v1alpha1.KafkaSink)
 						s.Spec.ReplicationFactor = nil
@@ -317,15 +317,15 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						ControllerOwnsTopic(reconciler.ExternalTopicOwner),
+						StatusControllerOwnsTopic(reconciler.ExternalTopicOwner),
 						func(obj duckv1.KRShaped) {
 							s := obj.(*v1alpha1.KafkaSink)
 							s.Spec.ReplicationFactor = nil
 							s.Spec.NumPartitions = nil
 						},
 						InitSinkConditions,
-						DataPlaneAvailable,
-						TopicNotPresentErr(SinkTopic(), io.EOF),
+						StatusDataPlaneAvailable,
+						StatusTopicNotPresentErr(SinkTopic(), io.EOF),
 					),
 				},
 			},
@@ -337,7 +337,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - set topic and bootstrap servers",
 			Objects: []runtime.Object{
 				NewSink(
-					ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 					func(obj duckv1.KRShaped) {
 						s := obj.(*v1alpha1.KafkaSink)
 						s.Spec.Topic = "my-topic-1"
@@ -377,18 +377,18 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 						func(obj duckv1.KRShaped) {
 							s := obj.(*v1alpha1.KafkaSink)
 							s.Spec.Topic = "my-topic-1"
 							s.Spec.BootstrapServers = []string{"kafka-broker:10000"}
 						},
 						InitSinkConditions,
-						DataPlaneAvailable,
-						ConfigParsed,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
 						BootstrapServers([]string{"kafka-broker:10000"}),
-						TopicReadyWithOwner("my-topic-1", sink.ControllerTopicOwner),
-						ConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner("my-topic-1", sink.ControllerTopicOwner),
+						StatusConfigMapUpdatedReady(&env),
 						SinkAddressable(&env),
 					),
 				},
@@ -401,7 +401,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Failed to create topic",
 			Objects: []runtime.Object{
 				NewSink(
-					ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				SinkReceiverPod(env.SystemNamespace, nil),
@@ -423,11 +423,11 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 						InitSinkConditions,
-						DataPlaneAvailable,
+						StatusDataPlaneAvailable,
 						BootstrapServers(bootstrapServersArr),
-						FailedToCreateTopic(SinkTopic()),
+						StatusFailedToCreateTopic(SinkTopic()),
 					),
 				},
 			},
@@ -439,7 +439,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Config map not found - create config map",
 			Objects: []runtime.Object{
 				NewSink(
-					ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewService(),
@@ -481,13 +481,13 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 						InitSinkConditions,
-						DataPlaneAvailable,
-						ConfigParsed,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 					),
 				},
@@ -497,7 +497,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - config map not readable",
 			Objects: []runtime.Object{
 				NewSink(
-					ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMap(&env, []byte(`{"hello": "world"}`)),
@@ -529,13 +529,13 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 						InitSinkConditions,
-						DataPlaneAvailable,
-						ConfigParsed,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 					),
 				},
@@ -545,7 +545,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - preserve config map previous state",
 			Objects: []runtime.Object{
 				NewSink(
-					ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMapFromContract(&contract.Contract{
@@ -600,13 +600,13 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 						InitSinkConditions,
-						DataPlaneAvailable,
-						ConfigParsed,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 					),
 				},
@@ -616,7 +616,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - update existing broker while preserving others",
 			Objects: []runtime.Object{
 				NewSink(
-					ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMapFromContract(&contract.Contract{
@@ -669,13 +669,13 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 						InitSinkConditions,
-						DataPlaneAvailable,
-						ConfigParsed,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 					),
 				},
@@ -703,7 +703,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				{
 					Object: NewSink(
 						InitSinkConditions,
-						DataPlaneNotAvailable,
+						StatusDataPlaneNotAvailable,
 					),
 				},
 			},
@@ -712,7 +712,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - unchanged",
 			Objects: []runtime.Object{
 				NewSink(
-					ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMapFromContract(&contract.Contract{
@@ -749,13 +749,13 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 						InitSinkConditions,
-						DataPlaneAvailable,
-						ConfigParsed,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 					),
 				},
@@ -765,7 +765,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - unchanged contract - changed receiver pod annotation",
 			Objects: []runtime.Object{
 				NewSink(
-					ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMapFromContract(&contract.Contract{
@@ -807,13 +807,13 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 						InitSinkConditions,
-						DataPlaneAvailable,
-						ConfigParsed,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
 						BootstrapServers(bootstrapServersArr),
-						ConfigMapUpdatedReady(&env),
-						TopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 					),
 				},
@@ -850,7 +850,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - topic externally controlled",
 			Objects: []runtime.Object{
 				NewDeletedSink(
-					ControllerOwnsTopic(reconciler.ExternalTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ExternalTopicOwner),
 				),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -905,7 +905,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - topic controlled by us",
 			Objects: []runtime.Object{
 				NewDeletedSink(
-					ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 				),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -959,7 +959,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - topic controlled by us - error deleting topic",
 			Objects: []runtime.Object{
 				NewDeletedSink(
-					ControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 					func(obj duckv1.KRShaped) {
 						s := obj.(*v1alpha1.KafkaSink)
 						s.Spec.Topic = "topic-2"

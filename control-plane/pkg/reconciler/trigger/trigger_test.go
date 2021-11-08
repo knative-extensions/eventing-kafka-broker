@@ -714,7 +714,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 				newTrigger(),
 				NewBroker(
 					func(v *eventing.Broker) { v.Status.InitializeConditions() },
-					BrokerConfigNotParsed("wrong"),
+					StatusBrokerConfigNotParsed("wrong"),
 				),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
