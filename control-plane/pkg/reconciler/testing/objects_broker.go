@@ -197,7 +197,6 @@ func StatusBrokerConfigNotParsed(reason string) func(broker *eventing.Broker) {
 	}
 }
 
-// TODO: extract and reuse
 func BrokerAddressable(env *config.Env) func(broker *eventing.Broker) {
 
 	return func(broker *eventing.Broker) {
