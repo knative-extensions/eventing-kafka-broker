@@ -19,6 +19,7 @@ package testing
 import (
 	"fmt"
 	"io/ioutil"
+	"time"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -165,6 +166,11 @@ func loadCerts() (ca, userKey, userCert []byte) {
 }
 
 type KRShapedOption func(obj duckv1.KRShaped)
+
+func WithDeletedTimeStamp(obj duckv1.KRShaped) {
+	metaObj := obj.(metav1.Object)
+	metaObj.SetDeletionTimestamp(&metav1.Time{Time: time.Now()})
+}
 
 func StatusConfigParsed(obj duckv1.KRShaped) {
 	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionConfigParsed)

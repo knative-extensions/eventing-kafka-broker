@@ -19,7 +19,6 @@ package testing
 import (
 	"context"
 	"fmt"
-	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -79,10 +78,7 @@ func NewDeletedSink(options ...KRShapedOption) runtime.Object {
 	return NewSink(
 		append(
 			options,
-			func(obj duckv1.KRShaped) {
-				sink := obj.(*eventing.KafkaSink)
-				sink.DeletionTimestamp = &metav1.Time{Time: time.Now()}
-			},
+			WithDeletedTimeStamp,
 		)...,
 	)
 }

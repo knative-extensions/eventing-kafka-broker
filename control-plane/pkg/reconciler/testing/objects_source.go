@@ -17,8 +17,6 @@
 package testing
 
 import (
-	"time"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -70,11 +68,7 @@ func NewDeletedSource(options ...KRShapedOption) runtime.Object {
 	return NewSource(
 		append(
 			options,
-			//TODO reuse
-			func(obj duckv1.KRShaped) {
-				source := obj.(*sources.KafkaSource)
-				source.DeletionTimestamp = &metav1.Time{Time: time.Now()}
-			},
+			WithDeletedTimeStamp,
 		)...,
 	)
 }

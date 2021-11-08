@@ -18,7 +18,6 @@ package testing
 
 import (
 	"fmt"
-	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -72,7 +71,7 @@ func NewDeletedBroker(options ...reconcilertesting.BrokerOption) runtime.Object 
 		append(
 			options,
 			func(broker *eventing.Broker) {
-				broker.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+				WithDeletedTimeStamp(broker)
 			},
 		)...,
 	)
