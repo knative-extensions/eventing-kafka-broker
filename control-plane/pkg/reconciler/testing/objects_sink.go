@@ -28,12 +28,12 @@ import (
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 )
 
 const (
@@ -51,9 +51,7 @@ var (
 	bootstrapServers = []string{"kafka-1:9092", "kafka-2:9093"}
 )
 
-type SinkOption func(sink *eventing.KafkaSink)
-
-func NewSink(options ...SinkOption) runtime.Object {
+func NewSink(options ...KRShapedOption) runtime.Object {
 	sink := &eventing.KafkaSink{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: SinkNamespace,
@@ -77,11 +75,12 @@ func NewSink(options ...SinkOption) runtime.Object {
 	return sink
 }
 
-func NewDeletedSink(options ...SinkOption) runtime.Object {
+func NewDeletedSink(options ...KRShapedOption) runtime.Object {
 	return NewSink(
 		append(
 			options,
-			func(sink *eventing.KafkaSink) {
+			func(obj duckv1.KRShaped) {
+				sink := obj.(*eventing.KafkaSink)
 				sink.DeletionTimestamp = &metav1.Time{Time: time.Now()}
 			},
 		)...,
@@ -92,56 +91,21 @@ func SinkTopic() string {
 	return fmt.Sprintf("knative-sink-%s-%s", SinkNamespace, SinkName)
 }
 
-func BootstrapServers(bootstrapServers []string) func(sink *eventing.KafkaSink) {
-	return func(sink *eventing.KafkaSink) {
+func BootstrapServers(bootstrapServers []string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		sink := obj.(*eventing.KafkaSink)
 		sink.Spec.BootstrapServers = bootstrapServers
 	}
 }
 
-func InitSinkConditions(sink *eventing.KafkaSink) {
+func InitSinkConditions(obj duckv1.KRShaped) {
+	sink := obj.(*eventing.KafkaSink)
 	sink.Status.InitializeConditions()
 }
 
-func SinkConfigMapUpdatedReady(configs *config.Env) func(sink *eventing.KafkaSink) {
-	return func(sink *eventing.KafkaSink) {
-		ConfigMapUpdatedReady(configs)(sink)
-	}
-}
-
-func SinkTopicReadyWithOwner(topic, owner string) func(sink *eventing.KafkaSink) {
-	return func(sink *eventing.KafkaSink) {
-		TopicReadyWithOwner(topic, owner)(sink)
-	}
-}
-
-func SinkConfigParsed(sink *eventing.KafkaSink) {
-	ConfigParsed(sink)
-}
-
-func SinkTopicNotPresentErr(topic string, err error) func(sink *eventing.KafkaSink) {
-	return func(sink *eventing.KafkaSink) {
-		TopicNotPresentErr(topic, err)(sink)
-	}
-}
-
-func SinkDataPlaneAvailable(sink *eventing.KafkaSink) {
-	DataPlaneAvailable(sink)
-}
-
-func SinkDataPlaneNotAvailable(sink *eventing.KafkaSink) {
-	DataPlaneNotAvailable(sink)
-}
-
-func SinkControllerOwnsTopic(sink *eventing.KafkaSink) {
-	ControllerOwnsTopic(sinkreconciler.ControllerTopicOwner)(sink)
-}
-
-func SinkControllerDontOwnTopic(sink *eventing.KafkaSink) {
-	ControllerOwnsTopic(sinkreconciler.ExternalTopicOwner)(sink)
-}
-
-func SinkAuthSecretRef(name string) func(sink *eventing.KafkaSink) {
-	return func(sink *eventing.KafkaSink) {
+func SinkAuthSecretRef(name string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		sink := obj.(*eventing.KafkaSink)
 		sink.Spec.Auth = &eventing.Auth{
 			Secret: &eventing.Secret{
 				Ref: &eventing.SecretReference{
@@ -152,10 +116,10 @@ func SinkAuthSecretRef(name string) func(sink *eventing.KafkaSink) {
 	}
 }
 
-func SinkAddressable(configs *config.Env) func(sink *eventing.KafkaSink) {
+func SinkAddressable(configs *config.Env) func(obj duckv1.KRShaped) {
 
-	return func(sink *eventing.KafkaSink) {
-
+	return func(obj duckv1.KRShaped) {
+		sink := obj.(*eventing.KafkaSink)
 		sink.Status.Address.URL = &apis.URL{
 			Scheme: "http",
 			Host:   network.GetServiceHostname(configs.IngressName, configs.SystemNamespace),
@@ -164,12 +128,6 @@ func SinkAddressable(configs *config.Env) func(sink *eventing.KafkaSink) {
 
 		sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrue(base.ConditionAddressable)
 	}
-}
-
-func SinkFailedToCreateTopic(sink *eventing.KafkaSink) {
-
-	FailedToCreateTopic(SinkTopic())(sink)
-
 }
 
 func SinkReceiverPod(namespace string, annotations map[string]string) runtime.Object {
