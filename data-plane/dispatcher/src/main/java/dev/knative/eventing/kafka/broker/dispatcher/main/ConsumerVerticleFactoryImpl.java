@@ -26,15 +26,13 @@ import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
-import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.KafkaResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.WebClientCloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.BaseConsumerVerticle;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedOffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedOffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
@@ -52,6 +50,11 @@ import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -60,13 +63,8 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -166,12 +164,14 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
           new AttributesFilter(egress.getFilter().getAttributesMap()) :
           Filter.noop();
 
-        final RecordDispatcherImpl recordDispatcher = new RecordDispatcherImpl(
+        final var commitIntervalMs = Integer.parseInt(String.valueOf(consumerConfigs.get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG)));
+
+        final var recordDispatcher = new RecordDispatcherImpl(
           filter,
           egressSubscriberSender,
           egressDeadLetterSender,
           new KafkaResponseHandler(producer, resource.getTopics(0)),
-          getOffsetManager(deliveryOrder, consumer, eventsSentCounter::increment),
+          new OffsetManager(vertx, consumer, eventsSentCounter::increment, commitIntervalMs),
           ConsumerTracer.create(
             ((VertxInternal) vertx).tracer(),
             new KafkaClientOptions()
@@ -272,14 +272,6 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
   private static boolean hasDeadLetterSink(final EgressConfig egressConfig) {
     return !(egressConfig == null || egressConfig.getDeadLetter().isEmpty());
-  }
-
-  private static RecordDispatcherListener getOffsetManager(final DeliveryOrder type, final KafkaConsumer<?, ?> consumer,
-                                                           Consumer<Integer> commitHandler) {
-    return switch (type) {
-      case ORDERED -> new OrderedOffsetManager(consumer, commitHandler);
-      case UNORDERED -> new UnorderedOffsetManager(consumer, commitHandler);
-    };
   }
 
   private static AbstractVerticle getConsumerVerticle(final DeliveryOrder type,
