@@ -21,6 +21,8 @@ import (
 	"testing"
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/wait"
+
 	"github.com/cloudevents/sdk-go/v2/test"
 	. "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/stretchr/testify/require"
@@ -95,22 +97,15 @@ func testKafkaSourceUpdate(t *testing.T, name string, test updateTest) {
 	originalEventTracker.AssertExact(1, recordevents.MatchEvent(matcherGen(eventSourceName, "original")))
 	t.Logf("Properly received original event for %s\n", eventSourceName)
 
-	// TODO(slinkydeveloper) Give it 5 secs to the kafka source to reconcile the claims status.
-	//  Since claims status is not part of readiness, it could cause a race on writing
-	time.Sleep(5 * time.Second)
-	var (
-		ksObj               *sourcesv1beta1.KafkaSource
-		newSinkEventTracker *recordevents.EventInfoStore
-	)
-	ksObj = contribtestlib.GetKafkaSourceV1Beta1OrFail(client, kafkaSourceName)
-	if ksObj == nil {
-		t.Fatalf("Unabled to Get kafkasource: %s/%s\n", client.Namespace, kafkaSourceName)
-	}
+	ksObj := waitForKafkaSourceReconcilerToReconcileSource(t, client, kafkaSourceName)
+
 	if test.topicName != defaultKafkaSource.topicName {
 		MustCreateTopic(client, KafkaClusterName, KafkaClusterNamespace, test.topicName+name, 10)
 		ksObj.Spec.Topics = []string{test.topicName + name}
 		eventSourceName = sourcesv1beta1.KafkaEventSource(client.Namespace, kafkaSourceName, test.topicName+name)
 	}
+
+	var newSinkEventTracker *recordevents.EventInfoStore
 	if test.sinkName != defaultKafkaSource.sinkName {
 		kSinkRef := resources.ServiceKRef(test.sinkName)
 		ksObj.Spec.Sink.Ref = kSinkRef
@@ -124,8 +119,7 @@ func testKafkaSourceUpdate(t *testing.T, name string, test updateTest) {
 	}
 
 	contribtestlib.UpdateKafkaSourceV1Beta1OrFail(client, ksObj)
-	// TODO(slinkydeveloper) Give it 5 secs to the kafka source to reconcile again
-	time.Sleep(5 * time.Second)
+	waitForKafkaSourceReconcilerToReconcileSource(t, client, kafkaSourceName)
 	client.WaitForAllTestResourcesReadyOrFail(context.Background())
 
 	t.Logf("Send update event to kafkatopic")
@@ -139,6 +133,21 @@ func testKafkaSourceUpdate(t *testing.T, name string, test updateTest) {
 		originalEventTracker.AssertExact(1, recordevents.MatchEvent(matcherGen(eventSourceName, "update")))
 	}
 
+}
+
+func waitForKafkaSourceReconcilerToReconcileSource(t *testing.T, client *testlib.Client, kafkaSourceName string) *sourcesv1beta1.KafkaSource {
+	var ksObj *sourcesv1beta1.KafkaSource
+	err := wait.Poll(10*time.Second, 4*time.Minute, func() (done bool, err error) {
+		ksObj = contribtestlib.GetKafkaSourceV1Beta1OrFail(client, kafkaSourceName)
+		if ksObj == nil {
+			t.Fatalf("Unabled to Get kafkasource: %s/%s\n", client.Namespace, kafkaSourceName)
+		}
+		return ksObj.Status.ObservedGeneration == ksObj.Generation, nil
+	})
+	if err != nil {
+		t.Fatalf("Failed to wait for KafkaSource reconciler to reconcile KafkaSource: %v", ksObj)
+	}
+	return ksObj
 }
 
 type message struct {

@@ -19,6 +19,7 @@ package lib
 import (
 	"context"
 
+	"k8s.io/client-go/util/retry"
 	testlib "knative.dev/eventing/test/lib"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -88,13 +89,19 @@ func GetKafkaSourceV1Beta1OrFail(c *testlib.Client, kafkaSource string) *sources
 }
 
 func UpdateKafkaSourceV1Beta1OrFail(c *testlib.Client, kafkaSource *sourcesv1beta1.KafkaSource) {
-	kafkaSourceClientSet, err := kafkaclientset.NewForConfig(c.Config)
-	if err != nil {
-		c.T.Fatalf("Failed to create v1beta1 KafkaSource client: %v", err)
-	}
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		latestKafkaSource := GetKafkaSourceV1Beta1OrFail(c, kafkaSource.Name)
+		kafkaSource.Spec.DeepCopyInto(&latestKafkaSource.Spec)
+		kafkaSourceClientSet, err := kafkaclientset.NewForConfig(c.Config)
+		if err != nil {
+			c.T.Fatalf("Failed to create v1beta1 KafkaSource client: %v", err)
+		}
 
-	kSources := kafkaSourceClientSet.SourcesV1beta1().KafkaSources(c.Namespace)
-	if _, err := kSources.Update(context.Background(), kafkaSource, metav1.UpdateOptions{}); err != nil {
+		kSources := kafkaSourceClientSet.SourcesV1beta1().KafkaSources(c.Namespace)
+		_, err = kSources.Update(context.Background(), latestKafkaSource, metav1.UpdateOptions{})
+		return err
+	})
+	if err != nil {
 		c.T.Fatalf("Failed to update v1beta1 KafkaSource %q: %v", kafkaSource.Name, err)
 	}
 }
