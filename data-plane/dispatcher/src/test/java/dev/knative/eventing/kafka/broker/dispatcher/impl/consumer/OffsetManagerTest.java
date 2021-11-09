@@ -18,10 +18,15 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
+import io.vertx.core.Vertx;
+import io.vertx.junit5.VertxExtension;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
+
 import java.util.List;
+
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
@@ -30,12 +35,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @Execution(value = ExecutionMode.CONCURRENT)
-public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
+@ExtendWith(VertxExtension.class)
+public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
   @Override
-  RecordDispatcherListener createOffsetManager(
-    KafkaConsumer<?, ?> consumer) {
-    return new UnorderedOffsetManager(consumer, null);
+  RecordDispatcherListener createOffsetManager(final Vertx vertx, final KafkaConsumer<?, ?> consumer) {
+    return new OffsetManager(vertx, consumer, null, 100L);
   }
 
   @Test
@@ -48,6 +53,46 @@ public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
       }
     })
       .containsEntry(new TopicPartition("aaa", 0), 10L);
+  }
+
+  @Test
+  public void shouldCommitAfterSendingEventsOrderedOnTheSamePartitionLongValues() {
+    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+      for (long i = Integer.MAX_VALUE - 50; i < ((long) Integer.MAX_VALUE) + 50; i++) {
+        var rec = record("aaa", 0, i);
+        offsetStrategy.recordReceived(rec);
+        offsetStrategy.successfullySentToSubscriber(rec);
+      }
+    })
+      .containsEntry(new TopicPartition("aaa", 0), Integer.MAX_VALUE + 50L);
+  }
+
+  @Test
+  public void shouldCommitAfterSendingEventsOrderedOnTheSamePartitionLongPeriod() {
+    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+      for (long i = 0; i < 2_000_051; i++) {
+
+        var rec = record("aaa", 0, i);
+        offsetStrategy.recordReceived(rec);
+        offsetStrategy.successfullySentToSubscriber(rec);
+      }
+    })
+      .containsEntry(new TopicPartition("aaa", 0), 2_000_051L);
+  }
+
+  @Test
+  public void shouldNotCommitAfterSendingEventsOrderedOnTheSamePartitionBrokenSequence() {
+    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+      // start number is odd number
+      for (long i = Integer.MAX_VALUE - 50; i < ((long) Integer.MAX_VALUE) + 50; i++) {
+        var rec = record("aaa", 0, i);
+        offsetStrategy.recordReceived(rec);
+        if (i % 2 == 0) {
+          offsetStrategy.successfullySentToSubscriber(rec);
+        }
+      }
+    })
+      .isEmpty();
   }
 
   @Test
@@ -148,7 +193,7 @@ public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
       List.of(5L, 2L, 0L, 7L, 1L, 3L, 4L)
         .forEach(offset -> offsetStrategy.successfullySentToSubscriber(record("aaa", 0, offset)));
     })
-      .isEmpty();
+      .containsEntry(new TopicPartition("aaa", 0), 6L);
   }
 
   @Test
@@ -209,10 +254,10 @@ public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void recordReceived() {
+  public void recordReceived(final Vertx vertx) {
     final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
     final Counter eventsSentCounter = mock(Counter.class);
-    new UnorderedOffsetManager(consumer, eventsSentCounter::increment).recordReceived(record("aaa", 0, 0));
+    new OffsetManager(vertx, consumer, eventsSentCounter::increment, 100L).recordReceived(record("aaa", 0, 0));
 
     shouldNeverCommit(consumer);
     shouldNeverPause(consumer);
@@ -221,12 +266,11 @@ public class UnorderedOffsetManagerTest extends AbstractOffsetManagerTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void failedToSendToDeadLetterSink() {
+  public void failedToSendToDeadLetterSink(final Vertx vertx) {
     final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
     final Counter eventsSentCounter = mock(Counter.class);
 
-    UnorderedOffsetManager strategy =
-      new UnorderedOffsetManager(consumer, eventsSentCounter::increment);
+    OffsetManager strategy = new OffsetManager(vertx, consumer, eventsSentCounter::increment, 100L);
     strategy.recordReceived(record("aaa", 0, 0));
     strategy.failedToSendToDeadLetterSink(record("aaa", 0, 0), null);
 

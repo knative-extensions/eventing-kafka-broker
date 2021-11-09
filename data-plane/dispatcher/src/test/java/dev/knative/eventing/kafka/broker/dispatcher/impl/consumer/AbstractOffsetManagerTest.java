@@ -19,10 +19,12 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.OffsetAndMetadata;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
@@ -45,7 +48,7 @@ import static org.mockito.Mockito.verify;
 
 public abstract class AbstractOffsetManagerTest {
 
-  abstract RecordDispatcherListener createOffsetManager(final KafkaConsumer<?, ?> consumer);
+  abstract RecordDispatcherListener createOffsetManager(final Vertx vertx, final KafkaConsumer<?, ?> consumer);
 
   protected static KafkaConsumerRecord<String, CloudEvent> record(String topic, int partition, long offset) {
     return new KafkaConsumerRecordImpl<>(
@@ -60,7 +63,8 @@ public abstract class AbstractOffsetManagerTest {
   }
 
   protected MapAssert<TopicPartition, Long> assertThatOffsetCommitted(
-    Collection<TopicPartition> partitionsConsumed, Consumer<RecordDispatcherListener> testExecutor) {
+    final Collection<TopicPartition> partitionsConsumed,
+    final Consumer<RecordDispatcherListener> testExecutor) {
     return assertThatOffsetCommittedWithFailures(partitionsConsumed,
       (offsetStrategy, flag) -> testExecutor.accept(offsetStrategy));
   }
@@ -96,10 +100,17 @@ public abstract class AbstractOffsetManagerTest {
       .when(vertxConsumer)
       .commit(any(Map.class));
 
-    testExecutor.accept(createOffsetManager(vertxConsumer), failureFlag);
+    testExecutor.accept(createOffsetManager(Vertx.vertx(), vertxConsumer), failureFlag);
 
+    try {
+      Thread.sleep(1000);
+    } catch (final InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+
+    final var committed = mockConsumer.committed(Set.copyOf(partitionsConsumed));
     return assertThat(
-      mockConsumer.committed(Set.copyOf(partitionsConsumed))
+      committed
         .entrySet()
         .stream()
         .collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue().offset()))
