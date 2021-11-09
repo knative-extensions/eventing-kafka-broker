@@ -118,7 +118,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -182,7 +182,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -245,7 +245,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -306,7 +306,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -367,7 +367,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -428,7 +428,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{

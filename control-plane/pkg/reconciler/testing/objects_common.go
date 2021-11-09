@@ -83,7 +83,7 @@ func ServiceURLFrom(ns, name string) string {
 	return fmt.Sprintf("http://%s.%s.svc.cluster.local", name, ns)
 }
 
-func NewConfigMap(env *config.Env, data []byte) runtime.Object {
+func NewConfigMapWithBinaryData(env *config.Env, data []byte) runtime.Object {
 	return reconcilertesting.NewConfigMap(
 		env.DataPlaneConfigMapName,
 		env.DataPlaneConfigMapNamespace,
@@ -95,6 +95,16 @@ func NewConfigMap(env *config.Env, data []byte) runtime.Object {
 				data = []byte("")
 			}
 			configMap.BinaryData[base.ConfigMapDataKey] = data
+		},
+	)
+}
+
+func NewConfigMapWithTextData(namespace, name string, data map[string]string) runtime.Object {
+	return reconcilertesting.NewConfigMap(
+		name,
+		namespace,
+		func(configMap *corev1.ConfigMap) {
+			configMap.Data = data
 		},
 	)
 }
@@ -111,7 +121,7 @@ func NewConfigMapFromContract(contract *contract.Contract, env *config.Env) runt
 		panic(err)
 	}
 
-	return NewConfigMap(env, data)
+	return NewConfigMapWithBinaryData(env, data)
 }
 
 func ConfigMapUpdate(env *config.Env, contract *contract.Contract) clientgotesting.UpdateActionImpl {

@@ -111,7 +111,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				NewSink(
 					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 				),
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
@@ -163,7 +163,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 					SinkAuthSecretRef("secret-1"),
 				),
 				NewSSLSecret(SinkNamespace, "secret-1"),
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -228,7 +228,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						s.Spec.NumPartitions = nil
 					},
 				),
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -294,7 +294,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						s.Spec.NumPartitions = nil
 					},
 				),
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -344,7 +344,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						s.Spec.BootstrapServers = []string{"kafka-broker:10000"}
 					},
 				),
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -457,7 +457,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&env, &contract.Contract{
@@ -500,7 +500,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
-				NewConfigMap(&env, []byte(`{"hello": "world"}`)),
+				NewConfigMapWithBinaryData(&env, []byte(`{"hello": "world"}`)),
 				SinkReceiverPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,

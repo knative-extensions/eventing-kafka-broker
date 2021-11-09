@@ -627,7 +627,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 			WantErr:                 true,
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
@@ -658,7 +658,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 				NewBroker(BrokerReady),
 				newTrigger(),
 				NewService(),
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
