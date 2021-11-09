@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
@@ -34,24 +35,94 @@ import (
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	fakeeventingkafkaclient "knative.dev/eventing-kafka/pkg/client/injection/client/fake"
-	eventingkafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+	"knative.dev/eventing-kafka/pkg/common/constants"
+	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/system"
 	"knative.dev/pkg/tracker"
 )
 
+var configKafka = map[string]string{
+	"version": "1.0.0",
+	"sarama": `
+enableLogging: false
+config: |
+  Version: 2.0.0 # Kafka Version Compatibility From Sarama's Supported List (Major.Minor.Patch)
+  Admin:
+    Timeout: 10000000000  # 10 seconds
+  Net:
+    KeepAlive: 30000000000  # 30 seconds
+    MaxOpenRequests: 1 # Set to 1 for use with Idempotent Producer
+    TLS:
+      Enable: true
+    SASL:
+      Enable: true
+      Version: 1
+  Metadata:
+    RefreshFrequency: 300000000000  # 5 minutes
+  Consumer:
+    Offsets:
+      AutoCommit:
+      Interval: 5000000000  # 5 seconds
+      Retention: 604800000000000  # 1 week
+  Producer:
+    Idempotent: true  # Must be false for Azure EventHubs
+    RequiredAcks: -1  # -1 = WaitForAll, Most stringent option for "at-least-once" delivery.
+`,
+	"eventing-kafka": `
+cloudevents:
+   maxIdleConns: 1000
+   maxIdleConnsPerHost: 100
+kafka:
+  authSecretName: kafka-cluster
+  authSecretNamespace: knative-eventing
+  brokers: kafka:9092
+channel:
+  adminType: kafka # One of "kafka", "azure", "custom"
+  dispatcher:
+    cpuRequest: 100m
+    memoryRequest: 50Mi
+  receiver:
+    cpuRequest: 100m
+    memoryRequest: 50Mi
+`,
+}
+
+const (
+	//TODO: remove
+	ExpectedTopicDetail = "expectedTopicDetail"
+
+	finalizerName = "kafkachannels.messaging.knative.dev"
+)
+
+var finalizerUpdatedEvent = Eventf(
+	corev1.EventTypeNormal,
+	"FinalizerUpdate",
+	fmt.Sprintf(`Updated %q finalizers`, ChannelName),
+)
+
+var DefaultEnv = &config.Env{
+	DataPlaneConfigMapNamespace: "knative-eventing",
+	DataPlaneConfigMapName:      "kafka-channel-channels-subscriptions",
+	GeneralConfigMapName:        "kafka-broker-config",
+	IngressName:                 "kafka-channel-ingress",
+	SystemNamespace:             "knative-eventing",
+	DataPlaneConfigFormat:       base.Json,
+}
+
 // TODO: tests with and without subscriptions
+// TODO: tests for things from config-kafka (partition count, etc)
+// TODO: are we setting a InitialOffsetsCommitted status?
+
 func TestReconcileKind(t *testing.T) {
 
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.IngressConditionSet)
 
-	configs := &config.Env{
-		SystemNamespace:      "cm",
-		GeneralConfigMapName: "cm",
-	}
+	env := *DefaultEnv
 	testKey := fmt.Sprintf("%s/%s", ChannelNamespace, ChannelName)
 
 	table := TableTest{
@@ -60,18 +131,19 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewChannel(),
 				NewService(),
-				ChannelReceiverPod(configs.SystemNamespace, map[string]string{
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				ChannelDispatcherPod(configs.SystemNamespace, map[string]string{
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
+				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -83,66 +155,68 @@ func TestReconcileKind(t *testing.T) {
 									Path: receiver.Path(ChannelNamespace, ChannelName),
 								},
 							},
-							Auth:      &contract.Resource_AbsentAuth{},
-							Reference: &contract.Reference{Namespace: ChannelNamespace, Name: ChannelName},
+							// TODO: do we need to set this?
+							//Auth:      &contract.Resource_AbsentAuth{},
+							// TODO: do we need to set this?
+							//Reference: &contract.Reference{Namespace: ChannelNamespace, Name: ChannelName},
 						},
 					},
 				}),
-				ChannelReceiverPodUpdate(configs.SystemNamespace, map[string]string{
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve":           "value_to_preserve",
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
-				ChannelDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve":           "value_to_preserve",
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
-			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(configs, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewChannel(
-					//ChannelConfigMapUpdatedReady(&configs),
-					//ChannelTopicsReady,
-					//ChannelDataPlaneAvailable,
-					//ChannelInitialOffsetsCommitted,
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(ChannelTopic()),
+						StatusDataPlaneAvailable,
+						//StatusInitialOffsetsCommitted,
+						ChannelAddressable(&env),
 					),
 				},
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
-				//patchFinalizers(),
+				patchFinalizers(),
 			},
 			WantEvents: []string{
-				//finalizerUpdatedEvent,
+				finalizerUpdatedEvent,
 			},
 		},
 	}
 
-	useTable(t, table, configs)
+	useTable(t, table, env)
 }
 
-func useTable(t *testing.T, table TableTest, configs *config.Env) {
-	table.Test(t, NewFactory(configs, func(ctx context.Context, listers *Listers, configs *config.Env, row *TableRow) controller.Reconciler {
-
-		var topicMetadata []*sarama.TopicMetadata
-		for _, t := range SourceTopics {
-			topicMetadata = append(topicMetadata, &sarama.TopicMetadata{Name: t, Partitions: []*sarama.PartitionMetadata{{}}})
-		}
+func useTable(t *testing.T, table TableTest, env config.Env) {
+	table.Test(t, NewFactory(&env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
 				PodLister:                   listers.GetPodLister(),
 				SecretLister:                listers.GetSecretLister(),
-				DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
-				SystemNamespace:             configs.SystemNamespace,
-				DispatcherLabel:             base.SourceDispatcherLabel,
+				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
+				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
+				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
+				SystemNamespace:             env.SystemNamespace,
+				DispatcherLabel:             base.ChannelDispatcherLabel,
+				ReceiverLabel:               base.ChannelReceiverLabel,
 			},
-			Env: configs,
+			Env:             env,
+			ConfigMapLister: listers.GetConfigMapLister(),
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
 			},
@@ -151,16 +225,20 @@ func useTable(t *testing.T, table TableTest, configs *config.Env) {
 			},
 			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
-					ExpectedTopicName:                      "",
-					ExpectedTopicDetail:                    sarama.TopicDetail{},
-					ErrorOnCreateTopic:                     nil,
-					ErrorOnDeleteTopic:                     nil,
-					ExpectedClose:                          false,
-					ExpectedCloseError:                     nil,
-					ExpectedTopics:                         SourceTopics,
-					ExpectedErrorOnDescribeTopics:          nil,
-					ExpectedTopicsMetadataOnDescribeTopics: topicMetadata,
-					T:                                      t,
+					ExpectedTopicName: ChannelTopic(),
+					// TODO: these are to be read from config-kafka and passed to the contract. fix the reconciler
+					ExpectedTopicDetail: sarama.TopicDetail{
+						NumPartitions:     1,
+						ReplicationFactor: 1,
+					},
+					// TODO: how much of these we need and want here?
+					ErrorOnCreateTopic:            nil,
+					ErrorOnDeleteTopic:            nil,
+					ExpectedClose:                 false,
+					ExpectedCloseError:            nil,
+					ExpectedErrorOnDescribeTopics: nil,
+					//ExpectedTopicsMetadataOnDescribeTopics: topicMetadata,
+					T: t,
 				}, nil
 			},
 		}
@@ -170,7 +248,7 @@ func useTable(t *testing.T, table TableTest, configs *config.Env) {
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))
 
-		r := eventingkafkachannelreconciler.NewReconciler(
+		r := messagingv1beta1kafkachannelreconciler.NewReconciler(
 			ctx,
 			logging.FromContext(ctx),
 			fakeeventingkafkaclient.Get(ctx),
@@ -180,4 +258,13 @@ func useTable(t *testing.T, table TableTest, configs *config.Env) {
 		)
 		return r
 	}))
+}
+
+func patchFinalizers() clientgotesting.PatchActionImpl {
+	action := clientgotesting.PatchActionImpl{}
+	action.Name = ChannelName
+	action.Namespace = ChannelNamespace
+	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
+	action.Patch = []byte(patch)
+	return action
 }

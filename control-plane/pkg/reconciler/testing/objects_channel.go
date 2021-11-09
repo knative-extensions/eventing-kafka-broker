@@ -18,16 +18,21 @@ package testing
 
 import (
 	"context"
+	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/network"
 )
 
 const (
@@ -119,4 +124,26 @@ func ChannelReceiverPodUpdate(namespace string, annotations map[string]string) c
 		namespace,
 		ChannelReceiverPod(namespace, annotations),
 	)
+}
+
+func ChannelAddressable(env *config.Env) func(obj duckv1.KRShaped) {
+
+	return func(obj duckv1.KRShaped) {
+		channel := obj.(*messagingv1beta1.KafkaChannel)
+
+		channel.Status.Address = &duckv1.Addressable{}
+
+		channel.Status.Address.URL = &apis.URL{
+			Scheme: "http",
+			Host:   network.GetServiceHostname(env.IngressName, env.SystemNamespace),
+			Path:   fmt.Sprintf("/%s/%s", channel.Namespace, channel.Name),
+		}
+
+		channel.GetConditionSet().Manage(&channel.Status).MarkTrue(base.ConditionAddressable)
+	}
+}
+
+func WithInitKafkaChannelConditions(obj duckv1.KRShaped) {
+	channel := obj.(*messagingv1beta1.KafkaChannel)
+	channel.Status.InitializeConditions()
 }
