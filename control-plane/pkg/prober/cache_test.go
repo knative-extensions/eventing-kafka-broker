@@ -31,7 +31,7 @@ func TestInMemoryLocalCache(t *testing.T) {
 	d := time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), d*2)
 	defer cancel()
-	c := NewInMemoryLocalCache(ctx, d)
+	c := NewLocalExpiringCache(ctx, d)
 	testCache(t, ctx, c, d)
 }
 

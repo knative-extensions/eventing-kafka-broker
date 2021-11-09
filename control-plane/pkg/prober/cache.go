@@ -41,13 +41,13 @@ type Cache interface {
 	GetStatus(key string) Status
 	// UpsertStatus add or updates the status associated with the given key.
 	// Once the given key expires the onExpired callback will be called passing the arg parameter.
-	UpsertStatus(key string, status Status, arg interface{}, onExpired ExpiredFunc)
+	UpsertStatus(key string, status Status, arg interface{}, onExpired ExpirationFunc)
 }
 
-// ExpiredFunc is a callback called once an entry in the cache is expired.
-type ExpiredFunc func(key string, arg interface{})
+// ExpirationFunc is a callback called once an entry in the cache is expired.
+type ExpirationFunc func(key string, arg interface{})
 
-type inMemoryLocalCache struct {
+type localExpiringCache struct {
 	// mu protects targets and entries
 	mu sync.RWMutex
 	// targets is a map of key-pointer to an element in the entries list.
@@ -56,7 +56,7 @@ type inMemoryLocalCache struct {
 	// This allows fast deletion of expired entries.
 	entries *list.List
 
-	expireDuration time.Duration
+	expiration time.Duration
 }
 
 type value struct {
@@ -64,22 +64,22 @@ type value struct {
 	lastUpsert time.Time
 	key        string
 	arg        interface{}
-	onExpired  ExpiredFunc
+	onExpired  ExpirationFunc
 }
 
-func NewInMemoryLocalCache(ctx context.Context, expireDuration time.Duration) Cache {
-	c := &inMemoryLocalCache{
-		mu:             sync.RWMutex{},
-		targets:        make(map[string]*list.Element, 64),
-		entries:        list.New().Init(),
-		expireDuration: expireDuration,
+func NewLocalExpiringCache(ctx context.Context, expiration time.Duration) Cache {
+	c := &localExpiringCache{
+		mu:         sync.RWMutex{},
+		targets:    make(map[string]*list.Element, 64),
+		entries:    list.New().Init(),
+		expiration: expiration,
 	}
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case <-time.After(expireDuration):
+			case <-time.After(expiration):
 				c.removeExpiredEntries(time.Now())
 			}
 		}
@@ -87,7 +87,7 @@ func NewInMemoryLocalCache(ctx context.Context, expireDuration time.Duration) Ca
 	return c
 }
 
-func (c *inMemoryLocalCache) GetStatus(key string) Status {
+func (c *localExpiringCache) GetStatus(key string) Status {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -100,7 +100,7 @@ func (c *inMemoryLocalCache) GetStatus(key string) Status {
 	return StatusUnknown
 }
 
-func (c *inMemoryLocalCache) UpsertStatus(key string, status Status, arg interface{}, onExpired ExpiredFunc) {
+func (c *localExpiringCache) UpsertStatus(key string, status Status, arg interface{}, onExpired ExpirationFunc) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -114,7 +114,7 @@ func (c *inMemoryLocalCache) UpsertStatus(key string, status Status, arg interfa
 	c.targets[key] = element
 }
 
-func (c *inMemoryLocalCache) removeExpiredEntries(now time.Time) {
+func (c *localExpiringCache) removeExpiredEntries(now time.Time) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -129,6 +129,6 @@ func (c *inMemoryLocalCache) removeExpiredEntries(now time.Time) {
 	}
 }
 
-func (c *inMemoryLocalCache) isExpired(v *value, now time.Time) bool {
-	return v.lastUpsert.Add(c.expireDuration).Before(now)
+func (c *localExpiringCache) isExpired(v *value, now time.Time) bool {
+	return v.lastUpsert.Add(c.expiration).Before(now)
 }
