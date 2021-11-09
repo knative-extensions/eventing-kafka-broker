@@ -73,7 +73,7 @@ public class UnorderedOffsetManagerBenchmark {
 
   @Benchmark
   public void benchmarkReverseOrder(RecordsState recordsState, Blackhole blackhole) {
-    OffsetManager offsetManager = new OffsetManager(Vertx.vertx(), new MockKafkaConsumer(), null, 10000L);
+    final OffsetManager offsetManager = new OffsetManager(Vertx.vertx(), new MockKafkaConsumer(), null, 10000L);
 
     int partitions = 100;
     for (int partition = 0; partition < partitions; partition++) {
