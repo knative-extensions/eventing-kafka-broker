@@ -36,7 +36,6 @@ import (
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	commonconfig "knative.dev/eventing-kafka/pkg/common/config"
 	"knative.dev/eventing-kafka/pkg/common/constants"
-	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
 	commonsarama "knative.dev/eventing-kafka/pkg/common/kafka/sarama"
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
@@ -68,6 +67,11 @@ type Reconciler struct {
 	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
 	NewKafkaClient kafka.NewClientFunc
+
+	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
+	// It's convenient to add this as Reconciler field so that we can mock the function used during the
+	// reconciliation loop.
+	InitOffsetsFunc kafka.InitOffsetsFunc
 
 	ConfigMapLister corelisters.ConfigMapLister
 }
@@ -439,7 +443,7 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messag
 
 	topicName := kafka.ChannelTopic(TopicPrefix, channel)
 	groupID := consumerGroup(channel, sub)
-	_, err := offset.InitOffsets(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID)
+	_, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID)
 	return err
 }
 

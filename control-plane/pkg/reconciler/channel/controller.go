@@ -23,6 +23,7 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
 
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	kafkachannelinformer "knative.dev/eventing-kafka/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
@@ -42,6 +43,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
+// TODO: no need for a configmap watcher?
 func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
 
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.IngressConditionSet)
@@ -62,6 +64,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		},
 		NewKafkaClient:             sarama.NewClient,
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
+		InitOffsetsFunc:            offset.InitOffsets,
 		Env:                        configs,
 		ConfigMapLister:            configmapInformer.Lister(),
 	}

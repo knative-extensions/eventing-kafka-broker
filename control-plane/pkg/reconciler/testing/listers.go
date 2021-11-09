@@ -28,8 +28,10 @@ import (
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 	"knative.dev/pkg/reconciler/testing"
 
+	eventingkafkachannels "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	eventingkafkasources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	fakeeventingkafkaclientset "knative.dev/eventing-kafka/pkg/client/clientset/versioned/fake"
+	eventingkafkachannelslisters "knative.dev/eventing-kafka/pkg/client/listers/messaging/v1beta1"
 	eventingkafkasourceslisters "knative.dev/eventing-kafka/pkg/client/listers/sources/v1beta1"
 
 	eventingkafkabroker "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
@@ -119,6 +121,10 @@ func (l *Listers) GetKafkaSinkLister() eventingkafkabrokerlisters.KafkaSinkListe
 
 func (l *Listers) GetKafkaSourceLister() eventingkafkasourceslisters.KafkaSourceLister {
 	return eventingkafkasourceslisters.NewKafkaSourceLister(l.indexerFor(&eventingkafkasources.KafkaSource{}))
+}
+
+func (l *Listers) GetKafkaChannelLister() eventingkafkachannelslisters.KafkaChannelLister {
+	return eventingkafkachannelslisters.NewKafkaChannelLister(l.indexerFor(&eventingkafkachannels.KafkaChannel{}))
 }
 
 func (l *Listers) indexerFor(obj runtime.Object) cache.Indexer {
