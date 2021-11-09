@@ -19,6 +19,7 @@ package source_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Shopify/sarama"
@@ -122,10 +123,10 @@ func TestReconcileKind(t *testing.T) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
-						SourceConfigMapUpdatedReady(&env),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -189,10 +190,10 @@ func TestReconcileKind(t *testing.T) {
 						WithCloudEventOverrides(&duckv1.CloudEventOverrides{
 							Extensions: map[string]string{"a": "foo", "b": "foo"},
 						}),
-						SourceConfigMapUpdatedReady(&env),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -250,10 +251,10 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: NewSource(
 						WithKeyType("string"),
-						SourceConfigMapUpdatedReady(&env),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -311,10 +312,10 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: NewSource(
 						WithKeyType("int"),
-						SourceConfigMapUpdatedReady(&env),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -372,10 +373,10 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: NewSource(
 						WithKeyType("byte-array"),
-						SourceConfigMapUpdatedReady(&env),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -433,10 +434,10 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: NewSource(
 						WithKeyType("float"),
-						SourceConfigMapUpdatedReady(&env),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
