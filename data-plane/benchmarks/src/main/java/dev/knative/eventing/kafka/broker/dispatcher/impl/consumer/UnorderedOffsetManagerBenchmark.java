@@ -19,6 +19,7 @@ import io.cloudevents.CloudEvent;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.kafka.client.common.PartitionInfo;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
@@ -27,11 +28,6 @@ import io.vertx.kafka.client.consumer.KafkaReadStream;
 import io.vertx.kafka.client.consumer.OffsetAndMetadata;
 import io.vertx.kafka.client.consumer.OffsetAndTimestamp;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -40,6 +36,12 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 public class UnorderedOffsetManagerBenchmark {
 
@@ -71,96 +73,70 @@ public class UnorderedOffsetManagerBenchmark {
 
   @Benchmark
   public void benchmarkReverseOrder(RecordsState recordsState, Blackhole blackhole) {
-    UnorderedOffsetManager offsetManager = new UnorderedOffsetManager(new MockKafkaConsumer(), null);
+    final OffsetManager offsetManager = new OffsetManager(Vertx.vertx(), new MockKafkaConsumer(), null, 10000L);
 
     int partitions = 100;
     for (int partition = 0; partition < partitions; partition++) {
-      blackhole.consume(
-        offsetManager.recordReceived(recordsState.records[partition][0])
-      );
+      offsetManager.recordReceived(recordsState.records[partition][0]);
     }
 
     for (int offset = 9_999; offset > 0; offset--) {
       for (int partition = 0; partition < partitions; partition++) {
-        blackhole.consume(
-          offsetManager.recordReceived(recordsState.records[partition][offset])
-        );
-        blackhole.consume(
-          offsetManager.successfullySentToSubscriber(recordsState.records[partition][offset])
-        );
+        offsetManager.recordReceived(recordsState.records[partition][offset]);
+        offsetManager.successfullySentToSubscriber(recordsState.records[partition][offset]);
       }
     }
 
     for (int partition = 0; partition < partitions; partition++) {
-      blackhole.consume(
-        offsetManager.successfullySentToSubscriber(recordsState.records[partition][0])
-      );
+      offsetManager.successfullySentToSubscriber(recordsState.records[partition][0]);
     }
   }
 
   @Benchmark
   public void benchmarkOrdered(RecordsState recordsState, Blackhole blackhole) {
-    UnorderedOffsetManager offsetManager = new UnorderedOffsetManager(new MockKafkaConsumer(), null);
+    OffsetManager offsetManager = new OffsetManager(Vertx.vertx(), new MockKafkaConsumer(), null, 10000L);
     int partitions = 100;
 
     for (int offset = 0; offset < 10_000; offset++) {
       for (int partition = 0; partition < partitions; partition++) {
-        blackhole.consume(
-          offsetManager.recordReceived(recordsState.records[partition][offset])
-        );
-        blackhole.consume(
-          offsetManager.successfullySentToSubscriber(recordsState.records[partition][offset])
-        );
+        offsetManager.recordReceived(recordsState.records[partition][offset]);
+        offsetManager.successfullySentToSubscriber(recordsState.records[partition][offset]);
       }
     }
   }
 
   @Benchmark
   public void benchmarkRealisticCase(RecordsState recordsState, Blackhole blackhole) {
-    UnorderedOffsetManager offsetManager = new UnorderedOffsetManager(new MockKafkaConsumer(), null);
+    OffsetManager offsetManager = new OffsetManager(Vertx.vertx(), new MockKafkaConsumer(), null, 10000L);
     int partitions = 10;
 
     for (int partition = 0; partition < partitions; partition++) {
-      blackhole.consume(
-        offsetManager.recordReceived(recordsState.records[partition][0])
-      );
+      offsetManager.recordReceived(recordsState.records[partition][0]);
     }
 
     for (int partition = 0; partition < partitions; partition++) {
-      for (int offset : new int[] {5, 2, 0, 7, 1, 3, 4, 6}) {
-        blackhole.consume(
-          offsetManager.successfullySentToSubscriber(recordsState.records[partition][offset])
-        );
+      for (int offset : new int[]{5, 2, 0, 7, 1, 3, 4, 6}) {
+        offsetManager.successfullySentToSubscriber(recordsState.records[partition][offset]);
       }
     }
   }
 
   @Benchmark
   public void benchmarkMixedABit(RecordsState recordsState, Blackhole blackhole) {
-    UnorderedOffsetManager offsetManager = new UnorderedOffsetManager(new MockKafkaConsumer(), null);
+    OffsetManager offsetManager = new OffsetManager(Vertx.vertx(), new MockKafkaConsumer(), null, 10000L);
     int partitions = 4;
 
     for (int partition = 0; partition < partitions; partition++) {
-      blackhole.consume(
-        offsetManager.recordReceived(recordsState.records[partition][0])
-      );
+      offsetManager.recordReceived(recordsState.records[partition][0]);
     }
 
     for (int i = 0; i < 120; i++) {
       // This will commit in the following order:
       // 1 0 3 2 5 4 ...
-      blackhole.consume(
-        offsetManager.successfullySentToSubscriber(recordsState.records[2][i % 2 == 0 ? i + 1 : i - 1])
-      );
-      blackhole.consume(
-        offsetManager.successfullySentToSubscriber(recordsState.records[1][i % 2 == 0 ? i + 1 : i - 1])
-      );
-      blackhole.consume(
-        offsetManager.successfullySentToSubscriber(recordsState.records[0][i % 2 == 0 ? i + 1 : i - 1])
-      );
-      blackhole.consume(
-        offsetManager.successfullySentToSubscriber(recordsState.records[3][i % 2 == 0 ? i + 1 : i - 1])
-      );
+      offsetManager.successfullySentToSubscriber(recordsState.records[2][i % 2 == 0 ? i + 1 : i - 1]);
+      offsetManager.successfullySentToSubscriber(recordsState.records[1][i % 2 == 0 ? i + 1 : i - 1]);
+      offsetManager.successfullySentToSubscriber(recordsState.records[0][i % 2 == 0 ? i + 1 : i - 1]);
+      offsetManager.successfullySentToSubscriber(recordsState.records[3][i % 2 == 0 ? i + 1 : i - 1]);
     }
   }
 
