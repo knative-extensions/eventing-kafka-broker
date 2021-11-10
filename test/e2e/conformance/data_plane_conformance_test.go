@@ -38,7 +38,7 @@ import (
 	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
-func TestBrokerIngressV1Beta1(t *testing.T) {
+func TestBrokerIngress(t *testing.T) {
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
 		// TODO re-use Eventing conformance test once it's runnable with non channel based brokers.
@@ -194,7 +194,7 @@ func TestBrokerIngressV1Beta1(t *testing.T) {
 	})
 }
 
-func TestBrokerConsumerV1Beta1(t *testing.T) {
+func TestBrokerConsumer(t *testing.T) {
 
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
