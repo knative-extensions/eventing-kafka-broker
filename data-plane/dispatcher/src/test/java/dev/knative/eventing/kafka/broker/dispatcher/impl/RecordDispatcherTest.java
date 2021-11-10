@@ -29,10 +29,11 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -236,14 +237,6 @@ public class RecordDispatcherTest {
   }
 
   public static RecordDispatcherListener offsetManagerMock() {
-    final RecordDispatcherListener recordDispatcherListener = mock(RecordDispatcherListener.class);
-
-    when(recordDispatcherListener.recordReceived(any())).thenReturn(Future.succeededFuture());
-    when(recordDispatcherListener.recordDiscarded(any())).thenReturn(Future.succeededFuture());
-    when(recordDispatcherListener.successfullySentToDeadLetterSink(any())).thenReturn(Future.succeededFuture());
-    when(recordDispatcherListener.successfullySentToSubscriber(any())).thenReturn(Future.succeededFuture());
-    when(recordDispatcherListener.failedToSendToDeadLetterSink(any(), any())).thenReturn(Future.succeededFuture());
-
-    return recordDispatcherListener;
+    return mock(RecordDispatcherListener.class);
   }
 }
