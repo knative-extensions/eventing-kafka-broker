@@ -19,6 +19,7 @@ package source_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Shopify/sarama"
@@ -117,15 +118,15 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
-						SourceConfigMapUpdatedReady(&env),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -181,7 +182,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -189,10 +190,10 @@ func TestReconcileKind(t *testing.T) {
 						WithCloudEventOverrides(&duckv1.CloudEventOverrides{
 							Extensions: map[string]string{"a": "foo", "b": "foo"},
 						}),
-						SourceConfigMapUpdatedReady(&env),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -244,16 +245,16 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
 						WithKeyType("string"),
-						SourceConfigMapUpdatedReady(&env),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -305,16 +306,16 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
 						WithKeyType("int"),
-						SourceConfigMapUpdatedReady(&env),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -366,16 +367,16 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
 						WithKeyType("byte-array"),
-						SourceConfigMapUpdatedReady(&env),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},
@@ -427,16 +428,16 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
 						WithKeyType("float"),
-						SourceConfigMapUpdatedReady(&env),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
-						InitialOffsetsCommitted,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
 					),
 				},
 			},

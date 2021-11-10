@@ -18,7 +18,6 @@ package testing
 
 import (
 	"fmt"
-	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -72,7 +71,7 @@ func NewDeletedBroker(options ...reconcilertesting.BrokerOption) runtime.Object 
 		append(
 			options,
 			func(broker *eventing.Broker) {
-				broker.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+				WithDeletedTimeStamp(broker)
 			},
 		)...,
 	)
@@ -169,43 +168,31 @@ func BrokerReady(broker *eventing.Broker) {
 	}
 }
 
-func BrokerConfigMapUpdatedReady(env *config.Env) func(broker *eventing.Broker) {
+func StatusBrokerConfigMapUpdatedReady(env *config.Env) func(broker *eventing.Broker) {
 	return func(broker *eventing.Broker) {
-		broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrueWithReason(
-			base.ConditionConfigMapUpdated,
-			fmt.Sprintf("Config map %s updated", env.DataPlaneConfigMapAsString()),
-			"",
-		)
+		StatusConfigMapUpdatedReady(env)(broker)
 	}
 }
 
-func BrokerTopicReady(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrueWithReason(
-		base.ConditionTopicReady,
-		fmt.Sprintf("Topic %s created", kafka.BrokerTopic(TopicPrefix, broker)),
-		"",
-	)
+func StatusBrokerTopicReady(broker *eventing.Broker) {
+	StatusTopicReadyWithName(kafka.BrokerTopic(TopicPrefix, broker))(broker)
 }
 
-func BrokerDataPlaneAvailable(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionDataPlaneAvailable)
+func StatusBrokerDataPlaneAvailable(broker *eventing.Broker) {
+	StatusDataPlaneAvailable(broker)
 }
 
-func BrokerDataPlaneNotAvailable(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
-		base.ConditionDataPlaneAvailable,
-		base.ReasonDataPlaneNotAvailable,
-		base.MessageDataPlaneNotAvailable,
-	)
+func StatusBrokerDataPlaneNotAvailable(broker *eventing.Broker) {
+	StatusDataPlaneNotAvailable(broker)
 }
 
-func BrokerConfigParsed(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionConfigParsed)
+func StatusBrokerConfigParsed(broker *eventing.Broker) {
+	StatusConfigParsed(broker)
 }
 
-func BrokerConfigNotParsed(reason string) func(broker *eventing.Broker) {
+func StatusBrokerConfigNotParsed(reason string) func(broker *eventing.Broker) {
 	return func(broker *eventing.Broker) {
-		broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(base.ConditionConfigParsed, reason, "")
+		StatusConfigNotParsed(broker, reason)
 	}
 }
 
@@ -229,30 +216,9 @@ func BrokerDLSResolved(uri string) func(broker *eventing.Broker) {
 	}
 }
 
-func BrokerFailedToCreateTopic(broker *eventing.Broker) {
+func StatusBrokerFailedToCreateTopic(broker *eventing.Broker) {
 
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
-		base.ConditionTopicReady,
-		fmt.Sprintf("Failed to create topic: %s", BrokerTopic()),
-		"%v",
-		fmt.Errorf("failed to create topic"),
-	)
-
-}
-
-func BrokerFailedToGetConfigMap(env *config.Env) func(broker *eventing.Broker) {
-
-	return func(broker *eventing.Broker) {
-
-		broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
-			base.ConditionConfigMapUpdated,
-			fmt.Sprintf(
-				"Failed to get ConfigMap: %s",
-				env.DataPlaneConfigMapAsString(),
-			),
-			`configmaps "knative-eventing" not found`,
-		)
-	}
+	StatusFailedToCreateTopic(BrokerTopic())(broker)
 
 }
 

@@ -28,7 +28,7 @@ public interface RecordDispatcherListener {
    *
    * @param record record received.
    */
-  Future<Void> recordReceived(KafkaConsumerRecord<?, ?> record);
+  void recordReceived(KafkaConsumerRecord<?, ?> record);
 
   /**
    * The given record cannot be delivered to dead letter sink.
@@ -36,26 +36,26 @@ public interface RecordDispatcherListener {
    * @param record record undeliverable to dead letter sink.
    * @param ex     exception occurred.
    */
-  Future<Void> failedToSendToDeadLetterSink(KafkaConsumerRecord<?, ?> record, Throwable ex);
+  void failedToSendToDeadLetterSink(KafkaConsumerRecord<?, ?> record, Throwable ex);
 
   /**
    * The given event doesn't pass the filter.
    *
    * @param record record discarded.
    */
-  Future<Void> recordDiscarded(KafkaConsumerRecord<?, ?> record);
+  void recordDiscarded(KafkaConsumerRecord<?, ?> record);
 
   /**
    * The given record has been successfully sent to subscriber.
    *
    * @param record record sent to subscriber.
    */
-  Future<Void> successfullySentToSubscriber(KafkaConsumerRecord<?, ?> record);
+  void successfullySentToSubscriber(KafkaConsumerRecord<?, ?> record);
 
   /**
    * The given record has been successfully sent to dead letter sink.
    *
    * @param record record sent to dead letter sink.
    */
-  Future<Void> successfullySentToDeadLetterSink(KafkaConsumerRecord<?, ?> record);
+  void successfullySentToDeadLetterSink(KafkaConsumerRecord<?, ?> record);
 }

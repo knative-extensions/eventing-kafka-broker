@@ -20,14 +20,11 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
-import dev.knative.eventing.kafka.broker.core.security.Credentials;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
-import dev.knative.eventing.kafka.broker.core.security.PlaintextCredentials;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
-import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.KafkaResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
@@ -37,10 +34,9 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.BaseConsumerVe
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventOverridesMutator;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedOffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedOffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.cloudevents.CloudEvent;
@@ -49,7 +45,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.tracing.TracingPolicy;
@@ -72,7 +67,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -178,6 +172,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
           Filter.noop();
 
         final var responseHandler = getNoopResponseHandlerOrDefault(egress, () -> getKafkaResponseHandler(vertx, producerConfigs, resource));
+        final var commitIntervalMs = Integer.parseInt(String.valueOf(consumerConfigs.get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG)));
 
         final var recordDispatcher = new RecordDispatcherMutatorChain(
           new RecordDispatcherImpl(
@@ -185,7 +180,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
             egressSubscriberSender,
             egressDeadLetterSender,
             responseHandler,
-            getOffsetManager(deliveryOrder, consumer, eventsSentCounter::increment),
+            new OffsetManager(vertx, consumer, eventsSentCounter::increment, commitIntervalMs),
             ConsumerTracer.create(
               ((VertxInternal) vertx).tracer(),
               new KafkaClientOptions()
@@ -303,14 +298,6 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
   private static boolean hasDeadLetterSink(final EgressConfig egressConfig) {
     return !(egressConfig == null || egressConfig.getDeadLetter().isEmpty());
-  }
-
-  private static RecordDispatcherListener getOffsetManager(final DeliveryOrder type, final KafkaConsumer<?, ?> consumer,
-                                                           Consumer<Integer> commitHandler) {
-    return switch (type) {
-      case ORDERED -> new OrderedOffsetManager(consumer, commitHandler);
-      case UNORDERED -> new UnorderedOffsetManager(consumer, commitHandler);
-    };
   }
 
   private static AbstractVerticle getConsumerVerticle(final DeliveryOrder type,
