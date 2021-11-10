@@ -93,9 +93,6 @@ channel:
 }
 
 const (
-	//TODO: remove
-	ExpectedTopicDetail = "expectedTopicDetail"
-
 	finalizerName = "kafkachannels.messaging.knative.dev"
 )
 
@@ -115,7 +112,7 @@ var DefaultEnv = &config.Env{
 }
 
 // TODO: tests with and without subscriptions
-// TODO: tests for things from config-kafka (partition count, etc)
+// TODO: tests for things from config-kafka
 // TODO: are we setting a InitialOffsetsCommitted status?
 
 func TestReconcileKind(t *testing.T) {
@@ -222,7 +219,6 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName: ChannelTopic(),
-					// TODO: these are to be read from config-kafka and passed to the contract. fix the reconciler
 					ExpectedTopicDetail: sarama.TopicDetail{
 						NumPartitions:     1,
 						ReplicationFactor: 1,
