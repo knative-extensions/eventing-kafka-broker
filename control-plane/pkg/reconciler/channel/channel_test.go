@@ -22,21 +22,12 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
-	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
-	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
-	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
-	fakeeventingkafkaclient "knative.dev/eventing-kafka/pkg/client/injection/client/fake"
-	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
-	"knative.dev/eventing-kafka/pkg/common/constants"
+
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -44,6 +35,19 @@ import (
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
 	"knative.dev/pkg/tracker"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
+	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
+	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
+
+	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
+	fakeeventingkafkaclient "knative.dev/eventing-kafka/pkg/client/injection/client/fake"
+	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+	"knative.dev/eventing-kafka/pkg/common/constants"
 )
 
 var configKafka = map[string]string{
