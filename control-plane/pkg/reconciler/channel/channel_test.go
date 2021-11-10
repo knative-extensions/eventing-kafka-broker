@@ -100,6 +100,7 @@ var DefaultEnv = &config.Env{
 // TODO: tests with and without subscriptions
 // TODO: tests for things from config-kafka
 // TODO: are we setting a InitialOffsetsCommitted status?
+// TODO: test if things from spec is used properly?
 
 func TestReconcileKind(t *testing.T) {
 
