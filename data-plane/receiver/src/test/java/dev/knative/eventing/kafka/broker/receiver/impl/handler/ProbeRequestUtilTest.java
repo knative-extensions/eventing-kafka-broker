@@ -20,9 +20,9 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import org.junit.jupiter.api.Test;
 
-import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeRequestUtil.PROBE_HEADER_NAME;
-import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeRequestUtil.PROBE_HEADER_VALUE;
-import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeRequestUtil.isProbeRequest;
+import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil.PROBE_HEADER_NAME;
+import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil.PROBE_HEADER_VALUE;
+import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil.isControlPlaneProbeRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -37,7 +37,7 @@ public class ProbeRequestUtilTest {
     when(request.method()).thenReturn(HttpMethod.GET);
     when(request.headers()).thenReturn(headers);
 
-    assertThat(isProbeRequest(request)).isTrue();
+    assertThat(isControlPlaneProbeRequest(request)).isTrue();
   }
 
   @Test
@@ -48,7 +48,7 @@ public class ProbeRequestUtilTest {
     when(request.method()).thenReturn(HttpMethod.GET);
     when(request.headers()).thenReturn(headers);
 
-    assertThat(isProbeRequest(request)).isFalse();
+    assertThat(isControlPlaneProbeRequest(request)).isFalse();
   }
 
   @Test
@@ -58,7 +58,7 @@ public class ProbeRequestUtilTest {
     when(request.method()).thenReturn(HttpMethod.GET);
     when(request.headers()).thenReturn(headers);
 
-    assertThat(isProbeRequest(request)).isFalse();
+    assertThat(isControlPlaneProbeRequest(request)).isFalse();
   }
 
   @Test
@@ -68,6 +68,6 @@ public class ProbeRequestUtilTest {
     when(request.method()).thenReturn(HttpMethod.POST);
     when(request.headers()).thenReturn(headers);
 
-    assertThat(isProbeRequest(request)).isFalse();
+    assertThat(isControlPlaneProbeRequest(request)).isFalse();
   }
 }

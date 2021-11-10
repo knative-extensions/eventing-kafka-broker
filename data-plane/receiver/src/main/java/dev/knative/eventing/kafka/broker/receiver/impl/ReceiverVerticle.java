@@ -37,8 +37,8 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeRequestUtil.PROBE_HASH_HEADER_NAME;
-import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeRequestUtil.isProbeRequest;
+import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil.PROBE_HASH_HEADER_NAME;
+import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil.isControlPlaneProbeRequest;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
@@ -125,7 +125,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
       return;
     }
 
-    if (isProbeRequest(request)) {
+    if (isControlPlaneProbeRequest(request)) {
       request.response()
         .putHeader(PROBE_HASH_HEADER_NAME, request.getHeader(PROBE_HASH_HEADER_NAME))
         .setStatusCode(OK.code()).end();

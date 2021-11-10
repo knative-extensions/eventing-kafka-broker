@@ -26,7 +26,7 @@ import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcile
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
-import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeRequestUtil;
+import dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
@@ -371,7 +371,7 @@ public class ReceiverVerticleTest {
     final CloudEvent event) {
     return request -> request
       .method(HttpMethod.GET)
-      .putHeader(ProbeRequestUtil.PROBE_HEADER_NAME, ProbeRequestUtil.PROBE_HEADER_VALUE)
+      .putHeader(ControlPlaneProbeRequestUtil.PROBE_HEADER_NAME, ControlPlaneProbeRequestUtil.PROBE_HEADER_VALUE)
       .send();
   }
 

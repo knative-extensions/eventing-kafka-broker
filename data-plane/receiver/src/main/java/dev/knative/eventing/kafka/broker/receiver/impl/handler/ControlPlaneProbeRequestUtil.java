@@ -18,15 +18,24 @@ package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 
-public class ProbeRequestUtil {
+public final class ControlPlaneProbeRequestUtil {
 
+  private ControlPlaneProbeRequestUtil() {
+  }
+
+  // Control plane probing is based on the Knative Networking Data Plane Contract.
+  // For a description of what these headers are see [1].
+  //
+  // [1]: https://github.com/knative/pkg/blob/b558677ab03404ed118ba3e179a7438fe2d8509a/network/network.go#L38-L51
   public static final String PROBE_HEADER_NAME = "K-Network-Probe";
-
   public static final String PROBE_HEADER_VALUE = "probe";
-
   public static final String PROBE_HASH_HEADER_NAME = "K-Network-Hash";
 
-  public static boolean isProbeRequest(final HttpServerRequest request) {
+  /**
+   * @param request HTTP request
+   * @return true if the provided request conforms to the Knative Networking Data Plane Contract, false otherwise.
+   */
+  public static boolean isControlPlaneProbeRequest(final HttpServerRequest request) {
     final var headers = request.headers();
     return HttpMethod.GET.equals(request.method()) &&
       headers.contains(PROBE_HEADER_NAME) &&
