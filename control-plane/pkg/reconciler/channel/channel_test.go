@@ -155,10 +155,6 @@ func TestReconcileKind(t *testing.T) {
 									Path: receiver.Path(ChannelNamespace, ChannelName),
 								},
 							},
-							// TODO: do we need to set this?
-							//Auth:      &contract.Resource_AbsentAuth{},
-							// TODO: do we need to set this?
-							//Reference: &contract.Reference{Namespace: ChannelNamespace, Name: ChannelName},
 						},
 					},
 				}),
@@ -231,13 +227,6 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 						NumPartitions:     1,
 						ReplicationFactor: 1,
 					},
-					// TODO: how much of these we need and want here?
-					ErrorOnCreateTopic:            nil,
-					ErrorOnDeleteTopic:            nil,
-					ExpectedClose:                 false,
-					ExpectedCloseError:            nil,
-					ExpectedErrorOnDescribeTopics: nil,
-					//ExpectedTopicsMetadataOnDescribeTopics: topicMetadata,
 					T: t,
 				}, nil
 			},
