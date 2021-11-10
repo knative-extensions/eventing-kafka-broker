@@ -26,6 +26,7 @@ import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcile
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
+import dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
@@ -36,6 +37,7 @@ import io.micrometer.core.instrument.cumulative.CumulativeCounter;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
@@ -65,6 +67,7 @@ import java.util.function.Function;
 import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -329,6 +332,32 @@ public class ReceiverVerticleTest {
           .addTopics("topic-name-42")
           .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name5"))
           .build()
+      ),
+      new TestCase(
+        new ProducerRecord<>(
+          "topic-name-42",
+          null,
+          null
+        ),
+        "/broker-ns/broker-name5",
+        probeRequestSender(null),
+        OK.code(),
+        DataPlaneContract.Resource.newBuilder()
+          .setUid("1")
+          .addTopics("topic-name-42")
+          .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name5"))
+          .build()
+      ),
+      new TestCase(
+        new ProducerRecord<>(
+          "topic-name-42",
+          null,
+          null
+        ),
+        "/broker-ns/broker-name5",
+        probeRequestSender(null),
+        NOT_FOUND.code(),
+        DataPlaneContract.Resource.newBuilder().build()
       )
     );
   }
@@ -336,6 +365,14 @@ public class ReceiverVerticleTest {
   private static Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> ceRequestSender(
     final CloudEvent event) {
     return request -> VertxMessageFactory.createWriter(request).writeBinary(event);
+  }
+
+  private static Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> probeRequestSender(
+    final CloudEvent event) {
+    return request -> request
+      .method(HttpMethod.GET)
+      .putHeader(ControlPlaneProbeRequestUtil.PROBE_HEADER_NAME, ControlPlaneProbeRequestUtil.PROBE_HEADER_VALUE)
+      .send();
   }
 
   static final class TestCase {

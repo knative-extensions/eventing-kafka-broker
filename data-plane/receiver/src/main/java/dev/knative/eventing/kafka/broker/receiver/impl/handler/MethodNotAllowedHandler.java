@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil.isControlPlaneProbeRequest;
 import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
 
 /**
@@ -41,14 +42,11 @@ public class MethodNotAllowedHandler implements Handler<HttpServerRequest> {
 
   @Override
   public void handle(final HttpServerRequest request) {
-    if (request.method() != HttpMethod.POST) {
-      request.response().setStatusCode(METHOD_NOT_ALLOWED.code()).end();
-
-      logger.warn("Only POST method is allowed. Method not allowed: {}",
-        keyValue("method", request.method())
-      );
+    if (HttpMethod.POST.equals(request.method()) || isControlPlaneProbeRequest(request)) {
+      this.next.handle(request);
       return;
     }
-    this.next.handle(request);
+    request.response().setStatusCode(METHOD_NOT_ALLOWED.code()).end();
+    logger.warn("Method not allowed: {}", keyValue("method", request.method()));
   }
 }
