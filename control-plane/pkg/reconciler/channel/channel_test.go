@@ -50,6 +50,7 @@ import (
 	"knative.dev/eventing-kafka/pkg/common/constants"
 )
 
+// TODO: are we using all of these?
 var configKafka = map[string]string{
 	"version": "1.0.0",
 	"sarama": `
@@ -68,31 +69,12 @@ config: |
       Version: 1
   Metadata:
     RefreshFrequency: 300000000000  # 5 minutes
-  Consumer:
-    Offsets:
-      AutoCommit:
-      Interval: 5000000000  # 5 seconds
-      Retention: 604800000000000  # 1 week
-  Producer:
-    Idempotent: true  # Must be false for Azure EventHubs
-    RequiredAcks: -1  # -1 = WaitForAll, Most stringent option for "at-least-once" delivery.
 `,
 	"eventing-kafka": `
-cloudevents:
-   maxIdleConns: 1000
-   maxIdleConnsPerHost: 100
 kafka:
   authSecretName: kafka-cluster
   authSecretNamespace: knative-eventing
   brokers: kafka:9092
-channel:
-  adminType: kafka # One of "kafka", "azure", "custom"
-  dispatcher:
-    cpuRequest: 100m
-    memoryRequest: 50Mi
-  receiver:
-    cpuRequest: 100m
-    memoryRequest: 50Mi
 `,
 }
 
