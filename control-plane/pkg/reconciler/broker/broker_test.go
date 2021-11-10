@@ -116,7 +116,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - no DLS",
 			Objects: []runtime.Object{
 				NewBroker(),
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 				NewService(),
 				BrokerReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
@@ -345,7 +345,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&env, &contract.Contract{
@@ -392,7 +392,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - config map not readable",
 			Objects: []runtime.Object{
 				NewBroker(),
-				NewConfigMap(&env, []byte(`{"hello": "world"}`)),
+				NewConfigMapWithBinaryData(&env, []byte(`{"hello": "world"}`)),
 				NewService(),
 				BrokerReceiverPod(env.SystemNamespace, nil),
 				BrokerDispatcherPod(env.SystemNamespace, map[string]string{
@@ -887,7 +887,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				),
 				BrokerConfig(bootstrapServers, 20, 5),
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 				NewService(),
 				BrokerReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
@@ -959,7 +959,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				),
 				NewSSLSecret(ConfigMapNamespace, "secret-1"),
 				BrokerConfig(bootstrapServers, 20, 5, BrokerAuthConfig("secret-1")),
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 				NewService(),
 				BrokerReceiverPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
@@ -1741,7 +1741,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			},
 			Key: testKey,
 			WantCreates: []runtime.Object{
-				NewConfigMap(&env, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			OtherTestData: map[string]interface{}{

@@ -23,31 +23,35 @@ import (
 	"strings"
 
 	"github.com/Shopify/sarama"
+
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
-	commonconfig "knative.dev/eventing-kafka/pkg/common/config"
-	"knative.dev/eventing-kafka/pkg/common/constants"
-	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
-	commonsarama "knative.dev/eventing-kafka/pkg/common/kafka/sarama"
-	v1 "knative.dev/eventing/pkg/apis/duck/v1"
+
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
 
+	v1 "knative.dev/eventing/pkg/apis/duck/v1"
+
+	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
+	commonconfig "knative.dev/eventing-kafka/pkg/common/config"
+	"knative.dev/eventing-kafka/pkg/common/constants"
+	commonsarama "knative.dev/eventing-kafka/pkg/common/kafka/sarama"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 const (
@@ -68,6 +72,11 @@ type Reconciler struct {
 	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
 	NewKafkaClient kafka.NewClientFunc
+
+	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
+	// It's convenient to add this as Reconciler field so that we can mock the function used during the
+	// reconciliation loop.
+	InitOffsetsFunc kafka.InitOffsetsFunc
 
 	ConfigMapLister corelisters.ConfigMapLister
 }
@@ -439,7 +448,7 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messag
 
 	topicName := kafka.ChannelTopic(TopicPrefix, channel)
 	groupID := consumerGroup(channel, sub)
-	_, err := offset.InitOffsets(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID)
+	_, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID)
 	return err
 }
 
