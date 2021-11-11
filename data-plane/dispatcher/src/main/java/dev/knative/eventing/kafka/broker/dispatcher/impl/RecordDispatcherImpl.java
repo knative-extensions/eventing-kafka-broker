@@ -81,7 +81,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     this.subscriberSender = composeSenderAndSinkHandler(subscriberSender, responseHandler, "subscriber");
     this.dlsSender = composeSenderAndSinkHandler(deadLetterSinkSender, responseHandler, "dead letter sink");
     this.recordDispatcherListener = recordDispatcherListener;
-    this.closeable = AsyncCloseable.compose(responseHandler, deadLetterSinkSender, subscriberSender);
+    this.closeable = AsyncCloseable.compose(responseHandler, deadLetterSinkSender, subscriberSender, recordDispatcherListener);
     this.consumerTracer = consumerTracer;
   }
 

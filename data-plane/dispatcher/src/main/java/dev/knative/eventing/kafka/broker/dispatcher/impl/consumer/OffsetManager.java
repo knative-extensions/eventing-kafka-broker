@@ -16,6 +16,8 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
@@ -30,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * This class implements the offset strategy that makes sure that, even unordered, the offset commit is ordered.
@@ -60,7 +63,7 @@ public final class OffsetManager implements RecordDispatcherListener {
     this.offsetTrackers = new HashMap<>();
     this.onCommit = onCommit;
 
-    vertx.setPeriodic(commitIntervalMs, l -> this.offsetTrackers.forEach(this::commit));
+    vertx.setPeriodic(commitIntervalMs, l -> commitAll());
   }
 
   /**
@@ -115,7 +118,7 @@ public final class OffsetManager implements RecordDispatcherListener {
       .recordNewOffset(record.offset());
   }
 
-  private synchronized void commit(final TopicPartition topicPartition, final OffsetTracker tracker) {
+  private synchronized Future<Void> commit(final TopicPartition topicPartition, final OffsetTracker tracker) {
     long newOffset = tracker.offsetToCommit();
     if (newOffset > tracker.getCommitted()) {
       // Reset the state
@@ -124,7 +127,7 @@ public final class OffsetManager implements RecordDispatcherListener {
       logger.debug("Committing offset for {} offset {}", topicPartition, newOffset);
 
       // Execute the actual commit
-      consumer.commit(Map.of(topicPartition, new OffsetAndMetadata(newOffset, "")))
+      return consumer.commit(Map.of(topicPartition, new OffsetAndMetadata(newOffset, "")))
         .onSuccess(ignored -> {
           if (onCommit != null) {
             onCommit.accept((int) newOffset);
@@ -133,6 +136,22 @@ public final class OffsetManager implements RecordDispatcherListener {
         .onFailure(cause -> logger.error("failed to commit topic partition {} offset {}", topicPartition, newOffset, cause))
         .mapEmpty();
     }
+    return null;
+  }
+
+  private Future<Void> commitAll() {
+    return CompositeFuture.all(
+      this.offsetTrackers.entrySet()
+        .stream()
+        .map(e -> commit(e.getKey(), e.getValue()))
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList())
+    ).mapEmpty();
+  }
+
+  @Override
+  public Future<Void> close() {
+    return commitAll();
   }
 
   /**
