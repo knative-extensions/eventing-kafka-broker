@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -123,5 +124,30 @@ func SourceDispatcherPod(namespace string, annotations map[string]string) runtim
 		Status: corev1.PodStatus{
 			Phase: corev1.PodRunning,
 		},
+	}
+}
+
+func InitSourceConditions(obj duckv1.KRShaped) {
+	sink := obj.(*sources.KafkaSource)
+	sink.Status.InitializeConditions()
+}
+
+func StatusSourceSinkResolved(uri string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.Status.SinkURI, _ = apis.ParseURL(uri)
+		ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(sources.KafkaConditionSinkProvided)
+	}
+}
+
+func StatusSourceSinkNotResolved(err string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.Status.SinkURI = nil
+		ks.GetConditionSet().Manage(ks.GetStatus()).MarkFalse(
+			sources.KafkaConditionSinkProvided,
+			"FailedToResolveSink",
+			err,
+		)
 	}
 }
