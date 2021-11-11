@@ -139,6 +139,11 @@ public final class OffsetManager implements RecordDispatcherListener {
     return null;
   }
 
+  /**
+   * Commit all tracked offsets by colling commit on every offsetTracker entry.
+   *
+   * @return succeeded or failed future.
+   */
   private Future<Void> commitAll() {
     return CompositeFuture.all(
       this.offsetTrackers.entrySet()
