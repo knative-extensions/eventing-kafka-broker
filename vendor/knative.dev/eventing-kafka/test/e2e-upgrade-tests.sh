@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Copyright 2021 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,17 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-data:
-  version: 1.0.0
-  # eventing-kafka.kafka.brokers: Replace this with the URLs for your kafka cluster,
-  #   which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
-  # eventing-kafka.kafka.authSecretName: name-of-your-secret-for-kafka-auth
-  # eventing-kafka.kafka.authSecretNamespace: namespace-of-your-secret-for-kafka-auth
-  eventing-kafka: |
-    kafka:
-      brokers: my-cluster-kafka-bootstrap.kafka:9092
-kind: ConfigMap
-metadata:
-  name: config-kafka
-  namespace: knative-eventing
+# Docs -> file://./upgrade/README.md
+
+export GO111MODULE=on
+
+# shellcheck disable=SC1090
+source "$(dirname "${BASH_SOURCE[0]}")/e2e-common.sh"
+
+initialize "$@" --skip-istio-addon
+
+set -Eeuo pipefail
+
+TIMEOUT=${TIMEOUT:-60m}
+GO_TEST_VERBOSITY="${GO_TEST_VERBOSITY:-standard-verbose}"
+
+go_test_e2e -v \
+  -tags=upgrade \
+  -timeout="${TIMEOUT}" \
+  ./test/upgrade \
+  || fail_test
+
+success
