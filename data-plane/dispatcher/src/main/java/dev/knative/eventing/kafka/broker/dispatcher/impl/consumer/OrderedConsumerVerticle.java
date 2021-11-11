@@ -111,6 +111,9 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   }
 
   void recordsHandler(KafkaConsumerRecords<String, CloudEvent> records) {
+    if (records == null) {
+      return;
+    }
     // Put records in queues
     // I assume the records are ordered per topic-partition
     for (int i = 0; i < records.size(); i++) {
