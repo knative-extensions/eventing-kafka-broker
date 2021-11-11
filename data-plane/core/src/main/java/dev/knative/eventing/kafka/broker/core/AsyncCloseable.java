@@ -21,6 +21,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -54,7 +55,10 @@ public interface AsyncCloseable extends Closeable {
   }
 
   /**
-   * Compose several {@link AsyncCloseable} into a single {@link AsyncCloseable}. One close failure will cause the whole close to fail.
+   * Compose several {@link AsyncCloseable}s into a single {@link AsyncCloseable}.
+   * One close failure will cause the whole close to fail.
+   * <p>
+   * It filters null futures returned by individual {@link AsyncCloseable} on close.
    *
    * @param closeables the closeables to compose
    * @return the composed closeables
