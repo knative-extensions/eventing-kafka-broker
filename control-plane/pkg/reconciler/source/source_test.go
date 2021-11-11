@@ -28,12 +28,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -127,6 +128,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
 						StatusDataPlaneAvailable,
 						StatusInitialOffsetsCommitted,
+						StatusSourceSinkResolved(ServiceURL),
 					),
 				},
 			},
@@ -194,6 +196,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
 						StatusDataPlaneAvailable,
 						StatusInitialOffsetsCommitted,
+						StatusSourceSinkResolved(ServiceURL),
 					),
 				},
 			},
@@ -255,6 +258,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
 						StatusDataPlaneAvailable,
 						StatusInitialOffsetsCommitted,
+						StatusSourceSinkResolved(ServiceURL),
 					),
 				},
 			},
@@ -316,6 +320,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
 						StatusDataPlaneAvailable,
 						StatusInitialOffsetsCommitted,
+						StatusSourceSinkResolved(ServiceURL),
 					),
 				},
 			},
@@ -377,6 +382,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
 						StatusDataPlaneAvailable,
 						StatusInitialOffsetsCommitted,
+						StatusSourceSinkResolved(ServiceURL),
 					),
 				},
 			},
@@ -438,6 +444,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
 						StatusDataPlaneAvailable,
 						StatusInitialOffsetsCommitted,
+						StatusSourceSinkResolved(ServiceURL),
 					),
 				},
 			},
@@ -447,6 +454,36 @@ func TestReconcileKind(t *testing.T) {
 			WantEvents: []string{
 				finalizerUpdatedEvent,
 			},
+		},
+		{
+			Name: "Reconciled failed - no sink",
+			Objects: []runtime.Object{
+				NewSource(),
+				SourceDispatcherPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key:                     testKey,
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						InitSourceConditions,
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
+						StatusSourceSinkNotResolved("failed to resolve destination: services \"test-service\" not found"),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				"Warning InternalError failed to resolve sink: failed to resolve destination: services \"test-service\" not found",
+			},
+			WantErr: true,
 		},
 	}
 

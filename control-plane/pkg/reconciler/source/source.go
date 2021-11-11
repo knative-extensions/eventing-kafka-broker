@@ -145,6 +145,12 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		}
 	}
 	statusConditionManager.InitialOffsetsCommitted()
+	// Get resource configuration.
+	resource, err := r.reconcileKafkaSourceResource(ctx, ks, authContext.MultiSecretReference)
+	if err != nil {
+		return statusConditionManager.FailedToResolveSink(err)
+	}
+	statusConditionManager.SinkResolved()
 
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
@@ -161,12 +167,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 	}
 
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
-
-	// Get resource configuration.
-	resource, err := r.reconcileKafkaSourceResource(ctx, ks, authContext.MultiSecretReference)
-	if err != nil {
-		return statusConditionManager.FailedToGetConfig(err)
-	}
 
 	sourceIndex := coreconfig.FindResource(ct, ks.GetUID())
 	// Update contract data with the new contract configuration
@@ -261,8 +261,10 @@ func (r *Reconciler) reconcileKafkaSourceResource(ctx context.Context, ks *sourc
 	}
 	destination, err := r.Resolver.URIFromDestinationV1(ctx, destinationSpec, ks)
 	if err != nil {
+		ks.Status.SinkURI = nil
 		return nil, fmt.Errorf("failed to resolve destination: %w", err)
 	}
+	ks.Status.SinkURI = destination
 
 	egressConfig := proto.Clone(&DefaultEgressConfig).(*contract.EgressConfig)
 

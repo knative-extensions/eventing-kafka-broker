@@ -28,6 +28,8 @@ import (
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 )
 
@@ -53,6 +55,7 @@ var EgressConditionSet = apis.NewLivingConditionSet(
 	ConditionTopicReady,
 	ConditionConfigMapUpdated,
 	ConditionInitialOffsetsCommitted,
+	sources.KafkaConditionSinkProvided,
 )
 
 const (
@@ -265,4 +268,17 @@ func (manager *StatusConditionManager) InitialOffsetNotCommitted(err error) erro
 
 func (manager *StatusConditionManager) InitialOffsetsCommitted() {
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrue(ConditionInitialOffsetsCommitted)
+}
+
+func (manager *StatusConditionManager) SinkResolved() {
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrue(sources.KafkaConditionSinkProvided)
+}
+
+func (manager *StatusConditionManager) FailedToResolveSink(err error) error {
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
+		sources.KafkaConditionSinkProvided,
+		"FailedToResolveSink",
+		err.Error(),
+	)
+	return fmt.Errorf("failed to resolve sink: %w", err)
 }
