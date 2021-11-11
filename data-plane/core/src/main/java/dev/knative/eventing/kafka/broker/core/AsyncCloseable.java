@@ -22,6 +22,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -61,7 +62,9 @@ public interface AsyncCloseable extends Closeable {
   static AsyncCloseable compose(AsyncCloseable... closeables) {
     return () -> CompositeFuture.all(
       Arrays.stream(closeables)
+        .filter(Objects::nonNull)
         .map(AsyncCloseable::close)
+        .filter(Objects::nonNull)
         .collect(Collectors.toList())
     ).mapEmpty();
   }
