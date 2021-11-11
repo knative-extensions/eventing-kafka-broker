@@ -456,6 +456,7 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 	egress := &contract.Egress{
 		Destination:   subscriber.SubscriberURI.String(),
 		ConsumerGroup: consumerGroup(channel, subscriber),
+		DeliveryOrder: contract.DeliveryOrder_ORDERED,
 		Uid:           string(subscriber.UID),
 	}
 
