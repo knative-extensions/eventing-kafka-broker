@@ -100,13 +100,15 @@ public abstract class AbstractOffsetManagerTest {
       .when(vertxConsumer)
       .commit(any(Map.class));
 
-    testExecutor.accept(createOffsetManager(Vertx.vertx(), vertxConsumer), failureFlag);
+    final var offsetManager = createOffsetManager(Vertx.vertx(), vertxConsumer);
+    testExecutor.accept(offsetManager, failureFlag);
 
     try {
       Thread.sleep(1000);
     } catch (final InterruptedException e) {
       throw new RuntimeException(e);
     }
+    assertThat(offsetManager.close().succeeded()).isTrue();
 
     final var committed = mockConsumer.committed(Set.copyOf(partitionsConsumed));
     return assertThat(
