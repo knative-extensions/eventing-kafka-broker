@@ -15,13 +15,13 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import io.vertx.core.Future;
+import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
 /**
  * This class contains hooks for listening events through the {@link dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher} lifecycle.
  */
-public interface RecordDispatcherListener {
+public interface RecordDispatcherListener extends AsyncCloseable {
 
   /**
    * The given record has been received.
