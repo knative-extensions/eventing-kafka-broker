@@ -168,8 +168,13 @@ type subscriberInfoOption func(sub *SubscriberInfo)
 func WithSubscribers(subscribers ...*SubscriberInfo) func(obj duckv1.KRShaped) {
 	return func(obj duckv1.KRShaped) {
 		channel := obj.(*messagingv1beta1.KafkaChannel)
-		channel.Spec.Subscribers = []eventingduckv1.SubscriberSpec{}
-		channel.Status.Subscribers = []eventingduckv1.SubscriberStatus{}
+		if len(channel.Spec.Subscribers) == 0 {
+			channel.Spec.Subscribers = []eventingduckv1.SubscriberSpec{}
+		}
+
+		if len(channel.Status.Subscribers) == 0 {
+			channel.Status.Subscribers = []eventingduckv1.SubscriberStatus{}
+		}
 
 		for _, s := range subscribers {
 			if s.spec != nil {
@@ -202,6 +207,30 @@ func Subscriber1(options ...subscriberInfoOption) *SubscriberInfo {
 	return s
 }
 
+func Subscriber2(options ...subscriberInfoOption) *SubscriberInfo {
+	s := &SubscriberInfo{
+		spec: &eventingduckv1.SubscriberSpec{
+			UID:           Subscription2UUID,
+			Generation:    1,
+			SubscriberURI: apis.HTTP(Subscription2URI),
+			ReplyURI:      apis.HTTP(Subscription2ReplyURI),
+		},
+		status: &eventingduckv1.SubscriberStatus{
+			UID:                Subscription2UUID,
+			ObservedGeneration: 1,
+			Ready:              "True",
+		},
+	}
+	for _, opt := range options {
+		opt(s)
+	}
+	return s
+}
+
 func WithFreshSubscriber(sub *SubscriberInfo) {
 	sub.status = nil
+}
+
+func WithUnreadySubscriber(sub *SubscriberInfo) {
+	sub.status.Ready = "False"
 }
