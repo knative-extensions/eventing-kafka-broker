@@ -434,7 +434,7 @@ func (c *Client) CreatePodOrFail(pod *corev1.Pod, options ...func(*corev1.Pod, *
 	// - "No API token found for service account %q,
 	//    retry after the token is automatically created and added to the service account"
 	err := reconciler.RetryErrors(func(attempts int) (err error) {
-		c.T.Logf("Creating pod %+v", pod)
+		//c.T.Logf("Creating pod %+v", pod)
 		_, e := pkgtest.CreatePod(context.Background(), c.Kube, pod)
 		return e
 	}, apierrs.IsConflict, apierrs.IsServerTimeout)
@@ -497,7 +497,7 @@ func (c *Client) CreateServiceAccountOrFail(saName string) {
 	namespace := c.Namespace
 	sa := resources.ServiceAccount(saName, namespace)
 	sas := c.Kube.CoreV1().ServiceAccounts(namespace)
-	c.T.Logf("Creating service account %+v", sa)
+	//c.T.Logf("Creating service account %+v", sa)
 	if _, err := sas.Create(context.Background(), sa, metav1.CreateOptions{}); err != nil && !apierrs.IsAlreadyExists(err) {
 		c.T.Fatalf("Failed to create service account %q: %v", saName, err)
 	}
@@ -525,7 +525,7 @@ func (c *Client) CreateClusterRoleOrFail(cr *rbacv1.ClusterRole) {
 
 // CreateRoleOrFail creates the given Role in the Client namespace or fail the test if there is an error.
 func (c *Client) CreateRoleOrFail(r *rbacv1.Role) {
-	c.T.Logf("Creating role %+v", r)
+	// c.T.Logf("Creating role %+v", r)
 	namespace := c.Namespace
 	rs := c.Kube.RbacV1().Roles(namespace)
 	if _, err := rs.Create(context.Background(), r, metav1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
@@ -544,7 +544,7 @@ func (c *Client) CreateRoleBindingOrFail(saName, rKind, rName, rbName, rbNamespa
 	rb := resources.RoleBinding(saName, saNamespace, rKind, rName, rbName, rbNamespace)
 	rbs := c.Kube.RbacV1().RoleBindings(rbNamespace)
 
-	c.T.Logf("Creating role binding %+v", rb)
+	//c.T.Logf("Creating role binding %+v", rb)
 	if _, err := rbs.Create(context.Background(), rb, metav1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 		c.T.Fatalf("Failed to create role binding %q: %v", rbName, err)
 	}
