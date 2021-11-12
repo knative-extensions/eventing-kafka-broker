@@ -106,8 +106,9 @@ var DefaultEnv = &config.Env{
 // TODO: compare with channel_test.go at /Users/aliok/code/github.com/knative/eventing/pkg/reconciler/channel/channel_test.go
 // TODO: tests with and without subscriptions
 // TODO: tests for things from config-kafka
-// TODO: are we setting a InitialOffsetsCommitted status?
-// TODO: test if things from spec is used properly?
+// TODO: are we setting a InitialOffsetsCommitted status? we gotta set it on the subscription. 1) can we do it? 2) does it make sense?
+// TODO: test if things from channel spec is used properly?
+// TODO: test if things from subscription spec is used properly?
 
 func TestReconcileKind(t *testing.T) {
 
@@ -121,14 +122,17 @@ func TestReconcileKind(t *testing.T) {
 			Name: "bad workqueue key",
 			// Make sure Reconcile handles bad keys.
 			Key: "too/many/parts",
-		}, {
+		},
+		{
 			Name: "key not found",
 			// Make sure Reconcile handles good keys that don't exist.
 			Key: "foo/not-found",
-		}, {
+		},
+		{
 			Name: "Channel not found",
 			Key:  testKey,
-		}, {
+		},
+		{
 			Name: "Channel is being deleted",
 			Key:  testKey,
 			Objects: []runtime.Object{
@@ -138,7 +142,8 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
 				NewConfigMapWithBinaryData(&env, nil),
 			},
-		}, {
+		},
+		{
 			Name: "Reconciled normal - no subscription - no auth",
 			Objects: []runtime.Object{
 				NewChannel(),
