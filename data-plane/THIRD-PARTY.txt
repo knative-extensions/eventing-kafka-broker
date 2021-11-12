@@ -1,5 +1,5 @@
 
-Lists of 153 third-party dependencies.
+Lists of 156 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.2.7 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.2.7 - http://logback.qos.ch/logback-core)
      (The Apache Software License, Version 2.0) Jackson-annotations (com.fasterxml.jackson.core:jackson-annotations:2.11.4 - http://github.com/FasterXML/jackson)
@@ -67,8 +67,8 @@ Lists of 153 third-party dependencies.
      (Apache License, Version 2.0) Fabric8 :: Kubernetes :: Server Mock (io.fabric8:kubernetes-server-mock:5.10.0 - http://fabric8.io/kubernetes-server-mock/)
      (Apache License, Version 2.0) Fabric8 :: Mock Web Server (io.fabric8:mockwebserver:0.2.2 - http://fabric8.io/)
      (The Apache Software License, Version 2.0) zjsonpatch (io.fabric8:zjsonpatch:0.3.0 - https://github.com/fabric8io/zjsonpatch/)
-     (The Apache Software License, Version 2.0) micrometer-core (io.micrometer:micrometer-core:1.7.5 - https://github.com/micrometer-metrics/micrometer)
-     (The Apache Software License, Version 2.0) micrometer-registry-prometheus (io.micrometer:micrometer-registry-prometheus:1.7.5 - https://github.com/micrometer-metrics/micrometer)
+     (The Apache Software License, Version 2.0) micrometer-core (io.micrometer:micrometer-core:1.8.0 - https://github.com/micrometer-metrics/micrometer)
+     (The Apache Software License, Version 2.0) micrometer-registry-prometheus (io.micrometer:micrometer-registry-prometheus:1.8.0 - https://github.com/micrometer-metrics/micrometer)
      (Apache License, Version 2.0) Netty/Buffer (io.netty:netty-buffer:4.1.69.Final - https://netty.io/netty-buffer/)
      (Apache License, Version 2.0) Netty/Codec (io.netty:netty-codec:4.1.69.Final - https://netty.io/netty-codec/)
      (Apache License, Version 2.0) Netty/Codec/DNS (io.netty:netty-codec-dns:4.1.69.Final - https://netty.io/netty-codec-dns/)
@@ -94,8 +94,11 @@ Lists of 153 third-party dependencies.
      (The Apache License, Version 2.0) OpenTelemetry Java (io.opentelemetry:opentelemetry-sdk-testing:1.7.1 - https://github.com/open-telemetry/opentelemetry-java)
      (The Apache License, Version 2.0) OpenTelemetry Java (io.opentelemetry:opentelemetry-sdk-trace:1.7.1 - https://github.com/open-telemetry/opentelemetry-java)
      (The Apache License, Version 2.0) OpenTelemetry Java (io.opentelemetry:opentelemetry-semconv:1.7.1-alpha - https://github.com/open-telemetry/opentelemetry-java)
-     (The Apache Software License, Version 2.0) Prometheus Java Simpleclient (io.prometheus:simpleclient:0.10.0 - http://github.com/prometheus/client_java/simpleclient)
-     (The Apache Software License, Version 2.0) Prometheus Java Simpleclient Common (io.prometheus:simpleclient_common:0.10.0 - http://github.com/prometheus/client_java/simpleclient_common)
+     (The Apache Software License, Version 2.0) Prometheus Java Simpleclient (io.prometheus:simpleclient:0.12.0 - http://github.com/prometheus/client_java/simpleclient)
+     (The Apache Software License, Version 2.0) Prometheus Java Simpleclient Common (io.prometheus:simpleclient_common:0.12.0 - http://github.com/prometheus/client_java/simpleclient_common)
+     (The Apache Software License, Version 2.0) Prometheus Java Span Context Supplier - Common (io.prometheus:simpleclient_tracer_common:0.12.0 - http://github.com/prometheus/client_java/simpleclient_tracer/simpleclient_tracer_common)
+     (The Apache Software License, Version 2.0) Prometheus Java Span Context Supplier - OpenTelemetry (io.prometheus:simpleclient_tracer_otel:0.12.0 - http://github.com/prometheus/client_java/simpleclient_tracer/simpleclient_tracer_otel)
+     (The Apache Software License, Version 2.0) Prometheus Java Span Context Supplier - OpenTelemetry Agent (io.prometheus:simpleclient_tracer_otel_agent:0.12.0 - http://github.com/prometheus/client_java/simpleclient_tracer/simpleclient_tracer_otel_agent)
      (Eclipse Public License - v 1.0) (The Apache Software License, Version 2.0) vertx-auth-common (io.vertx:vertx-auth-common:4.2.1 - http://nexus.sonatype.org/oss-repository-hosting.html/vertx-parent/vertx-ext/vertx-ext-parent/vertx-auth/vertx-auth-common)
      (Eclipse Public License - v 1.0) (The Apache Software License, Version 2.0) vertx-circuit-breaker (io.vertx:vertx-circuit-breaker:4.2.1 - http://nexus.sonatype.org/oss-repository-hosting.html/vertx-parent/vertx-ext/vertx-ext-parent/vertx-circuit-breaker)
      (Eclipse Public License - v 2.0) (The Apache Software License, Version 2.0) Vert.x Core (io.vertx:vertx-core:4.2.1 - http://nexus.sonatype.org/oss-repository-hosting.html/vertx-parent/vertx-core)
