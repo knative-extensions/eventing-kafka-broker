@@ -31,11 +31,6 @@ import (
 	"knative.dev/pkg/test/zipkin"
 )
 
-const (
-	SystemNamespace = "knative-eventing"
-	LogsDir         = "knative-eventing-logs"
-)
-
 var channelTestRunner testlib.ComponentsTestRunner
 
 func TestMain(m *testing.M) {
