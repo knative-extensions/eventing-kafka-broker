@@ -238,7 +238,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-broker-dispatcher
-          image: docker.io/pierdipi/knative-kafka-broker-dispatcher:e58d22ee-4395-11ec-9fa7-14857f6f674c
+          image: quay.io/pierdipi/knative-kafka-broker-dispatcher:122a5dac-495a-11ec-878d-14857f6f674c
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -398,7 +398,7 @@ spec:
               weight: 100
       containers:
         - name: kafka-broker-receiver
-          image: docker.io/pierdipi/knative-kafka-broker-receiver:e58d22ee-4395-11ec-9fa7-14857f6f674c
+          image: quay.io/pierdipi/knative-kafka-broker-receiver:122a5dac-495a-11ec-878d-14857f6f674c
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config

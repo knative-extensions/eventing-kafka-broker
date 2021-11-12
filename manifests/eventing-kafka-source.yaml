@@ -238,7 +238,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-source-dispatcher
-          image: docker.io/pierdipi/knative-kafka-broker-dispatcher:e58d22ee-4395-11ec-9fa7-14857f6f674c
+          image: quay.io/pierdipi/knative-kafka-broker-dispatcher:122a5dac-495a-11ec-878d-14857f6f674c
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
