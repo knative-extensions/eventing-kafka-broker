@@ -102,6 +102,8 @@ var DefaultEnv = &config.Env{
 	DataPlaneConfigFormat:       base.Json,
 }
 
+// TODO: compare with inmemorychannel_test.go at /Users/aliok/code/github.com/knative/eventing/pkg/reconciler/inmemorychannel/controller/inmemorychannel_test.go
+// TODO: compare with channel_test.go at /Users/aliok/code/github.com/knative/eventing/pkg/reconciler/channel/channel_test.go
 // TODO: tests with and without subscriptions
 // TODO: tests for things from config-kafka
 // TODO: are we setting a InitialOffsetsCommitted status?
@@ -116,6 +118,27 @@ func TestReconcileKind(t *testing.T) {
 
 	table := TableTest{
 		{
+			Name: "bad workqueue key",
+			// Make sure Reconcile handles bad keys.
+			Key: "too/many/parts",
+		}, {
+			Name: "key not found",
+			// Make sure Reconcile handles good keys that don't exist.
+			Key: "foo/not-found",
+		}, {
+			Name: "Channel not found",
+			Key:  testKey,
+		}, {
+			Name: "Channel is being deleted",
+			Key:  testKey,
+			Objects: []runtime.Object{
+				NewChannel(
+					WithInitKafkaChannelConditions,
+					WithDeletedTimeStamp),
+				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithBinaryData(&env, nil),
+			},
+		}, {
 			Name: "Reconciled normal - no subscription - no auth",
 			Objects: []runtime.Object{
 				NewChannel(),
