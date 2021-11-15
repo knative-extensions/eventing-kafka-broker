@@ -29,13 +29,14 @@ import (
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
+	pkglogging "knative.dev/pkg/logging"
 	"knative.dev/pkg/tracker"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	sinkinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/eventing/v1alpha1/kafkasink"
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
@@ -43,7 +44,9 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 
 	eventing.RegisterConditionSet(base.IngressConditionSet)
 
-	logger := logging.FromContext(ctx)
+	logger := pkglogging.FromContext(ctx)
+
+	sarama.Logger = logging.NewSaramaLogger(logger)
 
 	configmapInformer := configmapinformer.Get(ctx)
 
