@@ -49,7 +49,7 @@
     <protobuf.version>3.19.1</protobuf.version>
     <slf4j.version>1.7.32</slf4j.version>
     <ch.qos.logback.version>1.2.7</ch.qos.logback.version>
-    <net.logstash.logback.encoder.version>6.6</net.logstash.logback.encoder.version>
+    <net.logstash.logback.encoder.version>7.0</net.logstash.logback.encoder.version>
     <assertj.version>3.21.0</assertj.version>
     <awaitility.version>4.1.1</awaitility.version>
     <junit.jupiter.version>5.8.1</junit.jupiter.version>
