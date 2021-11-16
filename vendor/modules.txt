@@ -136,8 +136,6 @@ github.com/envoyproxy/protoc-gen-validate/validate
 github.com/evanphx/json-patch
 # github.com/evanphx/json-patch/v5 v5.6.0
 github.com/evanphx/json-patch/v5
-# github.com/ghodss/yaml v1.0.0
-github.com/ghodss/yaml
 # github.com/go-kit/log v0.1.0
 github.com/go-kit/log
 github.com/go-kit/log/level
@@ -1104,7 +1102,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.27.1-0.20211111181038-8dd3598228b4
+# knative.dev/eventing v0.27.1-0.20211116113552-12418535e186
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck
@@ -1213,7 +1211,7 @@ knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/request-sender
-# knative.dev/eventing-kafka v0.27.1-0.20211112061936-e491a58876b8
+# knative.dev/eventing-kafka v0.27.1-0.20211116080752-19b6cffc9fad
 ## explicit
 knative.dev/eventing-kafka/pkg/apis/bindings
 knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
@@ -1267,10 +1265,10 @@ knative.dev/eventing-kafka/pkg/common/kafka/sarama
 knative.dev/eventing-kafka/test/e2e/helpers
 knative.dev/eventing-kafka/test/lib
 knative.dev/eventing-kafka/test/lib/resources
-# knative.dev/hack v0.0.0-20211108170701-96aac1c30be3
+# knative.dev/hack v0.0.0-20211112192837-128cf0150a69
 ## explicit
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20211111114938-0b0c3390a475
+# knative.dev/pkg v0.0.0-20211115071955-517ef0292b53
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
