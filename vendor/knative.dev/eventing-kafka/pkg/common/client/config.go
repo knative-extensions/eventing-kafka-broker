@@ -25,12 +25,12 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/ghodss/yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-kafka/pkg/channel/distributed/common/kafka/constants"
 	"knative.dev/pkg/logging"
+	"sigs.k8s.io/yaml"
 )
 
 type KafkaAuthConfig struct {

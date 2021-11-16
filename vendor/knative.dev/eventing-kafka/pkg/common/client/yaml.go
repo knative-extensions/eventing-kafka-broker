@@ -22,7 +22,7 @@ import (
 	"regexp"
 
 	"github.com/Shopify/sarama"
-	"github.com/ghodss/yaml"
+	"sigs.k8s.io/yaml"
 )
 
 // Regular Expression To Find All Certificates In Net.TLS.Config.RootPEMs Field
