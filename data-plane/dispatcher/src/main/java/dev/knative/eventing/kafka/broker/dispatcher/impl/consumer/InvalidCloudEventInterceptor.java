@@ -40,6 +40,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import static dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KafkaConsumerRecordUtils.copyRecordAssigningValue;
 import static io.cloudevents.kafka.PartitionKeyExtensionInterceptor.PARTITION_KEY_EXTENSION;
 
 /**
@@ -174,20 +175,7 @@ public class InvalidCloudEventInterceptor implements ConsumerInterceptor<Object,
     }
 
     // Copy consumer record and set value to a valid CloudEvent.
-    return new ConsumerRecord<>(
-      record.topic(),
-      record.partition(),
-      record.offset(),
-      record.timestamp(),
-      record.timestampType(),
-      record.checksum(),
-      record.serializedKeySize(),
-      record.serializedValueSize(),
-      record.key(),
-      value.build(),
-      record.headers(),
-      record.leaderEpoch()
-    );
+    return copyRecordAssigningValue(record, value.build());
   }
 
   private static void setKey(CloudEventBuilder value, final Object key) {
