@@ -96,8 +96,6 @@ public class RecordDispatcherImpl implements RecordDispatcher {
    */
   @Override
   public Future<Void> dispatch(KafkaConsumerRecord<Object, CloudEvent> record) {
-    Promise<Void> promise = Promise.promise();
-
     /*
     That's pretty much what happens here:
 
@@ -120,9 +118,23 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       +->end<--+
      */
 
-    onRecordReceived(buildCloudEventValueIfMissing(record), promise);
-
-    return promise.future();
+    try {
+      Promise<Void> promise = Promise.promise();
+      onRecordReceived(maybeDeserializeValueFromHeaders(record), promise);
+      return promise.future();
+    } catch (final Exception ex) {
+      // This is a fatal exception that shouldn't happen in normal cases.
+      //
+      // It might happen if folks send bad records to a topic that is
+      // managed by our system.
+      //
+      // So discard record if we can't deal with the record, so that we can
+      // make progress in the partition.
+      logError("Exception occurred, discarding the record", record, ex);
+      recordDispatcherListener.recordReceived(record);
+      recordDispatcherListener.recordDiscarded(record);
+      return Future.failedFuture(ex);
+    }
   }
 
   private void onRecordReceived(final KafkaConsumerRecord<Object, CloudEvent> record, Promise<Void> finalProm) {
@@ -196,21 +208,21 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     finalProm.complete();
   }
 
-  private static KafkaConsumerRecord<Object, CloudEvent> buildCloudEventValueIfMissing(KafkaConsumerRecord<Object, CloudEvent> record) {
+  private static KafkaConsumerRecord<Object, CloudEvent> maybeDeserializeValueFromHeaders(KafkaConsumerRecord<Object, CloudEvent> record) {
+    if (record.value() != null) {
+      return record;
+    }
     // A valid CloudEvent in the CE binary protocol binding of Kafka
     // might be composed by only Headers.
     //
     // KafkaConsumer doesn't call the deserializer if the value
     // is null.
     //
-    // That means that we get a record with a null value event though
-    // the record is a valid CloudEvent.
-    if (record.value() == null) {
-      logDebug("Value is null", record);
-      final var value = cloudEventDeserializer.deserialize(record.record().topic(), record.record().headers(), null);
-      return new KafkaConsumerRecordImpl<>(KafkaConsumerRecordUtils.copyRecordAssigningValue(record.record(), value));
-    }
-    return record;
+    // That means that we get a record with a null value and some CE
+    // headers even though the record is a valid CloudEvent.
+    logDebug("Value is null", record);
+    final var value = cloudEventDeserializer.deserialize(record.record().topic(), record.record().headers(), null);
+    return new KafkaConsumerRecordImpl<>(KafkaConsumerRecordUtils.copyRecordAssigningValue(record.record(), value));
   }
 
   private static Function<KafkaConsumerRecord<Object, CloudEvent>, Future<Void>> composeSenderAndSinkHandler(
