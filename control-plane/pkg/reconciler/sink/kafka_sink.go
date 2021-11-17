@@ -22,6 +22,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
 	"knative.dev/pkg/controller"
@@ -32,6 +33,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
@@ -52,6 +54,10 @@ type Reconciler struct {
 	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
 	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
+
+	Prober prober.Prober
+
+	IngressHost string
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *eventing.KafkaSink) reconciler.Event {
@@ -216,7 +222,22 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	logger.Debug("Updated receiver pod annotation")
 
-	return statusConditionManager.Reconciled()
+	address := receiver.Address(r.IngressHost, ks)
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: ks.GetNamespace(),
+			Name:      ks.GetName(),
+		},
+	}
+
+	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusReady {
+		statusConditionManager.ProbesStatusNotReady(status)
+		return nil // Object will get re-queued once probe status changes.
+	}
+	statusConditionManager.Addressable(address)
+
+	return nil
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, ks *eventing.KafkaSink) reconciler.Event {

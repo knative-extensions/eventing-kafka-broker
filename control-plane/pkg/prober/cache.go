@@ -35,6 +35,17 @@ const (
 // Status represents the resource status.
 type Status int
 
+func (s Status) String() string {
+	switch s {
+	case StatusReady:
+		return "Ready"
+	case StatusNotReady:
+		return "NotReady"
+	default:
+		return "Unknown"
+	}
+}
+
 // Cache is a key-status store.
 type Cache interface {
 	// GetStatus retries the status associated with the given key.

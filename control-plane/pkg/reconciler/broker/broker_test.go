@@ -25,7 +25,11 @@ import (
 	"time"
 
 	"k8s.io/utils/pointer"
+	"knative.dev/pkg/network"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober/probertesting"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
@@ -63,6 +67,7 @@ const (
 	wantErrorOnCreateTopic = "wantErrorOnCreateTopic"
 	wantErrorOnDeleteTopic = "wantErrorOnDeleteTopic"
 	ExpectedTopicDetail    = "expectedTopicDetail"
+	testProber             = "testProber"
 )
 
 const (
@@ -164,11 +169,132 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 					),
 				},
 			},
 			OtherTestData: map[string]interface{}{
 				BootstrapServersConfigMapKey: bootstrapServers,
+			},
+		},
+		{
+			Name: "Reconciled failed - probe " + prober.StatusNotReady.String(),
+			Objects: []runtime.Object{
+				NewBroker(),
+				NewConfigMapWithBinaryData(&env, nil),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerConfigMapUpdatedReady(&env),
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerConfigParsed,
+						StatusBrokerTopicReady,
+						StatusBrokerProbeFailed(prober.StatusNotReady),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+				testProber:                   probertesting.MockProber(prober.StatusNotReady),
+			},
+		},
+		{
+			Name: "Reconciled failed - probe " + prober.StatusUnknown.String(),
+			Objects: []runtime.Object{
+				NewBroker(),
+				NewConfigMapWithBinaryData(&env, nil),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerConfigMapUpdatedReady(&env),
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerConfigParsed,
+						StatusBrokerTopicReady,
+						StatusBrokerProbeFailed(prober.StatusUnknown),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				BootstrapServersConfigMapKey: bootstrapServers,
+				testProber:                   probertesting.MockProber(prober.StatusUnknown),
 			},
 		},
 		{
@@ -221,6 +347,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerTopicReady,
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
 					),
 				},
@@ -279,6 +406,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerTopicReady,
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURLFrom(BrokerNamespace, ServiceName)),
 					),
 				},
@@ -380,6 +508,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerTopicReady,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
 					),
 				},
@@ -434,6 +563,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 					),
 				},
 			},
@@ -514,6 +644,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 					),
 				},
 			},
@@ -610,6 +741,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved("http://www.my-sink.com/api"),
 					),
 				},
@@ -694,6 +826,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 					),
 				},
 			},
@@ -770,6 +903,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 					),
 				},
 			},
@@ -938,6 +1072,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 					),
 				},
 			},
@@ -1016,6 +1151,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 					),
 				},
 			},
@@ -1227,6 +1363,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
 					),
 				},
@@ -1319,6 +1456,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerTopicReady,
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
 					),
 				},
@@ -1384,6 +1522,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerTopicReady,
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
 					),
 				},
@@ -1446,6 +1585,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerTopicReady,
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
 					),
 				},
@@ -1511,6 +1651,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerTopicReady,
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
 					),
 				},
@@ -1559,6 +1700,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerTopicReady,
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
 					),
 				},
@@ -1610,6 +1752,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerTopicReady,
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
 					),
 				},
@@ -1883,6 +2026,11 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			expectedTopicDetail = td.(sarama.TopicDetail)
 		}
 
+		proberMock := probertesting.MockProber(prober.StatusReady)
+		if p, ok := row.OtherTestData[testProber]; ok {
+			proberMock = p.(prober.Prober)
+		}
+
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
@@ -1907,7 +2055,9 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 					T:                   t,
 				}, nil
 			},
-			Env: env,
+			Env:         env,
+			Prober:      proberMock,
+			IngressHost: network.GetServiceHostname(env.IngressName, env.SystemNamespace),
 		}
 		reconciler.SetBootstrapServers(bootstrapServers)
 

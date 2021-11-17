@@ -42,6 +42,7 @@ func TestNewController(t *testing.T) {
 	configs := &config.Env{
 		SystemNamespace:      "cm",
 		GeneralConfigMapName: "cm",
+		IngressPodPort:       "8080",
 	}
 
 	ctx, _ = fakekubeclient.With(

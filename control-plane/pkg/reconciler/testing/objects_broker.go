@@ -24,13 +24,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -284,4 +286,14 @@ func BrokerReceiverPodUpdate(namespace string, annotations map[string]string) cl
 		namespace,
 		BrokerReceiverPod(namespace, annotations),
 	)
+}
+
+func StatusBrokerProbeSucceeded(broker *eventing.Broker) {
+	StatusProbeSucceeded(broker)
+}
+
+func StatusBrokerProbeFailed(status prober.Status) reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		StatusProbeFailed(status)(broker)
+	}
 }

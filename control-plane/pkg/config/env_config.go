@@ -27,6 +27,7 @@ type Env struct {
 	DataPlaneConfigMapName      string `required:"true" split_words:"true"`
 	GeneralConfigMapName        string `required:"true" split_words:"true"`
 	IngressName                 string `required:"true" split_words:"true"`
+	IngressPodPort              string `required:"false" split_words:"true"`
 	SystemNamespace             string `required:"true" split_words:"true"`
 	DataPlaneConfigFormat       string `required:"true" split_words:"true"`
 	DefaultBackoffDelayMs       uint64 `required:"false" split_words:"true"`

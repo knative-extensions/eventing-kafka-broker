@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -31,6 +32,7 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
@@ -40,6 +42,7 @@ import (
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
@@ -97,6 +100,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass)
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
+	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, env.IngressPodPort, reconciler.ReceiverSelector(), impl.EnqueueKey)
+	reconciler.IngressHost = network.GetServiceHostname(env.IngressName, env.SystemNamespace)
 
 	brokerInformer := brokerinformer.Get(ctx)
 

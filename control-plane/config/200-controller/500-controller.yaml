@@ -98,6 +98,13 @@ spec:
             - name: SOURCE_GENERAL_CONFIG_MAP_NAME
               value: kafka-broker-config
 
+            - name: BROKER_INGRESS_POD_PORT
+              value: "8080"
+            - name: CHANNEL_INGRESS_POD_PORT
+              value: "8080"
+            - name: SINK_INGRESS_POD_PORT
+              value: "8080"
+
             - name: BROKER_SYSTEM_NAMESPACE
               valueFrom:
                 fieldRef:

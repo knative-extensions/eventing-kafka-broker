@@ -208,7 +208,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
-	return statusConditionManager.Reconciled()
+	return nil
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {

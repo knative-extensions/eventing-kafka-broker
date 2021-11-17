@@ -25,6 +25,7 @@ import (
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
@@ -37,6 +38,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
@@ -65,6 +67,10 @@ type Reconciler struct {
 	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
 
 	BootstrapServers string
+
+	Prober prober.Prober
+
+	IngressHost string
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -221,7 +227,22 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
-	return statusConditionManager.Reconciled()
+	address := receiver.Address(r.IngressHost, broker)
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: broker.GetNamespace(),
+			Name:      broker.GetName(),
+		},
+	}
+
+	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusReady {
+		statusConditionManager.ProbesStatusNotReady(status)
+		return nil // Object will get re-queued once probe status changes.
+	}
+	statusConditionManager.Addressable(address)
+
+	return nil
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
