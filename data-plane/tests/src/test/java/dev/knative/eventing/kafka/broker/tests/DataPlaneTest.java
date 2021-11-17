@@ -57,6 +57,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -117,35 +118,40 @@ public class DataPlaneTest {
 
   /*
   1: event sent by the source to the Broker
-  2: event sent by the service in the response
+  2: event sent by the trigger 1 in the response
+  3: event sent by the trigger 2 in the response
                                                                               2
                                                                   +----------------------+
                                                                   |                      |
                                                                   |                +-----+-----+
                                                                   |          1     |           |
                                                                   |    +---------->+ Trigger 1 |
-                                                                  v    |           |           |
+                                                                  v    |     3     |           |
   +------------+          +-------------+                 +-------+----+----+      +-----------+
   |            |  1       |             |          2      |                 |
   | HTTPClient +--------->+  Receiver   |        +--------+  Dispatcher     |
   |            |          |             |        |        |                 |
   +------------+          +------+------+        |        +--------+---+----+      +-----------+
-                                 |               |                 ^   |           |           |
+                                 |               |                 ^   | 3         |           |
                                  |               v                 |   +---------->+ Trigger 2 |
                                1 |      +--------+--------+        |         2     |           |
                                  |      |                 |     1  |               +-----------+
                                  +----->+     Kafka       +--------+
                                         |                 |     2                  +-----------+
-                                        +-----------------+                        |           |
+                                        +-----------------+     3                  |           |
                                                                                    | Trigger 3 |
                                                                                    |           |
                                                                                    +-----------+
+
+
+
+
    */
   @Test
   @Timeout(timeUnit = TimeUnit.MINUTES, value = 1)
-  public void execute(final Vertx vertx, final VertxTestContext context) {
+  public void execute(final Vertx vertx, final VertxTestContext context) throws InterruptedException {
 
-    final var checkpoints = context.checkpoint(3);
+    final var checkpoints = context.checkpoint(4);
 
     // event sent by the source to the Broker (see 1 in diagram)
     final var expectedRequestEvent = CloudEventBuilder.v1()
@@ -158,7 +164,7 @@ public class DataPlaneTest {
       .build();
 
     // event sent in the response by the Callable service (see 2 in diagram)
-    final var expectedResponseEvent = CloudEventBuilder.v03()
+    final var expectedResponseEventService2 = CloudEventBuilder.v03()
       .withId(UUID.randomUUID().toString())
       .withDataSchema(URI.create("/api/data-schema-ce-2"))
       .withSubject("subject-ce-2")
@@ -166,6 +172,20 @@ public class DataPlaneTest {
       .withData("data-ce-2".getBytes())
       .withType(TYPE_CE_2)
       .build();
+
+    // event sent in the response by the Callable service 2 (see 3 in diagram)
+    final var expectedResponseEventService1 = CloudEventBuilder.v1()
+      .withId(UUID.randomUUID().toString())
+      .withDataSchema(URI.create("/api/data-schema-ce-3"))
+      .withSource(URI.create("/api/rossi"))
+      .withSubject("subject-ce-3")
+      .withType(TYPE_CE_1)
+      .build();
+
+    final var service1ExpectedEventsIterator = List.of(
+      expectedRequestEvent,
+      expectedResponseEventService1
+    ).iterator();
 
     final var resource = DataPlaneContract.Resource.newBuilder()
       .addTopics(TOPIC)
@@ -207,8 +227,12 @@ public class DataPlaneTest {
     new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS)
       .accept(DataPlaneContract.Contract.newBuilder().addResources(resource).build());
 
-    await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> assertThat(vertx.deploymentIDs())
+    await()
+      .atMost(10, TimeUnit.SECONDS)
+      .untilAsserted(() -> assertThat(vertx.deploymentIDs())
       .hasSize(resource.getEgressesCount() + NUM_RESOURCES + NUM_SYSTEM_VERTICLES));
+
+    Thread.sleep(2000); // Give consumers time to start
 
     // start service
     vertx.createHttpServer()
@@ -221,22 +245,29 @@ public class DataPlaneTest {
 
           // service 1 receives event sent by the HTTPClient
           if (request.path().equals(PATH_SERVICE_1)) {
+            final var expectedEvent = service1ExpectedEventsIterator.next();
             context.verify(() -> {
-              assertThat(event).isEqualTo(expectedRequestEvent);
+              assertThat(event).isEqualTo(expectedEvent);
               checkpoints.flag(); // 2
             });
 
-            // write event to the response, the event will be handled by service 2
-            VertxMessageFactory.createWriter(request.response())
-              .writeBinary(expectedResponseEvent);
+            if (service1ExpectedEventsIterator.hasNext()) {
+              // write event to the response, the event will be handled by service 2
+              VertxMessageFactory.createWriter(request.response())
+                .writeBinary(expectedResponseEventService2);
+            }
           }
 
           // service 2 receives event in the response
           if (request.path().equals(PATH_SERVICE_2)) {
             context.verify(() -> {
-              assertThat(event).isEqualTo(expectedResponseEvent);
+              assertThat(event).isEqualTo(expectedResponseEventService2);
               checkpoints.flag(); // 3
             });
+
+            // write event to the response, the event will be handled by service 2
+            VertxMessageFactory.createWriter(request.response())
+              .writeBinary(expectedResponseEventService1);
           }
 
           if (request.path().equals(PATH_SERVICE_3)) {
