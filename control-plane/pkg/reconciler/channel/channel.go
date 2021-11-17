@@ -56,7 +56,8 @@ import (
 
 const (
 	// TopicPrefix is the Kafka Channel topic prefix - (topic name: knative-messaging-kafka.<channel-namespace>.<channel-name>).
-	TopicPrefix = "knative-messaging-kafka"
+	TopicPrefix          = "knative-messaging-kafka"
+	DefaultDeliveryOrder = contract.DeliveryOrder_ORDERED
 )
 
 type Reconciler struct {
@@ -456,7 +457,7 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 	egress := &contract.Egress{
 		Destination:   subscriber.SubscriberURI.String(),
 		ConsumerGroup: consumerGroup(channel, subscriber),
-		DeliveryOrder: contract.DeliveryOrder_ORDERED,
+		DeliveryOrder: DefaultDeliveryOrder,
 		Uid:           string(subscriber.UID),
 	}
 
