@@ -27,6 +27,6 @@ require (
 	knative.dev/eventing v0.27.1-0.20211116113552-12418535e186
 	knative.dev/eventing-kafka v0.27.1-0.20211116080752-19b6cffc9fad
 	knative.dev/hack v0.0.0-20211112192837-128cf0150a69
-	knative.dev/pkg v0.0.0-20211115071955-517ef0292b53
+	knative.dev/pkg v0.0.0-20211116213053-d82be484e4c3
 	knative.dev/reconciler-test v0.0.0-20211112132636-ae9e2e21972f
 )
