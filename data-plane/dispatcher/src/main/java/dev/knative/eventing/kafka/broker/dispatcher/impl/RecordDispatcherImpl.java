@@ -21,6 +21,8 @@ import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDeserializer;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KafkaConsumerRecordUtils;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -28,12 +30,12 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.function.Function;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -46,6 +48,8 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 public class RecordDispatcherImpl implements RecordDispatcher {
 
   private static final Logger logger = LoggerFactory.getLogger(RecordDispatcherImpl.class);
+
+  private static final CloudEventDeserializer cloudEventDeserializer = new CloudEventDeserializer();
 
   private final Filter filter;
   private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<Void>> subscriberSender;
@@ -92,8 +96,6 @@ public class RecordDispatcherImpl implements RecordDispatcher {
    */
   @Override
   public Future<Void> dispatch(KafkaConsumerRecord<Object, CloudEvent> record) {
-    Promise<Void> promise = Promise.promise();
-
     /*
     That's pretty much what happens here:
 
@@ -116,9 +118,23 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       +->end<--+
      */
 
-    onRecordReceived(record, promise);
-
-    return promise.future();
+    try {
+      Promise<Void> promise = Promise.promise();
+      onRecordReceived(maybeDeserializeValueFromHeaders(record), promise);
+      return promise.future();
+    } catch (final Exception ex) {
+      // This is a fatal exception that shouldn't happen in normal cases.
+      //
+      // It might happen if folks send bad records to a topic that is
+      // managed by our system.
+      //
+      // So discard record if we can't deal with the record, so that we can
+      // make progress in the partition.
+      logError("Exception occurred, discarding the record", record, ex);
+      recordDispatcherListener.recordReceived(record);
+      recordDispatcherListener.recordDiscarded(record);
+      return Future.failedFuture(ex);
+    }
   }
 
   private void onRecordReceived(final KafkaConsumerRecord<Object, CloudEvent> record, Promise<Void> finalProm) {
@@ -190,6 +206,23 @@ public class RecordDispatcherImpl implements RecordDispatcher {
                                        final Promise<Void> finalProm) {
     recordDispatcherListener.failedToSendToDeadLetterSink(record, exception);
     finalProm.complete();
+  }
+
+  private static KafkaConsumerRecord<Object, CloudEvent> maybeDeserializeValueFromHeaders(KafkaConsumerRecord<Object, CloudEvent> record) {
+    if (record.value() != null) {
+      return record;
+    }
+    // A valid CloudEvent in the CE binary protocol binding of Kafka
+    // might be composed by only Headers.
+    //
+    // KafkaConsumer doesn't call the deserializer if the value
+    // is null.
+    //
+    // That means that we get a record with a null value and some CE
+    // headers even though the record is a valid CloudEvent.
+    logDebug("Value is null", record);
+    final var value = cloudEventDeserializer.deserialize(record.record().topic(), record.record().headers(), null);
+    return new KafkaConsumerRecordImpl<>(KafkaConsumerRecordUtils.copyRecordAssigningValue(record.record(), value));
   }
 
   private static Function<KafkaConsumerRecord<Object, CloudEvent>, Future<Void>> composeSenderAndSinkHandler(
