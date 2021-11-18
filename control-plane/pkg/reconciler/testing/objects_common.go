@@ -68,6 +68,15 @@ func NewService(mutations ...func(*corev1.Service)) *corev1.Service {
 			Name:      ServiceName,
 			Namespace: ServiceNamespace,
 		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:     "http",
+					Protocol: "TCP",
+					Port:     80,
+				},
+			},
+		},
 	}
 	for _, mut := range mutations {
 		mut(s)

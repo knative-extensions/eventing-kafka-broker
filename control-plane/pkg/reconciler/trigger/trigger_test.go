@@ -43,6 +43,7 @@ import (
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	"knative.dev/pkg/apis"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	serviceinformers "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
@@ -2296,6 +2297,7 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			Env:            env,
 		}
 
+		ctx = context.WithValue(ctx, serviceinformers.Key{}, ServiceInformer(ctx, NewService()))
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))
 
 		return triggerreconciler.NewReconciler(

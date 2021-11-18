@@ -23,17 +23,21 @@ import (
 	"testing"
 	"time"
 
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/protobuf/runtime/protoimpl"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/rest"
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
+	"knative.dev/pkg/injection"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
@@ -226,6 +230,7 @@ func TestIncrementContractGeneration(t *testing.T) {
 
 func TestEgressConfigFromDelivery(t *testing.T) {
 	ctx := context.Background()
+	ctx, _ = injection.Fake.SetupInformers(ctx, &rest.Config{})
 	ctx, _ = fakedynamicclient.With(ctx, runtime.NewScheme())
 	ctx = addressable.WithDuck(ctx)
 

@@ -31,6 +31,7 @@ import (
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	serviceinformers "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
 
@@ -535,6 +536,7 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 		reconciler.ConfigMapTracker = &FakeTracker{}
 		reconciler.SecretTracker = &FakeTracker{}
 
+		ctx = context.WithValue(ctx, serviceinformers.Key{}, ServiceInformer(ctx, NewService()))
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))
 
 		r := eventingkafkasourcereconciler.NewReconciler(

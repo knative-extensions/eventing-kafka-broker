@@ -25,12 +25,14 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/rest"
 	ktesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	pkgcontroller "knative.dev/pkg/controller"
+	"knative.dev/pkg/injection"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/reconciler"
 	. "knative.dev/pkg/reconciler/testing"
@@ -56,6 +58,7 @@ func NewFactory(env *config.Env, ctor Ctor) Factory {
 		listers := newListers(row.Objects)
 		ctx := context.Background()
 
+		ctx, _ = injection.Fake.SetupInformers(ctx, &rest.Config{})
 		ctx, eventingClient := fakeeventingclient.With(ctx, listers.GetEventingObjects()...)
 		ctx, sourcesKafkaClient := fakeeventingkafkakafkaclient.With(ctx, listers.GetEventingKafkaObjects()...)
 		ctx, eventingKafkaClient := fakeeventingkafkabrokerclient.With(ctx, listers.GetEventingKafkaBrokerObjects()...)
