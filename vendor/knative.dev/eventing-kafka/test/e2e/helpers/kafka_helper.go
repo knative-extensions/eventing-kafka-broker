@@ -19,10 +19,13 @@ package helpers
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"github.com/davecgh/go-spew/spew"
 	appsv1 "k8s.io/api/apps/v1"
@@ -31,6 +34,7 @@ import (
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
 	testlib "knative.dev/eventing/test/lib"
@@ -241,6 +245,11 @@ func MustCreateTopic(client *testlib.Client, clusterName, clusterNamespace, topi
 	}
 
 	client.Tracker.Add(topicGVR.Group, topicGVR.Version, topicGVR.Resource, clusterNamespace, topicName)
+
+	// Wait for the topic to be ready
+	if err := WaitForTopicReady(context.Background(), client, clusterNamespace, topicName, topicGVR); err != nil {
+		client.T.Fatalf("Error while creating the topic %s: %v", topicName, err)
+	}
 }
 
 //CheckKafkaSourceState waits for specified kafka source resource state
@@ -286,4 +295,37 @@ func CheckRADeployment(ctx context.Context, c *testlib.Client, name string, inSt
 		return fmt.Errorf("receiver adapter deployments %q is not in desired state, got: %+v: %w", name, lastState, waitErr)
 	}
 	return nil
+}
+
+func WaitForTopicReady(ctx context.Context, client *testlib.Client, namespace, name string, gvr schema.GroupVersionResource) error {
+	like := &duckv1.KResource{}
+	return wait.PollImmediate(interval, timeout, func() (bool, error) {
+		us, err := client.Dynamic.Resource(gvr).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			if apierrs.IsNotFound(err) {
+				log.Println(namespace, name, "not found", err)
+				// keep polling
+				return false, nil
+			}
+			return false, err
+		}
+		obj := like.DeepCopy()
+		if err = runtime.DefaultUnstructuredConverter.FromUnstructured(us.Object, obj); err != nil {
+			log.Fatalf("Error DefaultUnstructured.Dynamiconverter. %v", err)
+		}
+		obj.ResourceVersion = gvr.Version
+		obj.APIVersion = gvr.GroupVersion().String()
+
+		// First see if the resource has conditions.
+		if len(obj.Status.Conditions) == 0 {
+			return false, nil // keep polling
+		}
+
+		ready := obj.Status.GetCondition(apis.ConditionReady)
+		if ready != nil && ready.Status == corev1.ConditionTrue {
+			return true, nil
+		}
+
+		return false, nil
+	})
 }
