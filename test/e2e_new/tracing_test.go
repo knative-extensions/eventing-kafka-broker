@@ -86,7 +86,7 @@ func TracingHeadersUsingOrderedDelivery() *feature.Feature {
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Setup("install source", eventshub.Install(
+	f.Requirement("install source", eventshub.Install(
 		sourceName,
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),
@@ -131,7 +131,7 @@ func TracingHeadersUsingUnorderedDelivery() *feature.Feature {
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Setup("install source", eventshub.Install(
+	f.Requirement("install source", eventshub.Install(
 		sourceName,
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),
@@ -182,7 +182,7 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerAName))
 
-	f.Setup("install source", eventshub.Install(
+	f.Requirement("install source", eventshub.Install(
 		sourceName,
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),
