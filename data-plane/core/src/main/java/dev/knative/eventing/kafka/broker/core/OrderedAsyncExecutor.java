@@ -36,7 +36,7 @@ public class OrderedAsyncExecutor {
   public OrderedAsyncExecutor() {
     this.queue = new ArrayDeque<>();
     this.isStopped = false;
-    inFlight = false;
+    this.inFlight = false;
   }
 
   /**
@@ -45,23 +45,23 @@ public class OrderedAsyncExecutor {
    * @param task the task to offer
    */
   public void offer(Supplier<Future<?>> task) {
-    boolean wasEmpty = queue.isEmpty();
-    queue.offer(task);
+    boolean wasEmpty = this.queue.isEmpty();
+    this.queue.offer(task);
     if (wasEmpty) { // If no elements in the queue, then we need to start consuming it
       consume();
     }
   }
 
   private void consume() {
-    if (this.isStopped || queue.isEmpty() || inFlight) {
+    if (this.isStopped || this.queue.isEmpty() || this.inFlight) {
       return;
     }
-    inFlight = true;
+    this.inFlight = true;
     this.queue
       .remove()
       .get()
       .onComplete(ar -> {
-        inFlight = false;
+        this.inFlight = false;
         consume();
       });
   }
@@ -69,7 +69,7 @@ public class OrderedAsyncExecutor {
   public boolean isWaitingForTasks() {
     // TODO To perform this flag would be nice to take into account also the time that it takes for a sink to process a
     //  message so that we can fetch records in advance and keep queues busy.
-    return queue.size() == 0;
+    return this.queue.size() == 0;
   }
 
   /**

@@ -84,8 +84,11 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     super.stop(stopPromise);
   }
 
-  void recordsHandler(KafkaConsumerRecords<Object, CloudEvent> records) {
+  private void recordsHandler(KafkaConsumerRecords<Object, CloudEvent> records) {
     if (records == null || records.size() == 0) {
+      if (this.stopPolling) {
+        return;
+      }
       vertx.setTimer(POLLING_MS, l -> poll());
       return;
     }
