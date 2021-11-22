@@ -204,6 +204,16 @@ func StatusConfigMapUpdatedReady(env *config.Env) func(obj duckv1.KRShaped) {
 	}
 }
 
+func StatusConfigMapNotUpdatedReady(reason, message string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
+			base.ConditionConfigMapUpdated,
+			reason,
+			message,
+		)
+	}
+}
+
 func StatusTopicReadyWithName(topic string) func(obj duckv1.KRShaped) {
 	return func(obj duckv1.KRShaped) {
 		obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrueWithReason(

@@ -883,16 +883,177 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Unable to create topic",
 		},
 		{
-			// TODO
 			Name: "Create contract configmap when it does not exist",
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewService(),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: receiver.Path(ChannelNamespace, ChannelName),
+								},
+							},
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(&env, nil),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(ChannelTopic()),
+						StatusDataPlaneAvailable,
+						//StatusInitialOffsetsCommitted,
+						ChannelAddressable(&env),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
-			// TODO
 			Name: "Do not create contract configmap when it exists",
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewService(),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithBinaryData(&env, nil),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: receiver.Path(ChannelNamespace, ChannelName),
+								},
+							},
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(ChannelTopic()),
+						StatusDataPlaneAvailable,
+						//StatusInitialOffsetsCommitted,
+						ChannelAddressable(&env),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
-			// TODO
 			Name: "Corrupt contract in configmap",
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewService(),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithBinaryData(&env, []byte("corrupt")),
+			},
+			Key:                     testKey,
+			WantErr:                 true,
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
+						StatusTopicReadyWithName(ChannelTopic()),
+						StatusConfigMapNotUpdatedReady(
+							"Failed to get contract data from ConfigMap: knative-eventing/kafka-channel-channels-subscriptions",
+							"failed to unmarshal contract: 'corrupt' - proto:\u00a0syntax error (line 1:1): invalid value corrupt",
+						),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					"failed to get broker and triggers data from config map knative-eventing/kafka-channel-channels-subscriptions: failed to unmarshal contract: 'corrupt' - proto:\u00a0syntax error (line 1:1): invalid value corrupt",
+				),
+			},
 		},
 	}
 
