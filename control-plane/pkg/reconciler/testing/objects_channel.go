@@ -72,6 +72,27 @@ func NewChannel(options ...KRShapedOption) runtime.Object {
 	return c
 }
 
+func WithNumPartitions(np int32) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*messagingv1beta1.KafkaChannel)
+		ch.Spec.NumPartitions = np
+	}
+}
+
+func WithReplicationFactor(rp int16) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*messagingv1beta1.KafkaChannel)
+		ch.Spec.ReplicationFactor = rp
+	}
+}
+
+func WithRetentionDuration(rd string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*messagingv1beta1.KafkaChannel)
+		ch.Spec.RetentionDuration = rd
+	}
+}
+
 func ChannelReceiverPod(namespace string, annotations map[string]string) runtime.Object {
 	return &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{
