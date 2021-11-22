@@ -110,6 +110,9 @@ var DefaultEnv = &config.Env{
 // TODO: are we setting a InitialOffsetsCommitted status? we gotta set it on the subscription. 1) can we do it? 2) does it make sense?
 // TODO: test if things from channel spec is used properly?
 // TODO: test if things from subscription spec is used properly?
+// TODO: rename test cases consistently
+// TODO: test finalize?
+// TODO: fix the order of status updates
 
 func TestReconcileKind(t *testing.T) {
 
@@ -406,6 +409,7 @@ func TestReconcileKind(t *testing.T) {
 						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
 						WithSubscribers(Subscriber1()),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -476,6 +480,7 @@ func TestReconcileKind(t *testing.T) {
 						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
 						WithSubscribers(Subscriber1()),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -546,6 +551,7 @@ func TestReconcileKind(t *testing.T) {
 						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
 						WithSubscribers(Subscriber1()),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -624,6 +630,7 @@ func TestReconcileKind(t *testing.T) {
 						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
 						WithSubscribers(Subscriber1(), Subscriber2()),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -766,7 +773,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusDataPlaneAvailable,
-						StatusConfigNotParsed("ConfigMap's eventing-kafka value could not be converted to an EventingKafkaConfig struct: error unmarshaling JSON: json: cannot unmarshal number into Go value of type config.EventingKafkaConfig : 123123"),
+						StatusConfigNotParsed("ConfigMap's eventing-kafka value could not be converted to an EventingKafkaConfig struct: error unmarshaling JSON: while decoding JSON: json: cannot unmarshal number into Go value of type config.EventingKafkaConfig : 123123"),
 					),
 				},
 			},
@@ -778,7 +785,7 @@ func TestReconcileKind(t *testing.T) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"failed to get contract configuration: ConfigMap's eventing-kafka value could not be converted to an EventingKafkaConfig struct: error unmarshaling JSON: json: cannot unmarshal number into Go value of type config.EventingKafkaConfig : 123123",
+					"failed to get contract configuration: ConfigMap's eventing-kafka value could not be converted to an EventingKafkaConfig struct: error unmarshaling JSON: while decoding JSON: json: cannot unmarshal number into Go value of type config.EventingKafkaConfig : 123123",
 				),
 			},
 		},
@@ -848,6 +855,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusDataPlaneAvailable,
 						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -937,6 +945,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusDataPlaneAvailable,
 						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -1000,6 +1009,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusDataPlaneAvailable,
 						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
 			},
