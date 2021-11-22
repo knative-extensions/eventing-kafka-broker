@@ -194,7 +194,7 @@ func StatusBrokerConfigParsed(broker *eventing.Broker) {
 
 func StatusBrokerConfigNotParsed(reason string) func(broker *eventing.Broker) {
 	return func(broker *eventing.Broker) {
-		StatusConfigNotParsed(broker, reason)
+		StatusConfigNotParsed(reason)(broker)
 	}
 }
 
