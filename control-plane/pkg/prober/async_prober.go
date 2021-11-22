@@ -18,7 +18,6 @@ package prober
 
 import (
 	"context"
-	"net/url"
 	"sync"
 	"time"
 
@@ -90,18 +89,8 @@ func (a *asyncProber) Probe(ctx context.Context, addressable Addressable) Status
 	var enqueueOnce sync.Once
 
 	for _, p := range pods {
-		podUrl := &url.URL{
-			Scheme:      address.Scheme,
-			Opaque:      address.Opaque,
-			User:        address.User,
-			Host:        p.Status.PodIP + ":" + a.port,
-			Path:        address.Path,
-			RawPath:     address.RawPath,
-			ForceQuery:  address.ForceQuery,
-			RawQuery:    address.RawQuery,
-			Fragment:    address.Fragment,
-			RawFragment: address.RawFragment,
-		}
+		podUrl := *address
+		podUrl.Host = p.Status.PodIP + ":" + a.port
 		address := podUrl.String()
 
 		logger := a.logger.
