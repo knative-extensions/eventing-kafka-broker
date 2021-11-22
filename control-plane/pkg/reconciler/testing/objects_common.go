@@ -28,11 +28,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
@@ -262,6 +264,20 @@ func StatusDataPlaneNotAvailable(obj duckv1.KRShaped) {
 		base.ReasonDataPlaneNotAvailable,
 		base.MessageDataPlaneNotAvailable,
 	)
+}
+
+func StatusProbeSucceeded(obj duckv1.KRShaped) {
+	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionProbeSucceeded)
+}
+
+func StatusProbeFailed(status prober.Status) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
+			base.ConditionProbeSucceeded,
+			"ProbeStatus",
+			fmt.Sprintf("status: %s", status.String()),
+		)
+	}
 }
 
 func allocateStatusAnnotations(obj duckv1.KRShaped) {

@@ -22,9 +22,13 @@ import (
 	"io"
 	"testing"
 
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/network"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober/probertesting"
 
 	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
@@ -61,6 +65,7 @@ const (
 	ExpectedTopicsOnDescribeTopics = "expectedTopicsOnDescribeTopics"
 	ExpectedTopicIsPresent         = "expectedTopicIsPresent"
 	ExpectedErrorOnDescribeTopics  = "expectedErrorOnDescribeTopics"
+	testProber                     = "testProber"
 
 	TopicPrefix = "knative-sink-"
 )
@@ -151,6 +156,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -213,6 +219,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -279,6 +286,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ExternalTopicOwner),
 						SinkAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -390,6 +398,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusTopicReadyWithOwner("my-topic-1", sink.ControllerTopicOwner),
 						StatusConfigMapUpdatedReady(&env),
 						SinkAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -489,6 +498,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -537,6 +547,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -608,6 +619,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -677,6 +689,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -757,6 +770,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -815,8 +829,115 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
+			},
+		},
+		{
+			Name: "Reconciled failed - probe " + prober.StatusNotReady.String(),
+			Objects: []runtime.Object{
+				NewSink(
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+				),
+				NewConfigMapWithBinaryData(&env, nil),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              SinkUUID,
+							Topics:           []string{SinkTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 1,
+				}),
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						InitSinkConditions,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
+						BootstrapServers(bootstrapServersArr),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						StatusProbeFailed(prober.StatusNotReady),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
+			},
+		},
+		{
+			Name: "Reconciled failed - probe " + prober.StatusUnknown.String(),
+			Objects: []runtime.Object{
+				NewSink(
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+				),
+				NewConfigMapWithBinaryData(&env, nil),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              SinkUUID,
+							Topics:           []string{SinkTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, IngressType: &contract.Ingress_Path{Path: receiver.Path(SinkNamespace, SinkName)}},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 1,
+				}),
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						InitSinkConditions,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
+						BootstrapServers(bootstrapServersArr),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						StatusProbeFailed(prober.StatusUnknown),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusUnknown),
 			},
 		},
 	}
@@ -1089,6 +1210,11 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			errorOnDescribeTopics = isPresentError.(error)
 		}
 
+		proberMock := probertesting.MockProber(prober.StatusReady)
+		if p, ok := row.OtherTestData[testProber]; ok {
+			proberMock = p.(prober.Prober)
+		}
+
 		reconciler := &sink.Reconciler{
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
@@ -1113,7 +1239,9 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 					T:                                      t,
 				}, nil
 			},
-			Env: env,
+			Env:         env,
+			Prober:      proberMock,
+			IngressHost: network.GetServiceHostname(env.IngressName, env.SystemNamespace),
 		}
 
 		reconciler.SecretTracker = &FakeTracker{}

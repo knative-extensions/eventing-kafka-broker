@@ -18,6 +18,7 @@ package sink
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -30,12 +31,14 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
 	"knative.dev/pkg/tracker"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	sinkinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/eventing/v1alpha1/kafkasink"
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
@@ -72,6 +75,8 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 	}
 
 	impl := sinkreconciler.NewImpl(ctx, reconciler)
+	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, configs.IngressPodPort, reconciler.ReceiverSelector(), impl.EnqueueKey)
+	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
 
 	sinkInformer := sinkinformer.Get(ctx)
 

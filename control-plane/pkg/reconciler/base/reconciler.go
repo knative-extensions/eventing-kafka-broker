@@ -88,7 +88,7 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) IsReceiverRunning() bool {
-	pods, err := r.PodLister.List(r.receiverSelector())
+	pods, err := r.PodLister.List(r.ReceiverSelector())
 	return err == nil && len(pods) > 0 && isAtLeastOneRunning(pods)
 }
 
@@ -215,7 +215,7 @@ func (r *Reconciler) UpdateDispatcherPodsAnnotation(ctx context.Context, logger 
 }
 
 func (r *Reconciler) UpdateReceiverPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
-	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(r.receiverSelector())
+	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(r.ReceiverSelector())
 	if errors != nil {
 		return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
 	}
@@ -262,7 +262,7 @@ func (r *Reconciler) updatePodsAnnotation(ctx context.Context, logger *zap.Logge
 	return errors
 }
 
-func (r *Reconciler) receiverSelector() labels.Selector {
+func (r *Reconciler) ReceiverSelector() labels.Selector {
 	return labels.SelectorFromSet(map[string]string{"app": r.ReceiverLabel})
 }
 

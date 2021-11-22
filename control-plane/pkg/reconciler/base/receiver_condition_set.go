@@ -19,18 +19,19 @@ package base
 
 import (
 	"fmt"
+	"net/url"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
-	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 )
 
 const (
@@ -40,6 +41,7 @@ const (
 	ConditionConfigMapUpdated        apis.ConditionType = "ConfigMapUpdated"
 	ConditionConfigParsed            apis.ConditionType = "ConfigParsed"
 	ConditionInitialOffsetsCommitted apis.ConditionType = "InitialOffsetsCommitted"
+	ConditionProbeSucceeded          apis.ConditionType = "ProbeSucceeded"
 )
 
 var IngressConditionSet = apis.NewLivingConditionSet(
@@ -48,6 +50,7 @@ var IngressConditionSet = apis.NewLivingConditionSet(
 	ConditionTopicReady,
 	ConditionConfigMapUpdated,
 	ConditionConfigParsed,
+	ConditionProbeSucceeded,
 )
 
 var EgressConditionSet = apis.NewLivingConditionSet(
@@ -180,20 +183,21 @@ func (manager *StatusConditionManager) TopicReady(topic string) {
 	)
 }
 
-func (manager *StatusConditionManager) Reconciled() reconciler.Event {
-
-	if manager.SetAddress != nil {
-		object := manager.Object
-
-		manager.SetAddress(&apis.URL{
-			Scheme: "http",
-			Host:   network.GetServiceHostname(manager.Env.IngressName, manager.Env.SystemNamespace),
-			Path:   fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName()),
-		})
-		object.GetConditionSet().Manage(object.GetStatus()).MarkTrue(ConditionAddressable)
-	}
-
-	return nil
+func (manager *StatusConditionManager) Addressable(address *url.URL) {
+	manager.SetAddress(&apis.URL{
+		Scheme:      address.Scheme,
+		Opaque:      address.Opaque,
+		User:        address.User,
+		Host:        address.Host,
+		Path:        address.Path,
+		RawPath:     address.RawPath,
+		ForceQuery:  address.ForceQuery,
+		RawQuery:    address.RawQuery,
+		Fragment:    address.Fragment,
+		RawFragment: address.RawFragment,
+	})
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrue(ConditionAddressable)
+	manager.ProbesStatusReady()
 }
 
 func (manager *StatusConditionManager) FailedToUpdateDispatcherPodsAnnotation(err error) {
@@ -281,4 +285,16 @@ func (manager *StatusConditionManager) FailedToResolveSink(err error) error {
 		err.Error(),
 	)
 	return fmt.Errorf("failed to resolve sink: %w", err)
+}
+
+func (manager *StatusConditionManager) ProbesStatusNotReady(status prober.Status) {
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
+		ConditionProbeSucceeded,
+		"ProbeStatus",
+		fmt.Sprintf("status: %s", status.String()),
+	)
+}
+
+func (manager *StatusConditionManager) ProbesStatusReady() {
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrue(ConditionProbeSucceeded)
 }

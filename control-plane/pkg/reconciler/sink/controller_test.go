@@ -35,7 +35,9 @@ func TestNewController(t *testing.T) {
 
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
-	controller := NewController(ctx, nil, &config.Env{})
+	controller := NewController(ctx, nil, &config.Env{
+		IngressPodPort: "8080",
+	})
 
 	assert.NotNil(t, controller, "controller is nil")
 }

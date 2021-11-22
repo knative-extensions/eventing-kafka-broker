@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
+	"knative.dev/pkg/network"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,6 +39,8 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober/probertesting"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
@@ -79,6 +82,8 @@ kafka:
 }
 
 const (
+	testProber = "testProber"
+
 	finalizerName = "kafkachannels.messaging.knative.dev"
 )
 
@@ -165,6 +170,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusDataPlaneAvailable,
 						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
+						StatusProbeSucceeded,
 					),
 				},
 			},
@@ -175,6 +181,142 @@ func TestReconcileKind(t *testing.T) {
 				finalizerUpdatedEvent,
 			},
 		},
+		{
+			Name: "Reconciled failed - probe " + prober.StatusNotReady.String(),
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewService(),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: receiver.Path(ChannelNamespace, ChannelName),
+								},
+							},
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(&env, nil),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(ChannelTopic()),
+						StatusDataPlaneAvailable,
+						//StatusInitialOffsetsCommitted,
+						StatusProbeFailed(prober.StatusNotReady),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
+			},
+		},
+		{
+			Name: "Reconciled failed - probe " + prober.StatusUnknown.String(),
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewService(),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: receiver.Path(ChannelNamespace, ChannelName),
+								},
+							},
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(&env, nil),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(ChannelTopic()),
+						StatusDataPlaneAvailable,
+						//StatusInitialOffsetsCommitted,
+						StatusProbeFailed(prober.StatusUnknown),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusUnknown),
+			},
+		},
 	}
 
 	useTable(t, table, env)
@@ -182,6 +324,11 @@ func TestReconcileKind(t *testing.T) {
 
 func useTable(t *testing.T, table TableTest, env config.Env) {
 	table.Test(t, NewFactory(&env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
+
+		proberMock := probertesting.MockProber(prober.StatusReady)
+		if p, ok := row.OtherTestData[testProber]; ok {
+			proberMock = p.(prober.Prober)
+		}
 
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
@@ -213,6 +360,8 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 					T: t,
 				}, nil
 			},
+			Prober:      proberMock,
+			IngressHost: network.GetServiceHostname(env.IngressName, env.SystemNamespace),
 		}
 
 		reconciler.ConfigMapTracker = &FakeTracker{}

@@ -48,6 +48,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
@@ -80,6 +81,10 @@ type Reconciler struct {
 	InitOffsetsFunc kafka.InitOffsetsFunc
 
 	ConfigMapLister corelisters.ConfigMapLister
+
+	Prober prober.Prober
+
+	IngressHost string
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
@@ -267,7 +272,22 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return subscriptionError
 	}
 
-	return statusConditionManager.Reconciled()
+	address := receiver.Address(r.IngressHost, channel)
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: channel.GetNamespace(),
+			Name:      channel.GetName(),
+		},
+	}
+
+	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusReady {
+		statusConditionManager.ProbesStatusNotReady(status)
+		return nil // Object will get re-queued once probe status changes.
+	}
+	statusConditionManager.Addressable(address)
+
+	return nil
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
