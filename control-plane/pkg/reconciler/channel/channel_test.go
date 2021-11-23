@@ -1045,7 +1045,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusConfigMapNotUpdatedReady(
 							"Failed to get contract data from ConfigMap: knative-eventing/kafka-channel-channels-subscriptions",
-							"failed to unmarshal contract: 'corrupt' - proto:\u00a0syntax error (line 1:1): invalid value corrupt",
+							"failed to unmarshal contract: 'corrupt'",
 						),
 					),
 				},
@@ -1058,7 +1058,7 @@ func TestReconcileKind(t *testing.T) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"failed to get broker and triggers data from config map knative-eventing/kafka-channel-channels-subscriptions: failed to unmarshal contract: 'corrupt' - proto:\u00a0syntax error (line 1:1): invalid value corrupt",
+					"failed to get broker and triggers data from config map knative-eventing/kafka-channel-channels-subscriptions: failed to unmarshal contract: 'corrupt'",
 				),
 			},
 		},

@@ -173,8 +173,15 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 
 		logger.Warn("Failed to unmarshal config map", zap.Error(err))
 
+		// Because of https://github.com/golang/protobuf/issues/1314, we cannot use the error message in the unit tests.
+		// Also, the error here should only happen when there is an implementation issue as the configmap is only
+		// to be touched by the controller.
+		// Thus, let's not have the error message in the returned error. Instead, let's just print it.
+
+		logger.Error(fmt.Sprintf("failed to unmarshal contract: '%s' - %s", dataPlaneDataRaw, err))
+
 		// let the caller decide if it want to continue or fail on an error.
-		return ct, fmt.Errorf("failed to unmarshal contract: '%s' - %w", dataPlaneDataRaw, err)
+		return ct, fmt.Errorf("failed to unmarshal contract: '%s'", dataPlaneDataRaw)
 	}
 
 	return ct, nil
