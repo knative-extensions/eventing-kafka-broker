@@ -887,10 +887,6 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Unknown auth protocol  - with single fresh subscriber - with auth - unknown protocol",
 		},
 		{
-			// TODO
-			Name: "Unable to create topic",
-		},
-		{
 			Name: "Create contract configmap when it does not exist",
 			Objects: []runtime.Object{
 				NewChannel(),
