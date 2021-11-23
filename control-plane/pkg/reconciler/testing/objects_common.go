@@ -188,8 +188,10 @@ func StatusConfigParsed(obj duckv1.KRShaped) {
 	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionConfigParsed)
 }
 
-func StatusConfigNotParsed(obj duckv1.KRShaped, reason string) {
-	obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(base.ConditionConfigParsed, reason, "")
+func StatusConfigNotParsed(reason string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(base.ConditionConfigParsed, reason, "")
+	}
 }
 
 func StatusConfigMapUpdatedReady(env *config.Env) func(obj duckv1.KRShaped) {
@@ -198,6 +200,16 @@ func StatusConfigMapUpdatedReady(env *config.Env) func(obj duckv1.KRShaped) {
 			base.ConditionConfigMapUpdated,
 			fmt.Sprintf("Config map %s updated", env.DataPlaneConfigMapAsString()),
 			"",
+		)
+	}
+}
+
+func StatusConfigMapNotUpdatedReady(reason, message string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
+			base.ConditionConfigMapUpdated,
+			reason,
+			message,
 		)
 	}
 }
