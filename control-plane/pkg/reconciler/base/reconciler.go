@@ -178,7 +178,7 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 		// to be touched by the controller.
 		// Thus, let's not have the error message in the returned error. Instead, let's just print it.
 
-		logger.Error(fmt.Sprintf("failed to unmarshal contract: '%s' - %s", dataPlaneDataRaw, err))
+		logger.Error("Failed to unmarshal contract", zap.Any("content", dataPlaneDataRaw) , zap.Error(err))
 
 		// let the caller decide if it want to continue or fail on an error.
 		return ct, fmt.Errorf("failed to unmarshal contract: '%s'", dataPlaneDataRaw)
