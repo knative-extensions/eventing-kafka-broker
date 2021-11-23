@@ -113,6 +113,7 @@ var DefaultEnv = &config.Env{
 // TODO: rename test cases consistently
 // TODO: test finalize?
 // TODO: fix the order of status updates
+// TODO: add tests where there are no CM updates
 
 func TestReconcileKind(t *testing.T) {
 
