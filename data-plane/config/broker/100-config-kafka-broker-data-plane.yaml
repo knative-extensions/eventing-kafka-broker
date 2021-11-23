@@ -39,7 +39,7 @@ data:
     partitioner.class=org.apache.kafka.clients.producer.internals.DefaultPartitioner
     receive.buffer.bytes=-1
     request.timeout.ms=30000
-    enable.idempotence=false
+    enable.idempotence=true
     max.in.flight.requests.per.connection=5
     metadata.max.age.ms=300000
     # metric.reporters=""
