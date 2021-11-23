@@ -1044,7 +1044,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusConfigMapNotUpdatedReady(
 							"Failed to get contract data from ConfigMap: knative-eventing/kafka-channel-channels-subscriptions",
-							"failed to unmarshal contract: 'corrupt' - proto: syntax error (line 1:1): invalid value corrupt",
+							"failed to unmarshal contract: 'corrupt' - proto:\u00a0syntax error (line 1:1): invalid value corrupt",
 						),
 					),
 				},
