@@ -142,7 +142,7 @@ func waitForKafkaSourceReconcilerToReconcileSource(t *testing.T, client *testlib
 		if ksObj == nil {
 			t.Fatalf("Unabled to Get kafkasource: %s/%s\n", client.Namespace, kafkaSourceName)
 		}
-		return ksObj.Status.ObservedGeneration == ksObj.Generation, nil
+		return ksObj.Status.IsReady() && ksObj.Status.ObservedGeneration == ksObj.Generation, nil
 	})
 	if err != nil {
 		t.Fatalf("Failed to wait for KafkaSource reconciler to reconcile KafkaSource: %v", ksObj)
