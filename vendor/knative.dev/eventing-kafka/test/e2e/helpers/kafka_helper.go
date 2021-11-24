@@ -50,7 +50,7 @@ const (
 	strimziApiVersion    = "v1beta2"
 	strimziTopicResource = "kafkatopics"
 	interval             = 3 * time.Second
-	timeout              = 30 * time.Second
+	timeout              = 4 * time.Minute
 	kafkaCatImage        = "docker.io/edenhill/kafkacat:1.6.0"
 )
 
@@ -239,11 +239,9 @@ func MustCreateTopic(client *testlib.Client, clusterName, clusterNamespace, topi
 	}
 
 	_, err := client.Dynamic.Resource(topicGVR).Namespace(clusterNamespace).Create(context.Background(), &obj, metav1.CreateOptions{})
-
 	if err != nil {
 		client.T.Fatalf("Error while creating the topic %s: %v", topicName, err)
 	}
-
 	client.Tracker.Add(topicGVR.Group, topicGVR.Version, topicGVR.Resource, clusterNamespace, topicName)
 
 	// Wait for the topic to be ready
