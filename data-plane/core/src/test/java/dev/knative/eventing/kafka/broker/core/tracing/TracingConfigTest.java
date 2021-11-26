@@ -101,7 +101,7 @@ public class TracingConfigTest {
   }
 
   @Test
-  public void shouldReturnW3CHeadsFormatWhenBackendContainsUnknownName() throws IOException {
+  public void shouldReturnW3CHeadersFormatWhenBackendContainsUnknownName() throws IOException {
     final var dir = Files.createTempDirectory("tracing");
 
     write(dir, "/backend", " 1234 ");
