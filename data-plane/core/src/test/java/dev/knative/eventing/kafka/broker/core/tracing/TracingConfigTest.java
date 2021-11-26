@@ -16,7 +16,7 @@
 package dev.knative.eventing.kafka.broker.core.tracing;
 
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.Backend;
-import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.HeadsFormat;
+import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig.HeadersFormat;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -39,15 +39,51 @@ public class TracingConfigTest {
     write(dir, "/backend", " zipkin ");
     write(dir, "/sample-rate", " 0.1 ");
     write(dir, "/zipkin-endpoint", "  http://localhost:9241/v2/api/spans/     ");
-    write(dir, "/heads-format", " b3-multi-header  ");
 
     final var config = TracingConfig.fromDir(dir.toAbsolutePath().toString());
 
     assertThat(config.getBackend()).isEqualTo(Backend.ZIPKIN);
     assertThat(config.getSamplingRate()).isEqualTo(0.1F);
     assertThat(config.getUrl()).isEqualTo("http://localhost:9241/v2/api/spans/");
-    assertThat(config.getHeadsFormat()).isEqualTo(HeadsFormat.B3_MULTI_HEADER);
+    assertThat(config.getHeadersFormat()).isEqualTo(HeadersFormat.W3C);
   }
+
+  @Test
+  public void shouldParseConfigB3SingleHeaderGivenDirectory() throws IOException {
+
+    final var dir = Files.createTempDirectory("tracing");
+
+    write(dir, "/backend", " zipkin ");
+    write(dir, "/sample-rate", " 0.1 ");
+    write(dir, "/zipkin-endpoint", "  http://localhost:9241/v2/api/spans/     ");
+    write(dir, "/headers-format", " b3-single-header  ");
+
+    final var config = TracingConfig.fromDir(dir.toAbsolutePath().toString());
+
+    assertThat(config.getBackend()).isEqualTo(Backend.ZIPKIN);
+    assertThat(config.getSamplingRate()).isEqualTo(0.1F);
+    assertThat(config.getUrl()).isEqualTo("http://localhost:9241/v2/api/spans/");
+    assertThat(config.getHeadersFormat()).isEqualTo(HeadersFormat.B3_SINGLE_HEADER);
+  }
+
+  @Test
+  public void shouldParseConfigB3MultiHeaderGivenDirectory() throws IOException {
+
+    final var dir = Files.createTempDirectory("tracing");
+
+    write(dir, "/backend", " zipkin ");
+    write(dir, "/sample-rate", " 0.1 ");
+    write(dir, "/zipkin-endpoint", "  http://localhost:9241/v2/api/spans/     ");
+    write(dir, "/headers-format", " b3-multi-header  ");
+
+    final var config = TracingConfig.fromDir(dir.toAbsolutePath().toString());
+
+    assertThat(config.getBackend()).isEqualTo(Backend.ZIPKIN);
+    assertThat(config.getSamplingRate()).isEqualTo(0.1F);
+    assertThat(config.getUrl()).isEqualTo("http://localhost:9241/v2/api/spans/");
+    assertThat(config.getHeadersFormat()).isEqualTo(HeadersFormat.B3_MULTI_HEADER);
+  }
+
 
   @Test
   public void shouldReturnUnknownBackendWhenBackendContainsUnknownName() throws IOException {
@@ -75,7 +111,7 @@ public class TracingConfigTest {
 
     final var config = TracingConfig.fromDir(dir.toAbsolutePath().toString());
 
-    assertThat(config.getHeadsFormat()).isEqualTo(HeadsFormat.W3C);
+    assertThat(config.getHeadersFormat()).isEqualTo(HeadersFormat.W3C);
   }
 
   @Test
@@ -84,7 +120,7 @@ public class TracingConfigTest {
 
     final var config = TracingConfig.fromDir(dir.toAbsolutePath().toString());
 
-    assertThat(config.getHeadsFormat()).isEqualTo(HeadsFormat.W3C);
+    assertThat(config.getHeadersFormat()).isEqualTo(HeadersFormat.W3C);
   }
 
   @Test
@@ -102,7 +138,7 @@ public class TracingConfigTest {
 
     final var config = TracingConfig.fromDir("/tmp/" + UUID.randomUUID().toString());
 
-    assertThat(config.getHeadsFormat()).isEqualTo(HeadsFormat.W3C);
+    assertThat(config.getHeadersFormat()).isEqualTo(HeadersFormat.W3C);
   }
 
   @Test
@@ -139,7 +175,7 @@ public class TracingConfigTest {
 
   @Test
   public void setupShouldNotFailWhenBackendIsUnknown() {
-    assertThatNoException().isThrownBy(() -> new TracingConfig(Backend.UNKNOWN, null, 0F, HeadsFormat.W3C).setup());
+    assertThatNoException().isThrownBy(() -> new TracingConfig(Backend.UNKNOWN, null, 0F, HeadersFormat.W3C).setup());
   }
 
   private static void write(final Path root, final String name, final String s) throws IOException {

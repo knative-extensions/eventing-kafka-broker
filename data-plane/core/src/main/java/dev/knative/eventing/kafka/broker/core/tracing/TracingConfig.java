@@ -59,9 +59,9 @@ public final class TracingConfig {
   private final Backend backend;
   private final String url;
   private final float samplingRate;
-  private final HeadsFormat headsFormat;
+  private final HeadersFormat headersFormat;
 
-  TracingConfig(final Backend backend, final String url, final float samplingRate, final HeadsFormat headsFormat) {
+  TracingConfig(final Backend backend, final String url, final float samplingRate, final HeadersFormat headersFormat) {
     if (!backend.equals(Backend.UNKNOWN) && !URI.create(url).isAbsolute()) {
       throw new IllegalArgumentException(String.format(
         "Backend is %s but the endpoint isn't an absolute URI: %s",
@@ -72,7 +72,7 @@ public final class TracingConfig {
 
     this.backend = backend;
     this.url = url;
-    this.headsFormat = headsFormat;
+    this.headersFormat = headersFormat;
     if (backend.equals(Backend.UNKNOWN)) {
       this.samplingRate = 0F;
     } else {
@@ -86,7 +86,7 @@ public final class TracingConfig {
       keyValue("backend", getBackend()),
       keyValue("sampleRate", getSamplingRate()),
       keyValue("loggingDebugEnabled", logger.isDebugEnabled()),
-      keyValue("headsFormat", getHeadsFormat())
+      keyValue("headersFormat", getHeadersFormat())
     );
 
     SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
@@ -128,7 +128,7 @@ public final class TracingConfig {
       tracerProviderBuilder.build()
     );
 
-    final var contextPropagators = switch (getHeadsFormat()) {
+    final var contextPropagators = switch (getHeadersFormat()) {
       case B3_MULTI_HEADER -> ContextPropagators.create(B3Propagator.injectingMultiHeaders());
       case B3_SINGLE_HEADER -> ContextPropagators.create(B3Propagator.injectingSingleHeader());
       default -> ContextPropagators.create(W3CTraceContextPropagator.getInstance());
@@ -150,8 +150,8 @@ public final class TracingConfig {
     return samplingRate;
   }
 
-  HeadsFormat getHeadsFormat() {
-    return headsFormat;
+  HeadersFormat getHeadersFormat() {
+    return headersFormat;
   }
 
   @Override
@@ -160,7 +160,7 @@ public final class TracingConfig {
       "backend=" + backend +
       ", url='" + url + '\'' +
       ", samplingRate=" + samplingRate +
-      ", headsFormat=" + headsFormat +
+      ", headersFormat=" + headersFormat +
       '}';
   }
 
@@ -174,8 +174,8 @@ public final class TracingConfig {
     return pathOf(root, "sample-rate");
   }
 
-  private static Path headsFormatPath(final String root) {
-    return pathOf(root, "heads-format");
+  private static Path headersFormatPath(final String root) {
+    return pathOf(root, "headers-format");
   }
 
   private static SpanExporter zipkinExporter(TracingConfig tracingConfig) {
@@ -223,8 +223,8 @@ public final class TracingConfig {
       return Float.valueOf(s);
     }
 
-    static HeadsFormat HeadsFormat(InputStream in) throws IOException {
-      return HeadsFormat.from(trim(in));
+    static HeadersFormat HeadersFormat(InputStream in) throws IOException {
+      return HeadersFormat.from(trim(in));
     }
 
     private static String trim(InputStream in) throws IOException {
@@ -235,20 +235,20 @@ public final class TracingConfig {
   public static TracingConfig fromDir(final String path) throws IOException {
     final var backendPath = backendPath(path);
     if (!Files.exists(backendPath)) {
-      return new TracingConfig(Backend.UNKNOWN, null, 0, HeadsFormat.W3C);
+      return new TracingConfig(Backend.UNKNOWN, null, 0, HeadersFormat.W3C);
     }
 
     var sampleRate = 0F;
     var backend = Backend.UNKNOWN;
     var endpoint = "";
-    var headsFormat = HeadsFormat.W3C;
+    var headsFormat = HeadersFormat.W3C;
 
     try (final var backendFile = new FileInputStream(backendPath.toString())) {
       backend = Parser.backend(backendFile);
     }
 
     if (backend.equals(Backend.UNKNOWN)) {
-      return new TracingConfig(Backend.UNKNOWN, null, 0, HeadsFormat.W3C);
+      return new TracingConfig(Backend.UNKNOWN, null, 0, HeadersFormat.W3C);
     }
 
     final var sampleRatePath = sampleRatePath(path);
@@ -260,7 +260,7 @@ public final class TracingConfig {
 
     if (backend.equals(Backend.ZIPKIN)) {
       final var zipkinPath = pathOf(path, "zipkin-endpoint");
-      final var headsFormatPath = headsFormatPath(path);
+      final var headsFormatPath = headersFormatPath(path);
       if (Files.exists(zipkinPath)) {
         try (final var url = new FileInputStream(zipkinPath.toString())) {
           endpoint = Parser.URL(url);
@@ -268,10 +268,10 @@ public final class TracingConfig {
       }
       if (Files.exists(headsFormatPath)) {
         try (final var headsFormatFile = new FileInputStream(headsFormatPath.toString())) {
-          final var parsed = Parser.HeadsFormat(headsFormatFile);
+          final var parsed = Parser.HeadersFormat(headsFormatFile);
           //B3 propagation is available when backend is zipkin only
-          if (parsed.equals(HeadsFormat.B3_MULTI_HEADER)
-            || parsed.equals(HeadsFormat.B3_SINGLE_HEADER)) {
+          if (parsed.equals(HeadersFormat.B3_MULTI_HEADER)
+            || parsed.equals(HeadersFormat.B3_SINGLE_HEADER)) {
             headsFormat = parsed;
           }
         }
@@ -295,12 +295,12 @@ public final class TracingConfig {
     }
   }
 
-  enum HeadsFormat {
+  enum HeadersFormat {
     B3_MULTI_HEADER,
     B3_SINGLE_HEADER,
     W3C;
 
-    public static HeadsFormat from(final String s) {
+    public static HeadersFormat from(final String s) {
       return switch (s.trim().toLowerCase()) {
         case "b3-multi-header" -> B3_MULTI_HEADER;
         case "b3-single-header" -> B3_SINGLE_HEADER;
