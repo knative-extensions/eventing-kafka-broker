@@ -144,6 +144,12 @@
         <scope>import</scope>
       </dependency>
 
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-extension-trace-propagators</artifactId>
+        <version>${opentelemetry.version}</version>
+      </dependency>
+
       <!-- Kubernetes -->
       <dependency>
         <groupId>io.fabric8</groupId>
