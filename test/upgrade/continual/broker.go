@@ -117,20 +117,30 @@ func (k kafkaBrokerSut) Deploy(ctx sut.Context, destination duckv1.Destination) 
 }
 
 func (k kafkaBrokerSut) deployBroker(ctx sut.Context) {
+	namespace := ctx.Client.Namespace
 	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "kafka-broker-upgrade-config",
+			Namespace: namespace,
+		},
 		Data: map[string]string{
 			broker.BootstrapServersConfigMapKey:              testingpkg.BootstrapServersPlaintext,
 			broker.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", k.NumPartitions),
 			broker.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", k.ReplicationFactor),
 		},
 	}
-	namespace := ctx.Client.Namespace
 	cm, err := ctx.Kube.CoreV1().ConfigMaps(namespace).Create(ctx.Ctx, cm, metav1.CreateOptions{})
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		ctx.T.Fatalf("Failed to create ConfigMap %s/%s: %v", namespace, cm.GetName(), err)
 	}
 
 	ctx.Client.CreateBrokerOrFail(k.Broker.Name,
+		resources.WithConfigForBroker(&duckv1.KReference{
+			Kind:       "ConfigMap",
+			Namespace:  cm.GetNamespace(),
+			Name:       cm.GetName(),
+			APIVersion: "v1",
+		}),
 		resources.WithBrokerClassForBroker(kafka.BrokerClass),
 		resources.WithDeliveryForBroker(&eventingduckv1.DeliverySpec{
 			Retry:         pointer.Int32Ptr(int32(k.RetryCount)),
