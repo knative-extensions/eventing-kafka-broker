@@ -26,10 +26,3 @@ func BrokerPreUpgradeTest() pkgupgrade.Operation {
 		runBrokerSmokeTest(c.T)
 	})
 }
-
-// SourcePreUpgradeTest tests source operations before upgrade.
-func SourcePreUpgradeTest() pkgupgrade.Operation {
-	return pkgupgrade.NewOperation("SourcePreUpgradeTest", func(c pkgupgrade.Context) {
-		runSourceSmokeTest(c.T)
-	})
-}

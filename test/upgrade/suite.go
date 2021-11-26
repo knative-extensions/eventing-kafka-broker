@@ -27,12 +27,10 @@ func Suite() pkgupgrade.Suite {
 	return pkgupgrade.Suite{
 		Tests: pkgupgrade.Tests{
 			PreUpgrade: []pkgupgrade.Operation{
-				SourcePreUpgradeTest(),
 				BrokerPreUpgradeTest(),
 			},
 			PostUpgrade: []pkgupgrade.Operation{
 				BrokerPostUpgradeTest(),
-				SourcePostUpgradeTest(),
 			},
 			PostDowngrade: []pkgupgrade.Operation{
 				BrokerPostDowngradeTest(),

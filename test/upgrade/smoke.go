@@ -37,7 +37,3 @@ func runBrokerSmokeTest(t *testing.T) {
 		)
 	})
 }
-
-func runSourceSmokeTest(t *testing.T) {
-
-}
