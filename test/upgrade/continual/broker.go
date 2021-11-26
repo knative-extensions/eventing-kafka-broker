@@ -17,14 +17,27 @@
 package continual
 
 import (
+	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/eventing/test/lib/duck"
+	"knative.dev/eventing/test/lib/resources"
 	"knative.dev/eventing/test/upgrade/prober/sut"
-	"knative.dev/pkg/system"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
 	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade/continual"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 const (
@@ -38,19 +51,28 @@ const (
 // KafkaBrokerTestOptions holds test options for Kafka Broker tests.
 type KafkaBrokerTestOptions struct {
 	*eventingkafkaupgrade.TestOptions
-	*eventingkafkaupgrade.ReplicationOptions
-	*eventingkafkaupgrade.RetryOptions
+	*Broker
+	*Triggers
 }
 
 func (o *KafkaBrokerTestOptions) setDefaults() {
 	if o.TestOptions == nil {
 		o.TestOptions = &eventingkafkaupgrade.TestOptions{}
 	}
-	if o.RetryOptions == nil {
-		o.RetryOptions = defaultRetryOptions()
+	if o.Broker == nil {
+		o.Broker = &Broker{
+			Name:               "broker-upgrade",
+			ReplicationOptions: defaultReplicationOptions(),
+			RetryOptions:       defaultRetryOptions(),
+		}
 	}
-	if o.ReplicationOptions == nil {
-		o.ReplicationOptions = defaultReplicationOptions()
+	if o.Triggers == nil {
+		o.Triggers = &Triggers{
+			Prefix: "trigger-upgrade",
+			Triggers: sut.Triggers{
+				Types: eventTypes,
+			},
+		}
 	}
 }
 
@@ -77,41 +99,80 @@ func BrokerTest(opts KafkaBrokerTestOptions) pkgupgrade.BackgroundOperation {
 	return continualVerification(
 		"KafkaBrokerContinualTest",
 		opts.TestOptions,
-		&kafkaBrokerSut{
-			ReplicationOptions: opts.ReplicationOptions,
-			RetryOptions:       opts.RetryOptions,
-			SystemUnderTest:    sut.NewDefault(),
-		},
+		&kafkaBrokerSut{Broker: *opts.Broker, Triggers: *opts.Triggers},
 		kafkaBrokerConfigTemplatePath,
 	)
 }
 
 type kafkaBrokerSut struct {
-	*eventingkafkaupgrade.ReplicationOptions
-	*eventingkafkaupgrade.RetryOptions
-	sut.SystemUnderTest
+	Broker
+	Triggers
 }
 
-func (b *kafkaBrokerSut) setKafkaBrokerAsDefaultForBroker(ctx sut.Context) {
+func (k kafkaBrokerSut) Deploy(ctx sut.Context, destination duckv1.Destination) interface{} {
+	k.deployBroker(ctx)
+	url := k.fetchURL(ctx)
+	k.deployTriggers(ctx, destination)
+	return url
+}
+
+func (k kafkaBrokerSut) deployBroker(ctx sut.Context) {
 	cm := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: system.Namespace(),
-			Name:      "config-br-defaults",
-		},
 		Data: map[string]string{
-			"default-br-config": `
-clusterDefault:
-  brokerClass: Kafka
-  apiVersion: v1
-  kind: ConfigMap
-  name: kafka-broker-config
-  namespace: knative-eventing
-`,
+			broker.BootstrapServersConfigMapKey:              testingpkg.BootstrapServersPlaintext,
+			broker.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", k.NumPartitions),
+			broker.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", k.ReplicationFactor),
 		},
 	}
-	cm, err := ctx.Client.Kube.CoreV1().ConfigMaps(system.Namespace()).Update(ctx.Ctx, cm, metav1.UpdateOptions{})
+	namespace := ctx.Client.Namespace
+	cm, err := ctx.Kube.CoreV1().ConfigMaps(namespace).Create(ctx.Ctx, cm, metav1.CreateOptions{})
+	if err != nil && !apierrors.IsAlreadyExists(err) {
+		ctx.T.Fatalf("Failed to create ConfigMap %s/%s: %v", namespace, cm.GetName(), err)
+	}
+
+	ctx.Client.CreateBrokerOrFail(k.Broker.Name,
+		resources.WithBrokerClassForBroker(kafka.BrokerClass),
+		resources.WithDeliveryForBroker(&eventingduckv1.DeliverySpec{
+			Retry:         pointer.Int32Ptr(int32(k.RetryCount)),
+			BackoffPolicy: &k.BackoffPolicy,
+			BackoffDelay:  &k.BackoffDelay,
+		}),
+	)
+}
+
+func (k *kafkaBrokerSut) fetchURL(ctx sut.Context) *apis.URL {
+	namespace := ctx.Client.Namespace
+	ctx.Log.Debugf("Fetching \"%s\" broker URL for ns %s", k.Broker.Name, namespace)
+
+	meta := resources.NewMetaResource(
+		k.Broker.Name, namespace, testlib.BrokerTypeMeta,
+	)
+	err := duck.WaitForResourceReady(ctx.Client.Dynamic, meta)
 	if err != nil {
 		ctx.T.Fatal(err)
 	}
-	ctx.Log.Info("Updated config-br-defaults in ns knative-eventing to eq: ", cm.Data)
+
+	br, err := ctx.Client.Eventing.EventingV1().Brokers(namespace).Get(
+		ctx.Ctx, k.Broker.Name, metav1.GetOptions{},
+	)
+	if err != nil {
+		ctx.T.Fatal(err)
+	}
+
+	url := br.Status.Address.URL
+	ctx.Log.Debugf("\"%s\" broker URL for ns %s is %v", k.Broker.Name, namespace, url)
+	return url
+}
+
+func (k *kafkaBrokerSut) deployTriggers(ctx sut.Context, dest duckv1.Destination) {
+	for _, eventType := range k.Triggers.Types {
+		name := fmt.Sprintf("%s-%s", k.Prefix, eventType)
+		ctx.Log.Debugf("Creating trigger \"%s\" for type %s to route to %#v", name, eventType, dest)
+		ctx.Client.CreateTriggerOrFail(
+			name,
+			resources.WithBroker(k.Broker.Name),
+			resources.WithAttributesTriggerFilter(eventing.TriggerAnyFilter, eventType, nil),
+			resources.WithSubscriberDestination(func(t *eventing.Trigger) duckv1.Destination { return dest }),
+		)
+	}
 }

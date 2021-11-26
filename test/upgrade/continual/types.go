@@ -17,12 +17,30 @@
 package continual
 
 import (
+	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade/continual"
 	"knative.dev/eventing/test/upgrade/prober"
 	"knative.dev/eventing/test/upgrade/prober/sut"
+	"knative.dev/eventing/test/upgrade/prober/wathola/event"
 )
 
 // TestOptions holds options for EventingKafka continual tests.
 type TestOptions struct {
 	prober.ContinualVerificationOptions
 	SUTs map[string]sut.SystemUnderTest
+}
+
+type Triggers struct {
+	Prefix string
+	sut.Triggers
+}
+
+type Broker struct {
+	Name string
+	*eventingkafkaupgrade.ReplicationOptions
+	*eventingkafkaupgrade.RetryOptions
+}
+
+var eventTypes = []string{
+	event.Step{}.Type(),
+	event.Finished{}.Type(),
 }
