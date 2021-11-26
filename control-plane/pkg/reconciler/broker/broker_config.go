@@ -27,7 +27,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
-func configFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*kafka.TopicConfig, error) {
+func TopicConfigFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*kafka.TopicConfig, error) {
 
 	topicDetail := sarama.TopicDetail{}
 
