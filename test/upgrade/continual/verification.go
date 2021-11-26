@@ -80,6 +80,6 @@ func configurator(theSut sut.SystemUnderTest, configTemplate string) prober.Conf
 		// envconfig.Process invocation is repeated from within prober.NewConfig to
 		// make sure every knob is configurable, but using defaults from Eventing
 		// Kafka instead of Core. The prefix is also changed.
-		return envconfig.Process("eventing_kafka_upgrade_tests", config)
+		return envconfig.Process("eventing_kafka_broker_upgrade_tests", config)
 	}
 }
