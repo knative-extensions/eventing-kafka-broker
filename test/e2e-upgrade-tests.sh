@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Docs -> file://./upgrade/README.md
-
-
 # variables used:
 # - SKIP_INITIALIZE (default: false) - skip cluster creation.
 
