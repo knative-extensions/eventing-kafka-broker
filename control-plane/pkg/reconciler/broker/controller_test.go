@@ -68,7 +68,6 @@ func TestNewController(t *testing.T) {
 			},
 		}),
 		env,
-		"",
 	)
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
