@@ -115,7 +115,7 @@ public class TracingConfigTest {
   }
 
   @Test
-  public void shouldReturnW3CHeadsFormatWhenNoFilesArePresent() throws IOException {
+  public void shouldReturnW3CHeadersFormatWhenNoFilesArePresent() throws IOException {
     final var dir = Files.createTempDirectory("tracing");
 
     final var config = TracingConfig.fromDir(dir.toAbsolutePath().toString());
