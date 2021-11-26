@@ -21,7 +21,7 @@ source $(pwd)/hack/control-plane.sh
 # Latest release. If user does not supply this as a flag, the latest tagged release on the current branch will be used.
 readonly LATEST_RELEASE_VERSION=$(latest_version)
 # Previous release URL. If user does not supply this as a flag, the GCS previous directory will be used.
-readonly PREVIOUS_RELEASE_URL="${PREVIOUS_RELEASE_URL:-"https://github.com/knative/eventing/releases/download/${LATEST_RELEASE_VERSION}"}"
+readonly PREVIOUS_RELEASE_URL="${PREVIOUS_RELEASE_URL:-"https://github.com/knative-sandbox/eventing-kafka-broker/releases/download/${LATEST_RELEASE_VERSION}"}"
 
 readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
 
