@@ -241,7 +241,7 @@ public final class TracingConfig {
     var sampleRate = 0F;
     var backend = Backend.UNKNOWN;
     var endpoint = "";
-    var headsFormat = HeadersFormat.W3C;
+    var headersFormat = HeadersFormat.W3C;
 
     try (final var backendFile = new FileInputStream(backendPath.toString())) {
       backend = Parser.backend(backendFile);
@@ -260,25 +260,25 @@ public final class TracingConfig {
 
     if (backend.equals(Backend.ZIPKIN)) {
       final var zipkinPath = pathOf(path, "zipkin-endpoint");
-      final var headsFormatPath = headersFormatPath(path);
+      final var headersFormatPath = headersFormatPath(path);
       if (Files.exists(zipkinPath)) {
         try (final var url = new FileInputStream(zipkinPath.toString())) {
           endpoint = Parser.URL(url);
         }
       }
-      if (Files.exists(headsFormatPath)) {
-        try (final var headsFormatFile = new FileInputStream(headsFormatPath.toString())) {
-          final var parsed = Parser.HeadersFormat(headsFormatFile);
+      if (Files.exists(headersFormatPath)) {
+        try (final var headersFormatFile = new FileInputStream(headersFormatPath.toString())) {
+          final var parsed = Parser.HeadersFormat(headersFormatFile);
           //B3 propagation is available when backend is zipkin only
           if (parsed.equals(HeadersFormat.B3_MULTI_HEADER)
             || parsed.equals(HeadersFormat.B3_SINGLE_HEADER)) {
-            headsFormat = parsed;
+            headersFormat = parsed;
           }
         }
       }
     }
 
-    return new TracingConfig(backend, endpoint, sampleRate, headsFormat);
+    return new TracingConfig(backend, endpoint, sampleRate, headersFormat);
   }
 
   // Backend definition
