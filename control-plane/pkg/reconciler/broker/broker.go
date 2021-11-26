@@ -364,7 +364,7 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*
 		return nil, nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, err)
 	}
 
-	brokerConfig, err := configFromConfigMap(logger, cm)
+	brokerConfig, err := TopicConfigFromConfigMap(logger, cm)
 	if err != nil {
 		return nil, cm, err
 	}
@@ -431,7 +431,7 @@ func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev
 
 	return func(configMap *corev1.ConfigMap) {
 
-		topicConfig, err := configFromConfigMap(logger, configMap)
+		topicConfig, err := TopicConfigFromConfigMap(logger, configMap)
 		if err != nil {
 			return
 		}
