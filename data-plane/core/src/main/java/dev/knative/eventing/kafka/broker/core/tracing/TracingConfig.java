@@ -128,12 +128,11 @@ public final class TracingConfig {
       tracerProviderBuilder.build()
     );
 
-    ContextPropagators contextPropagators;
-    switch (getHeadsFormat()) {
-      case B3_MULTI_HEADER -> contextPropagators = ContextPropagators.create(B3Propagator.injectingMultiHeaders());
-      case B3_SINGLE_HEADER -> contextPropagators = ContextPropagators.create(B3Propagator.injectingSingleHeader());
-      default -> contextPropagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance());
-    }
+    final var contextPropagators = switch (getHeadsFormat()) {
+      case B3_MULTI_HEADER -> ContextPropagators.create(B3Propagator.injectingMultiHeaders());
+      case B3_SINGLE_HEADER -> ContextPropagators.create(B3Propagator.injectingSingleHeader());
+      default -> ContextPropagators.create(W3CTraceContextPropagator.getInstance());
+    };
     sdkBuilder.setPropagators(contextPropagators);
 
     return sdkBuilder.buildAndRegisterGlobal();
