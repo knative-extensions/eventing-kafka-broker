@@ -21,6 +21,7 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
+import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.OpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.resources.Resource;
@@ -30,14 +31,15 @@ import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -57,8 +59,9 @@ public final class TracingConfig {
   private final Backend backend;
   private final String url;
   private final float samplingRate;
+  private final HeadersFormat headersFormat;
 
-  TracingConfig(final Backend backend, final String url, final float samplingRate) {
+  TracingConfig(final Backend backend, final String url, final float samplingRate, final HeadersFormat headersFormat) {
     if (!backend.equals(Backend.UNKNOWN) && !URI.create(url).isAbsolute()) {
       throw new IllegalArgumentException(String.format(
         "Backend is %s but the endpoint isn't an absolute URI: %s",
@@ -69,6 +72,7 @@ public final class TracingConfig {
 
     this.backend = backend;
     this.url = url;
+    this.headersFormat = headersFormat;
     if (backend.equals(Backend.UNKNOWN)) {
       this.samplingRate = 0F;
     } else {
@@ -78,10 +82,11 @@ public final class TracingConfig {
 
   public OpenTelemetrySdk setup() {
     logger.info(
-      "Registering tracing configurations {} {} {}",
+      "Registering tracing configurations {} {} {} {}",
       keyValue("backend", getBackend()),
       keyValue("sampleRate", getSamplingRate()),
-      keyValue("loggingDebugEnabled", logger.isDebugEnabled())
+      keyValue("loggingDebugEnabled", logger.isDebugEnabled()),
+      keyValue("headersFormat", getHeadersFormat())
     );
 
     SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
@@ -122,9 +127,13 @@ public final class TracingConfig {
     sdkBuilder.setTracerProvider(
       tracerProviderBuilder.build()
     );
-    sdkBuilder.setPropagators(ContextPropagators.create(
-      W3CTraceContextPropagator.getInstance()
-    ));
+
+    final var contextPropagators = switch (getHeadersFormat()) {
+      case B3_MULTI_HEADER -> ContextPropagators.create(B3Propagator.injectingMultiHeaders());
+      case B3_SINGLE_HEADER -> ContextPropagators.create(B3Propagator.injectingSingleHeader());
+      default -> ContextPropagators.create(W3CTraceContextPropagator.getInstance());
+    };
+    sdkBuilder.setPropagators(contextPropagators);
 
     return sdkBuilder.buildAndRegisterGlobal();
   }
@@ -141,12 +150,17 @@ public final class TracingConfig {
     return samplingRate;
   }
 
+  HeadersFormat getHeadersFormat() {
+    return headersFormat;
+  }
+
   @Override
   public String toString() {
     return "TracingConfig{" +
       "backend=" + backend +
       ", url='" + url + '\'' +
       ", samplingRate=" + samplingRate +
+      ", headersFormat=" + headersFormat +
       '}';
   }
 
@@ -158,6 +172,10 @@ public final class TracingConfig {
 
   private static Path sampleRatePath(final String root) {
     return pathOf(root, "sample-rate");
+  }
+
+  private static Path headersFormatPath(final String root) {
+    return pathOf(root, "headers-format");
   }
 
   private static SpanExporter zipkinExporter(TracingConfig tracingConfig) {
@@ -205,6 +223,10 @@ public final class TracingConfig {
       return Float.valueOf(s);
     }
 
+    static HeadersFormat HeadersFormat(InputStream in) throws IOException {
+      return HeadersFormat.from(trim(in));
+    }
+
     private static String trim(InputStream in) throws IOException {
       return new String(in.readAllBytes()).trim();
     }
@@ -213,19 +235,20 @@ public final class TracingConfig {
   public static TracingConfig fromDir(final String path) throws IOException {
     final var backendPath = backendPath(path);
     if (!Files.exists(backendPath)) {
-      return new TracingConfig(Backend.UNKNOWN, null, 0);
+      return new TracingConfig(Backend.UNKNOWN, null, 0, HeadersFormat.W3C);
     }
 
     var sampleRate = 0F;
     var backend = Backend.UNKNOWN;
     var endpoint = "";
+    var headersFormat = HeadersFormat.W3C;
 
     try (final var backendFile = new FileInputStream(backendPath.toString())) {
       backend = Parser.backend(backendFile);
     }
 
     if (backend.equals(Backend.UNKNOWN)) {
-      return new TracingConfig(Backend.UNKNOWN, null, 0);
+      return new TracingConfig(Backend.UNKNOWN, null, 0, HeadersFormat.W3C);
     }
 
     final var sampleRatePath = sampleRatePath(path);
@@ -237,14 +260,25 @@ public final class TracingConfig {
 
     if (backend.equals(Backend.ZIPKIN)) {
       final var zipkinPath = pathOf(path, "zipkin-endpoint");
+      final var headersFormatPath = headersFormatPath(path);
       if (Files.exists(zipkinPath)) {
         try (final var url = new FileInputStream(zipkinPath.toString())) {
           endpoint = Parser.URL(url);
         }
       }
+      if (Files.exists(headersFormatPath)) {
+        try (final var headersFormatFile = new FileInputStream(headersFormatPath.toString())) {
+          final var parsed = Parser.HeadersFormat(headersFormatFile);
+          //B3 propagation is available when backend is zipkin only
+          if (parsed.equals(HeadersFormat.B3_MULTI_HEADER)
+            || parsed.equals(HeadersFormat.B3_SINGLE_HEADER)) {
+            headersFormat = parsed;
+          }
+        }
+      }
     }
 
-    return new TracingConfig(backend, endpoint, sampleRate);
+    return new TracingConfig(backend, endpoint, sampleRate, headersFormat);
   }
 
   // Backend definition
@@ -257,6 +291,20 @@ public final class TracingConfig {
       return switch (s.trim().toLowerCase()) {
         case "zipkin" -> ZIPKIN;
         default -> UNKNOWN;
+      };
+    }
+  }
+
+  enum HeadersFormat {
+    B3_MULTI_HEADER,
+    B3_SINGLE_HEADER,
+    W3C;
+
+    public static HeadersFormat from(final String s) {
+      return switch (s.trim().toLowerCase()) {
+        case "b3-multi-header" -> B3_MULTI_HEADER;
+        case "b3-single-header" -> B3_SINGLE_HEADER;
+        default -> W3C;
       };
     }
   }
