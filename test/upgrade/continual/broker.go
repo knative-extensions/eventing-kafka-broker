@@ -21,9 +21,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/test/upgrade/prober/sut"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/system"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
+
+	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade/continual"
 )
 
 const (
@@ -36,14 +37,14 @@ const (
 
 // KafkaBrokerTestOptions holds test options for Kafka Broker tests.
 type KafkaBrokerTestOptions struct {
-	*TestOptions
-	*ReplicationOptions
-	*RetryOptions
+	*eventingkafkaupgrade.TestOptions
+	*eventingkafkaupgrade.ReplicationOptions
+	*eventingkafkaupgrade.RetryOptions
 }
 
 func (o *KafkaBrokerTestOptions) setDefaults() {
 	if o.TestOptions == nil {
-		o.TestOptions = &TestOptions{}
+		o.TestOptions = &eventingkafkaupgrade.TestOptions{}
 	}
 	if o.RetryOptions == nil {
 		o.RetryOptions = defaultRetryOptions()
@@ -53,16 +54,16 @@ func (o *KafkaBrokerTestOptions) setDefaults() {
 	}
 }
 
-func defaultRetryOptions() *RetryOptions {
-	return &RetryOptions{
+func defaultRetryOptions() *eventingkafkaupgrade.RetryOptions {
+	return &eventingkafkaupgrade.RetryOptions{
 		RetryCount:    defaultRetryCount,
 		BackoffPolicy: defaultBackoffPolicy,
 		BackoffDelay:  defaultBackoffDelay,
 	}
 }
 
-func defaultReplicationOptions() *ReplicationOptions {
-	return &ReplicationOptions{
+func defaultReplicationOptions() *eventingkafkaupgrade.ReplicationOptions {
+	return &eventingkafkaupgrade.ReplicationOptions{
 		NumPartitions:     6,
 		ReplicationFactor: 3,
 	}
@@ -79,23 +80,16 @@ func BrokerTest(opts KafkaBrokerTestOptions) pkgupgrade.BackgroundOperation {
 		&kafkaBrokerSut{
 			ReplicationOptions: opts.ReplicationOptions,
 			RetryOptions:       opts.RetryOptions,
-			defaultSut:         nil,
+			SystemUnderTest:    sut.NewDefault(),
 		},
 		kafkaBrokerConfigTemplatePath,
 	)
 }
 
 type kafkaBrokerSut struct {
-	*ReplicationOptions
-	*RetryOptions
-	defaultSut sut.SystemUnderTest
-}
-
-func (b kafkaBrokerSut) Deploy(ctx sut.Context, destination duckv1.Destination) interface{} {
-	b.setKafkaBrokerAsDefaultForBroker(ctx)
-
-	b.defaultSut = sut.NewDefault()
-	return b.defaultSut.Deploy(ctx, destination)
+	*eventingkafkaupgrade.ReplicationOptions
+	*eventingkafkaupgrade.RetryOptions
+	sut.SystemUnderTest
 }
 
 func (b *kafkaBrokerSut) setKafkaBrokerAsDefaultForBroker(ctx sut.Context) {

@@ -17,30 +17,9 @@
 package continual
 
 import (
-	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/test/upgrade/prober"
 	"knative.dev/eventing/test/upgrade/prober/sut"
 )
-
-// ReplicationOptions hold options for replication.
-type ReplicationOptions struct {
-	NumPartitions     int
-	ReplicationFactor int
-}
-
-// RetryOptions holds options for retries.
-type RetryOptions struct {
-	RetryCount    int
-	BackoffPolicy eventingduckv1.BackoffPolicyType
-	BackoffDelay  string
-}
-
-// KafkaCluster represents Kafka cluster endpoint.
-type KafkaCluster struct {
-	BootstrapServers []string
-	Name             string
-	Namespace        string
-}
 
 // TestOptions holds options for EventingKafka continual tests.
 type TestOptions struct {

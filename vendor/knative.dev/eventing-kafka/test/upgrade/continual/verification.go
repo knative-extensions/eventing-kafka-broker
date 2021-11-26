@@ -1,18 +1,18 @@
 /*
- * Copyright 2021 The Knative Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+Copyright 2021 The Knative Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 
 package continual
 
@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/kelseyhightower/envconfig"
-	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade/continual"
 	"knative.dev/eventing/test/upgrade/prober"
 	"knative.dev/eventing/test/upgrade/prober/sut"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
@@ -28,7 +27,7 @@ import (
 
 func continualVerification(
 	testName string,
-	opts *eventingkafkaupgrade.TestOptions,
+	opts *TestOptions,
 	defaultSut sut.SystemUnderTest,
 	configTemplate string,
 ) pkgupgrade.BackgroundOperation {
@@ -43,13 +42,13 @@ func continualVerification(
 }
 
 func resolveSut(
-	testName string,
-	opts *eventingkafkaupgrade.TestOptions,
+	testname string,
+	opts *TestOptions,
 	defaultSut sut.SystemUnderTest,
 ) sut.SystemUnderTest {
 	var resolved sut.SystemUnderTest
 	if opts.SUTs != nil {
-		resolved = opts.SUTs[testName]
+		resolved = opts.SUTs[testname]
 	}
 	if resolved == nil {
 		resolved = defaultSut
@@ -58,7 +57,7 @@ func resolveSut(
 }
 
 func verificationOptions(
-	opts *eventingkafkaupgrade.TestOptions,
+	opts *TestOptions,
 	theSut sut.SystemUnderTest,
 	configTemplate string,
 ) prober.ContinualVerificationOptions {
