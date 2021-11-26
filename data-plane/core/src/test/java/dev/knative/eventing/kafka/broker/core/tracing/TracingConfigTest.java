@@ -93,7 +93,7 @@ public class TracingConfigTest {
     write(dir, "/backend", " 1234 ");
     write(dir, "/sample-rate", " 0.1 ");
     write(dir, "/zipkin-endpoint", "  http://localhost:9241/v2/api/spans/     ");
-    write(dir, "/heads-format", " b3-multi-header ");
+    write(dir, "/headers-format", " b3-multi-header ");
 
     final var config = TracingConfig.fromDir(dir.toAbsolutePath().toString());
 
@@ -107,7 +107,7 @@ public class TracingConfigTest {
     write(dir, "/backend", " 1234 ");
     write(dir, "/sample-rate", " 0.1 ");
     write(dir, "/zipkin-endpoint", "  http://localhost:9241/v2/api/spans/     ");
-    write(dir, "/heads-format", " b3-multi-header ");
+    write(dir, "/headers-format", " b3-multi-header ");
 
     final var config = TracingConfig.fromDir(dir.toAbsolutePath().toString());
 
