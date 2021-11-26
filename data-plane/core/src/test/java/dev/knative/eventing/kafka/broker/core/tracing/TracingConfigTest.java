@@ -134,7 +134,7 @@ public class TracingConfigTest {
   }
 
   @Test
-  public void shouldReturnW3CHeadsFormatWhenDirectoryIsNotPresent() throws IOException {
+  public void shouldReturnW3CHeadersFormatWhenDirectoryIsNotPresent() throws IOException {
 
     final var config = TracingConfig.fromDir("/tmp/" + UUID.randomUUID().toString());
 
