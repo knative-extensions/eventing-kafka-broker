@@ -472,7 +472,7 @@ func (r *Reconciler) getDefaultBootstrapServersOrFail() ([]string, error) {
 	defer r.bootstrapServersLock.RUnlock()
 
 	if len(r.bootstrapServers) == 0 {
-		return nil, fmt.Errorf("no %s provided", BootstrapServersConfigMapKey)
+		return nil, fmt.Errorf("no %s provided", kafka.BootstrapServersConfigMapKey)
 	}
 
 	return r.bootstrapServers, nil

@@ -19,45 +19,27 @@ package broker
 import (
 	"fmt"
 
-	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	"knative.dev/pkg/configmap"
-
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 func TopicConfigFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*kafka.TopicConfig, error) {
 
-	topicDetail := sarama.TopicDetail{}
+	config, err := kafka.TopicConfigFromConfigMap(logger, cm)
 
-	var replicationFactor int32
-	var bootstrapServers string
-
-	err := configmap.Parse(cm.Data,
-		configmap.AsInt32(DefaultTopicNumPartitionConfigMapKey, &topicDetail.NumPartitions),
-		configmap.AsInt32(DefaultTopicReplicationFactorConfigMapKey, &replicationFactor),
-		configmap.AsString(BootstrapServersConfigMapKey, &bootstrapServers),
-	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse config map %s/%s: %w", cm.Namespace, cm.Name, err)
+		return nil, fmt.Errorf("failed to build broker config from configmap %s/%s: %w", cm.Namespace, cm.Name, err)
 	}
 
-	if topicDetail.NumPartitions <= 0 || replicationFactor <= 0 || bootstrapServers == "" {
+	if config.TopicDetail.NumPartitions <= 0 || config.TopicDetail.ReplicationFactor <= 0 || len(config.BootstrapServers) == 0 {
 		return nil, fmt.Errorf(
 			"invalid configuration - numPartitions: %d - replicationFactor: %d - bootstrapServers: %s - ConfigMap data: %v",
-			topicDetail.NumPartitions,
-			replicationFactor,
-			bootstrapServers,
+			config.TopicDetail.NumPartitions,
+			config.TopicDetail.ReplicationFactor,
+			config.BootstrapServers,
 			cm.Data,
 		)
-	}
-
-	topicDetail.ReplicationFactor = int16(replicationFactor)
-
-	config := &kafka.TopicConfig{
-		TopicDetail:      topicDetail,
-		BootstrapServers: kafka.BootstrapServersArray(bootstrapServers),
 	}
 
 	logger.Debug("got broker config from config map", zap.Any("config", config))

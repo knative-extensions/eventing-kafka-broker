@@ -174,7 +174,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -233,8 +233,8 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
-				testProber:                   probertesting.MockProber(prober.StatusNotReady),
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
+				testProber:                         probertesting.MockProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -293,8 +293,8 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
-				testProber:                   probertesting.MockProber(prober.StatusUnknown),
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
+				testProber:                         probertesting.MockProber(prober.StatusUnknown),
 			},
 		},
 		{
@@ -353,7 +353,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -412,7 +412,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -447,8 +447,8 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnCreateTopic:       createTopicError,
-				BootstrapServersConfigMapKey: bootstrapServers,
+				wantErrorOnCreateTopic:             createTopicError,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -514,7 +514,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -568,7 +568,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -649,7 +649,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -747,7 +747,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -831,7 +831,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -908,7 +908,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -975,7 +975,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1077,7 +1077,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 				ExpectedTopicDetail: sarama.TopicDetail{
 					NumPartitions:     20,
 					ReplicationFactor: 5,
@@ -1156,7 +1156,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 				ExpectedTopicDetail: sarama.TopicDetail{
 					NumPartitions:     20,
 					ReplicationFactor: 5,
@@ -1200,7 +1200,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1256,7 +1256,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1369,7 +1369,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1462,7 +1462,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1528,7 +1528,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1591,7 +1591,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1657,7 +1657,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1706,7 +1706,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1758,7 +1758,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 	}
@@ -1808,7 +1808,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1836,7 +1836,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1870,8 +1870,8 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic:       deleteTopicError,
-				BootstrapServersConfigMapKey: bootstrapServers,
+				wantErrorOnDeleteTopic:             deleteTopicError,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1888,7 +1888,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1925,7 +1925,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1962,8 +1962,8 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic:       sarama.ErrUnknownTopicOrPartition,
-				BootstrapServersConfigMapKey: bootstrapServers,
+				wantErrorOnDeleteTopic:             sarama.ErrUnknownTopicOrPartition,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1983,7 +1983,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			},
 			Key: testKey,
 			OtherTestData: map[string]interface{}{
-				BootstrapServersConfigMapKey: bootstrapServers,
+				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 	}
@@ -2017,7 +2017,7 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 		}
 
 		bootstrapServers := ""
-		if bs, ok := row.OtherTestData[BootstrapServersConfigMapKey]; ok {
+		if bs, ok := row.OtherTestData[kafka.BootstrapServersConfigMapKey]; ok {
 			bootstrapServers = bs.(string)
 		}
 
@@ -2105,9 +2105,9 @@ func TestConfigMapUpdate(t *testing.T) {
 			Namespace: "cmnamespace",
 		},
 		Data: map[string]string{
-			DefaultTopicNumPartitionConfigMapKey:      "42",
-			DefaultTopicReplicationFactorConfigMapKey: "3",
-			BootstrapServersConfigMapKey:              "server1,server2",
+			kafka.DefaultTopicNumPartitionConfigMapKey:      "42",
+			kafka.DefaultTopicReplicationFactorConfigMapKey: "3",
+			kafka.BootstrapServersConfigMapKey:              "server1,server2",
 		},
 	}
 

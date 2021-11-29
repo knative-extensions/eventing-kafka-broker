@@ -132,9 +132,9 @@ func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int,
 			Name:      ConfigMapName,
 		},
 		Data: map[string]string{
-			BootstrapServersConfigMapKey:              bootstrapServers,
-			DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
-			DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
+			kafka.BootstrapServersConfigMapKey:              bootstrapServers,
+			kafka.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
+			kafka.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
 		},
 	}
 	for _, opt := range options {

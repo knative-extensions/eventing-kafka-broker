@@ -18,12 +18,14 @@ package kafka
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 
@@ -415,4 +417,55 @@ func TestBootstrapServersArray(t *testing.T) {
 	require.Contains(t, bss, "bs:9000")
 	require.Contains(t, bss, "bs:9002")
 	require.Len(t, bss, 3)
+}
+
+func TestTopicConfigFromConfigMap(t *testing.T) {
+	tests := []struct {
+		name string
+		data map[string]string
+		want TopicConfig
+	}{
+		{
+			name: "All provided",
+			data: map[string]string{
+				"default.topic.partitions":         "5",
+				"default.topic.replication.factor": "8",
+				"bootstrap.servers":                "server1:9092, server2:9092",
+			},
+			want: TopicConfig{
+				TopicDetail: sarama.TopicDetail{
+					NumPartitions:     5,
+					ReplicationFactor: 8,
+				},
+				BootstrapServers: []string{"server1:9092", "server2:9092"},
+			},
+		},
+		{
+			name: "All missing'",
+			data: map[string]string{},
+			want: TopicConfig{
+				TopicDetail: sarama.TopicDetail{
+					NumPartitions:     0,
+					ReplicationFactor: 0,
+				},
+				BootstrapServers: []string{},
+			},
+		},
+	}
+	for _, tt := range tests {
+
+		logger := zap.NewNop()
+
+		cm := &corev1.ConfigMap{
+			Data: tt.data,
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			got, _ := TopicConfigFromConfigMap(logger, cm)
+
+			if !reflect.DeepEqual(*got, tt.want) {
+				t.Errorf("TopicConfigFromConfigMap() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
