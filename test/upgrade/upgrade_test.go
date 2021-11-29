@@ -20,7 +20,6 @@
 package upgrade
 
 import (
-	"os"
 	"testing"
 
 	"go.uber.org/zap"
@@ -38,8 +37,4 @@ func newUpgradeConfig(t *testing.T) pkgupgrade.Configuration {
 		t.Fatal(err)
 	}
 	return pkgupgrade.Configuration{T: t, Log: log}
-}
-
-func TestMain(m *testing.M) {
-	os.Exit(m.Run())
 }
