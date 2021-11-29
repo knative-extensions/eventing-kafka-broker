@@ -35,7 +35,6 @@ import (
 
 	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade/continual"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
@@ -124,9 +123,9 @@ func (k kafkaBrokerSut) deployBroker(ctx sut.Context) {
 			Namespace: namespace,
 		},
 		Data: map[string]string{
-			broker.BootstrapServersConfigMapKey:              testingpkg.BootstrapServersPlaintext,
-			broker.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", k.NumPartitions),
-			broker.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", k.ReplicationFactor),
+			kafka.BootstrapServersConfigMapKey:              testingpkg.BootstrapServersPlaintext,
+			kafka.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", k.NumPartitions),
+			kafka.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", k.ReplicationFactor),
 		},
 	}
 	cm, err := ctx.Kube.CoreV1().ConfigMaps(namespace).Create(ctx.Ctx, cm, metav1.CreateOptions{})

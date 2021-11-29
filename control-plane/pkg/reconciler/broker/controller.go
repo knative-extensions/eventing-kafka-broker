@@ -48,10 +48,6 @@ import (
 )
 
 const (
-	DefaultTopicNumPartitionConfigMapKey      = "default.topic.partitions"
-	DefaultTopicReplicationFactorConfigMapKey = "default.topic.replication.factor"
-	BootstrapServersConfigMapKey              = "bootstrap.servers"
-
 	DefaultNumPartitions     = 10
 	DefaultReplicationFactor = 1
 )
