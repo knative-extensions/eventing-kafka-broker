@@ -40,9 +40,9 @@ type TopicConfig struct {
 }
 
 func TopicConfigFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*TopicConfig, error) {
-	topicDetail, config, topicConfig, err := buildTopicConfigFromConfigMap(cm)
+	config, err := buildTopicConfigFromConfigMap(cm)
 	if err != nil {
-		return topicConfig, err
+		return nil, err
 	}
 
 	if err := validateTopicConfig(config); err != nil {
@@ -50,15 +50,15 @@ func TopicConfigFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*TopicC
 	}
 
 	logger.Debug("topic config from configmap",
-		zap.Int32("numPartitions", topicDetail.NumPartitions),
-		zap.Int16("replicationFactor", topicDetail.ReplicationFactor),
+		zap.Int32("numPartitions", config.TopicDetail.NumPartitions),
+		zap.Int16("replicationFactor", config.TopicDetail.ReplicationFactor),
 		zap.Any("replicationFactor", config.BootstrapServers),
 	)
 
 	return config, nil
 }
 
-func buildTopicConfigFromConfigMap(cm *corev1.ConfigMap) (sarama.TopicDetail, *TopicConfig, *TopicConfig, error) {
+func buildTopicConfigFromConfigMap(cm *corev1.ConfigMap) (*TopicConfig, error) {
 	topicDetail := sarama.TopicDetail{}
 
 	var replicationFactor int32
@@ -70,7 +70,7 @@ func buildTopicConfigFromConfigMap(cm *corev1.ConfigMap) (sarama.TopicDetail, *T
 		configmap.AsString(BootstrapServersConfigMapKey, &bootstrapServers),
 	)
 	if err != nil {
-		return sarama.TopicDetail{}, nil, nil, fmt.Errorf("failed to parse config map %s/%s: %w", cm.Namespace, cm.Name, err)
+		return nil, fmt.Errorf("failed to parse config map %s/%s: %w", cm.Namespace, cm.Name, err)
 	}
 
 	topicDetail.ReplicationFactor = int16(replicationFactor)
@@ -79,7 +79,7 @@ func buildTopicConfigFromConfigMap(cm *corev1.ConfigMap) (sarama.TopicDetail, *T
 		TopicDetail:      topicDetail,
 		BootstrapServers: BootstrapServersArray(bootstrapServers),
 	}
-	return topicDetail, config, nil, nil
+	return config, nil
 }
 
 func validateTopicConfig(config *TopicConfig) error {
