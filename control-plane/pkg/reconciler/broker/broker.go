@@ -364,12 +364,16 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*
 		return nil, nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, err)
 	}
 
-	brokerConfig, err := TopicConfigFromConfigMap(logger, cm)
+	topicConfig, err := kafka.TopicConfigFromConfigMap(logger, cm)
 	if err != nil {
-		return nil, cm, err
+		return nil, cm, fmt.Errorf("unable to build topic config from configmap: %w - ConfigMap data: %v", err, cm.Data)
 	}
 
-	return brokerConfig, cm, nil
+	if err := r.ValidateTopicConfig(topicConfig); err != nil {
+		return nil, cm, fmt.Errorf("error validating topic config from configmap %s - ConfigMap data: %v", err, cm.Data)
+	}
+
+	return topicConfig, cm, nil
 }
 
 func (r *Reconciler) defaultTopicDetail() sarama.TopicDetail {
@@ -431,8 +435,22 @@ func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev
 
 	return func(configMap *corev1.ConfigMap) {
 
-		topicConfig, err := TopicConfigFromConfigMap(logger, configMap)
+		topicConfig, err := kafka.TopicConfigFromConfigMap(logger, configMap)
 		if err != nil {
+			logger.Error("failed to build broker config from configmap",
+				zap.String("configMap.Namespace", configMap.Namespace),
+				zap.String("configMap.Name", configMap.Name),
+				zap.Any("configMap.Data", configMap.Data),
+				zap.Error(err))
+			return
+		}
+
+		if err := r.ValidateTopicConfig(topicConfig); err != nil {
+			logger.Error("error validating topic config from configmap",
+				zap.String("configMap.namespace", configMap.Namespace),
+				zap.String("configMap.Name", configMap.Name),
+				zap.Any("configMap.Data", configMap.Data),
+				zap.Error(err))
 			return
 		}
 
@@ -476,4 +494,16 @@ func (r *Reconciler) getDefaultBootstrapServersOrFail() ([]string, error) {
 	}
 
 	return r.bootstrapServers, nil
+}
+
+func (r *Reconciler) ValidateTopicConfig(config *kafka.TopicConfig) error {
+	if config.TopicDetail.NumPartitions <= 0 || config.TopicDetail.ReplicationFactor <= 0 || len(config.BootstrapServers) == 0 {
+		return fmt.Errorf(
+			"invalid configuration - numPartitions: %d - replicationFactor: %d - bootstrapServers: %s",
+			config.TopicDetail.NumPartitions,
+			config.TopicDetail.ReplicationFactor,
+			config.BootstrapServers,
+		)
+	}
+	return nil
 }

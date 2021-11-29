@@ -2123,6 +2123,82 @@ func TestConfigMapUpdate(t *testing.T) {
 	})
 }
 
+func TestValidateTopicConfig(t *testing.T) {
+	tests := []struct {
+		name    string
+		config  kafka.TopicConfig
+		wantErr bool
+	}{
+		{
+			name: "All valid",
+			config: kafka.TopicConfig{
+				TopicDetail: sarama.TopicDetail{
+					NumPartitions:     5,
+					ReplicationFactor: 8,
+				},
+				BootstrapServers: []string{"server1:9092", "server2:9092"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Partitions not valid - zero",
+			config: kafka.TopicConfig{
+				TopicDetail: sarama.TopicDetail{
+					NumPartitions:     0,
+					ReplicationFactor: 8,
+				},
+				BootstrapServers: []string{"server1:9092", "server2:9092"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Partitions not valid - minus",
+			config: kafka.TopicConfig{
+				TopicDetail: sarama.TopicDetail{
+					NumPartitions:     -1,
+					ReplicationFactor: 8,
+				},
+				BootstrapServers: []string{"server1:9092", "server2:9092"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "ReplicationFactor not valid",
+			config: kafka.TopicConfig{
+				TopicDetail: sarama.TopicDetail{
+					NumPartitions:     5,
+					ReplicationFactor: 0,
+				},
+				BootstrapServers: []string{"server1:9092", "server2:9092"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Bootstrap servers empty",
+			config: kafka.TopicConfig{
+				TopicDetail: sarama.TopicDetail{
+					NumPartitions:     5,
+					ReplicationFactor: 1,
+				},
+				BootstrapServers: []string{},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
+			r := Reconciler{}
+			err := r.ValidateTopicConfig(&tt.config)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateTopicConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
 func patchFinalizers() clientgotesting.PatchActionImpl {
 	action := clientgotesting.PatchActionImpl{}
 	action.Name = BrokerName
