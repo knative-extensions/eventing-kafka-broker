@@ -26,7 +26,6 @@ import (
 // TestOptions holds options for EventingKafka continual tests.
 type TestOptions struct {
 	prober.ContinualVerificationOptions
-	SUTs map[string]sut.SystemUnderTest
 }
 
 type Triggers struct {
