@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2020 The Knative Authors
+# Copyright 2021 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Update release labels
-export TAG=${TAG:-"devel"}
-echo "Updating release labels to kafka.eventing.knative.dev/release: \"${TAG}\""
-export LABEL_YAML_CMD=(sed -e "s|kafka.eventing.knative.dev/release: devel|kafka.eventing.knative.dev/release: \"${TAG}\"|")
+# variables used:
+# - SKIP_INITIALIZE (default: false) - skip cluster creation.
+
+readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
+
+source $(dirname $0)/e2e-common.sh
+
+if ! ${SKIP_INITIALIZE}; then
+  initialize $@ --skip-istio-addon
+  save_release_artifacts || fail_test "Failed to save release artifacts"
+fi
+
+set -Eeuo pipefail
+
+TIMEOUT=${TIMEOUT:-60m}
+GO_TEST_VERBOSITY="${GO_TEST_VERBOSITY:-standard-verbose}"
+
+go_test_e2e -v \
+  -tags=upgrade \
+  -timeout="${TIMEOUT}" \
+  ./test/upgrade \
+  || fail_test
+
+success

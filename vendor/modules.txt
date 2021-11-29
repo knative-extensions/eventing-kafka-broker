@@ -233,6 +233,8 @@ github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
 # github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369
 github.com/matttproud/golang_protobuf_extensions/pbutil
+# github.com/mitchellh/go-homedir v1.1.0
+github.com/mitchellh/go-homedir
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
@@ -270,6 +272,11 @@ github.com/openzipkin/zipkin-go/model
 github.com/openzipkin/zipkin-go/propagation
 github.com/openzipkin/zipkin-go/reporter
 github.com/openzipkin/zipkin-go/reporter/http
+# github.com/pelletier/go-toml/v2 v2.0.0-beta.2
+github.com/pelletier/go-toml/v2
+github.com/pelletier/go-toml/v2/internal/ast
+github.com/pelletier/go-toml/v2/internal/tracker
+github.com/pelletier/go-toml/v2/internal/unsafe
 # github.com/pierdipi/sacura v0.0.0-20210302185533-982357fc042b
 ## explicit
 github.com/pierdipi/sacura
@@ -317,6 +324,8 @@ github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/tsenart/vegeta/v12 v12.8.4
 github.com/tsenart/vegeta/v12/lib
+# github.com/wavesoftware/go-ensure v1.0.0
+github.com/wavesoftware/go-ensure
 # github.com/xdg-go/pbkdf2 v1.0.0
 github.com/xdg-go/pbkdf2
 # github.com/xdg-go/scram v1.0.2
@@ -1140,6 +1149,19 @@ knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/request-sender
+knative.dev/eventing/test/test_images/wathola-fetcher
+knative.dev/eventing/test/test_images/wathola-forwarder
+knative.dev/eventing/test/test_images/wathola-receiver
+knative.dev/eventing/test/test_images/wathola-sender
+knative.dev/eventing/test/upgrade/prober
+knative.dev/eventing/test/upgrade/prober/sut
+knative.dev/eventing/test/upgrade/prober/wathola/client
+knative.dev/eventing/test/upgrade/prober/wathola/config
+knative.dev/eventing/test/upgrade/prober/wathola/event
+knative.dev/eventing/test/upgrade/prober/wathola/fetcher
+knative.dev/eventing/test/upgrade/prober/wathola/forwarder
+knative.dev/eventing/test/upgrade/prober/wathola/receiver
+knative.dev/eventing/test/upgrade/prober/wathola/sender
 # knative.dev/eventing-kafka v0.27.0
 ## explicit
 knative.dev/eventing-kafka/pkg/apis/bindings
@@ -1150,6 +1172,7 @@ knative.dev/eventing-kafka/pkg/apis/messaging
 knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1
 knative.dev/eventing-kafka/pkg/apis/sources/config
 knative.dev/eventing-kafka/pkg/apis/sources/v1beta1
+knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/testing
 knative.dev/eventing-kafka/pkg/channel/distributed/common/kafka/constants
 knative.dev/eventing-kafka/pkg/client/clientset/versioned
 knative.dev/eventing-kafka/pkg/client/clientset/versioned/fake
@@ -1190,9 +1213,14 @@ knative.dev/eventing-kafka/pkg/common/config
 knative.dev/eventing-kafka/pkg/common/constants
 knative.dev/eventing-kafka/pkg/common/kafka/offset
 knative.dev/eventing-kafka/pkg/common/kafka/sarama
+knative.dev/eventing-kafka/test/e2e/helpers
+knative.dev/eventing-kafka/test/lib
+knative.dev/eventing-kafka/test/lib/resources
+knative.dev/eventing-kafka/test/upgrade/continual
 # knative.dev/hack v0.0.0-20211101195839-11d193bf617b
 ## explicit
 knative.dev/hack
+knative.dev/hack/shell
 # knative.dev/pkg v0.0.0-20211101212339-96c0204a70dc
 ## explicit
 knative.dev/pkg/apis
@@ -1272,6 +1300,7 @@ knative.dev/pkg/test/monitoring
 knative.dev/pkg/test/prow
 knative.dev/pkg/test/slackutil
 knative.dev/pkg/test/spoof
+knative.dev/pkg/test/upgrade
 knative.dev/pkg/test/zipkin
 knative.dev/pkg/tracing
 knative.dev/pkg/tracing/config
