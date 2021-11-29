@@ -369,10 +369,6 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*
 		return nil, cm, fmt.Errorf("unable to build topic config from configmap: %w - ConfigMap data: %v", err, cm.Data)
 	}
 
-	if err := r.ValidateTopicConfig(topicConfig); err != nil {
-		return nil, cm, fmt.Errorf("error validating topic config from configmap %s - ConfigMap data: %v", err, cm.Data)
-	}
-
 	return topicConfig, cm, nil
 }
 
@@ -445,15 +441,6 @@ func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev
 			return
 		}
 
-		if err := r.ValidateTopicConfig(topicConfig); err != nil {
-			logger.Error("error validating topic config from configmap",
-				zap.String("configMap.namespace", configMap.Namespace),
-				zap.String("configMap.Name", configMap.Name),
-				zap.Any("configMap.Data", configMap.Data),
-				zap.Error(err))
-			return
-		}
-
 		logger.Debug("new defaults",
 			zap.Any("topicDetail", topicConfig.TopicDetail),
 			zap.String("BootstrapServers", topicConfig.GetBootstrapServers()),
@@ -494,16 +481,4 @@ func (r *Reconciler) getDefaultBootstrapServersOrFail() ([]string, error) {
 	}
 
 	return r.bootstrapServers, nil
-}
-
-func (r *Reconciler) ValidateTopicConfig(config *kafka.TopicConfig) error {
-	if config.TopicDetail.NumPartitions <= 0 || config.TopicDetail.ReplicationFactor <= 0 || len(config.BootstrapServers) == 0 {
-		return fmt.Errorf(
-			"invalid configuration - numPartitions: %d - replicationFactor: %d - bootstrapServers: %s",
-			config.TopicDetail.NumPartitions,
-			config.TopicDetail.ReplicationFactor,
-			config.BootstrapServers,
-		)
-	}
-	return nil
 }

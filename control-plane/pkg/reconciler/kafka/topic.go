@@ -40,7 +40,25 @@ type TopicConfig struct {
 }
 
 func TopicConfigFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*TopicConfig, error) {
+	topicDetail, config, topicConfig, err := buildTopicConfigFromConfigMap(cm)
+	if err != nil {
+		return topicConfig, err
+	}
 
+	if err := validateTopicConfig(config); err != nil {
+		return nil, fmt.Errorf("error validating topic config from configmap %s - ConfigMap data: %v", err, cm.Data)
+	}
+
+	logger.Debug("topic config from configmap",
+		zap.Int32("numPartitions", topicDetail.NumPartitions),
+		zap.Int16("replicationFactor", topicDetail.ReplicationFactor),
+		zap.Any("replicationFactor", config.BootstrapServers),
+	)
+
+	return config, nil
+}
+
+func buildTopicConfigFromConfigMap(cm *corev1.ConfigMap) (sarama.TopicDetail, *TopicConfig, *TopicConfig, error) {
 	topicDetail := sarama.TopicDetail{}
 
 	var replicationFactor int32
@@ -52,7 +70,7 @@ func TopicConfigFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*TopicC
 		configmap.AsString(BootstrapServersConfigMapKey, &bootstrapServers),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse config map %s/%s: %w", cm.Namespace, cm.Name, err)
+		return sarama.TopicDetail{}, nil, nil, fmt.Errorf("failed to parse config map %s/%s: %w", cm.Namespace, cm.Name, err)
 	}
 
 	topicDetail.ReplicationFactor = int16(replicationFactor)
@@ -61,14 +79,19 @@ func TopicConfigFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*TopicC
 		TopicDetail:      topicDetail,
 		BootstrapServers: BootstrapServersArray(bootstrapServers),
 	}
+	return topicDetail, config, nil, nil
+}
 
-	logger.Debug("topic config from configmap",
-		zap.Int32("numPartitions", topicDetail.NumPartitions),
-		zap.Int16("replicationFactor", topicDetail.ReplicationFactor),
-		zap.Any("replicationFactor", config.BootstrapServers),
-	)
-
-	return config, nil
+func validateTopicConfig(config *TopicConfig) error {
+	if config.TopicDetail.NumPartitions <= 0 || config.TopicDetail.ReplicationFactor <= 0 || len(config.BootstrapServers) == 0 {
+		return fmt.Errorf(
+			"invalid configuration - numPartitions: %d - replicationFactor: %d - bootstrapServers: %s",
+			config.TopicDetail.NumPartitions,
+			config.TopicDetail.ReplicationFactor,
+			config.BootstrapServers,
+		)
+	}
+	return nil
 }
 
 // GetBootstrapServers returns TopicConfig.BootstrapServers as a comma separated list of bootstrap servers.

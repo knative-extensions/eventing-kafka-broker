@@ -421,12 +421,13 @@ func TestBootstrapServersArray(t *testing.T) {
 
 func TestTopicConfigFromConfigMap(t *testing.T) {
 	tests := []struct {
-		name string
-		data map[string]string
-		want TopicConfig
+		name    string
+		data    map[string]string
+		want    TopicConfig
+		wantErr bool
 	}{
 		{
-			name: "All provided",
+			name: "All valid",
 			data: map[string]string{
 				"default.topic.partitions":         "5",
 				"default.topic.replication.factor": "8",
@@ -441,15 +442,28 @@ func TestTopicConfigFromConfigMap(t *testing.T) {
 			},
 		},
 		{
-			name: "All missing'",
-			data: map[string]string{},
-			want: TopicConfig{
-				TopicDetail: sarama.TopicDetail{
-					NumPartitions:     0,
-					ReplicationFactor: 0,
-				},
-				BootstrapServers: []string{},
+			name: "Missing keys 'default.topic.partitions' - not allowed",
+			data: map[string]string{
+				"default.topic.replication.factor": "8",
+				"bootstrap.servers":                "server1:9092, server2:9092",
 			},
+			wantErr: true,
+		},
+		{
+			name: "Missing keys 'default.topic.replication.factor' - not allowed",
+			data: map[string]string{
+				"default.topic.partitions": "5",
+				"bootstrap.servers":        "server1:9092, server2:9092",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Missing keys 'bootstrap.servers' - not allowed",
+			data: map[string]string{
+				"default.topic.partitions":         "5",
+				"default.topic.replication.factor": "8",
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -461,9 +475,14 @@ func TestTopicConfigFromConfigMap(t *testing.T) {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, _ := TopicConfigFromConfigMap(logger, cm)
+			got, err := TopicConfigFromConfigMap(logger, cm)
 
-			if !reflect.DeepEqual(*got, tt.want) {
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TopicConfigFromConfigMap() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr && !reflect.DeepEqual(*got, tt.want) {
 				t.Errorf("TopicConfigFromConfigMap() got = %v, want %v", got, tt.want)
 			}
 		})
