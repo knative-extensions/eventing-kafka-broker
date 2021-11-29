@@ -60,7 +60,7 @@ func TopicConfigFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*kafka.
 		BootstrapServers: kafka.BootstrapServersArray(bootstrapServers),
 	}
 
-	logger.Debug("got broker config from config map", zap.Any("config", config))
+	logger.Debug("got topic config from config map", zap.Any("config", config))
 
 	return config, nil
 }

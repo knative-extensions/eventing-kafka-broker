@@ -19,13 +19,11 @@ package broker
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -75,12 +73,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		KafkaDefaultTopicDetails: sarama.TopicDetail{
-			NumPartitions:     DefaultNumPartitions,
-			ReplicationFactor: DefaultReplicationFactor,
-		},
-		ConfigMapLister: configmapInformer.Lister(),
-		Env:             env,
+		ConfigMapLister:            configmapInformer.Lister(),
+		Env:                        env,
 	}
 
 	logger := logging.FromContext(ctx)
@@ -91,10 +85,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 			zap.String("configmap", env.DataPlaneConfigMapAsString()),
 			zap.Error(err),
 		)
-	}
-
-	if bootstrapServers != "" {
-		reconciler.SetBootstrapServers(bootstrapServers)
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass)
@@ -146,15 +136,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 			DeleteFunc: reconciler.OnDeleteObserver,
 		},
 	})
-
-	cm, err := reconciler.KubeClient.CoreV1().ConfigMaps(env.SystemNamespace).Get(ctx, env.GeneralConfigMapName, metav1.GetOptions{})
-	if err != nil {
-		panic(fmt.Errorf("failed to get config map %s/%s: %w", env.SystemNamespace, env.GeneralConfigMapName, err))
-	}
-
-	reconciler.ConfigMapUpdated(ctx)(cm)
-
-	watcher.Watch(env.GeneralConfigMapName, reconciler.ConfigMapUpdated(ctx))
 
 	return impl
 }
