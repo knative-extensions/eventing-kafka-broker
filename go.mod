@@ -25,9 +25,9 @@ require (
 	k8s.io/apiserver v0.21.4
 	k8s.io/client-go v0.21.4
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009
-	knative.dev/eventing v0.27.1-0.20211123205351-820db20be4b2
-	knative.dev/eventing-kafka v0.27.1-0.20211123070449-b50f5d4e986f
+	knative.dev/eventing v0.27.1-0.20211130054408-e73a69b875eb
+	knative.dev/eventing-kafka v0.27.1-0.20211130062708-40894229b566
 	knative.dev/hack v0.0.0-20211122162614-813559cefdda
-	knative.dev/pkg v0.0.0-20211123135150-787aec59e70a
+	knative.dev/pkg v0.0.0-20211129195804-438776b3c87c
 	knative.dev/reconciler-test v0.0.0-20211112132636-ae9e2e21972f
 )
