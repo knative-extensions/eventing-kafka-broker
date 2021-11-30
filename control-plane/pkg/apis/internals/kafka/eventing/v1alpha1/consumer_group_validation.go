@@ -17,31 +17,30 @@
 package v1alpha1
 
 import (
-	"fmt"
+	"context"
 
 	"knative.dev/pkg/apis"
 )
 
-const (
-	ConditionConsumers apis.ConditionType = "Consumers"
-)
-
 var (
-	conditionSet = apis.NewLivingConditionSet(
-		ConditionConsumers,
-	)
+	_ apis.Validatable = &ConsumerGroup{}
 )
 
-func (c *ConsumerGroup) GetConditionSet() apis.ConditionSet {
-	return conditionSet
+func (c *ConsumerGroup) Validate(ctx context.Context) *apis.FieldError {
+	ctx = apis.WithinParent(ctx, c.ObjectMeta)
+	return c.Spec.Validate(ctx).ViaField("spec")
 }
 
-func (cg *ConsumerGroup) MarkReconcileConsumersFailed(reason string, err error) error {
-	err = fmt.Errorf("failed to reconcile consumers: %w", err)
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumers, reason, err.Error())
-	return err
+func (cgs *ConsumerGroupSpec) Validate(ctx context.Context) *apis.FieldError {
+	if cgs.Replicas == nil {
+		return apis.ErrMissingField("replicas")
+	}
+	if cgs.Selector == nil {
+		return apis.ErrMissingField("selector")
+	}
+	return cgs.Template.Validate(ctx).ViaField("template")
 }
 
-func (cg *ConsumerGroup) MarkReconcileConsumersSucceeded() {
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionConsumers)
+func (cts *ConsumerTemplateSpec) Validate(ctx context.Context) *apis.FieldError {
+	return cts.Spec.Validate(ctx).ViaField("spec")
 }

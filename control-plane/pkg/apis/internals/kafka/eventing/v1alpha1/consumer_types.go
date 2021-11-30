@@ -138,3 +138,26 @@ func (c *Consumer) GetUntypedSpec() interface{} {
 func (c *Consumer) GetStatus() *duckv1.Status {
 	return &c.Status.Status
 }
+
+// IsLessThan returns true if c is less than other.
+//
+// if c is less than other, other might be deleted before c.
+func (c *Consumer) IsLessThan(other *Consumer) bool {
+	// Prefer ready instances.
+	if c.IsReady() {
+		return true
+	}
+	if other.IsReady() {
+		return false
+	}
+	// Prefer older instances.
+	return c.CreationTimestamp.Time.Before(other.CreationTimestamp.Time)
+}
+
+func (c *Consumer) IsReady() bool {
+	return c.Generation == c.Status.ObservedGeneration &&
+		c.GetConditionSet().Manage(c.GetStatus()).IsHappy()
+}
+
+// ConsumerOption is a functional option for Consumer.
+type ConsumerOption func(consumer *Consumer)

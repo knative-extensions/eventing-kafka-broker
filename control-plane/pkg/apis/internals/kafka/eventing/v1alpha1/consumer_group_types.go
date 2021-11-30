@@ -19,9 +19,8 @@ package v1alpha1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 // +genclient
@@ -109,4 +108,21 @@ func (c *ConsumerGroup) GetUntypedSpec() interface{} {
 // GetStatus retrieves the status of the ConsumerGroupt. Implements the KRShaped interface.
 func (c *ConsumerGroup) GetStatus() *duckv1.Status {
 	return &c.Status.Status
+}
+
+// ConsumerFromTemplate returns a Consumer from the Consumer template in the ConsumerGroup spec.
+func (cg *ConsumerGroup) ConsumerFromTemplate(options ...ConsumerOption) *Consumer {
+	// TODO figure out naming strategy, is generateName enough?
+	c := &Consumer{
+		ObjectMeta: cg.Spec.Template.ObjectMeta,
+		Spec:       cg.Spec.Template.Spec,
+	}
+
+	ownerRef := metav1.NewControllerRef(cg, ConsumerGroupGroupVersionKind)
+	c.OwnerReferences = append(c.OwnerReferences, *ownerRef)
+
+	for _, opt := range options {
+		opt(c)
+	}
+	return c
 }
