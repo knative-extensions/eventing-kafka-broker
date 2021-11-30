@@ -28,7 +28,7 @@ jobs:
     name: Java Unit Tests
     strategy:
       matrix:
-        java-version: [ 16 ]
+        java-version: [ 17 ]
         platform: [ ubuntu-latest ]
 
     runs-on: ${{ matrix.platform }}
