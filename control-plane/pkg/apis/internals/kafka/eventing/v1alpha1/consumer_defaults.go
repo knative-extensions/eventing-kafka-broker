@@ -17,31 +17,29 @@
 package v1alpha1
 
 import (
-	"fmt"
+	"context"
 
 	"knative.dev/pkg/apis"
 )
 
-const (
-	ConditionConsumers apis.ConditionType = "Consumers"
-)
-
 var (
-	conditionSet = apis.NewLivingConditionSet(
-		ConditionConsumers,
-	)
+	_ apis.Defaultable = &Consumer{}
 )
 
-func (c *ConsumerGroup) GetConditionSet() apis.ConditionSet {
-	return conditionSet
+// SetDefaults implements apis.Defaultable.
+func (c *Consumer) SetDefaults(ctx context.Context) {
+	ctx = apis.WithinParent(ctx, c.ObjectMeta)
+	c.Spec.SetDefaults(ctx)
 }
 
-func (cg *ConsumerGroup) MarkReconcileConsumersFailed(reason string, err error) error {
-	err = fmt.Errorf("failed to reconcile consumers: %w", err)
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumers, reason, err.Error())
-	return err
+func (c *ConsumerSpec) SetDefaults(ctx context.Context) {
+	c.Delivery.SetDefaults(ctx)
+	c.Subscriber.SetDefaults(ctx)
 }
 
-func (cg *ConsumerGroup) MarkReconcileConsumersSucceeded() {
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionConsumers)
+func (d *DeliverySpec) SetDefaults(ctx context.Context) {
+	if d == nil {
+		return
+	}
+	d.DeliverySpec.SetDefaults(ctx)
 }
