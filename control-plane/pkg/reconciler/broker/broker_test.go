@@ -171,9 +171,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 		{
 			Name: "Reconciled failed - probe " + prober.StatusNotReady.String(),
@@ -232,8 +229,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-				testProber:                         probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -293,8 +289,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-				testProber:                         probertesting.MockProber(prober.StatusUnknown),
+				testProber: probertesting.MockProber(prober.StatusUnknown),
 			},
 		},
 		{
@@ -353,9 +348,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 		{
 			Name: "Reconciled normal - with DLS - no DLS ref namespace",
@@ -413,9 +405,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 		{
 			Name: "Failed to create topic",
@@ -450,8 +439,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnCreateTopic:             createTopicError,
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
+				wantErrorOnCreateTopic: createTopicError,
 			},
 		},
 		{
@@ -517,9 +505,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 		{
 			Name: "Reconciled normal - config map not readable",
@@ -571,9 +556,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerProbeSucceeded,
 					),
 				},
-			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -653,9 +635,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerProbeSucceeded,
 					),
 				},
-			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -753,9 +732,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 		{
 			Name: "Reconciled normal - remove existing broker DLS while preserving others",
@@ -838,9 +814,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 		{
 			Name: "Reconciled normal - increment volume generation",
@@ -916,9 +889,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 		{
 			Name: "Failed to resolve DLS",
@@ -983,9 +953,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerTopicReady,
 					),
 				},
-			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1088,7 +1055,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 				ExpectedTopicDetail: sarama.TopicDetail{
 					NumPartitions:     20,
 					ReplicationFactor: 5,
@@ -1167,7 +1133,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 				ExpectedTopicDetail: sarama.TopicDetail{
 					NumPartitions:     20,
 					ReplicationFactor: 5,
@@ -1209,9 +1174,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigNotParsed(fmt.Sprintf(`failed to get configmap %s/%s: configmap %q not found`, ConfigMapNamespace, ConfigMapName, ConfigMapName)),
 					),
 				},
-			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1265,9 +1227,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigNotParsed(`supported config Kind: ConfigMap - got Pod`),
 					),
 				},
-			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1380,9 +1339,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 		{
 			Name: "no data plane pods running",
@@ -1475,9 +1431,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 		{
 			Name: "Reconciled normal - with retry config - linear",
@@ -1542,9 +1495,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 		{
 			Name: "Reconciled normal - with no retry num",
@@ -1605,9 +1555,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerDLSResolved(ServiceURL),
 					),
 				},
-			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1673,9 +1620,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 		{
 			Name: "Reconciled normal - unchanged",
@@ -1722,9 +1666,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerDLSResolved(ServiceURL),
 					),
 				},
-			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1776,9 +1717,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 	}
 
@@ -1827,9 +1765,6 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					Generation: 2,
 				}),
 			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 		{
 			Name: "Reconciled normal - with DLS",
@@ -1855,9 +1790,6 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				ConfigMapUpdate(&env, &contract.Contract{
 					Generation: 2,
 				}),
-			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1892,8 +1824,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic:             deleteTopicError,
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
+				wantErrorOnDeleteTopic: deleteTopicError,
 			},
 		},
 		{
@@ -1910,9 +1841,6 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				NewConfigMapWithBinaryData(&env, nil),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 		{
 			Name: "Reconciled normal - preserve config map previous state",
@@ -1947,9 +1875,6 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					},
 					Generation: 6,
 				}),
-			},
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
 			},
 		},
 		{
@@ -1987,8 +1912,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic:             sarama.ErrUnknownTopicOrPartition,
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
+				wantErrorOnDeleteTopic: sarama.ErrUnknownTopicOrPartition,
 			},
 		},
 		{
@@ -2008,9 +1932,6 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}, &env),
 			},
 			Key: testKey,
-			OtherTestData: map[string]interface{}{
-				kafka.BootstrapServersConfigMapKey: bootstrapServers,
-			},
 		},
 	}
 
