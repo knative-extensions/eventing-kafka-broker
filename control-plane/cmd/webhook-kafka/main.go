@@ -31,7 +31,9 @@ import (
 	"knative.dev/pkg/webhook/resourcesemantics/validation"
 
 	sourcesv1beta1 "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	eventingcorev1beta1 "knative.dev/eventing/pkg/apis/eventing/v1"
 
+	eventingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 )
 
@@ -44,7 +46,9 @@ var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 	sourcesv1beta1.SchemeGroupVersion.WithKind("KafkaSource"): &sourcesv1beta1.KafkaSource{},
 }
 
-var callbacks = map[schema.GroupVersionKind]validation.Callback{}
+var callbacks = map[schema.GroupVersionKind]validation.Callback{
+	eventingcorev1beta1.SchemeGroupVersion.WithKind("Broker"): eventingv1.BrokerValidationCallback(),
+}
 
 func NewDefaultingAdmissionController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 

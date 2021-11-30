@@ -20,9 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync"
 
-	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -30,7 +28,6 @@ import (
 	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -56,11 +53,7 @@ type Reconciler struct {
 
 	Resolver *resolver.URIResolver
 
-	KafkaDefaultTopicDetails     sarama.TopicDetail
-	KafkaDefaultTopicDetailsLock sync.RWMutex
-	bootstrapServers             []string
-	bootstrapServersLock         sync.RWMutex
-	ConfigMapLister              corelisters.ConfigMapLister
+	ConfigMapLister corelisters.ConfigMapLister
 
 	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
@@ -345,11 +338,6 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*
 
 	logger.Debug("broker config", zap.Any("broker.spec.config", broker.Spec.Config))
 
-	if broker.Spec.Config == nil {
-		tc, err := r.defaultConfig()
-		return tc, nil, err
-	}
-
 	if strings.ToLower(broker.Spec.Config.Kind) != "configmap" { // TODO: is there any constant?
 		return nil, nil, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind)
 	}
@@ -370,27 +358,6 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*
 	}
 
 	return topicConfig, cm, nil
-}
-
-func (r *Reconciler) defaultTopicDetail() sarama.TopicDetail {
-	r.KafkaDefaultTopicDetailsLock.RLock()
-	defer r.KafkaDefaultTopicDetailsLock.RUnlock()
-
-	// copy the default topic details
-	topicDetail := r.KafkaDefaultTopicDetails
-	return topicDetail
-}
-
-func (r *Reconciler) defaultConfig() (*kafka.TopicConfig, error) {
-	bootstrapServers, err := r.getDefaultBootstrapServersOrFail()
-	if err != nil {
-		return nil, err
-	}
-
-	return &kafka.TopicConfig{
-		TopicDetail:      r.defaultTopicDetail(),
-		BootstrapServers: bootstrapServers,
-	}, nil
 }
 
 func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
@@ -423,62 +390,4 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 	resource.EgressConfig = egressConfig
 
 	return resource, nil
-}
-
-func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev1.ConfigMap) {
-
-	logger := logging.FromContext(ctx).Desugar()
-
-	return func(configMap *corev1.ConfigMap) {
-
-		topicConfig, err := kafka.TopicConfigFromConfigMap(logger, configMap)
-		if err != nil {
-			logger.Error("failed to build broker config from configmap",
-				zap.String("configMap.Namespace", configMap.Namespace),
-				zap.String("configMap.Name", configMap.Name),
-				zap.Any("configMap.Data", configMap.Data),
-				zap.Error(err))
-			return
-		}
-
-		logger.Debug("new defaults",
-			zap.Any("topicDetail", topicConfig.TopicDetail),
-			zap.String("BootstrapServers", topicConfig.GetBootstrapServers()),
-		)
-
-		r.SetDefaultTopicDetails(topicConfig.TopicDetail)
-		r.SetBootstrapServers(topicConfig.GetBootstrapServers())
-	}
-}
-
-// SetBootstrapServers change kafka bootstrap brokers addresses.
-// servers: a comma separated list of brokers to connect to.
-func (r *Reconciler) SetBootstrapServers(servers string) {
-	if servers == "" {
-		return
-	}
-
-	addrs := kafka.BootstrapServersArray(servers)
-
-	r.bootstrapServersLock.Lock()
-	r.bootstrapServers = addrs
-	r.bootstrapServersLock.Unlock()
-}
-
-func (r *Reconciler) SetDefaultTopicDetails(topicDetail sarama.TopicDetail) {
-	r.KafkaDefaultTopicDetailsLock.Lock()
-	defer r.KafkaDefaultTopicDetailsLock.Unlock()
-
-	r.KafkaDefaultTopicDetails = topicDetail
-}
-
-func (r *Reconciler) getDefaultBootstrapServersOrFail() ([]string, error) {
-	r.bootstrapServersLock.RLock()
-	defer r.bootstrapServersLock.RUnlock()
-
-	if len(r.bootstrapServers) == 0 {
-		return nil, fmt.Errorf("no %s provided", kafka.BootstrapServersConfigMapKey)
-	}
-
-	return r.bootstrapServers, nil
 }

@@ -90,3 +90,11 @@ rules:
     verbs:
       - "update"
 
+  # Eventing resources care about
+  - apiGroups:
+      - "eventing.knative.dev"
+    resources:
+      - "brokers"
+    verbs:
+      - list
+      - get

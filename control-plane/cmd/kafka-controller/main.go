@@ -57,7 +57,7 @@ func main() {
 
 		// Broker controller
 		func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-			return broker.NewController(ctx, watcher, brokerEnv, "")
+			return broker.NewController(ctx, watcher, brokerEnv)
 		},
 
 		// Trigger controller
