@@ -52,7 +52,7 @@ func TopicConfigFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*TopicC
 	logger.Debug("topic config from configmap",
 		zap.Int32("numPartitions", config.TopicDetail.NumPartitions),
 		zap.Int16("replicationFactor", config.TopicDetail.ReplicationFactor),
-		zap.Any("replicationFactor", config.BootstrapServers),
+		zap.Any("bootstrapServers", config.BootstrapServers),
 	)
 
 	return config, nil
