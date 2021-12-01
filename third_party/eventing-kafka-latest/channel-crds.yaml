@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   name: kafkachannels.messaging.knative.dev
   labels:
-    kafka.eventing.knative.dev/release: "v20211128-e9e7ff815"
+    kafka.eventing.knative.dev/release: "v20211129-eaa0e79db"
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
