@@ -52,10 +52,30 @@ func TopicConfigFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*TopicC
 	logger.Debug("topic config from configmap",
 		zap.Int32("numPartitions", config.TopicDetail.NumPartitions),
 		zap.Int16("replicationFactor", config.TopicDetail.ReplicationFactor),
-		zap.Any("replicationFactor", config.BootstrapServers),
+		zap.Any("bootstrapServers", config.BootstrapServers),
 	)
 
 	return config, nil
+}
+
+func BootstrapServersFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) ([]string, error) {
+	topicConfig, err := buildTopicConfigFromConfigMap(cm)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse config map %s/%s: %w", cm.Namespace, cm.Name, err)
+	}
+
+	if len(topicConfig.BootstrapServers) == 0 {
+		return nil, fmt.Errorf(
+			"invalid configuration bootstrapServers: %s",
+			topicConfig.BootstrapServers,
+		)
+	}
+
+	logger.Debug("bootstrap servers from configmap",
+		zap.Any("bootstrapServers", topicConfig.BootstrapServers),
+	)
+
+	return topicConfig.BootstrapServers, nil
 }
 
 func buildTopicConfigFromConfigMap(cm *corev1.ConfigMap) (*TopicConfig, error) {

@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/Shopify/sarama"
 
@@ -40,9 +39,7 @@ import (
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
-	commonconfig "knative.dev/eventing-kafka/pkg/common/config"
 	"knative.dev/eventing-kafka/pkg/common/constants"
-	commonsarama "knative.dev/eventing-kafka/pkg/common/kafka/sarama"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -116,19 +113,15 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("configmap read", zap.Any("configmap", channelConfigMap))
 
-	// parse the config
-	eventingKafkaSettings, err := commonsarama.LoadEventingKafkaSettings(channelConfigMap.Data)
-	if err != nil {
-		return statusConditionManager.FailedToResolveConfig(err)
-	}
-	logger.Debug("config parsed", zap.Any("eventingKafkaSettings", eventingKafkaSettings))
-
 	if err := r.TrackConfigMap(channelConfigMap, channel); err != nil {
 		return fmt.Errorf("failed to track broker config: %w", err)
 	}
 
 	// get topic config
-	topicConfig := r.topicConfig(logger, eventingKafkaSettings, channel)
+	topicConfig, err := r.topicConfig(logger, channelConfigMap, channel)
+	if err != nil {
+		return statusConditionManager.FailedToResolveConfig(err)
+	}
 	logger.Debug("topic config resolved", zap.Any("config", topicConfig))
 	statusConditionManager.ConfigResolved()
 
@@ -357,15 +350,12 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 	logger.Debug("configmap read", zap.Any("configmap", channelConfigMap))
 
-	// parse the config
-	eventingKafkaSettings, err := commonsarama.LoadEventingKafkaSettings(channelConfigMap.Data)
-	if err != nil {
-		return err
-	}
-	logger.Debug("config parsed", zap.Any("eventingKafkaSettings", eventingKafkaSettings))
-
 	// get topic config
-	topicConfig := r.topicConfig(logger, eventingKafkaSettings, channel)
+	topicConfig, err := r.topicConfig(logger, channelConfigMap, channel)
+	if err != nil {
+		return fmt.Errorf("failed to resolve channel config: %w", err)
+	}
+
 	logger.Debug("topic config resolved", zap.Any("config", topicConfig))
 
 	// get the secret to access Kafka
@@ -500,15 +490,20 @@ func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
 	// TODO: do we want to support namespaced channels? they're not supported at the moment.
 
 	namespace := system.Namespace()
-	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(constants.SettingsConfigMapName)
+	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(r.Env.GeneralConfigMapName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, constants.SettingsConfigMapName, err)
+		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, r.Env.GeneralConfigMapName, err)
 	}
 
 	return cm, nil
 }
 
-func (r *Reconciler) topicConfig(logger *zap.Logger, eventingKafkaConfig *commonconfig.EventingKafkaConfig, channel *messagingv1beta1.KafkaChannel) *kafka.TopicConfig {
+func (r *Reconciler) topicConfig(logger *zap.Logger, cm *corev1.ConfigMap, channel *messagingv1beta1.KafkaChannel) (*kafka.TopicConfig, error) {
+	bootstrapServers, err := kafka.BootstrapServersFromConfigMap(logger, cm)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get bootstrapServers from configmap: %w - ConfigMap data: %v", err, cm.Data)
+	}
+
 	// Parse & Format the RetentionDuration into Sarama retention.ms string
 	retentionDuration, err := channel.Spec.ParseRetentionDuration()
 	if err != nil {
@@ -526,8 +521,8 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, eventingKafkaConfig *common
 				constants.KafkaTopicConfigRetentionMs: &retentionMillisString,
 			},
 		},
-		BootstrapServers: strings.Split(eventingKafkaConfig.Kafka.Brokers, ","),
-	}
+		BootstrapServers: bootstrapServers,
+	}, nil
 }
 
 func (r *Reconciler) secret(ctx context.Context, channelConfig *corev1.ConfigMap) (*corev1.Secret, error) {

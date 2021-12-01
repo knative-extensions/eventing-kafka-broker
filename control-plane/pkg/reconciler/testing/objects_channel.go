@@ -40,7 +40,7 @@ const (
 	ChannelName             = "kc"
 	ChannelNamespace        = "test-nc"
 	ChannelUUID             = "c1234567-8901-2345-6789-123456789101"
-	ChannelBootstrapServers = "kafka:9092"
+	ChannelBootstrapServers = "kafka-1:9092,kafka-2:9093"
 
 	Subscription1Name     = "sub-1"
 	Subscription2Name     = "sub-2"
