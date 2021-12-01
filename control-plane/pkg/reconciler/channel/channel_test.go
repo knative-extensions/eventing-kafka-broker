@@ -23,6 +23,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 	"knative.dev/pkg/network"
 
 	corev1 "k8s.io/api/core/v1"
@@ -77,8 +78,6 @@ var DefaultEnv = &config.Env{
 
 // TODO: compare with inmemorychannel_test.go at /Users/aliok/code/github.com/knative/eventing/pkg/reconciler/inmemorychannel/controller/inmemorychannel_test.go
 // TODO: compare with channel_test.go at /Users/aliok/code/github.com/knative/eventing/pkg/reconciler/channel/channel_test.go
-// TODO: tests with and without subscriptions
-// TODO: tests for things from config-kafka
 // TODO: are we setting a InitialOffsetsCommitted status? we gotta set it on the subscription. 1) can we do it? 2) does it make sense?
 // TODO: test if things from channel spec is used properly?
 // TODO: test if things from subscription spec is used properly?
@@ -902,24 +901,87 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
-			// TODO
 			Name: "Reconciled normal - with single fresh subscriber - with auth - PlainText",
-		},
-		{
-			// TODO
-			Name: "Reconciled normal - with single fresh subscriber - with auth - SASL PlainText",
-		},
-		{
-			// TODO
-			Name: "Reconciled normal - with single fresh subscriber - with auth - SSL",
-		},
-		{
-			// TODO
-			Name: "Reconciled normal - with single fresh subscriber - with auth - SASLSSL",
-		},
-		{
-			// TODO
-			Name: "Unknown auth protocol  - with single fresh subscriber - with auth - unknown protocol",
+			Objects: []runtime.Object{
+				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
+				NewService(),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+					security.AuthSecretNameKey:         "secret-1",
+				}),
+				NewConfigMapWithBinaryData(&env, nil),
+				NewSSLSecret(system.Namespace(), "secret-1"),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Auth: &contract.Resource_AuthSecret{
+								AuthSecret: &contract.Reference{
+									Uuid:      SecretUUID,
+									Namespace: system.Namespace(),
+									Name:      "secret-1",
+									Version:   SecretResourceVersion,
+								},
+							},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: receiver.Path(ChannelNamespace, ChannelName),
+								},
+							},
+							Egresses: []*contract.Egress{{
+								ConsumerGroup: "kafka." + ChannelNamespace + "." + ChannelName + "." + Subscription1UUID,
+								Destination:   "http://" + Subscription1URI,
+								Uid:           Subscription1UUID,
+								DeliveryOrder: contract.DeliveryOrder_ORDERED,
+							}},
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(ChannelTopic()),
+						StatusDataPlaneAvailable,
+						//StatusInitialOffsetsCommitted,
+						ChannelAddressable(&env),
+						WithSubscribers(Subscriber1()),
+						StatusProbeSucceeded,
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Create contract configmap when it does not exist",
