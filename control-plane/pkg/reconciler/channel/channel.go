@@ -126,7 +126,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	statusConditionManager.ConfigResolved()
 
 	// get the secret to access Kafka
-	secret, err := r.secret(ctx, channelConfigMap)
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap}, r.SecretProviderFunc())
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -359,7 +359,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	logger.Debug("topic config resolved", zap.Any("config", topicConfig))
 
 	// get the secret to access Kafka
-	secret, err := r.secret(ctx, channelConfigMap)
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap}, r.SecretProviderFunc())
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -523,10 +523,6 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, cm *corev1.ConfigMap, chann
 		},
 		BootstrapServers: bootstrapServers,
 	}, nil
-}
-
-func (r *Reconciler) secret(ctx context.Context, channelConfig *corev1.ConfigMap) (*corev1.Secret, error) {
-	return security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfig}, r.SecretProviderFunc())
 }
 
 func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
