@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
@@ -49,18 +48,6 @@ type ConsumerGroup struct {
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
 	Status ConsumerGroupStatus `json:"status,omitempty"`
-}
-
-func (c *ConsumerGroup) GetKey() types.NamespacedName {
-	return types.NamespacedName{Namespace: c.GetNamespace(), Name: c.GetName()}
-}
-
-func (c *ConsumerGroup) GetVReplicas() int32 {
-	return *c.Spec.Replicas
-}
-
-func (c *ConsumerGroup) GetPlacements() []eventingduckv1alpha1.Placement {
-	return c.Status.Placements
 }
 
 type ConsumerGroupSpec struct {
