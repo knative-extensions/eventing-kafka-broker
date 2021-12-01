@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"knative.dev/pkg/network"
 
 	corev1 "k8s.io/api/core/v1"
@@ -49,36 +50,7 @@ import (
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	fakeeventingkafkaclient "knative.dev/eventing-kafka/pkg/client/injection/client/fake"
 	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
-	"knative.dev/eventing-kafka/pkg/common/constants"
 )
-
-// TODO: are we using all of these?
-var configKafka = map[string]string{
-	"version": "1.0.0",
-	"sarama": `
-enableLogging: false
-config: |
-  Version: 2.0.0 # Kafka Version Compatibility From Sarama's Supported List (Major.Minor.Patch)
-  Admin:
-    Timeout: 10000000000  # 10 seconds
-  Net:
-    KeepAlive: 30000000000  # 30 seconds
-    MaxOpenRequests: 1 # Set to 1 for use with Idempotent Producer
-    TLS:
-      Enable: true
-    SASL:
-      Enable: true
-      Version: 1
-  Metadata:
-    RefreshFrequency: 300000000000  # 5 minutes
-`,
-	"eventing-kafka": `
-kafka:
-  authSecretName: kafka-cluster
-  authSecretNamespace: knative-eventing
-  brokers: kafka:9092
-`,
-}
 
 const (
 	testProber = "testProber"
@@ -97,7 +69,7 @@ var finalizerUpdatedEvent = Eventf(
 var DefaultEnv = &config.Env{
 	DataPlaneConfigMapNamespace: "knative-eventing",
 	DataPlaneConfigMapName:      "kafka-channel-channels-subscriptions",
-	GeneralConfigMapName:        "kafka-broker-config",
+	GeneralConfigMapName:        "kafka-channel-config",
 	IngressName:                 "kafka-channel-ingress",
 	SystemNamespace:             "knative-eventing",
 	DataPlaneConfigFormat:       base.Json,
@@ -144,7 +116,9 @@ func TestReconcileKind(t *testing.T) {
 				NewChannel(
 					WithInitKafkaChannelConditions,
 					WithDeletedTimeStamp),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 				NewConfigMapWithBinaryData(&env, nil),
 			},
 		},
@@ -161,7 +135,9 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -227,7 +203,9 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -295,7 +273,9 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -363,7 +343,9 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 				NewConfigMapWithBinaryData(&env, nil),
 			},
 			Key: testKey,
@@ -434,7 +416,9 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 				NewConfigMapWithBinaryData(&env, nil),
 			},
 			Key: testKey,
@@ -505,7 +489,9 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 				NewConfigMapWithBinaryData(&env, nil),
 			},
 			Key: testKey,
@@ -579,7 +565,9 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 				NewConfigMapWithBinaryData(&env, nil),
 			},
 			Key: testKey,
@@ -651,7 +639,9 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 			},
 			Key:                     testKey,
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
@@ -685,7 +675,9 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 			},
 			Key:                     testKey,
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
@@ -711,7 +703,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
-			Name: "config-kafka not resolved",
+			Name: "channel configmap not resolved",
 			Objects: []runtime.Object{
 				NewChannel(),
 				NewService(),
@@ -732,7 +724,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusDataPlaneAvailable,
-						StatusConfigNotParsed(fmt.Sprintf(`failed to get configmap %s/%s: configmap %q not found`, system.Namespace(), constants.SettingsConfigMapName, constants.SettingsConfigMapName)),
+						StatusConfigNotParsed(fmt.Sprintf(`failed to get configmap %s/%s: configmap %q not found`, system.Namespace(), DefaultEnv.GeneralConfigMapName, DefaultEnv.GeneralConfigMapName)),
 					),
 				},
 			},
@@ -744,12 +736,12 @@ func TestReconcileKind(t *testing.T) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					fmt.Sprintf(`failed to get contract configuration: failed to get configmap %s/%s: configmap %q not found`, system.Namespace(), constants.SettingsConfigMapName, constants.SettingsConfigMapName),
+					fmt.Sprintf(`failed to get contract configuration: failed to get configmap %s/%s: configmap %q not found`, system.Namespace(), DefaultEnv.GeneralConfigMapName, DefaultEnv.GeneralConfigMapName),
 				),
 			},
 		},
 		{
-			Name: "config-kafka not readable",
+			Name: "channel configmap does not have bootstrap servers",
 			Objects: []runtime.Object{
 				NewChannel(),
 				NewService(),
@@ -761,9 +753,8 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, map[string]string{
-					"version":        "1.0.0",
-					"eventing-kafka": `123123`,
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					"foo": "bar",
 				}),
 			},
 			Key:                     testKey,
@@ -774,7 +765,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusDataPlaneAvailable,
-						StatusConfigNotParsed("ConfigMap's eventing-kafka value could not be converted to an EventingKafkaConfig struct: error unmarshaling JSON: while decoding JSON: json: cannot unmarshal number into Go value of type config.EventingKafkaConfig : 123123"),
+						StatusConfigNotParsed("unable to get bootstrapServers from configmap: invalid configuration bootstrapServers: [] - ConfigMap data: map[foo:bar]"),
 					),
 				},
 			},
@@ -786,7 +777,48 @@ func TestReconcileKind(t *testing.T) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"failed to get contract configuration: ConfigMap's eventing-kafka value could not be converted to an EventingKafkaConfig struct: error unmarshaling JSON: while decoding JSON: json: cannot unmarshal number into Go value of type config.EventingKafkaConfig : 123123",
+					"failed to get contract configuration: unable to get bootstrapServers from configmap: invalid configuration bootstrapServers: [] - ConfigMap data: map[foo:bar]",
+				),
+			},
+		},
+		{
+			Name: "channel configmap has blank bootstrap servers",
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewService(),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: "",
+				}),
+			},
+			Key:                     testKey,
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantErr:                 true,
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusDataPlaneAvailable,
+						StatusConfigNotParsed("unable to get bootstrapServers from configmap: invalid configuration bootstrapServers: [] - ConfigMap data: map[bootstrap.servers:]"),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					"failed to get contract configuration: unable to get bootstrapServers from configmap: invalid configuration bootstrapServers: [] - ConfigMap data: map[bootstrap.servers:]",
 				),
 			},
 		},
@@ -807,7 +839,9 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 			},
 			OtherTestData: map[string]interface{}{
 				TestExpectedDataNumPartitions: int32(3),
@@ -900,7 +934,9 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -966,7 +1002,9 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 				NewConfigMapWithBinaryData(&env, nil),
 			},
 			Key: testKey,
@@ -1030,7 +1068,9 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewConfigMapWithTextData(system.Namespace(), constants.SettingsConfigMapName, configKafka),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
 				NewConfigMapWithBinaryData(&env, []byte("corrupt")),
 			},
 			Key:                     testKey,
