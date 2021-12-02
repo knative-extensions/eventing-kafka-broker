@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
@@ -108,7 +107,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 		logger.Debug("broker deleted", zap.String("finalizeDuringReconcile", "deleted"))
 
-		// The associated broker doesn't exist anymore, so clean up Trigger resources.
+		// The associated broker doesn't exist anymore, so clean up Trigger resources and owning consumer group resource.
 		return r.FinalizeKind(ctx, trigger)
 	}
 
@@ -144,17 +143,16 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 	triggerIndex := coreconfig.FindEgress(ct.Resources[brokerIndex].Egresses, trigger.UID)
 
-	if err := r.reconcileConsumerGroup(ctx, trigger, statusConditionManager); err != nil {
-		return statusConditionManager.failedToReconcileConsumerGroup("failed to reconcile consumer group", err)
-	}
-
-	statusConditionManager.consumerGroupReady()
-
 	triggerConfig, err := r.reconcileTriggerEgress(ctx, broker, trigger)
 	if err != nil {
 		return statusConditionManager.failedToResolveTriggerConfig(err)
 	}
 	statusConditionManager.subscriberResolved(triggerConfig)
+
+	if err := r.reconcileConsumerGroup(ctx, trigger, statusConditionManager); err != nil {
+		return statusConditionManager.failedToReconcileConsumerGroup("failed to reconcile consumer group", err)
+	}
+	statusConditionManager.consumerGroupReady()
 
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&trigger.Status.DeliveryStatus, triggerConfig.EgressConfig)
 
@@ -250,14 +248,13 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	logger.Debug("Found Trigger", zap.Int("triggerIndex", brokerIndex))
 
 	//Find and Delete the consumer group
-	selector := labels.SelectorFromSet(labels.Set{}) //Todo: selector?
-	cgs, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).List(selector)
+	cg, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(string(trigger.UID)) //Get by consumer group name
 	if err != nil {
-		return fmt.Errorf("failed to list consumer group: %w", err)
+		return err
 	}
 
-	if err := r.finalizeConsumerGroup(ctx, cgs); err != nil {
-		return cg.failedToReconcileConsumerGroup("Finalize ConsumerGroup failed", err)
+	if err := r.finalizeConsumerGroup(ctx, cg); err != nil {
+		return err
 	}
 
 	// Delete the Trigger from the config map data.
@@ -360,46 +357,37 @@ func deliveryOrderFromString(val string) (contract.DeliveryOrder, error) {
 }
 
 func (r Reconciler) reconcileConsumerGroup(ctx context.Context, trigger *eventing.Trigger, statusConditionManager statusConditionManager) error {
-	replicas := int32(1)
-	expecedCG := &internalscg.ConsumerGroup{
+	replicas := int32(1) //todo
+	expectedcg := &internalscg.ConsumerGroup{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: internalscg.ConsumerGroupGroupVersionKind.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "",
-			Namespace: "",
+			Name:      string(trigger.UID),
+			Namespace: trigger.Namespace,
 		},
 		Spec: internalscg.ConsumerGroupSpec{
-			Template: internalscg.ConsumerTemplateSpec{},
+			Template: internalscg.ConsumerTemplateSpec{
+				Spec: internalscg.ConsumerSpec{},
+			},
 			Replicas: &replicas,
 		},
 	}
 
-	selector := labels.SelectorFromSet(labels.Set{}) //Todo: selector?
-	cgs, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).List(selector)
-	if err != nil {
-		return statusConditionManager.failedToReconcileConsumerGroup("failed to list consumer groups", err)
+	cg, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(string(trigger.UID)) //Get by consumer group name
+	if err != nil && !apierrors.IsNotFound(err) {
+		return statusConditionManager.failedToReconcileConsumerGroup("failed to get consumer group", err)
 	}
 
-	//Todo: check consumergroup spec from lister to see if matches expected spec
-	if equality.Semantic.DeepDerivative(cSpec.Template, c.Spec) {
+	if apierrors.IsNotFound(err) {
+		if _, err := r.InternalsClient.ConsumerGroups(cg.GetNamespace()).Create(ctx, expectedcg, metav1.CreateOptions{}); err != nil {
+			return fmt.Errorf("failed to create consumer group%s/%s: %w", expectedcg.GetNamespace(), expectedcg.GetName(), err)
+		}
+		fmt.Printf("created consumer group%s/%s", expectedcg.GetNamespace(), expectedcg.GetName())
 		return nil
 	}
 
-	if len(cgs) == 0 {
-		// Consumer group doesn't exist, create it.
-		cg := &internalscg.ConsumerGroup{
-			TypeMeta:   metav1.TypeMeta{},
-			ObjectMeta: metav1.ObjectMeta{},
-			Spec: internalscg.ConsumerGroupSpec{
-				Template: internalscg.ConsumerTemplateSpec{},
-				Replicas: &replicas,
-			},
-		}
-		if _, err := r.InternalsClient.ConsumerGroups(cg.GetNamespace()).Create(ctx, cg, metav1.CreateOptions{}); err != nil {
-			return fmt.Errorf("failed to create consumer group%s/%s: %w", cg.GetNamespace(), cg.GetName(), err)
-		}
-		fmt.Printf("created consumer group%s/%s", cg.GetNamespace(), cg.GetName())
+	if equality.Semantic.DeepDerivative(cg.Spec, expectedcg.Spec) {
 		return nil
 	}
 

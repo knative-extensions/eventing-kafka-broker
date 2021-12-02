@@ -148,7 +148,6 @@ func isDeadLetterSinkConfigured(egressConfig *contract.EgressConfig) bool {
 }
 
 func (m *statusConditionManager) consumerGroupReady() {
-	//Todo: add new trigger condition const to eventing trigger lifecyle?
 	m.Trigger.GetConditionSet().Manage(&m.Trigger.Status).MarkTrue(
 		ConditionConsumerGroup,
 	)
@@ -157,7 +156,6 @@ func (m *statusConditionManager) consumerGroupReady() {
 func (m *statusConditionManager) failedToReconcileConsumerGroup(reason string, err error) error {
 	err = fmt.Errorf("failed to reconcile consumer group: %w", err)
 
-	//Todo: add new trigger condition const to eventing trigger lifecyle?
 	m.Trigger.GetConditionSet().Manage(&m.Trigger.Status).MarkFalse(
 		ConditionConsumerGroup,
 		reason,
