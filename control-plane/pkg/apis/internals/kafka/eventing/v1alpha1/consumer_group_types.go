@@ -65,6 +65,14 @@ type ConsumerGroupSpec struct {
 	// If unspecified, defaults to 1.
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
+
+	// Selector is a label query over consumers that should match the Replicas count.
+	// If Selector is empty, it is defaulted to the labels present on the template.
+	// Label keys and values that must match in order to be controlled by this
+	// controller, if empty defaulted to labels on template.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+	// +optional
+	Selector map[string]string `json:"selector,omitempty" protobuf:"bytes,2,rep,name=selector"`
 }
 
 type ConsumerGroupStatus struct {
