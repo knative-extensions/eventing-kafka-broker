@@ -29,6 +29,10 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 )
 
+const (
+	ConditionConsumerGroup apis.ConditionType = "ConsumerGroupReady"
+)
+
 type statusConditionManager struct {
 	Trigger *eventing.Trigger
 
@@ -141,4 +145,21 @@ func (m *statusConditionManager) subscriberResolved(egress *contract.Egress) {
 
 func isDeadLetterSinkConfigured(egressConfig *contract.EgressConfig) bool {
 	return egressConfig != nil && egressConfig.DeadLetter != ""
+}
+
+func (m *statusConditionManager) consumerGroupReady() {
+	m.Trigger.GetConditionSet().Manage(&m.Trigger.Status).MarkTrue(
+		ConditionConsumerGroup,
+	)
+}
+
+func (m *statusConditionManager) failedToReconcileConsumerGroup(reason string, err error) error {
+	err = fmt.Errorf("failed to reconcile consumer group: %w", err)
+
+	m.Trigger.GetConditionSet().Manage(&m.Trigger.Status).MarkFalse(
+		ConditionConsumerGroup,
+		reason,
+		err.Error(),
+	)
+	return err
 }
