@@ -14,11 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Update release labels if this is a tagged release
-if [[ -n "${TAG}" ]]; then
-  echo "Tagged release, updating release labels to kafka.eventing.knative.dev/release: \"${TAG}\""
-  export LABEL_YAML_CMD=(sed -e "s|kafka.eventing.knative.dev/release: devel|kafka.eventing.knative.dev/release: \"${TAG}\"|")
-else
-  echo "Untagged release, will NOT update release labels"
-  export LABEL_YAML_CMD=(cat)
-fi
+# Update release labels
+export TAG=${TAG:-"devel"}
+echo "Updating release labels to kafka.eventing.knative.dev/release: \"${TAG}\""
+export LABEL_YAML_CMD=(sed -e "s|kafka.eventing.knative.dev/release: devel|kafka.eventing.knative.dev/release: \"${TAG}\"|")
