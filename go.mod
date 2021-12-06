@@ -3,7 +3,7 @@ module knative.dev/eventing-kafka-broker
 go 1.16
 
 require (
-	github.com/Shopify/sarama v1.30.0
+	github.com/Shopify/sarama v1.30.1
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.4.1
 	github.com/cloudevents/sdk-go/v2 v2.4.1
 	github.com/google/go-cmp v0.5.6
@@ -16,8 +16,6 @@ require (
 	go.uber.org/atomic v1.9.0
 	go.uber.org/multierr v1.6.0
 	go.uber.org/zap v1.19.1
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/net v0.0.0-20211105192438-b53810dc28af // indirect
 	google.golang.org/protobuf v1.27.1
 	k8s.io/api v0.21.4
 	k8s.io/apiextensions-apiserver v0.21.4
@@ -25,9 +23,9 @@ require (
 	k8s.io/apiserver v0.21.4
 	k8s.io/client-go v0.21.4
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009
-	knative.dev/eventing v0.27.1-0.20211130054408-e73a69b875eb
-	knative.dev/eventing-kafka v0.27.1-0.20211130062708-40894229b566
-	knative.dev/hack v0.0.0-20211122162614-813559cefdda
-	knative.dev/pkg v0.0.0-20211129195804-438776b3c87c
-	knative.dev/reconciler-test v0.0.0-20211112132636-ae9e2e21972f
+	knative.dev/eventing v0.27.1-0.20211203061837-ab80d13b52fa
+	knative.dev/eventing-kafka v0.27.1-0.20211206100927-9e32151957a2
+	knative.dev/hack v0.0.0-20211203062838-e11ac125e707
+	knative.dev/pkg v0.0.0-20211206113427-18589ac7627e
+	knative.dev/reconciler-test v0.0.0-20211206091826-80584b570590
 )
