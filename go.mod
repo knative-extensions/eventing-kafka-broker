@@ -24,7 +24,7 @@ require (
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009
 	knative.dev/eventing v0.27.0
 	knative.dev/eventing-kafka v0.27.0
-	knative.dev/hack v0.0.0-20211101195839-11d193bf617b
+	knative.dev/hack v0.0.0-20211122163517-fe1340f21191
 	knative.dev/pkg v0.0.0-20211101212339-96c0204a70dc
 	knative.dev/reconciler-test v0.0.0-20211101214439-9839937c9b13
 )
