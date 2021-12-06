@@ -20,9 +20,11 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"google.golang.org/protobuf/testing/protocmp"
 	"k8s.io/utils/pointer"
+	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -36,7 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
+	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	"knative.dev/pkg/apis"
@@ -49,8 +51,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
-
-	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 )
 
 const (
@@ -121,7 +121,6 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 					},
 				}, &env),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
-				NewConsumerGroup(),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -162,9 +161,1392 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
-						WithTriggerConsumerGroupReady,
 					),
 				},
+			},
+		},
+		{
+			Name: "Reconciled normal - with Broker DLS",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+					WithDelivery(),
+				),
+				newTrigger(),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+						},
+					},
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									EgressConfig:  &contract.EgressConfig{DeadLetter: ServiceURL},
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						withDeadLetterSinkURI(ServiceURL),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - with Trigger DLS",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(withDelivery),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+						},
+					},
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									EgressConfig: &contract.EgressConfig{
+										DeadLetter:    url.String(),
+										Retry:         3,
+										BackoffPolicy: contract.BackoffPolicy_Exponential,
+										BackoffDelay:  uint64(time.Second.Milliseconds()),
+										Timeout:       uint64((time.Second * 2).Milliseconds()),
+									},
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						withDelivery,
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						withDeadLetterSinkURI(url.String()),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - Trigger with ordered delivery",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Ordered))),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+						},
+					},
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									DeliveryOrder: contract.DeliveryOrder_ORDERED,
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_ORDERED),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Ordered)),
+						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - Trigger with unordered delivery",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Unordered))),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+						},
+					},
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									DeliveryOrder: contract.DeliveryOrder_UNORDERED,
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Unordered)),
+						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - Trigger delivery",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(withDelivery),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+						},
+					},
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									EgressConfig: &contract.EgressConfig{
+										DeadLetter:    url.String(),
+										Retry:         3,
+										BackoffPolicy: contract.BackoffPolicy_Exponential,
+										BackoffDelay:  uint64(time.Second.Milliseconds()),
+										Timeout:       uint64((time.Second * 2).Milliseconds()),
+									},
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						withDelivery,
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						reconcilertesting.WithTriggerDeadLetterSinkResolvedSucceeded(),
+						reconcilertesting.WithTriggerStatusDeadLetterSinkURI("http://localhost/path"),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - with existing Triggers and Brokers",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID + "z",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+							},
+						},
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source_value",
+									}},
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID + "a",
+									Uid:           TriggerUUID + "a",
+								},
+								{
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source_value",
+									}},
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+							},
+						},
+					},
+					Generation: 2,
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID + "z",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+							},
+						},
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source_value",
+									}},
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID + "a",
+									Uid:           TriggerUUID + "a",
+								},
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+							},
+						},
+					},
+					Generation: 3,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "3",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+					),
+				},
+			},
+		},
+		{
+			Name: "Config map not found - broker not found in config map",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(),
+				NewService(),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			Key:                     testKey,
+			WantErr:                 true,
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(&env, nil),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					fmt.Sprintf(
+						"broker not found in data plane config map %s",
+						env.DataPlaneConfigMapAsString(),
+					),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerBrokerFailed(
+							"Broker not found in data plane map",
+							fmt.Sprintf("config map: %s", env.DataPlaneConfigMapAsString()),
+						),
+					),
+				},
+			},
+		},
+		{
+			Name: "Empty data plane config map",
+			Objects: []runtime.Object{
+				NewBroker(BrokerReady),
+				newTrigger(),
+				NewService(),
+				NewConfigMapWithBinaryData(&env, nil),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			Key:     testKey,
+			WantErr: true,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					fmt.Sprintf(
+						"broker not found in data plane config map %s",
+						env.DataPlaneConfigMapAsString(),
+					),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerBrokerFailed(
+							"Broker not found in data plane map",
+							fmt.Sprintf("config map: %s", env.DataPlaneConfigMapAsString()),
+						),
+					),
+				},
+			},
+		},
+		{
+			Name: "Broker not found, no broker in config map",
+			Objects: []runtime.Object{
+				newTrigger(),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+					),
+				},
+			},
+		},
+		{
+			Name: "Broker not ready",
+			Objects: []runtime.Object{
+				newTrigger(),
+				NewBroker(
+					func(v *eventing.Broker) { v.Status.InitializeConditions() },
+					StatusBrokerConfigNotParsed("wrong"),
+				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerBrokerFailed("wrong", ""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Broker deleted, no broker in config map",
+			Objects: []runtime.Object{
+				newTrigger(),
+				NewDeletedBroker(),
+				NewConfigMapFromContract(&contract.Contract{
+					Generation: 8,
+				}, &env),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+					),
+				},
+			},
+		},
+		{
+			Name: "Broker deleted, no trigger in config map",
+			Objects: []runtime.Object{
+				newTrigger(),
+				NewDeletedBroker(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:    BrokerUUID,
+							Topics: []string{BrokerTopic()},
+						},
+					},
+					Generation: 8,
+				}, &env),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+					),
+				},
+			},
+		},
+		{
+			Name: "Broker deleted, trigger in config map",
+			Objects: []runtime.Object{
+				newTrigger(),
+				NewDeletedBroker(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:    BrokerUUID,
+							Topics: []string{BrokerTopic()},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID + "a",
+									Uid:           TriggerUUID + "a",
+								},
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+							},
+						},
+					},
+					Generation: 8,
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:    BrokerUUID,
+							Topics: []string{BrokerTopic()},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID + "a",
+									Uid:           TriggerUUID + "a",
+								},
+							},
+						},
+					},
+					Generation: 9,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "9",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - no op",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(
+					withAttributes(map[string]string{
+						"type": "type1",
+					}),
+				),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"type": "type1",
+									}},
+								},
+							},
+						},
+					},
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						withAttributes(map[string]string{
+							"type": "type1",
+						}),
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - many Triggers - start",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(
+					withAttributes(map[string]string{
+						"type": "type1",
+					}),
+				),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+							},
+						},
+						{
+							Uid:     BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+							},
+						},
+					},
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"type": "type1",
+									}},
+								},
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+							},
+						},
+						{
+							Uid:     BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						withAttributes(map[string]string{
+							"type": "type1",
+						}),
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - many Triggers - end",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(
+					withAttributes(map[string]string{
+						"ext": "extval",
+					}),
+				),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+							},
+						},
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+							},
+						},
+					},
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+							},
+						},
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"ext": "extval",
+									}},
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						withAttributes(map[string]string{
+							"ext": "extval",
+						}),
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - many Triggers - middle",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+							},
+						},
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+							},
+						},
+						{
+							Uid:     BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+							},
+						},
+					},
+				}, &env),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+							},
+						},
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+							},
+						},
+						{
+							Uid:     BrokerUUID + "a",
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+								},
+								{
+									Destination:   "http://example.com/1",
+									ConsumerGroup: "1",
+									Uid:           "1",
+								},
+								{
+									Destination:   "http://example.com/2",
+									ConsumerGroup: "2",
+									Uid:           "2",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source2",
+									}},
+								},
+								{
+									Destination:   "http://example.com/3",
+									ConsumerGroup: "3",
+									Uid:           "3",
+									Filter: &contract.Filter{Attributes: map[string]string{
+										"source": "source3",
+									}},
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+					),
+				},
+			},
+		},
+		{
+			Name: "Don't reconcile trigger associated with a broker with a different broker class",
+			Objects: []runtime.Object{
+				newTrigger(),
+				NewBroker(func(b *eventing.Broker) {
+					b.Annotations = map[string]string{
+						eventing.BrokerClassAnnotationKey: "MTChannelBasedBroker",
+					}
+				}),
+			},
+			Key: testKey,
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+					),
+				},
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
 			},
 		},
 	}
@@ -184,6 +1566,16 @@ func withDelivery(trigger *eventing.Trigger) {
 		BackoffDelay:   pointer.StringPtr("PT1S"),
 		Timeout:        pointer.StringPtr("PT2S"),
 	}
+}
+
+func TestTriggerFinalizer(t *testing.T) {
+
+	t.Parallel()
+
+	for _, f := range Formats {
+		triggerFinalizer(t, f, *DefaultEnv)
+	}
+
 }
 
 func triggerFinalizer(t *testing.T, format string, env config.Env) {
@@ -871,7 +2263,6 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
-						WithTriggerConsumerGroupReady,
 					),
 				},
 			},
@@ -899,12 +2290,10 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,
 			},
-			BrokerLister:        listers.GetBrokerLister(),
-			EventingClient:      fakeeventingclient.Get(ctx),
-			Resolver:            nil,
-			Env:                 env,
-			ConsumerGroupLister: listers.GetConsumerGroupLister(),
-			InternalsClient:     consumergroupclient.Get(ctx),
+			BrokerLister:   listers.GetBrokerLister(),
+			EventingClient: eventingclient.Get(ctx),
+			Resolver:       nil,
+			Env:            env,
 		}
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))
@@ -912,7 +2301,7 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 		return triggerreconciler.NewReconciler(
 			ctx,
 			logger,
-			fakeeventingclient.Get(ctx),
+			eventingclient.Get(ctx),
 			listers.GetTriggerLister(),
 			controller.GetEventRecorder(ctx),
 			reconciler,
@@ -975,22 +2364,6 @@ func withTriggerSubscriberResolvedSucceeded(deliveryOrder contract.DeliveryOrder
 			fmt.Sprintf("Subscriber will receive events with the delivery order: %s", deliveryOrder.String()),
 		)
 	}
-}
-
-// WithTriggerConsumerGroupReady initializes the Triggers's conditions.
-func WithTriggerConsumerGroupReady(t *eventing.Trigger) {
-	t.GetConditionSet().Manage(&t.Status).MarkTrue(
-		ConditionConsumerGroup,
-	)
-}
-
-// WithTriggerConsumerGroupFailed marks the ConsumerGroup as failed
-func WithTriggerConsumerGroupFailed(t *eventing.Trigger) {
-	t.GetConditionSet().Manage(&t.Status).MarkFalse(
-		ConditionConsumerGroup,
-		"",
-		"",
-	)
 }
 
 func patchFinalizers() clientgotesting.PatchActionImpl {

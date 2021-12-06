@@ -19,8 +19,11 @@ package v1alpha1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
+	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 )
 
 // +genclient
@@ -82,6 +85,14 @@ type ConsumerGroupStatus struct {
 
 	// inherits PlaceableStatus Status
 	eventingduckv1alpha1.PlaceableStatus `json:",inline"`
+
+	// SubscriberURI is the resolved URI of the receiver for this Trigger.
+	// +optional
+	SubscriberURI *apis.URL `json:"subscriberUri,omitempty"`
+
+	// DeliveryStatus contains a resolved URL to the dead letter sink address, and any other
+	// resolved delivery options.
+	eventingduckv1.DeliveryStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

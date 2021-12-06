@@ -31,8 +31,6 @@ import (
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
-	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
-	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	apiseventing "knative.dev/eventing/pkg/apis/eventing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
@@ -60,7 +58,6 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 	brokerInformer := brokerinformer.Get(ctx)
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
-	consumerGroupInformer := consumergroupinformer.Get(ctx)
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
@@ -74,11 +71,9 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
-		BrokerLister:        brokerInformer.Lister(),
-		EventingClient:      eventingclient.Get(ctx),
-		Env:                 configs,
-		ConsumerGroupLister: consumerGroupInformer.Lister(),
-		InternalsClient:     consumergroupclient.Get(ctx),
+		BrokerLister:   brokerInformer.Lister(),
+		EventingClient: eventingclient.Get(ctx),
+		Env:            configs,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {

@@ -25,7 +25,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 
 	"go.uber.org/zap"
-	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
@@ -37,9 +36,6 @@ import (
 	"knative.dev/pkg/resolver"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
-	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
-	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
@@ -58,9 +54,6 @@ type Reconciler struct {
 	Resolver       *resolver.URIResolver
 
 	Env *config.Env
-
-	ConsumerGroupLister internalslst.ConsumerGroupLister
-	InternalsClient     internalsclient.Interface
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -148,11 +141,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		return statusConditionManager.failedToResolveTriggerConfig(err)
 	}
 	statusConditionManager.subscriberResolved(triggerConfig)
-
-	if err := r.reconcileConsumerGroup(ctx, trigger, statusConditionManager); err != nil {
-		return statusConditionManager.failedToReconcileConsumerGroup("failed to reconcile consumer group", err)
-	}
-	statusConditionManager.consumerGroupReady()
 
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&trigger.Status.DeliveryStatus, triggerConfig.EgressConfig)
 
@@ -246,16 +234,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	}
 
 	logger.Debug("Found Trigger", zap.Int("triggerIndex", brokerIndex))
-
-	//Find and Delete the consumer group
-	cg, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(string(trigger.UID)) //Get by consumer group name
-	if err != nil {
-		return err
-	}
-
-	if err := r.finalizeConsumerGroup(ctx, cg); err != nil {
-		return err
-	}
 
 	// Delete the Trigger from the config map data.
 	ct.Resources[brokerIndex].Egresses = deleteTrigger(egresses, triggerIndex)
@@ -354,54 +332,4 @@ func deliveryOrderFromString(val string) (contract.DeliveryOrder, error) {
 	default:
 		return contract.DeliveryOrder_UNORDERED, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, internals.Ordered, internals.Unordered)
 	}
-}
-
-func (r Reconciler) reconcileConsumerGroup(ctx context.Context, trigger *eventing.Trigger, statusConditionManager statusConditionManager) error {
-	replicas := int32(1) //todo
-	expectedcg := &internalscg.ConsumerGroup{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: internalscg.ConsumerGroupGroupVersionKind.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      string(trigger.UID),
-			Namespace: trigger.Namespace,
-		},
-		Spec: internalscg.ConsumerGroupSpec{
-			Template: internalscg.ConsumerTemplateSpec{
-				Spec: internalscg.ConsumerSpec{},
-			},
-			Replicas: &replicas,
-		},
-	}
-
-	cg, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(string(trigger.UID)) //Get by consumer group name
-	if err != nil && !apierrors.IsNotFound(err) {
-		return statusConditionManager.failedToReconcileConsumerGroup("failed to get consumer group", err)
-	}
-
-	if apierrors.IsNotFound(err) {
-		if _, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedcg.GetNamespace()).Create(ctx, expectedcg, metav1.CreateOptions{}); err != nil {
-			return fmt.Errorf("failed to create consumer group%s/%s: %w", expectedcg.GetNamespace(), expectedcg.GetName(), err)
-		}
-		fmt.Printf("created consumer group%s/%s", expectedcg.GetNamespace(), expectedcg.GetName())
-		return nil
-	}
-
-	if equality.Semantic.DeepDerivative(cg.Spec, expectedcg.Spec) {
-		return nil
-	}
-
-	return nil
-}
-
-func (r Reconciler) finalizeConsumerGroup(ctx context.Context, consumerGroup *internalscg.ConsumerGroup) error {
-	dOpts := metav1.DeleteOptions{
-		Preconditions: &metav1.Preconditions{UID: &consumerGroup.UID},
-	}
-
-	err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(consumerGroup.GetNamespace()).Delete(ctx, consumerGroup.GetName(), dOpts)
-	if err != nil && !apierrors.IsNotFound(err) {
-		return fmt.Errorf("failed to remove consumer group%s/%s: %w", consumerGroup.GetNamespace(), consumerGroup.GetName(), err)
-	}
-	return nil
 }
