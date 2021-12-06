@@ -18,6 +18,10 @@ source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
 source $(pwd)/hack/data-plane.sh
 source $(pwd)/hack/control-plane.sh
 
+# Latest release. If user does not supply this as a flag, the latest tagged release on the current branch will be used.
+readonly LATEST_RELEASE_VERSION=$(latest_version)
+readonly PREVIOUS_RELEASE_URL="${PREVIOUS_RELEASE_URL:-"https://github.com/knative-sandbox/eventing-kafka-broker/releases/download/${LATEST_RELEASE_VERSION}"}"
+
 readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
 
 # Vendored eventing test images.
@@ -88,18 +92,31 @@ function build_components_from_source() {
   return $?
 }
 
+function install_latest_release() {
+  echo "Installing latest release from ${PREVIOUS_RELEASE_URL}"
+
+  ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
+
+  kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
+  kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
+  kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
+}
+
+function install_head() {
+  echo "Installing head"
+
+  kubectl apply -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
+  kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
+  kubectl apply -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
+}
+
 function test_setup() {
 
   build_components_from_source || return $?
 
-  kubectl apply -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
-  wait_until_pods_running knative-eventing || fail_test "Control plane did not come up"
+  install_head || return $?
 
-  kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_BROKER_ARTIFACT}"
-  wait_until_pods_running knative-eventing || fail_test "Broker data plane did not come up"
-
-  kubectl apply -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to apply ${EVENTING_KAFKA_SINK_ARTIFACT}"
-  wait_until_pods_running knative-eventing || fail_test "Sink data plane did not come up"
+  wait_until_pods_running knative-eventing || fail_test "System did not come up"
 
   # Apply test configurations, and restart data plane components (we don't have hot reload)
   ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
