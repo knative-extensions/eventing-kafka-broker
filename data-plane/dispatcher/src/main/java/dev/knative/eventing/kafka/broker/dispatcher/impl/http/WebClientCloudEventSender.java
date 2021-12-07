@@ -26,12 +26,11 @@ import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.Objects;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -88,31 +87,37 @@ public final class WebClientCloudEventSender implements CloudEventSender {
       })
       .onSuccess(response -> {
 
-        if (response.statusCode() >= 300 || response.statusCode() < 200) {
+        if (isRetryableStatusCode(response.statusCode())) {
           logError(event, response);
-          // TODO determine which status codes are retryable
-          //  (channels -> https://github.com/knative/eventing/issues/2411)
           breaker.tryFail("response status code is not 2xx - got: " + response.statusCode());
           return;
+        }
+
+        if (response.statusCode() >= 300) {
+          logError("Received a non-retryable status code that is not 2xx.", event, response);
         }
 
         breaker.tryComplete(response);
       });
   }
 
-  private void logError(final CloudEvent event, final HttpResponse<Buffer> response) {
+  private void logError(final String prefix, final CloudEvent event, final HttpResponse<Buffer> response) {
     if (logger.isDebugEnabled()) {
-      logger.error("failed to send event to subscriber {} {} {}",
+      logger.error(prefix + "failed to send event to subscriber {} {} {}",
         keyValue("target", target),
         keyValue("statusCode", response.statusCode()),
         keyValue("event", event)
       );
     } else {
-      logger.error("failed to send event to subscriber {} {}",
+      logger.error(prefix + " failed to send event to subscriber {} {}",
         keyValue("target", target),
         keyValue("statusCode", response.statusCode())
       );
     }
+  }
+
+  private void logError(final CloudEvent event, final HttpResponse<Buffer> response) {
+    logError("", event, response);
   }
 
   private void logError(final CloudEvent event, Throwable ex) {
@@ -128,5 +133,13 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     this.circuitBreaker.close();
     this.client.close();
     return Future.succeededFuture();
+  }
+
+  static boolean isRetryableStatusCode(final int statusCode) {
+    // From https://github.com/knative/specs/blob/c348f501de9eb998b4fd010c54d9127033ee41be/specs/eventing/data-plane.md#event-acknowledgement-and-delivery-retry
+    return statusCode >= 500 || // Generic error
+      statusCode == 404 || // Endpoint does not exist
+      statusCode == 409 || // Conflict / Processing in progress
+      statusCode == 429;   // Too Many Requests / Overloaded
   }
 }

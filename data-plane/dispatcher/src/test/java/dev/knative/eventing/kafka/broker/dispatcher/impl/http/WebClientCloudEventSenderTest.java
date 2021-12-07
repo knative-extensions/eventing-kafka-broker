@@ -13,16 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl;
+package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 
-import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import static dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender.isRetryableStatusCode;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -52,5 +58,37 @@ public class WebClientCloudEventSenderTest {
         verify(webClient, times(1)).close();
         context.completeNow();
       }));
+  }
+
+  @ParameterizedTest
+  @MethodSource("retryableStatusCodes")
+  public void shouldRetryRetryableStatusCodes(final Integer statusCode) {
+    assertThat(isRetryableStatusCode(statusCode)).isTrue();
+  }
+
+  @ParameterizedTest
+  @MethodSource("nonRetryableStatusCodes")
+  public void shouldNotRetryNonRetryableStatusCodes(final Integer statusCode) {
+    assertThat(isRetryableStatusCode(statusCode)).isFalse();
+  }
+
+  public static Stream<Integer> nonRetryableStatusCodes() {
+    return Stream.concat(
+      Stream.concat(
+        IntStream.range(200, 404).boxed(),
+        IntStream.range(405, 409).boxed()
+      ),
+      Stream.concat(
+        IntStream.range(410, 429).boxed(),
+        IntStream.range(430, 500).boxed()
+      )
+    );
+  }
+
+  public static Stream<Integer> retryableStatusCodes() {
+    return Stream.concat(
+      IntStream.range(500, 600).boxed(),
+      IntStream.of(404, 409, 429).boxed()
+    );
   }
 }
