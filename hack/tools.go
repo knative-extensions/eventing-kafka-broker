@@ -33,6 +33,12 @@ import (
 	_ "knative.dev/eventing/test/test_images/recordevents"
 	_ "knative.dev/eventing/test/test_images/request-sender"
 
+	// Test images from eventing for upgrade test
+	_ "knative.dev/eventing/test/test_images/wathola-fetcher"
+	_ "knative.dev/eventing/test/test_images/wathola-forwarder"
+	_ "knative.dev/eventing/test/test_images/wathola-receiver"
+	_ "knative.dev/eventing/test/test_images/wathola-sender"
+
 	// For chaos testing the leader election.
 	_ "knative.dev/pkg/leaderelection/chaosduck"
 
