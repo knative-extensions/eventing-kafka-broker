@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright 2021 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package trigger
+package v2
 
 import (
 	"context"
+	"strings"
 
+	"go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
-	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
-	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 
@@ -33,15 +35,25 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
+
+	apiseventing "knative.dev/eventing/pkg/apis/eventing"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 )
 
-func NewControllerV2(ctx context.Context, _ configmap.Watcher, configs *config.Env) *controller.Impl {
+const (
+	ControllerAgentName = "kafka-trigger-controller"
+
+	FinalizerName = "kafka.triggers.eventing.knative.dev"
+)
+
+func NewControllerV2(ctx context.Context, configs *config.Env) *controller.Impl {
 
 	logger := logging.FromContext(ctx).Desugar()
 
-	configmapInformer := configmapinformer.Get(ctx)
 	brokerInformer := brokerinformer.Get(ctx)
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
@@ -74,17 +86,70 @@ func NewControllerV2(ctx context.Context, _ configmap.Watcher, configs *config.E
 		Handler:    enqueueTriggers(logger, triggerLister, impl.Enqueue),
 	})
 
-	globalResync := func(_ interface{}) {
-		impl.GlobalResync(triggerInformer.Informer())
-	}
-
-	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
-		Handler: cache.ResourceEventHandlerFuncs{
-			AddFunc:    globalResync,
-			DeleteFunc: globalResync,
-		},
-	})
-
+	// ConsumerGroup changes and enqueue associated Trigger
+	consumerGroupInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		Handler: controller.HandleAll(func(obj interface{}) {
+			if cg, ok := obj.(*internalscg.ConsumerGroup); ok {
+				for _, or := range cg.OwnerReferences {
+					if strings.ToLower(or.Kind) == "trigger" {
+						impl.EnqueueKey(types.NamespacedName{Namespace: cg.GetNamespace(), Name: or.Name}) //enqueue trigger with name from owner ref
+						return
+					}
+				}
+			}
+		})})
 	return impl
+}
+
+func filterTriggers(lister eventinglisters.BrokerLister) func(interface{}) bool {
+	return func(obj interface{}) bool {
+		trigger, ok := obj.(*eventing.Trigger)
+		if !ok {
+			return false
+		}
+
+		if hasKafkaBrokerTriggerFinalizer(trigger.Finalizers, FinalizerName) {
+			return true
+		}
+
+		broker, err := lister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
+		if err != nil {
+			return false
+		}
+
+		value, ok := broker.GetAnnotations()[apiseventing.BrokerClassKey]
+		return ok && value == kafka.BrokerClass
+	}
+}
+
+func hasKafkaBrokerTriggerFinalizer(finalizers []string, finalizerName string) bool {
+	for _, f := range finalizers {
+		if f == finalizerName {
+			return true
+		}
+	}
+	return false
+}
+
+func enqueueTriggers(
+	logger *zap.Logger,
+	lister eventinglisters.TriggerLister,
+	enqueue func(obj interface{})) cache.ResourceEventHandler {
+
+	return controller.HandleAll(func(obj interface{}) {
+
+		if broker, ok := obj.(*eventing.Broker); ok {
+
+			selector := labels.SelectorFromSet(map[string]string{apiseventing.BrokerLabelKey: broker.Name})
+			triggers, err := lister.Triggers(broker.Namespace).List(selector)
+			if err != nil {
+				logger.Warn("Failed to list triggers", zap.Any("broker", broker), zap.Error(err))
+				return
+			}
+
+			for _, trigger := range triggers {
+				enqueue(trigger)
+			}
+		}
+	})
 }

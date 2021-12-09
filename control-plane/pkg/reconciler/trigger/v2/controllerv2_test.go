@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright 2021 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package trigger
+package v2
 
 import (
 	"testing"
-
-	"knative.dev/pkg/configmap"
 
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
@@ -37,7 +35,7 @@ import (
 func TestNewControllerV2(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
-	controller := NewControllerV2(ctx, configmap.NewStaticWatcher(), &config.Env{})
+	controller := NewControllerV2(ctx, &config.Env{})
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright 2021 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package trigger
+package v2
 
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
@@ -37,6 +37,11 @@ import (
 	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+)
+
+const (
+	deliveryOrderAnnotation = "kafka.eventing.knative.dev/delivery.order"
 )
 
 type ReconcilerV2 struct {
@@ -48,12 +53,6 @@ type ReconcilerV2 struct {
 }
 
 func (r *ReconcilerV2) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.reconcileKind(ctx, trigger)
-	})
-}
-
-func (r *ReconcilerV2) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
@@ -100,12 +99,20 @@ func (r *ReconcilerV2) reconcileKind(ctx context.Context, trigger *eventing.Trig
 	return nil
 }
 
-func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, trigger *eventing.Trigger) (consgroup *internalscg.ConsumerGroup, err error) {
+func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
 
+	var deliveryOrdering = internals.Unordered
+	var err error
+	deliveryOrderingAnnotationValue, ok := trigger.Annotations[deliveryOrderAnnotation]
+	if ok {
+		deliveryOrdering, err = deliveryOrderingFromString(deliveryOrderingAnnotationValue)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	//todo additionally handle trigger.Spec.Filter
 	newcg := &internalscg.ConsumerGroup{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: internalscg.ConsumerGroupGroupVersionKind.String(),
-		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(trigger.UID),
 			Namespace: trigger.Namespace,
@@ -116,13 +123,13 @@ func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, trigger *event
 		Spec: internalscg.ConsumerGroupSpec{
 			Template: internalscg.ConsumerTemplateSpec{
 				Spec: internalscg.ConsumerSpec{
-					//Topics: []string{}, //todo from contract resource
-					//Configs: internalscg.ConsumerConfigs{Configs: map[string]string{"group.id": ""}}, //todo
+					Topics:  []string{},                                                                               //todo get topics from broker resource
+					Configs: internalscg.ConsumerConfigs{Configs: map[string]string{"group.id": string(trigger.UID)}}, //todo get bootstrap.servers from broker resource
 					Delivery: &internalscg.DeliverySpec{
-						Delivery: trigger.Spec.Delivery,
-						Ordering: internals.Ordered,
-					},
+						DeliverySpec: trigger.Spec.Delivery,
+						Ordering:     deliveryOrdering},
 					Filters: &internalscg.Filters{
+						Filter:  trigger.Spec.Filter,
 						Filters: trigger.Spec.Filters,
 					},
 					Subscriber: trigger.Spec.Subscriber,
@@ -131,6 +138,8 @@ func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, trigger *event
 		},
 	}
 
+	//todo validate newcg
+
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(string(trigger.UID)) //Get by consumer group name
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
@@ -138,10 +147,12 @@ func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, trigger *event
 
 	if apierrors.IsNotFound(err) {
 		cg, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(newcg.GetNamespace()).Create(ctx, newcg, metav1.CreateOptions{})
-		if err != nil {
-			return nil, err
+		if err != nil && !apierrors.IsAlreadyExists(err) {
+			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", newcg.GetNamespace(), newcg.GetName(), err)
 		}
-		fmt.Printf("created consumer group%s/%s", newcg.GetNamespace(), newcg.GetName())
+		if apierrors.IsAlreadyExists(err) {
+			return newcg, nil
+		}
 		return cg, nil
 	}
 
@@ -160,4 +171,20 @@ func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, trigger *event
 	}
 
 	return cg, nil
+}
+
+func isKnativeKafkaBroker(broker *eventing.Broker) (bool, string) {
+	brokerClass := broker.GetAnnotations()[eventing.BrokerClassAnnotationKey]
+	return brokerClass == kafka.BrokerClass, brokerClass
+}
+
+func deliveryOrderingFromString(val string) (internals.DeliveryOrdering, error) {
+	switch strings.ToLower(val) {
+	case string(internals.Ordered):
+		return internals.Ordered, nil
+	case string(internals.Unordered):
+		return internals.Unordered, nil
+	default:
+		return internals.Unordered, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, internals.Ordered, internals.Unordered)
+	}
 }

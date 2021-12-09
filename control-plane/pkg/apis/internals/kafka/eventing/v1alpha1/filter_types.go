@@ -27,6 +27,12 @@ import (
 // If not specified, will default to allowing all events.
 type Filters struct {
 
+	// Filter is the filter to apply against all events from the Broker. Only events that pass this
+	// filter will be sent to the Subscriber. If not specified, will default to allowing all events.
+	//
+	// +optional
+	Filter *eventing.TriggerFilter `json:"filter,omitempty"`
+
 	// Filters is an experimental field that conforms to the CNCF CloudEvents Subscriptions
 	// API. It's an array of filter expressions that evaluate to true or false.
 	// If any filter expression in the array evaluates to false, the event MUST

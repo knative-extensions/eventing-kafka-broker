@@ -76,7 +76,7 @@ type ConsumerSpec struct {
 type DeliverySpec struct {
 	// DeliverySpec is the Knative core delivery spec.
 	// DeliverySpec contains the delivery options for event senders.
-	Delivery *eventingduck.DeliverySpec `json:",inline,omitempty"`
+	*eventingduck.DeliverySpec `json:",inline,omitempty"`
 
 	// Ordering is the ordering of the event delivery.
 	Ordering eventing.DeliveryOrdering `json:"ordering"`

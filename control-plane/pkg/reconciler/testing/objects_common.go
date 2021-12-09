@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
+	"k8s.io/utils/pointer"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
@@ -301,7 +302,6 @@ func allocateStatusAnnotations(obj duckv1.KRShaped) {
 }
 
 func NewConsumerGroup() *internalscg.ConsumerGroup {
-	replicas := int32(1)
 	return &internalscg.ConsumerGroup{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: internalscg.ConsumerGroupGroupVersionKind.String(),
@@ -314,7 +314,7 @@ func NewConsumerGroup() *internalscg.ConsumerGroup {
 			Template: internalscg.ConsumerTemplateSpec{
 				Spec: internalscg.ConsumerSpec{},
 			},
-			Replicas: &replicas,
+			Replicas: pointer.Int32Ptr(1),
 		},
 	}
 }

@@ -29,10 +29,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 )
 
-const (
-	ConditionConsumerGroup apis.ConditionType = "ConsumerGroupReady"
-)
-
 type statusConditionManager struct {
 	Trigger *eventing.Trigger
 
