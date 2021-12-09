@@ -19,9 +19,8 @@ package v1alpha1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 // +genclient
@@ -65,6 +64,14 @@ type ConsumerGroupSpec struct {
 	// If unspecified, defaults to 1.
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
+
+	// Selector is a label query over consumers that should match the Replicas count.
+	// If Selector is empty, it is defaulted to the labels present on the template.
+	// Label keys and values that must match in order to be controlled by this
+	// controller, if empty defaulted to labels on template.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+	// +optional
+	Selector map[string]string `json:"selector,omitempty" protobuf:"bytes,2,rep,name=selector"`
 }
 
 type ConsumerGroupStatus struct {
@@ -101,4 +108,21 @@ func (c *ConsumerGroup) GetUntypedSpec() interface{} {
 // GetStatus retrieves the status of the ConsumerGroupt. Implements the KRShaped interface.
 func (c *ConsumerGroup) GetStatus() *duckv1.Status {
 	return &c.Status.Status
+}
+
+// ConsumerFromTemplate returns a Consumer from the Consumer template in the ConsumerGroup spec.
+func (cg *ConsumerGroup) ConsumerFromTemplate(options ...ConsumerOption) *Consumer {
+	// TODO figure out naming strategy, is generateName enough?
+	c := &Consumer{
+		ObjectMeta: cg.Spec.Template.ObjectMeta,
+		Spec:       cg.Spec.Template.Spec,
+	}
+
+	ownerRef := metav1.NewControllerRef(cg, ConsumerGroupGroupVersionKind)
+	c.OwnerReferences = append(c.OwnerReferences, *ownerRef)
+
+	for _, opt := range options {
+		opt(c)
+	}
+	return c
 }

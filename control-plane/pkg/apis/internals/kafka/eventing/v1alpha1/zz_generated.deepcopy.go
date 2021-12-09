@@ -147,6 +147,13 @@ func (in *ConsumerGroupSpec) DeepCopyInto(out *ConsumerGroupSpec) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.Selector != nil {
+		in, out := &in.Selector, &out.Selector
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	return
 }
 
