@@ -248,11 +248,11 @@ func TestKafkaSourceUpdate(t *testing.T) {
 			topicName: defaultKafkaSource.topicName,
 			sinkName:  "update-event-recorder",
 		},
-		"change-topic": {
-			auth:      defaultKafkaSource.auth,
-			topicName: "update-topic",
-			sinkName:  defaultKafkaSource.sinkName,
-		},
+		// "change-topic": {
+		// 	auth:      defaultKafkaSource.auth,
+		// 	topicName: "update-topic",
+		// 	sinkName:  defaultKafkaSource.sinkName,
+		// },
 		"change-bootstrap-server": {
 			auth: authSetup{
 				bootStrapServer: KafkaBootstrapUrlPlain,
