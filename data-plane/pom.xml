@@ -43,7 +43,7 @@
     <!-- dependencies version -->
     <vertx.version>4.2.1</vertx.version>
     <cloudevents.sdk.version>2.2.0</cloudevents.sdk.version>
-    <micrometer.version>1.8.0</micrometer.version>
+    <micrometer.version>1.8.1</micrometer.version>
     <opentelemetry.version>1.9.1</opentelemetry.version>
     <jackson.version>2.13.0</jackson.version>
     <protobuf.version>3.19.1</protobuf.version>
