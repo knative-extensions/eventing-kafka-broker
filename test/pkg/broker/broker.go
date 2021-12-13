@@ -28,7 +28,6 @@ import (
 	"knative.dev/eventing/test/lib/resources"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
@@ -41,16 +40,17 @@ func Creator(client *eventingtestlib.Client, version string) string {
 	switch version {
 	case "v1":
 		namespace := client.Namespace
+		cmName := "kafka-broker-upgrade-config"
 		// Create Broker's own ConfigMap to prevent using defaults.
 		cm := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kafka-broker-upgrade-config",
+				Name:      cmName,
 				Namespace: namespace,
 			},
 			Data: map[string]string{
-				broker.BootstrapServersConfigMapKey:              testingpkg.BootstrapServersPlaintext,
-				broker.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", testingpkg.NumPartitions),
-				broker.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", testingpkg.ReplicationFactor),
+				kafka.BootstrapServersConfigMapKey:              testingpkg.BootstrapServersPlaintext,
+				kafka.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", testingpkg.NumPartitions),
+				kafka.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", testingpkg.ReplicationFactor),
 			},
 		}
 		cm, err := client.Kube.CoreV1().ConfigMaps(namespace).Create(context.Background(), cm, metav1.CreateOptions{})
@@ -62,8 +62,8 @@ func Creator(client *eventingtestlib.Client, version string) string {
 			resources.WithBrokerClassForBroker(kafka.BrokerClass),
 			resources.WithConfigForBroker(&duckv1.KReference{
 				Kind:       "ConfigMap",
-				Namespace:  cm.GetNamespace(),
-				Name:       cm.GetName(),
+				Namespace:  namespace,
+				Name:       cmName,
 				APIVersion: "v1",
 			}),
 		)
