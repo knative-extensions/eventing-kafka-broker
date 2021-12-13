@@ -22,17 +22,34 @@ import (
 	"knative.dev/pkg/apis"
 )
 
+func (c *Consumer) Validate(ctx context.Context) *apis.FieldError {
+	specCtx := ctx
+	if apis.IsInUpdate(ctx) {
+		specCtx = apis.WithinUpdate(ctx, apis.GetBaseline(ctx).(*Consumer).Spec)
+	}
+	return c.Spec.Validate(specCtx).ViaField("spec")
+}
+
 func (cs *ConsumerSpec) Validate(ctx context.Context) *apis.FieldError {
+	if cs == nil {
+		return nil
+	}
 	var err *apis.FieldError
 	if len(cs.Topics) == 0 {
 		return apis.ErrMissingField("topics")
 	}
-	return err.Also(
+	err = err.Also(
 		cs.Delivery.Validate(ctx).ViaField("delivery"),
 		cs.Configs.Validate(ctx).ViaField("configs"),
 		cs.Filters.Validate(ctx).ViaField("filters"),
 		cs.Subscriber.Validate(ctx).ViaField("subscriber"),
+		cs.PodBind.Validate(ctx).ViaField("podBind"),
 	)
+
+	if cs.CloudEventOverrides != nil {
+		err = err.Also(cs.CloudEventOverrides.Validate(ctx).ViaField("ceOverrides"))
+	}
+	return err
 }
 
 func (d *DeliverySpec) Validate(ctx context.Context) *apis.FieldError {
@@ -43,12 +60,49 @@ func (d *DeliverySpec) Validate(ctx context.Context) *apis.FieldError {
 }
 
 func (cc *ConsumerConfigs) Validate(ctx context.Context) *apis.FieldError {
-	if v, ok := cc.Configs["group.id"]; !ok || v == "" {
-		return apis.ErrMissingField("group.id")
+	expected := []string{
+		"group.id",
+		"bootstrap.servers",
+	}
+	for _, key := range expected {
+		if v, ok := cc.Configs[key]; !ok || v == "" {
+			return apis.ErrMissingField(key)
+		}
 	}
 	return nil
 }
 
 func (f *Filters) Validate(ctx context.Context) *apis.FieldError {
 	return nil
+}
+
+func (p PodBind) Validate(ctx context.Context) *apis.FieldError {
+	if len(p.PodName) == 0 {
+		return apis.ErrMissingField("podName")
+	}
+	if len(p.PodNamespace) == 0 {
+		return apis.ErrMissingField("podNamespace")
+	}
+	if apis.IsInUpdate(ctx) {
+		return p.CheckImmutableFields(ctx, apis.GetBaseline(ctx).(ConsumerSpec).PodBind)
+	}
+	return nil
+}
+
+func (p PodBind) CheckImmutableFields(ctx context.Context, original PodBind) *apis.FieldError {
+	if p.PodName != original.PodName || p.PodNamespace != original.PodNamespace {
+		return ErrImmutableField("podBind",
+			"Moving a consumer to a different pod is unsupported, to move a consumer to another pod, "+
+				"remove this one and create a new consumer with the same spec",
+		)
+	}
+	return nil
+}
+
+func ErrImmutableField(field, details string) *apis.FieldError {
+	return &apis.FieldError{
+		Message: "Immutable field updated",
+		Paths:   []string{field},
+		Details: details,
+	}
 }

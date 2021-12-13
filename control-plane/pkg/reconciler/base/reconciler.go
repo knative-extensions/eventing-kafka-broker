@@ -216,7 +216,7 @@ func (r *Reconciler) UpdateDispatcherPodsAnnotation(ctx context.Context, logger 
 	if errors != nil {
 		return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
 	}
-	return r.updatePodsAnnotation(ctx, logger, "dispatcher", volumeGeneration, pods)
+	return r.UpdatePodsAnnotation(ctx, logger, "dispatcher", volumeGeneration, pods)
 }
 
 func (r *Reconciler) UpdateReceiverPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
@@ -224,10 +224,10 @@ func (r *Reconciler) UpdateReceiverPodsAnnotation(ctx context.Context, logger *z
 	if errors != nil {
 		return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
 	}
-	return r.updatePodsAnnotation(ctx, logger, "receiver", volumeGeneration, pods)
+	return r.UpdatePodsAnnotation(ctx, logger, "receiver", volumeGeneration, pods)
 }
 
-func (r *Reconciler) updatePodsAnnotation(ctx context.Context, logger *zap.Logger, component string, volumeGeneration uint64, pods []*corev1.Pod) error {
+func (r *Reconciler) UpdatePodsAnnotation(ctx context.Context, logger *zap.Logger, component string, volumeGeneration uint64, pods []*corev1.Pod) error {
 
 	var errors error
 
