@@ -119,6 +119,10 @@ func filterTriggers(lister eventinglisters.BrokerLister) func(interface{}) bool 
 			return false
 		}
 
+		if hasKafkaBrokerTriggerFinalizer(trigger.Finalizers, FinalizerName) {
+			return true
+		}
+
 		broker, err := lister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
 		if err != nil {
 			return false
@@ -127,6 +131,15 @@ func filterTriggers(lister eventinglisters.BrokerLister) func(interface{}) bool 
 		value, ok := broker.GetAnnotations()[apiseventing.BrokerClassKey]
 		return ok && value == kafka.BrokerClass
 	}
+}
+
+func hasKafkaBrokerTriggerFinalizer(finalizers []string, finalizerName string) bool {
+	for _, f := range finalizers {
+		if f == finalizerName {
+			return true
+		}
+	}
+	return false
 }
 
 func enqueueTriggers(
