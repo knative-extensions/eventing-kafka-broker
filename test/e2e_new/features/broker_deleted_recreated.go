@@ -17,9 +17,16 @@
 package features
 
 import (
+	"k8s.io/apimachinery/pkg/types"
+	"knative.dev/eventing/test/rekt/resources/broker"
+	"knative.dev/eventing/test/rekt/resources/trigger"
+	"knative.dev/pkg/system"
+	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
+	"knative.dev/reconciler-test/resources/svc"
 
 	"knative.dev/eventing-kafka-broker/test/e2e_new/features/featuressteps"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap"
 )
 
 func BrokerDeletedRecreated() *feature.Feature {
@@ -31,6 +38,31 @@ func BrokerDeletedRecreated() *feature.Feature {
 	f.Setup("test broker", featuressteps.BrokerSmokeTest(brokerName, triggerName))
 	f.Requirement("delete resources", featuressteps.DeleteResources(f))
 	f.Assert("test broker after deletion", featuressteps.BrokerSmokeTest(brokerName, triggerName))
+
+	return f
+}
+
+func BrokerConfigMapDeletedFirst() *feature.Feature {
+	f := feature.NewFeatureNamed("delete broker ConfigMap first")
+
+	brokerName := feature.MakeRandomK8sName("broker")
+	triggerName := feature.MakeRandomK8sName("trigger")
+	cmName := feature.MakeRandomK8sName("cm-deleted-first")
+	sink := feature.MakeRandomK8sName("sink")
+
+	f.Setup("install sink", eventshub.Install(sink, eventshub.StartReceiver))
+	f.Setup("install config", configmap.Copy(
+		types.NamespacedName{Namespace: system.Namespace(), Name: "kafka-broker-config"},
+		cmName,
+	))
+	f.Setup("install broker", broker.Install(brokerName, append(broker.WithEnvConfig(), broker.WithConfig(cmName))...))
+	f.Setup("install trigger", trigger.Install(triggerName, brokerName,
+		trigger.WithSubscriber(svc.AsKReference(sink), "")),
+	)
+
+	f.Requirement("delete Broker ConfigMap", featuressteps.DeleteConfigMap(cmName))
+
+	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
 
 	return f
 }

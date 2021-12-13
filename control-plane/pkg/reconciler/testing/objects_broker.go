@@ -23,6 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/sets"
 	clientgotesting "k8s.io/client-go/testing"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
@@ -44,6 +45,8 @@ const (
 	BrokerUUID      = "e7185016-5d98-4b54-84e8-3b1cd4acc6b4"
 	BrokerNamespace = "test-namespace"
 	BrokerName      = "test-broker"
+
+	ConfigMapFinalizerName = "kafka.brokers.eventing.knative.dev/" + BrokerNamespace + "-" + BrokerName
 )
 
 func BrokerTopic() string {
@@ -131,8 +134,9 @@ type CMOption func(cm *corev1.ConfigMap)
 func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int, options ...CMOption) *corev1.ConfigMap {
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: ConfigMapNamespace,
-			Name:      ConfigMapName,
+			Namespace:  ConfigMapNamespace,
+			Name:       ConfigMapName,
+			Finalizers: []string{"finalizer-that-we-should-not-drop"},
 		},
 		Data: map[string]string{
 			kafka.BootstrapServersConfigMapKey:              bootstrapServers,
@@ -144,6 +148,18 @@ func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int,
 		opt(cm)
 	}
 	return cm
+}
+
+func BrokerConfigFinalizer(finalizerName string) CMOption {
+	return func(cm *corev1.ConfigMap) {
+		cm.Finalizers = append(cm.Finalizers, finalizerName)
+	}
+}
+
+func BrokerConfigFinalizerRemove(finalizerName string) CMOption {
+	return func(cm *corev1.ConfigMap) {
+		cm.Finalizers = sets.NewString(cm.Finalizers...).Delete(finalizerName).List()
+	}
 }
 
 func BrokerAuthConfig(name string) CMOption {
