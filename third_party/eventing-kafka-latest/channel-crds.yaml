@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   name: kafkachannels.messaging.knative.dev
   labels:
-    kafka.eventing.knative.dev/release: "v20211209-94078c662"
+    kafka.eventing.knative.dev/release: "v20211212-58afd241e"
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
@@ -88,6 +88,7 @@ spec:
                       description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
                       type: integer
                       format: int32
+                  x-kubernetes-preserve-unknown-fields: true # This is necessary to enable experimental features in the delivery
                 subscribers:
                   description: This is the list of subscriptions for this subscribable.
                   type: array
@@ -131,6 +132,7 @@ spec:
                             description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
                             type: integer
                             format: int32
+                        x-kubernetes-preserve-unknown-fields: true # This is necessary to enable experimental features in the delivery
                       generation:
                         description: Generation of the origin of the subscriber with uid:UID.
                         type: integer
