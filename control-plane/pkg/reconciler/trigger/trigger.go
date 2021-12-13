@@ -35,6 +35,7 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
+	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
@@ -43,8 +44,6 @@ import (
 
 const (
 	deliveryOrderAnnotation = "kafka.eventing.knative.dev/delivery.order"
-	deliveryOrderOrdered    = "ordered"
-	deliveryOrderUnordered  = "unordered"
 )
 
 type Reconciler struct {
@@ -101,7 +100,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 		logger.Debug("broker deleted", zap.String("finalizeDuringReconcile", "deleted"))
 
-		// The associated broker doesn't exist anymore, so clean up Trigger resources.
+		// The associated broker doesn't exist anymore, so clean up Trigger resources and owning consumer group resource.
 		return r.FinalizeKind(ctx, trigger)
 	}
 
@@ -326,11 +325,11 @@ func isKnativeKafkaBroker(broker *eventing.Broker) (bool, string) {
 
 func deliveryOrderFromString(val string) (contract.DeliveryOrder, error) {
 	switch strings.ToLower(val) {
-	case deliveryOrderOrdered:
+	case string(internals.Ordered):
 		return contract.DeliveryOrder_ORDERED, nil
-	case deliveryOrderUnordered:
+	case string(internals.Unordered):
 		return contract.DeliveryOrder_UNORDERED, nil
 	default:
-		return contract.DeliveryOrder_UNORDERED, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, deliveryOrderOrdered, deliveryOrderUnordered)
+		return contract.DeliveryOrder_UNORDERED, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, internals.Ordered, internals.Unordered)
 	}
 }

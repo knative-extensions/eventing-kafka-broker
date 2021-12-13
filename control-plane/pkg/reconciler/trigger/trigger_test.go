@@ -24,6 +24,7 @@ import (
 
 	"google.golang.org/protobuf/testing/protocmp"
 	"k8s.io/utils/pointer"
+	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -38,7 +39,6 @@ import (
 	clientgotesting "k8s.io/client-go/testing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
-	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	"knative.dev/pkg/apis"
@@ -305,7 +305,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 				NewBroker(
 					BrokerReady,
 				),
-				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderOrdered)),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Ordered))),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -357,7 +357,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_ORDERED),
-						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderOrdered),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Ordered)),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -369,7 +369,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 				NewBroker(
 					BrokerReady,
 				),
-				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderUnordered)),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Unordered))),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -421,7 +421,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, deliveryOrderUnordered),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Unordered)),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -2301,7 +2301,7 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 		return triggerreconciler.NewReconciler(
 			ctx,
 			logger,
-			fakeeventingclient.Get(ctx),
+			eventingclient.Get(ctx),
 			listers.GetTriggerLister(),
 			controller.GetEventRecorder(ctx),
 			reconciler,

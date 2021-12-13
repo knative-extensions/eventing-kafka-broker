@@ -20,6 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
@@ -75,7 +76,7 @@ type ConsumerSpec struct {
 type DeliverySpec struct {
 	// DeliverySpec is the Knative core delivery spec.
 	// DeliverySpec contains the delivery options for event senders.
-	eventingduck.DeliverySpec `json:",inline,omitempty"`
+	*eventingduck.DeliverySpec `json:",inline,omitempty"`
 
 	// Ordering is the ordering of the event delivery.
 	Ordering eventing.DeliveryOrdering `json:"ordering"`
@@ -111,6 +112,14 @@ type ConsumerStatus struct {
 	// * ObservedGeneration - the 'Generation' of the Consumer that was last processed by the controller.
 	// * Conditions - the latest available observations of a resource's current state.
 	duckv1.Status
+
+	// SubscriberURI is the resolved URI of the receiver for this Trigger.
+	// +optional
+	SubscriberURI *apis.URL `json:"subscriberUri,omitempty"`
+
+	// DeliveryStatus contains a resolved URL to the dead letter sink address, and any other
+	// resolved delivery options.
+	eventingduck.DeliveryStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

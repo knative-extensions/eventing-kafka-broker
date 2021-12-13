@@ -99,7 +99,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 								},
 							},
 							Delivery: &DeliverySpec{
-								DeliverySpec: eventingduck.DeliverySpec{},
+								DeliverySpec: &eventingduck.DeliverySpec{},
 							},
 							Subscriber: duckv1.Destination{
 								URI: &apis.URL{

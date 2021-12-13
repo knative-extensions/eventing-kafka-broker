@@ -28,6 +28,7 @@ import (
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 	"knative.dev/pkg/reconciler/testing"
 
+	eventingkafkabrokerconsumer "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	eventingkafkachannels "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	eventingkafkasources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	fakeeventingkafkaclientset "knative.dev/eventing-kafka/pkg/client/clientset/versioned/fake"
@@ -36,6 +37,8 @@ import (
 
 	eventingkafkabroker "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	fakeeventingkafkabrokerclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/fake"
+	fakeeventingkafkaconsumerclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/fake"
+	consumerlisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	eventingkafkabrokerlisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/eventing/v1alpha1"
 )
 
@@ -45,6 +48,7 @@ var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakeapiextensionsclientset.AddToScheme,
 	fakeeventingkafkabrokerclientset.AddToScheme,
 	fakeeventingkafkaclientset.AddToScheme,
+	fakeeventingkafkaconsumerclientset.AddToScheme,
 }
 
 type Listers struct {
@@ -95,6 +99,14 @@ func (l *Listers) GetEventingKafkaObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(fakeeventingkafkaclientset.AddToScheme)
 }
 
+func (l *Listers) GetConsumerGroupObjects() []runtime.Object {
+	return l.sorter.ObjectsForSchemeFunc(fakeeventingkafkaconsumerclientset.AddToScheme)
+}
+
+func (l *Listers) GetConsumerObjects() []runtime.Object {
+	return l.sorter.ObjectsForSchemeFunc(fakeeventingkafkaconsumerclientset.AddToScheme)
+}
+
 func (l *Listers) GetBrokerLister() eventinglisters.BrokerLister {
 	return eventinglisters.NewBrokerLister(l.indexerFor(&eventing.Broker{}))
 }
@@ -125,6 +137,14 @@ func (l *Listers) GetKafkaSourceLister() eventingkafkasourceslisters.KafkaSource
 
 func (l *Listers) GetKafkaChannelLister() eventingkafkachannelslisters.KafkaChannelLister {
 	return eventingkafkachannelslisters.NewKafkaChannelLister(l.indexerFor(&eventingkafkachannels.KafkaChannel{}))
+}
+
+func (l *Listers) GetConsumerGroupLister() consumerlisters.ConsumerGroupLister {
+	return consumerlisters.NewConsumerGroupLister(l.indexerFor(&eventingkafkabrokerconsumer.ConsumerGroup{}))
+}
+
+func (l *Listers) GetConsumerLister() consumerlisters.ConsumerLister {
+	return consumerlisters.NewConsumerLister(l.indexerFor(&eventingkafkabrokerconsumer.Consumer{}))
 }
 
 func (l *Listers) indexerFor(obj runtime.Object) cache.Indexer {
