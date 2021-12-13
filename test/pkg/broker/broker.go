@@ -17,13 +17,20 @@
 package broker
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	eventingtestlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func Creator(client *eventingtestlib.Client, version string) string {
@@ -33,9 +40,32 @@ func Creator(client *eventingtestlib.Client, version string) string {
 
 	switch version {
 	case "v1":
+		namespace := client.Namespace
+		// Create Broker's own ConfigMap to prevent using defaults.
+		cm := &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "kafka-broker-upgrade-config",
+				Namespace: namespace,
+			},
+			Data: map[string]string{
+				broker.BootstrapServersConfigMapKey:              testingpkg.BootstrapServersPlaintext,
+				broker.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", testingpkg.NumPartitions),
+				broker.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", testingpkg.ReplicationFactor),
+			},
+		}
+		cm, err := client.Kube.CoreV1().ConfigMaps(namespace).Create(context.Background(), cm, metav1.CreateOptions{})
+		if err != nil && !apierrors.IsAlreadyExists(err) {
+			client.T.Fatalf("Failed to create ConfigMap %s/%s: %v", namespace, cm.GetName(), err)
+		}
 		client.CreateBrokerOrFail(
 			name,
 			resources.WithBrokerClassForBroker(kafka.BrokerClass),
+			resources.WithConfigForBroker(&duckv1.KReference{
+				Kind:       "ConfigMap",
+				Namespace:  cm.GetNamespace(),
+				Name:       cm.GetName(),
+				APIVersion: "v1",
+			}),
 		)
 	default:
 		panic(fmt.Sprintf("Unsupported version of Broker: %q", version))
