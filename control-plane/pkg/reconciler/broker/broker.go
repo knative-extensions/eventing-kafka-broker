@@ -403,7 +403,7 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 }
 
 func (r *Reconciler) addFinalizerCM(ctx context.Context, finalizer string, cm *corev1.ConfigMap) error {
-	if !hasFinalizer(cm, finalizer) {
+	if !containsFinalizerCM(cm, finalizer) {
 		cm := cm.DeepCopy() // Do not modify informer copy.
 		cm.Finalizers = append(cm.Finalizers, finalizer)
 		_, err := r.KubeClient.CoreV1().ConfigMaps(cm.GetNamespace()).Update(ctx, cm, metav1.UpdateOptions{})
@@ -414,7 +414,7 @@ func (r *Reconciler) addFinalizerCM(ctx context.Context, finalizer string, cm *c
 	return nil
 }
 
-func hasFinalizer(cm *corev1.ConfigMap, finalizer string) bool {
+func containsFinalizerCM(cm *corev1.ConfigMap, finalizer string) bool {
 	if cm == nil {
 		return false
 	}
