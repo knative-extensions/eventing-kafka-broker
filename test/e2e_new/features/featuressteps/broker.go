@@ -21,10 +21,14 @@ import (
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
@@ -79,4 +83,30 @@ func BrokerSmokeTest(brokerName, triggerName string) feature.StepFn {
 
 func DeleteResources(f *feature.Feature) feature.StepFn {
 	return compose(f.DeleteResources)
+}
+
+func DeleteConfigMap(name string) feature.StepFn {
+	foreground := metav1.DeletePropagationForeground
+	return func(ctx context.Context, t feature.T) {
+		ns := environment.FromContext(ctx).Namespace()
+		err := kubeclient.Get(ctx).CoreV1().
+			ConfigMaps(ns).
+			Delete(ctx, name, metav1.DeleteOptions{PropagationPolicy: &foreground})
+		if err != nil {
+			t.Fatalf("Failed to delete ConfigMap %s/%s: %w\n", ns, name, err)
+		}
+	}
+}
+
+func DeleteBroker(name string) feature.StepFn {
+	foreground := metav1.DeletePropagationForeground
+	return func(ctx context.Context, t feature.T) {
+		ns := environment.FromContext(ctx).Namespace()
+		err := eventingclient.Get(ctx).EventingV1().
+			Brokers(ns).
+			Delete(ctx, name, metav1.DeleteOptions{PropagationPolicy: &foreground})
+		if err != nil {
+			t.Fatalf("Failed to delete Broker %s/%s: %w\n", ns, name, err)
+		}
+	}
 }
