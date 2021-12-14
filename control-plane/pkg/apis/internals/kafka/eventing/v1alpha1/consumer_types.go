@@ -19,10 +19,12 @@ package v1alpha1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 )
 
@@ -59,7 +61,9 @@ type ConsumerSpec struct {
 	// More info: https://kafka.apache.org/documentation/#consumerconfigs
 	Configs ConsumerConfigs `json:"configs,omitempty"`
 
-	// TODO Add auth
+	// Auth is the auth configuration for the Consumer.
+	// +optional
+	Auth *Auth `json:"auth,omitempty"`
 
 	// DeliverySpec contains the delivery options for event senders.
 	// +optional
@@ -71,6 +75,16 @@ type ConsumerSpec struct {
 
 	// Subscriber is the addressable that receives events that pass the Filters.
 	Subscriber duckv1.Destination `json:"subscriber"`
+
+	// CloudEventOverrides defines overrides to control the output format and
+	// modifications of the event sent to the subscriber.
+	// +optional
+	CloudEventOverrides *duckv1.CloudEventOverrides `json:"ceOverrides,omitempty"`
+}
+
+type Auth struct {
+	NetSpec  *bindings.KafkaNetSpec
+	AuthSpec *eventingv1alpha1.Auth
 }
 
 type DeliverySpec struct {

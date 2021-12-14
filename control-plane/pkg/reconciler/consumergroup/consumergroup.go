@@ -25,12 +25,21 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"knative.dev/pkg/apis"
 	"knative.dev/pkg/reconciler"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
+)
+
+const (
+	// KafkaConditionConsumerGroupReady has status True when the KafkaChannel has created a consumer group.
+	KafkaConditionConsumerGroupReady apis.ConditionType = "ConsumerGroupReady"
+
+	// KafkaConditionConsumerGroupNotReady has status False when the KafkaChannel has failed to create a consumer group.
+	KafkaConditionConsumerGroupNotReady apis.ConditionType = "ConsumerGroupNotReady"
 )
 
 type Reconciler struct {
