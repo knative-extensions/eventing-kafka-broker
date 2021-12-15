@@ -18,11 +18,9 @@ package v2
 
 import (
 	"context"
-	"strings"
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -33,9 +31,9 @@ import (
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 
-	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 
@@ -88,16 +86,10 @@ func NewControllerV2(ctx context.Context, configs *config.Env) *controller.Impl 
 
 	// ConsumerGroup changes and enqueue associated Trigger
 	consumerGroupInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		Handler: controller.HandleAll(func(obj interface{}) {
-			if cg, ok := obj.(*internalscg.ConsumerGroup); ok {
-				for _, or := range cg.OwnerReferences {
-					if strings.ToLower(or.Kind) == "trigger" {
-						impl.EnqueueKey(types.NamespacedName{Namespace: cg.GetNamespace(), Name: or.Name}) //enqueue trigger with name from owner ref
-						return
-					}
-				}
-			}
-		})})
+		FilterFunc: consumergroup.Filter("trigger"),
+		Handler:    controller.HandleAll(impl.Enqueue),
+	})
+
 	return impl
 }
 
