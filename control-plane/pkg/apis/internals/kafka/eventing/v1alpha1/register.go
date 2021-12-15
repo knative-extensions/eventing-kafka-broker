@@ -33,6 +33,12 @@ var ConsumerGroupGroupVersionKind = schema.GroupVersionKind{
 	Kind:    "ConsumerGroup",
 }
 
+var ConsumerGroupVersionKind = schema.GroupVersionKind{
+	Group:   SchemeGroupVersion.Group,
+	Version: SchemeGroupVersion.Version,
+	Kind:    "Consumer",
+}
+
 // Kind takes an unqualified kind and returns back a Group qualified GroupKind.
 func Kind(kind string) schema.GroupKind {
 	return SchemeGroupVersion.WithKind(kind).GroupKind()

@@ -23,12 +23,14 @@ import (
 )
 
 const (
-	ConditionConsumers apis.ConditionType = "Consumers"
+	ConditionConsumerGroupConsumers          apis.ConditionType = "Consumers"
+	ConditionConsumerGroupConsumersScheduled apis.ConditionType = "ConsumersScheduled"
 )
 
 var (
 	conditionSet = apis.NewLivingConditionSet(
-		ConditionConsumers,
+		ConditionConsumerGroupConsumers,
+		ConditionConsumerGroupConsumersScheduled,
 	)
 )
 
@@ -38,10 +40,20 @@ func (c *ConsumerGroup) GetConditionSet() apis.ConditionSet {
 
 func (cg *ConsumerGroup) MarkReconcileConsumersFailed(reason string, err error) error {
 	err = fmt.Errorf("failed to reconcile consumers: %w", err)
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumers, reason, err.Error())
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumerGroupConsumers, reason, err.Error())
 	return err
 }
 
 func (cg *ConsumerGroup) MarkReconcileConsumersSucceeded() {
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionConsumers)
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionConsumerGroupConsumers)
+}
+
+func (cg *ConsumerGroup) MarkScheduleConsumerFailed(reason string, err error) error {
+	err = fmt.Errorf("failed to schedule consumers: %w", err)
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumerGroupConsumers, reason, err.Error())
+	return err
+}
+
+func (cg *ConsumerGroup) MarkScheduleSucceeded() {
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionConsumerGroupConsumersScheduled)
 }

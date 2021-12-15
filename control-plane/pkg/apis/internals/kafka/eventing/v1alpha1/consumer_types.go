@@ -53,6 +53,11 @@ type Consumer struct {
 	Status ConsumerStatus `json:"status,omitempty"`
 }
 
+type PodBind struct {
+	PodName      string `json:"podName"`
+	PodNamespace string `json:"podNamespace"`
+}
+
 type ConsumerSpec struct {
 	// Topics is the list of topics to subscribe to.
 	Topics []string `json:"topics"`
@@ -80,6 +85,12 @@ type ConsumerSpec struct {
 	// modifications of the event sent to the subscriber.
 	// +optional
 	CloudEventOverrides *duckv1.CloudEventOverrides `json:"ceOverrides,omitempty"`
+
+	// VReplicas is the number of virtual replicas for a consumer.
+	VReplicas *int32
+
+	// PodBind represents a reference to the pod in which the consumer should be placed.
+	PodBind *PodBind `json:"podBind"`
 }
 
 type Auth struct {
