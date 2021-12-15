@@ -55,6 +55,14 @@ var (
 	OwnerAsChannelLabel = map[string]string{
 		kafkainternals.UserFacingResourceLabelSelector: "kafkachannel",
 	}
+
+	ConsumerSubscription1Label = map[string]string{
+		kafkainternals.ConsumerLabelSelector: Subscription1UUID,
+	}
+
+	ConsumerSubscription2Label = map[string]string{
+		kafkainternals.ConsumerLabelSelector: Subscription2UUID,
+	}
 )
 
 type ConsumerGroupOption func(cg *kafkainternals.ConsumerGroup)

@@ -67,12 +67,12 @@ const (
 	TopicPrefix          = "knative-messaging-kafka"
 	DefaultDeliveryOrder = internals.Ordered
 
-	KafkaChannelConditionConsumerGroup apis.ConditionType = "ConsumerGroup" //condition is registered by controller
+	KafkaChannelConditionConsumerGroups apis.ConditionType = "ConsumerGroups" //condition is registered by controller
 )
 
 var (
 	conditionSet = apis.NewLivingConditionSet(
-		KafkaChannelConditionConsumerGroup,
+		KafkaChannelConditionConsumerGroups,
 		base.ConditionTopicReady,
 		base.ConditionConfigMapUpdated,
 		base.ConditionConfigParsed,
@@ -206,10 +206,10 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 
 	subscriptionError := r.reconcileSubscribers(ctx, channel, topicName, topicConfig.BootstrapServers)
 	if subscriptionError != nil {
-		channel.GetConditionSet().Manage(&channel.Status).MarkFalse(KafkaChannelConditionConsumerGroup, "failed to reconcile consumer group", subscriptionError.Error())
+		channel.GetConditionSet().Manage(&channel.Status).MarkFalse(KafkaChannelConditionConsumerGroups, "failed to reconcile consumer groups", subscriptionError.Error())
 		return subscriptionError
 	}
-	channel.GetConditionSet().Manage(&channel.Status).MarkTrue(KafkaChannelConditionConsumerGroup)
+	channel.GetConditionSet().Manage(&channel.Status).MarkTrue(KafkaChannelConditionConsumerGroups)
 
 	// Update contract data with the new contract configuration (add/update channel resource)
 	channelIndex := coreconfig.FindResource(ct, channel.UID)
