@@ -75,7 +75,7 @@ func main() {
 
 		// KafkaSink controller
 		injection.NamedControllerConstructor{
-			Name: "kafkasink-controller",
+			Name: "sink-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 				return sink.NewController(ctx, watcher, sinkEnv)
 			},
@@ -83,7 +83,7 @@ func main() {
 
 		// KafkaSource controller
 		injection.NamedControllerConstructor{
-			Name: "kafkasource-controller",
+			Name: "source-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 				return source.NewController(ctx, watcher, sourceEnv)
 			},
