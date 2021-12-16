@@ -83,7 +83,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		)
 	}
 
-	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass)
+	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass, func(impl *controller.Impl) controller.Options {
+		return controller.Options{PromoteFilterFunc: kafka.BrokerClassFilter()}
+	})
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, env.IngressPodPort, reconciler.ReceiverSelector(), impl.EnqueueKey)
