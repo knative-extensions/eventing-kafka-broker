@@ -29,6 +29,7 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
@@ -43,6 +44,11 @@ func main() {
 	brokerEnv, err := config.GetEnvConfig("BROKER", broker.ValidateDefaultBackoffDelayMs)
 	if err != nil {
 		log.Fatal("cannot process environment variables with prefix BROKER", err)
+	}
+
+	channelEnv, err := config.GetEnvConfig("CHANNEL")
+	if err != nil {
+		log.Fatal("cannot process environment variables with prefix CHANNEL", err)
 	}
 
 	sinkEnv, err := config.GetEnvConfig("SINK")
@@ -70,6 +76,14 @@ func main() {
 			Name: "trigger-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 				return trigger.NewController(ctx, watcher, brokerEnv)
+			},
+		},
+
+		// Channel controller
+		injection.NamedControllerConstructor{
+			Name: "channel-controller",
+			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
+				return channel.NewController(ctx, watcher, channelEnv)
 			},
 		},
 
