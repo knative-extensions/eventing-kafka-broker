@@ -209,6 +209,11 @@ func (in *ConsumerGroupStatus) DeepCopyInto(out *ConsumerGroupStatus) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.DeliveryStatus.DeepCopyInto(&out.DeliveryStatus)
+	if in.Replicas != nil {
+		in, out := &in.Replicas, &out.Replicas
+		*out = new(int32)
+		**out = **in
+	}
 	return
 }
 

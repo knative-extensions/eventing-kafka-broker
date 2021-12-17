@@ -22,18 +22,15 @@ import (
 	"k8s.io/client-go/tools/cache"
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
-	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
-	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/controller"
+
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 
 	kafkainformer "knative.dev/eventing-kafka/pkg/client/injection/informers/sources/v1beta1/kafkasource"
 	"knative.dev/eventing-kafka/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 func NewControllerV2(ctx context.Context, configs *config.Env) *controller.Impl {
@@ -41,33 +38,17 @@ func NewControllerV2(ctx context.Context, configs *config.Env) *controller.Impl 
 	kafkaInformer := kafkainformer.Get(ctx)
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
 
+	sources.RegisterAlternateKafkaConditionSet(conditionSet)
+
 	r := &ReconcilerV2{
-		Reconciler: &base.Reconciler{
-			KubeClient:                  kubeclient.Get(ctx),
-			PodLister:                   podinformer.Get(ctx).Lister(),
-			SecretLister:                secretinformer.Get(ctx).Lister(),
-			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
-			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
-			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
-			SystemNamespace:             configs.SystemNamespace,
-			DispatcherLabel:             base.SourceDispatcherLabel,
-		},
 		ConsumerGroupLister: consumerGroupInformer.Lister(),
 		InternalsClient:     consumergroupclient.Get(ctx),
 	}
 
 	impl := kafkasource.NewImpl(ctx, r)
 
-	kafkaInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
-
-	r.SecretTracker = impl.Tracker
-	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(r.SecretTracker.OnChanged))
-
 	kafkaInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: kafka.BrokerClassFilter(),
-		Handler: cache.ResourceEventHandlerFuncs{
-			DeleteFunc: r.OnDeleteObserver,
-		},
+		Handler: controller.HandleAll(impl.Enqueue),
 	})
 
 	// ConsumerGroup changes and enqueue associated KafkaSource

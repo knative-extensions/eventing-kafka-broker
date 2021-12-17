@@ -142,10 +142,6 @@ func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, trigger *event
 		return nil, err
 	}
 
-	if err := newcg.Validate(ctx); err != nil {
-		return nil, fmt.Errorf("failed to validate expected consumer group %s/%s: %w", newcg.GetNamespace(), newcg.GetName(), err)
-	}
-
 	if apierrors.IsNotFound(err) {
 		cg, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(newcg.GetNamespace()).Create(ctx, newcg, metav1.CreateOptions{})
 		if err != nil && !apierrors.IsAlreadyExists(err) {
@@ -167,7 +163,7 @@ func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, trigger *event
 		Spec:       newcg.Spec,
 		Status:     cg.Status,
 	}
-	if _, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
+	if cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
 		return nil, fmt.Errorf("failed to update consumer group %s/%s: %w", newCg.GetNamespace(), newCg.GetName(), err)
 	}
 
