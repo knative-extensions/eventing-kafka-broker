@@ -23,19 +23,24 @@ import (
 	"os"
 	"testing"
 
+	"knative.dev/eventing-kafka/test"
+	eventingTest "knative.dev/eventing/test"
 	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/pkg/system"
 )
 
-const (
-	SystemNamespace = "knative-eventing"
-	LogsDir         = "knative-eventing-logs"
-)
+var channelTestRunner testlib.ComponentsTestRunner
 
-func TestMain(t *testing.M) {
+func TestMain(m *testing.M) {
 
-	exit := t.Run()
+	eventingTest.InitializeEventingFlags()
+	channelTestRunner = testlib.ComponentsTestRunner{
+		ComponentFeatureMap: test.ChannelFeatureMap,
+		ComponentsToTest:    eventingTest.EventingFlags.Channels,
+	}
+	os.Exit(func() int {
+		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
 
-	testlib.ExportLogs(LogsDir, SystemNamespace)
-
-	os.Exit(exit)
+		return m.Run()
+	}())
 }
