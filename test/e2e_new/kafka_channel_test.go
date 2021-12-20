@@ -21,9 +21,10 @@ package e2e_new
 
 import (
 	"fmt"
-	"knative.dev/eventing-kafka/pkg/channel/distributed/common/kafka/constants"
 	"testing"
 	"time"
+
+	"knative.dev/eventing-kafka/pkg/channel/distributed/common/kafka/constants"
 
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
