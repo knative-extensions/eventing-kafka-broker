@@ -90,7 +90,7 @@ func TestKafkaChannelEvents(t *testing.T) {
 	// Generate Unique Test Names And Add To Context Store
 	ctx = state.ContextWith(ctx, &state.KVStore{})
 	testName := feature.MakeRandomK8sName(kafkaChannelTestPrefix)
-	kafkaChannelServiceName := appendKafkaChannelServiceNameSuffix(testName)
+	kafkaChannelServiceName := fmt.Sprintf("%s-%s", testName, constants.KafkaChannelServiceNameSuffix)
 	state.SetOrFail(ctx, t, kafkachannel.TestNameKey, testName)
 	state.SetOrFail(ctx, t, kafkachannel.SenderNameKey, testName+"-sender")
 	state.SetOrFail(ctx, t, kafkachannel.SenderSinkKey, kafkaChannelServiceName)
@@ -103,9 +103,4 @@ func TestKafkaChannelEvents(t *testing.T) {
 	env.Test(ctx, t, kafkachannel.ConfigureDataPlane(ctx, t))
 	env.Test(ctx, t, kafkachannel.SendEvents(ctx, t, 10, 1, 10))               // 10 Events with IDs 1-10
 	env.Test(ctx, t, kafkachannel.ReplayEvents(ctx, t, offsetTime, 20, 1, 10)) // 20 Events with IDs 1-10
-}
-
-// appendKafkaChannelServiceNameSuffix appends the KafkaChannel Service name suffix to the specified string.
-func appendKafkaChannelServiceNameSuffix(channelName string) string {
-	return fmt.Sprintf("%s-%s", channelName, constants.KafkaChannelServiceNameSuffix)
 }
