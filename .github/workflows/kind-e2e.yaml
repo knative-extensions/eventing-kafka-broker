@@ -126,7 +126,7 @@ jobs:
 
           # Run the tests tagged as e2e on the KinD cluster.
           go test -race -count=1 -timeout=1h -v -short -tags=e2e \
-             ${{ matrix.test-suite }} ${{ matrix.extra-test-flags }}
+             ${{ matrix.test-suite }} ${{ matrix.extra-test-flags }} -channels=messaging.knative.dev/v1beta1:KafkaChannel
 
       - name: Teardown Eventing Kafka Broker
         run: ./hack/run.sh teardown
