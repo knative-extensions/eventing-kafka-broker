@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/Shopify/sarama v1.30.1
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.4.1
-	github.com/cloudevents/sdk-go/v2 v2.4.1
+	github.com/cloudevents/sdk-go/v2 v2.7.0
 	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -23,9 +23,9 @@ require (
 	k8s.io/apiserver v0.21.4
 	k8s.io/client-go v0.21.4
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009
-	knative.dev/eventing v0.28.0
-	knative.dev/eventing-kafka v0.28.0
-	knative.dev/hack v0.0.0-20211203062838-e11ac125e707
-	knative.dev/pkg v0.0.0-20211206113427-18589ac7627e
-	knative.dev/reconciler-test v0.0.0-20211207070557-0d138a88867b
+	knative.dev/eventing v0.28.1-0.20211217092418-fede720191d3
+	knative.dev/eventing-kafka v0.28.1-0.20211221061317-76257e9c0397
+	knative.dev/hack v0.0.0-20211216134818-6fc030496333
+	knative.dev/pkg v0.0.0-20211216142117-79271798f696
+	knative.dev/reconciler-test v0.0.0-20211213105719-9cdcfcc2f3fd
 )
