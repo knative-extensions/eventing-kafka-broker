@@ -98,3 +98,12 @@ rules:
     verbs:
       - list
       - get
+
+  # messaging.knative.dev resources and finalizers we care about.
+  - apiGroups:
+      - messaging.knative.dev
+    resources:
+      - kafkachannels
+    verbs:
+      - get
+      - list
