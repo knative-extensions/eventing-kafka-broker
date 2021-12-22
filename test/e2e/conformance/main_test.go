@@ -20,34 +20,22 @@
 package conformance
 
 import (
-	"log"
 	"os"
 	"testing"
 
-	"knative.dev/eventing-kafka/test"
-	eventingTest "knative.dev/eventing/test"
 	testlib "knative.dev/eventing/test/lib"
-	"knative.dev/pkg/system"
-	"knative.dev/pkg/test/zipkin"
 )
 
-var channelTestRunner testlib.ComponentsTestRunner
+const (
+	SystemNamespace = "knative-eventing"
+	LogsDir         = "knative-eventing-logs"
+)
 
-func TestMain(m *testing.M) {
+func TestMain(t *testing.M) {
 
-	os.Exit(func() int {
-		eventingTest.InitializeEventingFlags()
-		channelTestRunner = testlib.ComponentsTestRunner{
-			ComponentFeatureMap: test.ChannelFeatureMap,
-			ComponentsToTest:    eventingTest.EventingFlags.Channels,
-		}
+	exit := t.Run()
 
-		// Any tests may SetupZipkinTracing, it will only actually be done once. This should be the ONLY
-		// place that cleans it up. If an individual test calls this instead, then it will break other
-		// tests that need the tracing in place.
-		defer zipkin.CleanupZipkinTracingSetup(log.Printf)
-		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
+	testlib.ExportLogs(LogsDir, SystemNamespace)
 
-		return m.Run()
-	}())
+	os.Exit(exit)
 }
