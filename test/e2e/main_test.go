@@ -36,7 +36,10 @@ func TestMain(m *testing.M) {
 	eventingTest.InitializeEventingFlags()
 	channelTestRunner = testlib.ComponentsTestRunner{
 		ComponentFeatureMap: test.ChannelFeatureMap,
-		ComponentsToTest:    eventingTest.EventingFlags.Channels,
+	}
+
+	for k := range channelTestRunner.ComponentFeatureMap {
+		channelTestRunner.ComponentsToTest = append(channelTestRunner.ComponentsToTest, k)
 	}
 	os.Exit(func() int {
 		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())

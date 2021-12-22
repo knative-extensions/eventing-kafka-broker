@@ -26,7 +26,7 @@ import (
 // Each pair means the channel support the list of features.
 var ChannelFeatureMap = map[metav1.TypeMeta][]testlib.Feature{
 	{
-		APIVersion: resources.MessagingAPIVersion,
+		APIVersion: "messaging.knative.dev/v1beta1",
 		Kind:       KafkaChannelKind,
 	}: {
 		testlib.FeatureBasic,
