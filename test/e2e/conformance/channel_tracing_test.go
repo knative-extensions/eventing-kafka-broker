@@ -23,37 +23,13 @@ import (
 	"context"
 	"testing"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing/test/conformance/helpers"
 	testlib "knative.dev/eventing/test/lib"
-
-	contribtest "knative.dev/eventing-kafka/test"
 )
-
-// Eventing channels are v1, but Kafka channel is v1beta1.
-const kafkaChannelAPIVersion = "messaging.knative.dev/v1beta1"
 
 func TestChannelTracingWithReply(t *testing.T) {
 	// TODO: skip for now
 	t.Skip()
 
-	// Enable this test only for Kafka
-	helpers.ChannelTracingTestHelperWithChannelTestRunner(context.Background(), t, testlib.ComponentsTestRunner{
-		ComponentFeatureMap: map[metav1.TypeMeta][]testlib.Feature{
-			{
-				APIVersion: kafkaChannelAPIVersion,
-				Kind:       contribtest.KafkaChannelKind,
-			}: {
-				testlib.FeatureBasic,
-				testlib.FeatureRedelivery,
-				testlib.FeaturePersistence,
-			},
-		},
-		ComponentsToTest: []metav1.TypeMeta{
-			{
-				APIVersion: kafkaChannelAPIVersion,
-				Kind:       contribtest.KafkaChannelKind,
-			},
-		},
-	}, testlib.SetupClientOptionNoop)
+	helpers.ChannelTracingTestHelperWithChannelTestRunner(context.Background(), t, channelTestRunner, testlib.SetupClientOptionNoop)
 }

@@ -25,6 +25,10 @@ jobs:
         eventing-config:
           - "./third_party/eventing-latest/"
 
+        test-suite:
+          - ./test/e2e
+          - ./test/e2e_new
+
         # Map between K8s and KinD versions.
         # This is attempting to make it a bit clearer what's being tested.
         # See: https://github.com/kubernetes-sigs/kind/releases/tag/v0.9.0
@@ -114,7 +118,7 @@ jobs:
 
           wait_until_pods_running kafka && wait_until_pods_running knative-eventing
 
-      - name: Run e2e Tests (./test/e2e)
+      - name: Run e2e Tests
         run: |
           export KO_FLAGS="--platform=linux/amd64"
           export SYSTEM_NAMESPACE=knative-eventing
@@ -122,17 +126,7 @@ jobs:
 
           # Run the tests tagged as e2e on the KinD cluster.
           go test -race -count=1 -timeout=1h -short -tags=e2e \
-             ./test/e2e ${{ matrix.extra-test-flags }} -channels=messaging.knative.dev/v1beta1:KafkaChannel
-
-      - name: Run e2e Tests (./test/e2e_new)
-        run: |
-          export KO_FLAGS="--platform=linux/amd64"
-          export SYSTEM_NAMESPACE=knative-eventing
-          export CLUSTER_DOMAIN=${CLUSTER_SUFFIX}
-
-          # Run the tests tagged as e2e on the KinD cluster.
-          go test -race -count=1 -timeout=1h -short -tags=e2e \
-             ./test/e2e_new ${{ matrix.extra-test-flags }}
+             ${{ matrix.test-suite }} ${{ matrix.extra-test-flags }}
 
       - name: Teardown Eventing Kafka Broker
         run: ./hack/run.sh teardown
