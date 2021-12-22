@@ -1220,7 +1220,6 @@ knative.dev/eventing/test/rekt/resources/broker
 knative.dev/eventing/test/rekt/resources/delivery
 knative.dev/eventing/test/rekt/resources/eventlibrary
 knative.dev/eventing/test/rekt/resources/flaker
-knative.dev/eventing/test/rekt/resources/subscription
 knative.dev/eventing/test/rekt/resources/trigger
 knative.dev/eventing/test/test_images
 knative.dev/eventing/test/test_images/event-flaker
@@ -1299,9 +1298,6 @@ knative.dev/eventing-kafka/pkg/common/kafka/sarama
 knative.dev/eventing-kafka/test/e2e/helpers
 knative.dev/eventing-kafka/test/lib
 knative.dev/eventing-kafka/test/lib/resources
-knative.dev/eventing-kafka/test/rekt/features/kafkachannel
-knative.dev/eventing-kafka/test/rekt/resources/kafkachannel
-knative.dev/eventing-kafka/test/rekt/resources/resetoffset
 knative.dev/eventing-kafka/test/upgrade/continual
 # knative.dev/hack v0.0.0-20211216134818-6fc030496333
 ## explicit
