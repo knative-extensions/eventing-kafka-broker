@@ -329,7 +329,10 @@ func removeResource(_ *zap.Logger, ct *contract.Contract, c *kafkainternals.Cons
 
 func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkainternals.Consumer, mutatorFunc contractMutatorFunc) (bool, error) {
 	// Get the data plane pod when the Consumer should be scheduled.
-	p, err := r.getPod(c)
+	p, err := r.PodLister.Pods(c.Spec.PodBind.PodNamespace).Get(c.Spec.PodBind.PodName)
+	if err != nil {
+		return false, fmt.Errorf("failed to get pod %s/%s: %w", c.Spec.PodBind.PodNamespace, c.Spec.PodBind.PodName, err)
+	}
 	if apierrors.IsNotFound(err) {
 		// Pod not found, return no error since the Consumer
 		// will get re-queued when the pod is added.
@@ -345,9 +348,21 @@ func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkain
 	}
 
 	// Get contract associated with the pod.
-	b, cm, ct, err := r.getContract(ctx, c, p, logger)
+	cmName, err := cmNameFromPod(p, c)
 	if err != nil {
 		return false, err
+	}
+
+	b := r.commonReconciler(p, cmName)
+
+	cm, err := b.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		return false, fmt.Errorf("failed to get or create data plane ConfigMap %s/%s: %w", p.GetNamespace(), cmName, err)
+	}
+
+	ct, err := b.GetDataPlaneConfigMapData(logger, cm)
+	if err != nil {
+		return false, fmt.Errorf("failed to get contract from ConfigMap %s/%s: %w", p.GetNamespace(), cmName, err)
 	}
 
 	if changed := mutatorFunc(logger, ct, c); changed == coreconfig.ResourceChanged {
@@ -361,34 +376,6 @@ func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkain
 	}
 
 	return true, b.UpdatePodsAnnotation(ctx, logger, "dispatcher" /* component, for logging */, ct.Generation, []*corev1.Pod{p})
-}
-
-func (r Reconciler) getPod(c *kafkainternals.Consumer) (*corev1.Pod, error) {
-	p, err := r.PodLister.Pods(c.Spec.PodBind.PodNamespace).Get(c.Spec.PodBind.PodName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get pod %s/%s: %w", c.Spec.PodBind.PodNamespace, c.Spec.PodBind.PodName, err)
-	}
-	return p, nil
-}
-
-func (r Reconciler) getContract(ctx context.Context, c *kafkainternals.Consumer, p *corev1.Pod, logger *zap.Logger) (base.Reconciler, *corev1.ConfigMap, *contract.Contract, error) {
-	cmName, err := r.getCMName(p, c)
-	if err != nil {
-		return base.Reconciler{}, nil, nil, err
-	}
-
-	b := r.commonReconciler(p, cmName)
-
-	cm, err := b.GetOrCreateDataPlaneConfigMap(ctx)
-	if err != nil {
-		return base.Reconciler{}, nil, nil, fmt.Errorf("failed to get or create data plane ConfigMap %s/%s: %w", p.GetNamespace(), cmName, err)
-	}
-
-	ct, err := b.GetDataPlaneConfigMapData(logger, cm)
-	if err != nil {
-		return base.Reconciler{}, nil, nil, fmt.Errorf("failed to get contract from ConfigMap %s/%s: %w", p.GetNamespace(), cmName, err)
-	}
-	return b, cm, ct, nil
 }
 
 func (r Reconciler) commonReconciler(p *corev1.Pod, cmName string) base.Reconciler {
@@ -407,7 +394,7 @@ func (r Reconciler) commonReconciler(p *corev1.Pod, cmName string) base.Reconcil
 	}
 }
 
-func (r Reconciler) getCMName(p *corev1.Pod, c *kafkainternals.Consumer) (string, error) {
+func cmNameFromPod(p *corev1.Pod, c *kafkainternals.Consumer) (string, error) {
 	var vDp *corev1.Volume
 	for i, v := range p.Spec.Volumes {
 		if v.Name == eventing.ConfigMapVolumeName && v.ConfigMap != nil && v.ConfigMap.Name != "" {
