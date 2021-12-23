@@ -30,10 +30,12 @@ import (
 )
 
 func TestEventTransformationForTriggerV1BrokerV1(t *testing.T) {
+	t.Skip()
 	runTest(t, "v1", "v1")
 }
 
 func runTest(t *testing.T, brokerVersion string, triggerVersion string) {
+	t.Skip()
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
 
 		helpers.EventTransformationForTriggerTestHelper(

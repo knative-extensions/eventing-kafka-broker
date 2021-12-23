@@ -38,6 +38,7 @@ const (
 )
 
 func TestBrokerRedeliveryBrokerV1BackoffLinear(t *testing.T) {
+	t.Skip()
 
 	kafkatesting.RunMultiple(t, func(t *testing.T) {
 
@@ -60,6 +61,7 @@ func TestBrokerRedeliveryBrokerV1BackoffLinear(t *testing.T) {
 }
 
 func TestBrokerRedeliveryBrokerV1BackoffExponential(t *testing.T) {
+	t.Skip()
 
 	kafkatesting.RunMultiple(t, func(t *testing.T) {
 

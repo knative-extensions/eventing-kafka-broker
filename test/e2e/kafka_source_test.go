@@ -28,10 +28,12 @@ import (
 )
 
 func TestKafkaSourceUpdate(t *testing.T) {
+	t.Skip()
 	testingpkg.RunMultiple(t, eventingkafkahelpers.TestKafkaSourceUpdate)
 }
 
 func TestKafkaSourceAssureIsOperational(t *testing.T) {
+	t.Skip()
 	testingpkg.RunMultiple(t, func(t *testing.T) {
 		eventingkafkahelpers.AssureKafkaSourceIsOperational(t, func(auth, testCase, version string) bool { return true })
 	})
