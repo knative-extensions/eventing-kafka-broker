@@ -48,7 +48,7 @@
     <jackson.version>2.13.1</jackson.version>
     <protobuf.version>3.19.1</protobuf.version>
     <slf4j.version>1.7.32</slf4j.version>
-    <ch.qos.logback.version>1.2.9</ch.qos.logback.version>
+    <ch.qos.logback.version>1.2.10</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>7.0.1</net.logstash.logback.encoder.version>
     <assertj.version>3.21.0</assertj.version>
     <awaitility.version>4.1.1</awaitility.version>
