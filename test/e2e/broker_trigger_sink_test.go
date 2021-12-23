@@ -50,8 +50,6 @@ import (
                 +--------+
 */
 func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
-	t.Skip()
-
 	testingpkg.RunMultipleN(t, 10, func(t *testing.T) {
 
 		ctx := context.Background()
