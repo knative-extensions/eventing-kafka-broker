@@ -90,11 +90,20 @@ rules:
     verbs:
       - "update"
 
-  # Eventing resources care about
+  # Eventing resources we care about
   - apiGroups:
       - "eventing.knative.dev"
     resources:
       - "brokers"
+    verbs:
+      - list
+      - get
+
+  # Messaging resources we care about
+  - apiGroups:
+      - "messaging.knative.dev"
+    resources:
+      - "kafkachannel"
     verbs:
       - list
       - get
