@@ -42,7 +42,6 @@ const (
 )
 
 func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
-	t.Skip()
 	testKafkaSink(t, eventingv1alpha1.ModeStructured, nil, func(kss *eventingv1alpha1.KafkaSinkSpec) error {
 		kss.ContentMode = pointer.StringPtr("")
 		return nil
@@ -50,37 +49,30 @@ func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
 }
 
 func TestKafkaSinkV1Alpha1StructuredContentMode(t *testing.T) {
-	t.Skip()
 	testKafkaSink(t, eventingv1alpha1.ModeStructured, nil)
 }
 
 func TestKafkaSinkV1Alpha1BinaryContentMode(t *testing.T) {
-	t.Skip()
 	testKafkaSink(t, eventingv1alpha1.ModeBinary, nil)
 }
 
 func TestKafkaSinkV1Alpha1AuthPlaintext(t *testing.T) {
-	t.Skip()
 	testKafkaSink(t, eventingv1alpha1.ModeStructured, Plaintext, withBootstrap(BootstrapServersPlaintextArr), withSecret)
 }
 
 func TestKafkaSinkV1Alpha1AuthSsl(t *testing.T) {
-	t.Skip()
 	testKafkaSink(t, eventingv1alpha1.ModeStructured, Ssl, withBootstrap(BootstrapServersSslArr), withSecret)
 }
 
 func TestKafkaSinkV1Alpha1AuthSaslPlaintextScram512(t *testing.T) {
-	t.Skip()
 	testKafkaSink(t, eventingv1alpha1.ModeStructured, SaslPlaintextScram512, withBootstrap(BootstrapServersSaslPlaintextArr), withSecret)
 }
 
 func TestKafkaSinkV1Alpha1AuthSslSaslScram512(t *testing.T) {
-	t.Skip()
 	testKafkaSink(t, eventingv1alpha1.ModeStructured, SslSaslScram512, withBootstrap(BootstrapServersSslSaslScramArr), withSecret)
 }
 
 func testKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func(kss *eventingv1alpha1.KafkaSinkSpec) error) {
-	t.Skip()
 	RunMultiple(t, func(t *testing.T) {
 
 		ctx := context.Background()
