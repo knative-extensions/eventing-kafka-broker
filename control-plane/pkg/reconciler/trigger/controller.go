@@ -81,6 +81,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 			FinalizerName:     FinalizerName,
 			AgentName:         ControllerAgentName,
 			SkipStatusUpdates: false,
+			PromoteFilterFunc: filterTriggers(reconciler.BrokerLister),
 		}
 	})
 
