@@ -17,50 +17,40 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kafka-sink-receiver
+  name: kafka-broker-dispatcher
   namespace: knative-eventing
   labels:
-    app: kafka-sink-receiver
+    app: kafka-broker-dispatcher
     kafka.eventing.knative.dev/release: devel
 spec:
   selector:
     matchLabels:
-      app: kafka-sink-receiver
+      app: kafka-broker-dispatcher
   template:
     metadata:
-      name: kafka-sink-receiver
+      name: kafka-broker-dispatcher
       labels:
-        app: kafka-sink-receiver
+        app: kafka-broker-dispatcher
         kafka.eventing.knative.dev/release: devel
     spec:
-      serviceAccountName: knative-kafka-sink-data-plane
+      serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
         runAsNonRoot: true
-      # To avoid node becoming SPOF, spread our replicas to different nodes.
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: kafka-sink-receiver
-                topologyKey: kubernetes.io/hostname
-              weight: 100
       containers:
-        - name: kafka-sink-receiver
-          image: ${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}
+        - name: kafka-broker-dispatcher
+          image: ${KNATIVE_KAFKA_DISPATCHER_IMAGE}
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
-              name: config-kafka-sink-data-plane
+              name: config-kafka-broker-data-plane
               readOnly: true
-            - mountPath: /etc/sinks
-              name: kafka-sink-sinks
+            - mountPath: /etc/brokers-triggers
+              name: kafka-broker-brokers-triggers
               readOnly: true
             - mountPath: /tmp
               name: cache
             - mountPath: /etc/logging
-              name: kafka-sink-config-logging
+              name: kafka-broker-config-logging
               readOnly: true
             - mountPath: /etc/tracing
               name: config-tracing
@@ -69,28 +59,27 @@ spec:
             - containerPort: 9090
               name: http-metrics
               protocol: TCP
-            - containerPort: 8080
-              name: http
-              protocol: TCP
           env:
             - name: SERVICE_NAME
-              value: "kafka-sink-receiver"
+              value: "kafka-broker-dispatcher"
             - name: SERVICE_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            - name: INGRESS_PORT
-              value: "8080"
             - name: PRODUCER_CONFIG_FILE_PATH
-              value: /etc/config/config-kafka-sink-producer.properties
-            - name: HTTPSERVER_CONFIG_FILE_PATH
-              value: /etc/config/config-kafka-sink-httpserver.properties
+              value: /etc/config/config-kafka-broker-producer.properties
+            - name: CONSUMER_CONFIG_FILE_PATH
+              value: /etc/config/config-kafka-broker-consumer.properties
+            - name: WEBCLIENT_CONFIG_FILE_PATH
+              value: /etc/config/config-kafka-broker-webclient.properties
             - name: DATA_PLANE_CONFIG_FILE_PATH
-              value: /etc/sinks/data
-            - name: LIVENESS_PROBE_PATH
-              value: /healthz
-            - name: READINESS_PROBE_PATH
-              value: /readyz
+              value: /etc/brokers-triggers/data
+            - name: EGRESSES_INITIAL_CAPACITY
+              value: "20"
+            - name: INSTANCE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
             - name: METRICS_PATH
               value: /metrics
             - name: METRICS_PORT
@@ -117,8 +106,8 @@ spec:
           livenessProbe:
             failureThreshold: 3
             httpGet:
-              port: 8080
-              path: /healthz
+              port: 9090
+              path: /metrics
               scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 3
@@ -127,8 +116,8 @@ spec:
           readinessProbe:
             failureThreshold: 3
             httpGet:
-              port: 8080
-              path: /readyz
+              port: 9090
+              path: /metrics
               scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 3
@@ -141,41 +130,21 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
       volumes:
-        - name: kafka-sink-sinks
+        - name: config-kafka-broker-data-plane
           configMap:
-            name: kafka-sink-sinks
-        - name: config-kafka-sink-data-plane
+            name: config-kafka-broker-data-plane
+        - name: kafka-broker-brokers-triggers
           configMap:
-            name: config-kafka-sink-data-plane
+            name: kafka-broker-brokers-triggers
         - name: cache
           emptyDir: { }
-        - name: kafka-sink-config-logging
+        - name: kafka-broker-config-logging
           configMap:
             name: kafka-config-logging
         - name: config-tracing
           configMap:
             name: config-tracing
       restartPolicy: Always
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: kafka-sink-ingress
-  namespace: knative-eventing
-  labels:
-    app: kafka-sink-receiver
-    kafka.eventing.knative.dev/release: devel
-spec:
-  selector:
-    app: kafka-sink-receiver
-  ports:
-    - name: http
-      port: 80
-      protocol: TCP
-      targetPort: 8080
-    - name: http-metrics
-      port: 9090
-      protocol: TCP
-      targetPort: 9090
----
+      dnsConfig:
+        options:
+          - name: single-request-reopen
