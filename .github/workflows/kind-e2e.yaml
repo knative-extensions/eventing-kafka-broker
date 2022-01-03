@@ -128,9 +128,6 @@ jobs:
           go test -race -count=1 -timeout=1h -v -short -tags=e2e \
              ${{ matrix.test-suite }} ${{ matrix.extra-test-flags }}
 
-      - name: Teardown Eventing Kafka Broker
-        run: ./hack/run.sh teardown
-
       - name: Collect system diagnostics
         if: ${{ failure() }}
         run: |
