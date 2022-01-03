@@ -41,7 +41,7 @@ wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing 
 
 header "Running tests"
 
-export_logs_continuously "kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver"
+export_logs_continuously "kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver" "kafka-source-dispatcher" "kafka-webhook-eventing" "kafka-controller"
 
 go_test_e2e -timeout=30m ./test/e2e_new/... || fail_test "E2E (new) suite failed"
 go_test_e2e -timeout=30m ./test/e2e/... || fail_test "E2E suite failed"
