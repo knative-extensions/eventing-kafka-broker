@@ -19,37 +19,24 @@
 # - UUID (default: latest)
 # - SKIP_PUSH (default: false) --> images will not be pushed to remote registry, nor to kind local registry
 
-source $(pwd)/hack/label.sh
+source "$(pwd)"/hack/label.sh
 
 readonly SKIP_PUSH=${SKIP_PUSH:-false}
-readonly UUID=${UUID:-${TAG:-latest}}
 
 readonly DATA_PLANE_DIR=data-plane
 readonly DATA_PLANE_CONFIG_DIR=${DATA_PLANE_DIR}/config
 
 # Source config
 readonly SOURCE_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/source
-readonly KAFKA_SOURCE_DATA_PLANE_CONFIG_TEMPLATE_DIR=${SOURCE_DATA_PLANE_CONFIG_DIR}/template # no trailing slash
-readonly KAFKA_SOURCE_DISPATCHER_TEMPLATE_FILE=${KAFKA_SOURCE_DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-dispatcher.yaml
-
 # Broker config
 readonly BROKER_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/broker
-readonly KAFKA_BROKER_DATA_PLANE_CONFIG_TEMPLATE_DIR=${BROKER_DATA_PLANE_CONFIG_DIR}/template # no trailing slash
-readonly KAFKA_BROKER_DISPATCHER_TEMPLATE_FILE=${KAFKA_BROKER_DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-dispatcher.yaml
-readonly KAFKA_BROKER_RECEIVER_TEMPLATE_FILE=${KAFKA_BROKER_DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-receiver.yaml
-
 # Sink config
 readonly SINK_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/sink
-readonly KAFKA_SINK_DATA_PLANE_CONFIG_TEMPLATE_DIR=${SINK_DATA_PLANE_CONFIG_DIR}/template
-readonly KAFKA_SINK_RECEIVER_TEMPLATE_FILE=${KAFKA_SINK_DATA_PLANE_CONFIG_TEMPLATE_DIR}/500-receiver.yaml
-
-readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-knative-kafka-broker-receiver}"
-readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-knative-kafka-broker-dispatcher}"
 
 # The BASE_IMAGE must have system libraries (libc, zlib, etc) compatible with the JAVA_IMAGE because
 # Jlink generates a jdk linked to the same system libraries available on the base images.
-readonly BASE_IMAGE=gcr.io/distroless/java-debian11:base-nonroot  # Based on debian:buster
-readonly JAVA_IMAGE=docker.io/eclipse-temurin:17-jdk-centos7      # Based on centos7
+readonly BASE_IMAGE=${BASE_IMAGE:-"gcr.io/distroless/java-debian11:base-nonroot"} # Based on debian:buster
+readonly JAVA_IMAGE=${JAVA_IMAGE:-"docker.io/eclipse-temurin:17-jdk-centos7"}     # Based on centos7
 
 readonly RECEIVER_JAR="receiver-1.0-SNAPSHOT.jar"
 readonly RECEIVER_DIRECTORY=receiver
@@ -73,7 +60,7 @@ function image_push() {
     return
   fi
   if [ "$KO_DOCKER_REPO" = "kind.local" ]; then
-   kind load docker-image "$1"
+    kind load docker-image "$1"
   else
     docker push "$1"
   fi
@@ -82,14 +69,37 @@ function image_push() {
 function receiver_build_push() {
   header "Building receiver ..."
 
-  docker build \
+  readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver}"
+
+  local digest
+  digest=$(docker build \
+    -q \
     -f ${DATA_PLANE_DIR}/docker/Dockerfile \
-    --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
-    --build-arg BASE_IMAGE=${BASE_IMAGE} \
+    --build-arg JAVA_IMAGE="${JAVA_IMAGE}" \
+    --build-arg BASE_IMAGE="${BASE_IMAGE}" \
     --build-arg APP_JAR=${RECEIVER_JAR} \
     --build-arg APP_DIR=${RECEIVER_DIRECTORY} \
-    -t "${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}" ${DATA_PLANE_DIR} &&
-    image_push "${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}"
+    -t "${receiver}:latest" ${DATA_PLANE_DIR})
+
+  header "Pushing receiver image, digest: $digest"
+
+  # Remove sha256 prefix from digest "sha256:..." since that's not legal
+  # for pushing the image.
+  local tag=${digest/sha256/""}
+
+  # Export variable that identifies the image.
+  #
+  # We cannot reference the image by digest since re-tagging
+  # the image with docker or podman will produce a different
+  # digest.
+  export KNATIVE_KAFKA_RECEIVER_IMAGE="$receiver$tag"
+
+  # Tag the built image with the latest tag with the tag based on the digest.
+  docker tag "${receiver}:latest" "${KNATIVE_KAFKA_RECEIVER_IMAGE}" &&
+    image_push "${KNATIVE_KAFKA_RECEIVER_IMAGE}" &&
+    # Remove the tagged image after pushing it to avoid having
+    # many images during local development.
+    docker image rm "${KNATIVE_KAFKA_RECEIVER_IMAGE}"
 
   return $?
 }
@@ -97,63 +107,69 @@ function receiver_build_push() {
 function dispatcher_build_push() {
   header "Building dispatcher ..."
 
-  docker build \
+  readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher}"
+
+  local digest
+  digest=$(docker build \
+    -q \
     -f ${DATA_PLANE_DIR}/docker/Dockerfile \
     --build-arg JAVA_IMAGE=${JAVA_IMAGE} \
     --build-arg BASE_IMAGE=${BASE_IMAGE} \
     --build-arg APP_JAR=${DISPATCHER_JAR} \
     --build-arg APP_DIR=${DISPATCHER_DIRECTORY} \
-    -t "${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}" ${DATA_PLANE_DIR} &&
-    image_push "${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}"
+    -t "${dispatcher}:latest" ${DATA_PLANE_DIR})
+
+  header "Pushing dispatcher image digest: $digest"
+
+  # Remove sha256 prefix from digest "sha256:..." since that's not legal
+  # for pushing the image.
+  local tag=${digest/sha256/""}
+
+  # Export variable that identifies the image.
+  #
+  # We cannot reference the image by digest since re-tagging
+  # the image with docker or podman will produce a different
+  # digest.
+  export KNATIVE_KAFKA_DISPATCHER_IMAGE="$dispatcher$tag"
+
+  # Tag the built image with the latest tag with the tag based on the digest.
+  docker tag "${dispatcher}:latest" "${KNATIVE_KAFKA_DISPATCHER_IMAGE}" &&
+    image_push "${KNATIVE_KAFKA_DISPATCHER_IMAGE}" &&
+    # Remove the tagged image after pushing it to avoid having
+    # many images during local development.
+    docker image rm "${KNATIVE_KAFKA_DISPATCHER_IMAGE}"
 
   return $?
 }
 
 function data_plane_build_push() {
-
-  local uuid=${UUID}
-  if [ "${uuid}" = "latest" ]; then
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-      # MacOS
-      uuid="$(uuidgen)"
-    else
-      uuid="$(uuidgen --time)"
-    fi
-  fi
-
-  export KNATIVE_KAFKA_SOURCE_DISPATCHER_IMAGE="${KO_DOCKER_REPO}"/"${dispatcher}":"${uuid}"
-
-  export KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${receiver}":"${uuid}"
-
-  export KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE="${KO_DOCKER_REPO}"/"${dispatcher}":"${uuid}"
-
-  export KNATIVE_KAFKA_SINK_RECEIVER_IMAGE="${KO_DOCKER_REPO}"/"${receiver}":"${uuid}"
-
   receiver_build_push || receiver_build_push || fail_test "failed to build receiver"
   dispatcher_build_push || dispatcher_build_push || fail_test "failed to build dispatcher"
 }
 
+function replace_images() {
+  local file=$1
+
+  sed -i "s|\${KNATIVE_KAFKA_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_DISPATCHER_IMAGE}|g" "${file}" &&
+    sed -i "s|\${KNATIVE_KAFKA_RECEIVER_IMAGE}|${KNATIVE_KAFKA_RECEIVER_IMAGE}|g" "${file}"
+
+  return $?
+}
+
 function k8s() {
-  echo "source dispatcher image ---> ${KNATIVE_KAFKA_SOURCE_DISPATCHER_IMAGE}"
-  echo "broker dispatcher image ---> ${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}"
-  echo "broker receiver image   ---> ${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}"
-  echo "sink receiver image   ---> ${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}"
+  header "Creating artifacts"
 
-  ko resolve ${KO_FLAGS} -f ${SOURCE_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SOURCE_ARTIFACT}"
-  ko resolve ${KO_FLAGS} -f ${BROKER_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}"
-  ko resolve ${KO_FLAGS} -f ${SINK_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SINK_ARTIFACT}"
+  echo "Dispatcher image ---> ${KNATIVE_KAFKA_DISPATCHER_IMAGE}"
+  echo "Receiver image   ---> ${KNATIVE_KAFKA_RECEIVER_IMAGE}"
 
-  sed "s|\${KNATIVE_KAFKA_SOURCE_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_SOURCE_DISPATCHER_IMAGE}|g" ${KAFKA_SOURCE_DISPATCHER_TEMPLATE_FILE} |
-    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SOURCE_ARTIFACT}" || fail_test "Failed to append ${KAFKA_SOURCE_DISPATCHER_TEMPLATE_FILE}"
+  ko resolve ${KO_FLAGS} -Rf ${SOURCE_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SOURCE_ARTIFACT}"
+  ko resolve ${KO_FLAGS} -Rf ${BROKER_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}"
+  ko resolve ${KO_FLAGS} -Rf ${SINK_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SINK_ARTIFACT}"
 
-  sed "s|\${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}|g" ${KAFKA_BROKER_DISPATCHER_TEMPLATE_FILE} |
-    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to append ${KAFKA_BROKER_DISPATCHER_TEMPLATE_FILE}"
-
-  sed "s|\${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}|${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}|g" ${KAFKA_BROKER_RECEIVER_TEMPLATE_FILE} |
-    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to append ${KAFKA_BROKER_RECEIVER_TEMPLATE_FILE}"
-
-  sed "s|\${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}|${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}|g" ${KAFKA_SINK_RECEIVER_TEMPLATE_FILE} |
-    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to append ${KAFKA_SINK_RECEIVER_TEMPLATE_FILE}"
+  replace_images "${EVENTING_KAFKA_SOURCE_ARTIFACT}" &&
+    replace_images "${EVENTING_KAFKA_BROKER_ARTIFACT}" &&
+    replace_images "${EVENTING_KAFKA_SINK_ARTIFACT}" &&
+    return $?
 }
 
 function data_plane_unit_tests() {
@@ -164,8 +180,8 @@ function data_plane_unit_tests() {
   echo "Copy test reports in ${ARTIFACTS}"
   find . -type f -regextype posix-extended -regex ".*/TEST-.*.xml$" | xargs -I '{}' cp {} ${ARTIFACTS}/
   pushd ${ARTIFACTS} || fail_test
-  for f in * ; do
-    mv -- "$f" "junit_$f" ;
+  for f in *; do
+    mv -- "$f" "junit_$f"
   done
   popd || fail_test
   popd || fail_test

@@ -48,7 +48,7 @@ spec:
               weight: 100
       containers:
         - name: kafka-broker-receiver
-          image: ${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}
+          image: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
