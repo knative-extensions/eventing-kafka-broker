@@ -33,9 +33,6 @@ readonly BROKER_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/broker
 # Sink config
 readonly SINK_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/sink
 
-readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver}"
-readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher}"
-
 # The BASE_IMAGE must have system libraries (libc, zlib, etc) compatible with the JAVA_IMAGE because
 # Jlink generates a jdk linked to the same system libraries available on the base images.
 readonly BASE_IMAGE=${BASE_IMAGE:-"gcr.io/distroless/java-debian11:base-nonroot"} # Based on debian:buster
@@ -72,6 +69,8 @@ function image_push() {
 function receiver_build_push() {
   header "Building receiver ..."
 
+  readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver}"
+
   local digest
   digest=$(docker build \
     -q \
@@ -107,6 +106,8 @@ function receiver_build_push() {
 
 function dispatcher_build_push() {
   header "Building dispatcher ..."
+
+  readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher}"
 
   local digest
   digest=$(docker build \
