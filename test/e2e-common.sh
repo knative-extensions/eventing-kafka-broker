@@ -18,6 +18,15 @@ source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
 source $(pwd)/hack/data-plane.sh
 source $(pwd)/hack/control-plane.sh
 
+# If gcloud is not available make it a no-op, not an error.
+which gcloud &>/dev/null || gcloud() { echo "[ignore-gcloud $*]" 1>&2; }
+
+# Use GNU tools on macOS. Requires the 'grep' and 'gnu-sed' Homebrew formulae.
+if [ "$(uname)" == "Darwin" ]; then
+  sed=gsed
+  grep=ggrep
+fi
+
 # Latest release. If user does not supply this as a flag, the latest tagged release on the current branch will be used.
 readonly LATEST_RELEASE_VERSION=$(latest_version)
 readonly PREVIOUS_RELEASE_URL="${PREVIOUS_RELEASE_URL:-"https://github.com/knative-sandbox/eventing-kafka-broker/releases/download/${LATEST_RELEASE_VERSION}"}"
