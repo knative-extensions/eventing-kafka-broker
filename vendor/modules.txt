@@ -1191,9 +1191,11 @@ knative.dev/eventing/pkg/reconciler/testing
 knative.dev/eventing/pkg/reconciler/testing/scheme
 knative.dev/eventing/pkg/reconciler/testing/v1
 knative.dev/eventing/pkg/utils
+knative.dev/eventing/test
 knative.dev/eventing/test/conformance/helpers
 knative.dev/eventing/test/conformance/helpers/tracing
 knative.dev/eventing/test/e2e/helpers
+knative.dev/eventing/test/flags
 knative.dev/eventing/test/lib
 knative.dev/eventing/test/lib/dropevents
 knative.dev/eventing/test/lib/dropevents/dropeventsfibonacci
@@ -1220,6 +1222,7 @@ knative.dev/eventing/test/rekt/resources/broker
 knative.dev/eventing/test/rekt/resources/delivery
 knative.dev/eventing/test/rekt/resources/eventlibrary
 knative.dev/eventing/test/rekt/resources/flaker
+knative.dev/eventing/test/rekt/resources/subscription
 knative.dev/eventing/test/rekt/resources/trigger
 knative.dev/eventing/test/test_images
 knative.dev/eventing/test/test_images/event-flaker
@@ -1295,9 +1298,13 @@ knative.dev/eventing-kafka/pkg/common/config
 knative.dev/eventing-kafka/pkg/common/constants
 knative.dev/eventing-kafka/pkg/common/kafka/offset
 knative.dev/eventing-kafka/pkg/common/kafka/sarama
+knative.dev/eventing-kafka/test
 knative.dev/eventing-kafka/test/e2e/helpers
 knative.dev/eventing-kafka/test/lib
 knative.dev/eventing-kafka/test/lib/resources
+knative.dev/eventing-kafka/test/rekt/features/kafkachannel
+knative.dev/eventing-kafka/test/rekt/resources/kafkachannel
+knative.dev/eventing-kafka/test/rekt/resources/resetoffset
 knative.dev/eventing-kafka/test/upgrade/continual
 # knative.dev/hack v0.0.0-20211216134818-6fc030496333
 ## explicit
