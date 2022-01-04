@@ -1,8 +1,8 @@
-//go:build e2e || deletecm
-// +build e2e deletecm
+//go:build e2e
+// +build e2e
 
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright 2021 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,30 +17,16 @@
  * limitations under the License.
  */
 
-package e2e
+package conformance
 
 import (
-	"os"
+	"context"
 	"testing"
 
-	"knative.dev/eventing-kafka/test"
-	eventingTest "knative.dev/eventing/test"
+	eventingconformancehelpers "knative.dev/eventing/test/conformance/helpers"
 	testlib "knative.dev/eventing/test/lib"
-	"knative.dev/pkg/system"
 )
 
-var channelTestRunner testlib.ComponentsTestRunner
-
-func TestMain(m *testing.M) {
-
-	eventingTest.InitializeEventingFlags()
-	channelTestRunner = testlib.ComponentsTestRunner{
-		ComponentFeatureMap: test.ChannelFeatureMap,
-		ComponentsToTest:    eventingTest.EventingFlags.Channels,
-	}
-	os.Exit(func() int {
-		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
-
-		return m.Run()
-	}())
+func TestChannelStatusSubscriber(t *testing.T) {
+	eventingconformancehelpers.ChannelStatusSubscriberTestHelperWithChannelTestRunner(context.Background(), t, channelTestRunner, testlib.SetupClientOptionNoop)
 }

@@ -42,6 +42,8 @@ jobs:
           - k8s-version: v1.22.2
             kind-version: v0.11.1
             kind-image-sha: sha256:f638a08c1f68fe2a99e724ace6df233a546eaf6713019a0b310130a4f91ebe7f
+          - test-suite: ./test/e2e
+            extra-test-flags: -channels=messaging.knative.dev/v1beta1:KafkaChannel
 
     env:
       GOPATH: ${{ github.workspace }}
