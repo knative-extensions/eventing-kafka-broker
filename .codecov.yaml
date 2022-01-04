@@ -1,3 +1,6 @@
+codecov:
+  branch: main
+
 ignore:
   - "**/zz_generated*.go" # Ignore generated files.
   - "pkg/client"
