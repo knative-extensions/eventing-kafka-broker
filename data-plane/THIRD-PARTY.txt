@@ -1,5 +1,5 @@
 
-Lists of 160 third-party dependencies.
+Lists of 159 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.2.10 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.2.10 - http://logback.qos.ch/logback-core)
      (The Apache Software License, Version 2.0) Jackson-annotations (com.fasterxml.jackson.core:jackson-annotations:2.13.1 - http://github.com/FasterXML/jackson)
@@ -119,7 +119,6 @@ Lists of 160 third-party dependencies.
      (Apache License, Version 2.0) Byte Buddy (without dependencies) (net.bytebuddy:byte-buddy:1.12.4 - https://bytebuddy.net/byte-buddy)
      (Apache License, Version 2.0) Byte Buddy agent (net.bytebuddy:byte-buddy-agent:1.12.4 - https://bytebuddy.net/byte-buddy-agent)
      (Apache License, Version 2.0) (MIT License) Logstash Logback Encoder (net.logstash.logback:logstash-logback-encoder:7.0.1 - https://github.com/logfellow/logstash-logback-encoder)
-     (The MIT License) JOpt Simple (net.sf.jopt-simple:jopt-simple:4.6 - http://pholser.github.com/jopt-simple)
      (The MIT License) JOpt Simple (net.sf.jopt-simple:jopt-simple:5.0.4 - http://jopt-simple.github.io/jopt-simple)
      (MIT) argparse4j (net.sourceforge.argparse4j:argparse4j:0.7.0 - http://argparse4j.github.io)
      (The BSD License) ANTLR 4 Runtime (org.antlr:antlr4-runtime:4.9.2 - http://www.antlr.org/antlr4-runtime)
@@ -149,8 +148,8 @@ Lists of 160 third-party dependencies.
      (The MIT License) mockito-core (org.mockito:mockito-core:4.2.0 - https://github.com/mockito/mockito)
      (The MIT License) mockito-junit-jupiter (org.mockito:mockito-junit-jupiter:4.2.0 - https://github.com/mockito/mockito)
      (Apache License, Version 2.0) Objenesis (org.objenesis:objenesis:3.2 - http://objenesis.org/objenesis)
-     (GNU General Public License (GPL), version 2, with the Classpath exception) JMH Core (org.openjdk.jmh:jmh-core:1.33 - http://openjdk.java.net/projects/code-tools/jmh/jmh-core/)
-     (GNU General Public License (GPL), version 2, with the Classpath exception) JMH Generators: Annotation Processors (org.openjdk.jmh:jmh-generator-annprocess:1.33 - http://openjdk.java.net/projects/code-tools/jmh/jmh-generator-annprocess/)
+     (GNU General Public License (GPL), version 2, with the Classpath exception) JMH Core (org.openjdk.jmh:jmh-core:1.34 - http://openjdk.java.net/projects/code-tools/jmh/jmh-core/)
+     (GNU General Public License (GPL), version 2, with the Classpath exception) JMH Generators: Annotation Processors (org.openjdk.jmh:jmh-generator-annprocess:1.34 - http://openjdk.java.net/projects/code-tools/jmh/jmh-generator-annprocess/)
      (The Apache License, Version 2.0) org.opentest4j:opentest4j (org.opentest4j:opentest4j:1.2.0 - https://github.com/ota4j-team/opentest4j)
      (Apache-2.0) Scala Library (org.scala-lang:scala-library:2.12.13 - https://www.scala-lang.org/)
      (Apache-2.0) Scala Compiler (org.scala-lang:scala-reflect:2.12.13 - https://www.scala-lang.org/)
