@@ -512,3 +512,8 @@ func fakeKafkaBrokerListener(t *testing.T, addr string) (*sarama.Broker, func())
 		_ = listener.Close()
 	}
 }
+
+func TestPartitionLagString(t *testing.T) {
+	pl := PartitionLag{}
+	require.NotEmpty(t, pl.String())
+}
