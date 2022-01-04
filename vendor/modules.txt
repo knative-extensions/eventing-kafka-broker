@@ -22,8 +22,6 @@ github.com/PuerkitoBio/urlesc
 # github.com/Shopify/sarama v1.30.1
 ## explicit
 github.com/Shopify/sarama
-# github.com/antlr/antlr4 v0.0.0-20210105192202-5c2b686f95e1
-github.com/antlr/antlr4/runtime/Go/antlr
 # github.com/beorn7/perks v1.0.1
 github.com/beorn7/perks/quantile
 # github.com/blang/semver/v4 v4.0.0
@@ -48,14 +46,6 @@ github.com/cloudevents/sdk-go/observability/opencensus/v2/http
 # github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.4.1
 ## explicit
 github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2
-# github.com/cloudevents/sdk-go/sql/v2 v2.7.0
-github.com/cloudevents/sdk-go/sql/v2
-github.com/cloudevents/sdk-go/sql/v2/expression
-github.com/cloudevents/sdk-go/sql/v2/function
-github.com/cloudevents/sdk-go/sql/v2/gen
-github.com/cloudevents/sdk-go/sql/v2/parser
-github.com/cloudevents/sdk-go/sql/v2/runtime
-github.com/cloudevents/sdk-go/sql/v2/utils
 # github.com/cloudevents/sdk-go/v2 v2.7.0
 ## explicit
 github.com/cloudevents/sdk-go/v2
@@ -393,12 +383,13 @@ go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
-# go.opentelemetry.io/otel v0.16.0
+# go.opentelemetry.io/otel v0.20.0
+go.opentelemetry.io/otel/attribute
 go.opentelemetry.io/otel/codes
 go.opentelemetry.io/otel/internal
 go.opentelemetry.io/otel/internal/baggage
-go.opentelemetry.io/otel/label
 go.opentelemetry.io/otel/propagation
+# go.opentelemetry.io/otel/trace v0.20.0
 go.opentelemetry.io/otel/trace
 # go.uber.org/atomic v1.9.0
 ## explicit
@@ -1121,7 +1112,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.28.1-0.20211217092418-fede720191d3
+# knative.dev/eventing v0.28.1-0.20211230085924-1ba7810fba5d
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck
@@ -1246,7 +1237,7 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/eventing-kafka v0.28.1-0.20211221061317-76257e9c0397
+# knative.dev/eventing-kafka v0.28.1-0.20220104114830-15a64fb7261f
 ## explicit
 knative.dev/eventing-kafka/pkg/apis/bindings
 knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
@@ -1306,7 +1297,7 @@ knative.dev/eventing-kafka/test/rekt/features/kafkachannel
 knative.dev/eventing-kafka/test/rekt/resources/kafkachannel
 knative.dev/eventing-kafka/test/rekt/resources/resetoffset
 knative.dev/eventing-kafka/test/upgrade/continual
-# knative.dev/hack v0.0.0-20211216134818-6fc030496333
+# knative.dev/hack v0.0.0-20211222071919-abd085fc43de
 ## explicit
 knative.dev/hack
 knative.dev/hack/shell
@@ -1405,7 +1396,7 @@ knative.dev/pkg/webhook/json
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20211213105719-9cdcfcc2f3fd
+# knative.dev/reconciler-test v0.0.0-20211222120418-816f2192fec9
 ## explicit
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment

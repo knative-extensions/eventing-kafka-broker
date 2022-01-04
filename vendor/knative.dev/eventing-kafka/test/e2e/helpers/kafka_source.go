@@ -244,7 +244,6 @@ func AssureKafkaSourceIsOperational(t *testing.T, scope SourceTestScope) {
 				"id":          "A234-1234-1234",
 			}),
 			extensions: map[string]string{
-				"type":                 "my.own.type",
 				"comexampleothervalue": "5",
 			},
 			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) EventMatcher {
