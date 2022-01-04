@@ -12,44 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
-
-import (
-	"math"
-	"unsafe"
-)
-
-func BoolToRaw(b bool) uint64 {
-	if b {
-		return 1
-	}
-	return 0
-}
-
-func RawToBool(r uint64) bool {
-	return r != 0
-}
-
-func Int64ToRaw(i int64) uint64 {
-	return uint64(i)
-}
-
-func RawToInt64(r uint64) int64 {
-	return int64(r)
-}
-
-func Float64ToRaw(f float64) uint64 {
-	return math.Float64bits(f)
-}
-
-func RawToFloat64(r uint64) float64 {
-	return math.Float64frombits(r)
-}
-
-func RawPtrToFloat64Ptr(r *uint64) *float64 {
-	return (*float64)(unsafe.Pointer(r))
-}
-
-func RawPtrToInt64Ptr(r *uint64) *int64 {
-	return (*int64)(unsafe.Pointer(r))
-}
+// package attribute provides key and value attributes.
+//
+// This package is currently in a pre-GA phase. Backwards incompatible changes
+// may be introduced in subsequent minor version releases as we work to track
+// the evolving OpenTelemetry specification and user feedback.
+package attribute // import "go.opentelemetry.io/otel/attribute"
