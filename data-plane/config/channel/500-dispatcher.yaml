@@ -38,7 +38,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-channel-dispatcher
-          image: ${KNATIVE_KAFKA_CHANNEL_DISPATCHER_IMAGE}
+          image: ${KNATIVE_KAFKA_DISPATCHER_IMAGE}
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config

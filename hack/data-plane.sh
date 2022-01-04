@@ -172,6 +172,7 @@ function k8s() {
   replace_images "${EVENTING_KAFKA_SOURCE_ARTIFACT}" &&
     replace_images "${EVENTING_KAFKA_BROKER_ARTIFACT}" &&
     replace_images "${EVENTING_KAFKA_SINK_ARTIFACT}" &&
+    replace_images "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" &&
     return $?
 }
 
