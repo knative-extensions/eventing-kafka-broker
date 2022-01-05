@@ -41,11 +41,8 @@ import (
 )
 
 const (
-	// KafkaConditionConsumerGroupReady has status True when the KafkaChannel has created a consumer group.
-	KafkaConditionConsumerGroupReady apis.ConditionType = "ConsumerGroupReady"
-
-	// KafkaConditionConsumerGroupNotReady has status False when the KafkaChannel has failed to create a consumer group.
-	KafkaConditionConsumerGroupNotReady apis.ConditionType = "ConsumerGroupNotReady"
+	// KafkaConditionConsumerGroup has status True when the KafkaChannel has created a consumer group, and False otherwise.
+	KafkaConditionConsumerGroup apis.ConditionType = "ConsumerGroupCreate"
 )
 
 type Reconciler struct {

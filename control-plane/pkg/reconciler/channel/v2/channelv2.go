@@ -20,16 +20,18 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/multierr"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	v1 "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/pkg/apis"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/reconciler"
 
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
@@ -42,6 +44,14 @@ const (
 	// TopicPrefix is the Kafka Channel topic prefix - (topic name: knative-messaging-kafka.<channel-namespace>.<channel-name>).
 	TopicPrefix          = "knative-messaging-kafka"
 	DefaultDeliveryOrder = internals.Ordered
+
+	KafkaChannelConditionConsumerGroup apis.ConditionType = "ConsumerGroup" //condition is registered by controller
+)
+
+var (
+	conditionSet = apis.NewLivingConditionSet(
+		KafkaChannelConditionConsumerGroup,
+	)
 )
 
 type Reconciler struct {
@@ -51,82 +61,82 @@ type Reconciler struct {
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
 
-	consgroup, err := r.reconcileConsumerGroup(ctx, channel)
+	err := r.reconcileConsumerGroup(ctx, channel)
 	if err != nil {
-		channel.GetConditionSet().Manage(&channel.Status).MarkFalse(consumergroup.KafkaConditionConsumerGroupNotReady, "failed to reconcile consumer group", err.Error())
+		channel.GetConditionSet().Manage(&channel.Status).MarkFalse(KafkaChannelConditionConsumerGroup, "failed to reconcile consumer group", err.Error())
 		return err
 	}
-	channel.GetConditionSet().Manage(&channel.Status).MarkTrue(consumergroup.KafkaConditionConsumerGroupReady)
+	channel.GetConditionSet().Manage(&channel.Status).MarkTrue(KafkaChannelConditionConsumerGroup)
 
 	//todo other status fields relevant for channels
-
 	//SubscribableStatus
 	//AddressStatus
+	//DeadLetterSinkURI
 
-	channel.Status.DeadLetterSinkURI = consgroup.Status.DeadLetterSinkURI //DeliveryStatus
 	return nil
 }
 
-func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagingv1beta1.KafkaChannel) (*internalscg.ConsumerGroup, error) {
+func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagingv1beta1.KafkaChannel) error {
 
 	topicName := kafka.ChannelTopic(TopicPrefix, channel)
-	newcg := &internalscg.ConsumerGroup{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      string(channel.UID),
-			Namespace: channel.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				*kmeta.NewControllerRef(channel),
+	var globalErr error
+
+	for i := range channel.Spec.Subscribers {
+		s := &channel.Spec.Subscribers[i]
+		newcg := &internalscg.ConsumerGroup{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      string(s.UID),
+				Namespace: channel.Namespace,
+				OwnerReferences: []metav1.OwnerReference{
+					*kmeta.NewControllerRef(channel),
+				},
 			},
-		},
-		Spec: internalscg.ConsumerGroupSpec{
-			Template: internalscg.ConsumerTemplateSpec{
-				Spec: internalscg.ConsumerSpec{
-					Topics: []string{topicName},
-					Configs: internalscg.ConsumerConfigs{Configs: map[string]string{
-						"group.id": string(channel.UID),
-					}},
-					Delivery: &internalscg.DeliverySpec{
-						DeliverySpec: channel.Spec.Delivery,
-						Ordering:     DefaultDeliveryOrder,
+			Spec: internalscg.ConsumerGroupSpec{
+				Template: internalscg.ConsumerTemplateSpec{
+					Spec: internalscg.ConsumerSpec{
+						Topics: []string{topicName},
+						Configs: internalscg.ConsumerConfigs{Configs: map[string]string{
+							"group.id": consumerGroup(channel, s),
+						}},
+						Delivery: &internalscg.DeliverySpec{
+							DeliverySpec: channel.Spec.Delivery,
+							Ordering:     DefaultDeliveryOrder,
+						},
 					},
 				},
 			},
-		},
-	}
-
-	cg, err := r.ConsumerGroupLister.ConsumerGroups(channel.GetNamespace()).Get(string(channel.UID)) //Get by consumer group id
-	if err != nil && !apierrors.IsNotFound(err) {
-		return nil, err
-	}
-
-	if err := newcg.Validate(ctx); err != nil {
-		return nil, fmt.Errorf("failed to validate expected consumer group %s/%s: %w", newcg.GetNamespace(), newcg.GetName(), err)
-	}
-
-	if apierrors.IsNotFound(err) {
-		cg, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(newcg.GetNamespace()).Create(ctx, newcg, metav1.CreateOptions{})
-		if err != nil && !apierrors.IsAlreadyExists(err) {
-			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", newcg.GetNamespace(), newcg.GetName(), err)
 		}
-		if apierrors.IsAlreadyExists(err) {
-			return newcg, nil
+
+		cg, err := r.ConsumerGroupLister.ConsumerGroups(channel.GetNamespace()).Get(string(s.UID)) //Get by consumer group id
+		if err != nil && !apierrors.IsNotFound(err) {
+			globalErr = multierr.Append(globalErr, err)
 		}
-		return cg, nil
+
+		if apierrors.IsNotFound(err) {
+			_, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(newcg.GetNamespace()).Create(ctx, newcg, metav1.CreateOptions{})
+			if err != nil && !apierrors.IsAlreadyExists(err) {
+				globalErr = multierr.Append(globalErr, fmt.Errorf("failed to create consumer group %s/%s: %w", newcg.GetNamespace(), newcg.GetName(), err))
+			}
+			continue
+		}
+
+		if !equality.Semantic.DeepDerivative(newcg.Spec, cg.Spec) {
+			newCg := &internalscg.ConsumerGroup{
+				TypeMeta:   cg.TypeMeta,
+				ObjectMeta: cg.ObjectMeta,
+				Spec:       newcg.Spec,
+				Status:     cg.Status,
+			}
+			if _, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
+				globalErr = multierr.Append(globalErr, fmt.Errorf("failed to update consumer group %s/%s: %w", newCg.GetNamespace(), newCg.GetName(), err))
+			}
+		}
 	}
 
-	if equality.Semantic.DeepDerivative(newcg.Spec, cg.Spec) {
-		return cg, nil
-	}
+	return globalErr
+}
 
-	newCg := &internalscg.ConsumerGroup{
-		TypeMeta:   cg.TypeMeta,
-		ObjectMeta: cg.ObjectMeta,
-		Spec:       newcg.Spec,
-		Status:     cg.Status,
-	}
-	if _, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
-		return nil, fmt.Errorf("failed to update consumer group %s/%s: %w", newCg.GetNamespace(), newCg.GetName(), err)
-	}
-
-	return cg, nil
+// consumerGroup returns a consumerGroup name for the given channel and subscription
+func consumerGroup(channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec) string {
+	return fmt.Sprintf("kafka.%s.%s.%s", channel.Namespace, channel.Name, string(s.UID))
 }

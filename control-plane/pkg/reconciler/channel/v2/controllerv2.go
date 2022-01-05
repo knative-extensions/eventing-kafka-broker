@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/client-go/tools/cache"
 
+	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	kafkachannelinformer "knative.dev/eventing-kafka/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
 	kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 
@@ -37,6 +38,8 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 
 	channelInformer := kafkachannelinformer.Get(ctx)
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
+
+	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(conditionSet)
 
 	reconciler := &Reconciler{
 		ConsumerGroupLister: consumerGroupInformer.Lister(),
