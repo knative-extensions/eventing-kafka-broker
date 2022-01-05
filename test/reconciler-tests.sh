@@ -2,7 +2,7 @@
 
 source $(dirname $0)/e2e-common.sh
 
-setup_eventing_kafka_broker_test_cluster
+setup_eventing_kafka_broker_test_cluster || fail_test "Failed to setup cluster"
 
 go_test_e2e -timeout=30m ./test/e2e_new/... || fail_test "E2E (new) suite failed"
 
