@@ -14,9 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
+readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
+export REPLICAS=${REPLICAS:-3}
+
 source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
 source $(pwd)/hack/data-plane.sh
 source $(pwd)/hack/control-plane.sh
+
+# If gcloud is not available make it a no-op, not an error.
+which gcloud &>/dev/null || gcloud() { echo "[ignore-gcloud $*]" 1>&2; }
+
+# Use GNU tools on macOS. Requires the 'grep' and 'gnu-sed' Homebrew formulae.
+if [ "$(uname)" == "Darwin" ]; then
+  sed=gsed
+  grep=ggrep
+fi
 
 # Latest release. If user does not supply this as a flag, the latest tagged release on the current branch will be used.
 readonly LATEST_RELEASE_VERSION=$(latest_version)
@@ -190,9 +203,11 @@ function delete_sacura() {
 
 function export_logs_continuously() {
 
+  labels=("kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver" "kafka-channel-receiver" "kafka-channel-dispatcher" "kafka-source-dispatcher" "kafka-webhook-eventing" "kafka-controller")
+
   mkdir -p "$ARTIFACTS/${SYSTEM_NAMESPACE}"
 
-  for deployment in "$@"; do
+  for deployment in "${labels[@]}"; do
     kubectl logs -n ${SYSTEM_NAMESPACE} -f -l=app="$deployment" >"$ARTIFACTS/${SYSTEM_NAMESPACE}/$deployment" 2>&1 &
   done
 }
