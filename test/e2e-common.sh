@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
+readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
+export REPLICAS=${REPLICAS:-3}
+
 source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
 source $(pwd)/hack/data-plane.sh
 source $(pwd)/hack/control-plane.sh
@@ -213,4 +217,25 @@ function save_release_artifacts() {
   cp "${EVENTING_KAFKA_SINK_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
   cp "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
   cp "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
+}
+
+function setup_eventing_kafka_broker_test_cluster() {
+  if ! ${SKIP_INITIALIZE}; then
+    initialize $@ --skip-istio-addon
+    save_release_artifacts || fail_test "Failed to save release artifacts"
+  fi
+
+  if ! ${LOCAL_DEVELOPMENT}; then
+    scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
+    apply_sacura || fail_test "Failed to apply Sacura"
+    apply_chaos || fail_test "Failed to apply chaos"
+  fi
+
+  header "Waiting Knative eventing to come up"
+
+  wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing didn't come up"
+
+  header "Running tests"
+
+  export_logs_continuously "kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver" "kafka-channel-receiver" "kafka-channel-dispatcher" "kafka-source-dispatcher" "kafka-webhook-eventing" "kafka-controller"
 }
