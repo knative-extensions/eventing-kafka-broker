@@ -203,9 +203,11 @@ function delete_sacura() {
 
 function export_logs_continuously() {
 
+  labels=("kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver" "kafka-channel-receiver" "kafka-channel-dispatcher" "kafka-source-dispatcher" "kafka-webhook-eventing" "kafka-controller")
+
   mkdir -p "$ARTIFACTS/${SYSTEM_NAMESPACE}"
 
-  for deployment in "$@"; do
+  for deployment in "${labels[@]}"; do
     kubectl logs -n ${SYSTEM_NAMESPACE} -f -l=app="$deployment" >"$ARTIFACTS/${SYSTEM_NAMESPACE}/$deployment" 2>&1 &
   done
 }
@@ -217,25 +219,4 @@ function save_release_artifacts() {
   cp "${EVENTING_KAFKA_SINK_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
   cp "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
   cp "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
-}
-
-function setup_eventing_kafka_broker_test_cluster() {
-  if ! ${SKIP_INITIALIZE}; then
-    initialize $@ --skip-istio-addon
-    save_release_artifacts || fail_test "Failed to save release artifacts"
-  fi
-
-  if ! ${LOCAL_DEVELOPMENT}; then
-    scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
-    apply_sacura || fail_test "Failed to apply Sacura"
-    apply_chaos || fail_test "Failed to apply chaos"
-  fi
-
-  header "Waiting Knative eventing to come up"
-
-  wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing didn't come up"
-
-  header "Running tests"
-
-  export_logs_continuously "kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver" "kafka-channel-receiver" "kafka-channel-dispatcher" "kafka-source-dispatcher" "kafka-webhook-eventing" "kafka-controller"
 }
