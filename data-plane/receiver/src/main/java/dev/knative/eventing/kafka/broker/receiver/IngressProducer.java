@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.producer.KafkaProducer;
@@ -44,5 +45,10 @@ public interface IngressProducer {
    * @return the topic where the record should be sent to.
    */
   String getTopic();
+
+  /**
+   * @return the resource associated with this producer.
+   */
+  DataPlaneContract.Reference getReference();
 
 }

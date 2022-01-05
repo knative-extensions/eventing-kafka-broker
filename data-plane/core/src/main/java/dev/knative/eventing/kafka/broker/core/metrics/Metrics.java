@@ -16,8 +16,14 @@
 package dev.knative.eventing.kafka.broker.core.metrics;
 
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.BaseUnits;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
+import io.micrometer.core.instrument.config.NamingConvention;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.metrics.MetricsOptions;
 import io.vertx.core.net.PemKeyCertOptions;
@@ -50,19 +56,38 @@ public class Metrics {
   // are disallowed by the monitoring system.
 
   /**
-   * In prometheus format --> http_requests_malformed_total
-   */
-  public static final String HTTP_REQUESTS_MALFORMED_COUNT = "http.requests.malformed";
-
-  /**
-   * In prometheus format --> http_requests_produce_total
-   */
-  public static final String HTTP_REQUESTS_PRODUCE_COUNT = "http.requests.produce";
-
-  /**
    * In prometheus format --> http_events_sent_total
    */
   public static final String HTTP_EVENTS_SENT_COUNT = "http.events.sent";
+
+  /**
+   * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
+   * @see Metrics#eventCount(io.micrometer.core.instrument.Tags)
+   */
+  public static final String EVENTS_COUNT = "event_count";
+
+  /**
+   * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
+   * @see Metrics#eventDispatchLatency(io.micrometer.core.instrument.Tags)
+   */
+  public static final String EVENT_DISPATCH_LATENCY = "event_dispatch_latencies";
+
+  /**
+   * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
+   */
+  public static class Tags {
+    public static final String RESPONSE_CODE = "response_code";
+    public static final String RESPONSE_CODE_CLASS = "response_code_class";
+    public static final String EVENT_TYPE = "event_type";
+  }
+
+  /**
+   * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
+   */
+  public static class Units {
+    // Unified Code for Units of Measure: http://unitsofmeasure.org/ucum.html
+    public static final String DIMENSIONLESS = "1";
+  }
 
   /**
    * Get metrics options from the given metrics configurations.
@@ -71,6 +96,9 @@ public class Metrics {
    * @return Metrics options.
    */
   public static MetricsOptions getOptions(final BaseEnv metricsConfigs) {
+    final var registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+    registry.config().namingConvention(NamingConvention.identity);
+
     return new MicrometerMetricsOptions()
       .setEnabled(true)
       .addDisabledMetricsCategory(MetricsDomain.EVENT_BUS)
@@ -81,6 +109,7 @@ public class Metrics {
       .setMetricsNaming(MetricsNaming.v4Names())
       .setRegistryName(METRICS_REGISTRY_NAME)
       .setJvmMetricsEnabled(metricsConfigs.isMetricsJvmEnabled())
+      .setMicrometerRegistry(registry)
       .setPrometheusOptions(new VertxPrometheusOptions()
         .setEmbeddedServerOptions(new HttpServerOptions()
           .setPort(metricsConfigs.getMetricsPort())
@@ -148,5 +177,22 @@ public class Metrics {
       return HttpServerOptions.DEFAULT_HOST;
     }
     return host;
+  }
+
+  public static Counter.Builder eventCount(final io.micrometer.core.instrument.Tags tags) {
+    return Counter
+      .builder(EVENTS_COUNT)
+      .description("Number of events received")
+      .tags(tags)
+      .baseUnit(Metrics.Units.DIMENSIONLESS);
+  }
+
+  public static DistributionSummary.Builder eventDispatchLatency(final io.micrometer.core.instrument.Tags tags) {
+    return DistributionSummary
+      .builder(EVENT_DISPATCH_LATENCY)
+      .description("The time spent dispatching an event to Kafka")
+      .tags(tags)
+      .baseUnit(BaseUnits.MILLISECONDS)
+      .serviceLevelObjectives(1, 2, 5, 10, 20, 50, 100, 500, 1000, 5000, 10000);
   }
 }
