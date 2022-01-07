@@ -30,6 +30,7 @@ function usage() {
   echo "   teardown-chaos                                          Remove chaosduck"
   echo "   profiler                                                Run profiling tests"
   echo "   generate                                                Run code generators"
+  echo "   build-from-source                                       Build artifacts from source"
   echo ""
 }
 
@@ -41,6 +42,8 @@ elif [[ "${action}" == "deploy-kafka" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && kafka_setup
 elif [[ "${action}" == "deploy" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && test_setup
+elif [[ "${action}" == "build-from-source" ]]; then
+  source "${ROOT_DIR}"/test/e2e-common.sh && build_components_from_source
 elif [[ "${action}" == "teardown" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && test_teardown
 elif [[ "${action}" == "unit-test" || "${action}" == "unit-tests" ]]; then

@@ -21,6 +21,7 @@ export REPLICAS=${REPLICAS:-3}
 source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
 source $(pwd)/hack/data-plane.sh
 source $(pwd)/hack/control-plane.sh
+source $(pwd)/hack/artifacts-env.sh
 
 # If gcloud is not available make it a no-op, not an error.
 which gcloud &>/dev/null || gcloud() { echo "[ignore-gcloud $*]" 1>&2; }
@@ -40,11 +41,12 @@ readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
 # Vendored eventing test images.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
 
-export EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT="eventing-kafka-controller.yaml"
-export EVENTING_KAFKA_SOURCE_ARTIFACT="eventing-kafka-source.yaml"
-export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
-export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
-export EVENTING_KAFKA_CHANNEL_ARTIFACT="eventing-kafka-channel.yaml"
+export MONITORING_ARTIFACTS_PATH="manifests/monitoring/prometheus-operator"
+export EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/controller"
+export EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/source"
+export EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/broker"
+export EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/sink"
+export EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/channel"
 
 # The number of control plane replicas to run.
 readonly REPLICAS=${REPLICAS:-1}
@@ -111,6 +113,9 @@ function build_components_from_source() {
 
   header "Control plane setup"
   control_plane_setup || fail_test "Failed to set up control plane components"
+
+  header "Building Monitoring artifacts"
+  build_monitoring_artifacts || fail_test "Failed to create monitoring artifacts"
 
   return $?
 }
@@ -216,7 +221,35 @@ function save_release_artifacts() {
   # Copy our release artifacts into artifacts, so that release artifacts of a PR can be tested and reviewed without
   # building the project from source.
   cp "${EVENTING_KAFKA_BROKER_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
+  cp "${EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
+  cp "${EVENTING_KAFKA_SOURCE_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
+  cp "${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
   cp "${EVENTING_KAFKA_SINK_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
+  cp "${EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
   cp "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
+  cp "${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
   cp "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
+  cp "${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+}
+
+function build_monitoring_artifacts() {
+
+  ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
+    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
+  ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
+    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
+  ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
+    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
+  ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
+    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
+  ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
+    "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
 }
