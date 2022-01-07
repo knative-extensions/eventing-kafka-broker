@@ -53,6 +53,7 @@ type Consumer struct {
 	Status ConsumerStatus `json:"status,omitempty"`
 }
 
+// PodBind is a reference to a corev1.Pod.
 type PodBind struct {
 	PodName      string `json:"podName"`
 	PodNamespace string `json:"podNamespace"`
