@@ -29,7 +29,6 @@ import (
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/utils/pointer"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	"knative.dev/pkg/apis"
 	"knative.dev/pkg/reconciler"
 
 	"knative.dev/eventing/pkg/scheduler"
@@ -38,11 +37,6 @@ import (
 	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
-)
-
-const (
-	// KafkaConditionConsumerGroup has status True when the KafkaChannel has created a consumer group, and False otherwise.
-	KafkaConditionConsumerGroup apis.ConditionType = "ConsumerGroupCreate"
 )
 
 type Reconciler struct {

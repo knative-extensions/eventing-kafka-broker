@@ -27,21 +27,31 @@ import (
 
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 
 	"knative.dev/pkg/controller"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 )
 
 func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 
+	configmapInformer := configmapinformer.Get(ctx)
 	channelInformer := kafkachannelinformer.Get(ctx)
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
 
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(conditionSet)
 
 	reconciler := &Reconciler{
+		Reconciler: &base.Reconciler{
+			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
+			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
+			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
+		},
+		Env:                 configs,
+		ConfigMapLister:     configmapInformer.Lister(),
 		ConsumerGroupLister: consumerGroupInformer.Lister(),
 		InternalsClient:     consumergroupclient.Get(ctx),
 	}
@@ -55,7 +65,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	// ConsumerGroup changes and enqueue associated channel
 	consumerGroupInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: consumergroup.Filter("kafkachannel"),
-		Handler:    controller.HandleAll(impl.Enqueue),
+		Handler:    controller.HandleAll(consumergroup.Enqueue("kafkachannel", impl.EnqueueKey)),
 	})
 
 	return impl
