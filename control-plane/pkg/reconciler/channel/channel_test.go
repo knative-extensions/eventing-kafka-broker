@@ -22,9 +22,10 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
+	"knative.dev/pkg/network"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-	"knative.dev/pkg/network"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -147,6 +148,7 @@ func TestReconcileKind(t *testing.T) {
 							Uid:              ChannelUUID,
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								IngressType: &contract.Ingress_Path{
 									Path: receiver.Path(ChannelNamespace, ChannelName),
@@ -215,6 +217,7 @@ func TestReconcileKind(t *testing.T) {
 							Uid:              ChannelUUID,
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								IngressType: &contract.Ingress_Path{
 									Path: receiver.Path(ChannelNamespace, ChannelName),
@@ -285,6 +288,7 @@ func TestReconcileKind(t *testing.T) {
 							Uid:              ChannelUUID,
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								IngressType: &contract.Ingress_Path{
 									Path: receiver.Path(ChannelNamespace, ChannelName),
@@ -356,6 +360,7 @@ func TestReconcileKind(t *testing.T) {
 							Uid:              ChannelUUID,
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								IngressType: &contract.Ingress_Path{
 									Path: receiver.Path(ChannelNamespace, ChannelName),
@@ -429,6 +434,7 @@ func TestReconcileKind(t *testing.T) {
 							Uid:              ChannelUUID,
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								IngressType: &contract.Ingress_Path{
 									Path: receiver.Path(ChannelNamespace, ChannelName),
@@ -502,6 +508,7 @@ func TestReconcileKind(t *testing.T) {
 							Uid:              ChannelUUID,
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								IngressType: &contract.Ingress_Path{
 									Path: receiver.Path(ChannelNamespace, ChannelName),
@@ -578,6 +585,7 @@ func TestReconcileKind(t *testing.T) {
 							Uid:              ChannelUUID,
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								IngressType: &contract.Ingress_Path{
 									Path: receiver.Path(ChannelNamespace, ChannelName),
@@ -855,6 +863,7 @@ func TestReconcileKind(t *testing.T) {
 							Uid:              ChannelUUID,
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								IngressType: &contract.Ingress_Path{
 									Path: receiver.Path(ChannelNamespace, ChannelName),
@@ -929,6 +938,7 @@ func TestReconcileKind(t *testing.T) {
 							Uid:              ChannelUUID,
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
 							Auth: &contract.Resource_AuthSecret{
 								AuthSecret: &contract.Reference{
 									Uuid:      SecretUUID,
@@ -1009,6 +1019,7 @@ func TestReconcileKind(t *testing.T) {
 							Uid:              ChannelUUID,
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								IngressType: &contract.Ingress_Path{
 									Path: receiver.Path(ChannelNamespace, ChannelName),
@@ -1078,6 +1089,7 @@ func TestReconcileKind(t *testing.T) {
 							Uid:              ChannelUUID,
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								IngressType: &contract.Ingress_Path{
 									Path: receiver.Path(ChannelNamespace, ChannelName),

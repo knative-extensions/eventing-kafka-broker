@@ -175,6 +175,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 			IngressType: &contract.Ingress_Path{Path: receiver.PathFromObject(ks)},
 		},
 		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
+		Reference: &contract.Reference{
+			Uuid:      string(ks.GetUID()),
+			Namespace: ks.GetNamespace(),
+			Name:      ks.GetName(),
+		},
 	}
 	if ks.Spec.HasAuthConfig() {
 		sinkConfig.Auth = &contract.Resource_AuthSecret{

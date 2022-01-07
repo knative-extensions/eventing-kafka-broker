@@ -32,6 +32,7 @@ import (
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
@@ -123,6 +124,14 @@ func SinkAddressable(configs *config.Env) func(obj duckv1.KRShaped) {
 		}
 
 		sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrue(base.ConditionAddressable)
+	}
+}
+
+func SinkReference() *contract.Reference {
+	return &contract.Reference{
+		Uuid:      SinkUUID,
+		Namespace: SinkNamespace,
+		Name:      SinkName,
 	}
 }
 
