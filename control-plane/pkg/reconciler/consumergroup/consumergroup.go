@@ -83,7 +83,7 @@ func (r Reconciler) reconcileConsumers(ctx context.Context, cg *kafkainternals.C
 			continue
 		}
 
-		if err := r.reconcileConsumersInPlacement(ctx, cg, *pc.Placement, pc.Consumers); err != nil {
+		if err := r.reconcileConsumersInPlacement(ctx, cg, pc); err != nil {
 			return cg.MarkReconcileConsumersFailed("ReconcileConsumer", err)
 		}
 	}
@@ -94,8 +94,10 @@ func (r Reconciler) reconcileConsumers(ctx context.Context, cg *kafkainternals.C
 func (r Reconciler) reconcileConsumersInPlacement(
 	ctx context.Context,
 	cg *kafkainternals.ConsumerGroup,
-	placement eventingduckv1alpha1.Placement,
-	consumers []*kafkainternals.Consumer) error {
+	pc ConsumersPerPlacement) error {
+
+	placement := *pc.Placement
+	consumers := pc.Consumers
 
 	// Check if there is a consumer for the given placement.
 	if len(consumers) == 0 {
