@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 )
@@ -72,6 +73,64 @@ func TestFilter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := Filter(tt.userFacingResource)(tt.resource); got != tt.want {
 				t.Errorf("Filter() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestEnqueue(t *testing.T) {
+	tests := []struct {
+		name               string
+		resource           interface{}
+		userFacingResource string
+		want               int
+	}{
+		{
+			name:               "unknown type",
+			resource:           &kafkainternals.Consumer{},
+			userFacingResource: "trigger",
+			want:               0,
+		},
+		{
+			name: "trigger pass",
+			resource: &kafkainternals.ConsumerGroup{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
+					OwnerReferences: []metav1.OwnerReference{
+						{
+							Kind: "trigger",
+						},
+					},
+				},
+			},
+			userFacingResource: "trigger",
+			want:               1,
+		},
+		{
+			name: "no pass",
+			resource: &kafkainternals.ConsumerGroup{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
+					OwnerReferences: []metav1.OwnerReference{
+						{
+							Kind: "kafkasource",
+						},
+					},
+				},
+			},
+			userFacingResource: "trigger",
+			want:               0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			called := 0
+			f := func(key types.NamespacedName) {
+				called++
+			}
+			Enqueue(tt.userFacingResource, f)(tt.resource)
+			if called != tt.want {
+				t.Errorf("Enqueue called %v, want %v", called, tt.want)
 			}
 		})
 	}

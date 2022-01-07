@@ -19,6 +19,8 @@ package consumergroup
 import (
 	"strings"
 
+	"k8s.io/apimachinery/pkg/types"
+
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 )
 
@@ -39,5 +41,22 @@ func Filter(userFacingResource string) func(obj interface{}) bool {
 		}
 
 		return false
+	}
+}
+
+// Enqueue enqueues using the provided enqueue function the resource associated with a ConsumerGroup
+func Enqueue(userFacingResource string, enqueue func(key types.NamespacedName)) func(obj interface{}) {
+	userFacingResource = strings.ToLower(userFacingResource)
+	return func(obj interface{}) {
+		cg, ok := obj.(*kafkainternals.ConsumerGroup)
+		if !ok {
+			return
+		}
+
+		for _, or := range cg.OwnerReferences {
+			if strings.ToLower(or.Kind) == userFacingResource {
+				enqueue(types.NamespacedName{Namespace: cg.GetNamespace(), Name: or.Name})
+			}
+		}
 	}
 }
