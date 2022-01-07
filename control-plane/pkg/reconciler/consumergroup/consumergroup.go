@@ -71,9 +71,9 @@ func (r Reconciler) reconcileConsumers(ctx context.Context, cg *kafkainternals.C
 		return cg.MarkReconcileConsumersFailed("ListConsumers", err)
 	}
 
-	consumersByPlacement := r.joinConsumersByPlacement(cg.Status.Placements, existingConsumers)
+	placementConsumers := r.joinConsumersByPlacement(cg.Status.Placements, existingConsumers)
 
-	for _, pc := range consumersByPlacement {
+	for _, pc := range placementConsumers {
 		if pc.Placement == nil {
 			for _, c := range pc.Consumers {
 				if err := r.finalizeConsumer(ctx, c); err != nil {
