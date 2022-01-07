@@ -25,15 +25,17 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 const (
@@ -171,6 +173,14 @@ func ChannelAddressable(env *config.Env) func(obj duckv1.KRShaped) {
 		}
 
 		channel.GetConditionSet().Manage(&channel.Status).MarkTrue(base.ConditionAddressable)
+	}
+}
+
+func ChannelReference() *contract.Reference {
+	return &contract.Reference{
+		Uuid:      ChannelUUID,
+		Namespace: ChannelNamespace,
+		Name:      ChannelName,
 	}
 }
 

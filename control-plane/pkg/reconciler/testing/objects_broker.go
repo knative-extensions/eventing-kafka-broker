@@ -33,6 +33,7 @@ import (
 	"knative.dev/pkg/network"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -228,6 +229,14 @@ func BrokerAddressable(env *config.Env) func(broker *eventing.Broker) {
 		}
 
 		broker.GetConditionSet().Manage(&broker.Status).MarkTrue(base.ConditionAddressable)
+	}
+}
+
+func BrokerReference() *contract.Reference {
+	return &contract.Reference{
+		Uuid:      BrokerUUID,
+		Namespace: BrokerNamespace,
+		Name:      BrokerName,
 	}
 }
 
