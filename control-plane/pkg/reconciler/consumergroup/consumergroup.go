@@ -75,6 +75,7 @@ func (r Reconciler) reconcileConsumers(ctx context.Context, cg *kafkainternals.C
 
 	for _, pc := range placementConsumers {
 		if pc.Placement == nil {
+			// There is no placement for pc.Consumers, so they need to be finalized.
 			for _, c := range pc.Consumers {
 				if err := r.finalizeConsumer(ctx, c); err != nil {
 					return cg.MarkReconcileConsumersFailed("FinalizeConsumer", err)
