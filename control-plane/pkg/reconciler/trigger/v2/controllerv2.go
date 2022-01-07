@@ -88,7 +88,7 @@ func NewControllerV2(ctx context.Context, configs *config.Env) *controller.Impl 
 	// ConsumerGroup changes and enqueue associated Trigger
 	consumerGroupInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: consumergroup.Filter("trigger"),
-		Handler:    controller.HandleAll(impl.Enqueue),
+		Handler:    controller.HandleAll(consumergroup.Enqueue("trigger", impl.EnqueueKey)),
 	})
 
 	return impl
