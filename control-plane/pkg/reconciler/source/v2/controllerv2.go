@@ -54,7 +54,7 @@ func NewControllerV2(ctx context.Context, configs *config.Env) *controller.Impl 
 	// ConsumerGroup changes and enqueue associated KafkaSource
 	consumerGroupInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: consumergroup.Filter("kafkasource"),
-		Handler:    controller.HandleAll(impl.Enqueue),
+		Handler:    controller.HandleAll(consumergroup.Enqueue("kafkasource", impl.EnqueueKey)),
 	})
 	return impl
 }
