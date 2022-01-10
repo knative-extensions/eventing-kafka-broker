@@ -232,34 +232,93 @@ public class ConsumerVerticleFactoryImplTest {
 
   @Test
   public void getNoopResponseHandler() {
-    final var counter = new AtomicInteger(0);
+    final var kafkaCounter = new AtomicInteger(0);
+    final var httpCounter = new AtomicInteger(0);
     final var egress = DataPlaneContract.Egress.newBuilder()
       .setDiscardReply(DataPlaneContract.Empty.newBuilder().build())
       .build();
 
-    final var r = ConsumerVerticleFactoryImpl.getResponseHandler(egress, () -> {
-      counter.incrementAndGet();
-      return null;
-    });
+    final var r = ConsumerVerticleFactoryImpl.getResponseHandler(egress,
+      () -> {
+        kafkaCounter.incrementAndGet();
+        return null;
+      },
+      () -> {
+        httpCounter.incrementAndGet();
+        return null;
+      });
 
     assertThat(r).isNotNull();
-    assertThat(counter.get()).isEqualTo(0);
+    assertThat(kafkaCounter.get()).isEqualTo(0);
+    assertThat(httpCounter.get()).isEqualTo(0);
   }
 
   @Test
   public void getKafkaResponseHandler() {
-    final var counter = new AtomicInteger(0);
+    final var kafkaCounter = new AtomicInteger(0);
+    final var httpCounter = new AtomicInteger(0);
 
     final var egress = DataPlaneContract.Egress.newBuilder()
       .setReplyToOriginalTopic(DataPlaneContract.Empty.newBuilder().build())
       .build();
 
-    final var r = ConsumerVerticleFactoryImpl.getResponseHandler(egress, () -> {
-      counter.incrementAndGet();
-      return null;
-    });
+    final var r = ConsumerVerticleFactoryImpl.getResponseHandler(egress,
+      () -> {
+        kafkaCounter.incrementAndGet();
+        return null;
+      },
+      () -> {
+        httpCounter.incrementAndGet();
+        return null;
+      });
 
     assertThat(r).isNull();
-    assertThat(counter.get()).isEqualTo(1);
+    assertThat(kafkaCounter.get()).isEqualTo(1);
+    assertThat(httpCounter.get()).isEqualTo(0);
+  }
+
+  @Test
+  public void getHttpResponseHandler() {
+    final var kafkaCounter = new AtomicInteger(0);
+    final var httpCounter = new AtomicInteger(0);
+
+    final var egress = DataPlaneContract.Egress.newBuilder()
+      .setReplyUrl("http://foo.bar")
+      .build();
+
+    final var r = ConsumerVerticleFactoryImpl.getResponseHandler(egress,
+      () -> {
+        kafkaCounter.incrementAndGet();
+        return null;
+      },
+      () -> {
+        httpCounter.incrementAndGet();
+        return null;
+      });
+
+    assertThat(r).isNull();
+    assertThat(kafkaCounter.get()).isEqualTo(0);
+    assertThat(httpCounter.get()).isEqualTo(1);
+  }
+
+  @Test
+  public void getShouldBackToNoopResponseHandlerIfNothingSet() {
+    final var kafkaCounter = new AtomicInteger(0);
+    final var httpCounter = new AtomicInteger(0);
+    final var egress = DataPlaneContract.Egress.newBuilder().build();
+
+    final var r = ConsumerVerticleFactoryImpl.getResponseHandler(egress,
+      () -> {
+        kafkaCounter.incrementAndGet();
+        return null;
+      },
+      () -> {
+        httpCounter.incrementAndGet();
+        return null;
+      });
+
+    assertThat(r).isNotNull();
+    assertThat(kafkaCounter.get()).isEqualTo(0);
+    assertThat(httpCounter.get()).isEqualTo(0);
   }
 }

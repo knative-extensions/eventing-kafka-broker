@@ -22,10 +22,7 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
 import dev.knative.eventing.kafka.broker.dispatcher.*;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherMutatorChain;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseToKafkaTopicHandler;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.*;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.*;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
@@ -156,7 +153,9 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
           new AttributesFilter(egress.getFilter().getAttributesMap()) :
           Filter.noop();
 
-          final var responseHandler = getResponseHandler(egress, () -> getResponseToKafkaTopicHandler(vertx, producerConfigs, resource));
+        final var responseHandler = getResponseHandler(egress,
+          () -> getResponseToKafkaTopicHandler(vertx, producerConfigs, resource),
+          () -> getResponseToHttpEndpointHandler(vertx, egress.getReplyUrl()));
         final var commitIntervalMs = Integer.parseInt(String.valueOf(consumerConfigs.get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG)));
 
         final var recordDispatcher = new RecordDispatcherMutatorChain(
@@ -188,11 +187,17 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
   }
 
   static ResponseHandler getResponseHandler(final DataPlaneContract.Egress egress,
-                                            final Supplier<ResponseHandler> defaultSupplier) {
-    if (egress.hasDiscardReply()) {
+                                            final Supplier<ResponseHandler> kafkaSupplier,
+                                            final Supplier<ResponseHandler> httpSupplier) {
+    if(egress.hasReplyUrl()){
+      return httpSupplier.get();
+    } else if(egress.hasReplyToOriginalTopic()){
+      return kafkaSupplier.get();
+    } else if (egress.hasDiscardReply()) {
       return new NoopResponseHandler();
     }
-    return defaultSupplier.get();
+    //TODO: log
+    return new NoopResponseHandler();
   }
 
   private ResponseToKafkaTopicHandler getResponseToKafkaTopicHandler(final Vertx vertx,
@@ -200,6 +205,27 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
                                                                      final DataPlaneContract.Resource resource) {
     final KafkaProducer<String, CloudEvent> producer = createProducer(vertx, producerConfigs);
     return new ResponseToKafkaTopicHandler(producer, resource.getTopics(0));
+  }
+
+  private ResponseToHttpEndpointHandler getResponseToHttpEndpointHandler(final Vertx vertx,
+                                                                         final String target) {
+
+    // TODO: dupe
+    final var circuitBreaker = CircuitBreaker
+      // TODO: egressConfig: null?
+      .create(target, vertx, createCircuitBreakerOptions(null))
+      // TODO: egressConfig: null?
+      .retryPolicy(computeRetryPolicy(null))
+      .openHandler(r -> logger.info("Circuit breaker opened {}", keyValue("target", target)))
+      .halfOpenHandler(r -> logger.info("Circuit breaker half-opened {}", keyValue("target", target)))
+      .closeHandler(r -> logger.info("Circuit breaker closed {}", keyValue("target", target)));
+
+    // TODO: dupe
+    WebClientCloudEventSender cloudEventSender = new WebClientCloudEventSender(
+      WebClient.create(vertx, this.webClientOptions), circuitBreaker, target
+    );
+
+    return new ResponseToHttpEndpointHandler(cloudEventSender);
   }
 
   protected KafkaProducer<String, CloudEvent> createProducer(final Vertx vertx,

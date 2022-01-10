@@ -469,6 +469,13 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 		ConsumerGroup: consumerGroup(channel, subscriber),
 		DeliveryOrder: DefaultDeliveryOrder,
 		Uid:           string(subscriber.UID),
+		ReplyStrategy: &contract.Egress_DiscardReply{},
+	}
+
+	if subscriber.ReplyURI != nil {
+		egress.ReplyStrategy = &contract.Egress_ReplyUrl{
+			ReplyUrl: subscriber.ReplyURI.String(),
+		}
 	}
 
 	subscriptionEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, subscriber.Delivery, r.DefaultBackoffDelayMs)
