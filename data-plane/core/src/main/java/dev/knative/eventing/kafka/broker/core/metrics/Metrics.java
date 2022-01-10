@@ -20,6 +20,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.metrics.MetricsOptions;
+import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.micrometer.MetricsDomain;
 import io.vertx.micrometer.MetricsNaming;
@@ -28,8 +29,15 @@ import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.producer.Producer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Metrics {
+
+  private static final Logger logger = LoggerFactory.getLogger(Metrics.class);
+
+  private static final PemKeyCertOptions pemKeyCertOptions = permKeyCertOptions();
+  private static final String host = getHost();
 
   public static final String METRICS_REGISTRY_NAME = "metrics";
 
@@ -77,6 +85,9 @@ public class Metrics {
         .setEmbeddedServerOptions(new HttpServerOptions()
           .setPort(metricsConfigs.getMetricsPort())
           .setTracingPolicy(TracingPolicy.IGNORE)
+          .setSsl(pemKeyCertOptions != null)
+          .setPemKeyCertOptions(pemKeyCertOptions)
+          .setHost(host)
         )
         .setEmbeddedServerEndpoint(metricsConfigs.getMetricsPath())
         .setPublishQuantiles(metricsConfigs.isPublishQuantilesEnabled())
@@ -118,5 +129,24 @@ public class Metrics {
     final var clientMetrics = new KafkaClientMetrics(producer);
     clientMetrics.bindTo(getRegistry());
     return clientMetrics;
+  }
+
+  public static PemKeyCertOptions permKeyCertOptions() {
+    final var certPath = System.getenv().get("METRICS_PEM_CERT_PATH");
+    final var keyPath = System.getenv().get("METRICS_PEM_KEY_PATH");
+    if (certPath == null || keyPath == null) {
+      logger.info("Metrics cert paths weren't provided, server will start without TLS");
+      return null;
+    }
+    return new PemKeyCertOptions().setCertPath(certPath).setKeyPath(keyPath);
+  }
+
+  private static String getHost() {
+    final var host = System.getenv().get("METRICS_HOST");
+    if (host == null) {
+      logger.info("Metrics server host wasn't provided, using default value " + HttpServerOptions.DEFAULT_HOST);
+      return HttpServerOptions.DEFAULT_HOST;
+    }
+    return host;
   }
 }
