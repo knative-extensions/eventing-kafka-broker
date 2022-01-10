@@ -27,20 +27,17 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-
-import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
 
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.apache.kafka.clients.consumer.ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG;
-import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
-import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.*;
 import static org.apache.kafka.clients.producer.ProducerConfig.INTERCEPTOR_CLASSES_CONFIG;
-import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
-import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
+import static org.apache.kafka.clients.producer.ProducerConfig.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mock;
@@ -240,7 +237,7 @@ public class ConsumerVerticleFactoryImplTest {
       .setDiscardReply(DataPlaneContract.Empty.newBuilder().build())
       .build();
 
-    final var r = ConsumerVerticleFactoryImpl.getNoopResponseHandlerOrDefault(egress, () -> {
+    final var r = ConsumerVerticleFactoryImpl.getResponseHandler(egress, () -> {
       counter.incrementAndGet();
       return null;
     });
@@ -257,7 +254,7 @@ public class ConsumerVerticleFactoryImplTest {
       .setReplyToOriginalTopic(DataPlaneContract.Empty.newBuilder().build())
       .build();
 
-    final var r = ConsumerVerticleFactoryImpl.getNoopResponseHandlerOrDefault(egress, () -> {
+    final var r = ConsumerVerticleFactoryImpl.getResponseHandler(egress, () -> {
       counter.incrementAndGet();
       return null;
     });

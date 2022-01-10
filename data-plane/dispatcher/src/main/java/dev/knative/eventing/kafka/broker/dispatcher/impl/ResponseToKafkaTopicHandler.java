@@ -27,18 +27,19 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 /**
- * This class implements a {@link ResponseHandler} that will convert the sink response into a {@link CloudEvent} and push it to Kafka.
+ * This class implements a {@link ResponseHandler} that will convert the sink response into a {@link CloudEvent} and push it to a Kafka topic.
  */
-public final class KafkaResponseHandler implements ResponseHandler {
+public final class ResponseToKafkaTopicHandler implements ResponseHandler {
 
-  private static final Logger logger = LoggerFactory.getLogger(KafkaResponseHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(ResponseToKafkaTopicHandler.class);
 
   private final String topic;
   private final KafkaProducer<String, CloudEvent> producer;
@@ -50,7 +51,7 @@ public final class KafkaResponseHandler implements ResponseHandler {
    * @param producer Kafka producer.
    * @param topic    topic to produce records.
    */
-  public KafkaResponseHandler(final KafkaProducer<String, CloudEvent> producer, final String topic) {
+  public ResponseToKafkaTopicHandler(final KafkaProducer<String, CloudEvent> producer, final String topic) {
 
     Objects.requireNonNull(topic, "provide topic");
     Objects.requireNonNull(producer, "provide producer");

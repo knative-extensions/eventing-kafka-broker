@@ -31,8 +31,6 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-import java.net.URI;
-import java.util.concurrent.CountDownLatch;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -42,14 +40,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import java.net.URI;
+import java.util.concurrent.CountDownLatch;
+
+import static org.mockito.Mockito.*;
 
 @Execution(ExecutionMode.CONCURRENT)
 @ExtendWith(VertxExtension.class)
-public class KafkaResponseHandlerTest {
+public class ResponseToKafkaTopicHandlerTest {
 
   static {
     BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
@@ -64,7 +62,7 @@ public class KafkaResponseHandlerTest {
       new StringSerializer(),
       new CloudEventSerializerMock()
     );
-    final var handler = new KafkaResponseHandler(
+    final var handler = new ResponseToKafkaTopicHandler(
       KafkaProducer.create(vertx, producer), TOPIC
     );
 
@@ -86,7 +84,7 @@ public class KafkaResponseHandlerTest {
       new StringSerializer(),
       new CloudEventSerializerMock()
     );
-    final var handler = new KafkaResponseHandler(
+    final var handler = new ResponseToKafkaTopicHandler(
       KafkaProducer.create(vertx, producer), TOPIC
     );
 
@@ -110,7 +108,7 @@ public class KafkaResponseHandlerTest {
       new StringSerializer(),
       new CloudEventSerializerMock()
     );
-    final var handler = new KafkaResponseHandler(
+    final var handler = new ResponseToKafkaTopicHandler(
       KafkaProducer.create(vertx, producer), TOPIC
     );
 
@@ -134,7 +132,7 @@ public class KafkaResponseHandlerTest {
       new StringSerializer(),
       new CloudEventSerializerMock()
     );
-    final var handler = new KafkaResponseHandler(
+    final var handler = new ResponseToKafkaTopicHandler(
       KafkaProducer.create(vertx, producer), TOPIC
     );
 
@@ -175,7 +173,7 @@ public class KafkaResponseHandlerTest {
     final var mockProducer = new MockProducer<String, CloudEvent>();
     when(producer.unwrap()).thenReturn(mockProducer);
 
-    final var sinkResponseHandler = new KafkaResponseHandler(
+    final var sinkResponseHandler = new ResponseToKafkaTopicHandler(
       producer, "topic"
     );
 

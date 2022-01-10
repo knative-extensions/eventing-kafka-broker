@@ -21,22 +21,12 @@ import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
-import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
-import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
-import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
-import dev.knative.eventing.kafka.broker.dispatcher.Filter;
-import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.KafkaResponseHandler;
+import dev.knative.eventing.kafka.broker.dispatcher.*;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherMutatorChain;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.BaseConsumerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventOverridesMutator;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OffsetManager;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseToKafkaTopicHandler;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.*;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.cloudevents.CloudEvent;
@@ -60,13 +50,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -171,7 +156,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
           new AttributesFilter(egress.getFilter().getAttributesMap()) :
           Filter.noop();
 
-        final var responseHandler = getNoopResponseHandlerOrDefault(egress, () -> getKafkaResponseHandler(vertx, producerConfigs, resource));
+          final var responseHandler = getResponseHandler(egress, () -> getResponseToKafkaTopicHandler(vertx, producerConfigs, resource));
         final var commitIntervalMs = Integer.parseInt(String.valueOf(consumerConfigs.get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG)));
 
         final var recordDispatcher = new RecordDispatcherMutatorChain(
@@ -202,19 +187,19 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     return getConsumerVerticle(deliveryOrder, initializer, new HashSet<>(resource.getTopicsList()));
   }
 
-  static ResponseHandler getNoopResponseHandlerOrDefault(final DataPlaneContract.Egress egress,
-                                                         final Supplier<ResponseHandler> defaultSupplier) {
+  static ResponseHandler getResponseHandler(final DataPlaneContract.Egress egress,
+                                            final Supplier<ResponseHandler> defaultSupplier) {
     if (egress.hasDiscardReply()) {
       return new NoopResponseHandler();
     }
     return defaultSupplier.get();
   }
 
-  private KafkaResponseHandler getKafkaResponseHandler(final Vertx vertx,
-                                                       final Map<String, Object> producerConfigs,
-                                                       final DataPlaneContract.Resource resource) {
+  private ResponseToKafkaTopicHandler getResponseToKafkaTopicHandler(final Vertx vertx,
+                                                                     final Map<String, Object> producerConfigs,
+                                                                     final DataPlaneContract.Resource resource) {
     final KafkaProducer<String, CloudEvent> producer = createProducer(vertx, producerConfigs);
-    return new KafkaResponseHandler(producer, resource.getTopics(0));
+    return new ResponseToKafkaTopicHandler(producer, resource.getTopics(0));
   }
 
   protected KafkaProducer<String, CloudEvent> createProducer(final Vertx vertx,
