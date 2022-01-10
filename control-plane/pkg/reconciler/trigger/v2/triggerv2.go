@@ -111,7 +111,6 @@ func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, trigger *event
 		}
 	}
 
-	//todo additionally handle trigger.Spec.Filter
 	newcg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(trigger.UID),
@@ -137,8 +136,6 @@ func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, trigger *event
 			},
 		},
 	}
-
-	//todo validate newcg
 
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(string(trigger.UID)) //Get by consumer group name
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -166,7 +163,7 @@ func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, trigger *event
 		Spec:       newcg.Spec,
 		Status:     cg.Status,
 	}
-	if _, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
+	if cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
 		return nil, fmt.Errorf("failed to update consumer group %s/%s: %w", newCg.GetNamespace(), newCg.GetName(), err)
 	}
 

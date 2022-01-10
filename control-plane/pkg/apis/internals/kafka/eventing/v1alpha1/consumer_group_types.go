@@ -93,6 +93,12 @@ type ConsumerGroupStatus struct {
 	// DeliveryStatus contains a resolved URL to the dead letter sink address, and any other
 	// resolved delivery options.
 	eventingduckv1.DeliveryStatus `json:",inline"`
+
+	// Replicas is the latest observed number of replicas of the given Template.
+	// These are replicas in the sense that they are instantiations of the
+	// same Template, but individual replicas also have a consistent identity.
+	// +optional
+	Replicas *int32 `json:"replicas,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
