@@ -44,7 +44,7 @@ func (kss *KafkaSourceSpec) Validate(ctx context.Context) *apis.FieldError {
 		errs = errs.Also(apis.ErrMissingField("topics"))
 	}
 	if len(kss.BootstrapServers) <= 0 {
-		errs = errs.Also(apis.ErrMissingField("bootstrapServer"))
+		errs = errs.Also(apis.ErrMissingField("bootstrapServers"))
 	}
 	switch kss.InitialOffset {
 	case OffsetEarliest, OffsetLatest:

@@ -29,7 +29,10 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
+	consolidatedmessaging "knative.dev/eventing-kafka/pkg/channel/consolidated/apis/messaging"
+
 	"knative.dev/pkg/apis"
 )
 
@@ -76,25 +79,25 @@ func WithKafkaChannelConfigReady() KafkaChannelOption {
 
 func WithKafkaChannelDeploymentNotReady(reason, message string) KafkaChannelOption {
 	return func(nc *v1beta1.KafkaChannel) {
-		nc.Status.MarkDispatcherFailed(reason, message)
+		consolidatedmessaging.MarkDispatcherFailed(&nc.Status, reason, message)
 	}
 }
 
 func WithKafkaChannelDeploymentReady() KafkaChannelOption {
 	return func(nc *v1beta1.KafkaChannel) {
-		nc.Status.PropagateDispatcherStatus(&appsv1.DeploymentStatus{Conditions: []appsv1.DeploymentCondition{{Type: appsv1.DeploymentAvailable, Status: corev1.ConditionTrue}}})
+		consolidatedmessaging.PropagateDispatcherStatus(&nc.Status, &appsv1.DeploymentStatus{Conditions: []appsv1.DeploymentCondition{{Type: appsv1.DeploymentAvailable, Status: corev1.ConditionTrue}}})
 	}
 }
 
 func WithKafkaChannelServicetNotReady(reason, message string) KafkaChannelOption {
 	return func(nc *v1beta1.KafkaChannel) {
-		nc.Status.MarkServiceFailed(reason, message)
+		consolidatedmessaging.MarkServiceFailed(&nc.Status, reason, message)
 	}
 }
 
 func WithKafkaChannelServiceReady() KafkaChannelOption {
 	return func(nc *v1beta1.KafkaChannel) {
-		nc.Status.MarkServiceTrue()
+		consolidatedmessaging.MarkServiceTrue(&nc.Status)
 	}
 }
 
@@ -112,13 +115,13 @@ func WithKafkaChannelChannelServiceReady() KafkaChannelOption {
 
 func WithKafkaChannelEndpointsNotReady(reason, message string) KafkaChannelOption {
 	return func(nc *v1beta1.KafkaChannel) {
-		nc.Status.MarkEndpointsFailed(reason, message)
+		consolidatedmessaging.MarkEndpointsFailed(&nc.Status, reason, message)
 	}
 }
 
 func WithKafkaChannelEndpointsReady() KafkaChannelOption {
 	return func(nc *v1beta1.KafkaChannel) {
-		nc.Status.MarkEndpointsTrue()
+		consolidatedmessaging.MarkEndpointsTrue(&nc.Status)
 	}
 }
 
