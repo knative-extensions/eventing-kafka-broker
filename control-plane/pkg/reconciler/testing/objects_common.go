@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	"k8s.io/utils/pointer"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
@@ -38,8 +37,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-
-	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 )
 
 const (
@@ -298,23 +295,5 @@ func StatusProbeFailed(status prober.Status) func(obj duckv1.KRShaped) {
 func allocateStatusAnnotations(obj duckv1.KRShaped) {
 	if obj.GetStatus().Annotations == nil {
 		obj.GetStatus().Annotations = make(map[string]string, 1)
-	}
-}
-
-func NewConsumerGroup() *internalscg.ConsumerGroup {
-	return &internalscg.ConsumerGroup{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: internalscg.ConsumerGroupGroupVersionKind.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      TriggerUUID,
-			Namespace: ServiceNamespace,
-		},
-		Spec: internalscg.ConsumerGroupSpec{
-			Template: internalscg.ConsumerTemplateSpec{
-				Spec: internalscg.ConsumerSpec{},
-			},
-			Replicas: pointer.Int32Ptr(1),
-		},
 	}
 }
