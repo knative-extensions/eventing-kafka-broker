@@ -51,7 +51,6 @@ const (
 	Subscription1URI      = "sub-1-uri"
 	Subscription2URI      = "sub-2-uri"
 	Subscription1ReplyURI = "sub-1-reply-uri"
-	Subscription2ReplyURI = "sub-2-reply-uri"
 )
 
 func ChannelTopic() string {
@@ -244,7 +243,7 @@ func Subscriber2(options ...subscriberInfoOption) *SubscriberInfo {
 			UID:           Subscription2UUID,
 			Generation:    1,
 			SubscriberURI: apis.HTTP(Subscription2URI),
-			ReplyURI:      apis.HTTP(Subscription2ReplyURI),
+			// no replies on this one
 		},
 		status: &eventingduckv1.SubscriberStatus{
 			UID:                Subscription2UUID,
