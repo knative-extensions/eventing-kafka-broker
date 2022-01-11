@@ -43,7 +43,10 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @Execution(ExecutionMode.CONCURRENT)
 @ExtendWith(VertxExtension.class)
