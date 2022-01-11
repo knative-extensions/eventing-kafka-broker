@@ -155,7 +155,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
         final var responseHandler = getResponseHandler(egress,
           () -> getResponseToKafkaTopicHandler(vertx, producerConfigs, resource),
-          () -> getResponseToHttpEndpointHandler(vertx, egress.getReplyUrl()));
+          () -> new ResponseToHttpEndpointHandler(createConsumerRecordSender(vertx, egress.getReplyUrl(), egressConfig)));
         final var commitIntervalMs = Integer.parseInt(String.valueOf(consumerConfigs.get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG)));
 
         final var recordDispatcher = new RecordDispatcherMutatorChain(
@@ -205,27 +205,6 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
                                                                      final DataPlaneContract.Resource resource) {
     final KafkaProducer<String, CloudEvent> producer = createProducer(vertx, producerConfigs);
     return new ResponseToKafkaTopicHandler(producer, resource.getTopics(0));
-  }
-
-  private ResponseToHttpEndpointHandler getResponseToHttpEndpointHandler(final Vertx vertx,
-                                                                         final String target) {
-
-    // TODO: dupe
-    final var circuitBreaker = CircuitBreaker
-      // TODO: egressConfig: null?
-      .create(target, vertx, createCircuitBreakerOptions(null))
-      // TODO: egressConfig: null?
-      .retryPolicy(computeRetryPolicy(null))
-      .openHandler(r -> logger.info("Circuit breaker opened {}", keyValue("target", target)))
-      .halfOpenHandler(r -> logger.info("Circuit breaker half-opened {}", keyValue("target", target)))
-      .closeHandler(r -> logger.info("Circuit breaker closed {}", keyValue("target", target)));
-
-    // TODO: dupe
-    WebClientCloudEventSender cloudEventSender = new WebClientCloudEventSender(
-      WebClient.create(vertx, this.webClientOptions), circuitBreaker, target
-    );
-
-    return new ResponseToHttpEndpointHandler(cloudEventSender);
   }
 
   protected KafkaProducer<String, CloudEvent> createProducer(final Vertx vertx,
