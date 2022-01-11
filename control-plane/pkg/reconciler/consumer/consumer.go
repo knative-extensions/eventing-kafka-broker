@@ -327,6 +327,9 @@ func removeResource(_ *zap.Logger, ct *contract.Contract, c *kafkainternals.Cons
 	return idx
 }
 
+// schedule mutates the ConfigMap associated with the pod specified by Consumer.Spec.PodBind.
+//
+// The actual mutation is done by calling the provided contractMutatorFunc.
 func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkainternals.Consumer, mutatorFunc contractMutatorFunc) (bool, error) {
 	// Get the data plane pod when the Consumer should be scheduled.
 	p, err := r.PodLister.Pods(c.Spec.PodBind.PodNamespace).Get(c.Spec.PodBind.PodName)
