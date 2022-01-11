@@ -18,11 +18,21 @@ package upgrade
 
 import (
 	pkgupgrade "knative.dev/pkg/test/upgrade"
+
+	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing-kafka-broker/test/e2e"
 )
 
 // BrokerPostUpgradeTest tests channel operations after upgrade.
 func BrokerPostUpgradeTest() pkgupgrade.Operation {
 	return pkgupgrade.NewOperation("BrokerPostUpgradeTest", func(c pkgupgrade.Context) {
 		runBrokerSmokeTest(c.T)
+	})
+}
+
+// SinkPostUpgradeTest tests sink basic operations post upgrade.
+func SinkPostUpgradeTest() pkgupgrade.Operation {
+	return pkgupgrade.NewOperation("SinkPostDowngradeTest", func(c pkgupgrade.Context) {
+		e2e.RunTestKafkaSink(c.T, eventing.ModeBinary, nil)
 	})
 }

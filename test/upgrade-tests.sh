@@ -21,6 +21,15 @@ readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
 
 source $(dirname $0)/e2e-common.sh
 
+# Override test_setup from e2e-common since we don't want to apply the latest release
+# before running the upgrade test.
+function test_setup() {
+  build_components_from_source || return $?
+
+  # Apply test configurations, and restart data plane components (we don't have hot reload)
+  ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
+}
+
 if ! ${SKIP_INITIALIZE}; then
   initialize $@ --skip-istio-addon
   save_release_artifacts || fail_test "Failed to save release artifacts"
