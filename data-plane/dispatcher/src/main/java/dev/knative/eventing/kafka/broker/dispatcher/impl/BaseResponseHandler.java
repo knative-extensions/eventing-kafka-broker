@@ -15,59 +15,36 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
-import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import java.util.Objects;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
-/**
- * This class implements a {@link ResponseHandler} that will convert the sink response into a {@link CloudEvent} and push it to Kafka.
- */
-public final class KafkaResponseHandler implements ResponseHandler {
+public abstract class BaseResponseHandler implements ResponseHandler {
 
-  private static final Logger logger = LoggerFactory.getLogger(KafkaResponseHandler.class);
+  protected final Logger logger;
 
-  private final String topic;
-  private final KafkaProducer<String, CloudEvent> producer;
-  private final AutoCloseable producerMeterBinder;
-
-  /**
-   * All args constructor.
-   *
-   * @param producer Kafka producer.
-   * @param topic    topic to produce records.
-   */
-  public KafkaResponseHandler(final KafkaProducer<String, CloudEvent> producer, final String topic) {
-
-    Objects.requireNonNull(topic, "provide topic");
-    Objects.requireNonNull(producer, "provide producer");
-
-    this.topic = topic;
-    this.producer = producer;
-    this.producerMeterBinder = Metrics.register(this.producer.unwrap());
+  public BaseResponseHandler(Logger logger) {
+    this.logger = logger;
   }
 
   /**
-   * Handle the given response.
+   * The {@link BaseResponseHandler} will convert the response from the sink into a CloudEvent. Implementations should
+   * handle the CloudEvent.
    *
-   * @param response response to handle
-   * @return a succeeded or failed future.
+   * @param event CloudEvent parsed from the sink response
+   * @return future for handling
    */
+  protected abstract Future<Void> doHandleEvent(CloudEvent event);
+
   @Override
-  public Future<Void> handle(final HttpResponse<Buffer> response) {
+  public Future<Void> handle(HttpResponse<Buffer> response) {
     CloudEvent event;
 
     try {
@@ -98,22 +75,12 @@ public final class KafkaResponseHandler implements ResponseHandler {
 
     TracingSpan.decorateCurrentWithEvent(event);
 
-    return producer
-      .send(KafkaProducerRecord.create(topic, event))
-      .mapEmpty();
+    return this.doHandleEvent(event);
   }
 
   private static boolean maybeIsNotEvent(final HttpResponse<Buffer> response) {
     // This checks whether there is something in the body or not, though binary events can contain only headers and they
     // are valid Cloud Events.
     return response == null || response.body() == null || response.body().length() <= 0;
-  }
-
-  @Override
-  public Future<Void> close() {
-    return CompositeFuture.all(
-      this.producer.close(),
-      AsyncCloseable.wrapAutoCloseable(producerMeterBinder).close()
-    ).mapEmpty();
   }
 }

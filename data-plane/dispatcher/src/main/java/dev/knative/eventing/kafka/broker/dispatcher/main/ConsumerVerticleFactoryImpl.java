@@ -26,10 +26,11 @@ import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.KafkaResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherMutatorChain;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseToHttpEndpointHandler;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseToKafkaTopicHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.BaseConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventOverridesMutator;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
@@ -171,7 +172,9 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
           new AttributesFilter(egress.getFilter().getAttributesMap()) :
           Filter.noop();
 
-        final var responseHandler = getNoopResponseHandlerOrDefault(egress, () -> getKafkaResponseHandler(vertx, producerConfigs, resource));
+        final var responseHandler = getResponseHandler(egress,
+          () -> getResponseToKafkaTopicHandler(vertx, producerConfigs, resource),
+          () -> new ResponseToHttpEndpointHandler(createConsumerRecordSender(vertx, egress.getReplyUrl(), egressConfig)));
         final var commitIntervalMs = Integer.parseInt(String.valueOf(consumerConfigs.get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG)));
 
         final var recordDispatcher = new RecordDispatcherMutatorChain(
@@ -202,19 +205,25 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     return getConsumerVerticle(deliveryOrder, initializer, new HashSet<>(resource.getTopicsList()));
   }
 
-  static ResponseHandler getNoopResponseHandlerOrDefault(final DataPlaneContract.Egress egress,
-                                                         final Supplier<ResponseHandler> defaultSupplier) {
-    if (egress.hasDiscardReply()) {
+  static ResponseHandler getResponseHandler(final DataPlaneContract.Egress egress,
+                                            final Supplier<ResponseHandler> kafkaSupplier,
+                                            final Supplier<ResponseHandler> httpSupplier) {
+    if(egress.hasReplyUrl()){
+      return httpSupplier.get();
+    } else if(egress.hasReplyToOriginalTopic()){
+      return kafkaSupplier.get();
+    } else if (egress.hasDiscardReply()) {
       return new NoopResponseHandler();
     }
-    return defaultSupplier.get();
+    //TODO: log
+    return kafkaSupplier.get();
   }
 
-  private KafkaResponseHandler getKafkaResponseHandler(final Vertx vertx,
-                                                       final Map<String, Object> producerConfigs,
-                                                       final DataPlaneContract.Resource resource) {
+  private ResponseToKafkaTopicHandler getResponseToKafkaTopicHandler(final Vertx vertx,
+                                                                     final Map<String, Object> producerConfigs,
+                                                                     final DataPlaneContract.Resource resource) {
     final KafkaProducer<String, CloudEvent> producer = createProducer(vertx, producerConfigs);
-    return new KafkaResponseHandler(producer, resource.getTopics(0));
+    return new ResponseToKafkaTopicHandler(producer, resource.getTopics(0));
   }
 
   protected KafkaProducer<String, CloudEvent> createProducer(final Vertx vertx,
