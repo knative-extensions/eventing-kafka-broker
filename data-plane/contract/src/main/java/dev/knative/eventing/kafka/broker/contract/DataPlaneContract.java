@@ -3325,6 +3325,42 @@ public final class DataPlaneContract {
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType getKeyType();
 
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     * @return Whether the reference field is set.
+     */
+    boolean hasReference();
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     * @return The reference.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getReference();
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder();
+
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.ReplyStrategyCase getReplyStrategyCase();
   }
   /**
@@ -3465,6 +3501,19 @@ public final class DataPlaneContract {
               int rawValue = input.readEnum();
 
               keyType_ = rawValue;
+              break;
+            }
+            case 90: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder subBuilder = null;
+              if (reference_ != null) {
+                subBuilder = reference_.toBuilder();
+              }
+              reference_ = input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(reference_);
+                reference_ = subBuilder.buildPartial();
+              }
+
               break;
             }
             default: {
@@ -3955,6 +4004,53 @@ public final class DataPlaneContract {
       return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.UNRECOGNIZED : result;
     }
 
+    public static final int REFERENCE_FIELD_NUMBER = 11;
+    private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference reference_;
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     * @return Whether the reference field is set.
+     */
+    @java.lang.Override
+    public boolean hasReference() {
+      return reference_ != null;
+    }
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     * @return The reference.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getReference() {
+      return reference_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance() : reference_;
+    }
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder() {
+      return getReference();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -3998,6 +4094,9 @@ public final class DataPlaneContract {
       }
       if (keyType_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.String.getNumber()) {
         output.writeEnum(10, keyType_);
+      }
+      if (reference_ != null) {
+        output.writeMessage(11, getReference());
       }
       unknownFields.writeTo(output);
     }
@@ -4044,6 +4143,10 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(10, keyType_);
       }
+      if (reference_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(11, getReference());
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -4077,6 +4180,11 @@ public final class DataPlaneContract {
       }
       if (deliveryOrder_ != other.deliveryOrder_) return false;
       if (keyType_ != other.keyType_) return false;
+      if (hasReference() != other.hasReference()) return false;
+      if (hasReference()) {
+        if (!getReference()
+            .equals(other.getReference())) return false;
+      }
       if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
       switch (replyStrategyCase_) {
         case 3:
@@ -4123,6 +4231,10 @@ public final class DataPlaneContract {
       hash = (53 * hash) + deliveryOrder_;
       hash = (37 * hash) + KEYTYPE_FIELD_NUMBER;
       hash = (53 * hash) + keyType_;
+      if (hasReference()) {
+        hash = (37 * hash) + REFERENCE_FIELD_NUMBER;
+        hash = (53 * hash) + getReference().hashCode();
+      }
       switch (replyStrategyCase_) {
         case 3:
           hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
@@ -4294,6 +4406,12 @@ public final class DataPlaneContract {
 
         keyType_ = 0;
 
+        if (referenceBuilder_ == null) {
+          reference_ = null;
+        } else {
+          reference_ = null;
+          referenceBuilder_ = null;
+        }
         replyStrategyCase_ = 0;
         replyStrategy_ = null;
         return this;
@@ -4354,6 +4472,11 @@ public final class DataPlaneContract {
         }
         result.deliveryOrder_ = deliveryOrder_;
         result.keyType_ = keyType_;
+        if (referenceBuilder_ == null) {
+          result.reference_ = reference_;
+        } else {
+          result.reference_ = referenceBuilder_.build();
+        }
         result.replyStrategyCase_ = replyStrategyCase_;
         onBuilt();
         return result;
@@ -4426,6 +4549,9 @@ public final class DataPlaneContract {
         }
         if (other.keyType_ != 0) {
           setKeyTypeValue(other.getKeyTypeValue());
+        }
+        if (other.hasReference()) {
+          mergeReference(other.getReference());
         }
         switch (other.getReplyStrategyCase()) {
           case REPLYURL: {
@@ -5692,6 +5818,188 @@ public final class DataPlaneContract {
         keyType_ = 0;
         onChanged();
         return this;
+      }
+
+      private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference reference_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> referenceBuilder_;
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       * @return Whether the reference field is set.
+       */
+      public boolean hasReference() {
+        return referenceBuilder_ != null || reference_ != null;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       * @return The reference.
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getReference() {
+        if (referenceBuilder_ == null) {
+          return reference_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance() : reference_;
+        } else {
+          return referenceBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public Builder setReference(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
+        if (referenceBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          reference_ = value;
+          onChanged();
+        } else {
+          referenceBuilder_.setMessage(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public Builder setReference(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder builderForValue) {
+        if (referenceBuilder_ == null) {
+          reference_ = builderForValue.build();
+          onChanged();
+        } else {
+          referenceBuilder_.setMessage(builderForValue.build());
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public Builder mergeReference(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
+        if (referenceBuilder_ == null) {
+          if (reference_ != null) {
+            reference_ =
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.newBuilder(reference_).mergeFrom(value).buildPartial();
+          } else {
+            reference_ = value;
+          }
+          onChanged();
+        } else {
+          referenceBuilder_.mergeFrom(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public Builder clearReference() {
+        if (referenceBuilder_ == null) {
+          reference_ = null;
+          onChanged();
+        } else {
+          reference_ = null;
+          referenceBuilder_ = null;
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder getReferenceBuilder() {
+        
+        onChanged();
+        return getReferenceFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder() {
+        if (referenceBuilder_ != null) {
+          return referenceBuilder_.getMessageOrBuilder();
+        } else {
+          return reference_ == null ?
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance() : reference_;
+        }
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> 
+          getReferenceFieldBuilder() {
+        if (referenceBuilder_ == null) {
+          referenceBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder>(
+                  getReference(),
+                  getParentForChildren(),
+                  isClean());
+          reference_ = null;
+        }
+        return referenceBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -16745,51 +17053,52 @@ public final class DataPlaneContract {
       "e\030\002 \001(\t:\0028\001\"\177\n\014EgressConfig\022\022\n\ndeadLette" +
       "r\030\001 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030" +
       "\003 \001(\0162\016.BackoffPolicy\022\024\n\014backoffDelay\030\004 " +
-      "\001(\004\022\017\n\007timeout\030\005 \001(\004\"\256\002\n\006Egress\022\025\n\rconsu" +
+      "\001(\004\022\017\n\007timeout\030\005 \001(\004\"\315\002\n\006Egress\022\025\n\rconsu" +
       "merGroup\030\001 \001(\t\022\023\n\013destination\030\002 \001(\t\022\022\n\010r" +
       "eplyUrl\030\003 \001(\tH\000\022&\n\024replyToOriginalTopic\030" +
       "\004 \001(\0132\006.EmptyH\000\022\036\n\014discardReply\030\t \001(\0132\006." +
       "EmptyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030" +
       "\006 \001(\t\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConf" +
       "ig\022%\n\rdeliveryOrder\030\010 \001(\0162\016.DeliveryOrde" +
-      "r\022\031\n\007keyType\030\n \001(\0162\010.KeyTypeB\017\n\rreplyStr" +
-      "ategy\"[\n\007Ingress\022!\n\013contentMode\030\001 \001(\0162\014." +
-      "ContentMode\022\016\n\004path\030\002 \001(\tH\000\022\016\n\004host\030\003 \001(" +
-      "\tH\000B\r\n\013ingressType\"K\n\tReference\022\014\n\004uuid\030" +
-      "\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017" +
-      "\n\007version\030\004 \001(\t\"`\n\017SecretReference\022\035\n\tre" +
-      "ference\030\001 \001(\0132\n.Reference\022.\n\022keyFieldRef" +
-      "erences\030\002 \003(\0132\022.KeyFieldReference\"C\n\021Key" +
-      "FieldReference\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005fie" +
-      "ld\030\003 \001(\0162\014.SecretField\"Y\n\024MultiSecretRef" +
-      "erence\022\033\n\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nr" +
-      "eferences\030\002 \003(\0132\020.SecretReference\"\202\001\n\023Cl" +
-      "oudEventOverrides\0228\n\nextensions\030\001 \003(\0132$." +
-      "CloudEventOverrides.ExtensionsEntry\0321\n\017E" +
-      "xtensionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001" +
-      "(\t:\0028\001\"\350\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topi" +
-      "cs\030\002 \003(\t\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007in" +
-      "gress\030\004 \001(\0132\010.Ingress\022#\n\014egressConfig\030\005 " +
-      "\001(\0132\r.EgressConfig\022\031\n\010egresses\030\006 \003(\0132\007.E" +
-      "gress\022\034\n\nabsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\na" +
-      "uthSecret\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAu" +
-      "thSecret\030\t \001(\0132\025.MultiSecretReferenceH\000\022" +
-      "1\n\023cloudEventOverrides\030\n \001(\0132\024.CloudEven" +
-      "tOverrides\022\035\n\treference\030\013 \001(\0132\n.Referenc" +
-      "eB\006\n\004Auth\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(" +
-      "\004\022\034\n\tresources\030\002 \003(\0132\t.Resource*,\n\rBacko" +
-      "ffPolicy\022\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n" +
-      "\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED" +
-      "\020\001*=\n\007KeyType\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n" +
-      "\n\006Double\020\002\022\r\n\tByteArray\020\003*)\n\013ContentMode" +
-      "\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013SecretFi" +
-      "eld\022\022\n\016SASL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010U" +
-      "SER_CRT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PAS" +
-      "SWORD\020\005*D\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SA" +
-      "SL_PLAINTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n" +
-      "*dev.knative.eventing.kafka.broker.contr" +
-      "actB\021DataPlaneContractZ\032control-plane/pk" +
-      "g/contractb\006proto3"
+      "r\022\031\n\007keyType\030\n \001(\0162\010.KeyType\022\035\n\treferenc" +
+      "e\030\013 \001(\0132\n.ReferenceB\017\n\rreplyStrategy\"[\n\007" +
+      "Ingress\022!\n\013contentMode\030\001 \001(\0162\014.ContentMo" +
+      "de\022\016\n\004path\030\002 \001(\tH\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013in" +
+      "gressType\"K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\t" +
+      "namespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version" +
+      "\030\004 \001(\t\"`\n\017SecretReference\022\035\n\treference\030\001" +
+      " \001(\0132\n.Reference\022.\n\022keyFieldReferences\030\002" +
+      " \003(\0132\022.KeyFieldReference\"C\n\021KeyFieldRefe" +
+      "rence\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162" +
+      "\014.SecretField\"Y\n\024MultiSecretReference\022\033\n" +
+      "\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nreferences" +
+      "\030\002 \003(\0132\020.SecretReference\"\202\001\n\023CloudEventO" +
+      "verrides\0228\n\nextensions\030\001 \003(\0132$.CloudEven" +
+      "tOverrides.ExtensionsEntry\0321\n\017Extensions" +
+      "Entry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002" +
+      "\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022" +
+      "\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001" +
+      "(\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.Egr" +
+      "essConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\n" +
+      "absentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret" +
+      "\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAuthSecret\030" +
+      "\t \001(\0132\025.MultiSecretReferenceH\000\0221\n\023cloudE" +
+      "ventOverrides\030\n \001(\0132\024.CloudEventOverride" +
+      "s\022\035\n\treference\030\013 \001(\0132\n.ReferenceB\006\n\004Auth" +
+      "\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\treso" +
+      "urces\030\002 \003(\0132\t.Resource*,\n\rBackoffPolicy\022" +
+      "\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n\rDelivery" +
+      "Order\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007Key" +
+      "Type\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020" +
+      "\002\022\r\n\tByteArray\020\003*)\n\013ContentMode\022\n\n\006BINAR" +
+      "Y\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013SecretField\022\022\n\016SA" +
+      "SL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002" +
+      "\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D" +
+      "\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINT" +
+      "EXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knat" +
+      "ive.eventing.kafka.broker.contractB\021Data" +
+      "PlaneContractZ\032control-plane/pkg/contrac" +
+      "tb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -16824,7 +17133,7 @@ public final class DataPlaneContract {
     internal_static_Egress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Egress_descriptor,
-        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "KeyType", "ReplyStrategy", });
+        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "KeyType", "Reference", "ReplyStrategy", });
     internal_static_Ingress_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_Ingress_fieldAccessorTable = new

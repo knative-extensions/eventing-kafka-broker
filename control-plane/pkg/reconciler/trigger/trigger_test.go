@@ -24,11 +24,12 @@ import (
 
 	"google.golang.org/protobuf/testing/protocmp"
 	"k8s.io/utils/pointer"
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/tracker"
+
+	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
@@ -53,13 +54,6 @@ import (
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 )
 
-const (
-	// name of the trigger under test
-	triggerName = "test-trigger"
-	// namespace of the trigger under test
-	triggerNamespace = "test-namespace"
-)
-
 var DefaultEnv = &config.Env{
 	DataPlaneConfigMapNamespace: "knative-eventing",
 	DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
@@ -74,7 +68,7 @@ var (
 	finalizerUpdatedEvent = Eventf(
 		corev1.EventTypeNormal,
 		"FinalizerUpdate",
-		fmt.Sprintf(`Updated %q finalizers`, triggerName),
+		fmt.Sprintf(`Updated %q finalizers`, TriggerName),
 	)
 
 	url = &apis.URL{
@@ -98,7 +92,7 @@ func TestTriggerReconciler(t *testing.T) {
 
 func triggerReconciliation(t *testing.T, format string, env config.Env) {
 
-	testKey := fmt.Sprintf("%s/%s", triggerNamespace, triggerName)
+	testKey := fmt.Sprintf("%s/%s", TriggerNamespace, TriggerName)
 
 	env.DataPlaneConfigFormat = format
 
@@ -141,6 +135,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 								},
 							},
 						},
@@ -205,6 +200,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
 									EgressConfig:  &contract.EgressConfig{DeadLetter: ServiceURL},
+									Reference:     TriggerReference(),
 								},
 							},
 						},
@@ -267,6 +263,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 									EgressConfig: &contract.EgressConfig{
 										DeadLetter:    url.String(),
 										Retry:         3,
@@ -337,6 +334,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 									DeliveryOrder: contract.DeliveryOrder_ORDERED,
 								},
 							},
@@ -401,6 +399,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 									DeliveryOrder: contract.DeliveryOrder_UNORDERED,
 								},
 							},
@@ -465,6 +464,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 									EgressConfig: &contract.EgressConfig{
 										DeadLetter:    url.String(),
 										Retry:         3,
@@ -517,6 +517,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 								},
 							},
 						},
@@ -540,6 +541,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 								},
 							},
 						},
@@ -567,6 +569,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 								},
 							},
 						},
@@ -587,6 +590,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 								},
 							},
 						},
@@ -807,6 +811,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 								},
 							},
 						},
@@ -874,6 +879,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 									Filter: &contract.Filter{Attributes: map[string]string{
 										"type": "type1",
 									}},
@@ -932,6 +938,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 								},
 								{
 									Destination:   "http://example.com/1",
@@ -1012,6 +1019,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 									Filter: &contract.Filter{Attributes: map[string]string{
 										"type": "type1",
 									}},
@@ -1248,6 +1256,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 									Filter: &contract.Filter{Attributes: map[string]string{
 										"ext": "extval",
 									}},
@@ -1459,6 +1468,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
 								},
 								{
 									Destination:   "http://example.com/3",
@@ -1580,7 +1590,7 @@ func TestTriggerFinalizer(t *testing.T) {
 
 func triggerFinalizer(t *testing.T, format string, env config.Env) {
 
-	testKey := fmt.Sprintf("%s/%s", triggerNamespace, triggerName)
+	testKey := fmt.Sprintf("%s/%s", TriggerNamespace, TriggerName)
 
 	env.DataPlaneConfigFormat = format
 
@@ -2316,8 +2326,8 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 
 func newTrigger(options ...reconcilertesting.TriggerOption) runtime.Object {
 	return reconcilertesting.NewTrigger(
-		triggerName,
-		triggerNamespace,
+		TriggerName,
+		TriggerNamespace,
 		BrokerName,
 		append(
 			options,
@@ -2368,8 +2378,8 @@ func withTriggerSubscriberResolvedSucceeded(deliveryOrder contract.DeliveryOrder
 
 func patchFinalizers() clientgotesting.PatchActionImpl {
 	action := clientgotesting.PatchActionImpl{}
-	action.Name = triggerName
-	action.Namespace = triggerNamespace
+	action.Name = TriggerName
+	action.Namespace = TriggerNamespace
 	patch := `{"metadata":{"finalizers":["` + FinalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action

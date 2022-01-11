@@ -276,6 +276,11 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 		Destination:   destination.String(),
 		ConsumerGroup: string(trigger.UID),
 		Uid:           string(trigger.UID),
+		Reference: &contract.Reference{
+			Uuid:      string(trigger.GetUID()),
+			Namespace: trigger.GetNamespace(),
+			Name:      trigger.GetName(),
+		},
 	}
 
 	if trigger.Spec.Filter != nil && trigger.Spec.Filter.Attributes != nil {

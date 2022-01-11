@@ -25,6 +25,7 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
@@ -149,5 +150,13 @@ func StatusSourceSinkNotResolved(err string) KRShapedOption {
 			"FailedToResolveSink",
 			err,
 		)
+	}
+}
+
+func SourceReference() *contract.Reference {
+	return &contract.Reference{
+		Namespace: SourceNamespace,
+		Name:      SourceName,
+		Uuid:      SourceUUID,
 	}
 }

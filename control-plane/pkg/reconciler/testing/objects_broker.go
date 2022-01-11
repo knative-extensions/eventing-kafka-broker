@@ -47,6 +47,9 @@ const (
 	BrokerNamespace = "test-namespace"
 	BrokerName      = "test-broker"
 
+	TriggerName      = "test-trigger"
+	TriggerNamespace = "test-namespace"
+
 	ConfigMapFinalizerName = "kafka.brokers.eventing.knative.dev/" + BrokerNamespace + "-" + BrokerName
 )
 
@@ -237,6 +240,14 @@ func BrokerReference() *contract.Reference {
 		Uuid:      BrokerUUID,
 		Namespace: BrokerNamespace,
 		Name:      BrokerName,
+	}
+}
+
+func TriggerReference() *contract.Reference {
+	return &contract.Reference{
+		Uuid:      TriggerUUID,
+		Namespace: TriggerNamespace,
+		Name:      TriggerName,
 	}
 }
 

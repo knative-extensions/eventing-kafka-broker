@@ -24,8 +24,10 @@ import (
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
+	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1"
 	"knative.dev/pkg/reconciler/testing"
 
 	eventingkafkachannels "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
@@ -118,6 +120,10 @@ func (l *Listers) GetSecretLister() corelisters.SecretLister {
 
 func (l *Listers) GetTriggerLister() eventinglisters.TriggerLister {
 	return eventinglisters.NewTriggerLister(l.indexerFor(&eventing.Trigger{}))
+}
+
+func (l *Listers) GetSubscriptionLister() messaginglisters.SubscriptionLister {
+	return messaginglisters.NewSubscriptionLister(l.indexerFor(&messaging.Subscription{}))
 }
 
 func (l *Listers) GetConfigMapLister() corelisters.ConfigMapLister {

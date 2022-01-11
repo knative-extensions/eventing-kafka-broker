@@ -98,6 +98,13 @@ message Egress {
 
   // Kafka record key type.
   KeyType keyType = 10;
+
+  // Resource reference.
+  //
+  // This reference is used to reference the associated resource for data plane
+  // activities such as:
+  // - tagging metrics
+  Reference reference = 11;
 }
 
 // CloudEvent content mode
