@@ -67,7 +67,7 @@ func RunTestKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func
 			require.Nil(t, opt(&kss))
 		}
 
-		t.Log(kss)
+		t.Logf("%+v", kss)
 
 		if sp != nil {
 			secretData := sp(t, client)
