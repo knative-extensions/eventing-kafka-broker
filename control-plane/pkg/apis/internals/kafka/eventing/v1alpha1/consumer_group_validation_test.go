@@ -108,7 +108,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Host:   "127.0.0.1",
 								},
 							},
-							PodBind: PodBind{
+							PodBind: &PodBind{
 								PodName:      "p-0",
 								PodNamespace: "ns",
 							},
@@ -143,7 +143,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Host:   "127.0.0.1",
 								},
 							},
-							PodBind: PodBind{
+							PodBind: &PodBind{
 								PodNamespace: "ns",
 							},
 						},
@@ -177,7 +177,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Host:   "127.0.0.1",
 								},
 							},
-							PodBind: PodBind{
+							PodBind: &PodBind{
 								PodName: "p-0",
 							},
 						},
@@ -210,7 +210,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Host:   "127.0.0.1",
 								},
 							},
-							PodBind: PodBind{
+							PodBind: &PodBind{
 								PodName:      "p-0",
 								PodNamespace: "ns",
 							},
@@ -240,7 +240,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Host:   "127.0.0.1",
 								},
 							},
-							PodBind: PodBind{
+							PodBind: &PodBind{
 								PodName:      "p-0",
 								PodNamespace: "ns",
 							},
@@ -274,7 +274,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Host:   "127.0.0.1",
 								},
 							},
-							PodBind: PodBind{
+							PodBind: &PodBind{
 								PodName:      "p-1",
 								PodNamespace: "ns",
 							},
@@ -304,7 +304,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Host:   "127.0.0.1",
 								},
 							},
-							PodBind: PodBind{
+							PodBind: &PodBind{
 								PodName:      "p-0",
 								PodNamespace: "ns",
 							},
@@ -338,7 +338,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Host:   "127.0.0.1",
 								},
 							},
-							PodBind: PodBind{
+							PodBind: &PodBind{
 								PodName:      "p-0",
 								PodNamespace: "ns-1",
 							},
@@ -368,7 +368,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Host:   "127.0.0.1",
 								},
 							},
-							PodBind: PodBind{
+							PodBind: &PodBind{
 								PodName:      "p-0",
 								PodNamespace: "ns-2",
 							},

@@ -44,11 +44,8 @@ func (cs *ConsumerSpec) Validate(ctx context.Context) *apis.FieldError {
 		cs.Filters.Validate(ctx).ViaField("filters"),
 		cs.Subscriber.Validate(ctx).ViaField("subscriber"),
 		cs.PodBind.Validate(ctx).ViaField("podBind"),
+		cs.CloudEventOverrides.Validate(ctx).ViaField("ceOverrides"),
 	)
-
-	if cs.CloudEventOverrides != nil {
-		err = err.Also(cs.CloudEventOverrides.Validate(ctx).ViaField("ceOverrides"))
-	}
 	return err
 }
 
@@ -76,7 +73,10 @@ func (f *Filters) Validate(ctx context.Context) *apis.FieldError {
 	return nil
 }
 
-func (p PodBind) Validate(ctx context.Context) *apis.FieldError {
+func (p *PodBind) Validate(ctx context.Context) *apis.FieldError {
+	if p == nil {
+		return apis.ErrMissingField("")
+	}
 	if len(p.PodName) == 0 {
 		return apis.ErrMissingField("podName")
 	}
@@ -89,7 +89,7 @@ func (p PodBind) Validate(ctx context.Context) *apis.FieldError {
 	return nil
 }
 
-func (p PodBind) CheckImmutableFields(ctx context.Context, original PodBind) *apis.FieldError {
+func (p PodBind) CheckImmutableFields(ctx context.Context, original *PodBind) *apis.FieldError {
 	if p.PodName != original.PodName || p.PodNamespace != original.PodNamespace {
 		return ErrImmutableField("podBind",
 			"Moving a consumer to a different pod is unsupported, to move a consumer to another pod, "+
