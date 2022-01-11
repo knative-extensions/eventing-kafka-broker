@@ -68,7 +68,7 @@ func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
 			BootstrapServers:  testingpkg.BootstrapServersPlaintextArr,
 		}
 
-		createFunc := sink.CreatorV1Alpha1(clientSet, kss)
+		createFunc := sink.CreatorV1Alpha1(clientSet, client.Tracker, kss)
 
 		kafkaSink, err := createFunc(types.NamespacedName{
 			Namespace: client.Namespace,

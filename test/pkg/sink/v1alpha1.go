@@ -21,13 +21,17 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	testlib "knative.dev/eventing/test/lib"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/test/pkg/addressable"
 )
 
-func CreatorV1Alpha1(clientset eventingv1alpha1.EventingV1alpha1Interface, spec eventing.KafkaSinkSpec) addressable.Creator {
+func CreatorV1Alpha1(
+	clientset eventingv1alpha1.EventingV1alpha1Interface,
+	tracker *testlib.Tracker,
+	spec eventing.KafkaSinkSpec) addressable.Creator {
 
 	return func(namespacedName types.NamespacedName) (addressable.Addressable, error) {
 
@@ -40,10 +44,11 @@ func CreatorV1Alpha1(clientset eventingv1alpha1.EventingV1alpha1Interface, spec 
 			Spec: spec,
 		}
 
-		_, err := clientset.KafkaSinks(namespacedName.Namespace).Create(ctx, ks, metav1.CreateOptions{})
+		ks, err := clientset.KafkaSinks(namespacedName.Namespace).Create(ctx, ks, metav1.CreateOptions{})
 		if err != nil {
 			return addressable.Addressable{}, err
 		}
+		tracker.AddObj(ks)
 
 		return addressable.Addressable{
 			NamespacedName: namespacedName,

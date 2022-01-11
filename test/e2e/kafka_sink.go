@@ -83,7 +83,7 @@ func RunTestKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func
 			client.Tracker.Add(corev1.GroupName, "v1", "Secret", secret.Namespace, secret.Name)
 		}
 
-		createFunc := sink.CreatorV1Alpha1(clientSet, kss)
+		createFunc := sink.CreatorV1Alpha1(clientSet, client.Tracker, kss)
 
 		kafkaSink, err := createFunc(types.NamespacedName{
 			Namespace: client.Namespace,

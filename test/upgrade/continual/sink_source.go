@@ -109,7 +109,7 @@ func (k kafkaSinkSourceSut) deploySink(ctx sut.Context) {
 		Namespace: ctx.Client.Namespace,
 		Name:      k.Sink.Name,
 	}
-	if _, err = sink.CreatorV1Alpha1(clientSet, k.Sink.Spec)(s); err != nil {
+	if _, err = sink.CreatorV1Alpha1(clientSet, ctx.Tracker, k.Sink.Spec)(s); err != nil {
 		ctx.T.Fatalf("failed to create KafkaSink %+v: %v", s, err)
 	}
 }
