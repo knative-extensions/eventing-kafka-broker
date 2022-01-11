@@ -197,7 +197,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
       return new NoopResponseHandler();
     }
     //TODO: log
-    return new NoopResponseHandler();
+    return kafkaSupplier.get();
   }
 
   private ResponseToKafkaTopicHandler getResponseToKafkaTopicHandler(final Vertx vertx,

@@ -317,8 +317,8 @@ public class ConsumerVerticleFactoryImplTest {
         return null;
       });
 
-    assertThat(r).isNotNull();
-    assertThat(kafkaCounter.get()).isEqualTo(0);
+    assertThat(r).isNull();
+    assertThat(kafkaCounter.get()).isEqualTo(1);
     assertThat(httpCounter.get()).isEqualTo(0);
   }
 }
