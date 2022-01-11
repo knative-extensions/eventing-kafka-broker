@@ -74,11 +74,21 @@ public class Metrics {
 
   /**
    * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
+   * @see Metrics#eventDispatchLatency(io.micrometer.core.instrument.Tags)
+   */
+  public static final String EVENT_PROCESSING_LATENCY = "event_processing_latencies";
+
+  /**
+   * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
    */
   public static class Tags {
     public static final String RESPONSE_CODE = "response_code";
     public static final String RESPONSE_CODE_CLASS = "response_code_class";
     public static final String EVENT_TYPE = "event_type";
+
+    public static final String RESOURCE_NAME = "name";
+    public static final String RESOURCE_NAMESPACE = "namespace_name";
+    public static final String CONSUMER_NAME = "consumer_name";
   }
 
   /**
@@ -189,6 +199,15 @@ public class Metrics {
     return DistributionSummary
       .builder(EVENT_DISPATCH_LATENCY)
       .description("The time spent dispatching an event to Kafka")
+      .tags(tags)
+      .baseUnit(BaseUnits.MILLISECONDS)
+      .serviceLevelObjectives(1, 2, 5, 10, 20, 50, 100, 500, 1000, 5000, 10000);
+  }
+
+  public static DistributionSummary.Builder eventProcessingLatency(final io.micrometer.core.instrument.Tags tags) {
+    return DistributionSummary
+      .builder(EVENT_PROCESSING_LATENCY)
+      .description("The time spent processing an event")
       .tags(tags)
       .baseUnit(BaseUnits.MILLISECONDS)
       .serviceLevelObjectives(1, 2, 5, 10, 20, 50, 100, 500, 1000, 5000, 10000);

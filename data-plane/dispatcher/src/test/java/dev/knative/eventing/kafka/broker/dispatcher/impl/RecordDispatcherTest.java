@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSenderMock;
@@ -48,18 +50,25 @@ import static org.mockito.Mockito.when;
 @ExtendWith(VertxExtension.class)
 public class RecordDispatcherTest {
 
+  private static final ResourceContext resourceContext = new ResourceContext(
+    DataPlaneContract.Resource.newBuilder().build(),
+    DataPlaneContract.Egress.newBuilder().build()
+  );
+
   @Test
   public void shouldNotSendToSubscriberNorToDeadLetterSinkIfValueDoesntMatch() {
 
     final RecordDispatcherListener receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcherImpl(
+      resourceContext,
       value -> false,
       CloudEventSender.noop("subscriber send called"),
       CloudEventSender.noop("DLS send called"),
       new ResponseHandlerMock(),
       receiver,
-      null
+      null,
+      Metrics.getRegistry()
     );
 
     final var record = record();
@@ -79,12 +88,14 @@ public class RecordDispatcherTest {
     final RecordDispatcherListener receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcherImpl(
-      value -> true, new CloudEventSenderMock(
-      record -> {
-        sendCalled.set(true);
-        return Future.succeededFuture();
-      }
-    ),
+      resourceContext,
+      value -> true,
+      new CloudEventSenderMock(
+        record -> {
+          sendCalled.set(true);
+          return Future.succeededFuture();
+        }
+      ),
       new CloudEventSenderMock(
         record -> {
           fail("DLS send called");
@@ -93,7 +104,8 @@ public class RecordDispatcherTest {
       ),
       new ResponseHandlerMock(),
       receiver,
-      null
+      null,
+      Metrics.getRegistry()
     );
     final var record = record();
     dispatcherHandler.dispatch(record);
@@ -114,12 +126,14 @@ public class RecordDispatcherTest {
     final RecordDispatcherListener receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcherImpl(
-      value -> true, new CloudEventSenderMock(
-      record -> {
-        subscriberSenderSendCalled.set(true);
-        return Future.failedFuture("");
-      }
-    ),
+      resourceContext,
+      value -> true,
+      new CloudEventSenderMock(
+        record -> {
+          subscriberSenderSendCalled.set(true);
+          return Future.failedFuture("");
+        }
+      ),
       new CloudEventSenderMock(
         record -> {
           dlsSenderSendCalled.set(true);
@@ -127,7 +141,8 @@ public class RecordDispatcherTest {
         }
       ), new ResponseHandlerMock(),
       receiver,
-      null
+      null,
+      Metrics.getRegistry()
     );
     final var record = record();
     dispatcherHandler.dispatch(record);
@@ -149,6 +164,7 @@ public class RecordDispatcherTest {
     final RecordDispatcherListener receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcherImpl(
+      resourceContext,
       value -> true, new CloudEventSenderMock(
       record -> {
         subscriberSenderSendCalled.set(true);
@@ -163,7 +179,8 @@ public class RecordDispatcherTest {
       ),
       new ResponseHandlerMock(),
       receiver,
-      null
+      null,
+      Metrics.getRegistry()
     );
     final var record = record();
     dispatcherHandler.dispatch(record);
@@ -183,6 +200,7 @@ public class RecordDispatcherTest {
     final RecordDispatcherListener receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcherImpl(
+      resourceContext,
       value -> true,
       new CloudEventSenderMock(
         record -> {
@@ -193,7 +211,8 @@ public class RecordDispatcherTest {
       CloudEventSender.noop("No DLS configured"),
       new ResponseHandlerMock(),
       receiver,
-      null
+      null,
+      Metrics.getRegistry()
     );
     final var record = record();
     dispatcherHandler.dispatch(record);
@@ -219,8 +238,14 @@ public class RecordDispatcherTest {
     when(deadLetterSender.close()).thenReturn(Future.succeededFuture());
 
     final RecordDispatcher recordDispatcher = new RecordDispatcherImpl(
-      Filter.noop(), subscriberSender,
-      deadLetterSender, sinkResponseHandler, offsetManagerMock(), null);
+      resourceContext,
+      Filter.noop(),
+      subscriberSender,
+      deadLetterSender,
+      sinkResponseHandler,
+      offsetManagerMock(),
+      null,
+      Metrics.getRegistry());
 
     recordDispatcher.close()
       .onFailure(context::failNow)

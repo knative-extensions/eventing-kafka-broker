@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
@@ -24,16 +25,21 @@ import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KafkaConsumerRecordUtils;
 import io.cloudevents.CloudEvent;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -51,12 +57,20 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private static final CloudEventDeserializer cloudEventDeserializer = new CloudEventDeserializer();
 
+  // When we don't have an HTTP response, due to other errors for networking, etc,
+  // we only add the code class tag in the "error" class (5xx).
+  private static final Tag NO_RESPONSE_CODE_CLASS_TAG = Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, "5xx");
+
   private final Filter filter;
-  private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<Void>> subscriberSender;
-  private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<Void>> dlsSender;
+  private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> subscriberSender;
+  private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> dlsSender;
   private final RecordDispatcherListener recordDispatcherListener;
   private final AsyncCloseable closeable;
   private final ConsumerTracer consumerTracer;
+  private final MeterRegistry meterRegistry;
+  private final ResourceContext resourceContext;
+
+  private final Tags noResponseResourceTags;
 
   /**
    * All args constructor.
@@ -69,24 +83,32 @@ public class RecordDispatcherImpl implements RecordDispatcher {
    * @param consumerTracer           consumer tracer
    */
   public RecordDispatcherImpl(
+    final ResourceContext resourceContext,
     final Filter filter,
     final CloudEventSender subscriberSender,
     final CloudEventSender deadLetterSinkSender,
     final ResponseHandler responseHandler,
     final RecordDispatcherListener recordDispatcherListener,
-    final ConsumerTracer consumerTracer) {
+    final ConsumerTracer consumerTracer,
+    final MeterRegistry meterRegistry) {
+    Objects.requireNonNull(resourceContext, "provide resourceContext");
     Objects.requireNonNull(filter, "provide filter");
     Objects.requireNonNull(subscriberSender, "provide subscriberSender");
     Objects.requireNonNull(deadLetterSinkSender, "provide deadLetterSinkSender");
     Objects.requireNonNull(recordDispatcherListener, "provide offsetStrategy");
     Objects.requireNonNull(responseHandler, "provide sinkResponseHandler");
+    Objects.requireNonNull(meterRegistry, "provide meterRegistry");
 
+    this.resourceContext = resourceContext;
     this.filter = filter;
     this.subscriberSender = composeSenderAndSinkHandler(subscriberSender, responseHandler, "subscriber");
     this.dlsSender = composeSenderAndSinkHandler(deadLetterSinkSender, responseHandler, "dead letter sink");
     this.recordDispatcherListener = recordDispatcherListener;
     this.closeable = AsyncCloseable.compose(responseHandler, deadLetterSinkSender, subscriberSender, recordDispatcherListener);
     this.consumerTracer = consumerTracer;
+    this.meterRegistry = meterRegistry;
+
+    this.noResponseResourceTags = resourceContext.getTags().and(NO_RESPONSE_CODE_CLASS_TAG);
   }
 
   /**
@@ -119,8 +141,9 @@ public class RecordDispatcherImpl implements RecordDispatcher {
      */
 
     try {
+      final var recordContext = new ConsumerRecordContext(record);
       Promise<Void> promise = Promise.promise();
-      onRecordReceived(maybeDeserializeValueFromHeaders(record), promise);
+      onRecordReceived(maybeDeserializeValueFromHeaders(recordContext), promise);
       return promise.future();
     } catch (final Exception ex) {
       // This is a fatal exception that shouldn't happen in normal cases.
@@ -137,14 +160,14 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     }
   }
 
-  private void onRecordReceived(final KafkaConsumerRecord<Object, CloudEvent> record, Promise<Void> finalProm) {
-    logDebug("Handling record", record);
+  private void onRecordReceived(final ConsumerRecordContext recordContext, Promise<Void> finalProm) {
+    logDebug("Handling record", recordContext.getRecord());
 
     // Trace record received event
     // This needs to be done manually in order to work properly with both ordered and unordered delivery.
     if (consumerTracer != null) {
       Context context = Vertx.currentContext();
-      ConsumerTracer.StartedSpan span = consumerTracer.prepareMessageReceived(context, record.record());
+      ConsumerTracer.StartedSpan span = consumerTracer.prepareMessageReceived(context, recordContext.getRecord().record());
       if (span != null) {
         finalProm.future()
           .onComplete(ar -> {
@@ -157,60 +180,82 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       }
     }
 
-    recordDispatcherListener.recordReceived(record);
+    recordDispatcherListener.recordReceived(recordContext.getRecord());
     // Execute filtering
-    if (filter.test(record.value())) {
-      onFilterMatching(record, finalProm);
+    final var pass = filter.test(recordContext.getRecord().value());
+
+    Metrics
+      .eventProcessingLatency(this.resourceContext.getTags())
+      .register(meterRegistry)
+      .record(recordContext.performLatency());
+
+    // reset timer to start calculating the dispatch latency.
+    recordContext.resetTimer();
+
+    if (pass) {
+      onFilterMatching(recordContext, finalProm);
     } else {
-      onFilterNotMatching(record, finalProm);
+      onFilterNotMatching(recordContext, finalProm);
     }
   }
 
-  private void onFilterMatching(final KafkaConsumerRecord<Object, CloudEvent> record, final Promise<Void> finalProm) {
-    logDebug("Record match filtering", record);
-    subscriberSender.apply(record)
-      .onSuccess(res -> onSubscriberSuccess(record, finalProm))
-      .onFailure(ex -> onSubscriberFailure(record, finalProm));
+  private void onFilterMatching(final ConsumerRecordContext recordContext, final Promise<Void> finalProm) {
+    logDebug("Record match filtering", recordContext.getRecord());
+    subscriberSender.apply(recordContext.getRecord())
+      .onSuccess(response -> onSubscriberSuccess(response, recordContext, finalProm))
+      .onFailure(ex -> onSubscriberFailure(ex, recordContext, finalProm));
   }
 
-  private void onFilterNotMatching(final KafkaConsumerRecord<Object, CloudEvent> record,
+  private void onFilterNotMatching(final ConsumerRecordContext recordContext,
                                    final Promise<Void> finalProm) {
-    logDebug("Record doesn't match filtering", record);
-    recordDispatcherListener.recordDiscarded(record);
+    logDebug("Record doesn't match filtering", recordContext.getRecord());
+    recordDispatcherListener.recordDiscarded(recordContext.getRecord());
     finalProm.complete();
   }
 
-  private void onSubscriberSuccess(final KafkaConsumerRecord<Object, CloudEvent> record,
+  private void onSubscriberSuccess(final HttpResponse<?> response,
+                                   final ConsumerRecordContext recordContext,
                                    final Promise<Void> finalProm) {
-    logDebug("Successfully sent event to subscriber", record);
-    recordDispatcherListener.successfullySentToSubscriber(record);
+    logDebug("Successfully sent event to subscriber", recordContext.getRecord());
+
+    incrementEventCount(response);
+    recordDispatchLatency(response, recordContext);
+
+    recordDispatcherListener.successfullySentToSubscriber(recordContext.getRecord());
     finalProm.complete();
   }
 
-  private void onSubscriberFailure(final KafkaConsumerRecord<Object, CloudEvent> record,
+  private void onSubscriberFailure(final Throwable failure,
+                                   final ConsumerRecordContext recordContext,
                                    final Promise<Void> finalProm) {
-    dlsSender.apply(record)
-      .onSuccess(v -> onDeadLetterSinkSuccess(record, finalProm))
-      .onFailure(ex -> onDeadLetterSinkFailure(record, ex, finalProm));
+
+    final var response = getResponse(failure);
+    incrementEventCount(response);
+    recordDispatchLatency(response, recordContext);
+
+    dlsSender.apply(recordContext.getRecord())
+      .onSuccess(v -> onDeadLetterSinkSuccess(recordContext, finalProm))
+      .onFailure(ex -> onDeadLetterSinkFailure(recordContext, ex, finalProm));
   }
 
-  private void onDeadLetterSinkSuccess(final KafkaConsumerRecord<Object, CloudEvent> record,
+  private void onDeadLetterSinkSuccess(final ConsumerRecordContext recordContext,
                                        final Promise<Void> finalProm) {
-    logDebug("Successfully sent event to the dead letter sink", record);
-    recordDispatcherListener.successfullySentToDeadLetterSink(record);
+    logDebug("Successfully sent event to the dead letter sink", recordContext.getRecord());
+    recordDispatcherListener.successfullySentToDeadLetterSink(recordContext.getRecord());
     finalProm.complete();
   }
 
 
-  private void onDeadLetterSinkFailure(final KafkaConsumerRecord<Object, CloudEvent> record, final Throwable exception,
+  private void onDeadLetterSinkFailure(final ConsumerRecordContext recordContext,
+                                       final Throwable exception,
                                        final Promise<Void> finalProm) {
-    recordDispatcherListener.failedToSendToDeadLetterSink(record, exception);
+    recordDispatcherListener.failedToSendToDeadLetterSink(recordContext.getRecord(), exception);
     finalProm.complete();
   }
 
-  private static KafkaConsumerRecord<Object, CloudEvent> maybeDeserializeValueFromHeaders(KafkaConsumerRecord<Object, CloudEvent> record) {
-    if (record.value() != null) {
-      return record;
+  private static ConsumerRecordContext maybeDeserializeValueFromHeaders(ConsumerRecordContext recordContext) {
+    if (recordContext.getRecord().value() != null) {
+      return recordContext;
     }
     // A valid CloudEvent in the CE binary protocol binding of Kafka
     // might be composed by only Headers.
@@ -220,19 +265,59 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     //
     // That means that we get a record with a null value and some CE
     // headers even though the record is a valid CloudEvent.
-    logDebug("Value is null", record);
-    final var value = cloudEventDeserializer.deserialize(record.record().topic(), record.record().headers(), null);
-    return new KafkaConsumerRecordImpl<>(KafkaConsumerRecordUtils.copyRecordAssigningValue(record.record(), value));
+    logDebug("Value is null", recordContext.getRecord());
+    final var value = cloudEventDeserializer.deserialize(recordContext.getRecord().record().topic(), recordContext.getRecord().record().headers(), null);
+    recordContext.setRecord(new KafkaConsumerRecordImpl<>(KafkaConsumerRecordUtils.copyRecordAssigningValue(recordContext.getRecord().record(), value)));
+    return recordContext;
   }
 
-  private static Function<KafkaConsumerRecord<Object, CloudEvent>, Future<Void>> composeSenderAndSinkHandler(
+  private static Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> composeSenderAndSinkHandler(
     CloudEventSender sender, ResponseHandler sinkHandler, String senderType) {
     return rec -> sender.send(rec.value())
       .onFailure(ex -> logError("Failed to send event to " + senderType, rec, ex))
       .compose(res ->
         sinkHandler.handle(res)
           .onFailure(ex -> logError("Failed to handle " + senderType + " response", rec, ex))
+          .map(v -> res)
       );
+  }
+
+  private void incrementEventCount(@Nullable final HttpResponse<?> response) {
+    Metrics
+      .eventCount(getTags(response))
+      .register(meterRegistry)
+      .increment();
+  }
+
+  private void recordDispatchLatency(final HttpResponse<?> response,
+                                     final ConsumerRecordContext recordContext) {
+    Metrics
+      .eventDispatchLatency(getTags(response))
+      .register(meterRegistry)
+      .record(recordContext.performLatency());
+  }
+
+  private HttpResponse<?> getResponse(final Throwable throwable) {
+    for (Throwable c = throwable; c != null; c = c.getCause()) {
+      if (c instanceof ResponseFailureException) {
+        final var response = (HttpResponse<?>) ((ResponseFailureException) c).getResponse();
+        return response;
+      }
+    }
+    return null;
+  }
+
+  private Tags getTags(HttpResponse<?> response) {
+    Tags tags;
+    if (response == null) {
+      tags = this.noResponseResourceTags;
+    } else {
+      tags = this.resourceContext.getTags().and(
+        Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, response.statusCode() / 100 + "xx"),
+        Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(response.statusCode()))
+      );
+    }
+    return tags;
   }
 
   private static void logError(

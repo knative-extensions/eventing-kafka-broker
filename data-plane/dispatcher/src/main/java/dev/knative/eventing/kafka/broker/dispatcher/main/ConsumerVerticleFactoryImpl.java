@@ -31,6 +31,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherMutatorChain;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseToHttpEndpointHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseToKafkaTopicHandler;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.ResourceContext;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.BaseConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventOverridesMutator;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
@@ -179,6 +180,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
         final var recordDispatcher = new RecordDispatcherMutatorChain(
           new RecordDispatcherImpl(
+            new ResourceContext(resource, egress),
             filter,
             egressSubscriberSender,
             egressDeadLetterSender,
@@ -190,7 +192,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
                 .setConfig(consumerConfigs)
                 // Make sure the policy is propagate for the manually instantiated consumer tracer
                 .setTracingPolicy(TracingPolicy.PROPAGATE)
-            )
+            ),
+            Metrics.getRegistry()
           ),
           new CloudEventOverridesMutator(resource.getCloudEventOverrides())
         );
