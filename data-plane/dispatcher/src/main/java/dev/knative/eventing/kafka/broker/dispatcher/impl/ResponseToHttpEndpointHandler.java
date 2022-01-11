@@ -17,7 +17,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
  * This class implements a {@link ResponseHandler} that will convert the sink response into a {@link CloudEvent} and post it to a URL.
  */
 // TODO: lots of dupe
-// TODO: does replies go to DLS?
+// TODO: metrics?
 public class ResponseToHttpEndpointHandler implements ResponseHandler {
 
   private static final Logger logger = LoggerFactory.getLogger(ResponseToKafkaTopicHandler.class);
@@ -71,6 +71,6 @@ public class ResponseToHttpEndpointHandler implements ResponseHandler {
 
   @Override
   public Future<Void> close() {
-    return null;
+    return this.cloudEventSender.close().mapEmpty();
   }
 }
