@@ -26,17 +26,25 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandlerMock;
 import io.cloudevents.CloudEvent;
+import io.micrometer.core.instrument.search.MeterNotFoundException;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -55,6 +63,19 @@ public class RecordDispatcherTest {
     DataPlaneContract.Egress.newBuilder().build()
   );
 
+  static {
+    BackendRegistries.setupBackend(new MicrometerMetricsOptions()
+      .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+      .setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+  }
+
+  private PrometheusMeterRegistry registry;
+
+  @BeforeEach
+  public void setUp() {
+    registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+  }
+
   @Test
   public void shouldNotSendToSubscriberNorToDeadLetterSinkIfValueDoesntMatch() {
 
@@ -68,7 +89,7 @@ public class RecordDispatcherTest {
       new ResponseHandlerMock(),
       receiver,
       null,
-      Metrics.getRegistry()
+      registry
     );
 
     final var record = record();
@@ -79,6 +100,10 @@ public class RecordDispatcherTest {
     verify(receiver, never()).successfullySentToSubscriber(any());
     verify(receiver, never()).successfullySentToDeadLetterSink(any());
     verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
+
+    assertNoEventCount();
+    assertNoEventDispatchLatency();
+    assertEventProcessingLatency();
   }
 
   @Test
@@ -105,7 +130,7 @@ public class RecordDispatcherTest {
       new ResponseHandlerMock(),
       receiver,
       null,
-      Metrics.getRegistry()
+      registry
     );
     final var record = record();
     dispatcherHandler.dispatch(record);
@@ -116,6 +141,10 @@ public class RecordDispatcherTest {
     verify(receiver, never()).successfullySentToDeadLetterSink(any());
     verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
     verify(receiver, never()).recordDiscarded(any());
+
+    assertEventDispatchLatency();
+    assertEventProcessingLatency();
+    assertEventCount();
   }
 
   @Test
@@ -142,7 +171,7 @@ public class RecordDispatcherTest {
       ), new ResponseHandlerMock(),
       receiver,
       null,
-      Metrics.getRegistry()
+      registry
     );
     final var record = record();
     dispatcherHandler.dispatch(record);
@@ -154,6 +183,10 @@ public class RecordDispatcherTest {
     verify(receiver, never()).successfullySentToSubscriber(any());
     verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
     verify(receiver, never()).recordDiscarded(any());
+
+    assertEventDispatchLatency();
+    assertEventProcessingLatency();
+    assertEventCount();
   }
 
   @Test
@@ -180,7 +213,7 @@ public class RecordDispatcherTest {
       new ResponseHandlerMock(),
       receiver,
       null,
-      Metrics.getRegistry()
+      registry
     );
     final var record = record();
     dispatcherHandler.dispatch(record);
@@ -192,6 +225,10 @@ public class RecordDispatcherTest {
     verify(receiver, never()).successfullySentToDeadLetterSink(any());
     verify(receiver, never()).successfullySentToSubscriber(any());
     verify(receiver, never()).recordDiscarded(any());
+
+    assertEventDispatchLatency();
+    assertEventProcessingLatency();
+    assertEventCount();
   }
 
   @Test
@@ -212,7 +249,7 @@ public class RecordDispatcherTest {
       new ResponseHandlerMock(),
       receiver,
       null,
-      Metrics.getRegistry()
+      registry
     );
     final var record = record();
     dispatcherHandler.dispatch(record);
@@ -223,6 +260,10 @@ public class RecordDispatcherTest {
     verify(receiver, never()).successfullySentToDeadLetterSink(any());
     verify(receiver, never()).successfullySentToSubscriber(any());
     verify(receiver, never()).recordDiscarded(any());
+
+    assertEventDispatchLatency();
+    assertEventProcessingLatency();
+    assertEventCount();
   }
 
   @Test
@@ -264,4 +305,80 @@ public class RecordDispatcherTest {
   public static RecordDispatcherListener offsetManagerMock() {
     return mock(RecordDispatcherListener.class);
   }
+
+  private void assertNoEventCount() {
+    var counterNotFound = false;
+    try {
+      assertThat(
+        registry
+          .get(Metrics.EVENTS_COUNT)
+          .counters()
+          .stream()
+          .reduce((a, b) -> b)
+          .isEmpty()
+      ).isTrue();
+    } catch (MeterNotFoundException ignored) {
+      counterNotFound = true;
+    }
+    assertThat(counterNotFound).isTrue();
+  }
+
+  private void assertEventCount() {
+    assertThat(
+      registry
+        .get(Metrics.EVENTS_COUNT)
+        .counters()
+        .stream()
+        .reduce((a, b) -> b)
+        .get()
+        .count()
+    ).isGreaterThan(0);
+  }
+
+
+  private void assertNoEventDispatchLatency() {
+    var dispatchLatencyNotFound = false;
+    try {
+      assertThat(
+        registry
+          .get(Metrics.EVENT_DISPATCH_LATENCY)
+          .summaries()
+          .stream()
+          .reduce((a, b) -> b)
+          .isEmpty()
+      ).isTrue();
+    } catch (MeterNotFoundException ignored) {
+      dispatchLatencyNotFound = true;
+    }
+    assertThat(dispatchLatencyNotFound).isTrue();
+  }
+
+  private void assertEventDispatchLatency() {
+    await().untilAsserted(() ->
+      assertThat(
+        registry
+          .get(Metrics.EVENT_DISPATCH_LATENCY)
+          .summaries()
+          .stream()
+          .reduce((a, b) -> b)
+          .get()
+          .max()
+      ).isGreaterThan(0)
+    );
+  }
+
+  private void assertEventProcessingLatency() {
+    await().untilAsserted(() ->
+      assertThat(
+        registry
+          .get(Metrics.EVENT_PROCESSING_LATENCY)
+          .summaries()
+          .stream()
+          .reduce((a, b) -> b)
+          .get()
+          .max()
+      ).isGreaterThan(0)
+    );
+  }
+
 }
