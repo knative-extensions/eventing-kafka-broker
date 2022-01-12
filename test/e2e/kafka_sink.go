@@ -24,6 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/utils/pointer"
 	testlib "knative.dev/eventing/test/lib"
 
@@ -57,7 +58,7 @@ func RunTestKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func
 		// Create a KafkaSink with the following spec.
 
 		kss := eventingv1alpha1.KafkaSinkSpec{
-			Topic:             "kafka-sink-" + client.Namespace,
+			Topic:             names.SimpleNameGenerator.GenerateName("kafka-sink-" + client.Namespace),
 			NumPartitions:     pointer.Int32Ptr(10),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
 			BootstrapServers:  BootstrapServersPlaintextArr,
