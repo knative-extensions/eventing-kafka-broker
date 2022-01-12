@@ -32,7 +32,7 @@ func BrokerPreUpgradeTest() pkgupgrade.Operation {
 
 // SinkPreUpgradeTest tests sink basic operations pre upgrade.
 func SinkPreUpgradeTest() pkgupgrade.Operation {
-	return pkgupgrade.NewOperation("SinkPostDowngradeTest", func(c pkgupgrade.Context) {
+	return pkgupgrade.NewOperation("SinkPreUpgradeTest", func(c pkgupgrade.Context) {
 		e2e.RunTestKafkaSink(c.T, eventing.ModeBinary, nil)
 	})
 }
