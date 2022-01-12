@@ -120,7 +120,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
 
       final var ingressInfo = new IngressProducerImpl(
         rc.getValue().getProducer(),
-        resource.getTopics(0),
+        resource,
         ingress.getPath(),
         producerProps
       );
@@ -223,11 +223,15 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     private final String topic;
     private final String path;
     private final Properties producerProperties;
+    private final DataPlaneContract.Reference reference;
 
-    IngressProducerImpl(final KafkaProducer<String, CloudEvent> producer, final String topic, final String path,
+    IngressProducerImpl(final KafkaProducer<String, CloudEvent> producer,
+                        final DataPlaneContract.Resource resource,
+                        final String path,
                         final Properties producerProperties) {
       this.producer = producer;
-      this.topic = topic;
+      this.topic = resource.getTopics(0);
+      this.reference = resource.getReference();
       this.path = path;
       this.producerProperties = producerProperties;
     }
@@ -240,6 +244,11 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     @Override
     public String getTopic() {
       return topic;
+    }
+
+    @Override
+    public DataPlaneContract.Reference getReference() {
+      return reference;
     }
 
     String getPath() {

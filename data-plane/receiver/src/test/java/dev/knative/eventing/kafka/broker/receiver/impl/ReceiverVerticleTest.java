@@ -25,15 +25,17 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
-import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil;
+import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Meter.Id;
-import io.micrometer.core.instrument.cumulative.CumulativeCounter;
+import io.micrometer.core.instrument.Measurement;
+import io.micrometer.core.instrument.search.MeterNotFoundException;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -51,6 +53,7 @@ import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -63,6 +66,8 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
@@ -82,12 +87,14 @@ public class ReceiverVerticleTest {
 
   private static MockProducer<String, CloudEvent> mockProducer;
   private static IngressProducerReconcilableStore store;
-  private static Counter badRequestCount;
-  private static Counter produceRequestCount;
 
   static {
-    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    BackendRegistries.setupBackend(new MicrometerMetricsOptions()
+      .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+      .setRegistryName(Metrics.METRICS_REGISTRY_NAME));
   }
+
+  private PrometheusMeterRegistry registry;
 
   @BeforeEach
   public void setUp(final Vertx vertx, final VertxTestContext testContext) {
@@ -101,14 +108,13 @@ public class ReceiverVerticleTest {
     );
     KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, mockProducer);
 
-    badRequestCount = new CumulativeCounter(mock(Id.class));
-    produceRequestCount = new CumulativeCounter(mock(Id.class));
-
     store = new IngressProducerReconcilableStore(
       AuthProvider.noAuth(),
       new Properties(),
       properties -> producer
     );
+
+    registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
 
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(PORT);
@@ -122,8 +128,7 @@ public class ReceiverVerticleTest {
       v -> store,
       new IngressRequestHandlerImpl(
         StrictRequestToRecordMapper.getInstance(),
-        badRequestCount,
-        produceRequestCount
+        registry
       )
     );
     vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));
@@ -132,6 +137,11 @@ public class ReceiverVerticleTest {
   @BeforeEach
   public void cleanUp() {
     mockProducer.clear();
+  }
+
+  @AfterEach
+  public void tearDownEach() {
+    registry.close();
   }
 
   @AfterAll
@@ -159,8 +169,38 @@ public class ReceiverVerticleTest {
           .as("verify path: " + tc.path)
           .isEqualTo(tc.responseStatusCode);
 
-        assertThat((double) tc.badRequestCount).isEqualTo(badRequestCount.count());
-        assertThat((double) tc.produceEventCount).isEqualTo(produceRequestCount.count());
+        final var expectedCount = (double) tc.badRequestCount + (double) tc.produceEventCount;
+
+        final var defaultCounter = Counter.builder(Metrics.EVENTS_COUNT).register(Metrics.getRegistry());
+        Counter counter = defaultCounter;
+        try {
+          if (expectedCount > 0) {
+            counter = registry.get(Metrics.EVENTS_COUNT).counters()
+              .stream()
+              .reduce((a, b) -> b) // get last element
+              .orElse(defaultCounter);
+          }
+        } catch (MeterNotFoundException ignored1) {
+        }
+
+        assertThat(counter.count())
+          .describedAs("Counter: " + StreamSupport
+            .stream(counter.measure().spliterator(), false)
+            .map(Measurement::toString)
+            .collect(Collectors.joining()))
+          .isEqualTo(expectedCount);
+
+        if (tc.expectedDispatchLatency) {
+          final var eventDispatchLatency = registry.get(Metrics.EVENT_DISPATCH_LATENCY)
+            .summaries()
+            .stream()
+            .reduce((a, b) -> b)
+            .get();
+
+          assertThat(eventDispatchLatency.max()).isGreaterThan(0);
+          assertThat(eventDispatchLatency.totalAmount()).isGreaterThan(0);
+          assertThat(eventDispatchLatency.mean()).isGreaterThan(0);
+        }
 
         checkpoints.flag();
         countDown.countDown();
@@ -384,6 +424,7 @@ public class ReceiverVerticleTest {
     final DataPlaneContract.Resource resource;
     final int badRequestCount;
     final int produceEventCount;
+    final boolean expectedDispatchLatency;
 
     TestCase(
       final ProducerRecord<String, CloudEvent> record,
@@ -407,6 +448,8 @@ public class ReceiverVerticleTest {
         produceEventsCount = 1;
       }
 
+      this.expectedDispatchLatency = responseStatusCode == ACCEPTED.code();
+
       this.badRequestCount = badRequestCount;
       this.produceEventCount = produceEventsCount;
     }
@@ -415,6 +458,14 @@ public class ReceiverVerticleTest {
       return DataPlaneContract.Contract.newBuilder()
         .addResources(this.resource)
         .build();
+    }
+
+    @Override
+    public String toString() {
+      return "TestCase{" +
+        "path='" + path + '\'' +
+        ", responseStatusCode=" + responseStatusCode +
+        '}';
     }
   }
 }

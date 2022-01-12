@@ -36,7 +36,7 @@ import java.util.function.Supplier;
 
 class ReceiverVerticleFactory implements Supplier<Verticle> {
 
-  private ReceiverEnv env;
+  private final ReceiverEnv env;
   private final Properties producerConfigs;
   private final HttpServerOptions httpServerOptions;
 
@@ -51,8 +51,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     this.httpServerOptions = httpServerOptions;
     this.ingressRequestHandler = new IngressRequestHandlerImpl(
       StrictRequestToRecordMapper.getInstance(),
-      metricsRegistry.counter(Metrics.HTTP_REQUESTS_MALFORMED_COUNT),
-      metricsRegistry.counter(Metrics.HTTP_REQUESTS_PRODUCE_COUNT)
+      metricsRegistry
     );
   }
 

@@ -15,11 +15,15 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
+import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.RequestToRecordMapper;
 import io.cloudevents.CloudEvent;
-import io.micrometer.core.instrument.Counter;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
@@ -28,6 +32,8 @@ import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.RecordMetadata;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +44,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class IngressRequestHandlerImplTest {
+
+  static {
+    BackendRegistries.setupBackend(new MicrometerMetricsOptions()
+      .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+      .setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+  }
 
   @Test
   public void shouldSendRecordAndTerminateRequestWithRecordProduced() {
@@ -72,11 +84,10 @@ public class IngressRequestHandlerImplTest {
 
     final var handler = new IngressRequestHandlerImpl(
       mapper,
-      mock(Counter.class),
-      mock(Counter.class)
+      Metrics.getRegistry()
     );
 
-    handler.handle(request, new IngressProducer() {
+    handler.handle(new RequestContext(request), new IngressProducer() {
       @Override
       public KafkaProducer<String, CloudEvent> getKafkaProducer() {
         return producer;
@@ -85,6 +96,11 @@ public class IngressRequestHandlerImplTest {
       @Override
       public String getTopic() {
         return "1-12345";
+      }
+
+      @Override
+      public DataPlaneContract.Reference getReference() {
+        return DataPlaneContract.Reference.newBuilder().build();
       }
     });
 
@@ -103,11 +119,10 @@ public class IngressRequestHandlerImplTest {
 
     final var handler = new IngressRequestHandlerImpl(
       mapper,
-      mock(Counter.class),
-      mock(Counter.class)
+      Metrics.getRegistry()
     );
 
-    handler.handle(request, new IngressProducer() {
+    handler.handle(new RequestContext(request), new IngressProducer() {
       @Override
       public KafkaProducer<String, CloudEvent> getKafkaProducer() {
         return producer;
@@ -116,6 +131,11 @@ public class IngressRequestHandlerImplTest {
       @Override
       public String getTopic() {
         return "1-12345";
+      }
+
+      @Override
+      public DataPlaneContract.Reference getReference() {
+        return DataPlaneContract.Reference.newBuilder().build();
       }
     });
 

@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.receiver.impl;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
+import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
@@ -117,6 +118,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
   @Override
   public void handle(HttpServerRequest request) {
 
+    final var requestContext = new RequestContext(request);
+
     // Look up for the ingress producer
     IngressProducer producer = this.ingressProducerStore.resolve(request.path());
     if (producer == null) {
@@ -133,6 +136,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     }
 
     // Invoke the ingress request handler
-    this.ingressRequestHandler.handle(request, producer);
+    this.ingressRequestHandler.handle(requestContext, producer);
   }
 }
