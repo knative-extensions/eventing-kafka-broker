@@ -131,6 +131,8 @@ function install_latest_release() {
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
   # kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
+
+  wait_until_pods_running knative-eventing || fail_test "System did not come up"
 }
 
 function install_head() {
@@ -141,6 +143,8 @@ function install_head() {
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
+
+  wait_until_pods_running knative-eventing || fail_test "System did not come up"
 }
 
 function test_setup() {
