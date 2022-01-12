@@ -21,14 +21,18 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
+	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
+	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 )
 
 const (
 	ConsumerNamePrefix = "test-cg"
 	ConsumerNamespace  = "test-cg-ns"
+	DeliveryOrder      = internals.Ordered
 )
 
 type ConsumerOption func(cg *kafkainternals.Consumer)
@@ -81,6 +85,24 @@ func NewConsumerSpec(opts ...ConsumerSpecOption) kafkainternals.ConsumerSpec {
 	return *spec
 }
 
+func NewConsumerSpecDelivery(order internals.DeliveryOrdering) *kafkainternals.DeliverySpec {
+	return &kafkainternals.DeliverySpec{
+		Ordering: order,
+	}
+}
+
+func NewConsumerSpecAuth() *kafkainternals.Auth {
+	return &kafkainternals.Auth{
+		NetSpec: &v1beta1.KafkaNetSpec{},
+	}
+}
+
+func NewConsumerSpecFilters() *kafkainternals.Filters {
+	return &kafkainternals.Filters{
+		Filter: &v1.TriggerFilter{},
+	}
+}
+
 func ConsumerSpec(spec kafkainternals.ConsumerSpec) ConsumerOption {
 	return func(cg *kafkainternals.Consumer) {
 		cg.Spec = spec
@@ -128,5 +150,35 @@ func ConsumerGroupIdConfig(s string) ConsumerConfigsOption {
 func ConsumerVReplicas(vreplicas int32) ConsumerSpecOption {
 	return func(c *kafkainternals.ConsumerSpec) {
 		c.VReplicas = &vreplicas
+	}
+}
+
+func ConsumerAuth(auth *kafkainternals.Auth) ConsumerSpecOption {
+	return func(c *kafkainternals.ConsumerSpec) {
+		c.Auth = auth
+	}
+}
+
+func ConsumerDelivery(delivery *kafkainternals.DeliverySpec) ConsumerSpecOption {
+	return func(c *kafkainternals.ConsumerSpec) {
+		c.Delivery = delivery
+	}
+}
+
+func ConsumerSubscriber(dest duckv1.Destination) ConsumerSpecOption {
+	return func(c *kafkainternals.ConsumerSpec) {
+		c.Subscriber = dest
+	}
+}
+
+func ConsumerCloudEventOverrides(ce *duckv1.CloudEventOverrides) ConsumerSpecOption {
+	return func(c *kafkainternals.ConsumerSpec) {
+		c.CloudEventOverrides = ce
+	}
+}
+
+func ConsumerFilters(filters *kafkainternals.Filters) ConsumerSpecOption {
+	return func(c *kafkainternals.ConsumerSpec) {
+		c.Filters = filters
 	}
 }

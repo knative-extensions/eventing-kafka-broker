@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -45,15 +46,16 @@ const (
 var (
 	conditionSet = apis.NewLivingConditionSet(
 		KafkaConditionConsumerGroup,
+		sources.KafkaConditionSinkProvided,
 	)
 )
 
-type ReconcilerV2 struct {
+type Reconciler struct {
 	ConsumerGroupLister internalslst.ConsumerGroupLister
 	InternalsClient     internalsclient.Interface
 }
 
-func (r *ReconcilerV2) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
 
 	consgroup, err := r.reconcileConsumerGroup(ctx, ks)
 	if err != nil {
@@ -64,12 +66,12 @@ func (r *ReconcilerV2) ReconcileKind(ctx context.Context, ks *sources.KafkaSourc
 
 	ks.Status.MarkSink(consgroup.Status.SubscriberURI)
 	ks.Status.Placeable = consgroup.Status.Placeable
-	ks.Status.Consumers = *consgroup.Status.Replicas
+	ks.Status.Consumers = pointer.Int32Deref(consgroup.Status.Replicas, 0)
 
 	return nil
 }
 
-func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
+func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
 
 	newcg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
@@ -94,13 +96,16 @@ func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, ks *sources.Ka
 						Ordering: DefaultDeliveryOrder,
 					},
 					Subscriber: ks.Spec.Sink,
-					CloudEventOverrides: &duckv1.CloudEventOverrides{
-						Extensions: ks.Spec.CloudEventOverrides.Extensions,
-					},
 				},
 			},
 			Replicas: ks.Spec.Consumers,
 		},
+	}
+
+	if ks.Spec.CloudEventOverrides != nil {
+		newcg.Spec.Template.Spec.CloudEventOverrides = &duckv1.CloudEventOverrides{
+			Extensions: ks.Spec.CloudEventOverrides.Extensions,
+		}
 	}
 
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(ks.GetNamespace()).Get(string(ks.UID)) //Get by consumer group id
