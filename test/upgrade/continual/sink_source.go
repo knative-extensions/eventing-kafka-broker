@@ -17,6 +17,7 @@
 package continual
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/stretchr/testify/require"
@@ -112,6 +113,19 @@ func (k kafkaSinkSourceSut) deploySink(ctx sut.Context) {
 	if _, err = sink.CreatorV1Alpha1(clientSet, ctx.Tracker, k.Sink.Spec)(s); err != nil {
 		ctx.T.Fatalf("failed to create KafkaSink %+v: %v", s, err)
 	}
+
+	tm := metav1.TypeMeta{Kind: "KafkaSink", APIVersion: eventing.SchemeGroupVersion.String()}
+
+	ctx.Client.WaitForResourceReadyOrFail(k.Sink.Name, &tm)
+
+	ks, err := clientSet.KafkaSinks(ctx.Namespace).Get(ctx.Ctx, k.Sink.Name, metav1.GetOptions{})
+	if err != nil {
+		ctx.T.Logf("Failed to get KafkaSink %s/%s: %v", ctx.Namespace, k.Sink.Name, err)
+		return
+	}
+
+	b, _ := json.MarshalIndent(ks, "", " ")
+	ctx.T.Logf(string(b))
 }
 
 func (k kafkaSinkSourceSut) deploySource(ctx sut.Context, destination duckv1.Destination) {
