@@ -17,9 +17,48 @@
 package v1alpha1
 
 import (
+	"fmt"
+
 	"knative.dev/pkg/apis"
+	"knative.dev/pkg/reconciler"
+)
+
+const (
+	ConsumerConditionContract = "Contract"
+	ConsumerConditionBind     = "Bind"
+)
+
+var (
+	consumerConditionSet = apis.NewLivingConditionSet(
+		ConsumerConditionContract,
+		ConsumerConditionBind,
+	)
 )
 
 func (c *Consumer) GetConditionSet() apis.ConditionSet {
-	return apis.NewLivingConditionSet()
+	return consumerConditionSet
+}
+
+func (c *Consumer) MarkReconcileContractFailed(err error) reconciler.Event {
+	err = fmt.Errorf("failed to reconcile contract: %w", err)
+	c.GetConditionSet().Manage(c.GetStatus()).MarkFalse(ConsumerConditionContract, "ReconcileContract", err.Error())
+	return err
+}
+
+func (c *Consumer) MarkReconcileContractSucceeded() {
+	c.GetConditionSet().Manage(c.GetStatus()).MarkTrue(ConsumerConditionContract)
+}
+
+func (c *Consumer) MarkBindFailed(err error) reconciler.Event {
+	err = fmt.Errorf("failed to bind resource to pod: %w", err)
+	c.GetConditionSet().Manage(c.GetStatus()).MarkFalse(ConsumerConditionBind, "ConsumerBinding", err.Error())
+	return err
+}
+
+func (c *Consumer) MarkBindInProgress() {
+	c.GetConditionSet().Manage(c.GetStatus()).MarkFalse(ConsumerConditionBind, "BindInProgress", "")
+}
+
+func (c *Consumer) MarkBindSucceeded() {
+	c.GetConditionSet().Manage(c.GetStatus()).MarkTrue(ConsumerConditionBind)
 }

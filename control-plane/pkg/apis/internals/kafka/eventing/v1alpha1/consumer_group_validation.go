@@ -42,5 +42,9 @@ func (cgs *ConsumerGroupSpec) Validate(ctx context.Context) *apis.FieldError {
 }
 
 func (cts *ConsumerTemplateSpec) Validate(ctx context.Context) *apis.FieldError {
-	return cts.Spec.Validate(ctx).ViaField("spec")
+	specCtx := ctx
+	if apis.IsInUpdate(ctx) {
+		specCtx = apis.WithinUpdate(ctx, apis.GetBaseline(ctx).(*ConsumerGroup).Spec.Template.Spec)
+	}
+	return cts.Spec.Validate(specCtx).ViaField("spec")
 }

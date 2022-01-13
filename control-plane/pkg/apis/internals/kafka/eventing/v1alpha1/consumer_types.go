@@ -75,6 +75,10 @@ type ConsumerSpec struct {
 	// +optional
 	Delivery *DeliverySpec `json:"delivery,omitempty"`
 
+	// Reply is the strategy to handle event replies.
+	// +optional
+	Reply *ReplyStrategy `json:"reply,omitempty"`
+
 	// Filters is a set of filters.
 	// +optional
 	Filters *Filters `json:"filters,omitempty"`
@@ -92,6 +96,19 @@ type ConsumerSpec struct {
 
 	// PodBind represents a reference to the pod in which the consumer should be placed.
 	PodBind *PodBind `json:"podBind"`
+}
+
+type ReplyStrategy struct {
+	TopicReply *TopicReply
+	URLReply   *DestinationReply
+	NoReply    *struct{}
+}
+
+type TopicReply struct {
+}
+
+type DestinationReply struct {
+	Destination duckv1.Destination
 }
 
 type Auth struct {
