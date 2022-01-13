@@ -285,6 +285,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return err
 	}
 
+	broker.Status.Address.URL = nil
+
 	//  Rationale: after deleting a topic closing a producer ends up blocking and requesting metadata for max.block.ms
 	//  because topic metadata aren't available anymore.
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
