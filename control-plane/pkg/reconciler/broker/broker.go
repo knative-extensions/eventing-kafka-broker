@@ -283,12 +283,24 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return err
 	}
 
-	// TODO probe (as in #974) and check if status code is 404 otherwise requeue and return.
+	broker.Status.Address.URL = nil
+
 	//  Rationale: after deleting a topic closing a producer ends up blocking and requesting metadata for max.block.ms
 	//  because topic metadata aren't available anymore.
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
+	address := receiver.Address(r.IngressHost, broker)
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: broker.GetNamespace(),
+			Name:      broker.GetName(),
+		},
+	}
+	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusNotReady {
+		return nil // Object will get re-queued once probe status changes.
+	}
 
 	topicConfig, brokerConfig, err := r.topicConfig(ctx, logger, broker)
 	if err != nil {
