@@ -1145,6 +1145,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 			OtherTestData: map[string]interface{}{
 				wantErrorOnDeleteTopic: deleteTopicError,
 				wantTopicName:          "topic-2",
+				testProber:             probertesting.MockProber(prober.StatusNotReady),
 			},
 		},
 	}
