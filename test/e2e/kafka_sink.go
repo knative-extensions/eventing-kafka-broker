@@ -39,7 +39,61 @@ const (
 	sinkSecretName = "secret-test"
 )
 
-func RunTestKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func(kss *eventingv1alpha1.KafkaSinkSpec) error) {
+func RunKafkaSinkTestSuite(t *testing.T) {
+	t.Parallel()
+
+	t.Run("default content mode", func(t *testing.T) {
+		RunTestKafkaSink(t, nil,
+			withContentMode(""),
+		)
+	})
+
+	t.Run("structured content mode", func(t *testing.T) {
+		RunTestKafkaSink(t, nil,
+			withContentMode(eventingv1alpha1.ModeStructured),
+		)
+	})
+
+	t.Run("binary content mode", func(t *testing.T) {
+		RunTestKafkaSink(t, nil,
+			withContentMode(eventingv1alpha1.ModeStructured),
+		)
+	})
+
+	t.Run("Plaintext", func(t *testing.T) {
+		RunTestKafkaSink(t,
+			Plaintext,
+			withBootstrap(BootstrapServersPlaintextArr),
+			withSecret,
+		)
+	})
+
+	t.Run("SSL", func(t *testing.T) {
+		RunTestKafkaSink(t,
+			Ssl,
+			withBootstrap(BootstrapServersSslArr),
+			withSecret,
+		)
+	})
+
+	t.Run("SASL Plaintext", func(t *testing.T) {
+		RunTestKafkaSink(t,
+			SaslPlaintextScram512,
+			withBootstrap(BootstrapServersSaslPlaintextArr),
+			withSecret,
+		)
+	})
+
+	t.Run("SSL SASL SCRAM 512", func(t *testing.T) {
+		RunTestKafkaSink(t,
+			SslSaslScram512,
+			withBootstrap(BootstrapServersSslSaslScramArr),
+			withSecret,
+		)
+	})
+}
+
+func RunTestKafkaSink(t *testing.T, sp SecretProvider, opts ...func(kss *eventingv1alpha1.KafkaSinkSpec) error) {
 	RunMultiple(t, func(t *testing.T) {
 
 		ctx := context.Background()
@@ -61,7 +115,6 @@ func RunTestKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func
 			NumPartitions:     pointer.Int32Ptr(10),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
 			BootstrapServers:  BootstrapServersPlaintextArr,
-			ContentMode:       pointer.StringPtr(mode),
 		}
 		for _, opt := range opts {
 			require.Nil(t, opt(&kss))
@@ -101,6 +154,31 @@ func RunTestKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func
 		ids := addressable.Send(t, kafkaSink)
 
 		// Read events from the topic.
-		sink.Verify(t, client, mode, kss.Topic, ids)
+		sink.Verify(t, client, *ks.Spec.ContentMode, kss.Topic, ids)
 	})
+}
+
+func withSecret(kss *eventingv1alpha1.KafkaSinkSpec) error {
+	kss.Auth = &eventingv1alpha1.Auth{
+		Secret: &eventingv1alpha1.Secret{
+			Ref: &eventingv1alpha1.SecretReference{
+				Name: sinkSecretName,
+			},
+		},
+	}
+	return nil
+}
+
+func withBootstrap(bs []string) func(kss *eventingv1alpha1.KafkaSinkSpec) error {
+	return func(kss *eventingv1alpha1.KafkaSinkSpec) error {
+		kss.BootstrapServers = bs
+		return nil
+	}
+}
+
+func withContentMode(mode string) func(kss *eventingv1alpha1.KafkaSinkSpec) error {
+	return func(kss *eventingv1alpha1.KafkaSinkSpec) error {
+		kss.ContentMode = pointer.String(mode)
+		return nil
+	}
 }
