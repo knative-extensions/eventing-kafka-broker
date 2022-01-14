@@ -187,3 +187,11 @@ If you're unsure, whether you need to run it or not for your changes, run [our b
 ```shell
 kind delete cluster
 ```
+
+### Building From Source
+
+```shell
+./hack/run build-from-source
+```
+
+The project root directory will contain artifacts that are part of the released assets.
