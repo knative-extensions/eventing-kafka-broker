@@ -18,15 +18,20 @@ package v2
 
 import (
 	"context"
+	"net/http"
 
+	"github.com/Shopify/sarama"
 	"k8s.io/client-go/tools/cache"
 
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	kafkachannelinformer "knative.dev/eventing-kafka/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
 	kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	"knative.dev/pkg/network"
 
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 
 	"knative.dev/pkg/controller"
@@ -46,17 +51,22 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
+			KubeClient:                  kubeclient.Get(ctx),
 			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
 			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
 		},
-		Env:                 configs,
-		ConfigMapLister:     configmapInformer.Lister(),
-		ConsumerGroupLister: consumerGroupInformer.Lister(),
-		InternalsClient:     consumergroupclient.Get(ctx),
+		NewKafkaClient:             sarama.NewClient,
+		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
+		Env:                        configs,
+		ConfigMapLister:            configmapInformer.Lister(),
+		ConsumerGroupLister:        consumerGroupInformer.Lister(),
+		InternalsClient:            consumergroupclient.Get(ctx),
 	}
 
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)
+	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, configs.IngressPodPort, reconciler.ReceiverSelector(), impl.EnqueueKey)
+	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
 
 	channelInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		Handler: controller.HandleAll(impl.Enqueue),
