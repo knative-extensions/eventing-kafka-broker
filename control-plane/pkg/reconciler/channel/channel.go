@@ -322,6 +322,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 		logger.Debug("Contract config map updated")
 	}
 
+	channel.Status.Address = nil
+
 	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
 	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
 	// to update anyway remaining annotations with the contract generation that was saved in the CM.
@@ -336,12 +338,22 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 		return err
 	}
 
-	// TODO probe (as in #974) and check if status code is 404 otherwise requeue and return.
 	//  Rationale: after deleting a topic closing a producer ends up blocking and requesting metadata for max.block.ms
 	//  because topic metadata aren't available anymore.
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
+	address := receiver.Address(r.IngressHost, channel)
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: channel.GetNamespace(),
+			Name:      channel.GetName(),
+		},
+	}
+	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusNotReady {
+		return nil // Object will get re-queued once probe status changes.
+	}
 
 	// get the channel configmap
 	channelConfigMap, err := r.channelConfigMap()
