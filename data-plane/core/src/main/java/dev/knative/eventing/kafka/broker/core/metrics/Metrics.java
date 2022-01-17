@@ -97,8 +97,6 @@ public class Metrics {
    */
   public static MetricsOptions getOptions(final BaseEnv metricsConfigs) {
     final var registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
-    registry.config().namingConvention(NamingConvention.identity);
-
     return new MicrometerMetricsOptions()
       .setEnabled(true)
       .addDisabledMetricsCategory(MetricsDomain.EVENT_BUS)
