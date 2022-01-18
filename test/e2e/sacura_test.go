@@ -30,9 +30,15 @@ import (
 	"github.com/stretchr/testify/require"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/utils/pointer"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
+	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	testlib "knative.dev/eventing/test/lib"
 
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
@@ -42,7 +48,11 @@ import (
 const (
 	app                            = "sacura"
 	sacuraVerifyCommittedOffsetJob = "verify-committed-offset"
-	sacuraTriggerName              = "trigger"
+
+	sacuraChannelName      = "channel"
+	sacuraTriggerName      = "trigger"
+	sacuraSubscriptionName = "subscription"
+	sacuraSourceName       = "source"
 
 	pollTimeout  = 30 * time.Minute
 	pollInterval = 10 * time.Second
@@ -65,17 +75,12 @@ type SacuraTestConfig struct {
 	SourceTopic *string
 }
 
-func TestSacuraJob(t *testing.T) {
-	runSacuraTest(t, SacuraTestConfig{
-		Namespace:   "sacura",
-		BrokerTopic: pointer.StringPtr("knative-broker-sacura-sacura"),
-	})
-}
-
 func TestSacuraSinkSourceBrokerChannelJob(t *testing.T) {
 	runSacuraTest(t, SacuraTestConfig{
-		Namespace:   "sacura-sink-source-broker-channel",
-		BrokerTopic: pointer.StringPtr("knative-broker-sacura-sink-source-broker-channel-broker"),
+		Namespace:    "sacura-sink-source-broker-channel",
+		BrokerTopic:  pointer.StringPtr("knative-broker-sacura-sink-source-broker-channel-broker"),
+		ChannelTopic: pointer.StringPtr("knative-messaging-kafka.sacura-sink-source-broker-channel.channel"),
+		SourceTopic:  pointer.StringPtr("sacura-sink-source-broker-channel-topic"),
 	})
 }
 
@@ -99,31 +104,42 @@ func runSacuraTest(t *testing.T, config SacuraTestConfig) {
 		t.Fatal(jobPollError)
 	}
 
-	if config.BrokerTopic != nil {
-		t.Run("verify committed offset", func(t *testing.T) {
-			t.Log(strings.Repeat("-", 30))
-			t.Log("Verify committed offset")
-			t.Log(strings.Repeat("-", 30))
-
-			trigger, err := c.Eventing.EventingV1().Triggers(config.Namespace).Get(ctx, sacuraTriggerName, metav1.GetOptions{})
-			require.Nil(t, err, "Failed to get trigger %s/%s: %v", config.Namespace, sacuraTriggerName)
-
-			err = kafkatest.VerifyCommittedOffset(
-				c.Kube,
-				c.Tracker,
-				types.NamespacedName{
-					Namespace: config.Namespace,
-					Name:      sacuraVerifyCommittedOffsetJob,
-				},
-				&kafkatest.AdminConfig{
-					BootstrapServers: pkgtesting.BootstrapServersPlaintext,
-					Topic:            *config.BrokerTopic,
-					Group:            string(trigger.UID),
-				},
-			)
-			require.Nil(t, err, "Failed to verify committed offset")
-		})
+	topics := map[*string]func(t *testing.T) string{
+		config.BrokerTopic:  getKafkaTriggerConsumerGroup(ctx, c.Eventing, config.Namespace),
+		config.ChannelTopic: getKafkaSubscriptionConsumerGroup(ctx, c.Dynamic, config.Namespace),
+		config.SourceTopic:  getKafkaSourceConsumerGroup(ctx, c.Dynamic, config.Namespace),
 	}
+
+	t.Run("verify committed offset", func(t *testing.T) {
+		for topic, groupFunc := range topics {
+			if topic == nil {
+				continue
+			}
+
+			t.Run(*topic, func(t *testing.T) {
+				t.Log(strings.Repeat("-", 30))
+				t.Log("Verify committed offset")
+				t.Log(strings.Repeat("-", 30))
+
+				consumerGroup := groupFunc(t)
+
+				err := kafkatest.VerifyCommittedOffset(
+					c.Kube,
+					c.Tracker,
+					types.NamespacedName{
+						Namespace: config.Namespace,
+						Name:      sacuraVerifyCommittedOffsetJob + "-" + *topic,
+					},
+					&kafkatest.AdminConfig{
+						BootstrapServers: pkgtesting.BootstrapServersPlaintext,
+						Topic:            *topic,
+						Group:            consumerGroup,
+					},
+				)
+				require.Nil(t, err, "Failed to verify committed offset")
+			})
+		}
+	})
 }
 
 func isJobSucceeded(job *batchv1.Job) (bool, error) {
@@ -132,4 +148,49 @@ func isJobSucceeded(job *batchv1.Job) (bool, error) {
 	}
 
 	return job.Status.Succeeded > 0, nil
+}
+
+func getKafkaTriggerConsumerGroup(ctx context.Context, c *eventingclientset.Clientset, ns string) func(t *testing.T) string {
+	return func(t *testing.T) string {
+		trigger, err := c.EventingV1().Triggers(ns).Get(ctx, sacuraTriggerName, metav1.GetOptions{})
+		require.Nil(t, err, "Failed to get trigger %s/%s: %v", ns, sacuraTriggerName)
+		return string(trigger.UID)
+	}
+}
+
+func getKafkaSourceConsumerGroup(ctx context.Context, c dynamic.Interface, ns string) func(t *testing.T) string {
+	return func(t *testing.T) string {
+		gvr := schema.GroupVersionResource{
+			Group:    sources.SchemeGroupVersion.Group,
+			Version:  sources.SchemeGroupVersion.Version,
+			Resource: "KafkaSource",
+		}
+		ksUnstr, err := c.Resource(gvr).Namespace(ns).Get(ctx, sacuraSourceName, metav1.GetOptions{})
+		require.Nil(t, err)
+
+		ks := sources.KafkaSource{}
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(ksUnstr.UnstructuredContent(), &ks)
+		require.Nil(t, err)
+		require.NotEmpty(t, ks.Spec.ConsumerGroup)
+
+		return ks.Spec.ConsumerGroup
+	}
+}
+
+func getKafkaSubscriptionConsumerGroup(ctx context.Context, c dynamic.Interface, ns string) func(t *testing.T) string {
+	return func(t *testing.T) string {
+		gvr := schema.GroupVersionResource{
+			Group:    messaging.SchemeGroupVersion.Group,
+			Version:  messaging.SchemeGroupVersion.Version,
+			Resource: "Subscription",
+		}
+		subUnstr, err := c.Resource(gvr).Namespace(ns).Get(ctx, sacuraSubscriptionName, metav1.GetOptions{})
+		require.Nil(t, err)
+
+		sub := messaging.Subscription{}
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(subUnstr.UnstructuredContent(), &sub)
+		require.Nil(t, err)
+
+		return fmt.Sprintf("kafka.%s.%s.%s", c, sacuraChannelName, string(sub.UID))
+	}
 }
