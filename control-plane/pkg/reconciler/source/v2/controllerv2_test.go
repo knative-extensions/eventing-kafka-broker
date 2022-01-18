@@ -61,7 +61,7 @@ func TestNewControllerV2(t *testing.T) {
 
 	dynamicclient.With(ctx, dynamicScheme)
 
-	controller := NewControllerV2(ctx, configs)
+	controller := NewController(ctx, configs)
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
 	}

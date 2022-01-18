@@ -17,8 +17,10 @@
 package testing
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
@@ -66,6 +68,39 @@ func NewConsumerGroup(opts ...ConsumerGroupOption) *kafkainternals.ConsumerGroup
 	}
 
 	return cg
+}
+
+func ConsumerGroupReady(cg *kafkainternals.ConsumerGroup) {
+	cg.Status.Conditions = duckv1.Conditions{
+		{
+			Type:   apis.ConditionReady,
+			Status: corev1.ConditionTrue,
+		},
+	}
+}
+
+func WithConsumerGroupName(name string) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.ObjectMeta.Name = name
+	}
+}
+
+func WithConsumerGroupNamespace(namespace string) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.ObjectMeta.Namespace = namespace
+	}
+}
+
+func WithConsumerGroupOwnerRef(ownerref *metav1.OwnerReference) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.ObjectMeta.OwnerReferences = []metav1.OwnerReference{*ownerref}
+	}
+}
+
+func WithConsumerGroupLabels(labels map[string]string) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.Spec.Template.Labels = labels
+	}
 }
 
 func ConsumerGroupReplicas(replicas int32) ConsumerGroupOption {
