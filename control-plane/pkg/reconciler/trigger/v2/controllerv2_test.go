@@ -31,10 +31,10 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 )
 
-func TestNewControllerV2(t *testing.T) {
+func TestNewController(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
-	controller := NewControllerV2(ctx, &config.Env{})
+	controller := NewController(ctx, &config.Env{})
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
 	}

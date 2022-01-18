@@ -135,8 +135,13 @@ func InitSourceConditions(obj duckv1.KRShaped) {
 func StatusSourceSinkResolved(uri string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*sources.KafkaSource)
-		ks.Status.SinkURI, _ = apis.ParseURL(uri)
-		ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(sources.KafkaConditionSinkProvided)
+		res, _ := apis.ParseURL(uri)
+		ks.Status.SinkURI = res
+		if !res.IsEmpty() {
+			ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(sources.KafkaConditionSinkProvided)
+		} else {
+			ks.GetConditionSet().Manage(ks.GetStatus()).MarkUnknown(sources.KafkaConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
+		}
 	}
 }
 

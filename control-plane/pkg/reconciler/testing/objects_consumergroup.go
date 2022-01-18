@@ -68,6 +68,30 @@ func NewConsumerGroup(opts ...ConsumerGroupOption) *kafkainternals.ConsumerGroup
 	return cg
 }
 
+func WithConsumerGroupName(name string) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.ObjectMeta.Name = name
+	}
+}
+
+func WithConsumerGroupNamespace(namespace string) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.ObjectMeta.Namespace = namespace
+	}
+}
+
+func WithConsumerGroupOwnerRef(ownerref *metav1.OwnerReference) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.ObjectMeta.OwnerReferences = []metav1.OwnerReference{*ownerref}
+	}
+}
+
+func WithConsumerGroupLabels(labels map[string]string) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.Spec.Template.Labels = labels
+	}
+}
+
 func ConsumerGroupReplicas(replicas int32) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
 		cg.Spec.Replicas = pointer.Int32Ptr(replicas)

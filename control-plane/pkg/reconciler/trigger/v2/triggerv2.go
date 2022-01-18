@@ -44,7 +44,7 @@ const (
 	deliveryOrderAnnotation = "kafka.eventing.knative.dev/delivery.order"
 )
 
-type ReconcilerV2 struct {
+type Reconciler struct {
 	BrokerLister        eventinglisters.BrokerLister
 	EventingClient      eventingclientset.Interface
 	Env                 *config.Env
@@ -52,7 +52,7 @@ type ReconcilerV2 struct {
 	InternalsClient     internalsclient.Interface
 }
 
-func (r *ReconcilerV2) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
@@ -99,9 +99,9 @@ func (r *ReconcilerV2) ReconcileKind(ctx context.Context, trigger *eventing.Trig
 	return nil
 }
 
-func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
+func (r Reconciler) reconcileConsumerGroup(ctx context.Context, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
 
-	var deliveryOrdering = internals.Unordered
+	var deliveryOrdering = internals.Ordered
 	var err error
 	deliveryOrderingAnnotationValue, ok := trigger.Annotations[deliveryOrderAnnotation]
 	if ok {
