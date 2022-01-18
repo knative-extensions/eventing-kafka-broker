@@ -83,17 +83,25 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 		return nil
 	}
 
-	consgroup, err := r.reconcileConsumerGroup(ctx, trigger)
+	cg, err := r.reconcileConsumerGroup(ctx, trigger)
 	if err != nil {
 		trigger.Status.MarkDependencyFailed("failed to reconcile consumer group", err.Error())
 		return err
 	}
-	trigger.Status.MarkDependencySucceeded()
-
-	trigger.Status.SubscriberURI = consgroup.Status.SubscriberURI
+	if cg.IsReady() {
+		trigger.Status.MarkDependencySucceeded()
+	} else {
+		topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
+		if topLevelCondition == nil {
+			trigger.Status.MarkDependencyUnknown("failed to reconcile consumer group", "consumer group not ready")
+		} else {
+			trigger.Status.MarkDependencyFailed(topLevelCondition.Reason, topLevelCondition.Message)
+		}
+	}
+	trigger.Status.SubscriberURI = cg.Status.SubscriberURI
 	trigger.Status.MarkSubscriberResolvedSucceeded()
 
-	trigger.Status.DeadLetterSinkURI = consgroup.Status.DeadLetterSinkURI
+	trigger.Status.DeadLetterSinkURI = cg.Status.DeadLetterSinkURI
 	trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
 
 	return nil

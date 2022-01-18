@@ -56,6 +56,14 @@ var DefaultEnv = &config.Env{
 	SystemNamespace:             "knative-eventing",
 }
 
+var (
+	url = &apis.URL{
+		Scheme: "http",
+		Host:   "localhost",
+		Path:   "/path",
+	}
+)
+
 func TestReconcileKind(t *testing.T) {
 
 	testKey := fmt.Sprintf("%s/%s", triggerNamespace, triggerName)
@@ -92,7 +100,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
-						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group not ready"),
 						withDeadLetterSinkURI(""),
 					),
 				},
@@ -129,7 +137,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
-						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group not ready"),
 						withDeadLetterSinkURI(""),
 						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Ordered)),
 					),
@@ -167,7 +175,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
-						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group not ready"),
 						withDeadLetterSinkURI(""),
 						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Unordered)),
 					),
@@ -217,6 +225,54 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupLabels(nil),
+					ConsumerGroupReady,
+				),
+			},
+			Key:         testKey,
+			WantCreates: []runtime.Object{},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewConsumerGroup(
+						WithConsumerGroupName(TriggerUUID),
+						WithConsumerGroupNamespace(triggerNamespace),
+						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+						WithConsumerGroupLabels(nil),
+						ConsumerGroupConsumerSpec(NewConsumerSpec(
+							ConsumerTopics(),
+							ConsumerConfigs(
+								ConsumerGroupIdConfig(TriggerUUID),
+							),
+							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+							ConsumerFilters(NewConsumerSpecFilters()),
+						)),
+						ConsumerGroupReady,
+					),
+				},
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(),
+						reconcilertesting.WithTriggerDependencyReady(),
+						withDeadLetterSinkURI(""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - existing cg with update but not ready",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(),
+				NewConsumerGroup(
+					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupNamespace(triggerNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+					WithConsumerGroupLabels(nil),
 				),
 			},
 			Key:         testKey,
@@ -245,7 +301,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
-						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group not ready"),
 						withDeadLetterSinkURI(""),
 					),
 				},
@@ -253,6 +309,42 @@ func TestReconcileKind(t *testing.T) {
 		},
 		{
 			Name: "Reconciled normal - existing cg without update",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(),
+				NewConsumerGroup(
+					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupNamespace(triggerNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+					WithConsumerGroupLabels(nil),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(TriggerUUID),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerFilters(NewConsumerSpecFilters()),
+					)),
+					ConsumerGroupReady,
+				),
+			},
+			Key: testKey,
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(),
+						reconcilertesting.WithTriggerDependencyReady(),
+						withDeadLetterSinkURI(""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - existing cg without update but not ready",
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
@@ -280,8 +372,44 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
-						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group not ready"),
 						withDeadLetterSinkURI(""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal with dead letter sink uri",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(),
+				NewConsumerGroup(
+					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupNamespace(triggerNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+					WithConsumerGroupLabels(nil),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(TriggerUUID),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerFilters(NewConsumerSpecFilters()),
+					)),
+					WithDeadLetterSinkURI(url.String()),
+				),
+			},
+			Key: testKey,
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(),
+						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group not ready"),
+						withDeadLetterSinkURI(url.String()),
 					),
 				},
 			},
