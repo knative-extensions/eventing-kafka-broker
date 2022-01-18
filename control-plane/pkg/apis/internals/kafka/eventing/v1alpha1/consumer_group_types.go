@@ -162,3 +162,8 @@ func (cg *ConsumerGroup) ConsumerFromTemplate(options ...ConsumerOption) *Consum
 	}
 	return c
 }
+
+func (cg *ConsumerGroup) IsReady() bool {
+	return cg.Generation == cg.Status.ObservedGeneration &&
+		cg.GetConditionSet().Manage(cg.GetStatus()).IsHappy()
+}
