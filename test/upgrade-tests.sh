@@ -35,6 +35,8 @@ if ! ${SKIP_INITIALIZE}; then
   save_release_artifacts || fail_test "Failed to save release artifacts"
 fi
 
+export_logs_continuously
+
 set -Eeuo pipefail
 
 TIMEOUT=${TIMEOUT:-60m}
@@ -43,7 +45,7 @@ GO_TEST_VERBOSITY="${GO_TEST_VERBOSITY:-standard-verbose}"
 go_test_e2e -v \
   -tags=upgrade \
   -timeout="${TIMEOUT}" \
-  ./test/upgrade \
-  || fail_test
+  ./test/upgrade ||
+  fail_test
 
 success
