@@ -32,6 +32,7 @@ import (
 const (
 	ConsumerNamePrefix = "test-cg"
 	ConsumerNamespace  = "test-cg-ns"
+	DeliveryOrder      = internals.Ordered
 )
 
 type ConsumerOption func(cg *kafkainternals.Consumer)
