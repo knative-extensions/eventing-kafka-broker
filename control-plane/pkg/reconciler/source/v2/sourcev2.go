@@ -55,16 +55,27 @@ type ReconcilerV2 struct {
 
 func (r *ReconcilerV2) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
 
-	consgroup, err := r.reconcileConsumerGroup(ctx, ks)
+	cg, err := r.reconcileConsumerGroup(ctx, ks)
 	if err != nil {
 		ks.GetConditionSet().Manage(&ks.Status).MarkFalse(KafkaConditionConsumerGroup, "failed to reconcile consumer group", err.Error())
 		return err
 	}
-	ks.GetConditionSet().Manage(&ks.Status).MarkTrue(KafkaConditionConsumerGroup)
+	if cg.IsReady() {
+		ks.GetConditionSet().Manage(&ks.Status).MarkTrue(KafkaConditionConsumerGroup)
+	} else {
+		topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
+		ks.GetConditionSet().Manage(&ks.Status).MarkFalse(
+			KafkaConditionConsumerGroup,
+			topLevelCondition.Reason,
+			topLevelCondition.Message,
+		)
+	}
 
-	ks.Status.MarkSink(consgroup.Status.SubscriberURI)
-	ks.Status.Placeable = consgroup.Status.Placeable
-	ks.Status.Consumers = *consgroup.Status.Replicas
+	ks.Status.MarkSink(cg.Status.SubscriberURI)
+	ks.Status.Placeable = cg.Status.Placeable
+	if cg.Status.Replicas != nil {
+		ks.Status.Consumers = *cg.Status.Replicas
+	}
 
 	return nil
 }
