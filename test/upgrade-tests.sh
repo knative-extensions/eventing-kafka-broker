@@ -35,6 +35,8 @@ if ! ${SKIP_INITIALIZE}; then
   save_release_artifacts || fail_test "Failed to save release artifacts"
 fi
 
+export_logs_continuously
+
 set -Eeuo pipefail
 
 TIMEOUT=${TIMEOUT:-60m}
@@ -44,7 +46,7 @@ EVENTING_KAFKA_BROKER_UPGRADE_TESTS_FINISHEDSLEEP="5m" \
 go_test_e2e -v \
   -tags=upgrade \
   -timeout="${TIMEOUT}" \
-  ./test/upgrade \
-  || fail_test
+  ./test/upgrade ||
+  fail_test
 
 success
