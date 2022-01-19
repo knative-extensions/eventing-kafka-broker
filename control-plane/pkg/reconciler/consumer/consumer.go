@@ -19,12 +19,10 @@ package consumer
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"knative.dev/pkg/apis"
@@ -220,19 +218,7 @@ func reconcileCEOverrides(c *kafkainternals.Consumer) *contract.CloudEventOverri
 
 func (r Reconciler) reconcileUserFacingResourceRef(c *kafkainternals.Consumer) (*contract.Reference, error) {
 
-	// Get ConsumerGroup from the owner references list.
-	var cOr *metav1.OwnerReference
-	for i, or := range c.OwnerReferences {
-		if strings.ToLower(or.Kind) == kafkainternals.ConsumerGroupGroupVersionKind.Kind {
-			cOr = &c.OwnerReferences[i]
-			break
-		}
-	}
-	if cOr == nil {
-		return nil, fmt.Errorf("failed to find %s in owner references", kafkainternals.ConsumerGroupGroupVersionKind.Kind)
-	}
-
-	cg, err := r.ConsumerGroupLister.ConsumerGroups(c.GetNamespace()).Get(cOr.Name)
+	cg, err := r.ConsumerGroupLister.ConsumerGroups(c.GetNamespace()).Get(c.GetConsumerGroup().Name)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, fmt.Errorf("failed to get %s: %w", kafkainternals.ConsumerGroupGroupVersionKind.Kind, err)
 	}
@@ -240,18 +226,7 @@ func (r Reconciler) reconcileUserFacingResourceRef(c *kafkainternals.Consumer) (
 		return nil, nil
 	}
 
-	// Get user facing resource from the owner references list.
-	var cgOr *metav1.OwnerReference
-	for i, or := range cg.OwnerReferences {
-		k := strings.ToLower(or.Kind)
-		// TODO hardcoded resource kinds.
-		if k == "trigger" || k == "kafkasource" || k == "kafkachannel" {
-			cgOr = &cg.OwnerReferences[i]
-			break
-		}
-	}
-
-	userFacingResource := cgOr
+	userFacingResource := cg.GetUserFacingResourceRef()
 	ref := &contract.Reference{
 		Uuid:      string(userFacingResource.UID),
 		Namespace: c.GetNamespace(),

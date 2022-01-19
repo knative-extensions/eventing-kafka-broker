@@ -17,6 +17,8 @@
 package v1alpha1
 
 import (
+	"strings"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -166,4 +168,18 @@ func (cg *ConsumerGroup) ConsumerFromTemplate(options ...ConsumerOption) *Consum
 func (cg *ConsumerGroup) IsReady() bool {
 	return cg.Generation == cg.Status.ObservedGeneration &&
 		cg.GetConditionSet().Manage(cg.GetStatus()).IsHappy()
+}
+
+// GetUserFacingResourceRef gets the resource reference to the user-facing resources
+// that are backed by this ConsumerGroup using the OwnerReference list.
+func (cg *ConsumerGroup) GetUserFacingResourceRef() *metav1.OwnerReference {
+	for i, or := range cg.OwnerReferences {
+		// TODO hardcoded resource kinds.
+		if strings.EqualFold(or.Kind, "trigger") ||
+			strings.EqualFold(or.Kind, "kafkasource") ||
+			strings.EqualFold(or.Kind, "kafkachannel") {
+			return &cg.OwnerReferences[i]
+		}
+	}
+	return nil
 }
