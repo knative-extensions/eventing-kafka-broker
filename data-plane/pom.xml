@@ -41,7 +41,7 @@
     <mycila.license.plugin.version>4.1</mycila.license.plugin.version>
 
     <!-- dependencies version -->
-    <vertx.version>4.2.3</vertx.version>
+    <vertx.version>4.2.4</vertx.version>
     <cloudevents.sdk.version>2.3.0</cloudevents.sdk.version>
     <micrometer.version>1.8.2</micrometer.version>
     <opentelemetry.version>1.10.0</opentelemetry.version>
@@ -52,9 +52,9 @@
     <net.logstash.logback.encoder.version>7.0.1</net.logstash.logback.encoder.version>
     <assertj.version>3.22.0</assertj.version>
     <awaitility.version>4.1.1</awaitility.version>
-    <junit.jupiter.version>5.8.1</junit.jupiter.version>
+    <junit.jupiter.version>5.8.2</junit.jupiter.version>
     <mokito.junit.jupiter.version>4.2.0</mokito.junit.jupiter.version>
-    <fabric8.kubernetes.version>5.10.1</fabric8.kubernetes.version>
+    <fabric8.kubernetes.version>5.11.1</fabric8.kubernetes.version>
     <kafka.version>2.8.1</kafka.version>
     <debezium.version>1.8.0.Final</debezium.version>
   </properties>
