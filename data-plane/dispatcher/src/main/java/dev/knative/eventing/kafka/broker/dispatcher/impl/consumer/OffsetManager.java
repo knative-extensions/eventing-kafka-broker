@@ -160,9 +160,29 @@ public final class OffsetManager implements RecordDispatcherListener {
   }
 
   /**
-   * This offset tracker keeps track of the committed records.
+   * This offset tracker keeps track of the committed records for a
+   * single partition.
    */
   private static class OffsetTracker {
+
+    /*
+     * We use a BitSet as a replacement for an array of booleans.
+     * Each bit represents an offset of a partition.
+     *
+     * A bit in the BitSet is set when an offset can be committed
+     * to Kafka.
+     *
+     * Example case:
+     *
+     *  partition offsets   [0, 1, 2, 3, 4, 5, 6, 7, ... ]  <-- BitSet
+     *  t1                                                  <-- time 1
+     *  t1 success           ^     ^  ^        ^            <-- offsets recorded
+     *  t1 to commit            &                           <-- offset to commit (next unset offset)
+     *
+     *  t2                                                  <-- time 2
+     *  t2 success           ^  ^  ^  ^        ^            <-- offsets recorded
+     *  t2 to commit                     &                  <-- offset to commit (next unset offset)
+     */
 
     // In order to not use a huge amount of memory we cap the BitSet to a _dynamic_ max size governed by this
     // threshold.
