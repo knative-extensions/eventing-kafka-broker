@@ -1856,6 +1856,9 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 				ConfigMapFinalizerUpdateRemove(ConfigMapFinalizerName),
 			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
+			},
 		},
 		{
 			Name: "Reconciled normal - with DLS",
@@ -1884,6 +1887,9 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					Generation: 2,
 				}),
 				ConfigMapFinalizerUpdateRemove(ConfigMapFinalizerName),
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -1921,6 +1927,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			},
 			OtherTestData: map[string]interface{}{
 				wantErrorOnDeleteTopic: deleteTopicError,
+				testProber:             probertesting.MockProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -1942,6 +1949,9 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				NewConfigMapWithBinaryData(&env, nil),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
+			},
 		},
 		{
 			Name: "Reconciled normal - preserve config map previous state",
@@ -1979,6 +1989,9 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					Generation: 6,
 				}),
 				ConfigMapFinalizerUpdateRemove(ConfigMapFinalizerName),
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2020,6 +2033,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			},
 			OtherTestData: map[string]interface{}{
 				wantErrorOnDeleteTopic: sarama.ErrUnknownTopicOrPartition,
+				testProber:             probertesting.MockProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2043,6 +2057,9 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapFinalizerUpdateRemove(ConfigMapFinalizerName),
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
 			},
 		},
 	}
