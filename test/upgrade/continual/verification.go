@@ -18,7 +18,6 @@ package continual
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/kelseyhightower/envconfig"
 	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade/continual"
@@ -78,7 +77,6 @@ func configurator(theSut sut.SystemUnderTest, configTemplate string) prober.Conf
 		// TODO: knative/eventing#5176 - this is cumbersome
 		config.ConfigTemplate = fmt.Sprintf("../../../../../../%s",
 			configTemplate)
-		config.FinishedSleep = 5 * time.Minute
 		// envconfig.Process invocation is repeated from within prober.NewConfig to
 		// make sure every knob is configurable, but using defaults from Eventing
 		// Kafka instead of Core. The prefix is also changed.
