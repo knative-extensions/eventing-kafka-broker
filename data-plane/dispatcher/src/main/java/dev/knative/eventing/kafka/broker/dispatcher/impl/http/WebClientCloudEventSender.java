@@ -51,8 +51,11 @@ public final class WebClientCloudEventSender implements CloudEventSender {
    */
   public WebClientCloudEventSender(final WebClient client, final CircuitBreaker circuitBreaker, final String target) {
     Objects.requireNonNull(client, "provide client");
-    if (target == null || target.equals("") || !URI.create(target).isAbsolute()) {
-      throw new IllegalArgumentException("provide a valid target");
+    if (target == null || target.equals("")) {
+      throw new IllegalArgumentException("provide a target");
+    }
+    if (!URI.create(target).isAbsolute()){
+      throw new IllegalArgumentException("provide a valid target, provided target: " + target);
     }
     Objects.requireNonNull(circuitBreaker, "provide circuitBreaker");
 
