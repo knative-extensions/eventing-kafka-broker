@@ -20,9 +20,10 @@
 package rekt
 
 import (
+	"testing"
+
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/reconciler-test/pkg/manifest"
-	"testing"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"knative.dev/eventing/test/rekt/features/channel"
