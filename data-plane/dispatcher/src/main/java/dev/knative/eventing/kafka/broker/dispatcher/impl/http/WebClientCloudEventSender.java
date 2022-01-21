@@ -79,7 +79,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
   private void send(final CloudEvent event, final Promise<HttpResponse<Buffer>> breaker) {
     VertxMessageFactory
-      .createWriter(client.postAbs(target))
+      .createWriter(client.postAbs(target).putHeader("Prefer", "reply"))
       .writeBinary(event)
       .onFailure(ex -> {
         logError(event, ex);
