@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package rekt
+package e2e_new
 
 import (
 	"testing"
