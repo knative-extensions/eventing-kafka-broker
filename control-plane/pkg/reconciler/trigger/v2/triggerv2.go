@@ -109,7 +109,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 func (r Reconciler) reconcileConsumerGroup(ctx context.Context, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
 
-	var deliveryOrdering = internals.Ordered
+	var deliveryOrdering = internals.Unordered
 	var err error
 	deliveryOrderingAnnotationValue, ok := trigger.Annotations[deliveryOrderAnnotation]
 	if ok {

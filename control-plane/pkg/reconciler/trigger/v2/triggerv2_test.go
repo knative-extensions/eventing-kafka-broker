@@ -89,7 +89,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerConfigs(
 							ConsumerGroupIdConfig(TriggerUUID),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered)),
 						ConsumerFilters(NewConsumerSpecFilters()),
 					)),
 				),
@@ -242,7 +242,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerConfigs(
 								ConsumerGroupIdConfig(TriggerUUID),
 							),
-							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+							ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered)),
 							ConsumerFilters(NewConsumerSpecFilters()),
 						)),
 						ConsumerGroupReady,
@@ -289,7 +289,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerConfigs(
 								ConsumerGroupIdConfig(TriggerUUID),
 							),
-							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+							ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered)),
 							ConsumerFilters(NewConsumerSpecFilters()),
 						)),
 					),
@@ -324,7 +324,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerConfigs(
 							ConsumerGroupIdConfig(TriggerUUID),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered)),
 						ConsumerFilters(NewConsumerSpecFilters()),
 					)),
 					ConsumerGroupReady,
@@ -360,7 +360,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerConfigs(
 							ConsumerGroupIdConfig(TriggerUUID),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered)),
 						ConsumerFilters(NewConsumerSpecFilters()),
 					)),
 				),
@@ -373,6 +373,42 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group not ready"),
+						withDeadLetterSinkURI(""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - existing cg but failed",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+				),
+				newTrigger(),
+				NewConsumerGroup(
+					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupNamespace(triggerNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+					WithConsumerGroupLabels(nil),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(TriggerUUID),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered)),
+						ConsumerFilters(NewConsumerSpecFilters()),
+					)),
+					WithConsumerGroupFailed("failed", "failed"),
+				),
+			},
+			Key: testKey,
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(),
+						reconcilertesting.WithTriggerDependencyFailed("failed", "failed"),
 						withDeadLetterSinkURI(""),
 					),
 				},
@@ -395,7 +431,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerConfigs(
 							ConsumerGroupIdConfig(TriggerUUID),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered)),
 						ConsumerFilters(NewConsumerSpecFilters()),
 					)),
 					WithDeadLetterSinkURI(url.String()),
