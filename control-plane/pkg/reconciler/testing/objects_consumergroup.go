@@ -79,6 +79,12 @@ func ConsumerGroupReady(cg *kafkainternals.ConsumerGroup) {
 	}
 }
 
+func WithConsumerGroupFailed(reason string, msg string) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(kafkainternals.ConditionConsumerGroupConsumers, reason, msg)
+	}
+}
+
 func WithConsumerGroupName(name string) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
 		cg.ObjectMeta.Name = name
@@ -106,6 +112,12 @@ func WithConsumerGroupLabels(labels map[string]string) ConsumerGroupOption {
 func ConsumerGroupReplicas(replicas int32) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
 		cg.Spec.Replicas = pointer.Int32Ptr(replicas)
+	}
+}
+
+func ConsumerGroupReplicasStatus(replicas int32) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.Status.Replicas = pointer.Int32Ptr(replicas)
 	}
 }
 

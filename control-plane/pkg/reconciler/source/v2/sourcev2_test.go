@@ -76,7 +76,7 @@ func TestReconcileKind(t *testing.T) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
-						StatusSourceConsumerGrouUnknown(),
+						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 					),
 				},
@@ -119,14 +119,14 @@ func TestReconcileKind(t *testing.T) {
 						WithCloudEventOverrides(&duckv1.CloudEventOverrides{
 							Extensions: map[string]string{"a": "foo", "b": "foo"},
 						}),
-						StatusSourceConsumerGrouUnknown(),
+						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 					),
 				},
 			},
 		},
 		{
-			Name: "Reconciled normal - existing cons group with update",
+			Name: "Reconciled normal - existing cg with update",
 			Objects: []runtime.Object{
 				NewSource(),
 				NewConsumerGroup(
@@ -172,7 +172,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
-			Name: "Reconciled normal - existing cons group with update but not ready",
+			Name: "Reconciled normal - existing cg with update but not ready",
 			Objects: []runtime.Object{
 				NewSource(),
 				NewConsumerGroup(
@@ -209,14 +209,14 @@ func TestReconcileKind(t *testing.T) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
-						StatusSourceConsumerGrouUnknown(),
+						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 					),
 				},
 			},
 		},
 		{
-			Name: "Reconciled normal - existing cons group without update",
+			Name: "Reconciled normal - existing cg without update",
 			Objects: []runtime.Object{
 				NewSource(),
 				NewConsumerGroup(
@@ -250,7 +250,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
-			Name: "Reconciled normal - existing cons group without update but not ready",
+			Name: "Reconciled normal - existing cg without update but not ready",
 			Objects: []runtime.Object{
 				NewSource(),
 				NewConsumerGroup(
@@ -276,8 +276,78 @@ func TestReconcileKind(t *testing.T) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
-						StatusSourceConsumerGrouUnknown(),
+						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - existing cg but failed",
+			Objects: []runtime.Object{
+				NewSource(),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupLabels(nil),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewSourceSinkReference()),
+					)),
+					ConsumerGroupReplicas(1),
+					WithConsumerGroupFailed("failed", "failed"),
+				),
+			},
+			Key:         testKey,
+			WantCreates: []runtime.Object{},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						StatusSourceConsumerGroupFailed("failed", "failed"),
+						StatusSourceSinkResolved(""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - existing cg with replicas set in status",
+			Objects: []runtime.Object{
+				NewSource(),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupLabels(nil),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewSourceSinkReference()),
+					)),
+					ConsumerGroupReplicas(1),
+					ConsumerGroupReplicasStatus(1),
+					ConsumerGroupReady,
+				),
+			},
+			Key:         testKey,
+			WantCreates: []runtime.Object{},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						StatusSourceConsumerGroup(),
+						StatusSourceSinkResolved(""),
+						StatusSourceConsumerGroupReplicas(1),
 					),
 				},
 			},
@@ -310,16 +380,23 @@ func StatusSourceConsumerGroup() KRShapedOption {
 	}
 }
 
-func StatusSourceConsumerGroupFailed() KRShapedOption {
+func StatusSourceConsumerGroupFailed(reason string, msg string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*sources.KafkaSource)
-		ks.GetConditionSet().Manage(ks.GetStatus()).MarkFalse(KafkaConditionConsumerGroup, "failed to reconcile consumer group", "")
+		ks.GetConditionSet().Manage(ks.GetStatus()).MarkFalse(KafkaConditionConsumerGroup, reason, msg)
 	}
 }
 
-func StatusSourceConsumerGrouUnknown() KRShapedOption {
+func StatusSourceConsumerGroupUnknown() KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*sources.KafkaSource)
 		ks.GetConditionSet().Manage(ks.GetStatus()).MarkUnknown(KafkaConditionConsumerGroup, "failed to reconcile consumer group", "consumer group not ready")
+	}
+}
+
+func StatusSourceConsumerGroupReplicas(replicas int32) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.Status.Consumers = replicas
 	}
 }
