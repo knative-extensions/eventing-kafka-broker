@@ -141,7 +141,7 @@ func (c *ConsumerGroup) GetUntypedSpec() interface{} {
 	return c.Spec
 }
 
-// GetStatus retrieves the status of the ConsumerGroupt. Implements the KRShaped interface.
+// GetStatus retrieves the status of the ConsumerGroup. Implements the KRShaped interface.
 func (c *ConsumerGroup) GetStatus() *duckv1.Status {
 	return &c.Status.Status
 }

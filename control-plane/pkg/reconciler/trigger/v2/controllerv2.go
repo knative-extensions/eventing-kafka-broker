@@ -48,7 +48,7 @@ const (
 	FinalizerName = "kafka.triggers.eventing.knative.dev"
 )
 
-func NewControllerV2(ctx context.Context, configs *config.Env) *controller.Impl {
+func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 
 	logger := logging.FromContext(ctx).Desugar()
 
@@ -57,7 +57,7 @@ func NewControllerV2(ctx context.Context, configs *config.Env) *controller.Impl 
 	triggerLister := triggerInformer.Lister()
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
 
-	reconciler := &ReconcilerV2{
+	reconciler := &Reconciler{
 		BrokerLister:        brokerInformer.Lister(),
 		EventingClient:      eventingclient.Get(ctx),
 		Env:                 configs,

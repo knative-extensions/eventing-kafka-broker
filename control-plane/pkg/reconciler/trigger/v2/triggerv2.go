@@ -44,7 +44,7 @@ const (
 	deliveryOrderAnnotation = "kafka.eventing.knative.dev/delivery.order"
 )
 
-type ReconcilerV2 struct {
+type Reconciler struct {
 	BrokerLister        eventinglisters.BrokerLister
 	EventingClient      eventingclientset.Interface
 	Env                 *config.Env
@@ -52,7 +52,7 @@ type ReconcilerV2 struct {
 	InternalsClient     internalsclient.Interface
 }
 
-func (r *ReconcilerV2) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
@@ -83,23 +83,31 @@ func (r *ReconcilerV2) ReconcileKind(ctx context.Context, trigger *eventing.Trig
 		return nil
 	}
 
-	consgroup, err := r.reconcileConsumerGroup(ctx, trigger)
+	cg, err := r.reconcileConsumerGroup(ctx, trigger)
 	if err != nil {
 		trigger.Status.MarkDependencyFailed("failed to reconcile consumer group", err.Error())
 		return err
 	}
-	trigger.Status.MarkDependencySucceeded()
-
-	trigger.Status.SubscriberURI = consgroup.Status.SubscriberURI
+	if cg.IsReady() {
+		trigger.Status.MarkDependencySucceeded()
+	} else {
+		topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
+		if topLevelCondition == nil {
+			trigger.Status.MarkDependencyUnknown("failed to reconcile consumer group", "consumer group not ready")
+		} else {
+			trigger.Status.MarkDependencyFailed(topLevelCondition.Reason, topLevelCondition.Message)
+		}
+	}
+	trigger.Status.SubscriberURI = cg.Status.SubscriberURI
 	trigger.Status.MarkSubscriberResolvedSucceeded()
 
-	trigger.Status.DeadLetterSinkURI = consgroup.Status.DeadLetterSinkURI
+	trigger.Status.DeadLetterSinkURI = cg.Status.DeadLetterSinkURI
 	trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
 
 	return nil
 }
 
-func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
+func (r Reconciler) reconcileConsumerGroup(ctx context.Context, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
 
 	var deliveryOrdering = internals.Unordered
 	var err error
