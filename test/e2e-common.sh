@@ -143,20 +143,11 @@ function install_head() {
   kubectl apply -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
 }
 
-function set_default_channel(){
-  kubectl patch configmap default-ch-webhook \
-  -n knative-eventing \
-  --type merge \
-  -p '{"data":{"default-ch-config": "clusterDefault:\n  apiVersion: messaging.knative.dev/v1beta1\n  kind: KafkaChannel"}}'
-}
-
 function test_setup() {
 
   build_components_from_source || return $?
 
   install_head || return $?
-
-  set_default_channel  || return $?
 
   wait_until_pods_running knative-eventing || fail_test "System did not come up"
 
