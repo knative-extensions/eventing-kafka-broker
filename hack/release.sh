@@ -21,7 +21,7 @@ set -o pipefail
 source $(dirname $0)/../vendor/knative.dev/hack/release.sh
 source $(dirname $0)/data-plane.sh
 source $(dirname $0)/control-plane.sh
-source $(dirname $0)/hack/artifacts-env.sh
+source $(dirname $0)/artifacts-env.sh
 
 function fail() {
   echo "$1"
