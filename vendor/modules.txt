@@ -1231,6 +1231,7 @@ knative.dev/eventing/test/rekt/resources/trigger
 knative.dev/eventing/test/test_images
 knative.dev/eventing/test/test_images/event-flaker
 knative.dev/eventing/test/test_images/event-library
+knative.dev/eventing/test/test_images/event-library/kodata/events
 knative.dev/eventing/test/test_images/event-sender
 knative.dev/eventing/test/test_images/heartbeats
 knative.dev/eventing/test/test_images/performance
