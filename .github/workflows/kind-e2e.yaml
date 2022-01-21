@@ -28,6 +28,7 @@ jobs:
         test-suite:
           - ./test/e2e
           - ./test/e2e_new
+          - ./test/rekt
 
         # Map between K8s and KinD versions.
         # This is attempting to make it a bit clearer what's being tested.
