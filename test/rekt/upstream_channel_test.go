@@ -1,5 +1,5 @@
-//go:build e2e
-// +build e2e
+//go:build e2e && cloudevents
+// +build e2e,cloudevents
 
 /*
  * Copyright 2022 The Knative Authors
