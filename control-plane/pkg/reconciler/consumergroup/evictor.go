@@ -65,7 +65,7 @@ func (e *evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduck
 		With(zap.String("consumergroup", key.String())).
 		With(zap.String("pod", fmt.Sprintf("%s/%s", pod.GetNamespace(), pod.GetName())))
 
-	if err := e.markPodUnschedulable(logger, pod.DeepCopy() /* Do not modify informer copy. */); err != nil {
+	if err := e.disablePodScheduling(logger, pod.DeepCopy() /* Do not modify informer copy. */); err != nil {
 		return fmt.Errorf("failed to mark pod unschedulable: %w", err)
 	}
 
@@ -79,7 +79,7 @@ func (e *evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduck
 		return fmt.Errorf("failed to get consumer group %s/%s: %w", key.Namespace, key.Name, err)
 	}
 
-	// Do not evict when scheduling is in-progress.
+	// Do not evict when the consumer group isn't scheduled yet.
 	if cg.IsNotScheduled() {
 		return nil
 	}
@@ -99,7 +99,7 @@ func (e *evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduck
 	return nil
 }
 
-func (e *evictor) markPodUnschedulable(logger *zap.Logger, pod *corev1.Pod) error {
+func (e *evictor) disablePodScheduling(logger *zap.Logger, pod *corev1.Pod) error {
 	if pod.Annotations == nil {
 		pod.Annotations = make(map[string]string, 1)
 	}
