@@ -40,6 +40,7 @@ set -Eeuo pipefail
 TIMEOUT=${TIMEOUT:-60m}
 GO_TEST_VERBOSITY="${GO_TEST_VERBOSITY:-standard-verbose}"
 
+EVENTING_UPGRADE_TESTS_FINISHEDSLEEP="5m" \
 go_test_e2e -v \
   -tags=upgrade \
   -timeout="${TIMEOUT}" \
