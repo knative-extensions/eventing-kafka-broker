@@ -45,15 +45,16 @@ const (
 var (
 	conditionSet = apis.NewLivingConditionSet(
 		KafkaConditionConsumerGroup,
+		sources.KafkaConditionSinkProvided,
 	)
 )
 
-type ReconcilerV2 struct {
+type Reconciler struct {
 	ConsumerGroupLister internalslst.ConsumerGroupLister
 	InternalsClient     internalsclient.Interface
 }
 
-func (r *ReconcilerV2) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
 
 	cg, err := r.reconcileConsumerGroup(ctx, ks)
 	if err != nil {
@@ -64,11 +65,15 @@ func (r *ReconcilerV2) ReconcileKind(ctx context.Context, ks *sources.KafkaSourc
 		ks.GetConditionSet().Manage(&ks.Status).MarkTrue(KafkaConditionConsumerGroup)
 	} else {
 		topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
-		ks.GetConditionSet().Manage(&ks.Status).MarkFalse(
-			KafkaConditionConsumerGroup,
-			topLevelCondition.Reason,
-			topLevelCondition.Message,
-		)
+		if topLevelCondition == nil {
+			ks.GetConditionSet().Manage(&ks.Status).MarkUnknown(KafkaConditionConsumerGroup, "failed to reconcile consumer group", "consumer group not ready")
+		} else {
+			ks.GetConditionSet().Manage(&ks.Status).MarkFalse(
+				KafkaConditionConsumerGroup,
+				topLevelCondition.Reason,
+				topLevelCondition.Message,
+			)
+		}
 	}
 
 	ks.Status.MarkSink(cg.Status.SubscriberURI)
@@ -80,7 +85,7 @@ func (r *ReconcilerV2) ReconcileKind(ctx context.Context, ks *sources.KafkaSourc
 	return nil
 }
 
-func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
+func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
 
 	newcg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
@@ -105,13 +110,16 @@ func (r ReconcilerV2) reconcileConsumerGroup(ctx context.Context, ks *sources.Ka
 						Ordering: DefaultDeliveryOrder,
 					},
 					Subscriber: ks.Spec.Sink,
-					CloudEventOverrides: &duckv1.CloudEventOverrides{
-						Extensions: ks.Spec.CloudEventOverrides.Extensions,
-					},
 				},
 			},
 			Replicas: ks.Spec.Consumers,
 		},
+	}
+
+	if ks.Spec.CloudEventOverrides != nil {
+		newcg.Spec.Template.Spec.CloudEventOverrides = &duckv1.CloudEventOverrides{
+			Extensions: ks.Spec.CloudEventOverrides.Extensions,
+		}
 	}
 
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(ks.GetNamespace()).Get(string(ks.UID)) //Get by consumer group id

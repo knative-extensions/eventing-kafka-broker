@@ -33,14 +33,14 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 )
 
-func NewControllerV2(ctx context.Context, configs *config.Env) *controller.Impl {
+func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 
 	kafkaInformer := kafkainformer.Get(ctx)
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
 
 	sources.RegisterAlternateKafkaConditionSet(conditionSet)
 
-	r := &ReconcilerV2{
+	r := &Reconciler{
 		ConsumerGroupLister: consumerGroupInformer.Lister(),
 		InternalsClient:     consumergroupclient.Get(ctx),
 	}
