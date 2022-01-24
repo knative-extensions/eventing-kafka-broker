@@ -45,6 +45,9 @@ public class OrderedAsyncExecutor {
    * @param task the task to offer
    */
   public void offer(Supplier<Future<?>> task) {
+    if (this.isStopped) {
+      return;
+    }
     boolean wasEmpty = this.queue.isEmpty();
     this.queue.offer(task);
     if (wasEmpty) { // If no elements in the queue, then we need to start consuming it
@@ -53,7 +56,7 @@ public class OrderedAsyncExecutor {
   }
 
   private void consume() {
-    if (this.isStopped || this.queue.isEmpty() || this.inFlight) {
+    if (queue.isEmpty() || this.inFlight) {
       return;
     }
     this.inFlight = true;
