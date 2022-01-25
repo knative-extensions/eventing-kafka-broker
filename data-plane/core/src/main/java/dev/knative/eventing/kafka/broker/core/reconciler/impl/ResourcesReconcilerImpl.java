@@ -66,7 +66,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
   }
 
   @Override
-  public Future<Void> reconcile(final Collection<DataPlaneContract.Resource> newResources) {
+  public synchronized Future<Void> reconcile(final Collection<DataPlaneContract.Resource> newResources) {
     if (isReconcilingIngress()) {
       return reconcileIngress(newResources);
     }
@@ -86,7 +86,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     final List<Future> futures = new ArrayList<>(egresses.size() + this.cachedEgresses.size());
 
     final var diff = CollectionsUtils.diff(this.cachedEgresses.keySet(), egresses.keySet());
-    logger.debug("Reconcile egress diff {}", diff);
+    logger.info("Reconcile egress diff {}", diff);
 
     diff.getRemoved().forEach(uid -> {
       final var entry = this.cachedEgresses.get(uid);
@@ -124,7 +124,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       final var oldResource = this.cachedResources.get(newResource.getUid());
 
       if (resourceEquals(newResource, oldResource) && egressEquals(newEgress, this.cachedEgresses.get(uid).getKey())) {
-        logger.debug("Nothing changed for egress {} {} {}",
+        logger.info("Nothing changed for egress {} {} {}",
           keyValue("id", newEgress.getUid()),
           keyValue("consumerGroup", newEgress.getConsumerGroup()),
           keyValue("destination", newEgress.getDestination())
@@ -165,7 +165,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     final List<Future> futures = new ArrayList<>(newResourcesMap.size() + this.cachedResources.size());
 
     final var diff = CollectionsUtils.diff(this.cachedResources.keySet(), newResourcesMap.keySet());
-    logger.debug("Reconcile ingress diff {}", diff);
+    logger.info("Reconcile ingress diff {}", diff);
 
     diff.getRemoved().stream()
       .map(this.cachedResources::get)
