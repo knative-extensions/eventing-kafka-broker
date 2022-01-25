@@ -167,3 +167,11 @@ func (cg *ConsumerGroup) IsReady() bool {
 	return cg.Generation == cg.Status.ObservedGeneration &&
 		cg.GetConditionSet().Manage(cg.GetStatus()).IsHappy()
 }
+
+func (cg *ConsumerGroup) IsNotScheduled() bool {
+	// We want to return true when:
+	// - the condition isn't present, or
+	// - the condition isn't ready (aka status=false)
+	cond := cg.Status.GetCondition(ConditionConsumerGroupConsumersScheduled)
+	return cond.IsFalse() || cond.IsUnknown()
+}
