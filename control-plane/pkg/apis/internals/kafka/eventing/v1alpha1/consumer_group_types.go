@@ -183,3 +183,11 @@ func (cg *ConsumerGroup) GetUserFacingResourceRef() *metav1.OwnerReference {
 	}
 	return nil
 }
+
+func (cg *ConsumerGroup) IsNotScheduled() bool {
+	// We want to return true when:
+	// - the condition isn't present, or
+	// - the condition isn't ready (aka status=false)
+	cond := cg.Status.GetCondition(ConditionConsumerGroupConsumersScheduled)
+	return cond.IsFalse() || cond.IsUnknown()
+}

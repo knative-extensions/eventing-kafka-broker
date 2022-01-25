@@ -115,6 +115,12 @@ func ConsumerGroupReplicas(replicas int32) ConsumerGroupOption {
 	}
 }
 
+func ConsumerGroupReplicasStatus(replicas int32) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.Status.Replicas = pointer.Int32Ptr(replicas)
+	}
+}
+
 func ConsumerGroupSelector(selector map[string]string) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
 		cg.Spec.Selector = selector
