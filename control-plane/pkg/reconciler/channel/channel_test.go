@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
+	eventingrekttesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	"knative.dev/pkg/network"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
@@ -350,6 +351,9 @@ func TestReconcileKind(t *testing.T) {
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
+				eventingrekttesting.NewSubscription(Subscription1Name, ChannelNamespace,
+					eventingrekttesting.WithSubscriptionUID(Subscription1UUID),
+				),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -372,6 +376,11 @@ func TestReconcileKind(t *testing.T) {
 								Uid:           Subscription1UUID,
 								DeliveryOrder: contract.DeliveryOrder_ORDERED,
 								ReplyStrategy: &contract.Egress_ReplyUrl{ReplyUrl: "http://" + Subscription1ReplyURI},
+								Reference: &contract.Reference{
+									Name:      Subscription1Name,
+									Namespace: ChannelNamespace,
+									Uuid:      Subscription1UUID,
+								},
 							}},
 						},
 					},
@@ -425,6 +434,9 @@ func TestReconcileKind(t *testing.T) {
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
+				eventingrekttesting.NewSubscription(Subscription1Name, ChannelNamespace,
+					eventingrekttesting.WithSubscriptionUID(Subscription1UUID),
+				),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -447,6 +459,11 @@ func TestReconcileKind(t *testing.T) {
 								Uid:           Subscription1UUID,
 								DeliveryOrder: contract.DeliveryOrder_ORDERED,
 								ReplyStrategy: &contract.Egress_ReplyUrl{ReplyUrl: "http://" + Subscription1ReplyURI},
+								Reference: &contract.Reference{
+									Name:      Subscription1Name,
+									Namespace: ChannelNamespace,
+									Uuid:      Subscription1UUID,
+								},
 							}},
 						},
 					},
@@ -500,6 +517,9 @@ func TestReconcileKind(t *testing.T) {
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
+				eventingrekttesting.NewSubscription(Subscription1Name, ChannelNamespace,
+					eventingrekttesting.WithSubscriptionUID(Subscription1UUID),
+				),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -522,6 +542,11 @@ func TestReconcileKind(t *testing.T) {
 								Uid:           Subscription1UUID,
 								DeliveryOrder: contract.DeliveryOrder_ORDERED,
 								ReplyStrategy: &contract.Egress_ReplyUrl{ReplyUrl: "http://" + Subscription1ReplyURI},
+								Reference: &contract.Reference{
+									Name:      Subscription1Name,
+									Namespace: ChannelNamespace,
+									Uuid:      Subscription1UUID,
+								},
 							}},
 						},
 					},
@@ -578,6 +603,12 @@ func TestReconcileKind(t *testing.T) {
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
+				eventingrekttesting.NewSubscription(Subscription1Name, ChannelNamespace,
+					eventingrekttesting.WithSubscriptionUID(Subscription1UUID),
+				),
+				eventingrekttesting.NewSubscription(Subscription2Name, ChannelNamespace,
+					eventingrekttesting.WithSubscriptionUID(Subscription2UUID),
+				),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -600,12 +631,22 @@ func TestReconcileKind(t *testing.T) {
 								Uid:           Subscription1UUID,
 								DeliveryOrder: contract.DeliveryOrder_ORDERED,
 								ReplyStrategy: &contract.Egress_ReplyUrl{ReplyUrl: "http://" + Subscription1ReplyURI},
+								Reference: &contract.Reference{
+									Name:      Subscription1Name,
+									Namespace: ChannelNamespace,
+									Uuid:      Subscription1UUID,
+								},
 							}, {
 								ConsumerGroup: "kafka." + ChannelNamespace + "." + ChannelName + "." + Subscription2UUID,
 								Destination:   "http://" + Subscription2URI,
 								Uid:           Subscription2UUID,
 								DeliveryOrder: contract.DeliveryOrder_ORDERED,
 								ReplyStrategy: &contract.Egress_DiscardReply{},
+								Reference: &contract.Reference{
+									Name:      Subscription2Name,
+									Namespace: ChannelNamespace,
+									Uuid:      Subscription2UUID,
+								},
 							}},
 						},
 					},
@@ -933,6 +974,9 @@ func TestReconcileKind(t *testing.T) {
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
 				NewSSLSecret(system.Namespace(), "secret-1"),
+				eventingrekttesting.NewSubscription(Subscription1Name, ChannelNamespace,
+					eventingrekttesting.WithSubscriptionUID(Subscription1UUID),
+				),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -963,6 +1007,11 @@ func TestReconcileKind(t *testing.T) {
 								Uid:           Subscription1UUID,
 								DeliveryOrder: contract.DeliveryOrder_ORDERED,
 								ReplyStrategy: &contract.Egress_ReplyUrl{ReplyUrl: "http://" + Subscription1ReplyURI},
+								Reference: &contract.Reference{
+									Name:      Subscription1Name,
+									Namespace: ChannelNamespace,
+									Uuid:      Subscription1UUID,
+								},
 							}},
 						},
 					},
@@ -1217,8 +1266,9 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 				DispatcherLabel:             base.ChannelDispatcherLabel,
 				ReceiverLabel:               base.ChannelReceiverLabel,
 			},
-			Env:             env,
-			ConfigMapLister: listers.GetConfigMapLister(),
+			Env:                env,
+			ConfigMapLister:    listers.GetConfigMapLister(),
+			SubscriptionLister: listers.GetSubscriptionLister(),
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
 			},
