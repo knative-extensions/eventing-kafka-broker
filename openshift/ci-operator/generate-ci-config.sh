@@ -28,6 +28,7 @@ function print_image_dependencies {
     to_image=$(echo ${to_image//v0/upgrade-v0})
     to_image=$(echo ${to_image//migrate/storage-version-migration})
     to_image=$(echo ${to_image//kafka-kafka-/kafka-})
+    to_image=$(echo ${to_image//broker-broker-/broker-})
     image_env=$(echo ${to_image//-/_})
     image_env=$(echo ${image_env^^})
     cat <<EOF
