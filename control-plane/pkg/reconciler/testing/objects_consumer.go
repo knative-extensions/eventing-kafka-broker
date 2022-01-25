@@ -181,3 +181,14 @@ func ConsumerFilters(filters *kafkainternals.Filters) ConsumerSpecOption {
 		c.Filters = filters
 	}
 }
+
+func ConsumerForTrigger() ConsumerGroupOption {
+	return func(c *kafkainternals.ConsumerGroup) {
+		c.OwnerReferences = append(c.OwnerReferences, metav1.OwnerReference{
+			APIVersion: "eventing.knative.dev/v1",
+			Kind:       "Trigger",
+			Name:       "test-trigger",
+			UID:        TriggerUUID,
+		})
+	}
+}

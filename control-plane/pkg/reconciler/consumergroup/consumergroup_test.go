@@ -67,6 +67,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 					)),
 					ConsumerGroupReplicas(2),
+					ConsumerForTrigger(),
 				),
 			},
 			Key: ConsumerGroupTestKey,
@@ -114,6 +115,7 @@ func TestReconcileKind(t *testing.T) {
 								),
 							)),
 							ConsumerGroupReplicas(2),
+							ConsumerForTrigger(),
 						)
 						cg.Status.Placements = []eventingduckv1alpha1.Placement{
 							{PodName: "p1", VReplicas: 1},
@@ -151,6 +153,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig("my.group.id"),
 						),
 					)),
+					ConsumerForTrigger(),
 					ConsumerGroupReplicas(2),
 				),
 			},
@@ -188,6 +191,7 @@ func TestReconcileKind(t *testing.T) {
 								),
 							)),
 							ConsumerGroupReplicas(2),
+							ConsumerForTrigger(),
 						)
 						cg.Status.Placements = []eventingduckv1alpha1.Placement{
 							{PodName: "p1", VReplicas: 1},
@@ -226,6 +230,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 					)),
 					ConsumerGroupReplicas(3),
+					ConsumerForTrigger(),
 				),
 			},
 			Key: ConsumerGroupTestKey,
@@ -283,6 +288,7 @@ func TestReconcileKind(t *testing.T) {
 								),
 							)),
 							ConsumerGroupReplicas(3),
+							ConsumerForTrigger(),
 						)
 						cg.Status.Placements = []eventingduckv1alpha1.Placement{
 							{PodName: "p1", VReplicas: 1},
@@ -319,6 +325,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 					)),
 					ConsumerGroupReplicas(2),
+					ConsumerForTrigger(),
 				),
 			},
 			Key: ConsumerGroupTestKey,
@@ -379,6 +386,7 @@ func TestReconcileKind(t *testing.T) {
 								),
 							)),
 							ConsumerGroupReplicas(2),
+							ConsumerForTrigger(),
 						)
 						cg.Status.Placements = []eventingduckv1alpha1.Placement{
 							{PodName: "p1", VReplicas: 1},
@@ -392,7 +400,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
-			Name: "Scheduler failed",
+			Name: "Schedulers failed",
 			Objects: []runtime.Object{
 				NewConsumerGroup(
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
@@ -403,6 +411,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 					)),
 					ConsumerGroupReplicas(2),
+					ConsumerForTrigger(),
 				),
 			},
 			Key: ConsumerGroupTestKey,
@@ -427,6 +436,7 @@ func TestReconcileKind(t *testing.T) {
 								),
 							)),
 							ConsumerGroupReplicas(2),
+							ConsumerForTrigger(),
 						)
 						cg.GetConditionSet().Manage(cg.GetStatus()).InitializeConditions()
 						_ = cg.MarkScheduleConsumerFailed("Schedule", io.EOF)
@@ -440,7 +450,9 @@ func TestReconcileKind(t *testing.T) {
 	tt.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		r := Reconciler{
-			Scheduler:       row.OtherTestData[testSchedulerKey].(scheduler.Scheduler),
+			SchedulerFunc: func(s string) scheduler.Scheduler {
+				return row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
+			},
 			ConsumerLister:  listers.GetConsumerLister(),
 			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
 			NameGenerator:   &CounterGenerator{},

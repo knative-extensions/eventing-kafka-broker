@@ -17,6 +17,8 @@
 package v1alpha1
 
 import (
+	"strings"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
@@ -213,3 +215,14 @@ func (c *Consumer) IsReady() bool {
 
 // ConsumerOption is a functional option for Consumer.
 type ConsumerOption func(consumer *Consumer)
+
+// GetConsumerGroup gets the resource reference to the ConsumerGroup
+// using the OwnerReference list.
+func (c *Consumer) GetConsumerGroup() *metav1.OwnerReference {
+	for i, or := range c.OwnerReferences {
+		if strings.EqualFold(or.Kind, ConsumerGroupGroupVersionKind.Kind) {
+			return &c.OwnerReferences[i]
+		}
+	}
+	return nil
+}

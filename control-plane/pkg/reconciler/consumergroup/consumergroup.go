@@ -39,8 +39,10 @@ import (
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 )
 
+type schedulerFunc func(s string) scheduler.Scheduler
+
 type Reconciler struct {
-	Scheduler       scheduler.Scheduler
+	SchedulerFunc   schedulerFunc
 	ConsumerLister  kafkainternalslisters.ConsumerLister
 	InternalsClient internalv1alpha1.InternalV1alpha1Interface
 
@@ -167,7 +169,7 @@ func (r Reconciler) finalizeConsumer(ctx context.Context, consumer *kafkainterna
 }
 
 func (r Reconciler) schedule(cg *kafkainternals.ConsumerGroup) error {
-	placements, err := r.Scheduler.Schedule(cg)
+	placements, err := r.SchedulerFunc(cg.GetUserFacingResourceRef().Kind).Schedule(cg)
 	if err != nil {
 		return cg.MarkScheduleConsumerFailed("Schedule", err)
 	}
