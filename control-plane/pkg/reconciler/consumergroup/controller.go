@@ -79,7 +79,7 @@ func NewController(ctx context.Context) *controller.Impl {
 	c := SchedulerConfig{
 		RefreshPeriod:       2 * time.Minute,
 		Capacity:            50,
-		SchedulerPolicyType: scheduler.MAXFILLUP,
+		SchedulerPolicyType: "",
 		SchedulerPolicy:     schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaSchedulerName),
 		DeSchedulerPolicy:   schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaDeSchedulerName),
 	}
