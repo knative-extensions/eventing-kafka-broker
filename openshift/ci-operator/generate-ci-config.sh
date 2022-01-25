@@ -15,7 +15,7 @@ if [[ "$branch" == "knative-next" ]]; then
   promotion_name="knative-nightly"
   generate_continuous=false
 else
-  promotion_name="$branch.0"
+  promotion_name="$branch.3"
 fi
 
 core_images=$(find ./openshift/ci-operator/knative-images -mindepth 1 -maxdepth 1 -type d | LC_COLLATE=posix sort)
