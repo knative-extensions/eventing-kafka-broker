@@ -35,7 +35,7 @@ spec:
     spec:
       serviceAccountName: knative-kafka-sink-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       # To avoid node becoming SPOF, spread our replicas to different nodes.
       affinity:
         podAntiAffinity:

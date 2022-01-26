@@ -21,9 +21,8 @@ function resolve_resources(){
     sed -e "s+\(.* image: \)\(knative.dev\)\(.*/\)\(test/\)\(.*\)+\1\2 \3\4test-\5+g" \
         -e "s+ko://++" \
         -e "s+contrib.eventing.knative.dev/release: devel+contrib.eventing.knative.dev/release: ${release}+" \
-        -e "s+\${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}+${image_prefix}broker-dispatcher${image_tag}+" \
-        -e "s+\${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}+${image_prefix}broker-receiver${image_tag}+" \
-        -e "s+\${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}+${image_prefix}sink-receiver${image_tag}+" \
+        -e "s+\${KNATIVE_KAFKA_DISPATCHER_IMAGE}+${image_prefix}broker-dispatcher${image_tag}+" \
+        -e "s+\${KNATIVE_KAFKA_RECEIVER_IMAGE}+${image_prefix}broker-receiver${image_tag}+" \
         -e "s+\(.* image: \)\(knative.dev\)\(.*/\)\(.*\)+\1${image_prefix}broker-\4${image_tag}+g" \
         -e '/^[ \t]*#/d' \
         -e '/^[ \t]*$/d' \

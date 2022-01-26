@@ -1,6 +1,5 @@
 ---
 ---
----
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -131,10 +130,10 @@ spec:
     spec:
       serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       containers:
         - name: kafka-broker-dispatcher
-          image: ${KNATIVE_KAFKA_DISPATCHER_IMAGE}
+          image: registry.ci.openshift.org/openshift/knative-v1.1.3:knative-eventing-kafka-broker-dispatcher
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -264,7 +263,7 @@ spec:
     spec:
       serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -276,7 +275,7 @@ spec:
               weight: 100
       containers:
         - name: kafka-broker-receiver
-          image: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
+          image: registry.ci.openshift.org/openshift/knative-v1.1.3:knative-eventing-kafka-broker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -405,7 +404,6 @@ spec:
 ---
 ---
 ---
----
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -506,7 +504,7 @@ spec:
     spec:
       serviceAccountName: knative-kafka-sink-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -518,7 +516,7 @@ spec:
               weight: 100
       containers:
         - name: kafka-sink-receiver
-          image: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
+          image: registry.ci.openshift.org/openshift/knative-v1.1.3:knative-eventing-kafka-broker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -646,3 +644,244 @@ spec:
       targetPort: 9090
 ---
 ---
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-kafka-source-data-plane
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
+data:
+  config-kafka-source-producer.properties: |
+    key.serializer=org.apache.kafka.common.serialization.StringSerializer
+    value.serializer=io.cloudevents.kafka.CloudEventSerializer
+    acks=all
+    buffer.memory=33554432
+    retries=2147483647
+    batch.size=16384
+    client.dns.lookup=use_all_dns_ips
+    connections.max.idle.ms=600000
+    delivery.timeout.ms=120000
+    linger.ms=0
+    max.block.ms=60000
+    max.request.size=1048576
+    partitioner.class=org.apache.kafka.clients.producer.internals.DefaultPartitioner
+    receive.buffer.bytes=-1
+    request.timeout.ms=30000
+    enable.idempotence=false
+    max.in.flight.requests.per.connection=5
+    metadata.max.age.ms=300000
+    metrics.num.samples=2
+    metrics.recording.level=INFO
+    metrics.sample.window.ms=30000
+    reconnect.backoff.max.ms=1000
+    reconnect.backoff.ms=50
+    retry.backoff.ms=100
+  config-kafka-source-consumer.properties: |
+    cloudevent.invalid.transformer.enabled=true
+    cloudevent.invalid.kind.plural=kafkasources
+    key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+    value.deserializer=io.cloudevents.kafka.CloudEventDeserializer
+    fetch.min.bytes=1
+    heartbeat.interval.ms=3000
+    max.partition.fetch.bytes=1048576
+    session.timeout.ms=10000
+    allow.auto.create.topics=true
+    auto.offset.reset=earliest
+    client.dns.lookup=use_all_dns_ips
+    connections.max.idle.ms=540000
+    default.api.timeout.ms=60000
+    enable.auto.commit=false
+    exclude.internal.topics=true
+    fetch.max.bytes=52428800
+    isolation.level=read_uncommitted
+    max.poll.interval.ms=300000
+    max.poll.records=500
+    receive.buffer.bytes=65536
+    request.timeout.ms=30000
+    security.protocol=PLAINTEXT
+    send.buffer.bytes=131072
+    auto.commit.interval.ms=5000
+    check.crcs=true
+    fetch.max.wait.ms=500
+    metadata.max.age.ms=600000
+    reconnect.backoff.max.ms=1000
+    retry.backoff.ms=100
+  config-kafka-source-webclient.properties: |
+    idleTimeout=10000
+---
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: knative-kafka-source-data-plane
+  labels:
+    kafka.eventing.knative.dev/release: devel
+rules:
+  - apiGroups:
+      - "*"
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+---
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: knative-kafka-source-data-plane
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
+---
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: knative-kafka-source-data-plane
+  labels:
+    kafka.eventing.knative.dev/release: devel
+subjects:
+  - kind: ServiceAccount
+    name: knative-kafka-source-data-plane
+    namespace: knative-eventing
+roleRef:
+  kind: ClusterRole
+  name: knative-kafka-source-data-plane
+  apiGroup: rbac.authorization.k8s.io
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-source-dispatcher
+  namespace: knative-eventing
+  labels:
+    app: kafka-source-dispatcher
+    kafka.eventing.knative.dev/release: devel
+spec:
+  selector:
+    matchLabels:
+      app: kafka-source-dispatcher
+  template:
+    metadata:
+      name: kafka-source-dispatcher
+      labels:
+        app: kafka-source-dispatcher
+        kafka.eventing.knative.dev/release: devel
+    spec:
+      serviceAccountName: knative-kafka-source-data-plane
+      securityContext:
+        runAsNonRoot: false
+      containers:
+        - name: kafka-source-dispatcher
+          image: registry.ci.openshift.org/openshift/knative-v1.1.3:knative-eventing-kafka-broker-dispatcher
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /etc/config
+              name: config-kafka-source-data-plane
+              readOnly: true
+            - mountPath: /etc/sources
+              name: kafka-source-sources
+              readOnly: true
+            - mountPath: /tmp
+              name: cache
+            - mountPath: /etc/logging
+              name: kafka-config-logging
+              readOnly: true
+            - mountPath: /etc/tracing
+              name: config-tracing
+              readOnly: true
+          ports:
+            - containerPort: 9090
+              name: http-metrics
+              protocol: TCP
+          env:
+            - name: SERVICE_NAME
+              value: "kafka-source-dispatcher"
+            - name: SERVICE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: PRODUCER_CONFIG_FILE_PATH
+              value: /etc/config/config-kafka-source-producer.properties
+            - name: CONSUMER_CONFIG_FILE_PATH
+              value: /etc/config/config-kafka-source-consumer.properties
+            - name: WEBCLIENT_CONFIG_FILE_PATH
+              value: /etc/config/config-kafka-source-webclient.properties
+            - name: DATA_PLANE_CONFIG_FILE_PATH
+              value: /etc/sources/data
+            - name: EGRESSES_INITIAL_CAPACITY
+              value: "20"
+            - name: INSTANCE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: METRICS_PATH
+              value: /metrics
+            - name: METRICS_PORT
+              value: "9090"
+            - name: METRICS_PUBLISH_QUANTILES
+              value: "false"
+            - name: METRICS_JVM_ENABLED
+              value: "false"
+            - name: CONFIG_TRACING_PATH
+              value: "/etc/tracing"
+            - name: HTTP2_DISABLE
+              value: "true"
+            - name: WAIT_STARTUP_SECONDS
+              value: "8"
+          command:
+            - "java"
+          args:
+            - "-Dlogback.configurationFile=/etc/logging/config.xml"
+            - "-jar"
+            - "/app/app.jar"
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              port: 9090
+              path: /metrics
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              port: 9090
+              path: /metrics
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+          terminationMessagePolicy: FallbackToLogsOnError
+          terminationMessagePath: /dev/temination-log
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+      volumes:
+        - name: config-kafka-source-data-plane
+          configMap:
+            name: config-kafka-source-data-plane
+        - name: kafka-source-sources
+          configMap:
+            name: kafka-source-sources
+        - name: cache
+          emptyDir: { }
+        - name: kafka-config-logging
+          configMap:
+            name: kafka-config-logging
+        - name: config-tracing
+          configMap:
+            name: config-tracing
+      restartPolicy: Always
+      dnsConfig:
+        options:
+          - name: single-request-reopen
