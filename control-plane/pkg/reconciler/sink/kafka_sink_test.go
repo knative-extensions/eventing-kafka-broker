@@ -1034,6 +1034,9 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 					Generation: 2,
 				}),
 			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
+			},
 		},
 		{
 			Name: "Reconciled normal - topic controlled by us",
@@ -1087,6 +1090,124 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 					},
 					Generation: 2,
 				}),
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
+			},
+		},
+		{
+			Name: "Reconciled normal, probe not ready",
+			Objects: []runtime.Object{
+				NewDeletedSink(
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:    SinkUUID + "a",
+							Topics: []string{"topic"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+						{
+							Uid:    SinkUUID,
+							Topics: []string{"topic-2"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 1,
+				}, &env),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:    SinkUUID + "a",
+							Topics: []string{"topic"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 2,
+				}),
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
+			},
+		},
+		{
+			Name: "Reconciled failed, probe ready",
+			Objects: []runtime.Object{
+				NewDeletedSink(
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:    SinkUUID + "a",
+							Topics: []string{"topic"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+						{
+							Uid:    SinkUUID,
+							Topics: []string{"topic-2"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 1,
+				}, &env),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:    SinkUUID + "a",
+							Topics: []string{"topic"},
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: "path",
+								},
+								ContentMode: contract.ContentMode_STRUCTURED,
+							},
+							BootstrapServers: bootstrapServers,
+						},
+					},
+					Generation: 2,
+				}),
+			},
+			WantErr: true,
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusReady),
 			},
 		},
 		{
