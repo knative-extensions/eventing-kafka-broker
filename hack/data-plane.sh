@@ -35,8 +35,8 @@ readonly SINK_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/sink
 
 # The BASE_IMAGE must have system libraries (libc, zlib, etc) compatible with the JAVA_IMAGE because
 # Jlink generates a jdk linked to the same system libraries available on the base images.
-readonly BASE_IMAGE=${BASE_IMAGE:-"gcr.io/distroless/java-debian11:base-nonroot"} # Based on debian:buster
-readonly JAVA_IMAGE=${JAVA_IMAGE:-"docker.io/eclipse-temurin:17-jdk-centos7"}     # Based on centos7
+readonly BASE_IMAGE=${BASE_IMAGE:-"quay.io/openshift-knative/17-jdk-centos"}
+readonly JAVA_IMAGE=${JAVA_IMAGE:-"quay.io/openshift-knative/17-jdk-centos"}
 
 readonly RECEIVER_JAR="receiver-1.0-SNAPSHOT.jar"
 readonly RECEIVER_DIRECTORY=receiver
