@@ -109,7 +109,7 @@ func TestReconcileKind(t *testing.T) {
 			Key:  testKey,
 		},
 		{
-			Name: "Channel is being deleted",
+			Name: "Channel is being deleted, probe not ready",
 			Key:  testKey,
 			Objects: []runtime.Object{
 				NewChannel(
@@ -119,6 +119,26 @@ func TestReconcileKind(t *testing.T) {
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
+			},
+		},
+		{
+			Name: "Channel is being deleted, probe ready",
+			Key:  testKey,
+			Objects: []runtime.Object{
+				NewChannel(
+					WithInitKafkaChannelConditions,
+					WithDeletedTimeStamp),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+				NewConfigMapWithBinaryData(&env, nil),
+			},
+			WantErr: true,
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusReady),
 			},
 		},
 		{

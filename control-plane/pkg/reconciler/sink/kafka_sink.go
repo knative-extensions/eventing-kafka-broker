@@ -19,6 +19,7 @@ package sink
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -298,7 +299,9 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 		},
 	}
 	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusNotReady {
-		return nil // Object will get re-queued once probe status changes.
+		// Return a requeueKeyError that doesn't generate an event and it re-queues the object
+		// for a new reconciliation.
+		return controller.NewRequeueAfter(5 * time.Second)
 	}
 
 	if ks.GetStatus().Annotations[base.TopicOwnerAnnotation] == ControllerTopicOwner {
