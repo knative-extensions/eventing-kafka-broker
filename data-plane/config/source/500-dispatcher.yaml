@@ -35,7 +35,7 @@ spec:
     spec:
       serviceAccountName: knative-kafka-source-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       containers:
         - name: kafka-source-dispatcher
           image: ${KNATIVE_KAFKA_DISPATCHER_IMAGE}

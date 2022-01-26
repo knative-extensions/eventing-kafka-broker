@@ -130,10 +130,10 @@ spec:
     spec:
       serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       containers:
         - name: kafka-broker-dispatcher
-          image: ${KNATIVE_KAFKA_DISPATCHER_IMAGE}
+          image: registry.ci.openshift.org/openshift/knative-v1.1.3:knative-eventing-kafka-broker-dispatcher
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -263,7 +263,7 @@ spec:
     spec:
       serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -275,7 +275,7 @@ spec:
               weight: 100
       containers:
         - name: kafka-broker-receiver
-          image: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
+          image: registry.ci.openshift.org/openshift/knative-v1.1.3:knative-eventing-kafka-broker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -504,7 +504,7 @@ spec:
     spec:
       serviceAccountName: knative-kafka-sink-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -516,7 +516,7 @@ spec:
               weight: 100
       containers:
         - name: kafka-sink-receiver
-          image: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
+          image: registry.ci.openshift.org/openshift/knative-v1.1.3:knative-eventing-kafka-broker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -775,10 +775,10 @@ spec:
     spec:
       serviceAccountName: knative-kafka-source-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       containers:
         - name: kafka-source-dispatcher
-          image: ${KNATIVE_KAFKA_DISPATCHER_IMAGE}
+          image: registry.ci.openshift.org/openshift/knative-v1.1.3:knative-eventing-kafka-broker-dispatcher
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
