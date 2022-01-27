@@ -23,6 +23,8 @@ export_logs_continuously
 
 go_test_e2e -tags=e2e,cloudevents -timeout=1h ./test/e2e_new/... || fail_test "E2E (new) suite failed"
 
+go_test_e2e -timeout=1h ./test/e2e_new_channel/... || fail_test "E2E (new - KafkaChannel) suite failed"
+
 go_test_e2e -tags=deletecm ./test/e2e_new/... || fail_test "E2E (new deletecm) suite failed"
 
 if ! ${LOCAL_DEVELOPMENT}; then

@@ -24,14 +24,24 @@ import (
 	"os"
 	"testing"
 
+	"knative.dev/eventing-kafka/test"
+	eventingTest "knative.dev/eventing/test"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/pkg/system"
 	"knative.dev/pkg/test/zipkin"
 )
 
+var channelTestRunner testlib.ComponentsTestRunner
+
 func TestMain(m *testing.M) {
 
 	os.Exit(func() int {
+		eventingTest.InitializeEventingFlags()
+		channelTestRunner = testlib.ComponentsTestRunner{
+			ComponentFeatureMap: test.ChannelFeatureMap,
+			ComponentsToTest:    eventingTest.EventingFlags.Channels,
+		}
+
 		// Any tests may SetupZipkinTracing, it will only actually be done once. This should be the ONLY
 		// place that cleans it up. If an individual test calls this instead, then it will break other
 		// tests that need the tracing in place.

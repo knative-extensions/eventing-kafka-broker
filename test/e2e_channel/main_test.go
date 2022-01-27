@@ -2,7 +2,7 @@
 // +build e2e
 
 /*
- * Copyright 2022 The Knative Authors
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,30 @@
  * limitations under the License.
  */
 
-package e2e
+package e2e_channel
 
 import (
-	"context"
+	"os"
 	"testing"
 
-	"knative.dev/eventing/test/e2e/helpers"
+	"knative.dev/eventing-kafka/test"
+	eventingTest "knative.dev/eventing/test"
+	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/pkg/system"
 )
 
-func TestEventTransformationForSubscription(t *testing.T) {
-	helpers.EventTransformationForSubscriptionTestHelper(context.Background(), t, helpers.SubscriptionV1, channelTestRunner)
+var channelTestRunner testlib.ComponentsTestRunner
+
+func TestMain(m *testing.M) {
+
+	eventingTest.InitializeEventingFlags()
+	channelTestRunner = testlib.ComponentsTestRunner{
+		ComponentFeatureMap: test.ChannelFeatureMap,
+		ComponentsToTest:    eventingTest.EventingFlags.Channels,
+	}
+	os.Exit(func() int {
+		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
+
+		return m.Run()
+	}())
 }

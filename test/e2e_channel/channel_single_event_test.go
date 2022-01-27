@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e
+package e2e_channel
 
 import (
 	"context"

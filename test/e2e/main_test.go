@@ -23,21 +23,11 @@ import (
 	"os"
 	"testing"
 
-	"knative.dev/eventing-kafka/test"
-	eventingTest "knative.dev/eventing/test"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/pkg/system"
 )
 
-var channelTestRunner testlib.ComponentsTestRunner
-
 func TestMain(m *testing.M) {
-
-	eventingTest.InitializeEventingFlags()
-	channelTestRunner = testlib.ComponentsTestRunner{
-		ComponentFeatureMap: test.ChannelFeatureMap,
-		ComponentsToTest:    eventingTest.EventingFlags.Channels,
-	}
 	os.Exit(func() int {
 		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
 
