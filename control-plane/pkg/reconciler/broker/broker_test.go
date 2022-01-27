@@ -979,7 +979,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						},
 						reconcilertesting.WithInitBrokerConditions,
 						StatusBrokerDataPlaneAvailable,
-						StatusBrokerConfigParsed,
+						StatusBrokerConfigNotParsed("failed to resolve Spec.Delivery.DeadLetterSink: destination missing Ref and URI, expected at least one"),
 						StatusBrokerTopicReady,
 					),
 				},

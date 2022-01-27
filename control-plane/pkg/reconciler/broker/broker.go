@@ -161,7 +161,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	// Get resource configuration.
 	brokerResource, err := r.reconcilerBrokerResource(ctx, topic, broker, secret, topicConfig)
 	if err != nil {
-		return statusConditionManager.FailedToGetConfig(err)
+		return statusConditionManager.FailedToResolveConfig(err)
 	}
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&broker.Status.DeliveryStatus, brokerResource.EgressConfig)
 
