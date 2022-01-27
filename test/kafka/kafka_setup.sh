@@ -103,6 +103,7 @@ function create_sasl_secrets() {
     --from-literal=user="my-sasl-user" \
     --from-literal=protocol="SASL_SSL" \
     --from-literal=sasl.mechanism="SCRAM-SHA-512" \
+    --from-literal=saslType="SCRAM-SHA-512" \
     --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
 
   kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-sasl-plain-secret \
@@ -110,6 +111,7 @@ function create_sasl_secrets() {
     --from-literal=user="my-sasl-user" \
     --from-literal=protocol="SASL_PLAINTEXT" \
     --from-literal=sasl.mechanism="SCRAM-SHA-512" \
+    --from-literal=saslType="SCRAM-SHA-512" \
     --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
 }
 
