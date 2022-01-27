@@ -143,6 +143,8 @@ jobs:
 
       - name: Run e2e Tests
         run: |
+          source test/e2e-common.sh
+
           export KO_FLAGS="--platform=linux/amd64"
           export SYSTEM_NAMESPACE=knative-eventing
           export CLUSTER_DOMAIN=${CLUSTER_SUFFIX}
