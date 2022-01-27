@@ -18,10 +18,14 @@ package featuressteps
 
 import (
 	"context"
+	"encoding/json"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
@@ -108,5 +112,27 @@ func DeleteBroker(name string) feature.StepFn {
 		if err != nil {
 			t.Fatalf("Failed to delete Broker %s/%s: %w\n", ns, name, err)
 		}
+
+		interval, timeout := environment.PollTimingsFromContext(ctx)
+
+		err = wait.PollImmediate(interval, timeout, func() (bool, error) {
+			br, err := eventingclient.Get(ctx).
+				EventingV1().
+				Brokers(ns).
+				Get(ctx, name, metav1.GetOptions{})
+			if apierrors.IsNotFound(err) {
+				return true, nil
+			}
+			if err != nil {
+				t.Logf("Failed to get broker %s: %w", name, err)
+				return false, err
+			}
+
+			b, _ := json.MarshalIndent(br, "", " ")
+			t.Logf("Broker %s still present\n%s\n", name, b)
+
+			return false, nil
+		})
+		require.Nil(t, err)
 	}
 }
