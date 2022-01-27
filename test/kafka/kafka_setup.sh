@@ -66,7 +66,7 @@ function create_tls_secrets() {
   ca_cert_secret="my-cluster-cluster-ca-cert"
   tls_user="my-tls-user"
 
-  echo "Waiting until secrets: ${ca_cert_secret}, ${tls_user} don't exist"
+  echo "Waiting until secrets: ${ca_cert_secret}, ${tls_user} exist"
   wait_until_object_exists secret ${ca_cert_secret} kafka
   wait_until_object_exists secret ${tls_user} kafka
 
@@ -80,6 +80,7 @@ function create_tls_secrets() {
     --from-literal=ca.crt="$STRIMZI_CRT" \
     --from-literal=user.crt="$TLSUSER_CRT" \
     --from-literal=user.key="$TLSUSER_KEY" \
+    --from-literal=protocol="SSL" \
     --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
 }
 
@@ -87,11 +88,11 @@ function create_sasl_secrets() {
   ca_cert_secret="my-cluster-cluster-ca-cert"
   sasl_user="my-sasl-user"
 
-  echo "Waiting until secrets: ${ca_cert_secret}, ${sasl_user} don't exist"
+  echo "Waiting until secrets: ${ca_cert_secret}, ${sasl_user} exist"
   wait_until_object_exists secret ${ca_cert_secret} kafka
   wait_until_object_exists secret ${sasl_user} kafka
 
-  echo "Creating SASL Kafka secret"
+  echo "Creating SASL_SSL and SASL_PLAINTEXT Kafka secrets"
 
   STRIMZI_CRT=$(kubectl -n kafka get secret ${ca_cert_secret} --template='{{index .data "ca.crt"}}' | base64 --decode )
   SASL_PASSWD=$(kubectl -n kafka get secret ${sasl_user} --template='{{index .data "password"}}' | base64 --decode )
@@ -99,8 +100,16 @@ function create_sasl_secrets() {
   kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-sasl-secret \
     --from-literal=ca.crt="$STRIMZI_CRT" \
     --from-literal=password="$SASL_PASSWD" \
-    --from-literal=saslType="SCRAM-SHA-512" \
     --from-literal=user="my-sasl-user" \
+    --from-literal=protocol="SASL_SSL" \
+    --from-literal=sasl.mechanism="SCRAM-SHA-512" \
+    --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
+
+  kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-sasl-plain-secret \
+    --from-literal=password="$SASL_PASSWD" \
+    --from-literal=user="my-sasl-user" \
+    --from-literal=protocol="SASL_PLAINTEXT" \
+    --from-literal=sasl.mechanism="SCRAM-SHA-512" \
     --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
 }
 
