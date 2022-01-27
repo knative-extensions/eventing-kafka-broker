@@ -286,6 +286,6 @@ function setup_kafka_channel_auth() {
     kubectl patch configmap/kafka-channel-config \
       -n knative-eventing \
       --type=json \
-      -p='[{"op": "remove", "path": "/data/auth.secret.ref.name"}]'
+      -p='[{"op": "remove", "path": "/data/auth.secret.ref.name"}]' || true
   fi
 }
