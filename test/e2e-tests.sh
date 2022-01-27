@@ -17,6 +17,10 @@ header "Waiting Knative eventing to come up"
 
 wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing didn't come up"
 
+# Setup auth config for KafkaChannel. Uses CHANNEL_AUTH_SCENARIO env var.
+header "Setting up auth config for KafkaChannel"
+setup_kafka_channel_auth
+
 header "Running tests"
 
 export_logs_continuously

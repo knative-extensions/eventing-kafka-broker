@@ -24,6 +24,12 @@ jobs:
         eventing-config:
           - "./third_party/eventing-latest/"
 
+        channel-auth-scenario:
+          - "TLS"
+          - "SASL_SSL"
+          - "SASL_PLAIN"
+          - ""
+
         test-suite:
           - ./test/e2e
           - ./test/e2e_new
@@ -54,6 +60,8 @@ jobs:
       EVENTING_CONFIG: ${{ matrix.eventing-config }}
       NODE_VERSION: ${{ matrix.k8s-version }}
       NODE_SHA: ${{ matrix.kind-image-sha }}
+
+      CHANNEL_AUTH_SCENARIO: ${{ matrix.channel-auth-scenario }}
 
     steps:
       - name: Install Dependencies
@@ -121,6 +129,9 @@ jobs:
           export KO_FLAGS="--platform=linux/amd64"
           export SYSTEM_NAMESPACE=knative-eventing
           export CLUSTER_DOMAIN=${CLUSTER_SUFFIX}
+
+          # Setup auth config for KafkaChannel. Uses CHANNEL_AUTH_SCENARIO env var.
+          setup_kafka_channel_auth
 
           # Run the tests tagged as e2e on the KinD cluster.
           go test -race -count=1 -timeout=1h -v -short -tags=e2e \
