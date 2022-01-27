@@ -24,9 +24,6 @@ jobs:
         eventing-config:
           - "./third_party/eventing-latest/"
 
-        channel-auth-scenario:
-          - ""
-
         test-suite:
           - ./test/e2e
           - ./test/e2e_new
@@ -49,16 +46,21 @@ jobs:
           # additional tests for KafkaChannel auth scenarios
           - test-suite: ./test/e2e_channel
             extra-test-flags: -channels=messaging.knative.dev/v1beta1:KafkaChannel
-            channel-auth-scenario:
-              - "TLS"
-              - "SASL_SSL"
-              - "SASL_PLAIN"
+            channel-auth-scenario: TLS
+          - test-suite: ./test/e2e_channel
+            extra-test-flags: -channels=messaging.knative.dev/v1beta1:KafkaChannel
+            channel-auth-scenario: SASL_SSL
+          - test-suite: ./test/e2e_channel
+            extra-test-flags: -channels=messaging.knative.dev/v1beta1:KafkaChannel
+            channel-auth-scenario: SASL_PLAIN
+
           # additional tests for KafkaChannel auth scenarios
           - test-suite: ./test/e2e_new_channel
-            channel-auth-scenario:
-              - "TLS"
-              - "SASL_SSL"
-              - "SASL_PLAIN"
+            channel-auth-scenario: TLS
+          - test-suite: ./test/e2e_new_channel
+            channel-auth-scenario: SASL_SSL
+          - test-suite: ./test/e2e_new_channel
+            channel-auth-scenario: SASL_PLAIN
 
     env:
       GOPATH: ${{ github.workspace }}
