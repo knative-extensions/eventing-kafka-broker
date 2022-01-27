@@ -124,7 +124,6 @@ EOF
 
   sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-dispatcher|${KNATIVE_EVENTING_KAFKA_BROKER_DISPATCHER}|g" ${DP_RELEASE_YAML}
   sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-receiver|${KNATIVE_EVENTING_KAFKA_BROKER_RECEIVER}|g"     ${DP_RELEASE_YAML}
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-receiver|${KNATIVE_EVENTING_KAFKA_SINK_RECEIVER}|g"       ${DP_RELEASE_YAML}
 
   oc apply -f ${DP_RELEASE_YAML}
   wait_until_pods_running $EVENTING_NAMESPACE || return 1
