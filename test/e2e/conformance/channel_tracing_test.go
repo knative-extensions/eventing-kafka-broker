@@ -34,9 +34,6 @@ import (
 const kafkaChannelAPIVersion = "messaging.knative.dev/v1beta1"
 
 func TestChannelTracingWithReply(t *testing.T) {
-	// TODO: skip for now
-	t.Skip()
-
 	// Enable this test only for Kafka
 	helpers.ChannelTracingTestHelperWithChannelTestRunner(context.Background(), t, testlib.ComponentsTestRunner{
 		ComponentFeatureMap: map[metav1.TypeMeta][]testlib.Feature{
