@@ -40,6 +40,8 @@ export_logs_continuously
 
 go_test_e2e -timeout=1h ./test/e2e/... || fail_test "E2E suite failed"
 
+go_test_e2e -timeout=1h ./test/e2e_channel/... -channels=messaging.knative.dev/v1beta1:KafkaChannel || fail_test "E2E suite (KafkaChannel) failed"
+
 go_test_e2e -tags=deletecm ./test/e2e/... || fail_test "E2E (deletecm) suite failed"
 
 if ! ${LOCAL_DEVELOPMENT}; then
