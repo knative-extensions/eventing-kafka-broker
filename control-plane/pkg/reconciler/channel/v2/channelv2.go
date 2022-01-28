@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 
@@ -62,6 +63,9 @@ const (
 	// TopicPrefix is the Kafka Channel topic prefix - (topic name: knative-messaging-kafka.<channel-namespace>.<channel-name>).
 	TopicPrefix          = "knative-messaging-kafka"
 	DefaultDeliveryOrder = internals.Ordered
+
+	// Labels
+	KafkaChannelNameLabel = "kafkachannel-name"
 
 	KafkaChannelConditionConsumerGroup apis.ConditionType = "ConsumerGroup" //condition is registered by controller
 )
@@ -402,6 +406,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 
 	channel.Status.Subscribers = make([]v1.SubscriberStatus, 0)
 	var globalErr error
+	currentCgs := make(map[*internalscg.ConsumerGroup]struct{}, 0)
 	for i := range channel.Spec.Subscribers {
 		s := &channel.Spec.Subscribers[i]
 		logger = logger.With(zap.Any("subscription", s))
@@ -416,6 +421,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 			})
 			globalErr = multierr.Append(globalErr, err)
 		} else {
+			currentCgs[cg] = struct{}{} //adding reconciled consumer group to map
 			if cg.IsReady() {
 				logger.Debug("marking subscription as ready")
 				channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
@@ -444,6 +450,22 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 			}
 		}
 	}
+
+	// Get all consumer groups associated with this Channel
+	selector := labels.SelectorFromSet(map[string]string{KafkaChannelNameLabel: channel.Name})
+	channelCgs, err := r.ConsumerGroupLister.ConsumerGroups(channel.GetNamespace()).List(selector)
+	if err != nil {
+		globalErr = multierr.Append(globalErr, err)
+	}
+	for _, cg := range channelCgs {
+		if _, ok := currentCgs[cg]; !ok { //ConsumerGroup needs to be deleted since it isn't associated with an existing subscriber (subscriber may have been deleted)
+			err := r.finalizeConsumerGroup(ctx, cg)
+			if err != nil {
+				globalErr = multierr.Append(globalErr, err)
+			}
+		}
+	}
+
 	return globalErr
 }
 
@@ -454,6 +476,9 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 			Namespace: channel.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*kmeta.NewControllerRef(channel),
+			},
+			Labels: map[string]string{
+				KafkaChannelNameLabel: channel.Name, // identifies the new ConsumerGroup as associated with this channel (same namespace)
 			},
 		},
 		Spec: internalscg.ConsumerGroupSpec{
@@ -483,13 +508,15 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 		if err != nil && !apierrors.IsAlreadyExists(err) {
 			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", newcg.GetNamespace(), newcg.GetName(), err)
 		}
+
+	if apierrors.IsNotFound(err) {
+		_, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(newcg.GetNamespace()).Create(ctx, newcg, metav1.CreateOptions{})
+		if err != nil && !apierrors.IsAlreadyExists(err) {
+			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", newcg.GetNamespace(), newcg.GetName(), err)
+		}
 		if apierrors.IsAlreadyExists(err) {
 			return newcg, nil
 		}
-		return cg, nil
-	}
-
-	if equality.Semantic.DeepDerivative(newcg.Spec, cg.Spec) {
 		return cg, nil
 	}
 
@@ -503,7 +530,57 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 		return nil, fmt.Errorf("failed to update consumer group %s/%s: %w", newCg.GetNamespace(), newCg.GetName(), err)
 	}
 
-	return cg, nil
+// consumerGroup returns a consumerGroup name for the given channel and subscription
+func consumerGroup(channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec) string {
+	return fmt.Sprintf("kafka.%s.%s.%s", channel.Namespace, channel.Name, string(s.UID))
+}
+
+func (r *Reconciler) getChannelContractResource(topic string, channel *messagingv1beta1.KafkaChannel, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
+	resource := &contract.Resource{
+		Uid:    string(channel.UID),
+		Topics: []string{topic},
+		Ingress: &contract.Ingress{
+			IngressType: &contract.Ingress_Path{
+				Path: receiver.PathFromObject(channel),
+			},
+		},
+		BootstrapServers: config.GetBootstrapServers(),
+		Reference: &contract.Reference{
+			Uuid:      string(channel.GetUID()),
+			Namespace: channel.GetNamespace(),
+			Name:      channel.GetName(),
+		},
+	}
+
+	if secret != nil {
+		resource.Auth = &contract.Resource_AuthSecret{
+			AuthSecret: &contract.Reference{
+				Uuid:      string(secret.UID),
+				Namespace: secret.Namespace,
+				Name:      secret.Name,
+				Version:   secret.ResourceVersion,
+			},
+		}
+	}
+
+	return resource, nil
+}
+
+func subscriberStatus(s *v1.SubscriberSpec, err error) v1.SubscriberStatus {
+	if err != nil {
+		return v1.SubscriberStatus{
+			UID:                s.UID,
+			ObservedGeneration: s.Generation,
+			Ready:              corev1.ConditionFalse,
+			Message:            fmt.Sprint("Subscription not ready", err),
+		}
+	}
+
+	return v1.SubscriberStatus{
+		UID:                s.UID,
+		ObservedGeneration: s.Generation,
+		Ready:              corev1.ConditionTrue,
+	}
 }
 
 func (r *Reconciler) getChannelContractResource(topic string, channel *messagingv1beta1.KafkaChannel, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
@@ -579,4 +656,15 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, cm *corev1.ConfigMap, chann
 		},
 		BootstrapServers: bootstrapServers,
 	}, nil
+}
+
+func (r Reconciler) finalizeConsumerGroup(ctx context.Context, cg *internalscg.ConsumerGroup) error {
+	dOpts := metav1.DeleteOptions{
+		Preconditions: &metav1.Preconditions{UID: &cg.UID},
+	}
+	err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Delete(ctx, cg.GetName(), dOpts)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to remove consumer group %s/%s: %w", cg.GetNamespace(), cg.GetName(), err)
+	}
+	return nil
 }
