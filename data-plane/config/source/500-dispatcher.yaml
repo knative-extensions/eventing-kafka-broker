@@ -15,7 +15,7 @@
 # limitations under the License.
 
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: kafka-source-dispatcher
   namespace: knative-eventing
@@ -23,6 +23,8 @@ metadata:
     app: kafka-source-dispatcher
     kafka.eventing.knative.dev/release: devel
 spec:
+  serviceName: kafka-source-dispatcher
+  podManagementPolicy: "Parallel"
   selector:
     matchLabels:
       app: kafka-source-dispatcher
@@ -31,6 +33,7 @@ spec:
       name: kafka-source-dispatcher
       labels:
         app: kafka-source-dispatcher
+        app.kubernetes.io/component: kafka-dispatcher
         kafka.eventing.knative.dev/release: devel
     spec:
       serviceAccountName: knative-kafka-source-data-plane
@@ -44,8 +47,8 @@ spec:
             - mountPath: /etc/config
               name: config-kafka-source-data-plane
               readOnly: true
-            - mountPath: /etc/sources
-              name: kafka-source-sources
+            - mountPath: /etc/contract-resources
+              name: contract-resources
               readOnly: true
             - mountPath: /tmp
               name: cache
@@ -73,7 +76,7 @@ spec:
             - name: WEBCLIENT_CONFIG_FILE_PATH
               value: /etc/config/config-kafka-source-webclient.properties
             - name: DATA_PLANE_CONFIG_FILE_PATH
-              value: /etc/sources/data
+              value: /etc/contract-resources/data
             - name: EGRESSES_INITIAL_CAPACITY
               value: "20"
             - name: INSTANCE_ID
@@ -102,7 +105,16 @@ spec:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
+
+          resources:
+            requests:
+              cpu: 1000m
+              # 600Mi for virtual replicas + 100Mi overhead
+              memory: 700Mi
+            limits:
+              cpu: 2000m
+              memory: 1000Mi
+
           livenessProbe:
             failureThreshold: 3
             tcpSocket:
@@ -129,9 +141,6 @@ spec:
         - name: config-kafka-source-data-plane
           configMap:
             name: config-kafka-source-data-plane
-        - name: kafka-source-sources
-          configMap:
-            name: kafka-source-sources
         - name: cache
           emptyDir: { }
         - name: kafka-config-logging
