@@ -48,10 +48,10 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	impl := creconciler.NewImpl(ctx, r)
 
 	r.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
+	r.Tracker = impl.Tracker
 
 	consumerInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
-	r.Tracker = impl.Tracker
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(r.Tracker.OnChanged))
 
 	globalResync := func(interface{}) {
