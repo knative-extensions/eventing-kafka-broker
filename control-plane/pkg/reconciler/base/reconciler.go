@@ -199,7 +199,10 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *con
 		return fmt.Errorf("failed to marshal contract: %w", err)
 	}
 
-	// Update config map data. TODO is it safe to update this config map? do we need to copy it?
+	// Update config map data.
+	if configMap.BinaryData == nil {
+		configMap.BinaryData = make(map[string][]byte, 1)
+	}
 	configMap.BinaryData[ConfigMapDataKey] = data
 
 	_, err = r.KubeClient.CoreV1().ConfigMaps(configMap.Namespace).Update(ctx, configMap, metav1.UpdateOptions{})
