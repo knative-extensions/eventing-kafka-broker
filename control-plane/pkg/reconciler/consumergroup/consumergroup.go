@@ -60,6 +60,10 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 	if err := r.reconcileConsumers(ctx, cg); err != nil {
 		return err
 	}
+
+	if err := r.propagateStatus(cg); err != nil {
+		return cg.MarkReconcileConsumersFailed("PropagateConsumerStatus", err)
+	}
 	cg.MarkReconcileConsumersSucceeded()
 
 	return nil
@@ -239,6 +243,25 @@ func (r Reconciler) joinConsumersByPlacement(placements []eventingduckv1alpha1.P
 	})
 
 	return placementConsumers
+}
+
+func (r Reconciler) propagateStatus(cg *kafkainternals.ConsumerGroup) error {
+	consumers, err := r.ConsumerLister.Consumers(cg.GetNamespace()).List(labels.SelectorFromSet(cg.Spec.Selector))
+	if err != nil {
+		return fmt.Errorf("failed to list consumers for selector %+v: %w", cg.Spec.Selector, err)
+	}
+	count := int32(0)
+	for _, c := range consumers {
+		if c.IsReady() {
+			if c.Spec.VReplicas != nil {
+				count += *c.Spec.VReplicas
+			}
+			cg.Status.SubscriberURI = c.Status.SubscriberURI
+		}
+	}
+	cg.Status.Replicas = pointer.Int32(count)
+
+	return nil
 }
 
 var (
