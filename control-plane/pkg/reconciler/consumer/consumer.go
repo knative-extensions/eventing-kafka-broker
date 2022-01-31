@@ -375,7 +375,7 @@ func (r Reconciler) commonReconciler(p *corev1.Pod, cmName string) base.Reconcil
 func cmNameFromPod(p *corev1.Pod, c *kafkainternals.Consumer) (string, error) {
 	var vDp *corev1.Volume
 	for i, v := range p.Spec.Volumes {
-		if v.Name == eventing.ConfigMapVolumeName && v.ConfigMap != nil && v.ConfigMap.Name != "" {
+		if v.Name == kafkainternals.DispatcherVolumeName && v.ConfigMap != nil && v.ConfigMap.Name != "" {
 			vDp = &p.Spec.Volumes[i]
 			break
 		}
