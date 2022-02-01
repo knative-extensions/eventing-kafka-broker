@@ -30,8 +30,10 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumer"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source"
+	sourcev2 "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source/v2"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 )
 
@@ -99,7 +101,21 @@ func main() {
 		injection.NamedControllerConstructor{
 			Name: "source-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				return source.NewController(ctx, watcher, sourceEnv)
+				return sourcev2.NewController(ctx, sourceEnv)
+			},
+		},
+
+		injection.NamedControllerConstructor{
+			Name: "consumergroup-controller",
+			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
+				return consumergroup.NewController(ctx)
+			},
+		},
+		injection.NamedControllerConstructor{
+			Name: "consumer-controller",
+			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
+				// TODO(pierDipi) pass consumer controller specific config
+				return consumer.NewController(ctx, brokerEnv)
 			},
 		},
 	)
