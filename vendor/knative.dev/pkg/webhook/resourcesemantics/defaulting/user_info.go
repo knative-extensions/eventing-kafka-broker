@@ -51,7 +51,6 @@ func setUserInfoAnnotations(ctx context.Context, resource apis.HasSpec, groupNam
 		if groupName != "" {
 			updaterAnnotation = groupName + apis.UpdaterAnnotationSuffix
 			creatorAnnotation = groupName + apis.CreatorAnnotationSuffix
-		}
 
 		if apis.IsInUpdate(ctx) {
 			old := apis.GetBaseline(ctx).(apis.HasSpec)
