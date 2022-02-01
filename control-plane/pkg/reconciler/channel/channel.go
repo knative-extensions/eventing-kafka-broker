@@ -184,7 +184,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	// Get data plane config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
-		return statusConditionManager.FailedToGetConfig(err)
+		return statusConditionManager.FailedToResolveConfig(err)
 	}
 	logger.Debug("Got contract config map")
 
@@ -198,7 +198,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	// Get resource configuration
 	channelResource, err := r.getChannelContractResource(ctx, topic, channel, secret, topicConfig)
 	if err != nil {
-		return statusConditionManager.FailedToGetConfig(err)
+		return statusConditionManager.FailedToResolveConfig(err)
 	}
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&channel.Status.DeliveryStatus, channelResource.EgressConfig)
 

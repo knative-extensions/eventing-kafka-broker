@@ -219,11 +219,6 @@ func (manager *StatusConditionManager) FailedToUpdateReceiverPodsAnnotation(err 
 	return fmt.Errorf("failed to update receiver pods annotation: %w", err)
 }
 
-func (manager *StatusConditionManager) FailedToGetConfig(err error) reconciler.Event {
-
-	return fmt.Errorf("failed to get contract configuration: %w", err)
-}
-
 func (manager *StatusConditionManager) FailedToResolveConfig(err error) reconciler.Event {
 
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
