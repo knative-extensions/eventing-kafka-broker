@@ -129,6 +129,8 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
 
+            - name: CONFIG_LEADERELECTION_NAME
+              value: config-kafka-leader-election
             - name: CONFIG_LOGGING_NAME
               value: config-logging
             - name: CONFIG_OBSERVABILITY_NAME
