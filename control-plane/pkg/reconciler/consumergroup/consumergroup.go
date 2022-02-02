@@ -18,6 +18,7 @@ package consumergroup
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -37,6 +38,11 @@ import (
 	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
+)
+
+var (
+	ErrNoSubscriberURI     = errors.New("no subscriber URI resolved")
+	ErrNoDeadLetterSinkURI = errors.New("no dead letter sink URI resolved")
 )
 
 type schedulerFunc func(s string) scheduler.Scheduler
@@ -64,6 +70,16 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 	if err := r.propagateStatus(cg); err != nil {
 		return cg.MarkReconcileConsumersFailed("PropagateConsumerStatus", err)
 	}
+
+	if cg.Status.SubscriberURI == nil {
+		_ = cg.MarkReconcileConsumersFailed("PropagateSubscriberURI", ErrNoSubscriberURI)
+		return nil
+	}
+	if cg.HasDeadLetterSink() && cg.Status.DeadLetterSinkURI == nil {
+		_ = cg.MarkReconcileConsumersFailed("PropagateDeadLetterSinkURI", ErrNoDeadLetterSinkURI)
+		return nil
+	}
+
 	cg.MarkReconcileConsumersSucceeded()
 
 	return nil
@@ -256,7 +272,12 @@ func (r Reconciler) propagateStatus(cg *kafkainternals.ConsumerGroup) error {
 			if c.Spec.VReplicas != nil {
 				count += *c.Spec.VReplicas
 			}
-			cg.Status.SubscriberURI = c.Status.SubscriberURI
+			if c.Status.SubscriberURI != nil {
+				cg.Status.SubscriberURI = c.Status.SubscriberURI
+			}
+			if c.Status.DeliveryStatus.DeadLetterSinkURI != nil {
+				cg.Status.DeliveryStatus.DeadLetterSinkURI = c.Status.DeadLetterSinkURI
+			}
 		}
 	}
 	cg.Status.Replicas = pointer.Int32(count)

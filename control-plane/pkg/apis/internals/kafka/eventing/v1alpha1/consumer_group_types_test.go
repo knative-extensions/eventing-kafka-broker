@@ -17,10 +17,14 @@
 package v1alpha1
 
 import (
+	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 func TestConsumerGroup_GetUserFacingResourceRef(t *testing.T) {
@@ -123,4 +127,59 @@ func TestConsumerGroup_GetUserFacingResourceRef(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHasDeadLetterSink(t *testing.T) {
+
+	type HasDeadLetterSink interface {
+		HasDeadLetterSink() bool
+		apis.Defaultable
+	}
+
+	tt := []struct {
+		name              string
+		object            HasDeadLetterSink
+		hasDeadLetterSink bool
+	}{
+		{
+			name: "consumer group has dead letter sink",
+			object: &ConsumerGroup{Spec: ConsumerGroupSpec{Template: ConsumerTemplateSpec{Spec: ConsumerSpec{
+				Delivery: &DeliverySpec{DeliverySpec: &eventingduck.DeliverySpec{
+					DeadLetterSink: &duckv1.Destination{URI: apis.HTTP("localhost")},
+				}},
+			}}}},
+			hasDeadLetterSink: true,
+		},
+		{
+			name:              "consumer group has no dead letter sink",
+			object:            &ConsumerGroup{},
+			hasDeadLetterSink: false,
+		},
+		{
+			name: "consumer has dead letter sink",
+			object: &Consumer{Spec: ConsumerSpec{
+				Delivery: &DeliverySpec{DeliverySpec: &eventingduck.DeliverySpec{
+					DeadLetterSink: &duckv1.Destination{URI: apis.HTTP("localhost")},
+				}},
+			}},
+			hasDeadLetterSink: true,
+		},
+		{
+			name:              "consumer has no dead letter sink",
+			object:            &Consumer{},
+			hasDeadLetterSink: false,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.object.SetDefaults(context.Background())
+			got := tc.object.HasDeadLetterSink()
+
+			if tc.hasDeadLetterSink != got {
+				t.Errorf("want %v got %v", tc.hasDeadLetterSink, got)
+			}
+		})
+	}
+
 }

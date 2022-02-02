@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
+	"k8s.io/utils/pointer"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
@@ -32,6 +33,7 @@ import (
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/scheduler"
 
+	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
@@ -115,13 +117,14 @@ func TestReconcileKind(t *testing.T) {
 								),
 							)),
 							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusReplicas(0),
 							ConsumerForTrigger(),
 						)
 						cg.Status.Placements = []eventingduckv1alpha1.Placement{
 							{PodName: "p1", VReplicas: 1},
 							{PodName: "p2", VReplicas: 1},
 						}
-						cg.MarkReconcileConsumersSucceeded()
+						_ = cg.MarkReconcileConsumersFailed("PropagateSubscriberURI", ErrNoSubscriberURI)
 						cg.MarkScheduleSucceeded()
 						return cg
 					}(),
@@ -129,7 +132,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
-			Name: "Consumers in multiple pods, one exists",
+			Name: "Consumers in multiple pods, one exists - not ready",
 			Objects: []runtime.Object{
 				NewConsumer(2,
 					ConsumerSpec(NewConsumerSpec(
@@ -191,13 +194,14 @@ func TestReconcileKind(t *testing.T) {
 								),
 							)),
 							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusReplicas(0),
 							ConsumerForTrigger(),
 						)
 						cg.Status.Placements = []eventingduckv1alpha1.Placement{
 							{PodName: "p1", VReplicas: 1},
 							{PodName: "p2", VReplicas: 1},
 						}
-						cg.MarkReconcileConsumersSucceeded()
+						_ = cg.MarkReconcileConsumersFailed("PropagateSubscriberURI", ErrNoSubscriberURI)
 						cg.MarkScheduleSucceeded()
 						return cg
 					}(),
@@ -205,7 +209,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
-			Name: "Consumers in multiple pods, one exists, increase replicas",
+			Name: "Consumers in multiple pods, one exists - ready",
 			Objects: []runtime.Object{
 				NewConsumer(2,
 					ConsumerSpec(NewConsumerSpec(
@@ -220,6 +224,203 @@ func TestReconcileKind(t *testing.T) {
 							PodNamespace: systemNamespace,
 						}),
 					)),
+					ConsumerReady(),
+				),
+				NewConsumerGroup(
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+					)),
+					ConsumerForTrigger(),
+					ConsumerGroupReplicas(2),
+				),
+			},
+			Key: ConsumerGroupTestKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return []eventingduckv1alpha1.Placement{
+						{PodName: "p1", VReplicas: 1},
+						{PodName: "p2", VReplicas: 1},
+					}, nil
+				}),
+			},
+			WantCreates: []runtime.Object{
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+					)),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						cg := NewConsumerGroup(
+							ConsumerGroupConsumerSpec(NewConsumerSpec(
+								ConsumerTopics("t1", "t2"),
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+									ConsumerGroupIdConfig("my.group.id"),
+								),
+							)),
+							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusReplicas(1),
+							ConsumerForTrigger(),
+						)
+						cg.Status.Placements = []eventingduckv1alpha1.Placement{
+							{PodName: "p1", VReplicas: 1},
+							{PodName: "p2", VReplicas: 1},
+						}
+						cg.MarkReconcileConsumersSucceeded()
+						cg.MarkScheduleSucceeded()
+						cg.Status.SubscriberURI = ConsumerSubscriberURI
+						return cg
+					}(),
+				},
+			},
+		},
+		{
+			Name: "Consumers in multiple pods, one exists - ready, increase replicas, propagate dead letter sink URI",
+			Objects: []runtime.Object{
+				NewConsumer(2,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
+							NewConsumerSpecDeliveryDeadLetterSink(),
+						)),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{
+							PodName:      "p2",
+							PodNamespace: systemNamespace,
+						}),
+					)),
+					ConsumerReady(),
+				),
+				NewConsumerGroup(
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
+							NewConsumerSpecDeliveryDeadLetterSink(),
+						)),
+					)),
+					ConsumerGroupReplicas(3),
+					ConsumerForTrigger(),
+				),
+			},
+			Key: ConsumerGroupTestKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return []eventingduckv1alpha1.Placement{
+						{PodName: "p1", VReplicas: 1},
+						{PodName: "p2", VReplicas: 2},
+					}, nil
+				}),
+			},
+			WantCreates: []runtime.Object{
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
+							NewConsumerSpecDeliveryDeadLetterSink(),
+						)),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+					)),
+				),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				clientgotesting.NewUpdateAction(
+					schema.GroupVersionResource{
+						Group:    kafkainternals.SchemeGroupVersion.Group,
+						Version:  kafkainternals.SchemeGroupVersion.Version,
+						Resource: "consumers",
+					},
+					ConsumerNamespace,
+					NewConsumer(2,
+						ConsumerSpec(NewConsumerSpec(
+							ConsumerTopics("t1", "t2"),
+							ConsumerConfigs(
+								ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+								ConsumerGroupIdConfig("my.group.id"),
+							),
+							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
+								NewConsumerSpecDeliveryDeadLetterSink(),
+							)),
+							ConsumerVReplicas(2),
+							ConsumerPlacement(kafkainternals.PodBind{PodName: "p2", PodNamespace: systemNamespace}),
+						)),
+						ConsumerReady(),
+					),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						cg := NewConsumerGroup(
+							ConsumerGroupConsumerSpec(NewConsumerSpec(
+								ConsumerTopics("t1", "t2"),
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+									ConsumerGroupIdConfig("my.group.id"),
+								),
+								ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
+									NewConsumerSpecDeliveryDeadLetterSink(),
+								)),
+							)),
+							ConsumerGroupReplicas(3),
+							ConsumerForTrigger(),
+						)
+						cg.Status.Placements = []eventingduckv1alpha1.Placement{
+							{PodName: "p1", VReplicas: 1},
+							{PodName: "p2", VReplicas: 2},
+						}
+						cg.MarkReconcileConsumersSucceeded()
+						cg.MarkScheduleSucceeded()
+						cg.Status.SubscriberURI = ConsumerSubscriberURI
+						cg.Status.DeadLetterSinkURI = ConsumerDeadLetterSinkURI
+						cg.Status.Replicas = pointer.Int32(1)
+						return cg
+					}(),
+				},
+			},
+		},
+		{
+			Name: "Consumers in multiple pods, one exists - ready, increase replicas",
+			Objects: []runtime.Object{
+				NewConsumer(2,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{
+							PodName:      "p2",
+							PodNamespace: systemNamespace,
+						}),
+					)),
+					ConsumerReady(),
 				),
 				NewConsumerGroup(
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
@@ -273,6 +474,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerVReplicas(2),
 							ConsumerPlacement(kafkainternals.PodBind{PodName: "p2", PodNamespace: systemNamespace}),
 						)),
+						ConsumerReady(),
 					),
 				),
 			},
@@ -296,6 +498,8 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
+						cg.Status.SubscriberURI = ConsumerSubscriberURI
+						cg.Status.Replicas = pointer.Int32(1)
 						return cg
 					}(),
 				},
@@ -392,8 +596,9 @@ func TestReconcileKind(t *testing.T) {
 							{PodName: "p1", VReplicas: 1},
 							{PodName: "p2", VReplicas: 1},
 						}
-						cg.MarkReconcileConsumersSucceeded()
+						_ = cg.MarkReconcileConsumersFailed("PropagateSubscriberURI", ErrNoSubscriberURI)
 						cg.MarkScheduleSucceeded()
+						cg.Status.Replicas = pointer.Int32(0)
 						return cg
 					}(),
 				},
