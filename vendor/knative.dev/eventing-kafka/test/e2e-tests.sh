@@ -98,6 +98,12 @@ if [[ $TEST_CONSOLIDATED_CHANNEL_SASL == 1 ]]; then
   test_consolidated_channel_sasl || exit 1
 fi
 
+if ! command -v ps &> /dev/null && command -v apt-get &> /dev/null; then
+    # need to install ps
+    echo "Couldn't find ps command. Installing it. "
+    apt-get update && apt-get install -y procps
+fi
+
 # Terminate any zipkin port-forward processes that are still present on the system
 ps -e -o pid,command | grep 'kubectl port-forward zipkin[^*]*9411:9411 -n' | sed 's/^ *\([0-9][0-9]*\) .*/\1/' | xargs kill
 
