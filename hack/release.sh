@@ -67,6 +67,11 @@ function build_release() {
     "${EVENTING_KAFKA_CHANNEL_ARTIFACT}"
     "${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT}"
   )
+
+  # ARTIFACTS_TO_PUBLISH has to be a string, not an array.
+  # shellcheck disable=SC2178
+  # shellcheck disable=SC2124
+  export ARTIFACTS_TO_PUBLISH="${ARTIFACTS_TO_PUBLISH[@]}"
 }
 
 main $@
