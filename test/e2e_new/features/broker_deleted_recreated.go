@@ -36,7 +36,7 @@ func BrokerDeletedRecreated() *feature.Feature {
 	triggerName := feature.MakeRandomK8sName("trigger")
 
 	f.Setup("test broker", featuressteps.BrokerSmokeTest(brokerName, triggerName))
-	f.Requirement("delete resources", featuressteps.DeleteResources(f))
+	f.Requirement("delete broker", featuressteps.DeleteBroker(brokerName))
 	f.Assert("test broker after deletion", featuressteps.BrokerSmokeTest(brokerName, triggerName))
 
 	return f
