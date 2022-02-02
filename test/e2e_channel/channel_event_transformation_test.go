@@ -2,7 +2,7 @@
 // +build e2e
 
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright 2022 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,27 +17,15 @@
  * limitations under the License.
  */
 
-package conformance
+package e2e_channel
 
 import (
-	"log"
-	"os"
+	"context"
 	"testing"
 
-	testlib "knative.dev/eventing/test/lib"
-	"knative.dev/pkg/system"
-	"knative.dev/pkg/test/zipkin"
+	"knative.dev/eventing/test/e2e/helpers"
 )
 
-func TestMain(m *testing.M) {
-
-	os.Exit(func() int {
-		// Any tests may SetupZipkinTracing, it will only actually be done once. This should be the ONLY
-		// place that cleans it up. If an individual test calls this instead, then it will break other
-		// tests that need the tracing in place.
-		defer zipkin.CleanupZipkinTracingSetup(log.Printf)
-		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
-
-		return m.Run()
-	}())
+func TestEventTransformationForSubscription(t *testing.T) {
+	helpers.EventTransformationForSubscriptionTestHelper(context.Background(), t, helpers.SubscriptionV1, channelTestRunner)
 }

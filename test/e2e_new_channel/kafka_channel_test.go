@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_new
+package e2e_new_channel
 
 import (
 	"fmt"
