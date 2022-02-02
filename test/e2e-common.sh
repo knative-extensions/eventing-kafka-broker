@@ -289,3 +289,26 @@ function setup_kafka_channel_auth() {
       -p='[{"op": "remove", "path": "/data/auth.secret.ref.name"}]' || true
   fi
 }
+
+function parse_flags() {
+  # This function will be called repeatedly by initialize() with one fewer
+  # argument each time and expects a return value of "the number of arguments to skip"
+  # so we can just check the first argument and return 1 (to have it redirected to the
+  # test container) or 0 (to have initialize() parse it normally).
+  case $1 in
+    --channel-tls)
+      CHANNEL_AUTH_SCENARIO="TLS"
+      return 1
+      ;;
+    --channel-sasl-ssl)
+      CHANNEL_AUTH_SCENARIO="SASL_SSL"
+      return 1
+      ;;
+    --channel-sasl-plain)
+      CHANNEL_AUTH_SCENARIO="SASL_PLAIN"
+      return 1
+      ;;
+  esac
+  return 0
+}
+
