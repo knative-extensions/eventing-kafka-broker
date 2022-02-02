@@ -25,12 +25,15 @@ import (
 
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/storage/names"
+	"k8s.io/client-go/tools/cache"
 	"knative.dev/eventing/pkg/scheduler"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	"knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
 	nodeinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/node"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -99,10 +102,30 @@ func NewController(ctx context.Context) *controller.Impl {
 	impl := cgreconciler.NewImpl(ctx, r)
 	consumerInformer := consumer.Get(ctx)
 
+	consumerGroupInformer := consumer.Get(ctx)
+
 	consumergroup.Get(ctx).Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
 
+	globalResync := func(interface{}) {
+		impl.GlobalResync(consumerGroupInformer.Informer())
+	}
+
+	ResyncOnStatefulSetChange(ctx, globalResync)
+
 	return impl
+}
+
+func ResyncOnStatefulSetChange(ctx context.Context, handle func(interface{})) {
+	systemNamespace := system.Namespace()
+
+	statefulset.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: func(obj interface{}) bool {
+			ss := obj.(*appsv1.StatefulSet)
+			return ss.GetNamespace() == systemNamespace && kafkainternals.IsKnownStatefulSet(ss.GetName())
+		},
+		Handler: controller.HandleAll(handle),
+	})
 }
 
 func enqueueConsumerGroupFromConsumer(enqueue func(name types.NamespacedName)) func(obj interface{}) {
