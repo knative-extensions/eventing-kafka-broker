@@ -46,7 +46,7 @@
     <micrometer.version>1.8.2</micrometer.version>
     <opentelemetry.version>1.10.1</opentelemetry.version>
     <jackson.version>2.13.1</jackson.version>
-    <protobuf.version>3.19.3</protobuf.version>
+    <protobuf.version>3.19.4</protobuf.version>
     <slf4j.version>1.7.35</slf4j.version>
     <ch.qos.logback.version>1.2.10</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>7.0.1</net.logstash.logback.encoder.version>
