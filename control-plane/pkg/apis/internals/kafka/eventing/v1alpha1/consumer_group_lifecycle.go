@@ -25,7 +25,9 @@ import (
 const (
 	ConditionConsumerGroupConsumers          apis.ConditionType = "Consumers"
 	ConditionConsumerGroupConsumersScheduled apis.ConditionType = "ConsumersScheduled"
-	ConsumerSelectorAnnotation                                  = "kafka.eventing.knative.dev/metadata.uid"
+	// Labels
+	ConsumerSelectorAnnotation = "kafka.eventing.knative.dev/metadata.uid"
+	KafkaChannelNameLabel      = "kafkachannel-name"
 )
 
 var (

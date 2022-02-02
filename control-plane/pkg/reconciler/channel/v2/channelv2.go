@@ -18,6 +18,7 @@ package v2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -63,9 +64,6 @@ const (
 	// TopicPrefix is the Kafka Channel topic prefix - (topic name: knative-messaging-kafka.<channel-namespace>.<channel-name>).
 	TopicPrefix          = "knative-messaging-kafka"
 	DefaultDeliveryOrder = internals.Ordered
-
-	// Labels
-	KafkaChannelNameLabel = "kafkachannel-name"
 
 	KafkaChannelConditionConsumerGroup apis.ConditionType = "ConsumerGroup" //condition is registered by controller
 )
@@ -320,6 +318,8 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 		logger.Debug("Contract config map updated")
 	}
 
+	channel.Status.Address = nil
+
 	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
 	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
 	// to update anyway remaining annotations with the contract generation that was saved in the CM.
@@ -334,12 +334,22 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 		return err
 	}
 
-	// TODO probe (as in #974) and check if status code is 404 otherwise requeue and return.
 	//  Rationale: after deleting a topic closing a producer ends up blocking and requesting metadata for max.block.ms
 	//  because topic metadata aren't available anymore.
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
+	address := receiver.Address(r.IngressHost, channel)
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: channel.GetNamespace(),
+			Name:      channel.GetName(),
+		},
+	}
+	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusNotReady {
+		return nil // Object will get re-queued once probe status changes.
+	}
 
 	// get the channel configmap
 	channelConfigMap, err := r.channelConfigMap()
@@ -436,7 +446,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 						Ready:              corev1.ConditionUnknown,
 						Message:            msg,
 					})
-					//globalErr = multierr.Append(globalErr, errors.New(msg))
+					globalErr = multierr.Append(globalErr, errors.New(msg))
 				} else {
 					msg := fmt.Sprint("Subscription not ready. ", topLevelCondition.Reason, topLevelCondition.Message)
 					channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
@@ -445,14 +455,14 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 						Ready:              corev1.ConditionFalse,
 						Message:            msg,
 					})
-					//globalErr = multierr.Append(globalErr, errors.New(msg))
+					globalErr = multierr.Append(globalErr, errors.New(msg))
 				}
 			}
 		}
 	}
 
 	// Get all consumer groups associated with this Channel
-	selector := labels.SelectorFromSet(map[string]string{KafkaChannelNameLabel: channel.Name})
+	selector := labels.SelectorFromSet(map[string]string{internalscg.KafkaChannelNameLabel: channel.Name})
 	channelCgs, err := r.ConsumerGroupLister.ConsumerGroups(channel.GetNamespace()).List(selector)
 	if err != nil {
 		globalErr = multierr.Append(globalErr, err)
@@ -484,7 +494,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 				*kmeta.NewControllerRef(channel),
 			},
 			Labels: map[string]string{
-				KafkaChannelNameLabel: channel.Name, // identifies the new ConsumerGroup as associated with this channel (same namespace)
+				internalscg.KafkaChannelNameLabel: channel.Name, // identifies the new ConsumerGroup as associated with this channel (same namespace)
 			},
 		},
 		Spec: internalscg.ConsumerGroupSpec{
