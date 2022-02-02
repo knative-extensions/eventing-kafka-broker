@@ -25,6 +25,8 @@ import (
 const (
 	ConditionConsumerGroupConsumers          apis.ConditionType = "Consumers"
 	ConditionConsumerGroupConsumersScheduled apis.ConditionType = "ConsumersScheduled"
+	// Labels
+	KafkaChannelNameLabel = "kafkachannel-name"
 )
 
 var (
