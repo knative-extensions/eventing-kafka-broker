@@ -19,6 +19,11 @@ function usage() {
   echo "   deploy-kafka                                            Deploy Kafka (Strimzi)"
   echo "   deploy                                                  Deploy eventing-kafka-broker"
   echo "   teardown                                                Remove eventing-kafka-broker"
+  echo "   setup-channel-auth                                      Setup KafkaChannel config for the value of CHANNEL_AUTH_SCENARIO environment variable"
+  echo "   setup-channel-auth-none                                 Setup KafkaChannel config with no auth"
+  echo "   setup-channel-auth-tls                                  Setup KafkaChannel config with TLS auth"
+  echo "   setup-channel-auth-sasl-ssl                             Setup KafkaChannel config with SASL-SSL auth"
+  echo "   setup-channel-auth-sasl-plain                           Setup KafkaChannel config with SASL plaintext auth"
   echo "   unit-tests, unit-test                                   Run unit tests"
   echo "   unit-tests-data-plane, unit-test-data-plane             Run data-plane unit tests"
   echo "   unit-tests-control-plane, unit-test-control-plane       Run control-plane unit tests"
@@ -46,6 +51,16 @@ elif [[ "${action}" == "build-from-source" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && build_components_from_source
 elif [[ "${action}" == "teardown" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && test_teardown
+elif [[ "${action}" == "setup-channel-auth" ]]; then
+  "${ROOT_DIR}"/hack/setup-channel-auth.sh
+elif [[ "${action}" == "setup-channel-auth-none" ]]; then
+  CHANNEL_AUTH_SCENARIO=0 "${ROOT_DIR}"/hack/setup-channel-auth.sh
+elif [[ "${action}" == "setup-channel-auth-tls" ]]; then
+  CHANNEL_AUTH_SCENARIO="TLS" "${ROOT_DIR}"/hack/setup-channel-auth.sh
+elif [[ "${action}" == "setup-channel-auth-sasl-ssl" ]]; then
+  CHANNEL_AUTH_SCENARIO="SASL_SSL" "${ROOT_DIR}"/hack/setup-channel-auth.sh
+elif [[ "${action}" == "setup-channel-auth-sasl-plain" ]]; then
+  CHANNEL_AUTH_SCENARIO="SASL_PLAIN" "${ROOT_DIR}"/hack/setup-channel-auth.sh
 elif [[ "${action}" == "unit-test" || "${action}" == "unit-tests" ]]; then
   "${ROOT_DIR}"/test/presubmit-tests.sh --unit-tests
 elif [[ "${action}" == "unit-test-data-plane" || "${action}" == "unit-tests-data-plane" ]]; then

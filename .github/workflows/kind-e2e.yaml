@@ -143,14 +143,12 @@ jobs:
 
       - name: Run e2e Tests
         run: |
-          source test/e2e-common.sh
-
           export KO_FLAGS="--platform=linux/amd64"
           export SYSTEM_NAMESPACE=knative-eventing
           export CLUSTER_DOMAIN=${CLUSTER_SUFFIX}
 
           # Setup auth config for KafkaChannel. Uses CHANNEL_AUTH_SCENARIO env var.
-          setup_kafka_channel_auth
+          ./hack/setup-channel-auth.sh
 
           # Run the tests tagged as e2e on the KinD cluster.
           go test -race -count=1 -timeout=1h -v -short -tags=e2e,cloudevents \
