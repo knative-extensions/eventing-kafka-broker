@@ -320,11 +320,6 @@ func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkain
 		return false, err
 	}
 
-	// Check if the pod is running.
-	if p.Status.Phase != corev1.PodRunning {
-		return false, nil
-	}
-
 	// Get contract associated with the pod.
 	cmName, err := cmNameFromPod(p, c)
 	if err != nil {
@@ -336,6 +331,14 @@ func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkain
 	cm, err := b.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return false, fmt.Errorf("failed to get or create data plane ConfigMap %s/%s: %w", p.GetNamespace(), cmName, err)
+	}
+
+	// Check if the pod is running after trying to
+	// get or create the associated ConfigMap, since
+	// it won't become ready until we have created the
+	// ConfigMap
+	if p.Status.Phase != corev1.PodRunning {
+		return false, nil
 	}
 
 	ct, err := b.GetDataPlaneConfigMapData(logger, cm)
