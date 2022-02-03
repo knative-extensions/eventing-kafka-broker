@@ -58,7 +58,7 @@ func newEvictor(ctx context.Context, fields ...zap.Field) evictor {
 	}
 }
 
-func (e *evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv1alpha1.Placement) error {
+func (e evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv1alpha1.Placement) error {
 	key := vpod.GetKey()
 
 	logger := e.logger.
