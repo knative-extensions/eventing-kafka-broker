@@ -192,8 +192,8 @@ func (cg *ConsumerGroup) IsNotScheduled() bool {
 	return cond.IsFalse() || cond.IsUnknown()
 }
 
-func (in *ConsumerGroup) HasDeadLetterSink() bool {
-	return hasDeadLetterSink(in.Spec.Template.Spec.Delivery)
+func (cg *ConsumerGroup) HasDeadLetterSink() bool {
+	return hasDeadLetterSink(cg.Spec.Template.Spec.Delivery)
 }
 
 func hasDeadLetterSink(d *DeliverySpec) bool {
