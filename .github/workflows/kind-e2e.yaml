@@ -26,7 +26,7 @@ jobs:
 
         channel-auth-scenario:
           - ""
-          - "TLS"
+          - "SSL"
           - "SASL_SSL"
           - "SASL_PLAIN"
 
@@ -52,13 +52,13 @@ jobs:
         # don't run e2e for tests other than KafkaChannel when channel-auth-scenario is set
         exclude:
           - test-suite: ./test/e2e
-            channel-auth-scenario: "TLS"
+            channel-auth-scenario: "SSL"
           - test-suite: ./test/e2e
             channel-auth-scenario: "SASL_SSL"
           - test-suite: ./test/e2e
             channel-auth-scenario: "SASL_PLAIN"
           - test-suite: ./test/e2e_new
-            channel-auth-scenario: "TLS"
+            channel-auth-scenario: "SSL"
           - test-suite: ./test/e2e_new
             channel-auth-scenario: "SASL_SSL"
           - test-suite: ./test/e2e_new
@@ -78,7 +78,7 @@ jobs:
       NODE_VERSION: ${{ matrix.k8s-version }}
       NODE_SHA: ${{ matrix.kind-image-sha }}
 
-      CHANNEL_AUTH_SCENARIO: ${{ matrix.channel-auth-scenario }}
+      EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO: ${{ matrix.channel-auth-scenario }}
 
     steps:
       - name: Install Dependencies
@@ -148,9 +148,6 @@ jobs:
           export KO_FLAGS="--platform=linux/amd64"
           export SYSTEM_NAMESPACE=knative-eventing
           export CLUSTER_DOMAIN=${CLUSTER_SUFFIX}
-
-          # Setup auth config for KafkaChannel. Uses CHANNEL_AUTH_SCENARIO env var.
-          setup_kafka_channel_auth
 
           # Run the tests tagged as e2e on the KinD cluster.
           go test -race -count=1 -timeout=1h -v -short -tags=e2e,cloudevents \

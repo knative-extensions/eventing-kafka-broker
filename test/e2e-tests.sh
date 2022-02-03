@@ -17,26 +17,15 @@ header "Waiting Knative eventing to come up"
 
 wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing didn't come up"
 
-if [ ! -z "${CHANNEL_AUTH_SCENARIO}" ]; then
-  # if this flag exists, only test Kafka channel scenarios with auth
-
-  # Setup auth config for KafkaChannel. Uses CHANNEL_AUTH_SCENARIO env var.
-  header "Setting up auth config for KafkaChannel"
-  setup_kafka_channel_auth
-
-  header "Running KafkaChannel tests"
-
-  export_logs_continuously
-
-  go_test_e2e -timeout=1h ./test/e2e_channel/... -channels=messaging.knative.dev/v1beta1:KafkaChannel || fail_test "E2E suite (KafkaChannel) failed"
-
-  # this exits the script
-  success
-fi
+export_logs_continuously
 
 header "Running tests"
 
-export_logs_continuously
+if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
+  # if this flag exists, only test Kafka channel scenarios with auth
+  $(dirname $0)/channel-tests.sh || fail_test "Failed to execute KafkaChannel tests"
+  success
+fi
 
 go_test_e2e -timeout=1h ./test/e2e/... || fail_test "E2E suite failed"
 

@@ -154,6 +154,8 @@ function test_setup() {
   # Apply test configurations, and restart data plane components (we don't have hot reload)
   ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
 
+  setup_kafka_channel_auth || fail_test "Failed to apply channel auth configuration ${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO}"
+
   kubectl rollout restart deployment -n knative-eventing kafka-source-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
@@ -259,19 +261,21 @@ function build_monitoring_artifacts() {
 }
 
 function setup_kafka_channel_auth() {
-  if [ "$CHANNEL_AUTH_SCENARIO" == "TLS" ]; then
-    echo "Setting up TLS configuration for KafkaChannel"
+  echo "Apply channel auth config ${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO}"
+
+  if [ "$EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO" == "SSL" ]; then
+    echo "Setting up SSL configuration for KafkaChannel"
     kubectl patch configmap/kafka-channel-config \
       -n knative-eventing \
       --type merge \
       -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9093", "auth.secret.ref.name": "strimzi-tls-secret"}}'
-  elif [ "$CHANNEL_AUTH_SCENARIO" == "SASL_SSL" ]; then
+  elif [ "$EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO" == "SASL_SSL" ]; then
     echo "Setting up SASL_SSL configuration for KafkaChannel"
     kubectl patch configmap/kafka-channel-config \
       -n knative-eventing \
       --type merge \
       -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9094", "auth.secret.ref.name": "strimzi-sasl-secret"}}'
-  elif [ "$CHANNEL_AUTH_SCENARIO" == "SASL_PLAIN" ]; then
+  elif [ "$EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO" == "SASL_PLAIN" ]; then
     echo "Setting up SASL_PLAIN configuration for KafkaChannel"
     kubectl patch configmap/kafka-channel-config \
       -n knative-eventing \
@@ -289,26 +293,3 @@ function setup_kafka_channel_auth() {
       -p='[{"op": "remove", "path": "/data/auth.secret.ref.name"}]' || true
   fi
 }
-
-function parse_flags() {
-  # This function will be called repeatedly by initialize() with one fewer
-  # argument each time and expects a return value of "the number of arguments to skip"
-  # so we can just check the first argument and return 1 (to have it redirected to the
-  # test container) or 0 (to have initialize() parse it normally).
-  case $1 in
-    --channel-tls)
-      CHANNEL_AUTH_SCENARIO="TLS"
-      return 1
-      ;;
-    --channel-sasl-ssl)
-      CHANNEL_AUTH_SCENARIO="SASL_SSL"
-      return 1
-      ;;
-    --channel-sasl-plain)
-      CHANNEL_AUTH_SCENARIO="SASL_PLAIN"
-      return 1
-      ;;
-  esac
-  return 0
-}
-
