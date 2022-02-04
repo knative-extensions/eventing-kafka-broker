@@ -20,9 +20,10 @@ import (
 	"context"
 
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/pkg/controller"
+
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
-	"knative.dev/pkg/controller"
 
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 
@@ -47,9 +48,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 
 	impl := kafkasource.NewImpl(ctx, r)
 
-	kafkaInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		Handler: controller.HandleAll(impl.Enqueue),
-	})
+	kafkaInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	// ConsumerGroup changes and enqueue associated KafkaSource
 	consumerGroupInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
