@@ -24,6 +24,12 @@ jobs:
         eventing-config:
           - "./third_party/eventing-latest/"
 
+        channel-auth-scenario:
+          - ""
+          - "SSL"
+          - "SASL_SSL"
+          - "SASL_PLAIN"
+
         test-suite:
           - ./test/e2e
           - ./test/e2e_new
@@ -43,6 +49,21 @@ jobs:
           - test-suite: ./test/e2e_channel
             extra-test-flags: -channels=messaging.knative.dev/v1beta1:KafkaChannel
 
+        # don't run e2e for tests other than KafkaChannel when channel-auth-scenario is set
+        exclude:
+          - test-suite: ./test/e2e
+            channel-auth-scenario: "SSL"
+          - test-suite: ./test/e2e
+            channel-auth-scenario: "SASL_SSL"
+          - test-suite: ./test/e2e
+            channel-auth-scenario: "SASL_PLAIN"
+          - test-suite: ./test/e2e_new
+            channel-auth-scenario: "SSL"
+          - test-suite: ./test/e2e_new
+            channel-auth-scenario: "SASL_SSL"
+          - test-suite: ./test/e2e_new
+            channel-auth-scenario: "SASL_PLAIN"
+
     env:
       GOPATH: ${{ github.workspace }}
       KO_DOCKER_REPO: kind.local
@@ -56,6 +77,8 @@ jobs:
       EVENTING_CONFIG: ${{ matrix.eventing-config }}
       NODE_VERSION: ${{ matrix.k8s-version }}
       NODE_SHA: ${{ matrix.kind-image-sha }}
+
+      EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO: ${{ matrix.channel-auth-scenario }}
 
     steps:
       - name: Install Dependencies
@@ -120,6 +143,8 @@ jobs:
 
       - name: Run e2e Tests
         run: |
+          source test/e2e-common.sh
+
           export KO_FLAGS="--platform=linux/amd64"
           export SYSTEM_NAMESPACE=knative-eventing
           export CLUSTER_DOMAIN=${CLUSTER_SUFFIX}

@@ -154,6 +154,8 @@ function test_setup() {
   # Apply test configurations, and restart data plane components (we don't have hot reload)
   ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
 
+  setup_kafka_channel_auth || fail_test "Failed to apply channel auth configuration ${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO}"
+
   kubectl rollout restart deployment -n knative-eventing kafka-source-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
@@ -256,4 +258,38 @@ function build_monitoring_artifacts() {
 
   ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
     "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+}
+
+function setup_kafka_channel_auth() {
+  echo "Apply channel auth config ${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO}"
+
+  if [ "$EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO" == "SSL" ]; then
+    echo "Setting up SSL configuration for KafkaChannel"
+    kubectl patch configmap/kafka-channel-config \
+      -n knative-eventing \
+      --type merge \
+      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9093", "auth.secret.ref.name": "strimzi-tls-secret"}}'
+  elif [ "$EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO" == "SASL_SSL" ]; then
+    echo "Setting up SASL_SSL configuration for KafkaChannel"
+    kubectl patch configmap/kafka-channel-config \
+      -n knative-eventing \
+      --type merge \
+      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9094", "auth.secret.ref.name": "strimzi-sasl-secret"}}'
+  elif [ "$EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO" == "SASL_PLAIN" ]; then
+    echo "Setting up SASL_PLAIN configuration for KafkaChannel"
+    kubectl patch configmap/kafka-channel-config \
+      -n knative-eventing \
+      --type merge \
+      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9095", "auth.secret.ref.name": "strimzi-sasl-plain-secret"}}'
+  else
+    echo "Setting up no auth configuration for KafkaChannel"
+    kubectl patch configmap/kafka-channel-config \
+      -n knative-eventing \
+      --type merge \
+      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9092"}}'
+    kubectl patch configmap/kafka-channel-config \
+      -n knative-eventing \
+      --type=json \
+      -p='[{"op": "remove", "path": "/data/auth.secret.ref.name"}]' || true
+  fi
 }

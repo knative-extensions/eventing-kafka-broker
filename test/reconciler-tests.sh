@@ -17,9 +17,15 @@ header "Waiting Knative eventing to come up"
 
 wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing didn't come up"
 
+export_logs_continuously
+
 header "Running tests"
 
-export_logs_continuously
+if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
+  # if this flag exists, only test Kafka channel scenarios with auth
+  $(dirname $0)/channel-tests.sh || fail_test "Failed to execute KafkaChannel tests"
+  success
+fi
 
 go_test_e2e -timeout=1h ./test/e2e_new/... || fail_test "E2E (new) suite failed"
 
