@@ -115,6 +115,12 @@ func ConsumerGroupReplicas(replicas int32) ConsumerGroupOption {
 	}
 }
 
+func ConsumerGroupStatusReplicas(replicas int32) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.Status.Replicas = pointer.Int32Ptr(replicas)
+	}
+}
+
 func ConsumerGroupReplicasStatus(replicas int32) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
 		cg.Status.Replicas = pointer.Int32Ptr(replicas)

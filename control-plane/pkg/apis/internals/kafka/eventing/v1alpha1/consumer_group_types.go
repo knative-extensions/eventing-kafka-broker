@@ -191,3 +191,13 @@ func (cg *ConsumerGroup) IsNotScheduled() bool {
 	cond := cg.Status.GetCondition(ConditionConsumerGroupConsumersScheduled)
 	return cond.IsFalse() || cond.IsUnknown()
 }
+
+func (cg *ConsumerGroup) HasDeadLetterSink() bool {
+	return hasDeadLetterSink(cg.Spec.Template.Spec.Delivery)
+}
+
+func hasDeadLetterSink(d *DeliverySpec) bool {
+	return d != nil && d.DeliverySpec != nil &&
+		d.DeliverySpec.DeadLetterSink != nil &&
+		(d.DeliverySpec.DeadLetterSink.Ref != nil || d.DeliverySpec.DeadLetterSink.URI != nil)
+}

@@ -22,7 +22,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
@@ -32,6 +34,11 @@ import (
 const (
 	ConsumerNamePrefix = "test-cg"
 	ConsumerNamespace  = "test-cg-ns"
+)
+
+var (
+	ConsumerSubscriberURI     = apis.HTTP("localhost")
+	ConsumerDeadLetterSinkURI = apis.HTTP("dls.com")
 )
 
 type ConsumerOption func(cg *kafkainternals.Consumer)
@@ -84,9 +91,24 @@ func NewConsumerSpec(opts ...ConsumerSpecOption) kafkainternals.ConsumerSpec {
 	return *spec
 }
 
-func NewConsumerSpecDelivery(order internals.DeliveryOrdering) *kafkainternals.DeliverySpec {
-	return &kafkainternals.DeliverySpec{
-		Ordering: order,
+type DeliverySpecOption func(spec *kafkainternals.DeliverySpec)
+
+func NewConsumerSpecDelivery(order internals.DeliveryOrdering, options ...DeliverySpecOption) *kafkainternals.DeliverySpec {
+	d := &kafkainternals.DeliverySpec{Ordering: order}
+
+	for _, opt := range options {
+		opt(d)
+	}
+
+	return d
+}
+
+func NewConsumerSpecDeliveryDeadLetterSink() DeliverySpecOption {
+	return func(spec *kafkainternals.DeliverySpec) {
+		if spec.DeliverySpec == nil {
+			spec.DeliverySpec = &eventingduck.DeliverySpec{}
+		}
+		spec.DeliverySpec.DeadLetterSink = &duckv1.Destination{URI: ConsumerDeadLetterSinkURI}
 	}
 }
 
@@ -190,5 +212,17 @@ func ConsumerForTrigger() ConsumerGroupOption {
 			Name:       "test-trigger",
 			UID:        TriggerUUID,
 		})
+	}
+}
+
+func ConsumerReady() ConsumerOption {
+	return func(c *kafkainternals.Consumer) {
+		c.MarkBindSucceeded()
+		c.MarkReconcileContractSucceeded()
+		c.Status.SubscriberURI = ConsumerSubscriberURI
+
+		if c.HasDeadLetterSink() {
+			c.Status.DeadLetterSinkURI = ConsumerDeadLetterSinkURI
+		}
 	}
 }

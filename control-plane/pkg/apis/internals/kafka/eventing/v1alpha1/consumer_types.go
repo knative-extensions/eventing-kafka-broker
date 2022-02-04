@@ -230,3 +230,7 @@ func (c *Consumer) GetConsumerGroup() *metav1.OwnerReference {
 	}
 	return nil
 }
+
+func (c Consumer) HasDeadLetterSink() bool {
+	return hasDeadLetterSink(c.Spec.Delivery)
+}
