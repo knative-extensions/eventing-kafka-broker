@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
 	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
@@ -37,6 +38,9 @@ const (
 )
 
 var (
+	ConsumerUUID = "c1234567-8901-2345-6789-123456789102"
+	ConsumerName = fmt.Sprintf("%s-%d", ConsumerNamePrefix, 1)
+
 	ConsumerSubscriberURI     = apis.HTTP("localhost")
 	ConsumerDeadLetterSinkURI = apis.HTTP("dls.com")
 )
@@ -91,6 +95,12 @@ func NewConsumerSpec(opts ...ConsumerSpecOption) kafkainternals.ConsumerSpec {
 	return *spec
 }
 
+func ConsumerUID(uid string) ConsumerOption {
+	return func(c *kafkainternals.Consumer) {
+		c.UID = types.UID(uid)
+	}
+}
+
 type DeliverySpecOption func(spec *kafkainternals.DeliverySpec)
 
 func NewConsumerSpecDelivery(order internals.DeliveryOrdering, options ...DeliverySpecOption) *kafkainternals.DeliverySpec {
@@ -109,6 +119,42 @@ func NewConsumerSpecDeliveryDeadLetterSink() DeliverySpecOption {
 			spec.DeliverySpec = &eventingduck.DeliverySpec{}
 		}
 		spec.DeliverySpec.DeadLetterSink = &duckv1.Destination{URI: ConsumerDeadLetterSinkURI}
+	}
+}
+
+func NewConsumerRetry(r int32) DeliverySpecOption {
+	return func(spec *kafkainternals.DeliverySpec) {
+		if spec.DeliverySpec == nil {
+			spec.DeliverySpec = &eventingduck.DeliverySpec{}
+		}
+		spec.DeliverySpec.Retry = &r
+	}
+}
+
+func NewConsumerBackoffPolicy(policy eventingduck.BackoffPolicyType) DeliverySpecOption {
+	return func(spec *kafkainternals.DeliverySpec) {
+		if spec.DeliverySpec == nil {
+			spec.DeliverySpec = &eventingduck.DeliverySpec{}
+		}
+		spec.DeliverySpec.BackoffPolicy = &policy
+	}
+}
+
+func NewConsumerBackoffDelay(delay string) DeliverySpecOption {
+	return func(spec *kafkainternals.DeliverySpec) {
+		if spec.DeliverySpec == nil {
+			spec.DeliverySpec = &eventingduck.DeliverySpec{}
+		}
+		spec.DeliverySpec.BackoffDelay = &delay
+	}
+}
+
+func NewConsumerTimeout(timeout string) DeliverySpecOption {
+	return func(spec *kafkainternals.DeliverySpec) {
+		if spec.DeliverySpec == nil {
+			spec.DeliverySpec = &eventingduck.DeliverySpec{}
+		}
+		spec.DeliverySpec.Timeout = &timeout
 	}
 }
 
@@ -239,4 +285,20 @@ func ConsumerNoReply() *kafkainternals.ReplyStrategy {
 
 func ConsumerTopicReply() *kafkainternals.ReplyStrategy {
 	return &kafkainternals.ReplyStrategy{TopicReply: &kafkainternals.TopicReply{Enabled: true}}
+}
+
+func ConsumerOwnerRef(reference metav1.OwnerReference) ConsumerOption {
+	return func(cg *kafkainternals.Consumer) {
+		cg.OwnerReferences = append(cg.OwnerReferences, reference)
+	}
+}
+
+func ConsumerGroupAsOwnerRef() metav1.OwnerReference {
+	return metav1.OwnerReference{
+		APIVersion:         kafkainternals.SchemeGroupVersion.String(),
+		Kind:               kafkainternals.ConsumerGroupGroupVersionKind.Kind,
+		Name:               ConsumerGroupName,
+		Controller:         pointer.BoolPtr(true),
+		BlockOwnerDeletion: pointer.BoolPtr(true),
+	}
 }

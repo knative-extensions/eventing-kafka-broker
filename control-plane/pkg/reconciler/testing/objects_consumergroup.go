@@ -154,3 +154,9 @@ func WithDeadLetterSinkURI(uri string) func(cg *kafkainternals.ConsumerGroup) {
 		cg.Status.DeadLetterSinkURI = u
 	}
 }
+
+func ConsumerGroupOwnerRef(reference metav1.OwnerReference) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.OwnerReferences = append(cg.OwnerReferences, reference)
+	}
+}

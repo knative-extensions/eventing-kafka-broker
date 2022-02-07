@@ -20,6 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/pointer"
 	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/apis"
@@ -182,5 +183,16 @@ func SourceReference() *contract.Reference {
 		Namespace: SourceNamespace,
 		Name:      SourceName,
 		Uuid:      SourceUUID,
+	}
+}
+
+func SourceAsOwnerReference() metav1.OwnerReference {
+	return metav1.OwnerReference{
+		APIVersion:         sources.SchemeGroupVersion.String(),
+		Kind:               "KafkaSource",
+		Name:               SourceName,
+		UID:                SourceUUID,
+		Controller:         pointer.Bool(true),
+		BlockOwnerDeletion: pointer.Bool(true),
 	}
 }

@@ -112,6 +112,8 @@ func (r Reconciler) reconcileContractResource(ctx context.Context, c *kafkainter
 		return nil, nil
 	}
 
+	egress.Reference = userFacingResourceRef
+
 	resource := &contract.Resource{
 		Uid:                 string(c.UID),
 		Topics:              c.Spec.Topics,
@@ -219,11 +221,11 @@ func reconcileCEOverrides(c *kafkainternals.Consumer) *contract.CloudEventOverri
 func (r Reconciler) reconcileUserFacingResourceRef(c *kafkainternals.Consumer) (*contract.Reference, error) {
 
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(c.GetNamespace()).Get(c.GetConsumerGroup().Name)
-	if err != nil && !apierrors.IsNotFound(err) {
-		return nil, fmt.Errorf("failed to get %s: %w", kafkainternals.ConsumerGroupGroupVersionKind.Kind, err)
-	}
 	if apierrors.IsNotFound(err) {
 		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get %s: %w", kafkainternals.ConsumerGroupGroupVersionKind.Kind, err)
 	}
 
 	userFacingResource := cg.GetUserFacingResourceRef()
@@ -308,13 +310,13 @@ func removeResource(_ *zap.Logger, ct *contract.Contract, c *kafkainternals.Cons
 func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkainternals.Consumer, mutatorFunc contractMutatorFunc) (bool, error) {
 	// Get the data plane pod when the Consumer should be scheduled.
 	p, err := r.PodLister.Pods(c.Spec.PodBind.PodNamespace).Get(c.Spec.PodBind.PodName)
-	if err != nil {
-		return false, fmt.Errorf("failed to get pod %s/%s: %w", c.Spec.PodBind.PodNamespace, c.Spec.PodBind.PodName, err)
-	}
 	if apierrors.IsNotFound(err) {
 		// Pod not found, return no error since the Consumer
 		// will get re-queued when the pod is added.
 		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("failed to get pod %s/%s: %w", c.Spec.PodBind.PodNamespace, c.Spec.PodBind.PodName, err)
 	}
 
 	// Get contract associated with the pod.
