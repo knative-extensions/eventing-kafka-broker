@@ -51,19 +51,19 @@ func setUserInfoAnnotations(ctx context.Context, resource apis.HasSpec, groupNam
 		if groupName != "" {
 			updaterAnnotation = groupName + apis.UpdaterAnnotationSuffix
 			creatorAnnotation = groupName + apis.CreatorAnnotationSuffix
-
-			if apis.IsInUpdate(ctx) {
-				old := apis.GetBaseline(ctx).(apis.HasSpec)
-				if equality.Semantic.DeepEqual(old.GetUntypedSpec(), resource.GetUntypedSpec()) {
-					return
-				}
-				annotations[updaterAnnotation] = ui.Username
-			} else {
-				annotations[creatorAnnotation] = ui.Username
-				annotations[updaterAnnotation] = ui.Username
-			}
-			objectMetaAccessor.GetObjectMeta().SetAnnotations(annotations)
 		}
+
+		if apis.IsInUpdate(ctx) {
+			old := apis.GetBaseline(ctx).(apis.HasSpec)
+			if equality.Semantic.DeepEqual(old.GetUntypedSpec(), resource.GetUntypedSpec()) {
+				return
+			}
+			annotations[updaterAnnotation] = ui.Username
+		} else {
+			annotations[creatorAnnotation] = ui.Username
+			annotations[updaterAnnotation] = ui.Username
+		}
+		objectMetaAccessor.GetObjectMeta().SetAnnotations(annotations)
 	}
 }
 
