@@ -1323,6 +1323,7 @@ func TestReconcileKind(t *testing.T) {
 	tt.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		r := Reconciler{
+			Name: row.Name,
 			SchedulerFunc: func(s string) scheduler.Scheduler {
 				return row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
 			},

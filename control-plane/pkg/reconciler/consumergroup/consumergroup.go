@@ -71,6 +71,7 @@ type Reconciler struct {
 	InitOffsetsFunc kafka.InitOffsetsFunc
 
 	SystemNamespace string
+	Name            string
 }
 
 func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
