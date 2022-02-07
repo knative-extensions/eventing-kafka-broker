@@ -149,6 +149,9 @@ jobs:
           export SYSTEM_NAMESPACE=knative-eventing
           export CLUSTER_DOMAIN=${CLUSTER_SUFFIX}
 
+          # Setup auth config for KafkaChannel. Uses EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO env var.
+          setup_kafka_channel_auth
+
           # Run the tests tagged as e2e on the KinD cluster.
           go test -race -count=1 -timeout=1h -v -short -tags=e2e,cloudevents \
              ${{ matrix.test-suite }} ${{ matrix.extra-test-flags }}
