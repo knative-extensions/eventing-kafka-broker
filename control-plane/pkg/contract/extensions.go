@@ -31,7 +31,7 @@ func NewAnyFilter(filters []v1.SubscriptionsAPIFilter) *Filter {
 	return newCollectionFilter(filters, Dialect_ANY)
 }
 
-func NewNotFilter(f v1.SubscriptionsAPIFilter) *Filter{
+func NewNotFilter(f v1.SubscriptionsAPIFilter) *Filter {
 	return &Filter{
 		Dialect: Dialect_NOT,
 		Filters: []*Filter{
@@ -40,30 +40,30 @@ func NewNotFilter(f v1.SubscriptionsAPIFilter) *Filter{
 	}
 }
 
-func NewExactFilter(f v1.SubscriptionsAPIFilter) *Filter{
+func NewExactFilter(f v1.SubscriptionsAPIFilter) *Filter {
 	return &Filter{
-		Dialect: Dialect_EXACT,
+		Dialect:    Dialect_EXACT,
 		Attributes: f.Exact,
 	}
 }
 
-func NewPrefixFilter(f v1.SubscriptionsAPIFilter) *Filter{
+func NewPrefixFilter(f v1.SubscriptionsAPIFilter) *Filter {
 	return &Filter{
-		Dialect: Dialect_PREFIX,
+		Dialect:    Dialect_PREFIX,
 		Attributes: f.Prefix,
 	}
 }
 
-func NewSuffixFilter(f v1.SubscriptionsAPIFilter) *Filter{
+func NewSuffixFilter(f v1.SubscriptionsAPIFilter) *Filter {
 	return &Filter{
-		Dialect: Dialect_SUFFIX,
+		Dialect:    Dialect_SUFFIX,
 		Attributes: f.Suffix,
 	}
 }
 
-func NewCESQLFilter(f v1.SubscriptionsAPIFilter) *Filter{
+func NewCESQLFilter(f v1.SubscriptionsAPIFilter) *Filter {
 	return &Filter{
-		Dialect: Dialect_CESQL,
+		Dialect:    Dialect_CESQL,
 		Expression: f.SQL,
 	}
 }
