@@ -39,7 +39,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserialize
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.*;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
@@ -170,7 +170,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
           : NO_DEAD_LETTER_SINK_SENDER;
 
         final var filter = egress.hasFilter() ?
-          new AttributesFilter(egress.getFilter().getAttributesMap()) :
+          getFilter(egress.getFilter()) :
           Filter.noop();
 
         final var responseHandler = getResponseHandler(egress,
@@ -208,12 +208,40 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     return getConsumerVerticle(deliveryOrder, initializer, new HashSet<>(resource.getTopicsList()));
   }
 
+
+  private Filter getFilter(DataPlaneContract.Filter filter) {
+    return switch (filter.getDialect()) {
+      case EXACT -> new AttributesFilter(filter.getAttributesMap());
+      case PREFIX -> {
+        var entry = filter.getAttributesMap().entrySet().iterator().next();
+        yield new PrefixFilter(entry.getKey(), entry.getValue());
+      }
+      case SUFFIX -> {
+        var entry = filter.getAttributesMap().entrySet().iterator().next();
+        yield new SuffixFilter(entry.getKey(), entry.getValue());
+      }
+      case NOT -> new NotFilter(getFilter(filter.getFilters(0)));
+      case ANY -> {
+        var filters = filter.getFiltersList().stream()
+          .map(this::getFilter).collect(Collectors.toSet());
+        yield new AnyFilter(filters);
+      }
+      case ALL -> {
+        var filters = filter.getFiltersList().stream()
+          .map(this::getFilter).collect(Collectors.toSet());
+        yield new AllFilter(filters);
+      }
+      case CESQL -> new SqlFilter(filter.getExpression());
+      default -> Filter.noop();
+    };
+  }
+
   static ResponseHandler getResponseHandler(final DataPlaneContract.Egress egress,
                                             final Supplier<ResponseHandler> kafkaSupplier,
                                             final Supplier<ResponseHandler> httpSupplier) {
-    if(egress.hasReplyUrl()){
+    if (egress.hasReplyUrl()) {
       return httpSupplier.get();
-    } else if(egress.hasReplyToOriginalTopic()){
+    } else if (egress.hasReplyToOriginalTopic()) {
       return kafkaSupplier.get();
     } else if (egress.hasDiscardReply()) {
       return new NoopResponseHandler();

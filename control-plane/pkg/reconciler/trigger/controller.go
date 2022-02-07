@@ -22,6 +22,7 @@ import (
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing/pkg/apis/feature"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
@@ -50,7 +51,7 @@ const (
 	FinalizerName = "kafka.triggers.eventing.knative.dev"
 )
 
-func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env) *controller.Impl {
+func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
 
 	logger := logging.FromContext(ctx).Desugar()
 
@@ -84,6 +85,14 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 			PromoteFilterFunc: filterTriggers(reconciler.BrokerLister),
 		}
 	})
+
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"))
+	featureStore.WatchConfigs(watcher)
+
+	// Decorate contexts with the current state of the feature config.
+	reconciler.WithCtx = func(ctx context.Context) context.Context {
+		return featureStore.ToContext(ctx)
+	}
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 

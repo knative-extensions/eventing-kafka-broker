@@ -2304,6 +2304,10 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			EventingClient: eventingclient.Get(ctx),
 			Resolver:       nil,
 			Env:            env,
+			WithCtx: func(ctx context.Context) context.Context {
+				//TODO Enable feature store
+				return ctx
+			},
 		}
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))

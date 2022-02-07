@@ -16,6 +16,163 @@ public final class DataPlaneContract {
   }
   /**
    * <pre>
+   * A dialect for Cloud Events Subscriptions API Filters
+   * </pre>
+   *
+   * Protobuf enum {@code Dialect}
+   */
+  public enum Dialect
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>EXACT = 0;</code>
+     */
+    EXACT(0),
+    /**
+     * <code>PREFIX = 1;</code>
+     */
+    PREFIX(1),
+    /**
+     * <code>SUFFIX = 2;</code>
+     */
+    SUFFIX(2),
+    /**
+     * <code>ALL = 3;</code>
+     */
+    ALL(3),
+    /**
+     * <code>ANY = 4;</code>
+     */
+    ANY(4),
+    /**
+     * <code>NOT = 5;</code>
+     */
+    NOT(5),
+    /**
+     * <code>CESQL = 6;</code>
+     */
+    CESQL(6),
+    UNRECOGNIZED(-1),
+    ;
+
+    /**
+     * <code>EXACT = 0;</code>
+     */
+    public static final int EXACT_VALUE = 0;
+    /**
+     * <code>PREFIX = 1;</code>
+     */
+    public static final int PREFIX_VALUE = 1;
+    /**
+     * <code>SUFFIX = 2;</code>
+     */
+    public static final int SUFFIX_VALUE = 2;
+    /**
+     * <code>ALL = 3;</code>
+     */
+    public static final int ALL_VALUE = 3;
+    /**
+     * <code>ANY = 4;</code>
+     */
+    public static final int ANY_VALUE = 4;
+    /**
+     * <code>NOT = 5;</code>
+     */
+    public static final int NOT_VALUE = 5;
+    /**
+     * <code>CESQL = 6;</code>
+     */
+    public static final int CESQL_VALUE = 6;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static Dialect valueOf(int value) {
+      return forNumber(value);
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
+    public static Dialect forNumber(int value) {
+      switch (value) {
+        case 0: return EXACT;
+        case 1: return PREFIX;
+        case 2: return SUFFIX;
+        case 3: return ALL;
+        case 4: return ANY;
+        case 5: return NOT;
+        case 6: return CESQL;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<Dialect>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        Dialect> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<Dialect>() {
+            public Dialect findValueByNumber(int number) {
+              return Dialect.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalStateException(
+            "Can't get the descriptor of an unrecognized enum value.");
+      }
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(0);
+    }
+
+    private static final Dialect[] VALUES = values();
+
+    public static Dialect valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private Dialect(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:Dialect)
+  }
+
+  /**
+   * <pre>
    * BackoffPolicyType is the type for backoff policies
    * </pre>
    *
@@ -116,7 +273,7 @@ public final class DataPlaneContract {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(0);
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(1);
     }
 
     private static final BackoffPolicy[] VALUES = values();
@@ -228,7 +385,7 @@ public final class DataPlaneContract {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(1);
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(2);
     }
 
     private static final DeliveryOrder[] VALUES = values();
@@ -354,7 +511,7 @@ public final class DataPlaneContract {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(2);
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(3);
     }
 
     private static final KeyType[] VALUES = values();
@@ -466,7 +623,7 @@ public final class DataPlaneContract {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(3);
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(4);
     }
 
     private static final ContentMode[] VALUES = values();
@@ -610,7 +767,7 @@ public final class DataPlaneContract {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(4);
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(5);
     }
 
     private static final SecretField[] VALUES = values();
@@ -736,7 +893,7 @@ public final class DataPlaneContract {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(5);
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(6);
     }
 
     private static final Protocol[] VALUES = values();
@@ -1202,11 +1359,7 @@ public final class DataPlaneContract {
 
     /**
      * <pre>
-     * attributes filters events by exact match on event context attributes.
-     * Each key in the map is compared with the equivalent key in the event
-     * context. An event passes the filter if all values are equal to the
-     * specified values.
-     * Nested context attributes are not supported as keys. Only string values are supported.
+     * Cloud Events context attributes which might be used in a match based on the filter dialect
      * </pre>
      *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1214,11 +1367,7 @@ public final class DataPlaneContract {
     int getAttributesCount();
     /**
      * <pre>
-     * attributes filters events by exact match on event context attributes.
-     * Each key in the map is compared with the equivalent key in the event
-     * context. An event passes the filter if all values are equal to the
-     * specified values.
-     * Nested context attributes are not supported as keys. Only string values are supported.
+     * Cloud Events context attributes which might be used in a match based on the filter dialect
      * </pre>
      *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1233,11 +1382,7 @@ public final class DataPlaneContract {
     getAttributes();
     /**
      * <pre>
-     * attributes filters events by exact match on event context attributes.
-     * Each key in the map is compared with the equivalent key in the event
-     * context. An event passes the filter if all values are equal to the
-     * specified values.
-     * Nested context attributes are not supported as keys. Only string values are supported.
+     * Cloud Events context attributes which might be used in a match based on the filter dialect
      * </pre>
      *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1246,11 +1391,7 @@ public final class DataPlaneContract {
     getAttributesMap();
     /**
      * <pre>
-     * attributes filters events by exact match on event context attributes.
-     * Each key in the map is compared with the equivalent key in the event
-     * context. An event passes the filter if all values are equal to the
-     * specified values.
-     * Nested context attributes are not supported as keys. Only string values are supported.
+     * Cloud Events context attributes which might be used in a match based on the filter dialect
      * </pre>
      *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1261,11 +1402,7 @@ public final class DataPlaneContract {
         java.lang.String defaultValue);
     /**
      * <pre>
-     * attributes filters events by exact match on event context attributes.
-     * Each key in the map is compared with the equivalent key in the event
-     * context. An event passes the filter if all values are equal to the
-     * specified values.
-     * Nested context attributes are not supported as keys. Only string values are supported.
+     * Cloud Events context attributes which might be used in a match based on the filter dialect
      * </pre>
      *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1273,6 +1410,89 @@ public final class DataPlaneContract {
 
     java.lang.String getAttributesOrThrow(
         java.lang.String key);
+
+    /**
+     * <pre>
+     * The filter dialect as defined by Cloud Events Subscriptions API
+     * </pre>
+     *
+     * <code>.Dialect dialect = 2;</code>
+     * @return The enum numeric value on the wire for dialect.
+     */
+    int getDialectValue();
+    /**
+     * <pre>
+     * The filter dialect as defined by Cloud Events Subscriptions API
+     * </pre>
+     *
+     * <code>.Dialect dialect = 2;</code>
+     * @return The dialect.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Dialect getDialect();
+
+    /**
+     * <pre>
+     * Some dialects like ALL are a composition of other filters
+     * </pre>
+     *
+     * <code>repeated .Filter filters = 3;</code>
+     */
+    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter> 
+        getFiltersList();
+    /**
+     * <pre>
+     * Some dialects like ALL are a composition of other filters
+     * </pre>
+     *
+     * <code>repeated .Filter filters = 3;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter getFilters(int index);
+    /**
+     * <pre>
+     * Some dialects like ALL are a composition of other filters
+     * </pre>
+     *
+     * <code>repeated .Filter filters = 3;</code>
+     */
+    int getFiltersCount();
+    /**
+     * <pre>
+     * Some dialects like ALL are a composition of other filters
+     * </pre>
+     *
+     * <code>repeated .Filter filters = 3;</code>
+     */
+    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder> 
+        getFiltersOrBuilderList();
+    /**
+     * <pre>
+     * Some dialects like ALL are a composition of other filters
+     * </pre>
+     *
+     * <code>repeated .Filter filters = 3;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder getFiltersOrBuilder(
+        int index);
+
+    /**
+     * <pre>
+     * Some dialcets like CESQL have a filter expression
+     * </pre>
+     *
+     * <code>string expression = 4;</code>
+     * @return The expression.
+     */
+    java.lang.String getExpression();
+    /**
+     * <pre>
+     * Some dialcets like CESQL have a filter expression
+     * </pre>
+     *
+     * <code>string expression = 4;</code>
+     * @return The bytes for expression.
+     */
+    com.google.protobuf.ByteString
+        getExpressionBytes();
   }
   /**
    * Protobuf type {@code Filter}
@@ -1287,6 +1507,9 @@ public final class DataPlaneContract {
       super(builder);
     }
     private Filter() {
+      dialect_ = 0;
+      filters_ = java.util.Collections.emptyList();
+      expression_ = "";
     }
 
     @java.lang.Override
@@ -1333,6 +1556,27 @@ public final class DataPlaneContract {
                   attributes__.getKey(), attributes__.getValue());
               break;
             }
+            case 16: {
+              int rawValue = input.readEnum();
+
+              dialect_ = rawValue;
+              break;
+            }
+            case 26: {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                filters_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              filters_.add(
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.parser(), extensionRegistry));
+              break;
+            }
+            case 34: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              expression_ = s;
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -1348,6 +1592,9 @@ public final class DataPlaneContract {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
+          filters_ = java.util.Collections.unmodifiableList(filters_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -1405,11 +1652,7 @@ public final class DataPlaneContract {
     }
     /**
      * <pre>
-     * attributes filters events by exact match on event context attributes.
-     * Each key in the map is compared with the equivalent key in the event
-     * context. An event passes the filter if all values are equal to the
-     * specified values.
-     * Nested context attributes are not supported as keys. Only string values are supported.
+     * Cloud Events context attributes which might be used in a match based on the filter dialect
      * </pre>
      *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1431,11 +1674,7 @@ public final class DataPlaneContract {
     }
     /**
      * <pre>
-     * attributes filters events by exact match on event context attributes.
-     * Each key in the map is compared with the equivalent key in the event
-     * context. An event passes the filter if all values are equal to the
-     * specified values.
-     * Nested context attributes are not supported as keys. Only string values are supported.
+     * Cloud Events context attributes which might be used in a match based on the filter dialect
      * </pre>
      *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1447,11 +1686,7 @@ public final class DataPlaneContract {
     }
     /**
      * <pre>
-     * attributes filters events by exact match on event context attributes.
-     * Each key in the map is compared with the equivalent key in the event
-     * context. An event passes the filter if all values are equal to the
-     * specified values.
-     * Nested context attributes are not supported as keys. Only string values are supported.
+     * Cloud Events context attributes which might be used in a match based on the filter dialect
      * </pre>
      *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1468,11 +1703,7 @@ public final class DataPlaneContract {
     }
     /**
      * <pre>
-     * attributes filters events by exact match on event context attributes.
-     * Each key in the map is compared with the equivalent key in the event
-     * context. An event passes the filter if all values are equal to the
-     * specified values.
-     * Nested context attributes are not supported as keys. Only string values are supported.
+     * Cloud Events context attributes which might be used in a match based on the filter dialect
      * </pre>
      *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1488,6 +1719,139 @@ public final class DataPlaneContract {
         throw new java.lang.IllegalArgumentException();
       }
       return map.get(key);
+    }
+
+    public static final int DIALECT_FIELD_NUMBER = 2;
+    private int dialect_;
+    /**
+     * <pre>
+     * The filter dialect as defined by Cloud Events Subscriptions API
+     * </pre>
+     *
+     * <code>.Dialect dialect = 2;</code>
+     * @return The enum numeric value on the wire for dialect.
+     */
+    @java.lang.Override public int getDialectValue() {
+      return dialect_;
+    }
+    /**
+     * <pre>
+     * The filter dialect as defined by Cloud Events Subscriptions API
+     * </pre>
+     *
+     * <code>.Dialect dialect = 2;</code>
+     * @return The dialect.
+     */
+    @java.lang.Override public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Dialect getDialect() {
+      @SuppressWarnings("deprecation")
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Dialect result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Dialect.valueOf(dialect_);
+      return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Dialect.UNRECOGNIZED : result;
+    }
+
+    public static final int FILTERS_FIELD_NUMBER = 3;
+    private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter> filters_;
+    /**
+     * <pre>
+     * Some dialects like ALL are a composition of other filters
+     * </pre>
+     *
+     * <code>repeated .Filter filters = 3;</code>
+     */
+    @java.lang.Override
+    public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter> getFiltersList() {
+      return filters_;
+    }
+    /**
+     * <pre>
+     * Some dialects like ALL are a composition of other filters
+     * </pre>
+     *
+     * <code>repeated .Filter filters = 3;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder> 
+        getFiltersOrBuilderList() {
+      return filters_;
+    }
+    /**
+     * <pre>
+     * Some dialects like ALL are a composition of other filters
+     * </pre>
+     *
+     * <code>repeated .Filter filters = 3;</code>
+     */
+    @java.lang.Override
+    public int getFiltersCount() {
+      return filters_.size();
+    }
+    /**
+     * <pre>
+     * Some dialects like ALL are a composition of other filters
+     * </pre>
+     *
+     * <code>repeated .Filter filters = 3;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter getFilters(int index) {
+      return filters_.get(index);
+    }
+    /**
+     * <pre>
+     * Some dialects like ALL are a composition of other filters
+     * </pre>
+     *
+     * <code>repeated .Filter filters = 3;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder getFiltersOrBuilder(
+        int index) {
+      return filters_.get(index);
+    }
+
+    public static final int EXPRESSION_FIELD_NUMBER = 4;
+    private volatile java.lang.Object expression_;
+    /**
+     * <pre>
+     * Some dialcets like CESQL have a filter expression
+     * </pre>
+     *
+     * <code>string expression = 4;</code>
+     * @return The expression.
+     */
+    @java.lang.Override
+    public java.lang.String getExpression() {
+      java.lang.Object ref = expression_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        expression_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Some dialcets like CESQL have a filter expression
+     * </pre>
+     *
+     * <code>string expression = 4;</code>
+     * @return The bytes for expression.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getExpressionBytes() {
+      java.lang.Object ref = expression_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        expression_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
     }
 
     private byte memoizedIsInitialized = -1;
@@ -1510,6 +1874,15 @@ public final class DataPlaneContract {
           internalGetAttributes(),
           AttributesDefaultEntryHolder.defaultEntry,
           1);
+      if (dialect_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Dialect.EXACT.getNumber()) {
+        output.writeEnum(2, dialect_);
+      }
+      for (int i = 0; i < filters_.size(); i++) {
+        output.writeMessage(3, filters_.get(i));
+      }
+      if (!getExpressionBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, expression_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -1529,6 +1902,17 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
             .computeMessageSize(1, attributes__);
       }
+      if (dialect_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Dialect.EXACT.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(2, dialect_);
+      }
+      for (int i = 0; i < filters_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, filters_.get(i));
+      }
+      if (!getExpressionBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, expression_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -1546,6 +1930,11 @@ public final class DataPlaneContract {
 
       if (!internalGetAttributes().equals(
           other.internalGetAttributes())) return false;
+      if (dialect_ != other.dialect_) return false;
+      if (!getFiltersList()
+          .equals(other.getFiltersList())) return false;
+      if (!getExpression()
+          .equals(other.getExpression())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -1561,6 +1950,14 @@ public final class DataPlaneContract {
         hash = (37 * hash) + ATTRIBUTES_FIELD_NUMBER;
         hash = (53 * hash) + internalGetAttributes().hashCode();
       }
+      hash = (37 * hash) + DIALECT_FIELD_NUMBER;
+      hash = (53 * hash) + dialect_;
+      if (getFiltersCount() > 0) {
+        hash = (37 * hash) + FILTERS_FIELD_NUMBER;
+        hash = (53 * hash) + getFiltersList().hashCode();
+      }
+      hash = (37 * hash) + EXPRESSION_FIELD_NUMBER;
+      hash = (53 * hash) + getExpression().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1711,12 +2108,23 @@ public final class DataPlaneContract {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getFiltersFieldBuilder();
         }
       }
       @java.lang.Override
       public Builder clear() {
         super.clear();
         internalGetMutableAttributes().clear();
+        dialect_ = 0;
+
+        if (filtersBuilder_ == null) {
+          filters_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          filtersBuilder_.clear();
+        }
+        expression_ = "";
+
         return this;
       }
 
@@ -1746,6 +2154,17 @@ public final class DataPlaneContract {
         int from_bitField0_ = bitField0_;
         result.attributes_ = internalGetAttributes();
         result.attributes_.makeImmutable();
+        result.dialect_ = dialect_;
+        if (filtersBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) != 0)) {
+            filters_ = java.util.Collections.unmodifiableList(filters_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.filters_ = filters_;
+        } else {
+          result.filters_ = filtersBuilder_.build();
+        }
+        result.expression_ = expression_;
         onBuilt();
         return result;
       }
@@ -1796,6 +2215,39 @@ public final class DataPlaneContract {
         if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.getDefaultInstance()) return this;
         internalGetMutableAttributes().mergeFrom(
             other.internalGetAttributes());
+        if (other.dialect_ != 0) {
+          setDialectValue(other.getDialectValue());
+        }
+        if (filtersBuilder_ == null) {
+          if (!other.filters_.isEmpty()) {
+            if (filters_.isEmpty()) {
+              filters_ = other.filters_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureFiltersIsMutable();
+              filters_.addAll(other.filters_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.filters_.isEmpty()) {
+            if (filtersBuilder_.isEmpty()) {
+              filtersBuilder_.dispose();
+              filtersBuilder_ = null;
+              filters_ = other.filters_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              filtersBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getFiltersFieldBuilder() : null;
+            } else {
+              filtersBuilder_.addAllMessages(other.filters_);
+            }
+          }
+        }
+        if (!other.getExpression().isEmpty()) {
+          expression_ = other.expression_;
+          onChanged();
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -1854,11 +2306,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * attributes filters events by exact match on event context attributes.
-       * Each key in the map is compared with the equivalent key in the event
-       * context. An event passes the filter if all values are equal to the
-       * specified values.
-       * Nested context attributes are not supported as keys. Only string values are supported.
+       * Cloud Events context attributes which might be used in a match based on the filter dialect
        * </pre>
        *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1880,11 +2328,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * attributes filters events by exact match on event context attributes.
-       * Each key in the map is compared with the equivalent key in the event
-       * context. An event passes the filter if all values are equal to the
-       * specified values.
-       * Nested context attributes are not supported as keys. Only string values are supported.
+       * Cloud Events context attributes which might be used in a match based on the filter dialect
        * </pre>
        *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1896,11 +2340,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * attributes filters events by exact match on event context attributes.
-       * Each key in the map is compared with the equivalent key in the event
-       * context. An event passes the filter if all values are equal to the
-       * specified values.
-       * Nested context attributes are not supported as keys. Only string values are supported.
+       * Cloud Events context attributes which might be used in a match based on the filter dialect
        * </pre>
        *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1917,11 +2357,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * attributes filters events by exact match on event context attributes.
-       * Each key in the map is compared with the equivalent key in the event
-       * context. An event passes the filter if all values are equal to the
-       * specified values.
-       * Nested context attributes are not supported as keys. Only string values are supported.
+       * Cloud Events context attributes which might be used in a match based on the filter dialect
        * </pre>
        *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1946,11 +2382,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * attributes filters events by exact match on event context attributes.
-       * Each key in the map is compared with the equivalent key in the event
-       * context. An event passes the filter if all values are equal to the
-       * specified values.
-       * Nested context attributes are not supported as keys. Only string values are supported.
+       * Cloud Events context attributes which might be used in a match based on the filter dialect
        * </pre>
        *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1973,11 +2405,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * attributes filters events by exact match on event context attributes.
-       * Each key in the map is compared with the equivalent key in the event
-       * context. An event passes the filter if all values are equal to the
-       * specified values.
-       * Nested context attributes are not supported as keys. Only string values are supported.
+       * Cloud Events context attributes which might be used in a match based on the filter dialect
        * </pre>
        *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -1993,11 +2421,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * attributes filters events by exact match on event context attributes.
-       * Each key in the map is compared with the equivalent key in the event
-       * context. An event passes the filter if all values are equal to the
-       * specified values.
-       * Nested context attributes are not supported as keys. Only string values are supported.
+       * Cloud Events context attributes which might be used in a match based on the filter dialect
        * </pre>
        *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
@@ -2007,6 +2431,488 @@ public final class DataPlaneContract {
           java.util.Map<java.lang.String, java.lang.String> values) {
         internalGetMutableAttributes().getMutableMap()
             .putAll(values);
+        return this;
+      }
+
+      private int dialect_ = 0;
+      /**
+       * <pre>
+       * The filter dialect as defined by Cloud Events Subscriptions API
+       * </pre>
+       *
+       * <code>.Dialect dialect = 2;</code>
+       * @return The enum numeric value on the wire for dialect.
+       */
+      @java.lang.Override public int getDialectValue() {
+        return dialect_;
+      }
+      /**
+       * <pre>
+       * The filter dialect as defined by Cloud Events Subscriptions API
+       * </pre>
+       *
+       * <code>.Dialect dialect = 2;</code>
+       * @param value The enum numeric value on the wire for dialect to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDialectValue(int value) {
+        
+        dialect_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * The filter dialect as defined by Cloud Events Subscriptions API
+       * </pre>
+       *
+       * <code>.Dialect dialect = 2;</code>
+       * @return The dialect.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Dialect getDialect() {
+        @SuppressWarnings("deprecation")
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Dialect result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Dialect.valueOf(dialect_);
+        return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Dialect.UNRECOGNIZED : result;
+      }
+      /**
+       * <pre>
+       * The filter dialect as defined by Cloud Events Subscriptions API
+       * </pre>
+       *
+       * <code>.Dialect dialect = 2;</code>
+       * @param value The dialect to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDialect(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Dialect value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        
+        dialect_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * The filter dialect as defined by Cloud Events Subscriptions API
+       * </pre>
+       *
+       * <code>.Dialect dialect = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearDialect() {
+        
+        dialect_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter> filters_ =
+        java.util.Collections.emptyList();
+      private void ensureFiltersIsMutable() {
+        if (!((bitField0_ & 0x00000002) != 0)) {
+          filters_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter>(filters_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder> filtersBuilder_;
+
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter> getFiltersList() {
+        if (filtersBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(filters_);
+        } else {
+          return filtersBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public int getFiltersCount() {
+        if (filtersBuilder_ == null) {
+          return filters_.size();
+        } else {
+          return filtersBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter getFilters(int index) {
+        if (filtersBuilder_ == null) {
+          return filters_.get(index);
+        } else {
+          return filtersBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public Builder setFilters(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter value) {
+        if (filtersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFiltersIsMutable();
+          filters_.set(index, value);
+          onChanged();
+        } else {
+          filtersBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public Builder setFilters(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder builderForValue) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          filters_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          filtersBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public Builder addFilters(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter value) {
+        if (filtersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFiltersIsMutable();
+          filters_.add(value);
+          onChanged();
+        } else {
+          filtersBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public Builder addFilters(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter value) {
+        if (filtersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFiltersIsMutable();
+          filters_.add(index, value);
+          onChanged();
+        } else {
+          filtersBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public Builder addFilters(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder builderForValue) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          filters_.add(builderForValue.build());
+          onChanged();
+        } else {
+          filtersBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public Builder addFilters(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder builderForValue) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          filters_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          filtersBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public Builder addAllFilters(
+          java.lang.Iterable<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter> values) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, filters_);
+          onChanged();
+        } else {
+          filtersBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public Builder clearFilters() {
+        if (filtersBuilder_ == null) {
+          filters_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          filtersBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public Builder removeFilters(int index) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          filters_.remove(index);
+          onChanged();
+        } else {
+          filtersBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder getFiltersBuilder(
+          int index) {
+        return getFiltersFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder getFiltersOrBuilder(
+          int index) {
+        if (filtersBuilder_ == null) {
+          return filters_.get(index);  } else {
+          return filtersBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder> 
+           getFiltersOrBuilderList() {
+        if (filtersBuilder_ != null) {
+          return filtersBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(filters_);
+        }
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder addFiltersBuilder() {
+        return getFiltersFieldBuilder().addBuilder(
+            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder addFiltersBuilder(
+          int index) {
+        return getFiltersFieldBuilder().addBuilder(
+            index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Some dialects like ALL are a composition of other filters
+       * </pre>
+       *
+       * <code>repeated .Filter filters = 3;</code>
+       */
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder> 
+           getFiltersBuilderList() {
+        return getFiltersFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder> 
+          getFiltersFieldBuilder() {
+        if (filtersBuilder_ == null) {
+          filtersBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder>(
+                  filters_,
+                  ((bitField0_ & 0x00000002) != 0),
+                  getParentForChildren(),
+                  isClean());
+          filters_ = null;
+        }
+        return filtersBuilder_;
+      }
+
+      private java.lang.Object expression_ = "";
+      /**
+       * <pre>
+       * Some dialcets like CESQL have a filter expression
+       * </pre>
+       *
+       * <code>string expression = 4;</code>
+       * @return The expression.
+       */
+      public java.lang.String getExpression() {
+        java.lang.Object ref = expression_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          expression_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Some dialcets like CESQL have a filter expression
+       * </pre>
+       *
+       * <code>string expression = 4;</code>
+       * @return The bytes for expression.
+       */
+      public com.google.protobuf.ByteString
+          getExpressionBytes() {
+        java.lang.Object ref = expression_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          expression_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Some dialcets like CESQL have a filter expression
+       * </pre>
+       *
+       * <code>string expression = 4;</code>
+       * @param value The expression to set.
+       * @return This builder for chaining.
+       */
+      public Builder setExpression(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        expression_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Some dialcets like CESQL have a filter expression
+       * </pre>
+       *
+       * <code>string expression = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearExpression() {
+        
+        expression_ = getDefaultInstance().getExpression();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Some dialcets like CESQL have a filter expression
+       * </pre>
+       *
+       * <code>string expression = 4;</code>
+       * @param value The bytes for expression to set.
+       * @return This builder for chaining.
+       */
+      public Builder setExpressionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        expression_ = value;
+        onChanged();
         return this;
       }
       @java.lang.Override
@@ -17047,58 +17953,62 @@ public final class DataPlaneContract {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\016contract.proto\"\007\n\005Empty\"h\n\006Filter\022+\n\na" +
-      "ttributes\030\001 \003(\0132\027.Filter.AttributesEntry" +
-      "\0321\n\017AttributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005valu" +
-      "e\030\002 \001(\t:\0028\001\"\177\n\014EgressConfig\022\022\n\ndeadLette" +
-      "r\030\001 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030" +
-      "\003 \001(\0162\016.BackoffPolicy\022\024\n\014backoffDelay\030\004 " +
-      "\001(\004\022\017\n\007timeout\030\005 \001(\004\"\315\002\n\006Egress\022\025\n\rconsu" +
-      "merGroup\030\001 \001(\t\022\023\n\013destination\030\002 \001(\t\022\022\n\010r" +
-      "eplyUrl\030\003 \001(\tH\000\022&\n\024replyToOriginalTopic\030" +
-      "\004 \001(\0132\006.EmptyH\000\022\036\n\014discardReply\030\t \001(\0132\006." +
-      "EmptyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030" +
-      "\006 \001(\t\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConf" +
-      "ig\022%\n\rdeliveryOrder\030\010 \001(\0162\016.DeliveryOrde" +
-      "r\022\031\n\007keyType\030\n \001(\0162\010.KeyType\022\035\n\treferenc" +
-      "e\030\013 \001(\0132\n.ReferenceB\017\n\rreplyStrategy\"[\n\007" +
-      "Ingress\022!\n\013contentMode\030\001 \001(\0162\014.ContentMo" +
-      "de\022\016\n\004path\030\002 \001(\tH\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013in" +
-      "gressType\"K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\t" +
-      "namespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version" +
-      "\030\004 \001(\t\"`\n\017SecretReference\022\035\n\treference\030\001" +
-      " \001(\0132\n.Reference\022.\n\022keyFieldReferences\030\002" +
-      " \003(\0132\022.KeyFieldReference\"C\n\021KeyFieldRefe" +
-      "rence\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162" +
-      "\014.SecretField\"Y\n\024MultiSecretReference\022\033\n" +
-      "\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nreferences" +
-      "\030\002 \003(\0132\020.SecretReference\"\202\001\n\023CloudEventO" +
-      "verrides\0228\n\nextensions\030\001 \003(\0132$.CloudEven" +
-      "tOverrides.ExtensionsEntry\0321\n\017Extensions" +
-      "Entry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002" +
-      "\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022" +
-      "\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001" +
-      "(\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.Egr" +
-      "essConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\n" +
-      "absentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret" +
-      "\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAuthSecret\030" +
-      "\t \001(\0132\025.MultiSecretReferenceH\000\0221\n\023cloudE" +
-      "ventOverrides\030\n \001(\0132\024.CloudEventOverride" +
-      "s\022\035\n\treference\030\013 \001(\0132\n.ReferenceB\006\n\004Auth" +
-      "\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\treso" +
-      "urces\030\002 \003(\0132\t.Resource*,\n\rBackoffPolicy\022" +
-      "\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n\rDelivery" +
-      "Order\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007Key" +
-      "Type\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020" +
-      "\002\022\r\n\tByteArray\020\003*)\n\013ContentMode\022\n\n\006BINAR" +
-      "Y\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013SecretField\022\022\n\016SA" +
-      "SL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002" +
-      "\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D" +
-      "\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINT" +
-      "EXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knat" +
-      "ive.eventing.kafka.broker.contractB\021Data" +
-      "PlaneContractZ\032control-plane/pkg/contrac" +
-      "tb\006proto3"
+      "\n\016contract.proto\"\007\n\005Empty\"\261\001\n\006Filter\022+\n\n" +
+      "attributes\030\001 \003(\0132\027.Filter.AttributesEntr" +
+      "y\022\031\n\007dialect\030\002 \001(\0162\010.Dialect\022\030\n\007filters\030" +
+      "\003 \003(\0132\007.Filter\022\022\n\nexpression\030\004 \001(\t\0321\n\017At" +
+      "tributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(" +
+      "\t:\0028\001\"\177\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(" +
+      "\t\022\r\n\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162" +
+      "\016.BackoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\022\017\n" +
+      "\007timeout\030\005 \001(\004\"\315\002\n\006Egress\022\025\n\rconsumerGro" +
+      "up\030\001 \001(\t\022\023\n\013destination\030\002 \001(\t\022\022\n\010replyUr" +
+      "l\030\003 \001(\tH\000\022&\n\024replyToOriginalTopic\030\004 \001(\0132" +
+      "\006.EmptyH\000\022\036\n\014discardReply\030\t \001(\0132\006.EmptyH" +
+      "\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001(\t\022" +
+      "#\n\014egressConfig\030\007 \001(\0132\r.EgressConfig\022%\n\r" +
+      "deliveryOrder\030\010 \001(\0162\016.DeliveryOrder\022\031\n\007k" +
+      "eyType\030\n \001(\0162\010.KeyType\022\035\n\treference\030\013 \001(" +
+      "\0132\n.ReferenceB\017\n\rreplyStrategy\"[\n\007Ingres" +
+      "s\022!\n\013contentMode\030\001 \001(\0162\014.ContentMode\022\016\n\004" +
+      "path\030\002 \001(\tH\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressT" +
+      "ype\"K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamesp" +
+      "ace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t" +
+      "\"`\n\017SecretReference\022\035\n\treference\030\001 \001(\0132\n" +
+      ".Reference\022.\n\022keyFieldReferences\030\002 \003(\0132\022" +
+      ".KeyFieldReference\"C\n\021KeyFieldReference\022" +
+      "\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.Secr" +
+      "etField\"Y\n\024MultiSecretReference\022\033\n\010proto" +
+      "col\030\001 \001(\0162\t.Protocol\022$\n\nreferences\030\002 \003(\013" +
+      "2\020.SecretReference\"\202\001\n\023CloudEventOverrid" +
+      "es\0228\n\nextensions\030\001 \003(\0132$.CloudEventOverr" +
+      "ides.ExtensionsEntry\0321\n\017ExtensionsEntry\022" +
+      "\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010Reso" +
+      "urce\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020boo" +
+      "tstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.I" +
+      "ngress\022#\n\014egressConfig\030\005 \001(\0132\r.EgressCon" +
+      "fig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsent" +
+      "Auth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\013" +
+      "2\n.ReferenceH\000\0220\n\017multiAuthSecret\030\t \001(\0132" +
+      "\025.MultiSecretReferenceH\000\0221\n\023cloudEventOv" +
+      "errides\030\n \001(\0132\024.CloudEventOverrides\022\035\n\tr" +
+      "eference\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"<\n\010Co" +
+      "ntract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030" +
+      "\002 \003(\0132\t.Resource*R\n\007Dialect\022\t\n\005EXACT\020\000\022\n" +
+      "\n\006PREFIX\020\001\022\n\n\006SUFFIX\020\002\022\007\n\003ALL\020\003\022\007\n\003ANY\020\004" +
+      "\022\007\n\003NOT\020\005\022\t\n\005CESQL\020\006*,\n\rBackoffPolicy\022\017\n" +
+      "\013Exponential\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOr" +
+      "der\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyTy" +
+      "pe\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022" +
+      "\r\n\tByteArray\020\003*)\n\013ContentMode\022\n\n\006BINARY\020" +
+      "\000\022\016\n\nSTRUCTURED\020\001*a\n\013SecretField\022\022\n\016SASL" +
+      "_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014" +
+      "\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010" +
+      "Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEX" +
+      "T\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knativ" +
+      "e.eventing.kafka.broker.contractB\021DataPl" +
+      "aneContractZ\032control-plane/pkg/contractb" +
+      "\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -17115,7 +18025,7 @@ public final class DataPlaneContract {
     internal_static_Filter_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Filter_descriptor,
-        new java.lang.String[] { "Attributes", });
+        new java.lang.String[] { "Attributes", "Dialect", "Filters", "Expression", });
     internal_static_Filter_AttributesEntry_descriptor =
       internal_static_Filter_descriptor.getNestedTypes().get(0);
     internal_static_Filter_AttributesEntry_fieldAccessorTable = new

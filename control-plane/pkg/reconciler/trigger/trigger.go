@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	"knative.dev/eventing/pkg/apis/feature"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 
@@ -54,6 +56,8 @@ type Reconciler struct {
 	Resolver       *resolver.URIResolver
 
 	Env *config.Env
+
+	WithCtx func(ctx context.Context) context.Context
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -63,6 +67,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 }
 
 func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
+	ctx = r.WithCtx(ctx)
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
 
 	statusConditionManager := statusConditionManager{
@@ -283,9 +288,13 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 		},
 	}
 
-	if trigger.Spec.Filter != nil && trigger.Spec.Filter.Attributes != nil {
-		egress.Filter = &contract.Filter{
-			Attributes: trigger.Spec.Filter.Attributes,
+	if feature.FromContext(ctx).IsEnabled(feature.NewTriggerFilters) && len(trigger.Spec.Filters) > 0 {
+		egress.Filter = contract.NewAllFilter(trigger.Spec.Filters)
+	} else {
+		if trigger.Spec.Filter != nil && trigger.Spec.Filter.Attributes != nil {
+			egress.Filter = &contract.Filter{
+				Attributes: trigger.Spec.Filter.Attributes,
+			}
 		}
 	}
 

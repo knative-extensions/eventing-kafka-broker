@@ -11,14 +11,29 @@ option java_outer_classname = "DataPlaneContract";
 // Protobuf include nightmare? No thanks!
 message Empty {}
 
+// A dialect for Cloud Events Subscriptions API Filters
+enum Dialect {
+  EXACT = 0;
+  PREFIX = 1;
+  SUFFIX = 2;
+  ALL = 3;
+  ANY = 4;
+  NOT = 5;
+  CESQL = 6;
+}
+
 message Filter {
-  // attributes filters events by exact match on event context attributes.
-  // Each key in the map is compared with the equivalent key in the event
-  // context. An event passes the filter if all values are equal to the
-  // specified values.
-  //
-  // Nested context attributes are not supported as keys. Only string values are supported.
+  // Cloud Events context attributes which might be used in a match based on the filter dialect
   map<string, string> attributes = 1;
+
+  // The filter dialect as defined by Cloud Events Subscriptions API
+  Dialect dialect = 2;
+
+  // Some dialects like ALL are a composition of other filters
+  repeated Filter filters = 3;
+
+  // Some dialcets like CESQL have a filter expression
+  string expression = 4;
 }
 
 // BackoffPolicyType is the type for backoff policies
