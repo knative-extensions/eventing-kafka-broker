@@ -70,6 +70,12 @@ func NewConsumerGroup(opts ...ConsumerGroupOption) *kafkainternals.ConsumerGroup
 	return cg
 }
 
+func ConsumerGroupSubscriber(d duckv1.Destination) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.Spec.Template.Spec.Subscriber = d
+	}
+}
+
 func ConsumerGroupReady(cg *kafkainternals.ConsumerGroup) {
 	cg.Status.Conditions = duckv1.Conditions{
 		{

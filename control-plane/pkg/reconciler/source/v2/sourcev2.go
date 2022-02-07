@@ -66,7 +66,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 	} else {
 		topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
 		if topLevelCondition == nil {
-			ks.GetConditionSet().Manage(&ks.Status).MarkUnknown(KafkaConditionConsumerGroup, "failed to reconcile consumer group", "consumer group not ready")
+			ks.GetConditionSet().Manage(&ks.Status).MarkUnknown(
+				KafkaConditionConsumerGroup,
+				"failed to reconcile consumer group",
+				"consumer group not ready",
+			)
 		} else {
 			ks.GetConditionSet().Manage(&ks.Status).MarkFalse(
 				KafkaConditionConsumerGroup,
@@ -87,7 +91,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 
 func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
 
-	newcg := &internalscg.ConsumerGroup{
+	expectedCg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(ks.UID),
 			Namespace: ks.Namespace,
@@ -117,7 +121,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 	}
 
 	if ks.Spec.CloudEventOverrides != nil {
-		newcg.Spec.Template.Spec.CloudEventOverrides = &duckv1.CloudEventOverrides{
+		expectedCg.Spec.Template.Spec.CloudEventOverrides = &duckv1.CloudEventOverrides{
 			Extensions: ks.Spec.CloudEventOverrides.Extensions,
 		}
 	}
@@ -126,26 +130,22 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	}
-
 	if apierrors.IsNotFound(err) {
-		cg, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(newcg.GetNamespace()).Create(ctx, newcg, metav1.CreateOptions{})
+		cg, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedCg.GetNamespace()).Create(ctx, expectedCg, metav1.CreateOptions{})
 		if err != nil && !apierrors.IsAlreadyExists(err) {
-			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", newcg.GetNamespace(), newcg.GetName(), err)
-		}
-		if apierrors.IsAlreadyExists(err) {
-			return newcg, nil
+			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", expectedCg.GetNamespace(), expectedCg.GetName(), err)
 		}
 		return cg, nil
 	}
 
-	if equality.Semantic.DeepDerivative(newcg.Spec, cg.Spec) {
+	if equality.Semantic.DeepDerivative(expectedCg.Spec, cg.Spec) {
 		return cg, nil
 	}
 
 	newCg := &internalscg.ConsumerGroup{
 		TypeMeta:   cg.TypeMeta,
 		ObjectMeta: cg.ObjectMeta,
-		Spec:       newcg.Spec,
+		Spec:       expectedCg.Spec,
 		Status:     cg.Status,
 	}
 	if cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
