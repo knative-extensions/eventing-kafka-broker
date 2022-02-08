@@ -22,3 +22,5 @@ source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
 go_update_deps "$@"
 
+# Apply Git patches
+git apply $(dirname "$0")/patches/*
