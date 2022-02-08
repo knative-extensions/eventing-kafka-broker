@@ -23,7 +23,7 @@ header "Running tests"
 
 if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
   # if this flag exists, only test Kafka channel scenarios with auth
-  $(dirname $0)/channel-tests.sh || fail_test "Failed to execute KafkaChannel tests"
+  $(dirname $0)/channel-e2e-tests.sh || fail_test "Failed to execute KafkaChannel tests"
   success
 fi
 
