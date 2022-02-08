@@ -39,7 +39,7 @@ export_logs_continuously
 
 set -Eeuo pipefail
 
-TIMEOUT=${TIMEOUT:-60m}
+TIMEOUT=${TIMEOUT:-100m}
 GO_TEST_VERBOSITY="${GO_TEST_VERBOSITY:-standard-verbose}"
 
 EVENTING_KAFKA_BROKER_UPGRADE_TESTS_FINISHEDSLEEP="5m" \
