@@ -21,7 +21,6 @@ import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.BaseUnits;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
-import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.http.HttpServerOptions;
@@ -98,6 +97,8 @@ public class Metrics {
     // Unified Code for Units of Measure: http://unitsofmeasure.org/ucum.html
     public static final String DIMENSIONLESS = "1";
   }
+
+  private static final double[] LATENCY_SLOs = new double[]{50, 100, 500, 1000, 5000, 10000};
 
   /**
    * Get metrics options from the given metrics configurations.
@@ -201,7 +202,7 @@ public class Metrics {
       .description("The time spent dispatching an event to Kafka")
       .tags(tags)
       .baseUnit(BaseUnits.MILLISECONDS)
-      .serviceLevelObjectives(1, 2, 5, 10, 20, 50, 100, 500, 1000, 5000, 10000);
+      .serviceLevelObjectives(LATENCY_SLOs);
   }
 
   public static DistributionSummary.Builder eventProcessingLatency(final io.micrometer.core.instrument.Tags tags) {
@@ -210,6 +211,6 @@ public class Metrics {
       .description("The time spent processing an event")
       .tags(tags)
       .baseUnit(BaseUnits.MILLISECONDS)
-      .serviceLevelObjectives(1, 2, 5, 10, 20, 50, 100, 500, 1000, 5000, 10000);
+      .serviceLevelObjectives(LATENCY_SLOs);
   }
 }
