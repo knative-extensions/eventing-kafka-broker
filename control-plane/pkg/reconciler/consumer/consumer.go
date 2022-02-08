@@ -25,7 +25,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -43,8 +42,6 @@ import (
 
 type Reconciler struct {
 	SerDe contract.FormatSerDe
-
-	Enqueue func(c *kafkainternals.Consumer)
 
 	Resolver            *resolver.URIResolver
 	Tracker             tracker.Interface
@@ -143,7 +140,7 @@ func (r Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainterna
 			return nil, err
 		}
 	}
-	c.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(egressConfig.DeadLetter)
+	//c.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(egressConfig.DeadLetter)
 
 	egress := &contract.Egress{
 		ConsumerGroup: c.Spec.Configs.Configs["group.id"],

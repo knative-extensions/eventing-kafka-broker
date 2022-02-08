@@ -15,10 +15,11 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: defaulting.webhook.kafka.eventing.knative.dev
+  name: pods.defaulting.webhook.kafka.eventing.knative.dev
   labels:
     kafka.eventing.knative.dev/release: devel
 webhooks:
+  # Dispatcher pods webhook config.
   - admissionReviewVersions: [ "v1", "v1beta1" ]
     clientConfig:
       service:
@@ -26,5 +27,14 @@ webhooks:
         namespace: knative-eventing
     sideEffects: None
     failurePolicy: Fail
-    name: defaulting.webhook.kafka.eventing.knative.dev
+    name: pods.defaulting.webhook.kafka.eventing.knative.dev
     timeoutSeconds: 2
+    reinvocationPolicy: IfNeeded
+    matchPolicy: Equivalent
+    namespaceSelector:
+      matchExpressions: [ ]
+      matchLabels:
+        app.kubernetes.io/name: knative-eventing
+    objectSelector:
+      matchLabels:
+        app.kubernetes.io/component: kafka-dispatcher

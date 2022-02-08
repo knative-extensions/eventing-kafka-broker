@@ -55,6 +55,7 @@ type Reconciler struct {
 	NameGenerator names.NameGenerator
 
 	SystemNamespace string
+	Name            string
 }
 
 func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
