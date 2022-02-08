@@ -156,7 +156,7 @@ function test_setup() {
 
   setup_kafka_channel_auth || fail_test "Failed to apply channel auth configuration ${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO}"
 
-  kubectl rollout restart deployment -n knative-eventing kafka-source-dispatcher
+  kubectl rollout restart statefulset -n knative-eventing kafka-source-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
@@ -212,7 +212,7 @@ function delete_sacura() {
 
 function export_logs_continuously() {
 
-  labels=("kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver" "kafka-channel-receiver" "kafka-channel-dispatcher" "kafka-source-dispatcher" "kafka-webhook-eventing" "kafka-controller")
+  labels=("kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver" "kafka-channel-receiver" "kafka-channel-dispatcher" "kafka-webhook-eventing" "kafka-controller")
 
   mkdir -p "$ARTIFACTS/${SYSTEM_NAMESPACE}"
 

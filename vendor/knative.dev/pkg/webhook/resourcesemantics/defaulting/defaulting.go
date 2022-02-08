@@ -224,6 +224,12 @@ func (ac *reconciler) reconcileMutatingWebhook(ctx context.Context, caCert []byt
 	current.OwnerReferences = []metav1.OwnerReference{nsRef}
 
 	for i, wh := range current.Webhooks {
+		logger.Info(
+			zap.Any("key", ac.key),
+			zap.Any("rules", rules),
+			zap.Any("wh.name", wh.Name),
+		)
+
 		if wh.Name != current.Name {
 			continue
 		}
