@@ -108,6 +108,25 @@ func NewSourceSinkReference() duckv1.Destination {
 	}
 }
 
+func NewSourceSink2Reference() duckv1.Destination {
+	s := NewService2()
+	return duckv1.Destination{
+		Ref: &duckv1.KReference{
+			Kind:       s.Kind,
+			Namespace:  s.Namespace,
+			Name:       s.Name,
+			APIVersion: s.APIVersion,
+		},
+	}
+}
+
+func WithSourceSink(d duckv1.Destination) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		s := obj.(*sources.KafkaSource)
+		s.Spec.Sink = d
+	}
+}
+
 func SourceDispatcherPod(namespace string, annotations map[string]string) runtime.Object {
 	return &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{

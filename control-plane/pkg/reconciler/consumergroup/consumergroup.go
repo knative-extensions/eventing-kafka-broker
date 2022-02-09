@@ -139,9 +139,7 @@ func (r Reconciler) reconcileConsumersInPlacement(
 		}
 	}
 
-	// Do not modify informer copy.
-	c := &kafkainternals.Consumer{}
-	consumers[0].DeepCopyInto(c)
+	c := consumers[0]
 
 	expectedSpec := kafkainternals.ConsumerSpec{}
 	cg.Spec.Template.Spec.DeepCopyInto(&expectedSpec)
@@ -153,11 +151,21 @@ func (r Reconciler) reconcileConsumersInPlacement(
 		return nil
 	}
 
-	c.Spec.PodBind = &kafkainternals.PodBind{PodName: placement.PodName, PodNamespace: r.SystemNamespace}
-	c.Spec.VReplicas = pointer.Int32Ptr(*expectedSpec.VReplicas)
+	expectedSpec.PodBind = &kafkainternals.PodBind{
+		PodName:      placement.PodName,
+		PodNamespace: r.SystemNamespace,
+	}
+
+	// Do not modify informer copy.
+	expectedC := &kafkainternals.Consumer{
+		TypeMeta:   c.TypeMeta,
+		ObjectMeta: c.ObjectMeta,
+		Spec:       expectedSpec,
+		Status:     c.Status,
+	}
 
 	// Update existing Consumer.
-	if _, err := r.InternalsClient.Consumers(cg.GetNamespace()).Update(ctx, c, metav1.UpdateOptions{}); err != nil {
+	if _, err := r.InternalsClient.Consumers(cg.GetNamespace()).Update(ctx, expectedC, metav1.UpdateOptions{}); err != nil {
 		return fmt.Errorf("failed to update consumer %s/%s: %w", c.GetNamespace(), c.GetName(), err)
 	}
 

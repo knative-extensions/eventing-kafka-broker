@@ -46,6 +46,8 @@ const (
 	ServiceNamespace = "test-service-namespace"
 	ServiceName      = "test-service"
 
+	Service2Name = "test-service-2"
+
 	TriggerUUID = "e7185016-5d98-4b54-84e8-3b1cd4acc6b5"
 
 	SecretResourceVersion = "1234"
@@ -66,6 +68,23 @@ func NewService(mutations ...func(*corev1.Service)) *corev1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ServiceName,
+			Namespace: ServiceNamespace,
+		},
+	}
+	for _, mut := range mutations {
+		mut(s)
+	}
+	return s
+}
+
+func NewService2(mutations ...func(*corev1.Service)) *corev1.Service {
+	s := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      Service2Name,
 			Namespace: ServiceNamespace,
 		},
 	}

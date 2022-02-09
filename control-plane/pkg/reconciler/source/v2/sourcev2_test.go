@@ -33,10 +33,11 @@ import (
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
 
-	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	fakeeventingkafkaclient "knative.dev/eventing-kafka/pkg/client/injection/client/fake"
 	eventingkafkasourcereconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
+
+	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 )
@@ -126,6 +127,62 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
+			Name: "Reconciled normal - existing cg with sink update",
+			Objects: []runtime.Object{
+				NewSource(WithSourceSink(NewSourceSink2Reference())),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupLabels(nil),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewSourceSinkReference()),
+					)),
+					ConsumerGroupReplicas(1),
+					ConsumerGroupReady,
+				),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewConsumerGroup(
+						WithConsumerGroupName(SourceUUID),
+						WithConsumerGroupNamespace(SourceNamespace),
+						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+						WithConsumerGroupLabels(nil),
+						ConsumerGroupConsumerSpec(NewConsumerSpec(
+							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+							ConsumerConfigs(
+								ConsumerGroupIdConfig(SourceConsumerGroup),
+								ConsumerBootstrapServersConfig(SourceBootstrapServers),
+							),
+							ConsumerAuth(NewConsumerSpecAuth()),
+							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+							ConsumerSubscriber(NewSourceSink2Reference()),
+						)),
+						ConsumerGroupReplicas(1),
+						ConsumerGroupReady,
+					),
+				},
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						WithSourceSink(NewSourceSink2Reference()),
+						StatusSourceConsumerGroup(),
+						StatusSourceSinkResolved(""),
+					),
+				},
+			},
+		},
+		{
 			Name: "Reconciled normal - existing cg with update",
 			Objects: []runtime.Object{
 				NewSource(),
@@ -138,8 +195,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupReady,
 				),
 			},
-			Key:         testKey,
-			WantCreates: []runtime.Object{},
+			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewConsumerGroup(
@@ -238,8 +294,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupReady,
 				),
 			},
-			Key:         testKey,
-			WantCreates: []runtime.Object{},
+			Key: testKey,
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
