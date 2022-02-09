@@ -200,7 +200,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   }
 
   private void onFilterMatching(final ConsumerRecordContext recordContext, final Promise<Void> finalProm) {
-    logDebug("Record match filtering", recordContext.getRecord());
+    logDebug("Record matched filtering", recordContext.getRecord());
     subscriberSender.apply(recordContext.getRecord())
       .onSuccess(response -> onSubscriberSuccess(response, recordContext, finalProm))
       .onFailure(ex -> onSubscriberFailure(ex, recordContext, finalProm));
