@@ -208,7 +208,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private void onFilterNotMatching(final ConsumerRecordContext recordContext,
                                    final Promise<Void> finalProm) {
-    logDebug("Record doesn't match filtering", recordContext.getRecord());
+    logDebug("Record did not match filtering", recordContext.getRecord());
     recordDispatcherListener.recordDiscarded(recordContext.getRecord());
     finalProm.complete();
   }
