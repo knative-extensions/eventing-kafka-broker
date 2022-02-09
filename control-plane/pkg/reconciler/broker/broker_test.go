@@ -1861,6 +1861,36 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			},
 		},
 		{
+			Name: "Reconciled failed - probe not ready",
+			Objects: []runtime.Object{
+				NewDeletedBroker(),
+				BrokerConfig(bootstrapServers, 20, 5,
+					BrokerConfigFinalizer(ConfigMapFinalizerName),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+						},
+					},
+					Generation: 1,
+				}, &env),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources:  []*contract.Resource{},
+					Generation: 2,
+				}),
+			},
+			WantErr: true,
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusReady),
+			},
+		},
+		{
 			Name: "Reconciled normal - with DLS",
 			Objects: []runtime.Object{
 				NewDeletedBroker(
