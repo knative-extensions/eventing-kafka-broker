@@ -28,7 +28,7 @@ fi
 
 set -Eeuo pipefail
 
-TIMEOUT=${TIMEOUT:-60m}
+TIMEOUT=${TIMEOUT:-100m}
 GO_TEST_VERBOSITY="${GO_TEST_VERBOSITY:-standard-verbose}"
 
 go_test_e2e -v \
