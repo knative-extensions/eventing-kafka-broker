@@ -34,6 +34,8 @@ eventing-kafka-broker.yaml
 eventing-kafka-channel.yaml
 eventing-kafka-sink.yaml
 
+eventing-kafka-post-install.yaml
+
 eventing-kafka-controller-prometheus-operator.yaml
 eventing-kafka-source-prometheus-operator.yaml
 eventing-kafka-channel-prometheus-operator.yaml

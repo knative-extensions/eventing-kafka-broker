@@ -141,6 +141,7 @@ function install_head() {
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
+  kubectl create -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 }
 
 function test_setup() {
