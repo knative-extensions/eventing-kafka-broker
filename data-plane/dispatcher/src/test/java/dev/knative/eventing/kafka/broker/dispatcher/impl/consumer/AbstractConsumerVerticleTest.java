@@ -15,11 +15,14 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSenderMock;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandlerMock;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherTest;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.ResourceContext;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -29,17 +32,20 @@ import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -51,16 +57,27 @@ import static org.mockito.Mockito.when;
 @ExtendWith(VertxExtension.class)
 public abstract class AbstractConsumerVerticleTest {
 
+  private static final ResourceContext resourceContext = new ResourceContext(
+    DataPlaneContract.Resource.newBuilder().build(),
+    DataPlaneContract.Egress.newBuilder().build()
+  );
+
+  static {
+    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+  }
+
   @Test
   public void subscribedToTopic(final Vertx vertx, final VertxTestContext context) {
     final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
     final var recordDispatcher = new RecordDispatcherImpl(
+      resourceContext,
       value -> false,
       CloudEventSender.noop("subscriber send called"),
       CloudEventSender.noop("dead letter sink send called"),
       new ResponseHandlerMock(),
       RecordDispatcherTest.offsetManagerMock(),
-      null
+      null,
+      Metrics.getRegistry()
     );
     final var topic = "topic1";
 
@@ -90,12 +107,14 @@ public abstract class AbstractConsumerVerticleTest {
   public void stop(final Vertx vertx, final VertxTestContext context) {
     final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
     final var recordDispatcher = new RecordDispatcherImpl(
+      resourceContext,
       value -> false,
       CloudEventSender.noop("subscriber send called"),
       CloudEventSender.noop("dead letter sink send called"),
       new ResponseHandlerMock(),
       RecordDispatcherTest.offsetManagerMock(),
-      null
+      null,
+      Metrics.getRegistry()
     );
     final var topic = "topic1";
 
@@ -129,7 +148,7 @@ public abstract class AbstractConsumerVerticleTest {
   @Test
   @SuppressWarnings("unchecked")
   public void shouldCloseEverything(final Vertx vertx, final VertxTestContext context) {
-    final var topics = new String[] {"a"};
+    final var topics = new String[]{"a"};
     final KafkaConsumer<Object, CloudEvent> consumer = mock(KafkaConsumer.class);
 
     when(consumer.close()).thenReturn(Future.succeededFuture());
@@ -164,6 +183,7 @@ public abstract class AbstractConsumerVerticleTest {
     final var sinkClosed = new AtomicBoolean(false);
 
     final var recordDispatcher = new RecordDispatcherImpl(
+      resourceContext,
       ce -> true,
       new CloudEventSenderMock(
         record -> Future.succeededFuture(), () -> {
@@ -184,7 +204,8 @@ public abstract class AbstractConsumerVerticleTest {
       }
       ),
       RecordDispatcherTest.offsetManagerMock(),
-      null
+      null,
+      Metrics.getRegistry()
     );
 
     final var verticle = createConsumerVerticle(
