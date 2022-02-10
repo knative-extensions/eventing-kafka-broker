@@ -15,7 +15,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  generateName: kafka-controller-post-install
+  name: kafka-controller-post-install
   namespace: knative-eventing
   labels:
     app: kafka-controller-post-install
