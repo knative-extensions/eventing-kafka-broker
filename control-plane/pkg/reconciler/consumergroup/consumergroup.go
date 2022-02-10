@@ -68,20 +68,25 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 		return err
 	}
 	cg.MarkScheduleSucceeded()
+	logger.Info("CONSUMER GROUP SCHEDULER SUCCESS")
 
 	if err := r.reconcileConsumers(ctx, cg); err != nil {
+		logger.Info("CONSUMER GROUP CONSUMER ERROR")
 		return err
 	}
 
 	if err := r.propagateStatus(cg); err != nil {
+		logger.Info("CONSUMER GROUP PROPAGATE STATUS FAIL")
 		return cg.MarkReconcileConsumersFailed("PropagateConsumerStatus", err)
 	}
 
 	if cg.Status.SubscriberURI == nil {
+		logger.Info("CONSUMER GROUP SUB UI NIL")
 		_ = cg.MarkReconcileConsumersFailed("PropagateSubscriberURI", ErrNoSubscriberURI)
 		return nil
 	}
 	if cg.HasDeadLetterSink() && cg.Status.DeadLetterSinkURI == nil {
+		logger.Info("CONSUMER GROUP DEAD SINK NIL")
 		_ = cg.MarkReconcileConsumersFailed("PropagateDeadLetterSinkURI", ErrNoDeadLetterSinkURI)
 		return nil
 	}
@@ -205,6 +210,7 @@ func (r Reconciler) finalizeConsumer(ctx context.Context, consumer *kafkainterna
 func (r Reconciler) schedule(logger *zap.Logger, cg *kafkainternals.ConsumerGroup) error {
 	placements, err := r.SchedulerFunc(cg.GetUserFacingResourceRef().Kind).Schedule(cg)
 	if err != nil {
+		logger.Info("CONSUMER GROUP SCHEDULE PLACEMENTS ERR")
 		return cg.MarkScheduleConsumerFailed("Schedule", err)
 	}
 	// Sort placements by pod name.
