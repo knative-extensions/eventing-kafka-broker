@@ -83,8 +83,8 @@ func NewController(ctx context.Context) *controller.Impl {
 		RefreshPeriod:       100 * time.Second,
 		Capacity:            20,
 		SchedulerPolicyType: scheduler.MAXFILLUP,
-		SchedulerPolicy:     schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaSchedulerName),
-		DeSchedulerPolicy:   schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaDeSchedulerName),
+		//SchedulerPolicy:     schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaSchedulerName),
+		//DeSchedulerPolicy:   schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaDeSchedulerName),
 	}
 
 	kafkaLister := kafkainformer.Get(ctx).Lister()

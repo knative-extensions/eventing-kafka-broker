@@ -23,6 +23,7 @@ import (
 	"math"
 	"sort"
 
+	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +31,7 @@ import (
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/utils/pointer"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 
 	"knative.dev/eventing/pkg/scheduler"
@@ -59,7 +61,10 @@ type Reconciler struct {
 }
 
 func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
-	if err := r.schedule(cg); err != nil {
+	logger := logging.FromContext(ctx).Desugar()
+
+	if err := r.schedule(logger, cg); err != nil {
+		logger.Info("CONSUMER GROUP SCHEDULER ERROR")
 		return err
 	}
 	cg.MarkScheduleSucceeded()
@@ -197,7 +202,7 @@ func (r Reconciler) finalizeConsumer(ctx context.Context, consumer *kafkainterna
 	return nil
 }
 
-func (r Reconciler) schedule(cg *kafkainternals.ConsumerGroup) error {
+func (r Reconciler) schedule(logger *zap.Logger, cg *kafkainternals.ConsumerGroup) error {
 	placements, err := r.SchedulerFunc(cg.GetUserFacingResourceRef().Kind).Schedule(cg)
 	if err != nil {
 		return cg.MarkScheduleConsumerFailed("Schedule", err)
