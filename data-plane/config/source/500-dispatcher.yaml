@@ -32,6 +32,7 @@ spec:
       name: kafka-source-dispatcher
       labels:
         app: kafka-source-dispatcher
+        app.kubernetes.io/component: kafka-dispatcher
         kafka.eventing.knative.dev/release: devel
     spec:
       serviceAccountName: knative-kafka-source-data-plane

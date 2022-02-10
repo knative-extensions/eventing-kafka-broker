@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,6 +29,7 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
@@ -55,8 +57,9 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
+	logger := logging.FromContext(ctx).Desugar()
 
-	cg, err := r.reconcileConsumerGroup(ctx, ks)
+	cg, err := r.reconcileConsumerGroup(ctx, logger, ks)
 	if err != nil {
 		ks.GetConditionSet().Manage(&ks.Status).MarkFalse(KafkaConditionConsumerGroup, "failed to reconcile consumer group", err.Error())
 		return err
@@ -89,7 +92,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 	return nil
 }
 
-func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
+func (r Reconciler) reconcileConsumerGroup(ctx context.Context, logger *zap.Logger, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
 
 	expectedCg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
@@ -135,6 +138,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 		if err != nil && !apierrors.IsAlreadyExists(err) {
 			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", expectedCg.GetNamespace(), expectedCg.GetName(), err)
 		}
+		logger.Info("SOURCE CREATED CONSUMER GROUP")
 		return cg, nil
 	}
 

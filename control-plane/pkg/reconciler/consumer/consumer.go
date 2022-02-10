@@ -80,6 +80,7 @@ func (r Reconciler) ReconcileKind(ctx context.Context, c *kafkainternals.Consume
 		return nil
 	}
 	c.MarkBindSucceeded()
+	logger.Info("CONSUMER SCHEDULE BIND SUCCESS")
 
 	return nil
 }
@@ -316,13 +317,11 @@ func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkain
 		logger.Info("CONSUMER SCHEDULE POD NOT FOUND")
 		return false, nil
 	}
-	if err != nil {
-		return false, err
-	}
 
 	// Get contract associated with the pod.
 	cmName, err := cmNameFromPod(p, c)
 	if err != nil {
+		logger.Info("CONSUMER SCHEDULE CONTRACT ERR")
 		return false, err
 	}
 
