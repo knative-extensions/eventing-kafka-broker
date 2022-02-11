@@ -17,9 +17,13 @@
 package v1alpha1
 
 import (
+	"io"
+	"sort"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -79,4 +83,56 @@ func TestConsumer_GetConsumerGroup(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestByReadinessAndCreationTime(t *testing.T) {
+
+	consumers := []*Consumer{
+		// Not ready, first created
+		func() *Consumer {
+			c := &Consumer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "c1",
+					Namespace:         "ns",
+					CreationTimestamp: metav1.Time{Time: time.Now().Add(time.Second)},
+				},
+			}
+			c.GetConditionSet().Manage(c.GetStatus()).InitializeConditions()
+			return c
+		}(),
+		// Not ready, second created
+		func() *Consumer {
+			c := &Consumer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "c2",
+					Namespace:         "ns",
+					CreationTimestamp: metav1.Time{Time: time.Now().Add(time.Minute)},
+				},
+			}
+			c.GetConditionSet().Manage(c.GetStatus()).InitializeConditions()
+			_ = c.MarkBindFailed(io.EOF)
+			return c
+		}(),
+		// Ready, third created
+		func() *Consumer {
+			c := &Consumer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "c3",
+					Namespace:         "ns",
+					CreationTimestamp: metav1.Time{Time: time.Now().Add(time.Hour)},
+				},
+			}
+			c.GetConditionSet().Manage(c.GetStatus()).InitializeConditions()
+			c.MarkBindSucceeded()
+			c.MarkReconcileContractSucceeded()
+			return c
+		}(),
+	}
+
+	sort.Stable(ByReadinessAndCreationTime(consumers))
+
+	require.Equal(t, 3, len(consumers))
+	require.Equal(t, "c3", consumers[0].Name)
+	require.Equal(t, "c1", consumers[1].Name)
+	require.Equal(t, "c2", consumers[2].Name)
 }
