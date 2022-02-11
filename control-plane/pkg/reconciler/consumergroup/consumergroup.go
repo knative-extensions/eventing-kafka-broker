@@ -130,7 +130,7 @@ func (r Reconciler) reconcileConsumersInPlacement(
 	// Stable sort consumers so that we give consumers different deletion
 	// priorities based on their state (readiness, etc).
 	//
-	// Consumers at the tail of the list are deleted first.
+	// Consumers at the tail of the list are deleted.
 	sort.Stable(kafkainternals.ByReadinessAndCreationTime(consumers))
 
 	for _, c := range consumers[1:] {
