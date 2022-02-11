@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -299,7 +300,9 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		},
 	}
 	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusNotReady {
-		return nil // Object will get re-queued once probe status changes.
+		// Return a requeueKeyError that doesn't generate an event and it re-queues the object
+		// for a new reconciliation.
+		return controller.NewRequeueAfter(5 * time.Second)
 	}
 
 	topicConfig, brokerConfig, err := r.topicConfig(ctx, logger, broker)
