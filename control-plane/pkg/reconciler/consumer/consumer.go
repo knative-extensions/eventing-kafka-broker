@@ -316,9 +316,6 @@ func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkain
 		// will get re-queued when the pod is added.
 		return false, nil
 	}
-	if err != nil {
-		return false, err
-	}
 
 	// Get contract associated with the pod.
 	cmName, err := cmNameFromPod(p, c)

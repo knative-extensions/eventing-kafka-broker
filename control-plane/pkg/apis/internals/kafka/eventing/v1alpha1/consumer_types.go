@@ -197,21 +197,6 @@ func (c *Consumer) GetStatus() *duckv1.Status {
 	return &c.Status.Status
 }
 
-// IsLessThan returns true if c is less than other.
-//
-// if c is less than other, other might be deleted before c.
-func (c *Consumer) IsLessThan(other *Consumer) bool {
-	// Prefer ready instances.
-	if c.IsReady() {
-		return true
-	}
-	if other.IsReady() {
-		return false
-	}
-	// Prefer older instances.
-	return c.CreationTimestamp.Time.Before(other.CreationTimestamp.Time)
-}
-
 func (c *Consumer) IsReady() bool {
 	return c.Generation == c.Status.ObservedGeneration &&
 		c.GetConditionSet().Manage(c.GetStatus()).IsHappy()
@@ -233,4 +218,30 @@ func (c *Consumer) GetConsumerGroup() *metav1.OwnerReference {
 
 func (c Consumer) HasDeadLetterSink() bool {
 	return hasDeadLetterSink(c.Spec.Delivery)
+}
+
+type ByReadinessAndCreationTime []*Consumer
+
+func (consumers ByReadinessAndCreationTime) Len() int {
+	return len(consumers)
+}
+
+func (consumers ByReadinessAndCreationTime) Less(i, j int) bool {
+	c, other := consumers[i], consumers[j]
+
+	// Prefer ready instances.
+	if c.IsReady() {
+		return true
+	}
+	if other.IsReady() {
+		return false
+	}
+	// Prefer older instances.
+	return c.CreationTimestamp.Time.Before(other.CreationTimestamp.Time)
+}
+
+func (consumers ByReadinessAndCreationTime) Swap(i, j int) {
+	tmp := consumers[i]
+	consumers[i] = consumers[j]
+	consumers[j] = tmp
 }

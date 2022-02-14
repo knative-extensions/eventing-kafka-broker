@@ -82,8 +82,8 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
   public void handle(final RequestContext requestContext, final IngressProducer producer) {
 
     final var resourceTags = Tags.of(
-      Tag.of("name", producer.getReference().getName()),
-      Tag.of("namespace_name", producer.getReference().getNamespace())
+      Tag.of(Metrics.Tags.RESOURCE_NAME, producer.getReference().getName()),
+      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, producer.getReference().getNamespace())
     );
 
     requestToRecordMapper
