@@ -26,6 +26,6 @@ fi
 
 source $(dirname $0)/../vendor/knative.dev/hack/library.sh
 
-go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/control-plane/config/200-controller/100-config-tracing.yaml
-go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/control-plane/config/200-controller/100-config-logging.yaml
-go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/control-plane/config/200-controller/100-config-kafka-leader-election.yaml
+go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/control-plane/config/eventing-kafka-broker/200-controller/100-config-tracing.yaml
+go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/control-plane/config/eventing-kafka-broker/200-controller/100-config-logging.yaml
+go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/control-plane/config/eventing-kafka-broker/200-controller/100-config-kafka-leader-election.yaml
