@@ -15,4 +15,6 @@ export EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT="eventing-kafka-sink-pro
 export EVENTING_KAFKA_CHANNEL_ARTIFACT="eventing-kafka-channel.yaml"
 export EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT="eventing-kafka-channel-prometheus-operator.yaml"
 
+export EVENTING_KAFKA_POST_INSTALL_ARTIFACT="eventing-kafka-post-install.yaml"
+
 export EVENTING_KAFKA_ARTIFACT="eventing-kafka.yaml"
