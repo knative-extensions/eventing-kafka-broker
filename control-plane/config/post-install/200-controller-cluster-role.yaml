@@ -38,3 +38,77 @@ rules:
     verbs:
       - get
       - list
+
+  - apiGroups:
+      - admissionregistration.k8s.io
+    resources:
+      - mutatingwebhookconfigurations
+    resourceNames:
+      - defaulting.webhook.kafka.sources.knative.dev
+    verbs:
+      - delete
+
+  - apiGroups:
+      - admissionregistration.k8s.io
+    resources:
+      - validatingwebhookconfigurations
+    resourceNames:
+      - validation.webhook.kafka.sources.knative.dev
+      - config.webhook.kafka.sources.knative.dev
+    verbs:
+      - delete
+
+  - apiGroups:
+      - "*"
+    resources:
+      - services
+    resourceNames:
+      - kafka-source-webhook
+      - kafka-controller
+    verbs:
+      - delete
+
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    resourceNames:
+      - kafka-controller-manager
+    verbs:
+      - delete
+
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - clusterrolebindings
+    resourceNames:
+      - eventing-sources-kafka-controller
+      - eventing-sources-kafka-controller-addressable-resolver
+    verbs:
+      - delete
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - clusterroles
+    resourceNames:
+      - eventing-sources-kafka-controller
+    verbs:
+      - delete
+
+  - apiGroups:
+      - "*"
+    resources:
+      - serviceaccounts
+    resourceNames:
+      - kafka-controller-manager
+    verbs:
+      - delete
+
+  - apiGroups:
+      - "*"
+    resources:
+      - secrets
+    resourceNames:
+      - kafka-source-webhook-certs
+    verbs:
+      - delete

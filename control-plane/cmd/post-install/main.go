@@ -58,10 +58,20 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("failed to get kubeconfig: %w", err)
 	}
 
-	migrator := &KafkaSourceMigrator{
+	sourceMigrator := &KafkaSourceMigrator{
 		kcs: kcs.NewForConfigOrDie(config),
 		k8s: kubernetes.NewForConfigOrDie(config),
 	}
+	if err := sourceMigrator.Migrate(ctx); err != nil {
+		return fmt.Errorf("source migration failed: %w", err)
+	}
 
-	return migrator.Migrate(ctx)
+	sourceDeleter := &kafkaSourceDeleter{
+		k8s: kubernetes.NewForConfigOrDie(config),
+	}
+	if err := sourceDeleter.Delete(ctx); err != nil {
+		return fmt.Errorf("source migration failed: %w", err)
+	}
+
+	return nil
 }
