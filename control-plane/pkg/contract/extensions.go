@@ -52,7 +52,7 @@ func NewExactFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 // https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#prefix-filter-dialect
 func NewPrefixFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 
-	p := & Prefix{}
+	p := &Prefix{}
 	// Eventing Trigger API is conforming to the Subscriptions API, so this map has only a single
 	// key-value pair
 	for k, v := range f.Prefix {
@@ -79,7 +79,7 @@ func NewPrefixFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 // https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#suffix-filter-dialect
 func NewSuffixFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 
-	p := & Suffix{}
+	p := &Suffix{}
 	// Eventing Trigger API is conforming to the Subscriptions API, so this map has only a single
 	// key-value pair
 	for k, v := range f.Suffix {

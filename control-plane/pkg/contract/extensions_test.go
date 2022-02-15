@@ -36,14 +36,14 @@ func TestContractIncrementGeneration(t *testing.T) {
 
 func TestFromSubscriptionFilter(t *testing.T) {
 	tt := []struct {
-		name string
+		name      string
 		apiFilter v1.SubscriptionsAPIFilter
-		want *contract.DialectedFilter
+		want      *contract.DialectedFilter
 	}{
 		{
-			name: "empty all filter",
+			name:      "empty all filter",
 			apiFilter: v1.SubscriptionsAPIFilter{},
-			want: &contract.DialectedFilter{},
+			want:      &contract.DialectedFilter{},
 		},
 		{
 			name: "all filter with exact, prefix & suffix",
@@ -83,7 +83,7 @@ func TestFromSubscriptionFilter(t *testing.T) {
 								Filter: &contract.DialectedFilter_Prefix{
 									Prefix: &contract.Prefix{
 										Attribute: "source",
-										Prefix: "dev.knative",
+										Prefix:    "dev.knative",
 									},
 								},
 							},
@@ -91,7 +91,7 @@ func TestFromSubscriptionFilter(t *testing.T) {
 								Filter: &contract.DialectedFilter_Suffix{
 									Suffix: &contract.Suffix{
 										Attribute: "subject",
-										Suffix: "source",
+										Suffix:    "source",
 									},
 								},
 							},
@@ -102,7 +102,7 @@ func TestFromSubscriptionFilter(t *testing.T) {
 											Filter: &contract.DialectedFilter_Prefix{
 												Prefix: &contract.Prefix{
 													Attribute: "source",
-													Prefix: "dev.knative",
+													Prefix:    "dev.knative",
 												},
 											},
 										},
@@ -111,7 +111,7 @@ func TestFromSubscriptionFilter(t *testing.T) {
 							},
 							&contract.DialectedFilter{
 								Filter: &contract.DialectedFilter_Cesql{
-									Cesql: &contract.CESOL{
+									Cesql: &contract.CESQL{
 										Expression: "subject = 'source'",
 									},
 								},
@@ -127,8 +127,8 @@ func TestFromSubscriptionFilter(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := contract.FromSubscriptionFilter(tc.apiFilter)
 			if cmp.Diff(got, tc.want, cmpopts.IgnoreUnexported(contract.DialectedFilter{},
-			contract.All{},contract.Prefix{},contract.Suffix{}, contract.Exact{}, contract.Not{}, contract.CESOL{})) != "" {
-				t.Errorf("FromSubscriptionFilter() = %v, want %v", got, tc.want )
+				contract.All{}, contract.Prefix{}, contract.Suffix{}, contract.Exact{}, contract.Not{}, contract.CESQL{})) != "" {
+				t.Errorf("FromSubscriptionFilter() = %v, want %v", got, tc.want)
 			}
 		})
 	}
