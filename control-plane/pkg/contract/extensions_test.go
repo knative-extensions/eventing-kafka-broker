@@ -49,21 +49,21 @@ func TestFromSubscriptionFilter(t *testing.T) {
 			name: "all filter with exact, prefix & suffix",
 			apiFilter: v1.SubscriptionsAPIFilter{
 				All: []v1.SubscriptionsAPIFilter{
-					v1.SubscriptionsAPIFilter{
+					{
 						Exact: map[string]string{"type": "dev.knative.kafkasrc.kafkarecord"},
 					},
-					v1.SubscriptionsAPIFilter{
+					{
 						Prefix: map[string]string{"source": "dev.knative"},
 					},
-					v1.SubscriptionsAPIFilter{
+					{
 						Suffix: map[string]string{"subject": "source"},
 					},
-					v1.SubscriptionsAPIFilter{
+					{
 						Not: &v1.SubscriptionsAPIFilter{
 							Prefix: map[string]string{"source": "dev.knative"},
 						},
 					},
-					v1.SubscriptionsAPIFilter{
+					{
 						SQL: "subject = 'source'",
 					},
 				},
@@ -72,14 +72,14 @@ func TestFromSubscriptionFilter(t *testing.T) {
 				Filter: &contract.DialectedFilter_All{
 					All: &contract.All{
 						Filters: []*contract.DialectedFilter{
-							&contract.DialectedFilter{
+							{
 								Filter: &contract.DialectedFilter_Exact{
 									Exact: &contract.Exact{
 										Attributes: map[string]string{"type": "dev.knative.kafkasrc.kafkarecord"},
 									},
 								},
 							},
-							&contract.DialectedFilter{
+							{
 								Filter: &contract.DialectedFilter_Prefix{
 									Prefix: &contract.Prefix{
 										Attribute: "source",
@@ -87,7 +87,7 @@ func TestFromSubscriptionFilter(t *testing.T) {
 									},
 								},
 							},
-							&contract.DialectedFilter{
+							{
 								Filter: &contract.DialectedFilter_Suffix{
 									Suffix: &contract.Suffix{
 										Attribute: "subject",
@@ -95,7 +95,7 @@ func TestFromSubscriptionFilter(t *testing.T) {
 									},
 								},
 							},
-							&contract.DialectedFilter{
+							{
 								Filter: &contract.DialectedFilter_Not{
 									Not: &contract.Not{
 										Filter: &contract.DialectedFilter{
@@ -109,7 +109,7 @@ func TestFromSubscriptionFilter(t *testing.T) {
 									},
 								},
 							},
-							&contract.DialectedFilter{
+							{
 								Filter: &contract.DialectedFilter_Cesql{
 									Cesql: &contract.CESQL{
 										Expression: "subject = 'source'",
