@@ -118,6 +118,7 @@ public class RecordDispatcherTest {
       new CloudEventSenderMock(
         record -> {
           sendCalled.set(true);
+          simulateLatency(); // Simulate dispatch latency
           return Future.succeededFuture();
         }
       ),
@@ -160,6 +161,7 @@ public class RecordDispatcherTest {
       new CloudEventSenderMock(
         record -> {
           subscriberSenderSendCalled.set(true);
+          simulateLatency(); // Simulate dispatch latency
           return Future.failedFuture("");
         }
       ),
@@ -201,6 +203,7 @@ public class RecordDispatcherTest {
       value -> true, new CloudEventSenderMock(
       record -> {
         subscriberSenderSendCalled.set(true);
+        simulateLatency(); // Simulate dispatch latency
         return Future.failedFuture("");
       }
     ),
@@ -242,6 +245,7 @@ public class RecordDispatcherTest {
       new CloudEventSenderMock(
         record -> {
           subscriberSenderSendCalled.set(true);
+          simulateLatency(); // Simulate dispatch latency
           return Future.failedFuture("");
         }
       ),
@@ -379,6 +383,13 @@ public class RecordDispatcherTest {
           .max()
       ).isGreaterThan(0)
     );
+  }
+
+  private void simulateLatency() {
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException ignored) {
+    }
   }
 
 }
