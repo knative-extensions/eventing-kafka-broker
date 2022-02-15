@@ -1272,7 +1272,7 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/eventing-kafka v0.28.1-0.20220126011444-734561d578b9
+# knative.dev/eventing-kafka v0.29.0
 ## explicit
 knative.dev/eventing-kafka/pkg/apis/bindings
 knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
@@ -1337,7 +1337,7 @@ knative.dev/eventing-kafka/test/upgrade/continual
 ## explicit
 knative.dev/hack
 knative.dev/hack/shell
-# knative.dev/pkg v0.0.0-20220118160532-77555ea48cd4
+# knative.dev/pkg v0.0.0-20220202132633-df430fa0dd96
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
