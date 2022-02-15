@@ -422,7 +422,7 @@ func TestReconcileKind(t *testing.T) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"failed to resolve subscriber config: empty subscriber URI",
+					"failed to resolve subscriber config: failed to resolve Subscription.Spec.Subscriber: empty subscriber URI",
 				),
 			},
 		},
