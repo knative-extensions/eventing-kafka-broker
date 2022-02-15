@@ -1215,12 +1215,12 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 			proberMock = p.(prober.Prober)
 		}
 
-		numPartitions := int32(1)
+		numPartitions := int32(10)
 		if v, ok := row.OtherTestData[TestExpectedDataNumPartitions]; ok {
 			numPartitions = v.(int32)
 		}
 
-		replicationFactor := int16(1)
+		replicationFactor := int16(3)
 		if v, ok := row.OtherTestData[TestExpectedReplicationFactor]; ok {
 			replicationFactor = v.(int16)
 		}
