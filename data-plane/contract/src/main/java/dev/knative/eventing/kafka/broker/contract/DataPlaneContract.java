@@ -8242,10 +8242,26 @@ public final class DataPlaneContract {
       com.google.protobuf.MessageOrBuilder {
 
     /**
+     * <pre>
+     * attributes filters events by exact match on event context attributes.
+     * Each key in the map is compared with the equivalent key in the event
+     * context. An event passes the filter if all values are equal to the
+     * specified values.
+     * Nested context attributes are not supported as keys. Only string values are supported.
+     * </pre>
+     *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
     int getAttributesCount();
     /**
+     * <pre>
+     * attributes filters events by exact match on event context attributes.
+     * Each key in the map is compared with the equivalent key in the event
+     * context. An event passes the filter if all values are equal to the
+     * specified values.
+     * Nested context attributes are not supported as keys. Only string values are supported.
+     * </pre>
+     *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
     boolean containsAttributes(
@@ -8257,11 +8273,27 @@ public final class DataPlaneContract {
     java.util.Map<java.lang.String, java.lang.String>
     getAttributes();
     /**
+     * <pre>
+     * attributes filters events by exact match on event context attributes.
+     * Each key in the map is compared with the equivalent key in the event
+     * context. An event passes the filter if all values are equal to the
+     * specified values.
+     * Nested context attributes are not supported as keys. Only string values are supported.
+     * </pre>
+     *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
     java.util.Map<java.lang.String, java.lang.String>
     getAttributesMap();
     /**
+     * <pre>
+     * attributes filters events by exact match on event context attributes.
+     * Each key in the map is compared with the equivalent key in the event
+     * context. An event passes the filter if all values are equal to the
+     * specified values.
+     * Nested context attributes are not supported as keys. Only string values are supported.
+     * </pre>
+     *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
 
@@ -8269,6 +8301,14 @@ public final class DataPlaneContract {
         java.lang.String key,
         java.lang.String defaultValue);
     /**
+     * <pre>
+     * attributes filters events by exact match on event context attributes.
+     * Each key in the map is compared with the equivalent key in the event
+     * context. An event passes the filter if all values are equal to the
+     * specified values.
+     * Nested context attributes are not supported as keys. Only string values are supported.
+     * </pre>
+     *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
 
@@ -8405,6 +8445,14 @@ public final class DataPlaneContract {
       return internalGetAttributes().getMap().size();
     }
     /**
+     * <pre>
+     * attributes filters events by exact match on event context attributes.
+     * Each key in the map is compared with the equivalent key in the event
+     * context. An event passes the filter if all values are equal to the
+     * specified values.
+     * Nested context attributes are not supported as keys. Only string values are supported.
+     * </pre>
+     *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
 
@@ -8423,6 +8471,14 @@ public final class DataPlaneContract {
       return getAttributesMap();
     }
     /**
+     * <pre>
+     * attributes filters events by exact match on event context attributes.
+     * Each key in the map is compared with the equivalent key in the event
+     * context. An event passes the filter if all values are equal to the
+     * specified values.
+     * Nested context attributes are not supported as keys. Only string values are supported.
+     * </pre>
+     *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
     @java.lang.Override
@@ -8431,6 +8487,14 @@ public final class DataPlaneContract {
       return internalGetAttributes().getMap();
     }
     /**
+     * <pre>
+     * attributes filters events by exact match on event context attributes.
+     * Each key in the map is compared with the equivalent key in the event
+     * context. An event passes the filter if all values are equal to the
+     * specified values.
+     * Nested context attributes are not supported as keys. Only string values are supported.
+     * </pre>
+     *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
     @java.lang.Override
@@ -8444,6 +8508,14 @@ public final class DataPlaneContract {
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
+     * <pre>
+     * attributes filters events by exact match on event context attributes.
+     * Each key in the map is compared with the equivalent key in the event
+     * context. An event passes the filter if all values are equal to the
+     * specified values.
+     * Nested context attributes are not supported as keys. Only string values are supported.
+     * </pre>
+     *
      * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
     @java.lang.Override
@@ -8822,6 +8894,14 @@ public final class DataPlaneContract {
         return internalGetAttributes().getMap().size();
       }
       /**
+       * <pre>
+       * attributes filters events by exact match on event context attributes.
+       * Each key in the map is compared with the equivalent key in the event
+       * context. An event passes the filter if all values are equal to the
+       * specified values.
+       * Nested context attributes are not supported as keys. Only string values are supported.
+       * </pre>
+       *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
 
@@ -8840,6 +8920,14 @@ public final class DataPlaneContract {
         return getAttributesMap();
       }
       /**
+       * <pre>
+       * attributes filters events by exact match on event context attributes.
+       * Each key in the map is compared with the equivalent key in the event
+       * context. An event passes the filter if all values are equal to the
+       * specified values.
+       * Nested context attributes are not supported as keys. Only string values are supported.
+       * </pre>
+       *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
       @java.lang.Override
@@ -8848,6 +8936,14 @@ public final class DataPlaneContract {
         return internalGetAttributes().getMap();
       }
       /**
+       * <pre>
+       * attributes filters events by exact match on event context attributes.
+       * Each key in the map is compared with the equivalent key in the event
+       * context. An event passes the filter if all values are equal to the
+       * specified values.
+       * Nested context attributes are not supported as keys. Only string values are supported.
+       * </pre>
+       *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
       @java.lang.Override
@@ -8861,6 +8957,14 @@ public final class DataPlaneContract {
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
       /**
+       * <pre>
+       * attributes filters events by exact match on event context attributes.
+       * Each key in the map is compared with the equivalent key in the event
+       * context. An event passes the filter if all values are equal to the
+       * specified values.
+       * Nested context attributes are not supported as keys. Only string values are supported.
+       * </pre>
+       *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
       @java.lang.Override
@@ -8882,6 +8986,14 @@ public final class DataPlaneContract {
         return this;
       }
       /**
+       * <pre>
+       * attributes filters events by exact match on event context attributes.
+       * Each key in the map is compared with the equivalent key in the event
+       * context. An event passes the filter if all values are equal to the
+       * specified values.
+       * Nested context attributes are not supported as keys. Only string values are supported.
+       * </pre>
+       *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
 
@@ -8901,6 +9013,14 @@ public final class DataPlaneContract {
         return internalGetMutableAttributes().getMutableMap();
       }
       /**
+       * <pre>
+       * attributes filters events by exact match on event context attributes.
+       * Each key in the map is compared with the equivalent key in the event
+       * context. An event passes the filter if all values are equal to the
+       * specified values.
+       * Nested context attributes are not supported as keys. Only string values are supported.
+       * </pre>
+       *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
       public Builder putAttributes(
@@ -8913,6 +9033,14 @@ public final class DataPlaneContract {
         return this;
       }
       /**
+       * <pre>
+       * attributes filters events by exact match on event context attributes.
+       * Each key in the map is compared with the equivalent key in the event
+       * context. An event passes the filter if all values are equal to the
+       * specified values.
+       * Nested context attributes are not supported as keys. Only string values are supported.
+       * </pre>
+       *
        * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
 

@@ -23,52 +23,164 @@ func (x *Contract) IncrementGeneration() {
 	x.Generation++
 }
 
-func NewAllFilter(filters []v1.SubscriptionsAPIFilter) *Filter {
-	return newCollectionFilter(filters, Dialect_ALL)
-}
-
-func NewAnyFilter(filters []v1.SubscriptionsAPIFilter) *Filter {
-	return newCollectionFilter(filters, Dialect_ANY)
-}
-
-func NewNotFilter(f v1.SubscriptionsAPIFilter) *Filter {
-	return &Filter{
-		Dialect: Dialect_NOT,
-		Filters: []*Filter{
-			FromSubscriptionFilter(f),
+// NewExactFilter converts the SubscriptionsAPIFilter into the exact dialect of
+// the DialectedFilter as defined in CloudEvents Subscriptions API.
+//
+// Exact contains exactly one attribute where the key is the name of the CloudEvent
+// attribute and its value is the string value which must exactly match the value
+// of the CloudEvent attribute.
+//
+// See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
+// https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#all-filter-dialect
+func NewExactFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
+	return &DialectedFilter{
+		Filter: &DialectedFilter_Exact{
+			Exact: &Exact{
+				Attributes: f.Exact,
+			},
 		},
 	}
 }
 
-func NewExactFilter(f v1.SubscriptionsAPIFilter) *Filter {
-	return &Filter{
-		Dialect:    Dialect_EXACT,
-		Attributes: f.Exact,
+// NewPrefixFilter converts the SubscriptionsAPIFilter into the suffix dialect of
+// the DialectedFilter as defined in CloudEvents Subscriptions API.
+//
+// Prefix contains exactly one attribute where the key is the name of the CloudEvent
+// attribute which value must start with the value specified.
+//
+// See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
+// https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#prefix-filter-dialect
+func NewPrefixFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
+
+	p := & Prefix{}
+	// Eventing Trigger API is conforming to the Subscriptions API, so this map has only a single
+	// key-value pair
+	for k, v := range f.Prefix {
+		p.Attribute = k
+		p.Prefix = v
+		// We only expect a single element, but let's break anyway
+		break
+	}
+
+	return &DialectedFilter{
+		Filter: &DialectedFilter_Prefix{
+			Prefix: p,
+		},
 	}
 }
 
-func NewPrefixFilter(f v1.SubscriptionsAPIFilter) *Filter {
-	return &Filter{
-		Dialect:    Dialect_PREFIX,
-		Attributes: f.Prefix,
+// NewSuffixFilter converts the SubscriptionsAPIFilter into the suffix dialect of
+// the DialectedFilter as defined in CloudEvents Subscriptions API.
+//
+// Suffix contains exactly one attribute where the key is the name of the CloudEvent
+// attribute which value must end with the value specified.
+//
+// See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
+// https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#suffix-filter-dialect
+func NewSuffixFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
+
+	p := & Suffix{}
+	// Eventing Trigger API is conforming to the Subscriptions API, so this map has only a single
+	// key-value pair
+	for k, v := range f.Suffix {
+		p.Attribute = k
+		p.Suffix = v
+		// We only expect a single element, but let's break anyway
+		break
+	}
+
+	return &DialectedFilter{
+		Filter: &DialectedFilter_Suffix{
+			Suffix: p,
+		},
 	}
 }
 
-func NewSuffixFilter(f v1.SubscriptionsAPIFilter) *Filter {
-	return &Filter{
-		Dialect:    Dialect_SUFFIX,
-		Attributes: f.Suffix,
+// NewAllFilter converts the SubscriptionsAPIFilter into the all dialect of the
+// DialectedFilter as defined in CloudEvents Subscriptions API.
+//
+// All filter evaluates to true when all nested filters evaluate to true.
+//
+// See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
+// https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#all-filter-dialect
+func NewAllFilter(filters []v1.SubscriptionsAPIFilter) *DialectedFilter {
+	all := All{
+		Filters: []*DialectedFilter{},
+	}
+	for _, f := range filters {
+		all.Filters = append(all.Filters, FromSubscriptionFilter(f))
+	}
+	return &DialectedFilter{
+		Filter: &DialectedFilter_All{
+			All: &all,
+		},
 	}
 }
 
-func NewCESQLFilter(f v1.SubscriptionsAPIFilter) *Filter {
-	return &Filter{
-		Dialect:    Dialect_CESQL,
-		Expression: f.SQL,
+// NewAnyFilter converts the SubscriptionsAPIFilter into the any dialect of the
+// DialectedFilter as defined in CloudEvents Subscriptions API.
+//
+// All filter evaluates to true when all nested filters evaluate to true.
+//
+// See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
+// https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#any-filter-dialect
+func NewAnyFilter(filters []v1.SubscriptionsAPIFilter) *DialectedFilter {
+	any := Any{
+		Filters: []*DialectedFilter{},
+	}
+	for _, f := range filters {
+		any.Filters = append(any.Filters, FromSubscriptionFilter(f))
+	}
+	return &DialectedFilter{
+		Filter: &DialectedFilter_Any{
+			Any: &any,
+		},
 	}
 }
 
-func FromSubscriptionFilter(f v1.SubscriptionsAPIFilter) *Filter {
+// NewNotFilter converts the SubscriptionsAPIFilter into the not dialect of the
+// DialectedFilter as defined in CloudEvents Subscriptions API.
+//
+// Not filter evaluates to true when the nested filter evaluates to false.
+//
+// See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
+// https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#not-filter-dialect
+func NewNotFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
+	return &DialectedFilter{
+		Filter: &DialectedFilter_Not{
+			Not: &Not{
+				Filter: FromSubscriptionFilter(f),
+			},
+		},
+	}
+}
+
+// NewCESQLFilter converts the SubscriptionsAPIFilter into the sql dialect of the
+// DialectedFilter as defined in CloudEvents Subscriptions API.
+//
+// CESOL filter is a Cloud Events SQL Expression
+//
+// See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
+// https://github.com/cloudevents/spec/blob/main/subscriptions/sql.md#any-filter-dialect
+//
+// See "CNCF CloudEvents SQL Expression Language"
+// https://github.com/cloudevents/spec/blob/main/cesql/spec.md
+func NewCESQLFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
+	return &DialectedFilter{
+		Filter: &DialectedFilter_Cesql{
+			Cesql: &CESOL{
+				Expression: f.SQL,
+			},
+		},
+	}
+}
+
+// FromSubscriptionFilter converts a SubscriptionsAPIFilter to the corresponding
+// DialectedFilter based on the property set in the SubscriptionsAPIFilter.
+//
+// E.g a SubscriptionsAPIFilter with the All field set will be converted to a DialectedFilter
+// which Filter is of type DialectedFilter_All.
+func FromSubscriptionFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 	switch {
 	case len(f.All) > 0:
 		return NewAllFilter(f.All)
@@ -85,16 +197,5 @@ func FromSubscriptionFilter(f v1.SubscriptionsAPIFilter) *Filter {
 	case f.SQL != "":
 		return NewCESQLFilter(f)
 	}
-	return nil
-}
-
-func newCollectionFilter(filters []v1.SubscriptionsAPIFilter, dialect Dialect) *Filter {
-	cf := Filter{
-		Dialect: dialect,
-		Filters: make([]*Filter, 0, len(filters)),
-	}
-	for _, f := range filters {
-		cf.Filters = append(cf.Filters, FromSubscriptionFilter(f))
-	}
-	return &cf
+	return &DialectedFilter{}
 }

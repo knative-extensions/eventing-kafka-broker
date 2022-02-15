@@ -39,7 +39,13 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserialize
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.*;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AllFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AnyFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.NotFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.PrefixFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.SqlFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.SuffixFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
@@ -64,6 +70,7 @@ import org.slf4j.LoggerFactory;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -169,9 +176,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
           ? createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), egressConfig)
           : NO_DEAD_LETTER_SINK_SENDER;
 
-        final var filter = egress.hasFilter() ?
-          getFilter(egress.getFilter()) :
-          Filter.noop();
+        final var filter = getFilter(egress);
 
         final var responseHandler = getResponseHandler(egress,
           () -> getResponseToKafkaTopicHandler(vertx, producerConfigs, resource),
@@ -208,32 +213,33 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     return getConsumerVerticle(deliveryOrder, initializer, new HashSet<>(resource.getTopicsList()));
   }
 
+  private Filter getFilter(DataPlaneContract.Egress egress) {
+    // Dialected filters should override the attributes filter
+    if (egress.getDialectedFilterCount() > 0) {
+      return getFilter(egress.getDialectedFilterList());
+    } else if (egress.hasFilter()){
+      return new AttributesFilter(egress.getFilter().getAttributesMap());
+    }
+    return Filter.noop();
+  }
 
-  private Filter getFilter(DataPlaneContract.Filter filter) {
-    return switch (filter.getDialect()) {
-      case EXACT -> new AttributesFilter(filter.getAttributesMap());
-      case PREFIX -> {
-        var entry = filter.getAttributesMap().entrySet().iterator().next();
-        yield new PrefixFilter(entry.getKey(), entry.getValue());
-      }
-      case SUFFIX -> {
-        var entry = filter.getAttributesMap().entrySet().iterator().next();
-        yield new SuffixFilter(entry.getKey(), entry.getValue());
-      }
-      case NOT -> new NotFilter(getFilter(filter.getFilters(0)));
-      case ANY -> {
-        var filters = filter.getFiltersList().stream()
-          .map(this::getFilter).collect(Collectors.toSet());
-        yield new AnyFilter(filters);
-      }
-      case ALL -> {
-        var filters = filter.getFiltersList().stream()
-          .map(this::getFilter).collect(Collectors.toSet());
-        yield new AllFilter(filters);
-      }
-      case CESQL -> new SqlFilter(filter.getExpression());
+  private Filter getFilter(DataPlaneContract.DialectedFilter filter) {
+    return switch (filter.getFilterCase()){
+      case EXACT -> new AttributesFilter(filter.getExact().getAttributesMap());
+      case PREFIX -> new PrefixFilter(filter.getPrefix().getAttribute(),filter.getPrefix().getPrefix());
+      case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttribute(), filter.getSuffix().getSuffix());
+      case NOT -> new NotFilter(getFilter(filter.getNot().getFilter()));
+      case ANY -> new AnyFilter(filter.getAny().getFiltersList().stream().
+        map(this::getFilter).collect(Collectors.toSet()));
+      case ALL -> new AllFilter(filter.getAll().getFiltersList().stream().
+        map(this::getFilter).collect(Collectors.toSet()));
+      case CESQL -> new SqlFilter(filter.getCesql().getExpression());
       default -> Filter.noop();
     };
+  }
+
+  private Filter getFilter(List<DataPlaneContract.DialectedFilter> filters) {
+    return new AllFilter(filters.stream().map(this::getFilter).collect(Collectors.toSet()));
   }
 
   static ResponseHandler getResponseHandler(final DataPlaneContract.Egress egress,

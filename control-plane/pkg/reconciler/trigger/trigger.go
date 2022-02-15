@@ -289,7 +289,11 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 	}
 
 	if feature.FromContext(ctx).IsEnabled(feature.NewTriggerFilters) && len(trigger.Spec.Filters) > 0 {
-		egress.Filter = contract.NewAllFilter(trigger.Spec.Filters)
+		dialectedFilters := make([]*contract.DialectedFilter, 0, len(trigger.Spec.Filters))
+		for _, f := range trigger.Spec.Filters {
+			dialectedFilters = append(dialectedFilters, contract.FromSubscriptionFilter(f))
+		}
+		egress.DialectedFilter = dialectedFilters
 	} else {
 		if trigger.Spec.Filter != nil && trigger.Spec.Filter.Attributes != nil {
 			egress.Filter = &contract.Filter{

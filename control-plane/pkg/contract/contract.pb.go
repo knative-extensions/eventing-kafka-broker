@@ -868,6 +868,12 @@ type Filter struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// attributes filters events by exact match on event context attributes.
+	// Each key in the map is compared with the equivalent key in the event
+	// context. An event passes the filter if all values are equal to the
+	// specified values.
+	//
+	// Nested context attributes are not supported as keys. Only string values are supported.
 	Attributes map[string]string `protobuf:"bytes,1,rep,name=attributes,proto3" json:"attributes,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 

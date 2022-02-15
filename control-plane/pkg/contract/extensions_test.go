@@ -19,7 +19,10 @@ package contract_test
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/require"
+	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 )
@@ -29,4 +32,105 @@ func TestContractIncrementGeneration(t *testing.T) {
 	c.IncrementGeneration()
 
 	require.Equal(t, uint64(43), c.Generation)
+}
+
+func TestFromSubscriptionFilter(t *testing.T) {
+	tt := []struct {
+		name string
+		apiFilter v1.SubscriptionsAPIFilter
+		want *contract.DialectedFilter
+	}{
+		{
+			name: "empty all filter",
+			apiFilter: v1.SubscriptionsAPIFilter{},
+			want: &contract.DialectedFilter{},
+		},
+		{
+			name: "all filter with exact, prefix & suffix",
+			apiFilter: v1.SubscriptionsAPIFilter{
+				All: []v1.SubscriptionsAPIFilter{
+					v1.SubscriptionsAPIFilter{
+						Exact: map[string]string{"type": "dev.knative.kafkasrc.kafkarecord"},
+					},
+					v1.SubscriptionsAPIFilter{
+						Prefix: map[string]string{"source": "dev.knative"},
+					},
+					v1.SubscriptionsAPIFilter{
+						Suffix: map[string]string{"subject": "source"},
+					},
+					v1.SubscriptionsAPIFilter{
+						Not: &v1.SubscriptionsAPIFilter{
+							Prefix: map[string]string{"source": "dev.knative"},
+						},
+					},
+					v1.SubscriptionsAPIFilter{
+						SQL: "subject = 'source'",
+					},
+				},
+			},
+			want: &contract.DialectedFilter{
+				Filter: &contract.DialectedFilter_All{
+					All: &contract.All{
+						Filters: []*contract.DialectedFilter{
+							&contract.DialectedFilter{
+								Filter: &contract.DialectedFilter_Exact{
+									Exact: &contract.Exact{
+										Attributes: map[string]string{"type": "dev.knative.kafkasrc.kafkarecord"},
+									},
+								},
+							},
+							&contract.DialectedFilter{
+								Filter: &contract.DialectedFilter_Prefix{
+									Prefix: &contract.Prefix{
+										Attribute: "source",
+										Prefix: "dev.knative",
+									},
+								},
+							},
+							&contract.DialectedFilter{
+								Filter: &contract.DialectedFilter_Suffix{
+									Suffix: &contract.Suffix{
+										Attribute: "subject",
+										Suffix: "source",
+									},
+								},
+							},
+							&contract.DialectedFilter{
+								Filter: &contract.DialectedFilter_Not{
+									Not: &contract.Not{
+										Filter: &contract.DialectedFilter{
+											Filter: &contract.DialectedFilter_Prefix{
+												Prefix: &contract.Prefix{
+													Attribute: "source",
+													Prefix: "dev.knative",
+												},
+											},
+										},
+									},
+								},
+							},
+							&contract.DialectedFilter{
+								Filter: &contract.DialectedFilter_Cesql{
+									Cesql: &contract.CESOL{
+										Expression: "subject = 'source'",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			got := contract.FromSubscriptionFilter(tc.apiFilter)
+			if cmp.Diff(got, tc.want, cmpopts.IgnoreUnexported(contract.DialectedFilter{},
+			contract.All{},contract.Prefix{},contract.Suffix{}, contract.Exact{}, contract.Not{}, contract.CESOL{})) != "" {
+				t.Errorf("FromSubscriptionFilter() = %v, want %v", got, tc.want )
+			}
+		})
+	}
+
 }
