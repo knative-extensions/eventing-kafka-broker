@@ -1017,7 +1017,8 @@ type Egress struct {
 	//	*Egress_ReplyToOriginalTopic
 	//	*Egress_DiscardReply
 	ReplyStrategy isEgress_ReplyStrategy `protobuf_oneof:"replyStrategy"`
-	Filter        *Filter                `protobuf:"bytes,5,opt,name=filter,proto3" json:"filter,omitempty"`
+	// A filter for performing exact match against Cloud Events attributes
+	Filter *Filter `protobuf:"bytes,5,opt,name=filter,proto3" json:"filter,omitempty"`
 	// Id of the egress
 	// It's the same as the Kubernetes resource uid
 	Uid string `protobuf:"bytes,6,opt,name=uid,proto3" json:"uid,omitempty"`

@@ -10260,16 +10260,28 @@ public final class DataPlaneContract {
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getDiscardReplyOrBuilder();
 
     /**
+     * <pre>
+     * A filter for performing exact match against Cloud Events attributes
+     * </pre>
+     *
      * <code>.Filter filter = 5;</code>
      * @return Whether the filter field is set.
      */
     boolean hasFilter();
     /**
+     * <pre>
+     * A filter for performing exact match against Cloud Events attributes
+     * </pre>
+     *
      * <code>.Filter filter = 5;</code>
      * @return The filter.
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter getFilter();
     /**
+     * <pre>
+     * A filter for performing exact match against Cloud Events attributes
+     * </pre>
+     *
      * <code>.Filter filter = 5;</code>
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder getFilterOrBuilder();
@@ -10935,6 +10947,10 @@ public final class DataPlaneContract {
     public static final int FILTER_FIELD_NUMBER = 5;
     private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter filter_;
     /**
+     * <pre>
+     * A filter for performing exact match against Cloud Events attributes
+     * </pre>
+     *
      * <code>.Filter filter = 5;</code>
      * @return Whether the filter field is set.
      */
@@ -10943,6 +10959,10 @@ public final class DataPlaneContract {
       return filter_ != null;
     }
     /**
+     * <pre>
+     * A filter for performing exact match against Cloud Events attributes
+     * </pre>
+     *
      * <code>.Filter filter = 5;</code>
      * @return The filter.
      */
@@ -10951,6 +10971,10 @@ public final class DataPlaneContract {
       return filter_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.getDefaultInstance() : filter_;
     }
     /**
+     * <pre>
+     * A filter for performing exact match against Cloud Events attributes
+     * </pre>
+     *
      * <code>.Filter filter = 5;</code>
      */
     @java.lang.Override
@@ -12503,6 +12527,10 @@ public final class DataPlaneContract {
       private com.google.protobuf.SingleFieldBuilderV3<
           dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder> filterBuilder_;
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        * @return Whether the filter field is set.
        */
@@ -12510,6 +12538,10 @@ public final class DataPlaneContract {
         return filterBuilder_ != null || filter_ != null;
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        * @return The filter.
        */
@@ -12521,6 +12553,10 @@ public final class DataPlaneContract {
         }
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       public Builder setFilter(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter value) {
@@ -12537,6 +12573,10 @@ public final class DataPlaneContract {
         return this;
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       public Builder setFilter(
@@ -12551,6 +12591,10 @@ public final class DataPlaneContract {
         return this;
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       public Builder mergeFilter(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter value) {
@@ -12569,6 +12613,10 @@ public final class DataPlaneContract {
         return this;
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       public Builder clearFilter() {
@@ -12583,6 +12631,10 @@ public final class DataPlaneContract {
         return this;
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder getFilterBuilder() {
@@ -12591,6 +12643,10 @@ public final class DataPlaneContract {
         return getFilterFieldBuilder().getBuilder();
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder getFilterOrBuilder() {
@@ -12602,6 +12658,10 @@ public final class DataPlaneContract {
         }
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<

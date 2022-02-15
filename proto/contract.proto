@@ -123,7 +123,7 @@ message Egress {
     // Discard response.
     Empty discardReply = 9;
   }
-
+  // A filter for performing exact match against Cloud Events attributes
   Filter filter = 5;
 
   // Id of the egress
