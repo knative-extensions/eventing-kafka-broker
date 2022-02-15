@@ -13,21 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
+package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
 
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
-import java.net.URI;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.net.URI;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.stream.Stream;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SqlFilterTest {
+public class PrefixFilterTest {
 
   final static CloudEvent event = CloudEventBuilder.v1()
     .withId("123-42")
@@ -45,20 +46,18 @@ public class SqlFilterTest {
 
   @ParameterizedTest
   @MethodSource(value = {"testCases"})
-  public void match(CloudEvent event, String expression, boolean shouldMatch) {
-    var filter = new SqlFilter(expression);
+  public void match(CloudEvent event, String key, String value, boolean shouldMatch) {
+    var filter = new PrefixFilter(key, value);
     assertThat(filter.test(event))
       .isEqualTo(shouldMatch);
   }
 
   static Stream<Arguments> testCases() {
     return Stream.of(
-      Arguments.of(event, "'TRUE'", true),
-      Arguments.of(event, "'FALSE'", false),
-      Arguments.of(event, "0", false),
-      Arguments.of(event, "1", false),
-      Arguments.of(event, "id LIKE '123%'", true),
-      Arguments.of(event, "NOT(id LIKE '123%')", false)
+      Arguments.of(event, "id", "123", true),
+      Arguments.of(event, "id", "124", false),
+      Arguments.of(event, "source", "/api", true),
+      Arguments.of(event, "source", "/news", false)
     );
   }
 

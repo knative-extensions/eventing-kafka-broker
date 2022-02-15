@@ -13,21 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
+package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
 
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
-import java.net.URI;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.net.URI;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.stream.Stream;
 
-public class PrefixFilterTest {
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+public class ExactFilterTest {
 
   final static CloudEvent event = CloudEventBuilder.v1()
     .withId("123-42")
@@ -41,22 +44,44 @@ public class PrefixFilterTest {
       23, 20, 50, 0,
       ZoneOffset.UTC
     ))
+    .withExtension("abc", "123")
+    .withExtension("urlext", URI.create("/ext"))
     .build();
+
+  @Test
+  public void testInvalidKey() {
+    assertThatThrownBy(() -> new ExactFilter(null, "123"))
+      .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new ExactFilter("", "123"))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  public void testInvalidValue() {
+    assertThatThrownBy(() -> new ExactFilter("abc", null))
+      .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new ExactFilter("abc", ""))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
 
   @ParameterizedTest
   @MethodSource(value = {"testCases"})
   public void match(CloudEvent event, String key, String value, boolean shouldMatch) {
-    var filter = new PrefixFilter(key, value);
+    var filter = new ExactFilter(key, value);
     assertThat(filter.test(event))
       .isEqualTo(shouldMatch);
   }
 
   static Stream<Arguments> testCases() {
     return Stream.of(
-      Arguments.of(event, "id", "123", true),
-      Arguments.of(event, "id", "124", false),
-      Arguments.of(event, "source", "/api", true),
-      Arguments.of(event, "source", "/news", false)
+      Arguments.of(event, "id", "123-42", true),
+      Arguments.of(event, "id", "123-43", false),
+      Arguments.of(event, "source", "/api/some-source", true),
+      Arguments.of(event, "source", "/api/something-else", false),
+      Arguments.of(event, "abc", "123", true),
+      Arguments.of(event, "abc", "456", false),
+      Arguments.of(event, "urlext", "/ext", true),
+      Arguments.of(event, "urlext", "/no-ext", false)
     );
   }
 

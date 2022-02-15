@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
+package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
 
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.BaseStringFilter;
 import io.cloudevents.CloudEvent;
 
-import java.util.Map;
+public class ExactFilter extends BaseStringFilter {
 
-public class PrefixFilter extends BaseStringFilter {
-
-  public PrefixFilter(String attribute, String expectedValue) {
+  public ExactFilter(String attribute, String expectedValue) {
     super(attribute, expectedValue);
   }
 
   @Override
   public boolean test(CloudEvent cloudEvent) {
-    String value = this.extractor.apply(cloudEvent);
-    return value != null && value.startsWith(this.expectedValue);
+    return expectedValue.equals(this.extractor.apply(cloudEvent));
   }
 }
