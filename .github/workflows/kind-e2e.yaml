@@ -64,6 +64,12 @@ jobs:
             channel-auth-scenario: "SASL_SSL"
           - test-suite: ./test/e2e_new
             channel-auth-scenario: "SASL_PLAIN"
+          - test-suite: ./test/experimental
+            channel-auth-scenario: "SSL"
+          - test-suite: ./test/experimental
+            channel-auth-scenario: "SASL_SSL"
+          - test-suite: ./test/experimental
+            channel-auth-scenario: "SASL_PLAIN"
 
     env:
       GOPATH: ${{ github.workspace }}
