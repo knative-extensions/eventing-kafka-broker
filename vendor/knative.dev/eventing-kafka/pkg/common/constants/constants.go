@@ -21,10 +21,10 @@ import "time"
 const (
 
 	// DefaultNumPartitions is the KafkaChannel Spec default for the number of partitions
-	DefaultNumPartitions = 1
+	DefaultNumPartitions = 10
 
 	// DefaultReplicationFactor is the KafkaChannel Spec default for the replication factor
-	DefaultReplicationFactor = 1
+	DefaultReplicationFactor = 3
 
 	// DefaultRetentionISO8601Duration is the KafkaChannel Spec default for the retention duration as an ISO-8601 string
 	DefaultRetentionISO8601Duration = "PT168H" // Precise 7 Days
