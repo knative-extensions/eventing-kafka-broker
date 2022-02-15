@@ -66,10 +66,10 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumer(1,
 					ConsumerUID(ConsumerUUID),
 					ConsumerSpec(NewConsumerSpec(
-						ConsumerTopics("t1", "t2"),
+						ConsumerTopics(SourceTopics...),
 						ConsumerConfigs(
-							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+							ConsumerGroupIdConfig(SourceConsumerGroup),
 						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerVReplicas(1),
@@ -103,10 +103,10 @@ func TestReconcileKind(t *testing.T) {
 					Resources: []*contract.Resource{
 						{
 							Uid:              ConsumerUUID,
-							Topics:           []string{"t1", "t2"},
-							BootstrapServers: ChannelBootstrapServers,
+							Topics:           SourceTopics,
+							BootstrapServers: SourceBootstrapServers,
 							Egresses: []*contract.Egress{{
-								ConsumerGroup: "my.group.id",
+								ConsumerGroup: SourceConsumerGroup,
 								Destination:   ServiceURL,
 								ReplyStrategy: nil,
 								Filter:        nil,
@@ -143,10 +143,10 @@ func TestReconcileKind(t *testing.T) {
 						c := NewConsumer(1,
 							ConsumerUID(ConsumerUUID),
 							ConsumerSpec(NewConsumerSpec(
-								ConsumerTopics("t1", "t2"),
+								ConsumerTopics(SourceTopics...),
 								ConsumerConfigs(
-									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerBootstrapServersConfig(SourceBootstrapServers),
+									ConsumerGroupIdConfig(SourceConsumerGroup),
 								),
 								ConsumerSubscriber(NewSourceSinkReference()),
 								ConsumerVReplicas(1),
@@ -172,10 +172,10 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumer(1,
 					ConsumerUID(ConsumerUUID),
 					ConsumerSpec(NewConsumerSpec(
-						ConsumerTopics("t1", "t2"),
+						ConsumerTopics(SourceTopics...),
 						ConsumerConfigs(
-							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+							ConsumerGroupIdConfig(SourceConsumerGroup),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
 							NewConsumerSpecDeliveryDeadLetterSink(),
@@ -216,10 +216,10 @@ func TestReconcileKind(t *testing.T) {
 					Resources: []*contract.Resource{
 						{
 							Uid:              ConsumerUUID,
-							Topics:           []string{"t1", "t2"},
-							BootstrapServers: ChannelBootstrapServers,
+							Topics:           SourceTopics,
+							BootstrapServers: SourceBootstrapServers,
 							Egresses: []*contract.Egress{{
-								ConsumerGroup: "my.group.id",
+								ConsumerGroup: SourceConsumerGroup,
 								Destination:   ServiceURL,
 								ReplyStrategy: nil,
 								Filter:        nil,
@@ -262,10 +262,10 @@ func TestReconcileKind(t *testing.T) {
 						c := NewConsumer(1,
 							ConsumerUID(ConsumerUUID),
 							ConsumerSpec(NewConsumerSpec(
-								ConsumerTopics("t1", "t2"),
+								ConsumerTopics(SourceTopics...),
 								ConsumerConfigs(
-									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerBootstrapServersConfig(SourceBootstrapServers),
+									ConsumerGroupIdConfig(SourceConsumerGroup),
 								),
 								ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
 									NewConsumerSpecDeliveryDeadLetterSink(),
@@ -298,10 +298,10 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumer(1,
 					ConsumerUID(ConsumerUUID),
 					ConsumerSpec(NewConsumerSpec(
-						ConsumerTopics("t1", "t2"),
+						ConsumerTopics(SourceTopics...),
 						ConsumerConfigs(
-							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+							ConsumerGroupIdConfig(SourceConsumerGroup),
 						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerVReplicas(1),
@@ -324,10 +324,10 @@ func TestReconcileKind(t *testing.T) {
 						c := NewConsumer(1,
 							ConsumerUID(ConsumerUUID),
 							ConsumerSpec(NewConsumerSpec(
-								ConsumerTopics("t1", "t2"),
+								ConsumerTopics(SourceTopics...),
 								ConsumerConfigs(
-									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerBootstrapServersConfig(SourceBootstrapServers),
+									ConsumerGroupIdConfig(SourceConsumerGroup),
 								),
 								ConsumerSubscriber(NewSourceSinkReference()),
 								ConsumerVReplicas(1),
