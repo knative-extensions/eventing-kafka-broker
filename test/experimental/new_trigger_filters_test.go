@@ -36,7 +36,6 @@ import (
 	"knative.dev/eventing/test/rekt/resources/broker"
 )
 
-
 func TestMTChannelBrokerNewTriggerFilters(t *testing.T) {
 	t.Parallel()
 
