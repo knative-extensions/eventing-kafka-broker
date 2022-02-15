@@ -261,7 +261,7 @@ func WithNoSubscriberURI(sub *SubscriberInfo) {
 		}
 	}
 	sub.status.Ready = "False"
-	sub.status.Message = "Subscription not ready: failed to resolve subscriber config: empty subscriber URI"
+	sub.status.Message = "Subscription not ready: failed to resolve subscriber config: failed to resolve Subscription.Spec.Subscriber: empty subscriber URI"
 }
 
 func WithUnreadySubscriber(sub *SubscriberInfo) {

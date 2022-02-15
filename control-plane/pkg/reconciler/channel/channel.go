@@ -481,7 +481,7 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messag
 func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messagingv1beta1.KafkaChannel, subscriber *v1.SubscriberSpec) (*contract.Egress, error) {
 	subscriberURI := subscriber.SubscriberURI.String()
 	if subscriberURI == "" {
-		return nil, fmt.Errorf("empty subscriber URI")
+		return nil, fmt.Errorf("failed to resolve Subscription.Spec.Subscriber: empty subscriber URI")
 	}
 
 	egress := &contract.Egress{
