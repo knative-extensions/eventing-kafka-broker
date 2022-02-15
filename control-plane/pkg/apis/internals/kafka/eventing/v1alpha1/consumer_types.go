@@ -98,22 +98,28 @@ type ConsumerSpec struct {
 	CloudEventOverrides *duckv1.CloudEventOverrides `json:"ceOverrides,omitempty"`
 
 	// VReplicas is the number of virtual replicas for a consumer.
-	VReplicas *int32
+	VReplicas *int32 `json:"vReplicas"`
 
 	// PodBind represents a reference to the pod in which the consumer should be placed.
 	PodBind *PodBind `json:"podBind"`
 }
 
 type ReplyStrategy struct {
-	TopicReply *TopicReply
-	URLReply   *DestinationReply
-	NoReply    *struct{}
+	TopicReply *TopicReply       `json:"topicReply,omitempty"`
+	URLReply   *DestinationReply `json:"URLReply,omitempty"`
+	NoReply    *NoReply          `json:"noReply,omitempty"`
+}
+
+type NoReply struct {
+	Enabled bool `json:"enabled"`
 }
 
 type TopicReply struct {
+	Enabled bool `json:"enabled"`
 }
 
 type DestinationReply struct {
+	Enabled     bool `json:"enabled"`
 	Destination duckv1.Destination
 }
 

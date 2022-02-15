@@ -114,6 +114,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 						Ordering: DefaultDeliveryOrder,
 					},
 					Subscriber: ks.Spec.Sink,
+					Reply:      &internalscg.ReplyStrategy{NoReply: &internalscg.NoReply{Enabled: true}},
 				},
 			},
 			Replicas: ks.Spec.Consumers,

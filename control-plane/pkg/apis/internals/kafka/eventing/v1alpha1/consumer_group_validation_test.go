@@ -119,6 +119,45 @@ func TestConsumerGroup_Validate(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "invalid multiple reply strategies (topic, destination)",
+			ctx:  context.Background(),
+			given: &ConsumerGroup{
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Topics: []string{"t1"},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{
+									"group.id":          "g1",
+									"bootstrap.servers": "kafka:9092",
+								},
+							},
+							Reply: &ReplyStrategy{
+								TopicReply: &TopicReply{Enabled: true},
+								URLReply:   &DestinationReply{Enabled: true},
+							},
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{},
+							},
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+							PodBind: &PodBind{
+								PodName:      "p-0",
+								PodNamespace: "ns",
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
 			name: "invalid no pod name",
 			ctx:  context.Background(),
 			given: &ConsumerGroup{

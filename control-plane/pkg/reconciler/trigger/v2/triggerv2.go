@@ -140,6 +140,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, trigger *eventin
 						Filters: trigger.Spec.Filters,
 					},
 					Subscriber: trigger.Spec.Subscriber,
+					Reply:      &internalscg.ReplyStrategy{TopicReply: &internalscg.TopicReply{Enabled: true}},
 				},
 			},
 		},
