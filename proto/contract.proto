@@ -37,7 +37,7 @@ message Not {
   DialectedFilter filter = 1;
 }
 
-message CESOL {
+message CESQL {
   string expression = 1;
 }
 
@@ -49,7 +49,7 @@ message DialectedFilter {
     All all = 4;
     Any any = 5;
     Not not = 6;
-    CESOL cesql = 7;
+    CESQL cesql = 7;
   }
 }
 

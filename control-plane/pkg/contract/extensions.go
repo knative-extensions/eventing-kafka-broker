@@ -168,7 +168,7 @@ func NewNotFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 func NewCESQLFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 	return &DialectedFilter{
 		Filter: &DialectedFilter_Cesql{
-			Cesql: &CESOL{
+			Cesql: &CESQL{
 				Expression: f.SQL,
 			},
 		},

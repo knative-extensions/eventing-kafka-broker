@@ -5577,8 +5577,8 @@ public final class DataPlaneContract {
 
   }
 
-  public interface CESOLOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:CESOL)
+  public interface CESQLOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:CESQL)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -5594,18 +5594,18 @@ public final class DataPlaneContract {
         getExpressionBytes();
   }
   /**
-   * Protobuf type {@code CESOL}
+   * Protobuf type {@code CESQL}
    */
-  public static final class CESOL extends
+  public static final class CESQL extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:CESOL)
-      CESOLOrBuilder {
+      // @@protoc_insertion_point(message_implements:CESQL)
+      CESQLOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use CESOL.newBuilder() to construct.
-    private CESOL(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use CESQL.newBuilder() to construct.
+    private CESQL(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private CESOL() {
+    private CESQL() {
       expression_ = "";
     }
 
@@ -5613,7 +5613,7 @@ public final class DataPlaneContract {
     @SuppressWarnings({"unused"})
     protected java.lang.Object newInstance(
         UnusedPrivateParameter unused) {
-      return new CESOL();
+      return new CESQL();
     }
 
     @java.lang.Override
@@ -5621,7 +5621,7 @@ public final class DataPlaneContract {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private CESOL(
+    private CESQL(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -5666,15 +5666,15 @@ public final class DataPlaneContract {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESOL_descriptor;
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESQL_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESOL_fieldAccessorTable
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESQL_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.Builder.class);
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder.class);
     }
 
     public static final int EXPRESSION_FIELD_NUMBER = 1;
@@ -5754,10 +5754,10 @@ public final class DataPlaneContract {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL)) {
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL)) {
         return super.equals(obj);
       }
-      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL) obj;
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) obj;
 
       if (!getExpression()
           .equals(other.getExpression())) return false;
@@ -5779,69 +5779,69 @@ public final class DataPlaneContract {
       return hash;
     }
 
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL parseFrom(byte[] data)
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL parseFrom(java.io.InputStream input)
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL parseDelimitedFrom(java.io.InputStream input)
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL parseDelimitedFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -5854,7 +5854,7 @@ public final class DataPlaneContract {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL prototype) {
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -5870,26 +5870,26 @@ public final class DataPlaneContract {
       return builder;
     }
     /**
-     * Protobuf type {@code CESOL}
+     * Protobuf type {@code CESQL}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:CESOL)
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOLOrBuilder {
+        // @@protoc_insertion_point(builder_implements:CESQL)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESOL_descriptor;
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESQL_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESOL_fieldAccessorTable
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESQL_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.Builder.class);
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder.class);
       }
 
-      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.newBuilder()
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -5915,17 +5915,17 @@ public final class DataPlaneContract {
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESOL_descriptor;
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESQL_descriptor;
       }
 
       @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL getDefaultInstanceForType() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.getDefaultInstance();
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
       }
 
       @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL build() {
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL result = buildPartial();
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -5933,8 +5933,8 @@ public final class DataPlaneContract {
       }
 
       @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL buildPartial() {
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL(this);
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL(this);
         result.expression_ = expression_;
         onBuilt();
         return result;
@@ -5974,16 +5974,16 @@ public final class DataPlaneContract {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL) {
-          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL)other);
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL other) {
-        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.getDefaultInstance()) return this;
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance()) return this;
         if (!other.getExpression().isEmpty()) {
           expression_ = other.expression_;
           onChanged();
@@ -6003,11 +6003,11 @@ public final class DataPlaneContract {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL parsedMessage = null;
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL) e.getUnfinishedMessage();
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -6105,41 +6105,41 @@ public final class DataPlaneContract {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:CESOL)
+      // @@protoc_insertion_point(builder_scope:CESQL)
     }
 
-    // @@protoc_insertion_point(class_scope:CESOL)
-    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:CESQL)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL();
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL();
     }
 
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL getDefaultInstance() {
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<CESOL>
-        PARSER = new com.google.protobuf.AbstractParser<CESOL>() {
+    private static final com.google.protobuf.Parser<CESQL>
+        PARSER = new com.google.protobuf.AbstractParser<CESQL>() {
       @java.lang.Override
-      public CESOL parsePartialFrom(
+      public CESQL parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CESOL(input, extensionRegistry);
+        return new CESQL(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<CESOL> parser() {
+    public static com.google.protobuf.Parser<CESQL> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<CESOL> getParserForType() {
+    public com.google.protobuf.Parser<CESQL> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL getDefaultInstanceForType() {
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -6240,19 +6240,19 @@ public final class DataPlaneContract {
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.NotOrBuilder getNotOrBuilder();
 
     /**
-     * <code>.CESOL cesql = 7;</code>
+     * <code>.CESQL cesql = 7;</code>
      * @return Whether the cesql field is set.
      */
     boolean hasCesql();
     /**
-     * <code>.CESOL cesql = 7;</code>
+     * <code>.CESQL cesql = 7;</code>
      * @return The cesql.
      */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL getCesql();
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL getCesql();
     /**
-     * <code>.CESOL cesql = 7;</code>
+     * <code>.CESQL cesql = 7;</code>
      */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOLOrBuilder getCesqlOrBuilder();
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder getCesqlOrBuilder();
 
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.FilterCase getFilterCase();
   }
@@ -6386,14 +6386,14 @@ public final class DataPlaneContract {
               break;
             }
             case 58: {
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.Builder subBuilder = null;
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder subBuilder = null;
               if (filterCase_ == 7) {
-                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL) filter_).toBuilder();
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_).toBuilder();
               }
               filter_ =
-                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.parser(), extensionRegistry);
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.parser(), extensionRegistry);
               if (subBuilder != null) {
-                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL) filter_);
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_);
                 filter_ = subBuilder.buildPartial();
               }
               filterCase_ = 7;
@@ -6670,7 +6670,7 @@ public final class DataPlaneContract {
 
     public static final int CESQL_FIELD_NUMBER = 7;
     /**
-     * <code>.CESOL cesql = 7;</code>
+     * <code>.CESQL cesql = 7;</code>
      * @return Whether the cesql field is set.
      */
     @java.lang.Override
@@ -6678,25 +6678,25 @@ public final class DataPlaneContract {
       return filterCase_ == 7;
     }
     /**
-     * <code>.CESOL cesql = 7;</code>
+     * <code>.CESQL cesql = 7;</code>
      * @return The cesql.
      */
     @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL getCesql() {
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL getCesql() {
       if (filterCase_ == 7) {
-         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL) filter_;
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_;
       }
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.getDefaultInstance();
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
     }
     /**
-     * <code>.CESOL cesql = 7;</code>
+     * <code>.CESQL cesql = 7;</code>
      */
     @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOLOrBuilder getCesqlOrBuilder() {
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder getCesqlOrBuilder() {
       if (filterCase_ == 7) {
-         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL) filter_;
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_;
       }
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.getDefaultInstance();
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
     }
 
     private byte memoizedIsInitialized = -1;
@@ -6732,7 +6732,7 @@ public final class DataPlaneContract {
         output.writeMessage(6, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) filter_);
       }
       if (filterCase_ == 7) {
-        output.writeMessage(7, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL) filter_);
+        output.writeMessage(7, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_);
       }
       unknownFields.writeTo(output);
     }
@@ -6769,7 +6769,7 @@ public final class DataPlaneContract {
       }
       if (filterCase_ == 7) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(7, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL) filter_);
+          .computeMessageSize(7, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -8045,9 +8045,9 @@ public final class DataPlaneContract {
       }
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOLOrBuilder> cesqlBuilder_;
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder> cesqlBuilder_;
       /**
-       * <code>.CESOL cesql = 7;</code>
+       * <code>.CESQL cesql = 7;</code>
        * @return Whether the cesql field is set.
        */
       @java.lang.Override
@@ -8055,27 +8055,27 @@ public final class DataPlaneContract {
         return filterCase_ == 7;
       }
       /**
-       * <code>.CESOL cesql = 7;</code>
+       * <code>.CESQL cesql = 7;</code>
        * @return The cesql.
        */
       @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL getCesql() {
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL getCesql() {
         if (cesqlBuilder_ == null) {
           if (filterCase_ == 7) {
-            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL) filter_;
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_;
           }
-          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.getDefaultInstance();
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
         } else {
           if (filterCase_ == 7) {
             return cesqlBuilder_.getMessage();
           }
-          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.getDefaultInstance();
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
         }
       }
       /**
-       * <code>.CESOL cesql = 7;</code>
+       * <code>.CESQL cesql = 7;</code>
        */
-      public Builder setCesql(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL value) {
+      public Builder setCesql(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL value) {
         if (cesqlBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -8089,10 +8089,10 @@ public final class DataPlaneContract {
         return this;
       }
       /**
-       * <code>.CESOL cesql = 7;</code>
+       * <code>.CESQL cesql = 7;</code>
        */
       public Builder setCesql(
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.Builder builderForValue) {
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder builderForValue) {
         if (cesqlBuilder_ == null) {
           filter_ = builderForValue.build();
           onChanged();
@@ -8103,13 +8103,13 @@ public final class DataPlaneContract {
         return this;
       }
       /**
-       * <code>.CESOL cesql = 7;</code>
+       * <code>.CESQL cesql = 7;</code>
        */
-      public Builder mergeCesql(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL value) {
+      public Builder mergeCesql(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL value) {
         if (cesqlBuilder_ == null) {
           if (filterCase_ == 7 &&
-              filter_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.getDefaultInstance()) {
-            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL) filter_)
+              filter_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance()) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_)
                 .mergeFrom(value).buildPartial();
           } else {
             filter_ = value;
@@ -8125,7 +8125,7 @@ public final class DataPlaneContract {
         return this;
       }
       /**
-       * <code>.CESOL cesql = 7;</code>
+       * <code>.CESQL cesql = 7;</code>
        */
       public Builder clearCesql() {
         if (cesqlBuilder_ == null) {
@@ -8144,38 +8144,38 @@ public final class DataPlaneContract {
         return this;
       }
       /**
-       * <code>.CESOL cesql = 7;</code>
+       * <code>.CESQL cesql = 7;</code>
        */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.Builder getCesqlBuilder() {
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder getCesqlBuilder() {
         return getCesqlFieldBuilder().getBuilder();
       }
       /**
-       * <code>.CESOL cesql = 7;</code>
+       * <code>.CESQL cesql = 7;</code>
        */
       @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOLOrBuilder getCesqlOrBuilder() {
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder getCesqlOrBuilder() {
         if ((filterCase_ == 7) && (cesqlBuilder_ != null)) {
           return cesqlBuilder_.getMessageOrBuilder();
         } else {
           if (filterCase_ == 7) {
-            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL) filter_;
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_;
           }
-          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.getDefaultInstance();
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
         }
       }
       /**
-       * <code>.CESOL cesql = 7;</code>
+       * <code>.CESQL cesql = 7;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOLOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder> 
           getCesqlFieldBuilder() {
         if (cesqlBuilder_ == null) {
           if (!(filterCase_ == 7)) {
-            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.getDefaultInstance();
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
           }
           cesqlBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOLOrBuilder>(
-                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESOL) filter_,
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_,
                   getParentForChildren(),
                   isClean());
           filter_ = null;
@@ -24537,10 +24537,10 @@ public final class DataPlaneContract {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Not_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_CESOL_descriptor;
+    internal_static_CESQL_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_CESOL_fieldAccessorTable;
+      internal_static_CESQL_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_DialectedFilter_descriptor;
   private static final 
@@ -24628,12 +24628,12 @@ public final class DataPlaneContract {
       "\001(\t\022\016\n\006suffix\030\002 \001(\t\"(\n\003All\022!\n\007filters\030\001 " +
       "\003(\0132\020.DialectedFilter\"(\n\003Any\022!\n\007filters\030" +
       "\001 \003(\0132\020.DialectedFilter\"\'\n\003Not\022 \n\006filter" +
-      "\030\001 \001(\0132\020.DialectedFilter\"\033\n\005CESOL\022\022\n\nexp" +
+      "\030\001 \001(\0132\020.DialectedFilter\"\033\n\005CESQL\022\022\n\nexp" +
       "ression\030\001 \001(\t\"\302\001\n\017DialectedFilter\022\027\n\005exa" +
       "ct\030\001 \001(\0132\006.ExactH\000\022\031\n\006prefix\030\002 \001(\0132\007.Pre" +
       "fixH\000\022\031\n\006suffix\030\003 \001(\0132\007.SuffixH\000\022\023\n\003all\030" +
       "\004 \001(\0132\004.AllH\000\022\023\n\003any\030\005 \001(\0132\004.AnyH\000\022\023\n\003no" +
-      "t\030\006 \001(\0132\004.NotH\000\022\027\n\005cesql\030\007 \001(\0132\006.CESOLH\000" +
+      "t\030\006 \001(\0132\004.NotH\000\022\027\n\005cesql\030\007 \001(\0132\006.CESQLH\000" +
       "B\010\n\006filter\"h\n\006Filter\022+\n\nattributes\030\001 \003(\013" +
       "2\027.Filter.AttributesEntry\0321\n\017AttributesE" +
       "ntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\177\n\014" +
@@ -24739,11 +24739,11 @@ public final class DataPlaneContract {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Not_descriptor,
         new java.lang.String[] { "Filter", });
-    internal_static_CESOL_descriptor =
+    internal_static_CESQL_descriptor =
       getDescriptor().getMessageTypes().get(7);
-    internal_static_CESOL_fieldAccessorTable = new
+    internal_static_CESQL_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_CESOL_descriptor,
+        internal_static_CESQL_descriptor,
         new java.lang.String[] { "Expression", });
     internal_static_DialectedFilter_descriptor =
       getDescriptor().getMessageTypes().get(8);
