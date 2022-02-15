@@ -1035,7 +1035,7 @@ type Egress struct {
 	// activities such as:
 	// - tagging metrics
 	Reference *Reference `protobuf:"bytes,11,opt,name=reference,proto3" json:"reference,omitempty"`
-	// CNCF CloudEvents SubscriptionsAPI compliant filtres
+	// CNCF CloudEvents SubscriptionsAPI compliant filters
 	DialectedFilter []*DialectedFilter `protobuf:"bytes,12,rep,name=dialectedFilter,proto3" json:"dialectedFilter,omitempty"`
 }
 

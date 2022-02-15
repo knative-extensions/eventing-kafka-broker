@@ -10404,7 +10404,7 @@ public final class DataPlaneContract {
 
     /**
      * <pre>
-     * CNCF CloudEvents SubscriptionsAPI compliant filtres
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
      * </pre>
      *
      * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -10413,7 +10413,7 @@ public final class DataPlaneContract {
         getDialectedFilterList();
     /**
      * <pre>
-     * CNCF CloudEvents SubscriptionsAPI compliant filtres
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
      * </pre>
      *
      * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -10421,7 +10421,7 @@ public final class DataPlaneContract {
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getDialectedFilter(int index);
     /**
      * <pre>
-     * CNCF CloudEvents SubscriptionsAPI compliant filtres
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
      * </pre>
      *
      * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -10429,7 +10429,7 @@ public final class DataPlaneContract {
     int getDialectedFilterCount();
     /**
      * <pre>
-     * CNCF CloudEvents SubscriptionsAPI compliant filtres
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
      * </pre>
      *
      * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -10438,7 +10438,7 @@ public final class DataPlaneContract {
         getDialectedFilterOrBuilderList();
     /**
      * <pre>
-     * CNCF CloudEvents SubscriptionsAPI compliant filtres
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
      * </pre>
      *
      * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -11154,7 +11154,7 @@ public final class DataPlaneContract {
     private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> dialectedFilter_;
     /**
      * <pre>
-     * CNCF CloudEvents SubscriptionsAPI compliant filtres
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
      * </pre>
      *
      * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -11165,7 +11165,7 @@ public final class DataPlaneContract {
     }
     /**
      * <pre>
-     * CNCF CloudEvents SubscriptionsAPI compliant filtres
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
      * </pre>
      *
      * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -11177,7 +11177,7 @@ public final class DataPlaneContract {
     }
     /**
      * <pre>
-     * CNCF CloudEvents SubscriptionsAPI compliant filtres
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
      * </pre>
      *
      * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -11188,7 +11188,7 @@ public final class DataPlaneContract {
     }
     /**
      * <pre>
-     * CNCF CloudEvents SubscriptionsAPI compliant filtres
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
      * </pre>
      *
      * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -11199,7 +11199,7 @@ public final class DataPlaneContract {
     }
     /**
      * <pre>
-     * CNCF CloudEvents SubscriptionsAPI compliant filtres
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
      * </pre>
      *
      * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13232,7 +13232,7 @@ public final class DataPlaneContract {
 
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13246,7 +13246,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13260,7 +13260,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13274,7 +13274,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13295,7 +13295,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13313,7 +13313,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13333,7 +13333,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13354,7 +13354,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13372,7 +13372,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13390,7 +13390,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13409,7 +13409,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13426,7 +13426,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13443,7 +13443,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13454,7 +13454,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13468,7 +13468,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13483,7 +13483,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13494,7 +13494,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
@@ -13506,7 +13506,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * CNCF CloudEvents SubscriptionsAPI compliant filtres
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
        * </pre>
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>

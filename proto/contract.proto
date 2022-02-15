@@ -148,7 +148,7 @@ message Egress {
   // - tagging metrics
   Reference reference = 11;
 
-  // CNCF CloudEvents SubscriptionsAPI compliant filtres
+  // CNCF CloudEvents SubscriptionsAPI compliant filters
   repeated DialectedFilter dialectedFilter = 12;
 }
 
