@@ -430,7 +430,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient saram
 				UID:                s.UID,
 				ObservedGeneration: s.Generation,
 				Ready:              corev1.ConditionFalse,
-				Message:            fmt.Sprint("Subscription not ready", err),
+				Message:            fmt.Sprintf("Subscription not ready: %v", err),
 			})
 			globalErr = multierr.Append(globalErr, err)
 		} else {
@@ -479,8 +479,13 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messag
 }
 
 func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messagingv1beta1.KafkaChannel, subscriber *v1.SubscriberSpec) (*contract.Egress, error) {
+	subscriberURI := subscriber.SubscriberURI.String()
+	if subscriberURI == "" {
+		return nil, fmt.Errorf("empty subscriber URI")
+	}
+
 	egress := &contract.Egress{
-		Destination:   subscriber.SubscriberURI.String(),
+		Destination:   subscriberURI,
 		ConsumerGroup: consumerGroup(channel, subscriber),
 		DeliveryOrder: DefaultDeliveryOrder,
 		Uid:           string(subscriber.UID),

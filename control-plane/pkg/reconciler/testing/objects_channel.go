@@ -261,6 +261,18 @@ func WithFreshSubscriber(sub *SubscriberInfo) {
 	sub.status = nil
 }
 
+func WithNoSubscriberURI(sub *SubscriberInfo) {
+	sub.spec.SubscriberURI = nil
+	if sub.status == nil {
+		sub.status = &eventingduckv1.SubscriberStatus{
+			UID:                sub.spec.UID,
+			ObservedGeneration: sub.spec.Generation,
+		}
+	}
+	sub.status.Ready = "False"
+	sub.status.Message = "Subscription not ready: failed to resolve subscriber config: empty subscriber URI"
+}
+
 func WithUnreadySubscriber(sub *SubscriberInfo) {
 	sub.status.Ready = "False"
 }
