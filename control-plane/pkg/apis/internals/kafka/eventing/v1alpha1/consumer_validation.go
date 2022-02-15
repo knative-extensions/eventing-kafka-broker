@@ -45,6 +45,7 @@ func (cs *ConsumerSpec) Validate(ctx context.Context) *apis.FieldError {
 		cs.Subscriber.Validate(ctx).ViaField("subscriber"),
 		cs.PodBind.Validate(ctx).ViaField("podBind"),
 		cs.CloudEventOverrides.Validate(ctx).ViaField("ceOverrides"),
+		cs.Reply.Validate(ctx).ViaField("reply"),
 	)
 	return err
 }
@@ -70,6 +71,27 @@ func (cc *ConsumerConfigs) Validate(ctx context.Context) *apis.FieldError {
 }
 
 func (f *Filters) Validate(ctx context.Context) *apis.FieldError {
+	return nil
+}
+
+func (in *ReplyStrategy) Validate(ctx context.Context) *apis.FieldError {
+	if in == nil {
+		return nil
+	}
+	setCounter := 0
+	if in.TopicReply != nil && in.TopicReply.Enabled {
+		setCounter++
+	}
+	if in.URLReply != nil && in.URLReply.Enabled {
+		setCounter++
+	}
+	if in.NoReply != nil && in.NoReply.Enabled {
+		setCounter++
+	}
+
+	if setCounter > 1 {
+		return apis.ErrMultipleOneOf("topicReply", "URLReply", "NoReply")
+	}
 	return nil
 }
 

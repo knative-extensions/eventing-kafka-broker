@@ -252,11 +252,11 @@ func (r Reconciler) reconcileReplyStrategy(ctx context.Context, c *kafkainternal
 	if c.Spec.Reply == nil {
 		return nil
 	}
-	if c.Spec.Reply.NoReply != nil {
+	if c.Spec.Reply.NoReply != nil && c.Spec.Reply.NoReply.Enabled {
 		egress.ReplyStrategy = &contract.Egress_DiscardReply{}
 		return nil
 	}
-	if c.Spec.Reply.URLReply != nil {
+	if c.Spec.Reply.URLReply != nil && c.Spec.Reply.URLReply.Enabled {
 		destination, err := r.Resolver.URIFromDestinationV1(ctx, c.Spec.Reply.URLReply.Destination, c)
 		if err != nil {
 			return fmt.Errorf("failed to resolve reply destination: %w", err)
@@ -266,7 +266,7 @@ func (r Reconciler) reconcileReplyStrategy(ctx context.Context, c *kafkainternal
 		}
 		return nil
 	}
-	if c.Spec.Reply.TopicReply != nil {
+	if c.Spec.Reply.TopicReply != nil && c.Spec.Reply.TopicReply.Enabled {
 		egress.ReplyStrategy = &contract.Egress_ReplyToOriginalTopic{}
 		return nil
 	}

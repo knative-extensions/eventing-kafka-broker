@@ -226,3 +226,17 @@ func ConsumerReady() ConsumerOption {
 		}
 	}
 }
+
+func ConsumerReply(s *kafkainternals.ReplyStrategy) ConsumerSpecOption {
+	return func(c *kafkainternals.ConsumerSpec) {
+		c.Reply = s
+	}
+}
+
+func ConsumerNoReply() *kafkainternals.ReplyStrategy {
+	return &kafkainternals.ReplyStrategy{NoReply: &kafkainternals.NoReply{Enabled: true}}
+}
+
+func ConsumerTopicReply() *kafkainternals.ReplyStrategy {
+	return &kafkainternals.ReplyStrategy{TopicReply: &kafkainternals.TopicReply{Enabled: true}}
+}
