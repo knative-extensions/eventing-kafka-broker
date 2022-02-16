@@ -22,8 +22,8 @@ metadata:
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
 data:
-  kreference-group: "enabled"
-  delivery-retryafter: "enabled"
-  delivery-timeout: "enabled"
+  kreference-group: "disabled"
+  delivery-retryafter: "disabled"
+  delivery-timeout: "disabled"
   strict-subscriber: "disabled"
   new-trigger-filters: "enabled"
