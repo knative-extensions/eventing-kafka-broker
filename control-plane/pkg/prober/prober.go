@@ -40,18 +40,18 @@ type EnqueueFunc func(key types.NamespacedName)
 // Prober probes an addressable resource.
 type Prober interface {
 	// Probe probes the provided Addressable resource and returns its Status.
-	Probe(ctx context.Context, addressable Addressable) Status
+	Probe(ctx context.Context, addressable Addressable, expected Status) Status
 }
 
 // Func type is an adapter to allow the use of
 // ordinary functions as Prober. If f is a function
 // with the appropriate signature, Func(f) is a
 // Prober that calls f.
-type Func func(ctx context.Context, addressable Addressable) Status
+type Func func(ctx context.Context, addressable Addressable, expected Status) Status
 
 // Probe implements the Prober interface for Func.
-func (p Func) Probe(ctx context.Context, addressable Addressable) Status {
-	return p(ctx, addressable)
+func (p Func) Probe(ctx context.Context, addressable Addressable, expected Status) Status {
+	return p(ctx, addressable, expected)
 }
 
 // httpClient interface is an interface for an HTTP client.
