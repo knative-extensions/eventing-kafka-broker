@@ -24,7 +24,7 @@ import (
 
 // MockProber returns a prober that always returns the provided status.
 func MockProber(status prober.Status) prober.Prober {
-	return prober.Func(func(ctx context.Context, addressable prober.Addressable) prober.Status {
+	return prober.Func(func(ctx context.Context, addressable prober.Addressable, expected prober.Status) prober.Status {
 		return status
 	})
 }
