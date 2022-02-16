@@ -119,15 +119,12 @@ var (
 // by name.
 func MainNamed(ctx context.Context, component string, ctors ...injection.NamedControllerConstructor) {
 
-	var (
-		disabledControllers string
-	)
-	flag.StringVar(&disabledControllers, "disable-controllers", "", "Comma-separated list of disabled controllers.")
+	disabledControllers := flag.String("disable-controllers", "", "Comma-separated list of disabled controllers.")
 
 	// HACK: This parses flags, so the above should be set once this runs.
 	cfg := injection.ParseAndGetRESTConfigOrDie()
 
-	enabledCtors := enabledControllers(strings.Split(disabledControllers, ","), ctors)
+	enabledCtors := enabledControllers(strings.Split(*disabledControllers, ","), ctors)
 
 	MainWithConfig(ctx, component, cfg, toControllerConstructors(enabledCtors)...)
 }

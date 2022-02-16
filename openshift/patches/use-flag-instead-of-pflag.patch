@@ -1,0 +1,31 @@
+diff --git a/vendor/knative.dev/pkg/injection/sharedmain/main.go b/vendor/knative.dev/pkg/injection/sharedmain/main.go
+index b2a1d511..faa333ba 100644
+--- a/vendor/knative.dev/pkg/injection/sharedmain/main.go
++++ b/vendor/knative.dev/pkg/injection/sharedmain/main.go
+@@ -24,10 +24,9 @@ import (
+ 	"log"
+ 	"net/http"
+ 	"os"
++	"strings"
+ 	"time"
+ 
+-	"github.com/spf13/pflag"
+-
+ 	"go.uber.org/automaxprocs/maxprocs" // automatically set GOMAXPROCS based on cgroups
+ 	"go.uber.org/zap"
+ 	"golang.org/x/sync/errgroup"
+@@ -120,12 +119,12 @@ var (
+ // by name.
+ func MainNamed(ctx context.Context, component string, ctors ...injection.NamedControllerConstructor) {
+ 
+-	disabledControllers := pflag.StringSlice("disable-controllers", []string{}, "Comma-separated list of disabled controllers.")
++	disabledControllers := flag.String("disable-controllers", "", "Comma-separated list of disabled controllers.")
+ 
+ 	// HACK: This parses flags, so the above should be set once this runs.
+ 	cfg := injection.ParseAndGetRESTConfigOrDie()
+ 
+-	enabledCtors := enabledControllers(*disabledControllers, ctors)
++	enabledCtors := enabledControllers(strings.Split(*disabledControllers, ","), ctors)
+ 
+ 	MainWithConfig(ctx, component, cfg, toControllerConstructors(enabledCtors)...)
+ }

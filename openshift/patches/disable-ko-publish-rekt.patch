@@ -1,0 +1,26 @@
+diff --git a/vendor/knative.dev/reconciler-test/pkg/images/ko.go b/vendor/knative.dev/reconciler-test/pkg/images/ko.go
+index adde2080..ff57c9d6 100644
+--- a/vendor/knative.dev/reconciler-test/pkg/images/ko.go
++++ b/vendor/knative.dev/reconciler-test/pkg/images/ko.go
+@@ -16,20 +16,7 @@ limitations under the License.
+ 
+ package images
+ 
+-import (
+-	"fmt"
+-	"os"
+-)
+-
+ // Use ko to publish the image.
+ func KoPublish(path string) (string, error) {
+-	platform := os.Getenv("PLATFORM")
+-	if len(platform) > 0 {
+-		platform = " --platform=" + platform
+-	}
+-	out, err := runCmd(fmt.Sprintf("ko publish%s -B %s", platform, path))
+-	if err != nil {
+-		return "", err
+-	}
+-	return out, nil
++	return "", nil
+ }

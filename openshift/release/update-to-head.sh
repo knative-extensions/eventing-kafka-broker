@@ -29,30 +29,22 @@ make generate-dockerfiles
 make RELEASE=ci generate-release
 git add openshift OWNERS Makefile
 git commit -m ":open_file_folder: Update openshift specific files."
-
-# Apply patches if present
-PATCHES_DIR="$(pwd)/openshift/patches/"
-if [ -d "$PATCHES_DIR" ] && [ "$(ls -A "$PATCHES_DIR")" ]; then
-    git apply openshift/patches/*
-    make RELEASE=ci generate-release
-    git commit -am ":fire: Apply carried patches."
-fi
 git push -f openshift ${REPO_BRANCH}
 
 # Trigger CI
 git checkout ${REPO_BRANCH} -B ${REPO_BRANCH_CI}
-date > ci
+date >ci
 git add ci
 git commit -m ":robot: Triggering CI on branch '${REPO_BRANCH}' after synching to upstream/main"
 git push -f openshift ${REPO_BRANCH_CI}
 
 if hash hub 2>/dev/null; then
-   # Test if there is already a sync PR in 
-   COUNT=$(hub api -H "Accept: application/vnd.github.v3+json" repos/${REPO_OWNER_NAME}/${REPO_NAME}/pulls --flat \
-    | grep -c ":robot: Triggering CI on branch '${REPO_BRANCH}' after synching to upstream/main") || true
-   if [ "$COUNT" = "0" ]; then
-      hub pull-request --no-edit -l "kind/sync-fork-to-upstream" -b ${REPO_OWNER_NAME}/${REPO_NAME}:${REPO_BRANCH} -h ${REPO_OWNER_NAME}/${REPO_NAME}:${REPO_BRANCH_CI}
-   fi
+  # Test if there is already a sync PR in
+  COUNT=$(hub api -H "Accept: application/vnd.github.v3+json" repos/${REPO_OWNER_NAME}/${REPO_NAME}/pulls --flat |
+    grep -c ":robot: Triggering CI on branch '${REPO_BRANCH}' after synching to upstream/main") || true
+  if [ "$COUNT" = "0" ]; then
+    hub pull-request --no-edit -l "kind/sync-fork-to-upstream" -b ${REPO_OWNER_NAME}/${REPO_NAME}:${REPO_BRANCH} -h ${REPO_OWNER_NAME}/${REPO_NAME}:${REPO_BRANCH_CI}
+  fi
 else
-   echo "hub (https://github.com/github/hub) is not installed, so you'll need to create a PR manually."
+  echo "hub (https://github.com/github/hub) is not installed, so you'll need to create a PR manually."
 fi

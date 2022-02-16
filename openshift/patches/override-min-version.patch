@@ -1,0 +1,13 @@
+diff --git a/vendor/knative.dev/pkg/version/version.go b/vendor/knative.dev/pkg/version/version.go
+index 56b7ae95..c79f442d 100644
+--- a/vendor/knative.dev/pkg/version/version.go
++++ b/vendor/knative.dev/pkg/version/version.go
+@@ -33,7 +33,7 @@ const (
+ 	// NOTE: If you are changing this line, please also update the minimum kubernetes
+ 	// version listed here:
+ 	// https://github.com/knative/docs/blob/mkdocs/docs/snippets/prerequisites.md
+-	defaultMinimumVersion = "v1.20.0"
++	defaultMinimumVersion = "v1.19.0"
+ )
+ 
+ func getMinimumVersion() string {
