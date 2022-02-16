@@ -275,7 +275,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		},
 	}
 
-	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusReady {
+	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusReady); status != prober.StatusReady {
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
@@ -352,7 +352,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 			Name:      channel.GetName(),
 		},
 	}
-	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusNotReady {
+	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusNotReady); status != prober.StatusNotReady {
 		// Return a requeueKeyError that doesn't generate an event and it re-queues the object
 		// for a new reconciliation.
 		return controller.NewRequeueAfter(5 * time.Second)
