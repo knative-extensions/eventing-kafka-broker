@@ -59,7 +59,7 @@ func NewAsync(ctx context.Context, client httpClient, port string, podsLabelsSel
 	}
 }
 
-func (a *asyncProber) Probe(ctx context.Context, addressable Addressable) Status {
+func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expected Status) Status {
 	address := addressable.Address
 	pods, err := a.podLister()
 	if err != nil {
@@ -98,8 +98,8 @@ func (a *asyncProber) Probe(ctx context.Context, addressable Addressable) Status
 			With(zap.String("address", address))
 
 		currentStatus := a.cache.GetStatus(address)
-		if currentStatus == StatusReady {
-			logger.Debug("Skip probing", zap.String("status", "ready"))
+		if currentStatus == expected {
+			logger.Debug("Skip probing, status in cache is equal to the expected status", zap.String("status", currentStatus.String()))
 			wg.Done()
 			continue
 		}
@@ -112,7 +112,7 @@ func (a *asyncProber) Probe(ctx context.Context, addressable Addressable) Status
 		// We want to requeue the resource only once when we have all probe request
 		// results.
 		enqueueOnce.Do(func() {
-			// Wait in a separate gorouting.
+			// Wait in a separate goroutine.
 			go func() {
 				// Wait for all the prober request results and then requeue the
 				// resource.
@@ -133,7 +133,7 @@ func (a *asyncProber) Probe(ctx context.Context, addressable Addressable) Status
 
 	if aggregatedCurrentKnownStatus == nil {
 		// Every status is ready, return ready.
-		return StatusReady
+		return expected
 	}
 	return *aggregatedCurrentKnownStatus
 }

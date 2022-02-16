@@ -36,6 +36,7 @@ import (
 )
 
 func TestAsyncProber(t *testing.T) {
+	t.Parallel()
 
 	tt := []struct {
 		name                string
@@ -106,12 +107,13 @@ func TestAsyncProber(t *testing.T) {
 	}
 
 	for _, tc := range tt {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, _ := reconcilertesting.SetupFakeContext(t)
-			ctx, cacel := context.WithCancel(ctx)
+			ctx, cancel := context.WithCancel(ctx)
 			defer func() {
 				time.Sleep(time.Second)
-				cacel()
+				cancel()
 			}()
 			wantRequestCountMin := atomic.NewInt64(int64(tc.wantRequestCountMin))
 			h := http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
@@ -121,7 +123,6 @@ func TestAsyncProber(t *testing.T) {
 			})
 			s := httptest.NewUnstartedServer(h)
 			s.Start()
-			time.Sleep(time.Second) // Wait for the server time to start.
 			defer s.Close()
 
 			for _, p := range tc.pods {
@@ -134,14 +135,15 @@ func TestAsyncProber(t *testing.T) {
 			prober := NewAsync(ctx, s.Client(), u.Port(), tc.podsLabelsSelector, func(key types.NamespacedName) {
 				wantRequeueCountMin.Dec()
 			})
+
 			probeFunc := func() bool {
-				status := prober.Probe(ctx, tc.addressable)
+				status := prober.Probe(ctx, tc.addressable, tc.wantStatus)
 				return status == tc.wantStatus
 			}
 
 			require.Eventuallyf(t, probeFunc, time.Second, 10*time.Millisecond, "")
-			require.GreaterOrEqual(t, int64(0), wantRequeueCountMin.Load())
-			require.GreaterOrEqual(t, int64(0), wantRequestCountMin.Load())
+			require.GreaterOrEqual(t, int64(0), wantRequestCountMin.Load(), "")
+			require.GreaterOrEqual(t, int64(0), wantRequeueCountMin.Load(), "")
 		})
 	}
 }
