@@ -31,6 +31,7 @@ import (
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
@@ -52,6 +53,8 @@ const (
 
 	SecretResourceVersion = "1234"
 	SecretUUID            = "a7185016-5d98-4b54-84e8-3b1cd4acc6b6"
+
+	SystemNamespace = "knative-eventing"
 )
 
 var (
@@ -314,5 +317,46 @@ func StatusProbeFailed(status prober.Status) func(obj duckv1.KRShaped) {
 func allocateStatusAnnotations(obj duckv1.KRShaped) {
 	if obj.GetStatus().Annotations == nil {
 		obj.GetStatus().Annotations = make(map[string]string, 1)
+	}
+}
+
+type PodOption func(pod *corev1.Pod)
+
+func NewDispatcherPod(name string, options ...PodOption) *corev1.Pod {
+	p := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: SystemNamespace,
+		},
+		Spec: corev1.PodSpec{
+			Volumes: []corev1.Volume{{
+				Name: kafkainternals.DispatcherVolumeName,
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: name,
+						},
+					},
+				},
+			}},
+		},
+	}
+
+	for _, opt := range options {
+		opt(p)
+	}
+
+	return p
+}
+
+func PodRunning() PodOption {
+	return func(pod *corev1.Pod) {
+		pod.Status.Phase = corev1.PodRunning
+	}
+}
+
+func PodAnnotations(annotations map[string]string) PodOption {
+	return func(pod *corev1.Pod) {
+		pod.Annotations = annotations
 	}
 }
