@@ -53,7 +53,7 @@ func TestMockProber(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := MockProber(tt.status).Probe(tt.ctx, tt.addressable)
+			got := MockProber(tt.status).Probe(tt.ctx, tt.addressable, tt.status)
 			if diff := cmp.Diff(tt.status, got); diff != "" {
 				t.Error("(-want, got)", diff)
 			}
