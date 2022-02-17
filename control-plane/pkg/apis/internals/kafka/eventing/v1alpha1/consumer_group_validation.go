@@ -56,10 +56,10 @@ func (cts *ConsumerTemplateSpec) Validate(ctx context.Context) *apis.FieldError 
 }
 
 func (c *ConsumerGroup) CheckImmutableFields(ctx context.Context, original map[string]string) *apis.FieldError {
-	if _, ok := original[KafkaChannelNameLabel]; ok {
-		if _, ok := c.Labels[KafkaChannelNameLabel]; !ok {
+	if orig, ok := original[KafkaChannelNameLabel]; ok {
+		if new, ok := c.Labels[KafkaChannelNameLabel]; !ok || orig != new {
 			return ErrImmutableField("Consumer Group Label",
-				"Removing the consumer group label is unsupported")
+				"Removing or modifying the consumer group label is unsupported")
 		}
 	}
 	return nil

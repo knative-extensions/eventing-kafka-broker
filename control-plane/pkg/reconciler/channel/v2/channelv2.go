@@ -410,7 +410,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 
 	channel.Status.Subscribers = make([]v1.SubscriberStatus, 0)
 	var globalErr error
-	currentCgs := make([]*internalscg.ConsumerGroup, 0)
+	currentCgs := make(map[string]*internalscg.ConsumerGroup)
 	for i := range channel.Spec.Subscribers {
 		s := &channel.Spec.Subscribers[i]
 		logger = logger.With(zap.Any("subscription", s))
@@ -425,7 +425,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 			})
 			globalErr = multierr.Append(globalErr, err)
 		} else {
-			currentCgs = append(currentCgs, cg) //adding reconciled consumer group to map
+			currentCgs[cg.Name] = cg // Adding reconciled consumer group to map
 			if cg.IsReady() {
 				logger.Debug("marking subscription as ready")
 				channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
@@ -465,13 +465,8 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 		globalErr = multierr.Append(globalErr, err)
 	}
 	for _, cg := range channelCgs {
-		found := false
-		for _, ccg := range currentCgs {
-			if ccg.Name == cg.Name {
-				found = true
-			}
-		}
-		if !found { //ConsumerGroup needs to be deleted since it isn't associated with an existing subscriber (subscriber may have been deleted)
+		_, found := currentCgs[cg.Name]
+		if !found { // ConsumerGroup needs to be deleted since it isn't associated with an existing subscriber (subscriber may have been deleted)
 			err := r.finalizeConsumerGroup(ctx, cg)
 			if err != nil {
 				globalErr = multierr.Append(globalErr, err)
@@ -491,14 +486,14 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 				*kmeta.NewControllerRef(channel),
 			},
 			Labels: map[string]string{
-				internalscg.KafkaChannelNameLabel: channel.Name, // identifies the new ConsumerGroup as associated with this channel (same namespace)
+				internalscg.KafkaChannelNameLabel: channel.Name, // Identifies the new ConsumerGroup as associated with this channel (same namespace)
 			},
 		},
 		Spec: internalscg.ConsumerGroupSpec{
 			Template: internalscg.ConsumerTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"eventing.knative.dev/subscriberUID": string(s.UID),
+						internalscg.ConsumerSelectorAnnotation: string(s.UID),
 					},
 				},
 				Spec: internalscg.ConsumerSpec{
@@ -516,7 +511,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 		},
 	}
 
-	cg, err := r.ConsumerGroupLister.ConsumerGroups(channel.GetNamespace()).Get(string(s.UID)) //Get by consumer group id
+	cg, err := r.ConsumerGroupLister.ConsumerGroups(channel.GetNamespace()).Get(string(s.UID)) // Get by consumer group id
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	}

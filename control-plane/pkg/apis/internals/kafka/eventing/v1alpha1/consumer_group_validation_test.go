@@ -561,6 +561,80 @@ func TestConsumerGroup_Validate(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "invalid with different channel label value",
+			ctx: apis.WithinUpdate(context.Background(), &ConsumerGroup{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						KafkaChannelNameLabel: "channelName", // identifies the new ConsumerGroup as associated with this channel
+					},
+				},
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Topics: []string{"t1"},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{
+									"group.id":          "g1",
+									"bootstrap.servers": "kafka:9092",
+								},
+							},
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{},
+							},
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+							PodBind: &PodBind{
+								PodName:      "p-0",
+								PodNamespace: "ns",
+							},
+						},
+					},
+				},
+			}),
+			given: &ConsumerGroup{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						KafkaChannelNameLabel: "channelBadName", // identifies the new ConsumerGroup as associated with this channel
+					},
+				},
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Topics: []string{"t1"},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{
+									"group.id":          "g1",
+									"bootstrap.servers": "kafka:9092",
+								},
+							},
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{},
+							},
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+							PodBind: &PodBind{
+								PodName:      "p-0",
+								PodNamespace: "ns",
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
