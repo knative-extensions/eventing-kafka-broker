@@ -345,7 +345,9 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 		},
 	}
 	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusNotReady); status != prober.StatusNotReady {
-		return nil // Object will get re-queued once probe status changes.
+		// Return a requeueKeyError that doesn't generate an event and it re-queues the object
+		// for a new reconciliation.
+		return controller.NewRequeueAfter(5 * time.Second)
 	}
 
 	// get the channel configmap
