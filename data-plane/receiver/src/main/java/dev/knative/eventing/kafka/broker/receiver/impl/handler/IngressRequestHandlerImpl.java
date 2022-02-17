@@ -15,17 +15,20 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
+import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.RequestToRecordMapper;
 import io.cloudevents.CloudEvent;
-import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.vertx.core.Future;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import io.vertx.kafka.client.producer.RecordMetadata;
 import org.slf4j.Logger;
@@ -43,36 +46,58 @@ import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE
  */
 public class IngressRequestHandlerImpl implements IngressRequestHandler {
 
+  static final Tag UNKNOWN_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "unknown");
+
   static final int MAPPER_FAILED = BAD_REQUEST.code();
+  static final Tags MAPPER_FAILED_COMMON_TAGS = Tags.of(
+    Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, "4xx"),
+    Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(MAPPER_FAILED)),
+    UNKNOWN_EVENT_TYPE_TAG
+  );
+
   static final int RECORD_PRODUCED = ACCEPTED.code();
+  static final Tags RECORD_PRODUCED_COMMON_TAGS = Tags.of(
+    Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(RECORD_PRODUCED)),
+    Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, "2xx")
+  );
+
   static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
+  static final Tags FAILED_TO_PRODUCE_COMMON_TAGS = Tags.of(
+    Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(FAILED_TO_PRODUCE)),
+    Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, "5xx")
+  );
 
   private static final Logger logger = LoggerFactory.getLogger(IngressRequestHandlerImpl.class);
 
   private final RequestToRecordMapper requestToRecordMapper;
-  private final Counter badRequestCounter;
-  private final Counter produceEventsCounter;
+  private final MeterRegistry meterRegistry;
 
-  public IngressRequestHandlerImpl(
-    RequestToRecordMapper requestToRecordMapper,
-    Counter badRequestCounter,
-    Counter produceEventsCounter) {
+  public IngressRequestHandlerImpl(final RequestToRecordMapper requestToRecordMapper,
+                                   final MeterRegistry meterRegistry) {
     this.requestToRecordMapper = requestToRecordMapper;
-    this.badRequestCounter = badRequestCounter;
-    this.produceEventsCounter = produceEventsCounter;
+    this.meterRegistry = meterRegistry;
   }
 
   @Override
-  public void handle(HttpServerRequest request, IngressProducer producer) {
+  public void handle(final RequestContext requestContext, final IngressProducer producer) {
+
+    final var resourceTags = Tags.of(
+      Tag.of(Metrics.Tags.RESOURCE_NAME, producer.getReference().getName()),
+      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, producer.getReference().getNamespace())
+    );
+
     requestToRecordMapper
-      .requestToRecord(request, producer.getTopic())
+      .requestToRecord(requestContext.getRequest(), producer.getTopic())
       .onFailure(cause -> {
         // Conversion to record failed
-        request.response().setStatusCode(MAPPER_FAILED).end();
-        badRequestCounter.increment();
+        requestContext.getRequest().response().setStatusCode(MAPPER_FAILED).end();
+
+        final var tags = MAPPER_FAILED_COMMON_TAGS.and(resourceTags);
+        Metrics.eventDispatchLatency(tags).register(meterRegistry).record(requestContext.performLatency());
+        Metrics.eventCount(tags).register(meterRegistry).increment();
 
         logger.warn("Failed to convert request to record {}",
-          keyValue("path", request.path()),
+          keyValue("path", requestContext.getRequest().path()),
           cause
         );
       })
@@ -93,28 +118,41 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
         // Decorate the span with event specific attributed
         TracingSpan.decorateCurrentWithEvent(record.value());
 
-        // Publish the record
-        return publishRecord(producer, record).onComplete(ar -> {
-          // Write the response back
-          if (ar.succeeded()) {
-            request.response()
-              .setStatusCode(RECORD_PRODUCED)
-              .end();
-          } else {
-            request.response()
-              .setStatusCode(FAILED_TO_PRODUCE)
-              .end();
-          }
-        });
+        final var eventTypeTag = Tag.of(Metrics.Tags.EVENT_TYPE, record.value().getType());
+
+        return publishRecord(producer, record)
+          .onSuccess(m -> {
+            requestContext.getRequest().response().setStatusCode(RECORD_PRODUCED).end();
+
+            final var tags = RECORD_PRODUCED_COMMON_TAGS
+              .and(resourceTags)
+              .and(eventTypeTag);
+            Metrics.eventDispatchLatency(tags).register(meterRegistry).record(requestContext.performLatency());
+            Metrics.eventCount(tags).register(meterRegistry).increment();
+
+          })
+          .onFailure(cause -> {
+            requestContext.getRequest().response().setStatusCode(FAILED_TO_PRODUCE).end();
+
+            final var tags = FAILED_TO_PRODUCE_COMMON_TAGS
+              .and(resourceTags)
+              .and(eventTypeTag);
+            Metrics.eventDispatchLatency(tags).register(meterRegistry).record(requestContext.performLatency());
+            Metrics.eventCount(tags).register(meterRegistry).increment();
+
+            logger.warn("Failed to produce record {}",
+              keyValue("path", requestContext.getRequest().path()),
+              cause
+            );
+          });
       });
   }
 
-  private Future<RecordMetadata> publishRecord(IngressProducer ingress,
-                                               KafkaProducerRecord<String, CloudEvent> record) {
+  private static Future<RecordMetadata> publishRecord(final IngressProducer ingress,
+                                                      final KafkaProducerRecord<String, CloudEvent> record) {
     return ingress.send(record)
       .onComplete(ar -> {
         if (ar.succeeded()) {
-          produceEventsCounter.increment();
           if (logger.isDebugEnabled()) {
             logger.debug("Record produced {} {} {} {} {}",
               keyValue("topic", record.topic()),

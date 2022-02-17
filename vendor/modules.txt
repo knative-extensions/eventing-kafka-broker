@@ -399,7 +399,6 @@ go.uber.org/automaxprocs/internal/cgroups
 go.uber.org/automaxprocs/internal/runtime
 go.uber.org/automaxprocs/maxprocs
 # go.uber.org/multierr v1.6.0
-## explicit
 go.uber.org/multierr
 # go.uber.org/zap v1.19.1
 ## explicit
@@ -1270,11 +1269,8 @@ knative.dev/eventing-kafka/pkg/client/injection/client
 knative.dev/eventing-kafka/pkg/client/injection/client/fake
 knative.dev/eventing-kafka/pkg/client/injection/informers/factory
 knative.dev/eventing-kafka/pkg/client/injection/informers/factory/fake
-knative.dev/eventing-kafka/pkg/client/injection/informers/messaging/v1beta1/kafkachannel
-knative.dev/eventing-kafka/pkg/client/injection/informers/messaging/v1beta1/kafkachannel/fake
 knative.dev/eventing-kafka/pkg/client/injection/informers/sources/v1beta1/kafkasource
 knative.dev/eventing-kafka/pkg/client/injection/informers/sources/v1beta1/kafkasource/fake
-knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel
 knative.dev/eventing-kafka/pkg/client/injection/reconciler/sources/v1beta1/kafkasource
 knative.dev/eventing-kafka/pkg/client/listers/bindings/v1beta1
 knative.dev/eventing-kafka/pkg/client/listers/kafka/v1alpha1

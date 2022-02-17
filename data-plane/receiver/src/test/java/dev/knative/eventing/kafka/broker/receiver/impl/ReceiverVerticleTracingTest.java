@@ -124,8 +124,7 @@ public class ReceiverVerticleTracingTest {
       v -> store,
       new IngressRequestHandlerImpl(
         StrictRequestToRecordMapper.getInstance(),
-        new CumulativeCounter(mock(Id.class)),
-        new CumulativeCounter(mock(Id.class))
+        Metrics.getRegistry()
       )
     );
 

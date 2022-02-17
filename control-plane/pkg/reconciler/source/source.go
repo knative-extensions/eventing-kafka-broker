@@ -275,6 +275,11 @@ func (r *Reconciler) reconcileKafkaSourceResource(ctx context.Context, ks *sourc
 		Uid:           string(ks.GetUID()),
 		EgressConfig:  egressConfig,
 		DeliveryOrder: DefaultDeliveryOrder,
+		Reference: &contract.Reference{
+			Uuid:      string(ks.GetUID()),
+			Namespace: ks.GetNamespace(),
+			Name:      ks.GetName(),
+		},
 	}
 	// Set key type hint (if any).
 	if keyType, ok := ks.Labels[sources.KafkaKeyTypeLabel]; ok {
@@ -286,10 +291,7 @@ func (r *Reconciler) reconcileKafkaSourceResource(ctx context.Context, ks *sourc
 		BootstrapServers: strings.Join(ks.Spec.BootstrapServers, ","),
 		Egresses:         []*contract.Egress{egress},
 		Auth:             &contract.Resource_AbsentAuth{},
-		Reference: &contract.Reference{
-			Namespace: ks.GetNamespace(),
-			Name:      ks.GetName(),
-		},
+		Reference:        egress.Reference,
 	}
 	if ks.Spec.CloudEventOverrides != nil {
 		resource.CloudEventOverrides = &contract.CloudEventOverrides{

@@ -4,7 +4,7 @@
 CGO_ENABLED=0
 GOOS=linux
 # Ignore errors if there are no images.
-CONTROL_PLANE_IMAGES=./control-plane/cmd/kafka-controller ./control-plane/cmd/webhook-kafka
+CONTROL_PLANE_IMAGES=./control-plane/cmd/kafka-controller ./control-plane/cmd/webhook-kafka ./control-plane/cmd/post-install
 TEST_IMAGES=$(shell find ./test/test_images ./vendor/knative.dev/eventing/test/test_images -mindepth 1 -maxdepth 1 -type d 2> /dev/null)
 KO_DOCKER_REPO=${DOCKER_REPO_OVERRIDE}
 BRANCH=

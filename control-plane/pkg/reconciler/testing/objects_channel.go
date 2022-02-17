@@ -25,15 +25,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
 const (
@@ -49,13 +49,8 @@ const (
 	Subscription1URI      = "sub-1-uri"
 	Subscription2URI      = "sub-2-uri"
 	Subscription1ReplyURI = "sub-1-reply-uri"
-	Subscription2ReplyURI = "sub-2-reply-uri"
 )
 
-func ChannelTopic() string {
-	c := NewChannel().(metav1.Object)
-	return kafka.ChannelTopic(TopicPrefix, c)
-}
 
 func NewChannel(options ...KRShapedOption) runtime.Object {
 	c := &messagingv1beta1.KafkaChannel{
@@ -174,6 +169,14 @@ func ChannelAddressable(env *config.Env) func(obj duckv1.KRShaped) {
 	}
 }
 
+func ChannelReference() *contract.Reference {
+	return &contract.Reference{
+		Uuid:      ChannelUUID,
+		Namespace: ChannelNamespace,
+		Name:      ChannelName,
+	}
+}
+
 func WithInitKafkaChannelConditions(obj duckv1.KRShaped) {
 	channel := obj.(*messagingv1beta1.KafkaChannel)
 	channel.Status.InitializeConditions()
@@ -234,7 +237,7 @@ func Subscriber2(options ...subscriberInfoOption) *SubscriberInfo {
 			UID:           Subscription2UUID,
 			Generation:    1,
 			SubscriberURI: apis.HTTP(Subscription2URI),
-			ReplyURI:      apis.HTTP(Subscription2ReplyURI),
+			// no replies on this one
 		},
 		status: &eventingduckv1.SubscriberStatus{
 			UID:                Subscription2UUID,
@@ -250,6 +253,18 @@ func Subscriber2(options ...subscriberInfoOption) *SubscriberInfo {
 
 func WithFreshSubscriber(sub *SubscriberInfo) {
 	sub.status = nil
+}
+
+func WithNoSubscriberURI(sub *SubscriberInfo) {
+	sub.spec.SubscriberURI = nil
+	if sub.status == nil {
+		sub.status = &eventingduckv1.SubscriberStatus{
+			UID:                sub.spec.UID,
+			ObservedGeneration: sub.spec.Generation,
+		}
+	}
+	sub.status.Ready = "False"
+	sub.status.Message = "Subscription not ready: failed to resolve subscriber config: failed to resolve Subscription.Spec.Subscriber: empty subscriber URI"
 }
 
 func WithUnreadySubscriber(sub *SubscriberInfo) {

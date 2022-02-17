@@ -25,6 +25,7 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
@@ -107,6 +108,25 @@ func NewSourceSinkReference() duckv1.Destination {
 	}
 }
 
+func NewSourceSink2Reference() duckv1.Destination {
+	s := NewService2()
+	return duckv1.Destination{
+		Ref: &duckv1.KReference{
+			Kind:       s.Kind,
+			Namespace:  s.Namespace,
+			Name:       s.Name,
+			APIVersion: s.APIVersion,
+		},
+	}
+}
+
+func WithSourceSink(d duckv1.Destination) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		s := obj.(*sources.KafkaSource)
+		s.Spec.Sink = d
+	}
+}
+
 func SourceDispatcherPod(namespace string, annotations map[string]string) runtime.Object {
 	return &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{
@@ -135,8 +155,13 @@ func InitSourceConditions(obj duckv1.KRShaped) {
 func StatusSourceSinkResolved(uri string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*sources.KafkaSource)
-		ks.Status.SinkURI, _ = apis.ParseURL(uri)
-		ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(sources.KafkaConditionSinkProvided)
+		res, _ := apis.ParseURL(uri)
+		ks.Status.SinkURI = res
+		if !res.IsEmpty() {
+			ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(sources.KafkaConditionSinkProvided)
+		} else {
+			ks.GetConditionSet().Manage(ks.GetStatus()).MarkUnknown(sources.KafkaConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
+		}
 	}
 }
 
@@ -151,3 +176,12 @@ func StatusSourceSinkNotResolved(err string) KRShapedOption {
 		)
 	}
 }
+
+func SourceReference() *contract.Reference {
+	return &contract.Reference{
+		Namespace: SourceNamespace,
+		Name:      SourceName,
+		Uuid:      SourceUUID,
+	}
+}
+

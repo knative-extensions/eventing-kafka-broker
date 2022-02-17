@@ -176,6 +176,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 			IngressType: &contract.Ingress_Path{Path: receiver.PathFromObject(ks)},
 		},
 		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
+		Reference: &contract.Reference{
+			Uuid:      string(ks.GetUID()),
+			Namespace: ks.GetNamespace(),
+			Name:      ks.GetName(),
+		},
 	}
 	if ks.Spec.HasAuthConfig() {
 		sinkConfig.Auth = &contract.Resource_AuthSecret{
@@ -232,7 +237,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		},
 	}
 
-	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusReady {
+	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusReady); status != prober.StatusReady {
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
@@ -298,7 +303,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 			Name:      ks.GetName(),
 		},
 	}
-	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusNotReady {
+	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusNotReady); status != prober.StatusNotReady {
 		// Return a requeueKeyError that doesn't generate an event and it re-queues the object
 		// for a new reconciliation.
 		return controller.NewRequeueAfter(5 * time.Second)

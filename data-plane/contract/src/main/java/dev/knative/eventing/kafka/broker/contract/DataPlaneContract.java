@@ -1196,6 +1196,7047 @@ public final class DataPlaneContract {
 
   }
 
+  public interface ExactOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:Exact)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    int getAttributesCount();
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    boolean containsAttributes(
+        java.lang.String key);
+    /**
+     * Use {@link #getAttributesMap()} instead.
+     */
+    @java.lang.Deprecated
+    java.util.Map<java.lang.String, java.lang.String>
+    getAttributes();
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    java.util.Map<java.lang.String, java.lang.String>
+    getAttributesMap();
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+
+    java.lang.String getAttributesOrDefault(
+        java.lang.String key,
+        java.lang.String defaultValue);
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+
+    java.lang.String getAttributesOrThrow(
+        java.lang.String key);
+  }
+  /**
+   * Protobuf type {@code Exact}
+   */
+  public static final class Exact extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:Exact)
+      ExactOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use Exact.newBuilder() to construct.
+    private Exact(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Exact() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Exact();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Exact(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                attributes_ = com.google.protobuf.MapField.newMapField(
+                    AttributesDefaultEntryHolder.defaultEntry);
+                mutable_bitField0_ |= 0x00000001;
+              }
+              com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
+              attributes__ = input.readMessage(
+                  AttributesDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+              attributes_.getMutableMap().put(
+                  attributes__.getKey(), attributes__.getValue());
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Exact_descriptor;
+    }
+
+    @SuppressWarnings({"rawtypes"})
+    @java.lang.Override
+    protected com.google.protobuf.MapField internalGetMapField(
+        int number) {
+      switch (number) {
+        case 1:
+          return internalGetAttributes();
+        default:
+          throw new RuntimeException(
+              "Invalid map field number: " + number);
+      }
+    }
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Exact_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.Builder.class);
+    }
+
+    public static final int ATTRIBUTES_FIELD_NUMBER = 1;
+    private static final class AttributesDefaultEntryHolder {
+      static final com.google.protobuf.MapEntry<
+          java.lang.String, java.lang.String> defaultEntry =
+              com.google.protobuf.MapEntry
+              .<java.lang.String, java.lang.String>newDefaultInstance(
+                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Exact_AttributesEntry_descriptor, 
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "",
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "");
+    }
+    private com.google.protobuf.MapField<
+        java.lang.String, java.lang.String> attributes_;
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+    internalGetAttributes() {
+      if (attributes_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(
+            AttributesDefaultEntryHolder.defaultEntry);
+      }
+      return attributes_;
+    }
+
+    public int getAttributesCount() {
+      return internalGetAttributes().getMap().size();
+    }
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+
+    @java.lang.Override
+    public boolean containsAttributes(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      return internalGetAttributes().getMap().containsKey(key);
+    }
+    /**
+     * Use {@link #getAttributesMap()} instead.
+     */
+    @java.lang.Override
+    @java.lang.Deprecated
+    public java.util.Map<java.lang.String, java.lang.String> getAttributes() {
+      return getAttributesMap();
+    }
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    @java.lang.Override
+
+    public java.util.Map<java.lang.String, java.lang.String> getAttributesMap() {
+      return internalGetAttributes().getMap();
+    }
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    @java.lang.Override
+
+    public java.lang.String getAttributesOrDefault(
+        java.lang.String key,
+        java.lang.String defaultValue) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, java.lang.String> map =
+          internalGetAttributes().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    @java.lang.Override
+
+    public java.lang.String getAttributesOrThrow(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, java.lang.String> map =
+          internalGetAttributes().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
+      }
+      return map.get(key);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      com.google.protobuf.GeneratedMessageV3
+        .serializeStringMapTo(
+          output,
+          internalGetAttributes(),
+          AttributesDefaultEntryHolder.defaultEntry,
+          1);
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (java.util.Map.Entry<java.lang.String, java.lang.String> entry
+           : internalGetAttributes().getMap().entrySet()) {
+        com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
+        attributes__ = AttributesDefaultEntryHolder.defaultEntry.newBuilderForType()
+            .setKey(entry.getKey())
+            .setValue(entry.getValue())
+            .build();
+        size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(1, attributes__);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) obj;
+
+      if (!internalGetAttributes().equals(
+          other.internalGetAttributes())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (!internalGetAttributes().getMap().isEmpty()) {
+        hash = (37 * hash) + ATTRIBUTES_FIELD_NUMBER;
+        hash = (53 * hash) + internalGetAttributes().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code Exact}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:Exact)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ExactOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Exact_descriptor;
+      }
+
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMapField(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetAttributes();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMutableMapField(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetMutableAttributes();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Exact_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        internalGetMutableAttributes().clear();
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Exact_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact(this);
+        int from_bitField0_ = bitField0_;
+        result.attributes_ = internalGetAttributes();
+        result.attributes_.makeImmutable();
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.getDefaultInstance()) return this;
+        internalGetMutableAttributes().mergeFrom(
+            other.internalGetAttributes());
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.MapField<
+          java.lang.String, java.lang.String> attributes_;
+      private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+      internalGetAttributes() {
+        if (attributes_ == null) {
+          return com.google.protobuf.MapField.emptyMapField(
+              AttributesDefaultEntryHolder.defaultEntry);
+        }
+        return attributes_;
+      }
+      private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+      internalGetMutableAttributes() {
+        onChanged();;
+        if (attributes_ == null) {
+          attributes_ = com.google.protobuf.MapField.newMapField(
+              AttributesDefaultEntryHolder.defaultEntry);
+        }
+        if (!attributes_.isMutable()) {
+          attributes_ = attributes_.copy();
+        }
+        return attributes_;
+      }
+
+      public int getAttributesCount() {
+        return internalGetAttributes().getMap().size();
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+
+      @java.lang.Override
+      public boolean containsAttributes(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        return internalGetAttributes().getMap().containsKey(key);
+      }
+      /**
+       * Use {@link #getAttributesMap()} instead.
+       */
+      @java.lang.Override
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.String> getAttributes() {
+        return getAttributesMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+      @java.lang.Override
+
+      public java.util.Map<java.lang.String, java.lang.String> getAttributesMap() {
+        return internalGetAttributes().getMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+      @java.lang.Override
+
+      public java.lang.String getAttributesOrDefault(
+          java.lang.String key,
+          java.lang.String defaultValue) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, java.lang.String> map =
+            internalGetAttributes().getMap();
+        return map.containsKey(key) ? map.get(key) : defaultValue;
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+      @java.lang.Override
+
+      public java.lang.String getAttributesOrThrow(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, java.lang.String> map =
+            internalGetAttributes().getMap();
+        if (!map.containsKey(key)) {
+          throw new java.lang.IllegalArgumentException();
+        }
+        return map.get(key);
+      }
+
+      public Builder clearAttributes() {
+        internalGetMutableAttributes().getMutableMap()
+            .clear();
+        return this;
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+
+      public Builder removeAttributes(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableAttributes().getMutableMap()
+            .remove(key);
+        return this;
+      }
+      /**
+       * Use alternate mutation accessors instead.
+       */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.String>
+      getMutableAttributes() {
+        return internalGetMutableAttributes().getMutableMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+      public Builder putAttributes(
+          java.lang.String key,
+          java.lang.String value) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        if (value == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableAttributes().getMutableMap()
+            .put(key, value);
+        return this;
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+
+      public Builder putAllAttributes(
+          java.util.Map<java.lang.String, java.lang.String> values) {
+        internalGetMutableAttributes().getMutableMap()
+            .putAll(values);
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:Exact)
+    }
+
+    // @@protoc_insertion_point(class_scope:Exact)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<Exact>
+        PARSER = new com.google.protobuf.AbstractParser<Exact>() {
+      @java.lang.Override
+      public Exact parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Exact(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Exact> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Exact> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface PrefixOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:Prefix)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>string attribute = 1;</code>
+     * @return The attribute.
+     */
+    java.lang.String getAttribute();
+    /**
+     * <code>string attribute = 1;</code>
+     * @return The bytes for attribute.
+     */
+    com.google.protobuf.ByteString
+        getAttributeBytes();
+
+    /**
+     * <code>string prefix = 2;</code>
+     * @return The prefix.
+     */
+    java.lang.String getPrefix();
+    /**
+     * <code>string prefix = 2;</code>
+     * @return The bytes for prefix.
+     */
+    com.google.protobuf.ByteString
+        getPrefixBytes();
+  }
+  /**
+   * Protobuf type {@code Prefix}
+   */
+  public static final class Prefix extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:Prefix)
+      PrefixOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use Prefix.newBuilder() to construct.
+    private Prefix(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Prefix() {
+      attribute_ = "";
+      prefix_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Prefix();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Prefix(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              attribute_ = s;
+              break;
+            }
+            case 18: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              prefix_ = s;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Prefix_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Prefix_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.Builder.class);
+    }
+
+    public static final int ATTRIBUTE_FIELD_NUMBER = 1;
+    private volatile java.lang.Object attribute_;
+    /**
+     * <code>string attribute = 1;</code>
+     * @return The attribute.
+     */
+    @java.lang.Override
+    public java.lang.String getAttribute() {
+      java.lang.Object ref = attribute_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        attribute_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string attribute = 1;</code>
+     * @return The bytes for attribute.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getAttributeBytes() {
+      java.lang.Object ref = attribute_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        attribute_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int PREFIX_FIELD_NUMBER = 2;
+    private volatile java.lang.Object prefix_;
+    /**
+     * <code>string prefix = 2;</code>
+     * @return The prefix.
+     */
+    @java.lang.Override
+    public java.lang.String getPrefix() {
+      java.lang.Object ref = prefix_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        prefix_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string prefix = 2;</code>
+     * @return The bytes for prefix.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getPrefixBytes() {
+      java.lang.Object ref = prefix_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        prefix_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (!getAttributeBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, attribute_);
+      }
+      if (!getPrefixBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, prefix_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (!getAttributeBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, attribute_);
+      }
+      if (!getPrefixBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, prefix_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) obj;
+
+      if (!getAttribute()
+          .equals(other.getAttribute())) return false;
+      if (!getPrefix()
+          .equals(other.getPrefix())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + ATTRIBUTE_FIELD_NUMBER;
+      hash = (53 * hash) + getAttribute().hashCode();
+      hash = (37 * hash) + PREFIX_FIELD_NUMBER;
+      hash = (53 * hash) + getPrefix().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code Prefix}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:Prefix)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.PrefixOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Prefix_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Prefix_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        attribute_ = "";
+
+        prefix_ = "";
+
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Prefix_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix(this);
+        result.attribute_ = attribute_;
+        result.prefix_ = prefix_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.getDefaultInstance()) return this;
+        if (!other.getAttribute().isEmpty()) {
+          attribute_ = other.attribute_;
+          onChanged();
+        }
+        if (!other.getPrefix().isEmpty()) {
+          prefix_ = other.prefix_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private java.lang.Object attribute_ = "";
+      /**
+       * <code>string attribute = 1;</code>
+       * @return The attribute.
+       */
+      public java.lang.String getAttribute() {
+        java.lang.Object ref = attribute_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          attribute_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string attribute = 1;</code>
+       * @return The bytes for attribute.
+       */
+      public com.google.protobuf.ByteString
+          getAttributeBytes() {
+        java.lang.Object ref = attribute_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          attribute_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string attribute = 1;</code>
+       * @param value The attribute to set.
+       * @return This builder for chaining.
+       */
+      public Builder setAttribute(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        attribute_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string attribute = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearAttribute() {
+        
+        attribute_ = getDefaultInstance().getAttribute();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string attribute = 1;</code>
+       * @param value The bytes for attribute to set.
+       * @return This builder for chaining.
+       */
+      public Builder setAttributeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        attribute_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object prefix_ = "";
+      /**
+       * <code>string prefix = 2;</code>
+       * @return The prefix.
+       */
+      public java.lang.String getPrefix() {
+        java.lang.Object ref = prefix_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          prefix_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string prefix = 2;</code>
+       * @return The bytes for prefix.
+       */
+      public com.google.protobuf.ByteString
+          getPrefixBytes() {
+        java.lang.Object ref = prefix_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          prefix_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string prefix = 2;</code>
+       * @param value The prefix to set.
+       * @return This builder for chaining.
+       */
+      public Builder setPrefix(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        prefix_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string prefix = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearPrefix() {
+        
+        prefix_ = getDefaultInstance().getPrefix();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string prefix = 2;</code>
+       * @param value The bytes for prefix to set.
+       * @return This builder for chaining.
+       */
+      public Builder setPrefixBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        prefix_ = value;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:Prefix)
+    }
+
+    // @@protoc_insertion_point(class_scope:Prefix)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<Prefix>
+        PARSER = new com.google.protobuf.AbstractParser<Prefix>() {
+      @java.lang.Override
+      public Prefix parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Prefix(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Prefix> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Prefix> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface SuffixOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:Suffix)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>string attribute = 1;</code>
+     * @return The attribute.
+     */
+    java.lang.String getAttribute();
+    /**
+     * <code>string attribute = 1;</code>
+     * @return The bytes for attribute.
+     */
+    com.google.protobuf.ByteString
+        getAttributeBytes();
+
+    /**
+     * <code>string suffix = 2;</code>
+     * @return The suffix.
+     */
+    java.lang.String getSuffix();
+    /**
+     * <code>string suffix = 2;</code>
+     * @return The bytes for suffix.
+     */
+    com.google.protobuf.ByteString
+        getSuffixBytes();
+  }
+  /**
+   * Protobuf type {@code Suffix}
+   */
+  public static final class Suffix extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:Suffix)
+      SuffixOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use Suffix.newBuilder() to construct.
+    private Suffix(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Suffix() {
+      attribute_ = "";
+      suffix_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Suffix();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Suffix(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              attribute_ = s;
+              break;
+            }
+            case 18: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              suffix_ = s;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Suffix_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Suffix_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.Builder.class);
+    }
+
+    public static final int ATTRIBUTE_FIELD_NUMBER = 1;
+    private volatile java.lang.Object attribute_;
+    /**
+     * <code>string attribute = 1;</code>
+     * @return The attribute.
+     */
+    @java.lang.Override
+    public java.lang.String getAttribute() {
+      java.lang.Object ref = attribute_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        attribute_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string attribute = 1;</code>
+     * @return The bytes for attribute.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getAttributeBytes() {
+      java.lang.Object ref = attribute_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        attribute_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int SUFFIX_FIELD_NUMBER = 2;
+    private volatile java.lang.Object suffix_;
+    /**
+     * <code>string suffix = 2;</code>
+     * @return The suffix.
+     */
+    @java.lang.Override
+    public java.lang.String getSuffix() {
+      java.lang.Object ref = suffix_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        suffix_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string suffix = 2;</code>
+     * @return The bytes for suffix.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getSuffixBytes() {
+      java.lang.Object ref = suffix_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        suffix_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (!getAttributeBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, attribute_);
+      }
+      if (!getSuffixBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, suffix_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (!getAttributeBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, attribute_);
+      }
+      if (!getSuffixBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, suffix_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) obj;
+
+      if (!getAttribute()
+          .equals(other.getAttribute())) return false;
+      if (!getSuffix()
+          .equals(other.getSuffix())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + ATTRIBUTE_FIELD_NUMBER;
+      hash = (53 * hash) + getAttribute().hashCode();
+      hash = (37 * hash) + SUFFIX_FIELD_NUMBER;
+      hash = (53 * hash) + getSuffix().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code Suffix}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:Suffix)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SuffixOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Suffix_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Suffix_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        attribute_ = "";
+
+        suffix_ = "";
+
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Suffix_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix(this);
+        result.attribute_ = attribute_;
+        result.suffix_ = suffix_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.getDefaultInstance()) return this;
+        if (!other.getAttribute().isEmpty()) {
+          attribute_ = other.attribute_;
+          onChanged();
+        }
+        if (!other.getSuffix().isEmpty()) {
+          suffix_ = other.suffix_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private java.lang.Object attribute_ = "";
+      /**
+       * <code>string attribute = 1;</code>
+       * @return The attribute.
+       */
+      public java.lang.String getAttribute() {
+        java.lang.Object ref = attribute_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          attribute_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string attribute = 1;</code>
+       * @return The bytes for attribute.
+       */
+      public com.google.protobuf.ByteString
+          getAttributeBytes() {
+        java.lang.Object ref = attribute_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          attribute_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string attribute = 1;</code>
+       * @param value The attribute to set.
+       * @return This builder for chaining.
+       */
+      public Builder setAttribute(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        attribute_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string attribute = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearAttribute() {
+        
+        attribute_ = getDefaultInstance().getAttribute();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string attribute = 1;</code>
+       * @param value The bytes for attribute to set.
+       * @return This builder for chaining.
+       */
+      public Builder setAttributeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        attribute_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object suffix_ = "";
+      /**
+       * <code>string suffix = 2;</code>
+       * @return The suffix.
+       */
+      public java.lang.String getSuffix() {
+        java.lang.Object ref = suffix_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          suffix_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string suffix = 2;</code>
+       * @return The bytes for suffix.
+       */
+      public com.google.protobuf.ByteString
+          getSuffixBytes() {
+        java.lang.Object ref = suffix_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          suffix_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string suffix = 2;</code>
+       * @param value The suffix to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSuffix(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        suffix_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string suffix = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearSuffix() {
+        
+        suffix_ = getDefaultInstance().getSuffix();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string suffix = 2;</code>
+       * @param value The bytes for suffix to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSuffixBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        suffix_ = value;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:Suffix)
+    }
+
+    // @@protoc_insertion_point(class_scope:Suffix)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<Suffix>
+        PARSER = new com.google.protobuf.AbstractParser<Suffix>() {
+      @java.lang.Override
+      public Suffix parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Suffix(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Suffix> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Suffix> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface AllOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:All)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> 
+        getFiltersList();
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getFilters(int index);
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    int getFiltersCount();
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+        getFiltersOrBuilderList();
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getFiltersOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code All}
+   */
+  public static final class All extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:All)
+      AllOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use All.newBuilder() to construct.
+    private All(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private All() {
+      filters_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new All();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private All(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                filters_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              filters_.add(
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.parser(), extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          filters_ = java.util.Collections.unmodifiableList(filters_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_All_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_All_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.Builder.class);
+    }
+
+    public static final int FILTERS_FIELD_NUMBER = 1;
+    private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> filters_;
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    @java.lang.Override
+    public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> getFiltersList() {
+      return filters_;
+    }
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+        getFiltersOrBuilderList() {
+      return filters_;
+    }
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    @java.lang.Override
+    public int getFiltersCount() {
+      return filters_.size();
+    }
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getFilters(int index) {
+      return filters_.get(index);
+    }
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getFiltersOrBuilder(
+        int index) {
+      return filters_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < filters_.size(); i++) {
+        output.writeMessage(1, filters_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < filters_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, filters_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) obj;
+
+      if (!getFiltersList()
+          .equals(other.getFiltersList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getFiltersCount() > 0) {
+        hash = (37 * hash) + FILTERS_FIELD_NUMBER;
+        hash = (53 * hash) + getFiltersList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code All}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:All)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AllOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_All_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_All_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getFiltersFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (filtersBuilder_ == null) {
+          filters_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          filtersBuilder_.clear();
+        }
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_All_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All(this);
+        int from_bitField0_ = bitField0_;
+        if (filtersBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0)) {
+            filters_ = java.util.Collections.unmodifiableList(filters_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.filters_ = filters_;
+        } else {
+          result.filters_ = filtersBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.getDefaultInstance()) return this;
+        if (filtersBuilder_ == null) {
+          if (!other.filters_.isEmpty()) {
+            if (filters_.isEmpty()) {
+              filters_ = other.filters_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureFiltersIsMutable();
+              filters_.addAll(other.filters_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.filters_.isEmpty()) {
+            if (filtersBuilder_.isEmpty()) {
+              filtersBuilder_.dispose();
+              filtersBuilder_ = null;
+              filters_ = other.filters_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              filtersBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getFiltersFieldBuilder() : null;
+            } else {
+              filtersBuilder_.addAllMessages(other.filters_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> filters_ =
+        java.util.Collections.emptyList();
+      private void ensureFiltersIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          filters_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>(filters_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> filtersBuilder_;
+
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> getFiltersList() {
+        if (filtersBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(filters_);
+        } else {
+          return filtersBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public int getFiltersCount() {
+        if (filtersBuilder_ == null) {
+          return filters_.size();
+        } else {
+          return filtersBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getFilters(int index) {
+        if (filtersBuilder_ == null) {
+          return filters_.get(index);
+        } else {
+          return filtersBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder setFilters(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+        if (filtersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFiltersIsMutable();
+          filters_.set(index, value);
+          onChanged();
+        } else {
+          filtersBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder setFilters(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder builderForValue) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          filters_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          filtersBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder addFilters(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+        if (filtersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFiltersIsMutable();
+          filters_.add(value);
+          onChanged();
+        } else {
+          filtersBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder addFilters(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+        if (filtersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFiltersIsMutable();
+          filters_.add(index, value);
+          onChanged();
+        } else {
+          filtersBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder addFilters(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder builderForValue) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          filters_.add(builderForValue.build());
+          onChanged();
+        } else {
+          filtersBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder addFilters(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder builderForValue) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          filters_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          filtersBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder addAllFilters(
+          java.lang.Iterable<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> values) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, filters_);
+          onChanged();
+        } else {
+          filtersBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder clearFilters() {
+        if (filtersBuilder_ == null) {
+          filters_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          filtersBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder removeFilters(int index) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          filters_.remove(index);
+          onChanged();
+        } else {
+          filtersBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder getFiltersBuilder(
+          int index) {
+        return getFiltersFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getFiltersOrBuilder(
+          int index) {
+        if (filtersBuilder_ == null) {
+          return filters_.get(index);  } else {
+          return filtersBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+           getFiltersOrBuilderList() {
+        if (filtersBuilder_ != null) {
+          return filtersBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(filters_);
+        }
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder addFiltersBuilder() {
+        return getFiltersFieldBuilder().addBuilder(
+            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder addFiltersBuilder(
+          int index) {
+        return getFiltersFieldBuilder().addBuilder(
+            index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder> 
+           getFiltersBuilderList() {
+        return getFiltersFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+          getFiltersFieldBuilder() {
+        if (filtersBuilder_ == null) {
+          filtersBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>(
+                  filters_,
+                  ((bitField0_ & 0x00000001) != 0),
+                  getParentForChildren(),
+                  isClean());
+          filters_ = null;
+        }
+        return filtersBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:All)
+    }
+
+    // @@protoc_insertion_point(class_scope:All)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<All>
+        PARSER = new com.google.protobuf.AbstractParser<All>() {
+      @java.lang.Override
+      public All parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new All(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<All> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<All> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface AnyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:Any)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> 
+        getFiltersList();
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getFilters(int index);
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    int getFiltersCount();
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+        getFiltersOrBuilderList();
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getFiltersOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code Any}
+   */
+  public static final class Any extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:Any)
+      AnyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use Any.newBuilder() to construct.
+    private Any(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Any() {
+      filters_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Any();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Any(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                filters_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              filters_.add(
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.parser(), extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          filters_ = java.util.Collections.unmodifiableList(filters_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Any_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Any_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.Builder.class);
+    }
+
+    public static final int FILTERS_FIELD_NUMBER = 1;
+    private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> filters_;
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    @java.lang.Override
+    public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> getFiltersList() {
+      return filters_;
+    }
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+        getFiltersOrBuilderList() {
+      return filters_;
+    }
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    @java.lang.Override
+    public int getFiltersCount() {
+      return filters_.size();
+    }
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getFilters(int index) {
+      return filters_.get(index);
+    }
+    /**
+     * <code>repeated .DialectedFilter filters = 1;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getFiltersOrBuilder(
+        int index) {
+      return filters_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < filters_.size(); i++) {
+        output.writeMessage(1, filters_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < filters_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, filters_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) obj;
+
+      if (!getFiltersList()
+          .equals(other.getFiltersList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getFiltersCount() > 0) {
+        hash = (37 * hash) + FILTERS_FIELD_NUMBER;
+        hash = (53 * hash) + getFiltersList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code Any}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:Any)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AnyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Any_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Any_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getFiltersFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (filtersBuilder_ == null) {
+          filters_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          filtersBuilder_.clear();
+        }
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Any_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any(this);
+        int from_bitField0_ = bitField0_;
+        if (filtersBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0)) {
+            filters_ = java.util.Collections.unmodifiableList(filters_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.filters_ = filters_;
+        } else {
+          result.filters_ = filtersBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.getDefaultInstance()) return this;
+        if (filtersBuilder_ == null) {
+          if (!other.filters_.isEmpty()) {
+            if (filters_.isEmpty()) {
+              filters_ = other.filters_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureFiltersIsMutable();
+              filters_.addAll(other.filters_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.filters_.isEmpty()) {
+            if (filtersBuilder_.isEmpty()) {
+              filtersBuilder_.dispose();
+              filtersBuilder_ = null;
+              filters_ = other.filters_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              filtersBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getFiltersFieldBuilder() : null;
+            } else {
+              filtersBuilder_.addAllMessages(other.filters_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> filters_ =
+        java.util.Collections.emptyList();
+      private void ensureFiltersIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          filters_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>(filters_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> filtersBuilder_;
+
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> getFiltersList() {
+        if (filtersBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(filters_);
+        } else {
+          return filtersBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public int getFiltersCount() {
+        if (filtersBuilder_ == null) {
+          return filters_.size();
+        } else {
+          return filtersBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getFilters(int index) {
+        if (filtersBuilder_ == null) {
+          return filters_.get(index);
+        } else {
+          return filtersBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder setFilters(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+        if (filtersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFiltersIsMutable();
+          filters_.set(index, value);
+          onChanged();
+        } else {
+          filtersBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder setFilters(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder builderForValue) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          filters_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          filtersBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder addFilters(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+        if (filtersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFiltersIsMutable();
+          filters_.add(value);
+          onChanged();
+        } else {
+          filtersBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder addFilters(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+        if (filtersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureFiltersIsMutable();
+          filters_.add(index, value);
+          onChanged();
+        } else {
+          filtersBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder addFilters(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder builderForValue) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          filters_.add(builderForValue.build());
+          onChanged();
+        } else {
+          filtersBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder addFilters(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder builderForValue) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          filters_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          filtersBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder addAllFilters(
+          java.lang.Iterable<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> values) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, filters_);
+          onChanged();
+        } else {
+          filtersBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder clearFilters() {
+        if (filtersBuilder_ == null) {
+          filters_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          filtersBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public Builder removeFilters(int index) {
+        if (filtersBuilder_ == null) {
+          ensureFiltersIsMutable();
+          filters_.remove(index);
+          onChanged();
+        } else {
+          filtersBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder getFiltersBuilder(
+          int index) {
+        return getFiltersFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getFiltersOrBuilder(
+          int index) {
+        if (filtersBuilder_ == null) {
+          return filters_.get(index);  } else {
+          return filtersBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+           getFiltersOrBuilderList() {
+        if (filtersBuilder_ != null) {
+          return filtersBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(filters_);
+        }
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder addFiltersBuilder() {
+        return getFiltersFieldBuilder().addBuilder(
+            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder addFiltersBuilder(
+          int index) {
+        return getFiltersFieldBuilder().addBuilder(
+            index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .DialectedFilter filters = 1;</code>
+       */
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder> 
+           getFiltersBuilderList() {
+        return getFiltersFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+          getFiltersFieldBuilder() {
+        if (filtersBuilder_ == null) {
+          filtersBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>(
+                  filters_,
+                  ((bitField0_ & 0x00000001) != 0),
+                  getParentForChildren(),
+                  isClean());
+          filters_ = null;
+        }
+        return filtersBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:Any)
+    }
+
+    // @@protoc_insertion_point(class_scope:Any)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<Any>
+        PARSER = new com.google.protobuf.AbstractParser<Any>() {
+      @java.lang.Override
+      public Any parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Any(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Any> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Any> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface NotOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:Not)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>.DialectedFilter filter = 1;</code>
+     * @return Whether the filter field is set.
+     */
+    boolean hasFilter();
+    /**
+     * <code>.DialectedFilter filter = 1;</code>
+     * @return The filter.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getFilter();
+    /**
+     * <code>.DialectedFilter filter = 1;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getFilterOrBuilder();
+  }
+  /**
+   * Protobuf type {@code Not}
+   */
+  public static final class Not extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:Not)
+      NotOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use Not.newBuilder() to construct.
+    private Not(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Not() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Not();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Not(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder subBuilder = null;
+              if (filter_ != null) {
+                subBuilder = filter_.toBuilder();
+              }
+              filter_ = input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(filter_);
+                filter_ = subBuilder.buildPartial();
+              }
+
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Not_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Not_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.Builder.class);
+    }
+
+    public static final int FILTER_FIELD_NUMBER = 1;
+    private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter filter_;
+    /**
+     * <code>.DialectedFilter filter = 1;</code>
+     * @return Whether the filter field is set.
+     */
+    @java.lang.Override
+    public boolean hasFilter() {
+      return filter_ != null;
+    }
+    /**
+     * <code>.DialectedFilter filter = 1;</code>
+     * @return The filter.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getFilter() {
+      return filter_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.getDefaultInstance() : filter_;
+    }
+    /**
+     * <code>.DialectedFilter filter = 1;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getFilterOrBuilder() {
+      return getFilter();
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (filter_ != null) {
+        output.writeMessage(1, getFilter());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (filter_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getFilter());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) obj;
+
+      if (hasFilter() != other.hasFilter()) return false;
+      if (hasFilter()) {
+        if (!getFilter()
+            .equals(other.getFilter())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasFilter()) {
+        hash = (37 * hash) + FILTER_FIELD_NUMBER;
+        hash = (53 * hash) + getFilter().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code Not}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:Not)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.NotOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Not_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Not_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (filterBuilder_ == null) {
+          filter_ = null;
+        } else {
+          filter_ = null;
+          filterBuilder_ = null;
+        }
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Not_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not(this);
+        if (filterBuilder_ == null) {
+          result.filter_ = filter_;
+        } else {
+          result.filter_ = filterBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.getDefaultInstance()) return this;
+        if (other.hasFilter()) {
+          mergeFilter(other.getFilter());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter filter_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> filterBuilder_;
+      /**
+       * <code>.DialectedFilter filter = 1;</code>
+       * @return Whether the filter field is set.
+       */
+      public boolean hasFilter() {
+        return filterBuilder_ != null || filter_ != null;
+      }
+      /**
+       * <code>.DialectedFilter filter = 1;</code>
+       * @return The filter.
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getFilter() {
+        if (filterBuilder_ == null) {
+          return filter_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.getDefaultInstance() : filter_;
+        } else {
+          return filterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>.DialectedFilter filter = 1;</code>
+       */
+      public Builder setFilter(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+        if (filterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          filter_ = value;
+          onChanged();
+        } else {
+          filterBuilder_.setMessage(value);
+        }
+
+        return this;
+      }
+      /**
+       * <code>.DialectedFilter filter = 1;</code>
+       */
+      public Builder setFilter(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder builderForValue) {
+        if (filterBuilder_ == null) {
+          filter_ = builderForValue.build();
+          onChanged();
+        } else {
+          filterBuilder_.setMessage(builderForValue.build());
+        }
+
+        return this;
+      }
+      /**
+       * <code>.DialectedFilter filter = 1;</code>
+       */
+      public Builder mergeFilter(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+        if (filterBuilder_ == null) {
+          if (filter_ != null) {
+            filter_ =
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.newBuilder(filter_).mergeFrom(value).buildPartial();
+          } else {
+            filter_ = value;
+          }
+          onChanged();
+        } else {
+          filterBuilder_.mergeFrom(value);
+        }
+
+        return this;
+      }
+      /**
+       * <code>.DialectedFilter filter = 1;</code>
+       */
+      public Builder clearFilter() {
+        if (filterBuilder_ == null) {
+          filter_ = null;
+          onChanged();
+        } else {
+          filter_ = null;
+          filterBuilder_ = null;
+        }
+
+        return this;
+      }
+      /**
+       * <code>.DialectedFilter filter = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder getFilterBuilder() {
+        
+        onChanged();
+        return getFilterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.DialectedFilter filter = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getFilterOrBuilder() {
+        if (filterBuilder_ != null) {
+          return filterBuilder_.getMessageOrBuilder();
+        } else {
+          return filter_ == null ?
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.getDefaultInstance() : filter_;
+        }
+      }
+      /**
+       * <code>.DialectedFilter filter = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+          getFilterFieldBuilder() {
+        if (filterBuilder_ == null) {
+          filterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>(
+                  getFilter(),
+                  getParentForChildren(),
+                  isClean());
+          filter_ = null;
+        }
+        return filterBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:Not)
+    }
+
+    // @@protoc_insertion_point(class_scope:Not)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<Not>
+        PARSER = new com.google.protobuf.AbstractParser<Not>() {
+      @java.lang.Override
+      public Not parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Not(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Not> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Not> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface CESQLOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:CESQL)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>string expression = 1;</code>
+     * @return The expression.
+     */
+    java.lang.String getExpression();
+    /**
+     * <code>string expression = 1;</code>
+     * @return The bytes for expression.
+     */
+    com.google.protobuf.ByteString
+        getExpressionBytes();
+  }
+  /**
+   * Protobuf type {@code CESQL}
+   */
+  public static final class CESQL extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:CESQL)
+      CESQLOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use CESQL.newBuilder() to construct.
+    private CESQL(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private CESQL() {
+      expression_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CESQL();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private CESQL(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              expression_ = s;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESQL_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESQL_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder.class);
+    }
+
+    public static final int EXPRESSION_FIELD_NUMBER = 1;
+    private volatile java.lang.Object expression_;
+    /**
+     * <code>string expression = 1;</code>
+     * @return The expression.
+     */
+    @java.lang.Override
+    public java.lang.String getExpression() {
+      java.lang.Object ref = expression_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        expression_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string expression = 1;</code>
+     * @return The bytes for expression.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getExpressionBytes() {
+      java.lang.Object ref = expression_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        expression_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (!getExpressionBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, expression_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (!getExpressionBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, expression_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) obj;
+
+      if (!getExpression()
+          .equals(other.getExpression())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + EXPRESSION_FIELD_NUMBER;
+      hash = (53 * hash) + getExpression().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code CESQL}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:CESQL)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESQL_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESQL_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        expression_ = "";
+
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESQL_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL(this);
+        result.expression_ = expression_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance()) return this;
+        if (!other.getExpression().isEmpty()) {
+          expression_ = other.expression_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private java.lang.Object expression_ = "";
+      /**
+       * <code>string expression = 1;</code>
+       * @return The expression.
+       */
+      public java.lang.String getExpression() {
+        java.lang.Object ref = expression_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          expression_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string expression = 1;</code>
+       * @return The bytes for expression.
+       */
+      public com.google.protobuf.ByteString
+          getExpressionBytes() {
+        java.lang.Object ref = expression_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          expression_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string expression = 1;</code>
+       * @param value The expression to set.
+       * @return This builder for chaining.
+       */
+      public Builder setExpression(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        expression_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string expression = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearExpression() {
+        
+        expression_ = getDefaultInstance().getExpression();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string expression = 1;</code>
+       * @param value The bytes for expression to set.
+       * @return This builder for chaining.
+       */
+      public Builder setExpressionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        expression_ = value;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:CESQL)
+    }
+
+    // @@protoc_insertion_point(class_scope:CESQL)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<CESQL>
+        PARSER = new com.google.protobuf.AbstractParser<CESQL>() {
+      @java.lang.Override
+      public CESQL parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new CESQL(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<CESQL> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CESQL> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface DialectedFilterOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:DialectedFilter)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>.Exact exact = 1;</code>
+     * @return Whether the exact field is set.
+     */
+    boolean hasExact();
+    /**
+     * <code>.Exact exact = 1;</code>
+     * @return The exact.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact getExact();
+    /**
+     * <code>.Exact exact = 1;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ExactOrBuilder getExactOrBuilder();
+
+    /**
+     * <code>.Prefix prefix = 2;</code>
+     * @return Whether the prefix field is set.
+     */
+    boolean hasPrefix();
+    /**
+     * <code>.Prefix prefix = 2;</code>
+     * @return The prefix.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix getPrefix();
+    /**
+     * <code>.Prefix prefix = 2;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.PrefixOrBuilder getPrefixOrBuilder();
+
+    /**
+     * <code>.Suffix suffix = 3;</code>
+     * @return Whether the suffix field is set.
+     */
+    boolean hasSuffix();
+    /**
+     * <code>.Suffix suffix = 3;</code>
+     * @return The suffix.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix getSuffix();
+    /**
+     * <code>.Suffix suffix = 3;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SuffixOrBuilder getSuffixOrBuilder();
+
+    /**
+     * <code>.All all = 4;</code>
+     * @return Whether the all field is set.
+     */
+    boolean hasAll();
+    /**
+     * <code>.All all = 4;</code>
+     * @return The all.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All getAll();
+    /**
+     * <code>.All all = 4;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AllOrBuilder getAllOrBuilder();
+
+    /**
+     * <code>.Any any = 5;</code>
+     * @return Whether the any field is set.
+     */
+    boolean hasAny();
+    /**
+     * <code>.Any any = 5;</code>
+     * @return The any.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any getAny();
+    /**
+     * <code>.Any any = 5;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AnyOrBuilder getAnyOrBuilder();
+
+    /**
+     * <code>.Not not = 6;</code>
+     * @return Whether the not field is set.
+     */
+    boolean hasNot();
+    /**
+     * <code>.Not not = 6;</code>
+     * @return The not.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not getNot();
+    /**
+     * <code>.Not not = 6;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.NotOrBuilder getNotOrBuilder();
+
+    /**
+     * <code>.CESQL cesql = 7;</code>
+     * @return Whether the cesql field is set.
+     */
+    boolean hasCesql();
+    /**
+     * <code>.CESQL cesql = 7;</code>
+     * @return The cesql.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL getCesql();
+    /**
+     * <code>.CESQL cesql = 7;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder getCesqlOrBuilder();
+
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.FilterCase getFilterCase();
+  }
+  /**
+   * Protobuf type {@code DialectedFilter}
+   */
+  public static final class DialectedFilter extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:DialectedFilter)
+      DialectedFilterOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use DialectedFilter.newBuilder() to construct.
+    private DialectedFilter(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private DialectedFilter() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DialectedFilter();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private DialectedFilter(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.Builder subBuilder = null;
+              if (filterCase_ == 1) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) filter_).toBuilder();
+              }
+              filter_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) filter_);
+                filter_ = subBuilder.buildPartial();
+              }
+              filterCase_ = 1;
+              break;
+            }
+            case 18: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.Builder subBuilder = null;
+              if (filterCase_ == 2) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) filter_).toBuilder();
+              }
+              filter_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) filter_);
+                filter_ = subBuilder.buildPartial();
+              }
+              filterCase_ = 2;
+              break;
+            }
+            case 26: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.Builder subBuilder = null;
+              if (filterCase_ == 3) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) filter_).toBuilder();
+              }
+              filter_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) filter_);
+                filter_ = subBuilder.buildPartial();
+              }
+              filterCase_ = 3;
+              break;
+            }
+            case 34: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.Builder subBuilder = null;
+              if (filterCase_ == 4) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) filter_).toBuilder();
+              }
+              filter_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) filter_);
+                filter_ = subBuilder.buildPartial();
+              }
+              filterCase_ = 4;
+              break;
+            }
+            case 42: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.Builder subBuilder = null;
+              if (filterCase_ == 5) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) filter_).toBuilder();
+              }
+              filter_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) filter_);
+                filter_ = subBuilder.buildPartial();
+              }
+              filterCase_ = 5;
+              break;
+            }
+            case 50: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.Builder subBuilder = null;
+              if (filterCase_ == 6) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) filter_).toBuilder();
+              }
+              filter_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) filter_);
+                filter_ = subBuilder.buildPartial();
+              }
+              filterCase_ = 6;
+              break;
+            }
+            case 58: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder subBuilder = null;
+              if (filterCase_ == 7) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_).toBuilder();
+              }
+              filter_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_);
+                filter_ = subBuilder.buildPartial();
+              }
+              filterCase_ = 7;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_DialectedFilter_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_DialectedFilter_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder.class);
+    }
+
+    private int filterCase_ = 0;
+    private java.lang.Object filter_;
+    public enum FilterCase
+        implements com.google.protobuf.Internal.EnumLite,
+            com.google.protobuf.AbstractMessage.InternalOneOfEnum {
+      EXACT(1),
+      PREFIX(2),
+      SUFFIX(3),
+      ALL(4),
+      ANY(5),
+      NOT(6),
+      CESQL(7),
+      FILTER_NOT_SET(0);
+      private final int value;
+      private FilterCase(int value) {
+        this.value = value;
+      }
+      /**
+       * @param value The number of the enum to look for.
+       * @return The enum associated with the given number.
+       * @deprecated Use {@link #forNumber(int)} instead.
+       */
+      @java.lang.Deprecated
+      public static FilterCase valueOf(int value) {
+        return forNumber(value);
+      }
+
+      public static FilterCase forNumber(int value) {
+        switch (value) {
+          case 1: return EXACT;
+          case 2: return PREFIX;
+          case 3: return SUFFIX;
+          case 4: return ALL;
+          case 5: return ANY;
+          case 6: return NOT;
+          case 7: return CESQL;
+          case 0: return FILTER_NOT_SET;
+          default: return null;
+        }
+      }
+      public int getNumber() {
+        return this.value;
+      }
+    };
+
+    public FilterCase
+    getFilterCase() {
+      return FilterCase.forNumber(
+          filterCase_);
+    }
+
+    public static final int EXACT_FIELD_NUMBER = 1;
+    /**
+     * <code>.Exact exact = 1;</code>
+     * @return Whether the exact field is set.
+     */
+    @java.lang.Override
+    public boolean hasExact() {
+      return filterCase_ == 1;
+    }
+    /**
+     * <code>.Exact exact = 1;</code>
+     * @return The exact.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact getExact() {
+      if (filterCase_ == 1) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.getDefaultInstance();
+    }
+    /**
+     * <code>.Exact exact = 1;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ExactOrBuilder getExactOrBuilder() {
+      if (filterCase_ == 1) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.getDefaultInstance();
+    }
+
+    public static final int PREFIX_FIELD_NUMBER = 2;
+    /**
+     * <code>.Prefix prefix = 2;</code>
+     * @return Whether the prefix field is set.
+     */
+    @java.lang.Override
+    public boolean hasPrefix() {
+      return filterCase_ == 2;
+    }
+    /**
+     * <code>.Prefix prefix = 2;</code>
+     * @return The prefix.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix getPrefix() {
+      if (filterCase_ == 2) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.getDefaultInstance();
+    }
+    /**
+     * <code>.Prefix prefix = 2;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.PrefixOrBuilder getPrefixOrBuilder() {
+      if (filterCase_ == 2) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.getDefaultInstance();
+    }
+
+    public static final int SUFFIX_FIELD_NUMBER = 3;
+    /**
+     * <code>.Suffix suffix = 3;</code>
+     * @return Whether the suffix field is set.
+     */
+    @java.lang.Override
+    public boolean hasSuffix() {
+      return filterCase_ == 3;
+    }
+    /**
+     * <code>.Suffix suffix = 3;</code>
+     * @return The suffix.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix getSuffix() {
+      if (filterCase_ == 3) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.getDefaultInstance();
+    }
+    /**
+     * <code>.Suffix suffix = 3;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SuffixOrBuilder getSuffixOrBuilder() {
+      if (filterCase_ == 3) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.getDefaultInstance();
+    }
+
+    public static final int ALL_FIELD_NUMBER = 4;
+    /**
+     * <code>.All all = 4;</code>
+     * @return Whether the all field is set.
+     */
+    @java.lang.Override
+    public boolean hasAll() {
+      return filterCase_ == 4;
+    }
+    /**
+     * <code>.All all = 4;</code>
+     * @return The all.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All getAll() {
+      if (filterCase_ == 4) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.getDefaultInstance();
+    }
+    /**
+     * <code>.All all = 4;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AllOrBuilder getAllOrBuilder() {
+      if (filterCase_ == 4) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.getDefaultInstance();
+    }
+
+    public static final int ANY_FIELD_NUMBER = 5;
+    /**
+     * <code>.Any any = 5;</code>
+     * @return Whether the any field is set.
+     */
+    @java.lang.Override
+    public boolean hasAny() {
+      return filterCase_ == 5;
+    }
+    /**
+     * <code>.Any any = 5;</code>
+     * @return The any.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any getAny() {
+      if (filterCase_ == 5) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.getDefaultInstance();
+    }
+    /**
+     * <code>.Any any = 5;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AnyOrBuilder getAnyOrBuilder() {
+      if (filterCase_ == 5) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.getDefaultInstance();
+    }
+
+    public static final int NOT_FIELD_NUMBER = 6;
+    /**
+     * <code>.Not not = 6;</code>
+     * @return Whether the not field is set.
+     */
+    @java.lang.Override
+    public boolean hasNot() {
+      return filterCase_ == 6;
+    }
+    /**
+     * <code>.Not not = 6;</code>
+     * @return The not.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not getNot() {
+      if (filterCase_ == 6) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.getDefaultInstance();
+    }
+    /**
+     * <code>.Not not = 6;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.NotOrBuilder getNotOrBuilder() {
+      if (filterCase_ == 6) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.getDefaultInstance();
+    }
+
+    public static final int CESQL_FIELD_NUMBER = 7;
+    /**
+     * <code>.CESQL cesql = 7;</code>
+     * @return Whether the cesql field is set.
+     */
+    @java.lang.Override
+    public boolean hasCesql() {
+      return filterCase_ == 7;
+    }
+    /**
+     * <code>.CESQL cesql = 7;</code>
+     * @return The cesql.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL getCesql() {
+      if (filterCase_ == 7) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
+    }
+    /**
+     * <code>.CESQL cesql = 7;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder getCesqlOrBuilder() {
+      if (filterCase_ == 7) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (filterCase_ == 1) {
+        output.writeMessage(1, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) filter_);
+      }
+      if (filterCase_ == 2) {
+        output.writeMessage(2, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) filter_);
+      }
+      if (filterCase_ == 3) {
+        output.writeMessage(3, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) filter_);
+      }
+      if (filterCase_ == 4) {
+        output.writeMessage(4, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) filter_);
+      }
+      if (filterCase_ == 5) {
+        output.writeMessage(5, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) filter_);
+      }
+      if (filterCase_ == 6) {
+        output.writeMessage(6, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) filter_);
+      }
+      if (filterCase_ == 7) {
+        output.writeMessage(7, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (filterCase_ == 1) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) filter_);
+      }
+      if (filterCase_ == 2) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) filter_);
+      }
+      if (filterCase_ == 3) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) filter_);
+      }
+      if (filterCase_ == 4) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) filter_);
+      }
+      if (filterCase_ == 5) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) filter_);
+      }
+      if (filterCase_ == 6) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(6, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) filter_);
+      }
+      if (filterCase_ == 7) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(7, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter) obj;
+
+      if (!getFilterCase().equals(other.getFilterCase())) return false;
+      switch (filterCase_) {
+        case 1:
+          if (!getExact()
+              .equals(other.getExact())) return false;
+          break;
+        case 2:
+          if (!getPrefix()
+              .equals(other.getPrefix())) return false;
+          break;
+        case 3:
+          if (!getSuffix()
+              .equals(other.getSuffix())) return false;
+          break;
+        case 4:
+          if (!getAll()
+              .equals(other.getAll())) return false;
+          break;
+        case 5:
+          if (!getAny()
+              .equals(other.getAny())) return false;
+          break;
+        case 6:
+          if (!getNot()
+              .equals(other.getNot())) return false;
+          break;
+        case 7:
+          if (!getCesql()
+              .equals(other.getCesql())) return false;
+          break;
+        case 0:
+        default:
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      switch (filterCase_) {
+        case 1:
+          hash = (37 * hash) + EXACT_FIELD_NUMBER;
+          hash = (53 * hash) + getExact().hashCode();
+          break;
+        case 2:
+          hash = (37 * hash) + PREFIX_FIELD_NUMBER;
+          hash = (53 * hash) + getPrefix().hashCode();
+          break;
+        case 3:
+          hash = (37 * hash) + SUFFIX_FIELD_NUMBER;
+          hash = (53 * hash) + getSuffix().hashCode();
+          break;
+        case 4:
+          hash = (37 * hash) + ALL_FIELD_NUMBER;
+          hash = (53 * hash) + getAll().hashCode();
+          break;
+        case 5:
+          hash = (37 * hash) + ANY_FIELD_NUMBER;
+          hash = (53 * hash) + getAny().hashCode();
+          break;
+        case 6:
+          hash = (37 * hash) + NOT_FIELD_NUMBER;
+          hash = (53 * hash) + getNot().hashCode();
+          break;
+        case 7:
+          hash = (37 * hash) + CESQL_FIELD_NUMBER;
+          hash = (53 * hash) + getCesql().hashCode();
+          break;
+        case 0:
+        default:
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code DialectedFilter}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:DialectedFilter)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_DialectedFilter_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_DialectedFilter_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        filterCase_ = 0;
+        filter_ = null;
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_DialectedFilter_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter(this);
+        if (filterCase_ == 1) {
+          if (exactBuilder_ == null) {
+            result.filter_ = filter_;
+          } else {
+            result.filter_ = exactBuilder_.build();
+          }
+        }
+        if (filterCase_ == 2) {
+          if (prefixBuilder_ == null) {
+            result.filter_ = filter_;
+          } else {
+            result.filter_ = prefixBuilder_.build();
+          }
+        }
+        if (filterCase_ == 3) {
+          if (suffixBuilder_ == null) {
+            result.filter_ = filter_;
+          } else {
+            result.filter_ = suffixBuilder_.build();
+          }
+        }
+        if (filterCase_ == 4) {
+          if (allBuilder_ == null) {
+            result.filter_ = filter_;
+          } else {
+            result.filter_ = allBuilder_.build();
+          }
+        }
+        if (filterCase_ == 5) {
+          if (anyBuilder_ == null) {
+            result.filter_ = filter_;
+          } else {
+            result.filter_ = anyBuilder_.build();
+          }
+        }
+        if (filterCase_ == 6) {
+          if (notBuilder_ == null) {
+            result.filter_ = filter_;
+          } else {
+            result.filter_ = notBuilder_.build();
+          }
+        }
+        if (filterCase_ == 7) {
+          if (cesqlBuilder_ == null) {
+            result.filter_ = filter_;
+          } else {
+            result.filter_ = cesqlBuilder_.build();
+          }
+        }
+        result.filterCase_ = filterCase_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.getDefaultInstance()) return this;
+        switch (other.getFilterCase()) {
+          case EXACT: {
+            mergeExact(other.getExact());
+            break;
+          }
+          case PREFIX: {
+            mergePrefix(other.getPrefix());
+            break;
+          }
+          case SUFFIX: {
+            mergeSuffix(other.getSuffix());
+            break;
+          }
+          case ALL: {
+            mergeAll(other.getAll());
+            break;
+          }
+          case ANY: {
+            mergeAny(other.getAny());
+            break;
+          }
+          case NOT: {
+            mergeNot(other.getNot());
+            break;
+          }
+          case CESQL: {
+            mergeCesql(other.getCesql());
+            break;
+          }
+          case FILTER_NOT_SET: {
+            break;
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int filterCase_ = 0;
+      private java.lang.Object filter_;
+      public FilterCase
+          getFilterCase() {
+        return FilterCase.forNumber(
+            filterCase_);
+      }
+
+      public Builder clearFilter() {
+        filterCase_ = 0;
+        filter_ = null;
+        onChanged();
+        return this;
+      }
+
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ExactOrBuilder> exactBuilder_;
+      /**
+       * <code>.Exact exact = 1;</code>
+       * @return Whether the exact field is set.
+       */
+      @java.lang.Override
+      public boolean hasExact() {
+        return filterCase_ == 1;
+      }
+      /**
+       * <code>.Exact exact = 1;</code>
+       * @return The exact.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact getExact() {
+        if (exactBuilder_ == null) {
+          if (filterCase_ == 1) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.getDefaultInstance();
+        } else {
+          if (filterCase_ == 1) {
+            return exactBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.Exact exact = 1;</code>
+       */
+      public Builder setExact(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact value) {
+        if (exactBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          filter_ = value;
+          onChanged();
+        } else {
+          exactBuilder_.setMessage(value);
+        }
+        filterCase_ = 1;
+        return this;
+      }
+      /**
+       * <code>.Exact exact = 1;</code>
+       */
+      public Builder setExact(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.Builder builderForValue) {
+        if (exactBuilder_ == null) {
+          filter_ = builderForValue.build();
+          onChanged();
+        } else {
+          exactBuilder_.setMessage(builderForValue.build());
+        }
+        filterCase_ = 1;
+        return this;
+      }
+      /**
+       * <code>.Exact exact = 1;</code>
+       */
+      public Builder mergeExact(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact value) {
+        if (exactBuilder_ == null) {
+          if (filterCase_ == 1 &&
+              filter_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.getDefaultInstance()) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) filter_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            filter_ = value;
+          }
+          onChanged();
+        } else {
+          if (filterCase_ == 1) {
+            exactBuilder_.mergeFrom(value);
+          }
+          exactBuilder_.setMessage(value);
+        }
+        filterCase_ = 1;
+        return this;
+      }
+      /**
+       * <code>.Exact exact = 1;</code>
+       */
+      public Builder clearExact() {
+        if (exactBuilder_ == null) {
+          if (filterCase_ == 1) {
+            filterCase_ = 0;
+            filter_ = null;
+            onChanged();
+          }
+        } else {
+          if (filterCase_ == 1) {
+            filterCase_ = 0;
+            filter_ = null;
+          }
+          exactBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.Exact exact = 1;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.Builder getExactBuilder() {
+        return getExactFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.Exact exact = 1;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ExactOrBuilder getExactOrBuilder() {
+        if ((filterCase_ == 1) && (exactBuilder_ != null)) {
+          return exactBuilder_.getMessageOrBuilder();
+        } else {
+          if (filterCase_ == 1) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.Exact exact = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ExactOrBuilder> 
+          getExactFieldBuilder() {
+        if (exactBuilder_ == null) {
+          if (!(filterCase_ == 1)) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.getDefaultInstance();
+          }
+          exactBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ExactOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) filter_,
+                  getParentForChildren(),
+                  isClean());
+          filter_ = null;
+        }
+        filterCase_ = 1;
+        onChanged();;
+        return exactBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.PrefixOrBuilder> prefixBuilder_;
+      /**
+       * <code>.Prefix prefix = 2;</code>
+       * @return Whether the prefix field is set.
+       */
+      @java.lang.Override
+      public boolean hasPrefix() {
+        return filterCase_ == 2;
+      }
+      /**
+       * <code>.Prefix prefix = 2;</code>
+       * @return The prefix.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix getPrefix() {
+        if (prefixBuilder_ == null) {
+          if (filterCase_ == 2) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.getDefaultInstance();
+        } else {
+          if (filterCase_ == 2) {
+            return prefixBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.Prefix prefix = 2;</code>
+       */
+      public Builder setPrefix(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix value) {
+        if (prefixBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          filter_ = value;
+          onChanged();
+        } else {
+          prefixBuilder_.setMessage(value);
+        }
+        filterCase_ = 2;
+        return this;
+      }
+      /**
+       * <code>.Prefix prefix = 2;</code>
+       */
+      public Builder setPrefix(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.Builder builderForValue) {
+        if (prefixBuilder_ == null) {
+          filter_ = builderForValue.build();
+          onChanged();
+        } else {
+          prefixBuilder_.setMessage(builderForValue.build());
+        }
+        filterCase_ = 2;
+        return this;
+      }
+      /**
+       * <code>.Prefix prefix = 2;</code>
+       */
+      public Builder mergePrefix(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix value) {
+        if (prefixBuilder_ == null) {
+          if (filterCase_ == 2 &&
+              filter_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.getDefaultInstance()) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) filter_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            filter_ = value;
+          }
+          onChanged();
+        } else {
+          if (filterCase_ == 2) {
+            prefixBuilder_.mergeFrom(value);
+          }
+          prefixBuilder_.setMessage(value);
+        }
+        filterCase_ = 2;
+        return this;
+      }
+      /**
+       * <code>.Prefix prefix = 2;</code>
+       */
+      public Builder clearPrefix() {
+        if (prefixBuilder_ == null) {
+          if (filterCase_ == 2) {
+            filterCase_ = 0;
+            filter_ = null;
+            onChanged();
+          }
+        } else {
+          if (filterCase_ == 2) {
+            filterCase_ = 0;
+            filter_ = null;
+          }
+          prefixBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.Prefix prefix = 2;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.Builder getPrefixBuilder() {
+        return getPrefixFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.Prefix prefix = 2;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.PrefixOrBuilder getPrefixOrBuilder() {
+        if ((filterCase_ == 2) && (prefixBuilder_ != null)) {
+          return prefixBuilder_.getMessageOrBuilder();
+        } else {
+          if (filterCase_ == 2) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.Prefix prefix = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.PrefixOrBuilder> 
+          getPrefixFieldBuilder() {
+        if (prefixBuilder_ == null) {
+          if (!(filterCase_ == 2)) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.getDefaultInstance();
+          }
+          prefixBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.PrefixOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) filter_,
+                  getParentForChildren(),
+                  isClean());
+          filter_ = null;
+        }
+        filterCase_ = 2;
+        onChanged();;
+        return prefixBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SuffixOrBuilder> suffixBuilder_;
+      /**
+       * <code>.Suffix suffix = 3;</code>
+       * @return Whether the suffix field is set.
+       */
+      @java.lang.Override
+      public boolean hasSuffix() {
+        return filterCase_ == 3;
+      }
+      /**
+       * <code>.Suffix suffix = 3;</code>
+       * @return The suffix.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix getSuffix() {
+        if (suffixBuilder_ == null) {
+          if (filterCase_ == 3) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.getDefaultInstance();
+        } else {
+          if (filterCase_ == 3) {
+            return suffixBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.Suffix suffix = 3;</code>
+       */
+      public Builder setSuffix(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix value) {
+        if (suffixBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          filter_ = value;
+          onChanged();
+        } else {
+          suffixBuilder_.setMessage(value);
+        }
+        filterCase_ = 3;
+        return this;
+      }
+      /**
+       * <code>.Suffix suffix = 3;</code>
+       */
+      public Builder setSuffix(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.Builder builderForValue) {
+        if (suffixBuilder_ == null) {
+          filter_ = builderForValue.build();
+          onChanged();
+        } else {
+          suffixBuilder_.setMessage(builderForValue.build());
+        }
+        filterCase_ = 3;
+        return this;
+      }
+      /**
+       * <code>.Suffix suffix = 3;</code>
+       */
+      public Builder mergeSuffix(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix value) {
+        if (suffixBuilder_ == null) {
+          if (filterCase_ == 3 &&
+              filter_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.getDefaultInstance()) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) filter_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            filter_ = value;
+          }
+          onChanged();
+        } else {
+          if (filterCase_ == 3) {
+            suffixBuilder_.mergeFrom(value);
+          }
+          suffixBuilder_.setMessage(value);
+        }
+        filterCase_ = 3;
+        return this;
+      }
+      /**
+       * <code>.Suffix suffix = 3;</code>
+       */
+      public Builder clearSuffix() {
+        if (suffixBuilder_ == null) {
+          if (filterCase_ == 3) {
+            filterCase_ = 0;
+            filter_ = null;
+            onChanged();
+          }
+        } else {
+          if (filterCase_ == 3) {
+            filterCase_ = 0;
+            filter_ = null;
+          }
+          suffixBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.Suffix suffix = 3;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.Builder getSuffixBuilder() {
+        return getSuffixFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.Suffix suffix = 3;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SuffixOrBuilder getSuffixOrBuilder() {
+        if ((filterCase_ == 3) && (suffixBuilder_ != null)) {
+          return suffixBuilder_.getMessageOrBuilder();
+        } else {
+          if (filterCase_ == 3) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.Suffix suffix = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SuffixOrBuilder> 
+          getSuffixFieldBuilder() {
+        if (suffixBuilder_ == null) {
+          if (!(filterCase_ == 3)) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.getDefaultInstance();
+          }
+          suffixBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SuffixOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) filter_,
+                  getParentForChildren(),
+                  isClean());
+          filter_ = null;
+        }
+        filterCase_ = 3;
+        onChanged();;
+        return suffixBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AllOrBuilder> allBuilder_;
+      /**
+       * <code>.All all = 4;</code>
+       * @return Whether the all field is set.
+       */
+      @java.lang.Override
+      public boolean hasAll() {
+        return filterCase_ == 4;
+      }
+      /**
+       * <code>.All all = 4;</code>
+       * @return The all.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All getAll() {
+        if (allBuilder_ == null) {
+          if (filterCase_ == 4) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.getDefaultInstance();
+        } else {
+          if (filterCase_ == 4) {
+            return allBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.All all = 4;</code>
+       */
+      public Builder setAll(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All value) {
+        if (allBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          filter_ = value;
+          onChanged();
+        } else {
+          allBuilder_.setMessage(value);
+        }
+        filterCase_ = 4;
+        return this;
+      }
+      /**
+       * <code>.All all = 4;</code>
+       */
+      public Builder setAll(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.Builder builderForValue) {
+        if (allBuilder_ == null) {
+          filter_ = builderForValue.build();
+          onChanged();
+        } else {
+          allBuilder_.setMessage(builderForValue.build());
+        }
+        filterCase_ = 4;
+        return this;
+      }
+      /**
+       * <code>.All all = 4;</code>
+       */
+      public Builder mergeAll(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All value) {
+        if (allBuilder_ == null) {
+          if (filterCase_ == 4 &&
+              filter_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.getDefaultInstance()) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) filter_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            filter_ = value;
+          }
+          onChanged();
+        } else {
+          if (filterCase_ == 4) {
+            allBuilder_.mergeFrom(value);
+          }
+          allBuilder_.setMessage(value);
+        }
+        filterCase_ = 4;
+        return this;
+      }
+      /**
+       * <code>.All all = 4;</code>
+       */
+      public Builder clearAll() {
+        if (allBuilder_ == null) {
+          if (filterCase_ == 4) {
+            filterCase_ = 0;
+            filter_ = null;
+            onChanged();
+          }
+        } else {
+          if (filterCase_ == 4) {
+            filterCase_ = 0;
+            filter_ = null;
+          }
+          allBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.All all = 4;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.Builder getAllBuilder() {
+        return getAllFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.All all = 4;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AllOrBuilder getAllOrBuilder() {
+        if ((filterCase_ == 4) && (allBuilder_ != null)) {
+          return allBuilder_.getMessageOrBuilder();
+        } else {
+          if (filterCase_ == 4) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.All all = 4;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AllOrBuilder> 
+          getAllFieldBuilder() {
+        if (allBuilder_ == null) {
+          if (!(filterCase_ == 4)) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.getDefaultInstance();
+          }
+          allBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AllOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) filter_,
+                  getParentForChildren(),
+                  isClean());
+          filter_ = null;
+        }
+        filterCase_ = 4;
+        onChanged();;
+        return allBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AnyOrBuilder> anyBuilder_;
+      /**
+       * <code>.Any any = 5;</code>
+       * @return Whether the any field is set.
+       */
+      @java.lang.Override
+      public boolean hasAny() {
+        return filterCase_ == 5;
+      }
+      /**
+       * <code>.Any any = 5;</code>
+       * @return The any.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any getAny() {
+        if (anyBuilder_ == null) {
+          if (filterCase_ == 5) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.getDefaultInstance();
+        } else {
+          if (filterCase_ == 5) {
+            return anyBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.Any any = 5;</code>
+       */
+      public Builder setAny(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any value) {
+        if (anyBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          filter_ = value;
+          onChanged();
+        } else {
+          anyBuilder_.setMessage(value);
+        }
+        filterCase_ = 5;
+        return this;
+      }
+      /**
+       * <code>.Any any = 5;</code>
+       */
+      public Builder setAny(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.Builder builderForValue) {
+        if (anyBuilder_ == null) {
+          filter_ = builderForValue.build();
+          onChanged();
+        } else {
+          anyBuilder_.setMessage(builderForValue.build());
+        }
+        filterCase_ = 5;
+        return this;
+      }
+      /**
+       * <code>.Any any = 5;</code>
+       */
+      public Builder mergeAny(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any value) {
+        if (anyBuilder_ == null) {
+          if (filterCase_ == 5 &&
+              filter_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.getDefaultInstance()) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) filter_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            filter_ = value;
+          }
+          onChanged();
+        } else {
+          if (filterCase_ == 5) {
+            anyBuilder_.mergeFrom(value);
+          }
+          anyBuilder_.setMessage(value);
+        }
+        filterCase_ = 5;
+        return this;
+      }
+      /**
+       * <code>.Any any = 5;</code>
+       */
+      public Builder clearAny() {
+        if (anyBuilder_ == null) {
+          if (filterCase_ == 5) {
+            filterCase_ = 0;
+            filter_ = null;
+            onChanged();
+          }
+        } else {
+          if (filterCase_ == 5) {
+            filterCase_ = 0;
+            filter_ = null;
+          }
+          anyBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.Any any = 5;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.Builder getAnyBuilder() {
+        return getAnyFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.Any any = 5;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AnyOrBuilder getAnyOrBuilder() {
+        if ((filterCase_ == 5) && (anyBuilder_ != null)) {
+          return anyBuilder_.getMessageOrBuilder();
+        } else {
+          if (filterCase_ == 5) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.Any any = 5;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AnyOrBuilder> 
+          getAnyFieldBuilder() {
+        if (anyBuilder_ == null) {
+          if (!(filterCase_ == 5)) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.getDefaultInstance();
+          }
+          anyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AnyOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) filter_,
+                  getParentForChildren(),
+                  isClean());
+          filter_ = null;
+        }
+        filterCase_ = 5;
+        onChanged();;
+        return anyBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.NotOrBuilder> notBuilder_;
+      /**
+       * <code>.Not not = 6;</code>
+       * @return Whether the not field is set.
+       */
+      @java.lang.Override
+      public boolean hasNot() {
+        return filterCase_ == 6;
+      }
+      /**
+       * <code>.Not not = 6;</code>
+       * @return The not.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not getNot() {
+        if (notBuilder_ == null) {
+          if (filterCase_ == 6) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.getDefaultInstance();
+        } else {
+          if (filterCase_ == 6) {
+            return notBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.Not not = 6;</code>
+       */
+      public Builder setNot(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not value) {
+        if (notBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          filter_ = value;
+          onChanged();
+        } else {
+          notBuilder_.setMessage(value);
+        }
+        filterCase_ = 6;
+        return this;
+      }
+      /**
+       * <code>.Not not = 6;</code>
+       */
+      public Builder setNot(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.Builder builderForValue) {
+        if (notBuilder_ == null) {
+          filter_ = builderForValue.build();
+          onChanged();
+        } else {
+          notBuilder_.setMessage(builderForValue.build());
+        }
+        filterCase_ = 6;
+        return this;
+      }
+      /**
+       * <code>.Not not = 6;</code>
+       */
+      public Builder mergeNot(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not value) {
+        if (notBuilder_ == null) {
+          if (filterCase_ == 6 &&
+              filter_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.getDefaultInstance()) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) filter_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            filter_ = value;
+          }
+          onChanged();
+        } else {
+          if (filterCase_ == 6) {
+            notBuilder_.mergeFrom(value);
+          }
+          notBuilder_.setMessage(value);
+        }
+        filterCase_ = 6;
+        return this;
+      }
+      /**
+       * <code>.Not not = 6;</code>
+       */
+      public Builder clearNot() {
+        if (notBuilder_ == null) {
+          if (filterCase_ == 6) {
+            filterCase_ = 0;
+            filter_ = null;
+            onChanged();
+          }
+        } else {
+          if (filterCase_ == 6) {
+            filterCase_ = 0;
+            filter_ = null;
+          }
+          notBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.Not not = 6;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.Builder getNotBuilder() {
+        return getNotFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.Not not = 6;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.NotOrBuilder getNotOrBuilder() {
+        if ((filterCase_ == 6) && (notBuilder_ != null)) {
+          return notBuilder_.getMessageOrBuilder();
+        } else {
+          if (filterCase_ == 6) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.Not not = 6;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.NotOrBuilder> 
+          getNotFieldBuilder() {
+        if (notBuilder_ == null) {
+          if (!(filterCase_ == 6)) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.getDefaultInstance();
+          }
+          notBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.NotOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) filter_,
+                  getParentForChildren(),
+                  isClean());
+          filter_ = null;
+        }
+        filterCase_ = 6;
+        onChanged();;
+        return notBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder> cesqlBuilder_;
+      /**
+       * <code>.CESQL cesql = 7;</code>
+       * @return Whether the cesql field is set.
+       */
+      @java.lang.Override
+      public boolean hasCesql() {
+        return filterCase_ == 7;
+      }
+      /**
+       * <code>.CESQL cesql = 7;</code>
+       * @return The cesql.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL getCesql() {
+        if (cesqlBuilder_ == null) {
+          if (filterCase_ == 7) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
+        } else {
+          if (filterCase_ == 7) {
+            return cesqlBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.CESQL cesql = 7;</code>
+       */
+      public Builder setCesql(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL value) {
+        if (cesqlBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          filter_ = value;
+          onChanged();
+        } else {
+          cesqlBuilder_.setMessage(value);
+        }
+        filterCase_ = 7;
+        return this;
+      }
+      /**
+       * <code>.CESQL cesql = 7;</code>
+       */
+      public Builder setCesql(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder builderForValue) {
+        if (cesqlBuilder_ == null) {
+          filter_ = builderForValue.build();
+          onChanged();
+        } else {
+          cesqlBuilder_.setMessage(builderForValue.build());
+        }
+        filterCase_ = 7;
+        return this;
+      }
+      /**
+       * <code>.CESQL cesql = 7;</code>
+       */
+      public Builder mergeCesql(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL value) {
+        if (cesqlBuilder_ == null) {
+          if (filterCase_ == 7 &&
+              filter_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance()) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            filter_ = value;
+          }
+          onChanged();
+        } else {
+          if (filterCase_ == 7) {
+            cesqlBuilder_.mergeFrom(value);
+          }
+          cesqlBuilder_.setMessage(value);
+        }
+        filterCase_ = 7;
+        return this;
+      }
+      /**
+       * <code>.CESQL cesql = 7;</code>
+       */
+      public Builder clearCesql() {
+        if (cesqlBuilder_ == null) {
+          if (filterCase_ == 7) {
+            filterCase_ = 0;
+            filter_ = null;
+            onChanged();
+          }
+        } else {
+          if (filterCase_ == 7) {
+            filterCase_ = 0;
+            filter_ = null;
+          }
+          cesqlBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.CESQL cesql = 7;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder getCesqlBuilder() {
+        return getCesqlFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.CESQL cesql = 7;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder getCesqlOrBuilder() {
+        if ((filterCase_ == 7) && (cesqlBuilder_ != null)) {
+          return cesqlBuilder_.getMessageOrBuilder();
+        } else {
+          if (filterCase_ == 7) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.CESQL cesql = 7;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder> 
+          getCesqlFieldBuilder() {
+        if (cesqlBuilder_ == null) {
+          if (!(filterCase_ == 7)) {
+            filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.getDefaultInstance();
+          }
+          cesqlBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_,
+                  getParentForChildren(),
+                  isClean());
+          filter_ = null;
+        }
+        filterCase_ = 7;
+        onChanged();;
+        return cesqlBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:DialectedFilter)
+    }
+
+    // @@protoc_insertion_point(class_scope:DialectedFilter)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<DialectedFilter>
+        PARSER = new com.google.protobuf.AbstractParser<DialectedFilter>() {
+      @java.lang.Override
+      public DialectedFilter parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new DialectedFilter(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<DialectedFilter> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<DialectedFilter> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface FilterOrBuilder extends
       // @@protoc_insertion_point(interface_extends:Filter)
       com.google.protobuf.MessageOrBuilder {
@@ -3219,16 +10260,28 @@ public final class DataPlaneContract {
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getDiscardReplyOrBuilder();
 
     /**
+     * <pre>
+     * A filter for performing exact match against Cloud Events attributes
+     * </pre>
+     *
      * <code>.Filter filter = 5;</code>
      * @return Whether the filter field is set.
      */
     boolean hasFilter();
     /**
+     * <pre>
+     * A filter for performing exact match against Cloud Events attributes
+     * </pre>
+     *
      * <code>.Filter filter = 5;</code>
      * @return The filter.
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter getFilter();
     /**
+     * <pre>
+     * A filter for performing exact match against Cloud Events attributes
+     * </pre>
+     *
      * <code>.Filter filter = 5;</code>
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder getFilterOrBuilder();
@@ -3325,6 +10378,86 @@ public final class DataPlaneContract {
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType getKeyType();
 
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     * @return Whether the reference field is set.
+     */
+    boolean hasReference();
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     * @return The reference.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getReference();
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder();
+
+    /**
+     * <pre>
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
+     * </pre>
+     *
+     * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+     */
+    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> 
+        getDialectedFilterList();
+    /**
+     * <pre>
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
+     * </pre>
+     *
+     * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getDialectedFilter(int index);
+    /**
+     * <pre>
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
+     * </pre>
+     *
+     * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+     */
+    int getDialectedFilterCount();
+    /**
+     * <pre>
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
+     * </pre>
+     *
+     * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+     */
+    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+        getDialectedFilterOrBuilderList();
+    /**
+     * <pre>
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
+     * </pre>
+     *
+     * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getDialectedFilterOrBuilder(
+        int index);
+
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.ReplyStrategyCase getReplyStrategyCase();
   }
   /**
@@ -3345,6 +10478,7 @@ public final class DataPlaneContract {
       uid_ = "";
       deliveryOrder_ = 0;
       keyType_ = 0;
+      dialectedFilter_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -3367,6 +10501,7 @@ public final class DataPlaneContract {
       if (extensionRegistry == null) {
         throw new java.lang.NullPointerException();
       }
+      int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -3467,6 +10602,28 @@ public final class DataPlaneContract {
               keyType_ = rawValue;
               break;
             }
+            case 90: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder subBuilder = null;
+              if (reference_ != null) {
+                subBuilder = reference_.toBuilder();
+              }
+              reference_ = input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(reference_);
+                reference_ = subBuilder.buildPartial();
+              }
+
+              break;
+            }
+            case 98: {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                dialectedFilter_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              dialectedFilter_.add(
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.parser(), extensionRegistry));
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -3482,6 +10639,9 @@ public final class DataPlaneContract {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          dialectedFilter_ = java.util.Collections.unmodifiableList(dialectedFilter_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -3787,6 +10947,10 @@ public final class DataPlaneContract {
     public static final int FILTER_FIELD_NUMBER = 5;
     private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter filter_;
     /**
+     * <pre>
+     * A filter for performing exact match against Cloud Events attributes
+     * </pre>
+     *
      * <code>.Filter filter = 5;</code>
      * @return Whether the filter field is set.
      */
@@ -3795,6 +10959,10 @@ public final class DataPlaneContract {
       return filter_ != null;
     }
     /**
+     * <pre>
+     * A filter for performing exact match against Cloud Events attributes
+     * </pre>
+     *
      * <code>.Filter filter = 5;</code>
      * @return The filter.
      */
@@ -3803,6 +10971,10 @@ public final class DataPlaneContract {
       return filter_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.getDefaultInstance() : filter_;
     }
     /**
+     * <pre>
+     * A filter for performing exact match against Cloud Events attributes
+     * </pre>
+     *
      * <code>.Filter filter = 5;</code>
      */
     @java.lang.Override
@@ -3955,6 +11127,113 @@ public final class DataPlaneContract {
       return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.UNRECOGNIZED : result;
     }
 
+    public static final int REFERENCE_FIELD_NUMBER = 11;
+    private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference reference_;
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     * @return Whether the reference field is set.
+     */
+    @java.lang.Override
+    public boolean hasReference() {
+      return reference_ != null;
+    }
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     * @return The reference.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getReference() {
+      return reference_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance() : reference_;
+    }
+    /**
+     * <pre>
+     * Resource reference.
+     * This reference is used to reference the associated resource for data plane
+     * activities such as:
+     * - tagging metrics
+     * </pre>
+     *
+     * <code>.Reference reference = 11;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder() {
+      return getReference();
+    }
+
+    public static final int DIALECTEDFILTER_FIELD_NUMBER = 12;
+    private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> dialectedFilter_;
+    /**
+     * <pre>
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
+     * </pre>
+     *
+     * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+     */
+    @java.lang.Override
+    public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> getDialectedFilterList() {
+      return dialectedFilter_;
+    }
+    /**
+     * <pre>
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
+     * </pre>
+     *
+     * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+        getDialectedFilterOrBuilderList() {
+      return dialectedFilter_;
+    }
+    /**
+     * <pre>
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
+     * </pre>
+     *
+     * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+     */
+    @java.lang.Override
+    public int getDialectedFilterCount() {
+      return dialectedFilter_.size();
+    }
+    /**
+     * <pre>
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
+     * </pre>
+     *
+     * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getDialectedFilter(int index) {
+      return dialectedFilter_.get(index);
+    }
+    /**
+     * <pre>
+     * CNCF CloudEvents SubscriptionsAPI compliant filters
+     * </pre>
+     *
+     * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getDialectedFilterOrBuilder(
+        int index) {
+      return dialectedFilter_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -3998,6 +11277,12 @@ public final class DataPlaneContract {
       }
       if (keyType_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.String.getNumber()) {
         output.writeEnum(10, keyType_);
+      }
+      if (reference_ != null) {
+        output.writeMessage(11, getReference());
+      }
+      for (int i = 0; i < dialectedFilter_.size(); i++) {
+        output.writeMessage(12, dialectedFilter_.get(i));
       }
       unknownFields.writeTo(output);
     }
@@ -4044,6 +11329,14 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(10, keyType_);
       }
+      if (reference_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(11, getReference());
+      }
+      for (int i = 0; i < dialectedFilter_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(12, dialectedFilter_.get(i));
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -4077,6 +11370,13 @@ public final class DataPlaneContract {
       }
       if (deliveryOrder_ != other.deliveryOrder_) return false;
       if (keyType_ != other.keyType_) return false;
+      if (hasReference() != other.hasReference()) return false;
+      if (hasReference()) {
+        if (!getReference()
+            .equals(other.getReference())) return false;
+      }
+      if (!getDialectedFilterList()
+          .equals(other.getDialectedFilterList())) return false;
       if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
       switch (replyStrategyCase_) {
         case 3:
@@ -4123,6 +11423,14 @@ public final class DataPlaneContract {
       hash = (53 * hash) + deliveryOrder_;
       hash = (37 * hash) + KEYTYPE_FIELD_NUMBER;
       hash = (53 * hash) + keyType_;
+      if (hasReference()) {
+        hash = (37 * hash) + REFERENCE_FIELD_NUMBER;
+        hash = (53 * hash) + getReference().hashCode();
+      }
+      if (getDialectedFilterCount() > 0) {
+        hash = (37 * hash) + DIALECTEDFILTER_FIELD_NUMBER;
+        hash = (53 * hash) + getDialectedFilterList().hashCode();
+      }
       switch (replyStrategyCase_) {
         case 3:
           hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
@@ -4267,6 +11575,7 @@ public final class DataPlaneContract {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getDialectedFilterFieldBuilder();
         }
       }
       @java.lang.Override
@@ -4294,6 +11603,18 @@ public final class DataPlaneContract {
 
         keyType_ = 0;
 
+        if (referenceBuilder_ == null) {
+          reference_ = null;
+        } else {
+          reference_ = null;
+          referenceBuilder_ = null;
+        }
+        if (dialectedFilterBuilder_ == null) {
+          dialectedFilter_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          dialectedFilterBuilder_.clear();
+        }
         replyStrategyCase_ = 0;
         replyStrategy_ = null;
         return this;
@@ -4322,6 +11643,7 @@ public final class DataPlaneContract {
       @java.lang.Override
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress buildPartial() {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress(this);
+        int from_bitField0_ = bitField0_;
         result.consumerGroup_ = consumerGroup_;
         result.destination_ = destination_;
         if (replyStrategyCase_ == 3) {
@@ -4354,6 +11676,20 @@ public final class DataPlaneContract {
         }
         result.deliveryOrder_ = deliveryOrder_;
         result.keyType_ = keyType_;
+        if (referenceBuilder_ == null) {
+          result.reference_ = reference_;
+        } else {
+          result.reference_ = referenceBuilder_.build();
+        }
+        if (dialectedFilterBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0)) {
+            dialectedFilter_ = java.util.Collections.unmodifiableList(dialectedFilter_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.dialectedFilter_ = dialectedFilter_;
+        } else {
+          result.dialectedFilter_ = dialectedFilterBuilder_.build();
+        }
         result.replyStrategyCase_ = replyStrategyCase_;
         onBuilt();
         return result;
@@ -4427,6 +11763,35 @@ public final class DataPlaneContract {
         if (other.keyType_ != 0) {
           setKeyTypeValue(other.getKeyTypeValue());
         }
+        if (other.hasReference()) {
+          mergeReference(other.getReference());
+        }
+        if (dialectedFilterBuilder_ == null) {
+          if (!other.dialectedFilter_.isEmpty()) {
+            if (dialectedFilter_.isEmpty()) {
+              dialectedFilter_ = other.dialectedFilter_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureDialectedFilterIsMutable();
+              dialectedFilter_.addAll(other.dialectedFilter_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.dialectedFilter_.isEmpty()) {
+            if (dialectedFilterBuilder_.isEmpty()) {
+              dialectedFilterBuilder_.dispose();
+              dialectedFilterBuilder_ = null;
+              dialectedFilter_ = other.dialectedFilter_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              dialectedFilterBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getDialectedFilterFieldBuilder() : null;
+            } else {
+              dialectedFilterBuilder_.addAllMessages(other.dialectedFilter_);
+            }
+          }
+        }
         switch (other.getReplyStrategyCase()) {
           case REPLYURL: {
             replyStrategyCase_ = 3;
@@ -4489,6 +11854,7 @@ public final class DataPlaneContract {
         return this;
       }
 
+      private int bitField0_;
 
       private java.lang.Object consumerGroup_ = "";
       /**
@@ -5161,6 +12527,10 @@ public final class DataPlaneContract {
       private com.google.protobuf.SingleFieldBuilderV3<
           dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder> filterBuilder_;
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        * @return Whether the filter field is set.
        */
@@ -5168,6 +12538,10 @@ public final class DataPlaneContract {
         return filterBuilder_ != null || filter_ != null;
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        * @return The filter.
        */
@@ -5179,6 +12553,10 @@ public final class DataPlaneContract {
         }
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       public Builder setFilter(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter value) {
@@ -5195,6 +12573,10 @@ public final class DataPlaneContract {
         return this;
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       public Builder setFilter(
@@ -5209,6 +12591,10 @@ public final class DataPlaneContract {
         return this;
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       public Builder mergeFilter(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter value) {
@@ -5227,6 +12613,10 @@ public final class DataPlaneContract {
         return this;
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       public Builder clearFilter() {
@@ -5241,6 +12631,10 @@ public final class DataPlaneContract {
         return this;
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder getFilterBuilder() {
@@ -5249,6 +12643,10 @@ public final class DataPlaneContract {
         return getFilterFieldBuilder().getBuilder();
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder getFilterOrBuilder() {
@@ -5260,6 +12658,10 @@ public final class DataPlaneContract {
         }
       }
       /**
+       * <pre>
+       * A filter for performing exact match against Cloud Events attributes
+       * </pre>
+       *
        * <code>.Filter filter = 5;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
@@ -5692,6 +13094,500 @@ public final class DataPlaneContract {
         keyType_ = 0;
         onChanged();
         return this;
+      }
+
+      private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference reference_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> referenceBuilder_;
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       * @return Whether the reference field is set.
+       */
+      public boolean hasReference() {
+        return referenceBuilder_ != null || reference_ != null;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       * @return The reference.
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getReference() {
+        if (referenceBuilder_ == null) {
+          return reference_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance() : reference_;
+        } else {
+          return referenceBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public Builder setReference(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
+        if (referenceBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          reference_ = value;
+          onChanged();
+        } else {
+          referenceBuilder_.setMessage(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public Builder setReference(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder builderForValue) {
+        if (referenceBuilder_ == null) {
+          reference_ = builderForValue.build();
+          onChanged();
+        } else {
+          referenceBuilder_.setMessage(builderForValue.build());
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public Builder mergeReference(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
+        if (referenceBuilder_ == null) {
+          if (reference_ != null) {
+            reference_ =
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.newBuilder(reference_).mergeFrom(value).buildPartial();
+          } else {
+            reference_ = value;
+          }
+          onChanged();
+        } else {
+          referenceBuilder_.mergeFrom(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public Builder clearReference() {
+        if (referenceBuilder_ == null) {
+          reference_ = null;
+          onChanged();
+        } else {
+          reference_ = null;
+          referenceBuilder_ = null;
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder getReferenceBuilder() {
+        
+        onChanged();
+        return getReferenceFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder() {
+        if (referenceBuilder_ != null) {
+          return referenceBuilder_.getMessageOrBuilder();
+        } else {
+          return reference_ == null ?
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance() : reference_;
+        }
+      }
+      /**
+       * <pre>
+       * Resource reference.
+       * This reference is used to reference the associated resource for data plane
+       * activities such as:
+       * - tagging metrics
+       * </pre>
+       *
+       * <code>.Reference reference = 11;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> 
+          getReferenceFieldBuilder() {
+        if (referenceBuilder_ == null) {
+          referenceBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder>(
+                  getReference(),
+                  getParentForChildren(),
+                  isClean());
+          reference_ = null;
+        }
+        return referenceBuilder_;
+      }
+
+      private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> dialectedFilter_ =
+        java.util.Collections.emptyList();
+      private void ensureDialectedFilterIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          dialectedFilter_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>(dialectedFilter_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> dialectedFilterBuilder_;
+
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> getDialectedFilterList() {
+        if (dialectedFilterBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(dialectedFilter_);
+        } else {
+          return dialectedFilterBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public int getDialectedFilterCount() {
+        if (dialectedFilterBuilder_ == null) {
+          return dialectedFilter_.size();
+        } else {
+          return dialectedFilterBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getDialectedFilter(int index) {
+        if (dialectedFilterBuilder_ == null) {
+          return dialectedFilter_.get(index);
+        } else {
+          return dialectedFilterBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public Builder setDialectedFilter(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+        if (dialectedFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureDialectedFilterIsMutable();
+          dialectedFilter_.set(index, value);
+          onChanged();
+        } else {
+          dialectedFilterBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public Builder setDialectedFilter(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder builderForValue) {
+        if (dialectedFilterBuilder_ == null) {
+          ensureDialectedFilterIsMutable();
+          dialectedFilter_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          dialectedFilterBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public Builder addDialectedFilter(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+        if (dialectedFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureDialectedFilterIsMutable();
+          dialectedFilter_.add(value);
+          onChanged();
+        } else {
+          dialectedFilterBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public Builder addDialectedFilter(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+        if (dialectedFilterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureDialectedFilterIsMutable();
+          dialectedFilter_.add(index, value);
+          onChanged();
+        } else {
+          dialectedFilterBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public Builder addDialectedFilter(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder builderForValue) {
+        if (dialectedFilterBuilder_ == null) {
+          ensureDialectedFilterIsMutable();
+          dialectedFilter_.add(builderForValue.build());
+          onChanged();
+        } else {
+          dialectedFilterBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public Builder addDialectedFilter(
+          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder builderForValue) {
+        if (dialectedFilterBuilder_ == null) {
+          ensureDialectedFilterIsMutable();
+          dialectedFilter_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          dialectedFilterBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public Builder addAllDialectedFilter(
+          java.lang.Iterable<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> values) {
+        if (dialectedFilterBuilder_ == null) {
+          ensureDialectedFilterIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, dialectedFilter_);
+          onChanged();
+        } else {
+          dialectedFilterBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public Builder clearDialectedFilter() {
+        if (dialectedFilterBuilder_ == null) {
+          dialectedFilter_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          dialectedFilterBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public Builder removeDialectedFilter(int index) {
+        if (dialectedFilterBuilder_ == null) {
+          ensureDialectedFilterIsMutable();
+          dialectedFilter_.remove(index);
+          onChanged();
+        } else {
+          dialectedFilterBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder getDialectedFilterBuilder(
+          int index) {
+        return getDialectedFilterFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getDialectedFilterOrBuilder(
+          int index) {
+        if (dialectedFilterBuilder_ == null) {
+          return dialectedFilter_.get(index);  } else {
+          return dialectedFilterBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+           getDialectedFilterOrBuilderList() {
+        if (dialectedFilterBuilder_ != null) {
+          return dialectedFilterBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(dialectedFilter_);
+        }
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder addDialectedFilterBuilder() {
+        return getDialectedFilterFieldBuilder().addBuilder(
+            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder addDialectedFilterBuilder(
+          int index) {
+        return getDialectedFilterFieldBuilder().addBuilder(
+            index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * CNCF CloudEvents SubscriptionsAPI compliant filters
+       * </pre>
+       *
+       * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
+       */
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder> 
+           getDialectedFilterBuilderList() {
+        return getDialectedFilterFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+          getDialectedFilterFieldBuilder() {
+        if (dialectedFilterBuilder_ == null) {
+          dialectedFilterBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>(
+                  dialectedFilter_,
+                  ((bitField0_ & 0x00000001) != 0),
+                  getParentForChildren(),
+                  isClean());
+          dialectedFilter_ = null;
+        }
+        return dialectedFilterBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -16666,6 +24562,51 @@ public final class DataPlaneContract {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Empty_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_Exact_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_Exact_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_Exact_AttributesEntry_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_Exact_AttributesEntry_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_Prefix_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_Prefix_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_Suffix_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_Suffix_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_All_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_All_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_Any_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_Any_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_Not_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_Not_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_CESQL_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_CESQL_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_DialectedFilter_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_DialectedFilter_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Filter_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -16739,57 +24680,72 @@ public final class DataPlaneContract {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\016contract.proto\"\007\n\005Empty\"h\n\006Filter\022+\n\na" +
-      "ttributes\030\001 \003(\0132\027.Filter.AttributesEntry" +
-      "\0321\n\017AttributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005valu" +
-      "e\030\002 \001(\t:\0028\001\"\177\n\014EgressConfig\022\022\n\ndeadLette" +
-      "r\030\001 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030" +
-      "\003 \001(\0162\016.BackoffPolicy\022\024\n\014backoffDelay\030\004 " +
-      "\001(\004\022\017\n\007timeout\030\005 \001(\004\"\256\002\n\006Egress\022\025\n\rconsu" +
-      "merGroup\030\001 \001(\t\022\023\n\013destination\030\002 \001(\t\022\022\n\010r" +
-      "eplyUrl\030\003 \001(\tH\000\022&\n\024replyToOriginalTopic\030" +
-      "\004 \001(\0132\006.EmptyH\000\022\036\n\014discardReply\030\t \001(\0132\006." +
-      "EmptyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030" +
-      "\006 \001(\t\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConf" +
-      "ig\022%\n\rdeliveryOrder\030\010 \001(\0162\016.DeliveryOrde" +
-      "r\022\031\n\007keyType\030\n \001(\0162\010.KeyTypeB\017\n\rreplyStr" +
-      "ategy\"[\n\007Ingress\022!\n\013contentMode\030\001 \001(\0162\014." +
-      "ContentMode\022\016\n\004path\030\002 \001(\tH\000\022\016\n\004host\030\003 \001(" +
-      "\tH\000B\r\n\013ingressType\"K\n\tReference\022\014\n\004uuid\030" +
-      "\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017" +
-      "\n\007version\030\004 \001(\t\"`\n\017SecretReference\022\035\n\tre" +
-      "ference\030\001 \001(\0132\n.Reference\022.\n\022keyFieldRef" +
-      "erences\030\002 \003(\0132\022.KeyFieldReference\"C\n\021Key" +
-      "FieldReference\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005fie" +
-      "ld\030\003 \001(\0162\014.SecretField\"Y\n\024MultiSecretRef" +
-      "erence\022\033\n\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nr" +
-      "eferences\030\002 \003(\0132\020.SecretReference\"\202\001\n\023Cl" +
-      "oudEventOverrides\0228\n\nextensions\030\001 \003(\0132$." +
-      "CloudEventOverrides.ExtensionsEntry\0321\n\017E" +
-      "xtensionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001" +
-      "(\t:\0028\001\"\350\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topi" +
-      "cs\030\002 \003(\t\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007in" +
-      "gress\030\004 \001(\0132\010.Ingress\022#\n\014egressConfig\030\005 " +
-      "\001(\0132\r.EgressConfig\022\031\n\010egresses\030\006 \003(\0132\007.E" +
-      "gress\022\034\n\nabsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\na" +
-      "uthSecret\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAu" +
-      "thSecret\030\t \001(\0132\025.MultiSecretReferenceH\000\022" +
-      "1\n\023cloudEventOverrides\030\n \001(\0132\024.CloudEven" +
-      "tOverrides\022\035\n\treference\030\013 \001(\0132\n.Referenc" +
-      "eB\006\n\004Auth\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(" +
-      "\004\022\034\n\tresources\030\002 \003(\0132\t.Resource*,\n\rBacko" +
-      "ffPolicy\022\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n" +
-      "\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED" +
-      "\020\001*=\n\007KeyType\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n" +
-      "\n\006Double\020\002\022\r\n\tByteArray\020\003*)\n\013ContentMode" +
-      "\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013SecretFi" +
-      "eld\022\022\n\016SASL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010U" +
-      "SER_CRT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PAS" +
-      "SWORD\020\005*D\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SA" +
-      "SL_PLAINTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n" +
-      "*dev.knative.eventing.kafka.broker.contr" +
-      "actB\021DataPlaneContractZ\032control-plane/pk" +
-      "g/contractb\006proto3"
+      "\n\016contract.proto\"\007\n\005Empty\"f\n\005Exact\022*\n\nat" +
+      "tributes\030\001 \003(\0132\026.Exact.AttributesEntry\0321" +
+      "\n\017AttributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030" +
+      "\002 \001(\t:\0028\001\"+\n\006Prefix\022\021\n\tattribute\030\001 \001(\t\022\016" +
+      "\n\006prefix\030\002 \001(\t\"+\n\006Suffix\022\021\n\tattribute\030\001 " +
+      "\001(\t\022\016\n\006suffix\030\002 \001(\t\"(\n\003All\022!\n\007filters\030\001 " +
+      "\003(\0132\020.DialectedFilter\"(\n\003Any\022!\n\007filters\030" +
+      "\001 \003(\0132\020.DialectedFilter\"\'\n\003Not\022 \n\006filter" +
+      "\030\001 \001(\0132\020.DialectedFilter\"\033\n\005CESQL\022\022\n\nexp" +
+      "ression\030\001 \001(\t\"\302\001\n\017DialectedFilter\022\027\n\005exa" +
+      "ct\030\001 \001(\0132\006.ExactH\000\022\031\n\006prefix\030\002 \001(\0132\007.Pre" +
+      "fixH\000\022\031\n\006suffix\030\003 \001(\0132\007.SuffixH\000\022\023\n\003all\030" +
+      "\004 \001(\0132\004.AllH\000\022\023\n\003any\030\005 \001(\0132\004.AnyH\000\022\023\n\003no" +
+      "t\030\006 \001(\0132\004.NotH\000\022\027\n\005cesql\030\007 \001(\0132\006.CESQLH\000" +
+      "B\010\n\006filter\"h\n\006Filter\022+\n\nattributes\030\001 \003(\013" +
+      "2\027.Filter.AttributesEntry\0321\n\017AttributesE" +
+      "ntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\177\n\014" +
+      "EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\r\n\005retr" +
+      "y\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.Backoff" +
+      "Policy\022\024\n\014backoffDelay\030\004 \001(\004\022\017\n\007timeout\030" +
+      "\005 \001(\004\"\370\002\n\006Egress\022\025\n\rconsumerGroup\030\001 \001(\t\022" +
+      "\023\n\013destination\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000" +
+      "\022&\n\024replyToOriginalTopic\030\004 \001(\0132\006.EmptyH\000" +
+      "\022\036\n\014discardReply\030\t \001(\0132\006.EmptyH\000\022\027\n\006filt" +
+      "er\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001(\t\022#\n\014egress" +
+      "Config\030\007 \001(\0132\r.EgressConfig\022%\n\rdeliveryO" +
+      "rder\030\010 \001(\0162\016.DeliveryOrder\022\031\n\007keyType\030\n " +
+      "\001(\0162\010.KeyType\022\035\n\treference\030\013 \001(\0132\n.Refer" +
+      "ence\022)\n\017dialectedFilter\030\014 \003(\0132\020.Dialecte" +
+      "dFilterB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n\013c" +
+      "ontentMode\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002" +
+      " \001(\tH\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"K\n" +
+      "\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 " +
+      "\001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"`\n\017Se" +
+      "cretReference\022\035\n\treference\030\001 \001(\0132\n.Refer" +
+      "ence\022.\n\022keyFieldReferences\030\002 \003(\0132\022.KeyFi" +
+      "eldReference\"C\n\021KeyFieldReference\022\021\n\tsec" +
+      "retKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.SecretFiel" +
+      "d\"Y\n\024MultiSecretReference\022\033\n\010protocol\030\001 " +
+      "\001(\0162\t.Protocol\022$\n\nreferences\030\002 \003(\0132\020.Sec" +
+      "retReference\"\202\001\n\023CloudEventOverrides\0228\n\n" +
+      "extensions\030\001 \003(\0132$.CloudEventOverrides.E" +
+      "xtensionsEntry\0321\n\017ExtensionsEntry\022\013\n\003key" +
+      "\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010Resource\022\013" +
+      "\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrap" +
+      "Servers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress" +
+      "\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig\022\031\n" +
+      "\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAuth\030\007" +
+      " \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n.Ref" +
+      "erenceH\000\0220\n\017multiAuthSecret\030\t \001(\0132\025.Mult" +
+      "iSecretReferenceH\000\0221\n\023cloudEventOverride" +
+      "s\030\n \001(\0132\024.CloudEventOverrides\022\035\n\treferen" +
+      "ce\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"<\n\010Contract" +
+      "\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132" +
+      "\t.Resource*,\n\rBackoffPolicy\022\017\n\013Exponenti" +
+      "al\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r\n\tUNO" +
+      "RDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006Stri" +
+      "ng\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tByteArr" +
+      "ay\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUC" +
+      "TURED\020\001*a\n\013SecretField\022\022\n\016SASL_MECHANISM" +
+      "\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY" +
+      "\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol\022\r" +
+      "\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL" +
+      "\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.eventing" +
+      ".kafka.broker.contractB\021DataPlaneContrac" +
+      "tZ\032control-plane/pkg/contractb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -16801,8 +24757,62 @@ public final class DataPlaneContract {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Empty_descriptor,
         new java.lang.String[] { });
-    internal_static_Filter_descriptor =
+    internal_static_Exact_descriptor =
       getDescriptor().getMessageTypes().get(1);
+    internal_static_Exact_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_Exact_descriptor,
+        new java.lang.String[] { "Attributes", });
+    internal_static_Exact_AttributesEntry_descriptor =
+      internal_static_Exact_descriptor.getNestedTypes().get(0);
+    internal_static_Exact_AttributesEntry_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_Exact_AttributesEntry_descriptor,
+        new java.lang.String[] { "Key", "Value", });
+    internal_static_Prefix_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_Prefix_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_Prefix_descriptor,
+        new java.lang.String[] { "Attribute", "Prefix", });
+    internal_static_Suffix_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_Suffix_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_Suffix_descriptor,
+        new java.lang.String[] { "Attribute", "Suffix", });
+    internal_static_All_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_All_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_All_descriptor,
+        new java.lang.String[] { "Filters", });
+    internal_static_Any_descriptor =
+      getDescriptor().getMessageTypes().get(5);
+    internal_static_Any_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_Any_descriptor,
+        new java.lang.String[] { "Filters", });
+    internal_static_Not_descriptor =
+      getDescriptor().getMessageTypes().get(6);
+    internal_static_Not_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_Not_descriptor,
+        new java.lang.String[] { "Filter", });
+    internal_static_CESQL_descriptor =
+      getDescriptor().getMessageTypes().get(7);
+    internal_static_CESQL_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_CESQL_descriptor,
+        new java.lang.String[] { "Expression", });
+    internal_static_DialectedFilter_descriptor =
+      getDescriptor().getMessageTypes().get(8);
+    internal_static_DialectedFilter_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_DialectedFilter_descriptor,
+        new java.lang.String[] { "Exact", "Prefix", "Suffix", "All", "Any", "Not", "Cesql", "Filter", });
+    internal_static_Filter_descriptor =
+      getDescriptor().getMessageTypes().get(9);
     internal_static_Filter_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Filter_descriptor,
@@ -16814,49 +24824,49 @@ public final class DataPlaneContract {
         internal_static_Filter_AttributesEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
     internal_static_EgressConfig_descriptor =
-      getDescriptor().getMessageTypes().get(2);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_EgressConfig_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_EgressConfig_descriptor,
         new java.lang.String[] { "DeadLetter", "Retry", "BackoffPolicy", "BackoffDelay", "Timeout", });
     internal_static_Egress_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(11);
     internal_static_Egress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Egress_descriptor,
-        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "KeyType", "ReplyStrategy", });
+        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "KeyType", "Reference", "DialectedFilter", "ReplyStrategy", });
     internal_static_Ingress_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(12);
     internal_static_Ingress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Ingress_descriptor,
         new java.lang.String[] { "ContentMode", "Path", "Host", "IngressType", });
     internal_static_Reference_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_Reference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Reference_descriptor,
         new java.lang.String[] { "Uuid", "Namespace", "Name", "Version", });
     internal_static_SecretReference_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(14);
     internal_static_SecretReference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_SecretReference_descriptor,
         new java.lang.String[] { "Reference", "KeyFieldReferences", });
     internal_static_KeyFieldReference_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(15);
     internal_static_KeyFieldReference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_KeyFieldReference_descriptor,
         new java.lang.String[] { "SecretKey", "Field", });
     internal_static_MultiSecretReference_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(16);
     internal_static_MultiSecretReference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_MultiSecretReference_descriptor,
         new java.lang.String[] { "Protocol", "References", });
     internal_static_CloudEventOverrides_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(17);
     internal_static_CloudEventOverrides_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_CloudEventOverrides_descriptor,
@@ -16868,13 +24878,13 @@ public final class DataPlaneContract {
         internal_static_CloudEventOverrides_ExtensionsEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
     internal_static_Resource_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(18);
     internal_static_Resource_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Resource_descriptor,
         new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", "AbsentAuth", "AuthSecret", "MultiAuthSecret", "CloudEventOverrides", "Reference", "Auth", });
     internal_static_Contract_descriptor =
-      getDescriptor().getMessageTypes().get(11);
+      getDescriptor().getMessageTypes().get(19);
     internal_static_Contract_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Contract_descriptor,

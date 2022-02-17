@@ -23,11 +23,11 @@ else
 fi
 
 # the Broker Control Plane parts
-resolve_resources control-plane/config/100-broker $broker_cp_output_file "$image_prefix" "$tag"
-resolve_resources control-plane/config/100-sink $broker_cp_output_file "$image_prefix" "$tag"
-resolve_resources control-plane/config/100-source $broker_cp_output_file "$image_prefix" "$tag"
-resolve_resources control-plane/config/200-controller $broker_cp_output_file "$image_prefix" "$tag"
-resolve_resources control-plane/config/200-webhook $broker_cp_output_file "$image_prefix" "$tag"
+resolve_resources control-plane/config/eventing-kafka-broker/100-broker $broker_cp_output_file "$image_prefix" "$tag"
+resolve_resources control-plane/config/eventing-kafka-broker/100-sink $broker_cp_output_file "$image_prefix" "$tag"
+resolve_resources control-plane/config/eventing-kafka-broker/100-source $broker_cp_output_file "$image_prefix" "$tag"
+resolve_resources control-plane/config/eventing-kafka-broker/200-controller $broker_cp_output_file "$image_prefix" "$tag"
+resolve_resources control-plane/config/eventing-kafka-broker/200-webhook $broker_cp_output_file "$image_prefix" "$tag"
 
 # the Broker Data Plane folders
 

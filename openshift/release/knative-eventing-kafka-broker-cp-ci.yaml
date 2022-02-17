@@ -255,6 +255,25 @@ rules:
       - list
       - watch
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    kafka.eventing.knative.dev/release: v1.1.3
+  name: config-kafka-leader-election
+  namespace: knative-eventing
+  annotations:
+    knative.dev/example-checksum: "96896b00"
+data:
+  _example: |
+    leaseDuration: "15s"
+    renewDeadline: "10s"
+    retryPeriod: "2s"
+    buckets: "1"
+  leaseDuration: "15s"
+  renewDeadline: "10s"
+  retryPeriod: "2s"
+---
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -273,6 +292,25 @@ data:
         <appender-ref ref="jsonConsoleAppender"/>
       </root>
     </configuration>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-tracing
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: v1.1.3
+    knative.dev/config-propagation: original
+    knative.dev/config-category: eventing
+  annotations:
+    knative.dev/example-checksum: "4002b4c2"
+data:
+  _example: |
+    backend: "none"
+    zipkin-endpoint: "http://zipkin.istio-system.svc.cluster.local:9411/api/v2/spans"
+    stackdriver-project-id: "my-project"
+    debug: "false"
+    sample-rate: "0.1"
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -378,6 +416,46 @@ rules:
       - get
       - watch
   - apiGroups:
+      - "*"
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "apps"
+    resources:
+      - statefulsets
+      - statefulsets/scale
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+  - apiGroups:
+      - "internal.kafka.eventing.knative.dev"
+    resources:
+      - "consumers"
+      - "consumers/status"
+      - "consumergroups"
+      - "consumergroups/status"
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - patch
+      - update
+  - apiGroups:
+      - "internal.kafka.eventing.knative.dev"
+    resources:
+      - "consumers/finalizers"
+      - "consumergroups/finalizers"
+    verbs:
+      - update
+  - apiGroups:
       - "eventing.knative.dev"
     resources:
       - "brokers"
@@ -411,6 +489,15 @@ rules:
       - watch
       - update
       - patch
+  - apiGroups:
+      - messaging.knative.dev
+    resources:
+      - subscriptions
+      - subscriptions/status
+    verbs:
+      - get
+      - list
+      - watch
   - apiGroups:
       - messaging.knative.dev
     resources:
@@ -496,7 +583,7 @@ spec:
         kafka.eventing.knative.dev/release: v1.1.3
     spec:
       securityContext:
-        runAsNonRoot: false
+        runAsNonRoot: true
       serviceAccountName: kafka-controller
       affinity:
         podAntiAffinity:
@@ -580,6 +667,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: CONFIG_LEADERELECTION_NAME
+              value: config-kafka-leader-election
             - name: CONFIG_LOGGING_NAME
               value: config-logging
             - name: CONFIG_OBSERVABILITY_NAME
@@ -672,6 +761,14 @@ rules:
     verbs:
       - list
       - get
+      - watch
+  - apiGroups:
+      - messaging.knative.dev
+    resources:
+      - kafkachannels
+    verbs:
+      - get
+      - list
 ---
 ---
 apiVersion: v1
@@ -705,7 +802,7 @@ metadata:
   labels:
     kafka.eventing.knative.dev/release: v1.1.3
 webhooks:
-  - admissionReviewVersions: ["v1", "v1beta1"]
+  - admissionReviewVersions: [ "v1", "v1beta1" ]
     clientConfig:
       service:
         name: kafka-webhook-eventing
@@ -714,6 +811,23 @@ webhooks:
     failurePolicy: Fail
     name: defaulting.webhook.kafka.eventing.knative.dev
     timeoutSeconds: 2
+  - admissionReviewVersions: [ "v1", "v1beta1" ]
+    clientConfig:
+      service:
+        name: kafka-webhook-eventing
+        namespace: knative-eventing
+    sideEffects: None
+    failurePolicy: Fail
+    name: pods.defaulting.webhook.kafka.eventing.knative.dev
+    timeoutSeconds: 2
+    reinvocationPolicy: IfNeeded
+    matchPolicy: Equivalent
+    namespaceSelector:
+      matchLabels:
+        app.kubernetes.io/name: knative-eventing
+    objectSelector:
+      matchLabels:
+        app.kubernetes.io/component: kafka-dispatcher
 ---
 apiVersion: v1
 kind: Secret
@@ -769,7 +883,7 @@ spec:
               weight: 100
       serviceAccountName: kafka-webhook-eventing
       securityContext:
-        runAsNonRoot: false
+        runAsNonRoot: true
       containers:
         - name: kafka-webhook-eventing
           terminationMessagePolicy: FallbackToLogsOnError
@@ -786,6 +900,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: CONFIG_LEADERELECTION_NAME
+              value: config-kafka-leader-election
             - name: CONFIG_LOGGING_NAME
               value: config-logging
             - name: METRICS_DOMAIN
@@ -833,5 +949,8 @@ spec:
     - name: https-webhook
       port: 443
       targetPort: 8443
+    - name: http-metrics
+      port: 9090
+      targetPort: 9090
   selector:
     app: kafka-webhook-eventing

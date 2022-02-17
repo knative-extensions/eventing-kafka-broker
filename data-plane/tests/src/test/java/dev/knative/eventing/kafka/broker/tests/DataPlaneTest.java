@@ -36,7 +36,6 @@ import io.cloudevents.core.v1.CloudEventV1;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.debezium.kafka.KafkaCluster;
-import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.client.WebClient;
@@ -385,8 +384,7 @@ public class DataPlaneTest {
       ),
       new IngressRequestHandlerImpl(
         StrictRequestToRecordMapper.getInstance(),
-        mock(Counter.class),
-        mock(Counter.class)
+        Metrics.getRegistry()
       )
     );
 

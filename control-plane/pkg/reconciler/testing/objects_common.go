@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	"k8s.io/utils/pointer"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
@@ -38,8 +37,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-
-	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 )
 
 const (
@@ -49,10 +46,14 @@ const (
 	ServiceNamespace = "test-service-namespace"
 	ServiceName      = "test-service"
 
+	Service2Name = "test-service-2"
+
 	TriggerUUID = "e7185016-5d98-4b54-84e8-3b1cd4acc6b5"
 
 	SecretResourceVersion = "1234"
 	SecretUUID            = "a7185016-5d98-4b54-84e8-3b1cd4acc6b6"
+
+	SystemNamespace = "knative-eventing"
 )
 
 var (
@@ -69,6 +70,23 @@ func NewService(mutations ...func(*corev1.Service)) *corev1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ServiceName,
+			Namespace: ServiceNamespace,
+		},
+	}
+	for _, mut := range mutations {
+		mut(s)
+	}
+	return s
+}
+
+func NewService2(mutations ...func(*corev1.Service)) *corev1.Service {
+	s := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      Service2Name,
 			Namespace: ServiceNamespace,
 		},
 	}
@@ -301,20 +319,16 @@ func allocateStatusAnnotations(obj duckv1.KRShaped) {
 	}
 }
 
-func NewConsumerGroup() *internalscg.ConsumerGroup {
-	return &internalscg.ConsumerGroup{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: internalscg.ConsumerGroupGroupVersionKind.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      TriggerUUID,
-			Namespace: ServiceNamespace,
-		},
-		Spec: internalscg.ConsumerGroupSpec{
-			Template: internalscg.ConsumerTemplateSpec{
-				Spec: internalscg.ConsumerSpec{},
-			},
-			Replicas: pointer.Int32Ptr(1),
-		},
+type PodOption func(pod *corev1.Pod)
+
+func PodRunning() PodOption {
+	return func(pod *corev1.Pod) {
+		pod.Status.Phase = corev1.PodRunning
+	}
+}
+
+func PodAnnotations(annotations map[string]string) PodOption {
+	return func(pod *corev1.Pod) {
+		pod.Annotations = annotations
 	}
 }

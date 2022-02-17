@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSenderMock;
@@ -24,17 +26,25 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandlerMock;
 import io.cloudevents.CloudEvent;
+import io.micrometer.core.instrument.search.MeterNotFoundException;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,18 +58,38 @@ import static org.mockito.Mockito.when;
 @ExtendWith(VertxExtension.class)
 public class RecordDispatcherTest {
 
+  private static final ResourceContext resourceContext = new ResourceContext(
+    DataPlaneContract.Resource.newBuilder().build(),
+    DataPlaneContract.Egress.newBuilder().build()
+  );
+
+  static {
+    BackendRegistries.setupBackend(new MicrometerMetricsOptions()
+      .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+      .setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+  }
+
+  private PrometheusMeterRegistry registry;
+
+  @BeforeEach
+  public void setUp() {
+    registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+  }
+
   @Test
   public void shouldNotSendToSubscriberNorToDeadLetterSinkIfValueDoesntMatch() {
 
     final RecordDispatcherListener receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcherImpl(
+      resourceContext,
       value -> false,
       CloudEventSender.noop("subscriber send called"),
       CloudEventSender.noop("DLS send called"),
       new ResponseHandlerMock(),
       receiver,
-      null
+      null,
+      registry
     );
 
     final var record = record();
@@ -70,6 +100,10 @@ public class RecordDispatcherTest {
     verify(receiver, never()).successfullySentToSubscriber(any());
     verify(receiver, never()).successfullySentToDeadLetterSink(any());
     verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
+
+    assertNoEventCount();
+    assertNoEventDispatchLatency();
+    assertEventProcessingLatency();
   }
 
   @Test
@@ -79,12 +113,15 @@ public class RecordDispatcherTest {
     final RecordDispatcherListener receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcherImpl(
-      value -> true, new CloudEventSenderMock(
-      record -> {
-        sendCalled.set(true);
-        return Future.succeededFuture();
-      }
-    ),
+      resourceContext,
+      value -> true,
+      new CloudEventSenderMock(
+        record -> {
+          sendCalled.set(true);
+          simulateLatency(); // Simulate dispatch latency
+          return Future.succeededFuture();
+        }
+      ),
       new CloudEventSenderMock(
         record -> {
           fail("DLS send called");
@@ -93,7 +130,8 @@ public class RecordDispatcherTest {
       ),
       new ResponseHandlerMock(),
       receiver,
-      null
+      null,
+      registry
     );
     final var record = record();
     dispatcherHandler.dispatch(record);
@@ -104,6 +142,10 @@ public class RecordDispatcherTest {
     verify(receiver, never()).successfullySentToDeadLetterSink(any());
     verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
     verify(receiver, never()).recordDiscarded(any());
+
+    assertEventDispatchLatency();
+    assertEventProcessingLatency();
+    assertEventCount();
   }
 
   @Test
@@ -114,12 +156,15 @@ public class RecordDispatcherTest {
     final RecordDispatcherListener receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcherImpl(
-      value -> true, new CloudEventSenderMock(
-      record -> {
-        subscriberSenderSendCalled.set(true);
-        return Future.failedFuture("");
-      }
-    ),
+      resourceContext,
+      value -> true,
+      new CloudEventSenderMock(
+        record -> {
+          subscriberSenderSendCalled.set(true);
+          simulateLatency(); // Simulate dispatch latency
+          return Future.failedFuture("");
+        }
+      ),
       new CloudEventSenderMock(
         record -> {
           dlsSenderSendCalled.set(true);
@@ -127,7 +172,8 @@ public class RecordDispatcherTest {
         }
       ), new ResponseHandlerMock(),
       receiver,
-      null
+      null,
+      registry
     );
     final var record = record();
     dispatcherHandler.dispatch(record);
@@ -139,6 +185,10 @@ public class RecordDispatcherTest {
     verify(receiver, never()).successfullySentToSubscriber(any());
     verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
     verify(receiver, never()).recordDiscarded(any());
+
+    assertEventDispatchLatency();
+    assertEventProcessingLatency();
+    assertEventCount();
   }
 
   @Test
@@ -149,9 +199,11 @@ public class RecordDispatcherTest {
     final RecordDispatcherListener receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcherImpl(
+      resourceContext,
       value -> true, new CloudEventSenderMock(
       record -> {
         subscriberSenderSendCalled.set(true);
+        simulateLatency(); // Simulate dispatch latency
         return Future.failedFuture("");
       }
     ),
@@ -163,7 +215,8 @@ public class RecordDispatcherTest {
       ),
       new ResponseHandlerMock(),
       receiver,
-      null
+      null,
+      registry
     );
     final var record = record();
     dispatcherHandler.dispatch(record);
@@ -175,6 +228,10 @@ public class RecordDispatcherTest {
     verify(receiver, never()).successfullySentToDeadLetterSink(any());
     verify(receiver, never()).successfullySentToSubscriber(any());
     verify(receiver, never()).recordDiscarded(any());
+
+    assertEventDispatchLatency();
+    assertEventProcessingLatency();
+    assertEventCount();
   }
 
   @Test
@@ -183,17 +240,20 @@ public class RecordDispatcherTest {
     final RecordDispatcherListener receiver = offsetManagerMock();
 
     final var dispatcherHandler = new RecordDispatcherImpl(
+      resourceContext,
       value -> true,
       new CloudEventSenderMock(
         record -> {
           subscriberSenderSendCalled.set(true);
+          simulateLatency(); // Simulate dispatch latency
           return Future.failedFuture("");
         }
       ),
       CloudEventSender.noop("No DLS configured"),
       new ResponseHandlerMock(),
       receiver,
-      null
+      null,
+      registry
     );
     final var record = record();
     dispatcherHandler.dispatch(record);
@@ -204,6 +264,10 @@ public class RecordDispatcherTest {
     verify(receiver, never()).successfullySentToDeadLetterSink(any());
     verify(receiver, never()).successfullySentToSubscriber(any());
     verify(receiver, never()).recordDiscarded(any());
+
+    assertEventDispatchLatency();
+    assertEventProcessingLatency();
+    assertEventCount();
   }
 
   @Test
@@ -219,8 +283,14 @@ public class RecordDispatcherTest {
     when(deadLetterSender.close()).thenReturn(Future.succeededFuture());
 
     final RecordDispatcher recordDispatcher = new RecordDispatcherImpl(
-      Filter.noop(), subscriberSender,
-      deadLetterSender, sinkResponseHandler, offsetManagerMock(), null);
+      resourceContext,
+      Filter.noop(),
+      subscriberSender,
+      deadLetterSender,
+      sinkResponseHandler,
+      offsetManagerMock(),
+      null,
+      Metrics.getRegistry());
 
     recordDispatcher.close()
       .onFailure(context::failNow)
@@ -239,4 +309,87 @@ public class RecordDispatcherTest {
   public static RecordDispatcherListener offsetManagerMock() {
     return mock(RecordDispatcherListener.class);
   }
+
+  private void assertNoEventCount() {
+    var counterNotFound = false;
+    try {
+      assertThat(
+        registry
+          .get(Metrics.EVENTS_COUNT)
+          .counters()
+          .stream()
+          .reduce((a, b) -> b)
+          .isEmpty()
+      ).isTrue();
+    } catch (MeterNotFoundException ignored) {
+      counterNotFound = true;
+    }
+    assertThat(counterNotFound).isTrue();
+  }
+
+  private void assertEventCount() {
+    assertThat(
+      registry
+        .get(Metrics.EVENTS_COUNT)
+        .counters()
+        .stream()
+        .reduce((a, b) -> b)
+        .get()
+        .count()
+    ).isGreaterThan(0);
+  }
+
+
+  private void assertNoEventDispatchLatency() {
+    var dispatchLatencyNotFound = false;
+    try {
+      assertThat(
+        registry
+          .get(Metrics.EVENT_DISPATCH_LATENCY)
+          .summaries()
+          .stream()
+          .reduce((a, b) -> b)
+          .isEmpty()
+      ).isTrue();
+    } catch (MeterNotFoundException ignored) {
+      dispatchLatencyNotFound = true;
+    }
+    assertThat(dispatchLatencyNotFound).isTrue();
+  }
+
+  private void assertEventDispatchLatency() {
+    await().untilAsserted(() ->
+      assertThat(
+        registry
+          .get(Metrics.EVENT_DISPATCH_LATENCY)
+          .summaries()
+          .stream()
+          .reduce((a, b) -> b)
+          .get()
+          .max()
+      ).isGreaterThan(0)
+    );
+  }
+
+  private void assertEventProcessingLatency() {
+    await().untilAsserted(() ->
+      assertThat(
+        registry
+          .get(Metrics.EVENT_PROCESSING_LATENCY)
+          .summaries()
+          .stream()
+          .reduce((a, b) -> b)
+          .get()
+          .max()
+      ).isGreaterThan(0)
+    );
+  }
+
+  private void simulateLatency() {
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException ignored) {
+    }
+  }
+
 }

@@ -199,7 +199,10 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *con
 		return fmt.Errorf("failed to marshal contract: %w", err)
 	}
 
-	// Update config map data. TODO is it safe to update this config map? do we need to copy it?
+	// Update config map data.
+	if configMap.BinaryData == nil {
+		configMap.BinaryData = make(map[string][]byte, 1)
+	}
 	configMap.BinaryData[ConfigMapDataKey] = data
 
 	_, err = r.KubeClient.CoreV1().ConfigMaps(configMap.Namespace).Update(ctx, configMap, metav1.UpdateOptions{})
@@ -216,7 +219,7 @@ func (r *Reconciler) UpdateDispatcherPodsAnnotation(ctx context.Context, logger 
 	if errors != nil {
 		return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
 	}
-	return r.updatePodsAnnotation(ctx, logger, "dispatcher", volumeGeneration, pods)
+	return r.UpdatePodsAnnotation(ctx, logger, "dispatcher", volumeGeneration, pods)
 }
 
 func (r *Reconciler) UpdateReceiverPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
@@ -224,10 +227,10 @@ func (r *Reconciler) UpdateReceiverPodsAnnotation(ctx context.Context, logger *z
 	if errors != nil {
 		return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
 	}
-	return r.updatePodsAnnotation(ctx, logger, "receiver", volumeGeneration, pods)
+	return r.UpdatePodsAnnotation(ctx, logger, "receiver", volumeGeneration, pods)
 }
 
-func (r *Reconciler) updatePodsAnnotation(ctx context.Context, logger *zap.Logger, component string, volumeGeneration uint64, pods []*corev1.Pod) error {
+func (r *Reconciler) UpdatePodsAnnotation(ctx context.Context, logger *zap.Logger, component string, volumeGeneration uint64, pods []*corev1.Pod) error {
 
 	var errors error
 

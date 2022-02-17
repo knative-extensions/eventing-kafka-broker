@@ -35,7 +35,6 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
@@ -276,6 +275,11 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 		Destination:   destination.String(),
 		ConsumerGroup: string(trigger.UID),
 		Uid:           string(trigger.UID),
+		Reference: &contract.Reference{
+			Uuid:      string(trigger.GetUID()),
+			Namespace: trigger.GetNamespace(),
+			Name:      trigger.GetName(),
+		},
 	}
 
 	if trigger.Spec.Filter != nil && trigger.Spec.Filter.Attributes != nil {
@@ -325,11 +329,11 @@ func isKnativeKafkaBroker(broker *eventing.Broker) (bool, string) {
 
 func deliveryOrderFromString(val string) (contract.DeliveryOrder, error) {
 	switch strings.ToLower(val) {
-	case string(internals.Ordered):
+	case "ordered":
 		return contract.DeliveryOrder_ORDERED, nil
-	case string(internals.Unordered):
+	case "unordered":
 		return contract.DeliveryOrder_UNORDERED, nil
 	default:
-		return contract.DeliveryOrder_UNORDERED, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, internals.Ordered, internals.Unordered)
+		return contract.DeliveryOrder_UNORDERED, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, "ordered", "unordered")
 	}
 }

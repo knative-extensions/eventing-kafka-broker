@@ -39,8 +39,6 @@ import (
 
 	fakeeventingkafkabrokerclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-
-	fakeconsumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 )
 
 const (
@@ -62,7 +60,6 @@ func NewFactory(env *config.Env, ctor Ctor) Factory {
 		ctx, sourcesKafkaClient := fakeeventingkafkakafkaclient.With(ctx, listers.GetEventingKafkaObjects()...)
 		ctx, eventingKafkaClient := fakeeventingkafkabrokerclient.With(ctx, listers.GetEventingKafkaBrokerObjects()...)
 		ctx, kubeClient := fakekubeclient.With(ctx, listers.GetKubeObjects()...)
-		ctx, consumerGroupClient := fakeconsumergroupclient.With(ctx, listers.GetConsumerGroupObjects()...)
 
 		ctx, dynamicClient := fakedynamicclient.With(ctx,
 			newScheme(),
@@ -98,7 +95,6 @@ func NewFactory(env *config.Env, ctor Ctor) Factory {
 			eventingClient.PrependReactor("*", "*", reactor)
 			eventingKafkaClient.PrependReactor("*", "*", reactor)
 			sourcesKafkaClient.PrependReactor("*", "*", reactor)
-			consumerGroupClient.PrependReactor("*", "*", reactor)
 		}
 
 		actionRecorderList := ActionRecorderList{
@@ -107,7 +103,6 @@ func NewFactory(env *config.Env, ctor Ctor) Factory {
 			eventingClient,
 			eventingKafkaClient,
 			sourcesKafkaClient,
-			consumerGroupClient,
 		}
 
 		eventList := EventList{

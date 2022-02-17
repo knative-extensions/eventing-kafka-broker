@@ -15,13 +15,11 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import io.vertx.core.http.HttpServerRequest;
-
 /**
  * This class handles incoming ingress requests.
  */
 public interface IngressRequestHandler {
 
-  void handle(HttpServerRequest request, IngressProducer producer);
+  void handle(RequestContext request, IngressProducer producer);
 
 }
