@@ -35,6 +35,14 @@ const (
 
 var (
 	ConsumerLabels = map[string]string{"c": "C"}
+
+	ConsumerSourceLabel = map[string]string{
+		kafkainternals.ConsumerSelectorAnnotation: SourceUUID,
+	}
+
+	ConsumerTriggerLabel = map[string]string{
+		kafkainternals.ConsumerSelectorAnnotation: TriggerUUID,
+	}
 )
 
 type ConsumerGroupOption func(cg *kafkainternals.ConsumerGroup)

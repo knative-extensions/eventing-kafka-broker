@@ -61,10 +61,6 @@ var (
 	Formats = []string{base.Protobuf, base.Json}
 
 	ServiceURL = ServiceURLFrom(ServiceNamespace, ServiceName)
-
-	TriggerCGLabels = map[string]string{
-		"eventing.knative.dev/triggerUID": TriggerUUID,
-	}
 )
 
 func NewService(mutations ...func(*corev1.Service)) *corev1.Service {

@@ -103,7 +103,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 			Template: internalscg.ConsumerTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"eventing.knative.dev/sourceUID": string(ks.UID),
+						internalscg.ConsumerSelectorAnnotation: string(ks.UID),
 					},
 				},
 				Spec: internalscg.ConsumerSpec{

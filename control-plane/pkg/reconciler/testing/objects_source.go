@@ -39,10 +39,7 @@ const (
 )
 
 var (
-	SourceTopics   = []string{"t1", "t2"}
-	SourceCGLabels = map[string]string{
-		"eventing.knative.dev/sourceUID": SourceUUID,
-	}
+	SourceTopics = []string{"t1", "t2"}
 )
 
 func NewSource(options ...KRShapedOption) *sources.KafkaSource {

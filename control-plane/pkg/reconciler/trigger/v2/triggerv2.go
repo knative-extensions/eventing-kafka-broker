@@ -131,7 +131,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, trigger *eventin
 			Template: internalscg.ConsumerTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"eventing.knative.dev/triggerUID": string(trigger.UID),
+						internalscg.ConsumerSelectorAnnotation: string(trigger.UID),
 					},
 				},
 				Spec: internalscg.ConsumerSpec{
