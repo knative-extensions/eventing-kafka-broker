@@ -129,6 +129,11 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, trigger *eventin
 		},
 		Spec: internalscg.ConsumerGroupSpec{
 			Template: internalscg.ConsumerTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						internalscg.ConsumerSelectorAnnotation: string(trigger.UID),
+					},
+				},
 				Spec: internalscg.ConsumerSpec{
 					Topics:  []string{},                                                                               //todo get topics from broker resource
 					Configs: internalscg.ConsumerConfigs{Configs: map[string]string{"group.id": string(trigger.UID)}}, //todo get bootstrap.servers from broker resource

@@ -60,7 +60,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -98,7 +98,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -136,7 +136,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -159,7 +159,7 @@ func TestReconcileKind(t *testing.T) {
 						WithConsumerGroupName(SourceUUID),
 						WithConsumerGroupNamespace(SourceNamespace),
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
-						WithConsumerGroupLabels(nil),
+						WithConsumerGroupLabels(ConsumerSourceLabel),
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 							ConsumerConfigs(
@@ -194,7 +194,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
 					ConsumerGroupReplicas(1),
 					ConsumerGroupReady,
 				),
@@ -206,7 +206,7 @@ func TestReconcileKind(t *testing.T) {
 						WithConsumerGroupName(SourceUUID),
 						WithConsumerGroupNamespace(SourceNamespace),
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
-						WithConsumerGroupLabels(nil),
+						WithConsumerGroupLabels(ConsumerSourceLabel),
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 							ConsumerConfigs(
@@ -240,7 +240,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
 					ConsumerGroupReplicas(1),
 				),
 			},
@@ -252,7 +252,7 @@ func TestReconcileKind(t *testing.T) {
 						WithConsumerGroupName(SourceUUID),
 						WithConsumerGroupNamespace(SourceNamespace),
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
-						WithConsumerGroupLabels(nil),
+						WithConsumerGroupLabels(ConsumerSourceLabel),
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 							ConsumerConfigs(
@@ -285,7 +285,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -319,7 +319,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -353,7 +353,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -388,7 +388,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(

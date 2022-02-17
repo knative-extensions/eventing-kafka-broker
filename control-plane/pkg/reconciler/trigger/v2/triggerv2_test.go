@@ -83,7 +83,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(TriggerUUID),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(),
 						ConsumerConfigs(
@@ -121,7 +121,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(TriggerUUID),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(),
 						ConsumerConfigs(
@@ -160,7 +160,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(TriggerUUID),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(),
 						ConsumerConfigs(
@@ -227,7 +227,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(TriggerUUID),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
 					ConsumerGroupReady,
 				),
 			},
@@ -239,7 +239,7 @@ func TestReconcileKind(t *testing.T) {
 						WithConsumerGroupName(TriggerUUID),
 						WithConsumerGroupNamespace(triggerNamespace),
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
-						WithConsumerGroupLabels(nil),
+						WithConsumerGroupLabels(ConsumerTriggerLabel),
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(),
 							ConsumerConfigs(
@@ -276,7 +276,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(TriggerUUID),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
 				),
 			},
 			Key:         testKey,
@@ -287,7 +287,7 @@ func TestReconcileKind(t *testing.T) {
 						WithConsumerGroupName(TriggerUUID),
 						WithConsumerGroupNamespace(triggerNamespace),
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
-						WithConsumerGroupLabels(nil),
+						WithConsumerGroupLabels(ConsumerTriggerLabel),
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(),
 							ConsumerConfigs(
@@ -323,7 +323,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(TriggerUUID),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(),
 						ConsumerConfigs(
@@ -360,7 +360,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(TriggerUUID),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(),
 						ConsumerConfigs(
@@ -396,7 +396,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(TriggerUUID),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(),
 						ConsumerConfigs(
@@ -433,7 +433,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(TriggerUUID),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
-					WithConsumerGroupLabels(nil),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(),
 						ConsumerConfigs(
