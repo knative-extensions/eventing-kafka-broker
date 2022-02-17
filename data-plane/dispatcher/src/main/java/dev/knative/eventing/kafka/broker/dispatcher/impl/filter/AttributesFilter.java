@@ -88,12 +88,24 @@ public class AttributesFilter implements Filter {
   public boolean test(final CloudEvent event) {
 
     for (final var entry : attributes) {
-      if (!entry.getKey().apply(event).equals(entry.getValue())) {
+      if (!this.match(entry.getKey().apply(event), entry.getValue())) {
         return false;
       }
     }
 
     return true;
+  }
+
+
+  /**
+   * Matches the given value against the wanted value.
+   *
+   * @param wanted desired attribute value
+   * @param given  cloud event current attribute value
+   * @return
+   */
+  public boolean match(String given, String wanted) {
+    return given.equals(wanted);
   }
 
   private static <T> String getOrDefault(

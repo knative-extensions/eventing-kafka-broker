@@ -13,27 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
+package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
-import java.util.Set;
+import io.cloudevents.sql.EvaluationException;
+import io.cloudevents.sql.EvaluationRuntime;
+import io.cloudevents.sql.Expression;
+import io.cloudevents.sql.Parser;
+import io.cloudevents.sql.Type;
 
-public class AnyFilter implements Filter {
+public class SqlFilter implements Filter {
 
-  private final Set<Filter> filters;
+  private final Expression expression;
+  private final EvaluationRuntime runtime;
 
-  public AnyFilter(Set<Filter> filters) {
-    this.filters = filters;
+  public SqlFilter(String sqlExpression) {
+    this.expression = Parser.parseDefault(sqlExpression);
+    this.runtime = EvaluationRuntime.getDefault();
   }
 
   @Override
   public boolean test(CloudEvent cloudEvent) {
-    for (Filter filter : filters) {
-      if (filter.test(cloudEvent)) {
-        return true;
-      }
+    try {
+      Object value = this.expression.tryEvaluate(this.runtime, cloudEvent);
+      return (Boolean) this.runtime.cast(value, Type.BOOLEAN);
+    } catch (EvaluationException evaluationException) {
+      return false;
     }
-    return false;
   }
 }
