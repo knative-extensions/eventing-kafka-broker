@@ -28,6 +28,12 @@ var (
 
 func (c *ConsumerGroup) Validate(ctx context.Context) *apis.FieldError {
 	ctx = apis.WithinParent(ctx, c.ObjectMeta)
+	if apis.IsInUpdate(ctx) {
+		err := c.CheckImmutableFields(ctx, apis.GetBaseline(ctx).(*ConsumerGroup).Labels)
+		if err != nil {
+			return err
+		}
+	}
 	return c.Spec.Validate(ctx).ViaField("spec")
 }
 
@@ -47,4 +53,14 @@ func (cts *ConsumerTemplateSpec) Validate(ctx context.Context) *apis.FieldError 
 		specCtx = apis.WithinUpdate(ctx, apis.GetBaseline(ctx).(*ConsumerGroup).Spec.Template.Spec)
 	}
 	return cts.Spec.Validate(specCtx).ViaField("spec")
+}
+
+func (c *ConsumerGroup) CheckImmutableFields(ctx context.Context, original map[string]string) *apis.FieldError {
+	if orig, ok := original[KafkaChannelNameLabel]; ok {
+		if new, ok := c.Labels[KafkaChannelNameLabel]; !ok || orig != new {
+			return ErrImmutableField("Consumer Group Label",
+				"Removing or modifying the consumer group label is unsupported")
+		}
+	}
+	return nil
 }

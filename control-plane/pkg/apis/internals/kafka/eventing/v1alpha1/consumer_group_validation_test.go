@@ -20,6 +20,7 @@ import (
 	"context"
 	"testing"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
@@ -410,6 +411,223 @@ func TestConsumerGroup_Validate(t *testing.T) {
 							PodBind: &PodBind{
 								PodName:      "p-0",
 								PodNamespace: "ns-2",
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid with channel label",
+			ctx: apis.WithinUpdate(context.Background(), &ConsumerGroup{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						KafkaChannelNameLabel: "channelName", // identifies the new ConsumerGroup as associated with this channel
+					},
+				},
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Topics: []string{"t1"},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{
+									"group.id":          "g1",
+									"bootstrap.servers": "kafka:9092",
+								},
+							},
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{},
+							},
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+							PodBind: &PodBind{
+								PodName:      "p-0",
+								PodNamespace: "ns",
+							},
+						},
+					},
+				},
+			}),
+			given: &ConsumerGroup{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						KafkaChannelNameLabel: "channelName", // identifies the new ConsumerGroup as associated with this channel
+					},
+				},
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Topics: []string{"t1"},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{
+									"group.id":          "g1",
+									"bootstrap.servers": "kafka:9092",
+								},
+							},
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{},
+							},
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+							PodBind: &PodBind{
+								PodName:      "p-0",
+								PodNamespace: "ns",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid without channel label",
+			ctx: apis.WithinUpdate(context.Background(), &ConsumerGroup{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						KafkaChannelNameLabel: "channelName", // identifies the new ConsumerGroup as associated with this channel
+					},
+				},
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Topics: []string{"t1"},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{
+									"group.id":          "g1",
+									"bootstrap.servers": "kafka:9092",
+								},
+							},
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{},
+							},
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+							PodBind: &PodBind{
+								PodName:      "p-0",
+								PodNamespace: "ns",
+							},
+						},
+					},
+				},
+			}),
+			given: &ConsumerGroup{
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Topics: []string{"t1"},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{
+									"group.id":          "g1",
+									"bootstrap.servers": "kafka:9092",
+								},
+							},
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{},
+							},
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+							PodBind: &PodBind{
+								PodName:      "p-0",
+								PodNamespace: "ns",
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid with different channel label value",
+			ctx: apis.WithinUpdate(context.Background(), &ConsumerGroup{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						KafkaChannelNameLabel: "channelName", // identifies the new ConsumerGroup as associated with this channel
+					},
+				},
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Topics: []string{"t1"},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{
+									"group.id":          "g1",
+									"bootstrap.servers": "kafka:9092",
+								},
+							},
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{},
+							},
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+							PodBind: &PodBind{
+								PodName:      "p-0",
+								PodNamespace: "ns",
+							},
+						},
+					},
+				},
+			}),
+			given: &ConsumerGroup{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						KafkaChannelNameLabel: "channelBadName", // identifies the new ConsumerGroup as associated with this channel
+					},
+				},
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Topics: []string{"t1"},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{
+									"group.id":          "g1",
+									"bootstrap.servers": "kafka:9092",
+								},
+							},
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{},
+							},
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+							PodBind: &PodBind{
+								PodName:      "p-0",
+								PodNamespace: "ns",
 							},
 						},
 					},
