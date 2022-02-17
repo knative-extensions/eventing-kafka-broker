@@ -22,33 +22,32 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/protobuf/testing/protocmp"
-	"k8s.io/utils/pointer"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-	"knative.dev/pkg/tracker"
-
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-
 	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
-	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
-	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/tracker"
 
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/apis/feature"
+	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
+	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
+	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+
+	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
@@ -2304,6 +2303,7 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			EventingClient: eventingclient.Get(ctx),
 			Resolver:       nil,
 			Env:            env,
+			Flags:          &feature.Flags{},
 		}
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))
