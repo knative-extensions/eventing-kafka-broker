@@ -13,27 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
+package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
 
-import dev.knative.eventing.kafka.broker.dispatcher.Filter;
-import io.cloudevents.CloudEvent;
-import java.util.Set;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
+import java.util.Map;
 
-public class AllFilter implements Filter {
+public class ExactFilter extends AttributesFilter {
 
-  private final Set<Filter> filters;
-
-  public AllFilter(Set<Filter> filters) {
-    this.filters = filters;
-  }
-
-  @Override
-  public boolean test(CloudEvent cloudEvent) {
-    for (Filter filter : filters) {
-      if (!filter.test(cloudEvent)) {
-        return false;
-      }
-    }
-    return true;
+  public ExactFilter(Map<String, String> attributes) {
+    super(attributes);
   }
 }

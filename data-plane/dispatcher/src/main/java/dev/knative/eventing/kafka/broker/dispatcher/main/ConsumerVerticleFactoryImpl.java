@@ -29,9 +29,9 @@ import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherMutatorChain;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.ResourceContext;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseToHttpEndpointHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseToKafkaTopicHandler;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.ResourceContext;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.BaseConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventOverridesMutator;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
@@ -40,6 +40,12 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AllFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AnyFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.NotFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.PrefixFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.SqlFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.SuffixFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
@@ -56,14 +62,10 @@ import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -72,6 +74,10 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -148,72 +154,99 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
     final BaseConsumerVerticle.Initializer initializer = (vertx, consumerVerticle) ->
       authProvider.getCredentials(resource).onSuccess(credentials -> {
-        KafkaClientsAuth.attachCredentials(consumerConfigs, credentials);
-        KafkaClientsAuth.attachCredentials(producerConfigs, credentials);
+       KafkaClientsAuth.attachCredentials(consumerConfigs, credentials);
+       KafkaClientsAuth.attachCredentials(producerConfigs, credentials);
 
-        final KafkaConsumer<Object, CloudEvent> consumer = createConsumer(vertx, consumerConfigs);
-        AutoCloseable metricsCloser = Metrics.register(consumer.unwrap());
+       final KafkaConsumer<Object, CloudEvent> consumer = createConsumer(vertx, consumerConfigs);
+       AutoCloseable metricsCloser = Metrics.register(consumer.unwrap());
 
-        final var egressConfig =
-          egress.hasEgressConfig() ?
-            egress.getEgressConfig() :
-            resource.getEgressConfig();
+       final var egressConfig =
+         egress.hasEgressConfig() ?
+           egress.getEgressConfig() :
+           resource.getEgressConfig();
 
-        final var egressSubscriberSender = createConsumerRecordSender(
-          vertx,
-          egress.getDestination(),
-          egressConfig
-        );
+       final var egressSubscriberSender = createConsumerRecordSender(
+         vertx,
+         egress.getDestination(),
+         egressConfig
+       );
 
-        final var egressDeadLetterSender = hasDeadLetterSink(egressConfig)
-          ? createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), egressConfig)
-          : NO_DEAD_LETTER_SINK_SENDER;
+       final var egressDeadLetterSender = hasDeadLetterSink(egressConfig)
+         ? createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), egressConfig)
+         : NO_DEAD_LETTER_SINK_SENDER;
 
-        final var filter = egress.hasFilter() ?
-          new AttributesFilter(egress.getFilter().getAttributesMap()) :
-          Filter.noop();
+       final var filter = getFilter(egress);
 
-        final var responseHandler = getResponseHandler(egress,
-          () -> getResponseToKafkaTopicHandler(vertx, producerConfigs, resource),
-          () -> new ResponseToHttpEndpointHandler(createConsumerRecordSender(vertx, egress.getReplyUrl(), egressConfig)));
-        final var commitIntervalMs = Integer.parseInt(String.valueOf(consumerConfigs.get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG)));
+       final var responseHandler = getResponseHandler(egress,
+         () -> getResponseToKafkaTopicHandler(vertx, producerConfigs, resource),
+         () -> new ResponseToHttpEndpointHandler(createConsumerRecordSender(vertx, egress.getReplyUrl(), egressConfig)));
+       final var commitIntervalMs = Integer.parseInt(String.valueOf(consumerConfigs.get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG)));
 
-        final var recordDispatcher = new RecordDispatcherMutatorChain(
-          new RecordDispatcherImpl(
-            new ResourceContext(resource, egress),
-            filter,
-            egressSubscriberSender,
-            egressDeadLetterSender,
-            responseHandler,
-            new OffsetManager(vertx, consumer, eventsSentCounter::increment, commitIntervalMs),
-            ConsumerTracer.create(
-              ((VertxInternal) vertx).tracer(),
-              new KafkaClientOptions()
-                .setConfig(consumerConfigs)
-                // Make sure the policy is propagate for the manually instantiated consumer tracer
-                .setTracingPolicy(TracingPolicy.PROPAGATE)
-            ),
-            Metrics.getRegistry()
-          ),
-          new CloudEventOverridesMutator(resource.getCloudEventOverrides())
-        );
+       final var recordDispatcher = new RecordDispatcherMutatorChain(
+         new RecordDispatcherImpl(
+           new ResourceContext(resource, egress),
+           filter,
+           egressSubscriberSender,
+           egressDeadLetterSender,
+           responseHandler,
+           new OffsetManager(vertx, consumer, eventsSentCounter::increment, commitIntervalMs),
+           ConsumerTracer.create(
+             ((VertxInternal) vertx).tracer(),
+             new KafkaClientOptions()
+               .setConfig(consumerConfigs)
+               // Make sure the policy is propagate for the manually instantiated consumer tracer
+               .setTracingPolicy(TracingPolicy.PROPAGATE)
+           ),
+           Metrics.getRegistry()
+         ),
+         new CloudEventOverridesMutator(resource.getCloudEventOverrides())
+       );
 
-        // Set all the built objects in the consumer verticle
-        consumerVerticle.setRecordDispatcher(recordDispatcher);
-        consumerVerticle.setConsumer(consumer);
-        consumerVerticle.setCloser(AsyncCloseable.wrapAutoCloseable(metricsCloser));
-      })
-        .mapEmpty();
+       // Set all the built objects in the consumer verticle
+       consumerVerticle.setRecordDispatcher(recordDispatcher);
+       consumerVerticle.setConsumer(consumer);
+       consumerVerticle.setCloser(AsyncCloseable.wrapAutoCloseable(metricsCloser));
+     })
+       .mapEmpty();
 
     return getConsumerVerticle(deliveryOrder, initializer, new HashSet<>(resource.getTopicsList()));
+  }
+
+  private Filter getFilter(DataPlaneContract.Egress egress) {
+    // Dialected filters should override the attributes filter
+    if (egress.getDialectedFilterCount() > 0) {
+      return getFilter(egress.getDialectedFilterList());
+    } else if (egress.hasFilter()) {
+      return new AttributesFilter(egress.getFilter().getAttributesMap());
+    }
+    return Filter.noop();
+  }
+
+  private Filter getFilter(DataPlaneContract.DialectedFilter filter) {
+    return switch (filter.getFilterCase()) {
+      case EXACT -> new AttributesFilter(filter.getExact().getAttributesMap());
+      case PREFIX -> new PrefixFilter(filter.getPrefix().getAttributesMap());
+      case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttributesMap());
+      case NOT -> new NotFilter(getFilter(filter.getNot().getFilter()));
+      case ANY -> new AnyFilter(filter.getAny().getFiltersList().stream().
+        map(this::getFilter).collect(Collectors.toSet()));
+      case ALL -> new AllFilter(filter.getAll().getFiltersList().stream().
+        map(this::getFilter).collect(Collectors.toSet()));
+      case CESQL -> new SqlFilter(filter.getCesql().getExpression());
+      default -> Filter.noop();
+    };
+  }
+
+  private Filter getFilter(List<DataPlaneContract.DialectedFilter> filters) {
+    return new AllFilter(filters.stream().map(this::getFilter).collect(Collectors.toSet()));
   }
 
   static ResponseHandler getResponseHandler(final DataPlaneContract.Egress egress,
                                             final Supplier<ResponseHandler> kafkaSupplier,
                                             final Supplier<ResponseHandler> httpSupplier) {
-    if(egress.hasReplyUrl()){
+    if (egress.hasReplyUrl()) {
       return httpSupplier.get();
-    } else if(egress.hasReplyToOriginalTopic()){
+    } else if (egress.hasReplyToOriginalTopic()) {
       return kafkaSupplier.get();
     } else if (egress.hasDiscardReply()) {
       return new NoopResponseHandler();
