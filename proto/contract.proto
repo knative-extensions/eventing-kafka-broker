@@ -11,6 +11,48 @@ option java_outer_classname = "DataPlaneContract";
 // Protobuf include nightmare? No thanks!
 message Empty {}
 
+message Exact {
+  map<string, string> attributes = 1;
+}
+
+message Prefix {
+  string attribute = 1;
+  string prefix = 2;
+}
+
+message Suffix {
+  string attribute = 1;
+  string suffix = 2;
+}
+
+message All {
+  repeated DialectedFilter filters = 1;
+}
+
+message Any {
+  repeated DialectedFilter filters = 1;
+}
+
+message Not {
+  DialectedFilter filter = 1;
+}
+
+message CESQL {
+  string expression = 1;
+}
+
+message DialectedFilter {
+  oneof filter {
+    Exact exact = 1;
+    Prefix prefix = 2;
+    Suffix suffix = 3;
+    All all = 4;
+    Any any = 5;
+    Not not = 6;
+    CESQL cesql = 7;
+  }
+}
+
 message Filter {
   // attributes filters events by exact match on event context attributes.
   // Each key in the map is compared with the equivalent key in the event
@@ -81,7 +123,7 @@ message Egress {
     // Discard response.
     Empty discardReply = 9;
   }
-
+  // A filter for performing exact match against Cloud Events attributes
   Filter filter = 5;
 
   // Id of the egress
@@ -105,6 +147,9 @@ message Egress {
   // activities such as:
   // - tagging metrics
   Reference reference = 11;
+
+  // CNCF CloudEvents SubscriptionsAPI compliant filters
+  repeated DialectedFilter dialectedFilter = 12;
 }
 
 // CloudEvent content mode
