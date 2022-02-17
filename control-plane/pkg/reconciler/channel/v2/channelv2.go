@@ -194,11 +194,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 
 	// Get data plane config data.
 	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
-	if err != nil && ct == nil {
+	if err != nil || ct == nil {
 		return statusConditionManager.FailedToGetDataFromConfigMap(err)
-	}
-	if ct == nil {
-		ct = &contract.Contract{}
 	}
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
@@ -276,7 +273,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		},
 	}
 
-	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusReady {
+	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusReady); status != prober.StatusReady {
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
@@ -347,7 +344,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 			Name:      channel.GetName(),
 		},
 	}
-	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusNotReady {
+	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusNotReady); status != prober.StatusNotReady {
 		return nil // Object will get re-queued once probe status changes.
 	}
 
@@ -499,6 +496,11 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 		},
 		Spec: internalscg.ConsumerGroupSpec{
 			Template: internalscg.ConsumerTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"eventing.knative.dev/subscriberUID": string(s.UID),
+					},
+				},
 				Spec: internalscg.ConsumerSpec{
 					Topics: []string{topicName},
 					Configs: internalscg.ConsumerConfigs{Configs: map[string]string{
