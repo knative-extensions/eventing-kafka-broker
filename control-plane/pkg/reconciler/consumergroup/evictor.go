@@ -24,9 +24,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/scheduler"
+	"knative.dev/pkg/apis/duck"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/logging"
 
@@ -69,7 +71,7 @@ func (e evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv
 		return fmt.Errorf("failed to mark pod unschedulable: %w", err)
 	}
 
-	cg, err := e.InternalsClient.
+	cgBefore, err := e.InternalsClient.
 		ConsumerGroups(key.Namespace).
 		Get(e.ctx, key.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
@@ -80,21 +82,34 @@ func (e evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv
 	}
 
 	// Do not evict when the consumer group isn't scheduled yet.
-	if cg.IsNotScheduled() {
+	if cgBefore.IsNotScheduled() {
 		return nil
 	}
 
-	cg.Status.Placements = removePlacement(cg.GetPlacements(), from)
+	cgAfter := cgBefore.DeepCopy()
+	cgAfter.Status.Placements = removePlacement(cgAfter.GetPlacements(), from)
 
-	_, err = e.InternalsClient.
-		ConsumerGroups(cg.GetNamespace()).
-		Update(e.ctx, cg, metav1.UpdateOptions{})
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
+	jsonPatch, err := duck.CreatePatch(cgBefore, cgAfter)
 	if err != nil {
-		return fmt.Errorf("failed to update consumer group %s/%s: %w", cg.GetNamespace(), cg.GetName(), err)
+		return err
 	}
+
+	// If there is nothing to patch, we are good, just return.
+	// Empty patch is [], hence we check for that.
+	if len(jsonPatch) == 0 {
+		return nil
+	}
+
+	patch, err := jsonPatch.MarshalJSON()
+	if err != nil {
+		return fmt.Errorf("marshaling JSON patch: %w", err)
+	}
+
+	patched, err := e.InternalsClient.ConsumerGroups(key.Namespace).Patch(e.ctx, key.Name, types.JSONPatchType, patch, metav1.PatchOptions{}, "status")
+	if err != nil {
+		return fmt.Errorf("failed patching: %w", err)
+	}
+	logging.FromContext(e.ctx).Debugw("Patched resource", zap.Any("patch", patch), zap.Any("patched", patched))
 
 	return nil
 }
@@ -113,13 +128,11 @@ func (e *evictor) disablePodScheduling(logger *zap.Logger, pod *corev1.Pod) erro
 		return fmt.Errorf("failed to update pod %s/%s: %w", pod.GetNamespace(), pod.GetName(), err)
 	}
 
-	logger.Info("Marked pod as unschedulable")
-
 	return nil
 }
 
 func removePlacement(before []eventingduckv1alpha1.Placement, toRemove *eventingduckv1alpha1.Placement) []eventingduckv1alpha1.Placement {
-	after := make([]eventingduckv1alpha1.Placement, 0, len(before))
+	after := make([]eventingduckv1alpha1.Placement, 0, len(before)-1)
 	for _, p := range before {
 		if p.PodName != toRemove.PodName {
 			after = append(after, p)
