@@ -74,6 +74,10 @@ func (cg *ConsumerGroup) GetPlacements() []eventingduckv1alpha1.Placement {
 	return cg.Status.Placements
 }
 
+func (cg *ConsumerGroup) GetResourceVersion() string {
+	return cg.ObjectMeta.ResourceVersion
+}
+
 type ConsumerGroupSpec struct {
 
 	// Template is the object that describes the consumer that will be created if
