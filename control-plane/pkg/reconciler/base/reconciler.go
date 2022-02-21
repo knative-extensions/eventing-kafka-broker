@@ -106,20 +106,22 @@ func isAtLeastOneRunning(pods []*corev1.Pod) bool {
 	return false
 }
 
-func (r *Reconciler) GetOrCreateDataPlaneConfigMap(ctx context.Context) (*corev1.ConfigMap, error) {
+type ConfigMapOption func(cm *corev1.ConfigMap)
+
+func (r *Reconciler) GetOrCreateDataPlaneConfigMap(ctx context.Context, options ...ConfigMapOption) (*corev1.ConfigMap, error) {
 
 	cm, err := r.KubeClient.CoreV1().
 		ConfigMaps(r.DataPlaneConfigMapNamespace).
 		Get(ctx, r.DataPlaneConfigMapName, metav1.GetOptions{})
 
 	if apierrors.IsNotFound(err) {
-		cm, err = r.createDataPlaneConfigMap(ctx)
+		cm, err = r.createDataPlaneConfigMap(ctx, options)
 	}
 
 	return cm, err
 }
 
-func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context) (*corev1.ConfigMap, error) {
+func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context, options []ConfigMapOption) (*corev1.ConfigMap, error) {
 	cm := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
@@ -130,6 +132,11 @@ func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context) (*corev1.Conf
 			ConfigMapDataKey: []byte(""),
 		},
 	}
+
+	for _, opt := range options {
+		opt(cm)
+	}
+
 	return r.KubeClient.CoreV1().ConfigMaps(r.DataPlaneConfigMapNamespace).Create(ctx, cm, metav1.CreateOptions{})
 }
 

@@ -91,7 +91,9 @@ func TestReconcileKind(t *testing.T) {
 					DataPlaneConfigFormat:       base.Json,
 					DataPlaneConfigMapNamespace: SystemNamespace,
 					DataPlaneConfigMapName:      "p1",
-				}, []byte("")),
+				}, []byte(""),
+					DispatcherPodAsOwnerReference("p1"),
+				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&config.Env{
@@ -129,7 +131,9 @@ func TestReconcileKind(t *testing.T) {
 							},
 						},
 					},
-				}),
+				},
+					DispatcherPodAsOwnerReference("p1"),
+				),
 				{Object: NewDispatcherPod("p1",
 					PodRunning(),
 					PodAnnotations(map[string]string{
@@ -204,7 +208,10 @@ func TestReconcileKind(t *testing.T) {
 					DataPlaneConfigFormat:       base.Json,
 					DataPlaneConfigMapNamespace: SystemNamespace,
 					DataPlaneConfigMapName:      "p1",
-				}, []byte("")),
+				},
+					[]byte(""),
+					DispatcherPodAsOwnerReference("p1"),
+				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&config.Env{
@@ -248,7 +255,9 @@ func TestReconcileKind(t *testing.T) {
 							},
 						},
 					},
-				}),
+				},
+					DispatcherPodAsOwnerReference("p1"),
+				),
 				{Object: NewDispatcherPod("p1",
 					PodRunning(),
 					PodAnnotations(map[string]string{
