@@ -357,9 +357,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
-					WithConsumerGroupMetaLabels(map[string]string{
-						kafkainternals.KafkaChannelNameLabel: ChannelName,
-					}),
+					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
@@ -412,9 +410,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
-					WithConsumerGroupMetaLabels(map[string]string{
-						kafkainternals.KafkaChannelNameLabel: ChannelName,
-					}),
+					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
@@ -466,9 +462,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
-					WithConsumerGroupMetaLabels(map[string]string{
-						kafkainternals.KafkaChannelNameLabel: ChannelName,
-					}),
+					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
@@ -517,9 +511,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
-					WithConsumerGroupMetaLabels(map[string]string{
-						kafkainternals.KafkaChannelNameLabel: ChannelName,
-					}),
+					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					ConsumerGroupReady,
 				),
 			},
@@ -546,9 +538,7 @@ func TestReconcileKind(t *testing.T) {
 						WithConsumerGroupName(Subscription1UUID),
 						WithConsumerGroupNamespace(ChannelNamespace),
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
-						WithConsumerGroupMetaLabels(map[string]string{
-							kafkainternals.KafkaChannelNameLabel: ChannelName,
-						}),
+						WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 						WithConsumerGroupLabels(ConsumerSubscription1Label),
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(ChannelTopic()),
@@ -595,9 +585,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
-					WithConsumerGroupMetaLabels(map[string]string{
-						kafkainternals.KafkaChannelNameLabel: ChannelName,
-					}),
+					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
@@ -654,9 +642,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
-					WithConsumerGroupMetaLabels(map[string]string{
-						kafkainternals.KafkaChannelNameLabel: ChannelName,
-					}),
+					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
@@ -671,9 +657,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(Subscription2UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
-					WithConsumerGroupMetaLabels(map[string]string{
-						kafkainternals.KafkaChannelNameLabel: ChannelName,
-					}),
+					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription2Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
@@ -724,9 +708,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(Subscription2UUID), //removed subscriber
 					WithConsumerGroupNamespace(ChannelNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
-					WithConsumerGroupMetaLabels(map[string]string{
-						kafkainternals.KafkaChannelNameLabel: ChannelName,
-					}),
+					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription2Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
@@ -746,9 +728,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
-					WithConsumerGroupMetaLabels(map[string]string{
-						kafkainternals.KafkaChannelNameLabel: ChannelName,
-					}),
+					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
@@ -962,9 +942,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
-					WithConsumerGroupMetaLabels(map[string]string{
-						kafkainternals.KafkaChannelNameLabel: ChannelName,
-					}),
+					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),

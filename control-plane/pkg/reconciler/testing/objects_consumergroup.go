@@ -44,6 +44,14 @@ var (
 		kafkainternals.ConsumerLabelSelector: TriggerUUID,
 	}
 
+	ConsumerSubscription1Label = map[string]string{
+		kafkainternals.ConsumerLabelSelector: Subscription1UUID,
+	}
+
+	ConsumerSubscription2Label = map[string]string{
+		kafkainternals.ConsumerLabelSelector: Subscription2UUID,
+	}
+
 	OwnerAsTriggerLabel = map[string]string{
 		kafkainternals.UserFacingResourceLabelSelector: "trigger",
 	}
@@ -54,14 +62,7 @@ var (
 
 	OwnerAsChannelLabel = map[string]string{
 		kafkainternals.UserFacingResourceLabelSelector: "kafkachannel",
-	}
-
-	ConsumerSubscription1Label = map[string]string{
-		kafkainternals.ConsumerLabelSelector: Subscription1UUID,
-	}
-
-	ConsumerSubscription2Label = map[string]string{
-		kafkainternals.ConsumerLabelSelector: Subscription2UUID,
+		kafkainternals.KafkaChannelNameLabel:           ChannelName,
 	}
 )
 
