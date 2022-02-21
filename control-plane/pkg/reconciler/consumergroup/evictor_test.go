@@ -45,6 +45,48 @@ func TestEvictorEvictSuccess(t *testing.T) {
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "name"},
 	}
+
+	pod1 := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{Namespace: "ns1", Name: "name1"},
+	}
+
+	cg := &kafkainternals.ConsumerGroup{
+		ObjectMeta: metav1.ObjectMeta{Namespace: "ns-1", Name: "cg-name"},
+		Status: kafkainternals.ConsumerGroupStatus{
+			PlaceableStatus: eventingduckv1alpha1.PlaceableStatus{Placeable: eventingduckv1alpha1.Placeable{
+				MaxAllowedVReplicas: pointer.Int32(1),
+				Placements: []eventingduckv1alpha1.Placement{
+					{PodName: pod.GetName(), VReplicas: 1},
+					{PodName: pod1.GetName(), VReplicas: 1},
+				},
+			}},
+		},
+	}
+	cg.GetConditionSet().Manage(cg.GetStatus()).InitializeConditions()
+	cg.MarkScheduleSucceeded()
+
+	placement := &eventingduckv1alpha1.Placement{PodName: pod1.GetName(), VReplicas: 1}
+
+	ctx, _ = kubeclient.With(ctx, pod)
+	ctx, _ = kafkainternalsclient.With(ctx, cg)
+
+	e := newEvictor(ctx)
+	err := e.evict(pod, cg, placement)
+
+	require.Nil(t, err)
+}
+
+func TestEvictorNoEviction(t *testing.T) {
+	ctx, _ := reconcilertesting.SetupFakeContext(t)
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "name"},
+	}
+
+	pod1 := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{Namespace: "ns1", Name: "name1"},
+	}
+
 	cg := &kafkainternals.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns-1", Name: "cg-name"},
 		Status: kafkainternals.ConsumerGroupStatus{
@@ -59,7 +101,7 @@ func TestEvictorEvictSuccess(t *testing.T) {
 	cg.GetConditionSet().Manage(cg.GetStatus()).InitializeConditions()
 	cg.MarkScheduleSucceeded()
 
-	placement := &eventingduckv1alpha1.Placement{PodName: pod.GetName(), VReplicas: 1}
+	placement := &eventingduckv1alpha1.Placement{PodName: pod1.GetName(), VReplicas: 1}
 
 	ctx, _ = kubeclient.With(ctx, pod)
 	ctx, _ = kafkainternalsclient.With(ctx, cg)
