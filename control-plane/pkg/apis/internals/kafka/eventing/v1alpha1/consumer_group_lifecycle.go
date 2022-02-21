@@ -28,7 +28,7 @@ const (
 	// Labels
 	KafkaChannelNameLabel                = "kafkachannel-name"
 	ConsumerSelectorAnnotation           = "kafka.eventing.knative.dev/metadata.uid"
-	UserFacingResourceSelectorAnnotation = "kafka.eventing.knative.dev/metadata.kind"
+	UserFacingResourceLabelSelector = "kafka.eventing.knative.dev/metadata.kind"
 )
 
 var (
