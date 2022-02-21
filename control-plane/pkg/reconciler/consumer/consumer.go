@@ -23,8 +23,10 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
+	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
@@ -327,7 +329,7 @@ func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkain
 
 	b := r.commonReconciler(p, cmName)
 
-	cm, err := b.GetOrCreateDataPlaneConfigMap(ctx)
+	cm, err := b.GetOrCreateDataPlaneConfigMap(ctx, podOwnerReference(p))
 	if err != nil {
 		return false, fmt.Errorf("failed to get or create data plane ConfigMap %s/%s: %w", p.GetNamespace(), cmName, err)
 	}
@@ -386,4 +388,17 @@ func cmNameFromPod(p *corev1.Pod, c *kafkainternals.Consumer) (string, error) {
 		return "", fmt.Errorf("failed to get data plane volume %s in pod %s/%s", eventing.ConfigMapVolumeName, c.Spec.PodBind.PodNamespace, c.Spec.PodBind.PodName)
 	}
 	return vDp.ConfigMap.Name, nil
+}
+
+func podOwnerReference(p *corev1.Pod) base.ConfigMapOption {
+	return func(cm *corev1.ConfigMap) {
+		cm.OwnerReferences = append(cm.OwnerReferences, metav1.OwnerReference{
+			APIVersion:         p.APIVersion,
+			Kind:               p.Kind,
+			Name:               p.Name,
+			UID:                p.UID,
+			Controller:         pointer.Bool(true),
+			BlockOwnerDeletion: pointer.Bool(true),
+		})
+	}
 }

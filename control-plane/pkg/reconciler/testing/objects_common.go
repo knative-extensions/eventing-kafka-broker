@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
+	"k8s.io/utils/pointer"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
@@ -55,6 +56,8 @@ const (
 	SecretUUID            = "a7185016-5d98-4b54-84e8-3b1cd4acc6b6"
 
 	SystemNamespace = "knative-eventing"
+
+	DispatcherPodUUID = "a7185016-5d98-4b54-84e8-3b1cd4acc6bp"
 )
 
 var (
@@ -107,11 +110,11 @@ func ServiceURLFrom(ns, name string) string {
 	return fmt.Sprintf("http://%s.%s.svc.cluster.local", name, ns)
 }
 
-func NewConfigMapWithBinaryData(env *config.Env, data []byte) runtime.Object {
+func NewConfigMapWithBinaryData(env *config.Env, data []byte, options ...reconcilertesting.ConfigMapOption) runtime.Object {
 	return reconcilertesting.NewConfigMap(
 		env.DataPlaneConfigMapName,
 		env.DataPlaneConfigMapNamespace,
-		func(configMap *corev1.ConfigMap) {
+		append(options, func(configMap *corev1.ConfigMap) {
 			if configMap.BinaryData == nil {
 				configMap.BinaryData = make(map[string][]byte, 1)
 			}
@@ -119,7 +122,7 @@ func NewConfigMapWithBinaryData(env *config.Env, data []byte) runtime.Object {
 				data = []byte("")
 			}
 			configMap.BinaryData[base.ConfigMapDataKey] = data
-		},
+		})...,
 	)
 }
 
@@ -133,7 +136,7 @@ func NewConfigMapWithTextData(namespace, name string, data map[string]string) ru
 	)
 }
 
-func NewConfigMapFromContract(contract *contract.Contract, env *config.Env) runtime.Object {
+func NewConfigMapFromContract(contract *contract.Contract, env *config.Env, options ...reconcilertesting.ConfigMapOption) runtime.Object {
 	var data []byte
 	var err error
 	if env.DataPlaneConfigFormat == base.Protobuf {
@@ -145,10 +148,10 @@ func NewConfigMapFromContract(contract *contract.Contract, env *config.Env) runt
 		panic(err)
 	}
 
-	return NewConfigMapWithBinaryData(env, data)
+	return NewConfigMapWithBinaryData(env, data, options...)
 }
 
-func ConfigMapUpdate(env *config.Env, contract *contract.Contract) clientgotesting.UpdateActionImpl {
+func ConfigMapUpdate(env *config.Env, contract *contract.Contract, options ...reconcilertesting.ConfigMapOption) clientgotesting.UpdateActionImpl {
 	return clientgotesting.NewUpdateAction(
 		schema.GroupVersionResource{
 			Group:    "*",
@@ -156,7 +159,7 @@ func ConfigMapUpdate(env *config.Env, contract *contract.Contract) clientgotesti
 			Resource: "ConfigMap",
 		},
 		env.DataPlaneConfigMapNamespace,
-		NewConfigMapFromContract(contract, env),
+		NewConfigMapFromContract(contract, env, options...),
 	)
 }
 
@@ -324,9 +327,14 @@ type PodOption func(pod *corev1.Pod)
 
 func NewDispatcherPod(name string, options ...PodOption) *corev1.Pod {
 	p := &corev1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Pod",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: SystemNamespace,
+			UID:       DispatcherPodUUID,
 		},
 		Spec: corev1.PodSpec{
 			Volumes: []corev1.Volume{{
@@ -347,6 +355,20 @@ func NewDispatcherPod(name string, options ...PodOption) *corev1.Pod {
 	}
 
 	return p
+}
+
+func DispatcherPodAsOwnerReference(name string) reconcilertesting.ConfigMapOption {
+	d := NewDispatcherPod(name)
+	return func(configMap *corev1.ConfigMap) {
+		configMap.OwnerReferences = append(configMap.OwnerReferences, metav1.OwnerReference{
+			APIVersion:         d.APIVersion,
+			Kind:               d.Kind,
+			Name:               d.Name,
+			UID:                d.UID,
+			Controller:         pointer.Bool(true),
+			BlockOwnerDeletion: pointer.Bool(true),
+		})
+	}
 }
 
 func PodRunning() PodOption {
