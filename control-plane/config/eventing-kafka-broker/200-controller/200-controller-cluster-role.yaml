@@ -105,6 +105,7 @@ rules:
       - watch
       - patch
       - update
+      - delete
   - apiGroups:
       - "internal.kafka.eventing.knative.dev"
     resources:
@@ -112,7 +113,7 @@ rules:
       - "consumergroups/finalizers"
     verbs:
       - update
-
+      - delete
   # Eventing resources and statuses we care about
   - apiGroups:
       - "eventing.knative.dev"
