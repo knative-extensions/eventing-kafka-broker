@@ -105,11 +105,11 @@ func (e evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv
 		return fmt.Errorf("marshaling JSON patch: %w", err)
 	}
 
-	patched, err := e.InternalsClient.ConsumerGroups(key.Namespace).Patch(e.ctx, key.Name, types.JSONPatchType, patch, metav1.PatchOptions{}, "status")
+	_, err = e.InternalsClient.ConsumerGroups(key.Namespace).Patch(e.ctx, key.Name, types.JSONPatchType, patch, metav1.PatchOptions{}, "status")
 	if err != nil {
 		return fmt.Errorf("failed patching: %w", err)
 	}
-	logging.FromContext(e.ctx).Debugw("Patched resource", zap.Any("patch", patch), zap.Any("patched", patched))
+	logger.Debug("Patched consumer group with placement changes", zap.Any("patch", patch))
 
 	return nil
 }
@@ -127,6 +127,8 @@ func (e *evictor) disablePodScheduling(logger *zap.Logger, pod *corev1.Pod) erro
 	if err != nil {
 		return fmt.Errorf("failed to update pod %s/%s: %w", pod.GetNamespace(), pod.GetName(), err)
 	}
+
+	logger.Info("Marked pod as unschedulable")
 
 	return nil
 }
