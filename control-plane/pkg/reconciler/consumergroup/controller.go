@@ -147,15 +147,15 @@ func getSelectorLabel(ssName string) map[string]string {
 	switch ssName {
 	case kafkainternals.SourceStatefulSetName:
 		selectorLabel = map[string]string{
-			kafkainternals.UserFacingResourceSelectorAnnotation: "kafkasource",
+			kafkainternals.UserFacingResourceLabelSelector: "kafkasource",
 		}
 	case kafkainternals.BrokerStatefulSetName:
 		selectorLabel = map[string]string{
-			kafkainternals.UserFacingResourceSelectorAnnotation: "trigger",
+			kafkainternals.UserFacingResourceLabelSelector: "trigger",
 		}
 	case kafkainternals.ChannelStatefulSetName:
 		selectorLabel = map[string]string{
-			kafkainternals.UserFacingResourceSelectorAnnotation: "kafkachannel",
+			kafkainternals.UserFacingResourceLabelSelector: "kafkachannel",
 		}
 	}
 	return selectorLabel

@@ -37,23 +37,23 @@ var (
 	ConsumerLabels = map[string]string{"c": "C"}
 
 	ConsumerSourceLabel = map[string]string{
-		kafkainternals.ConsumerSelectorAnnotation: SourceUUID,
+		kafkainternals.ConsumerLabelSelector: SourceUUID,
 	}
 
 	ConsumerTriggerLabel = map[string]string{
-		kafkainternals.ConsumerSelectorAnnotation: TriggerUUID,
+		kafkainternals.ConsumerLabelSelector: TriggerUUID,
 	}
 
 	OwnerAsTriggerLabel = map[string]string{
-		kafkainternals.UserFacingResourceSelectorAnnotation: "trigger",
+		kafkainternals.UserFacingResourceLabelSelector: "trigger",
 	}
 
 	OwnerAsSourceLabel = map[string]string{
-		kafkainternals.UserFacingResourceSelectorAnnotation: "kafkasource",
+		kafkainternals.UserFacingResourceLabelSelector: "kafkasource",
 	}
 
 	OwnerAsChannelLabel = map[string]string{
-		kafkainternals.UserFacingResourceSelectorAnnotation: "kafkachannel",
+		kafkainternals.UserFacingResourceLabelSelector: "kafkachannel",
 	}
 )
 
