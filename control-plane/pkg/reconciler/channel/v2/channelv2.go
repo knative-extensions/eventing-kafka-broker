@@ -489,7 +489,8 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 				*kmeta.NewControllerRef(channel),
 			},
 			Labels: map[string]string{
-				internalscg.KafkaChannelNameLabel: channel.Name, // Identifies the new ConsumerGroup as associated with this channel (same namespace)
+				internalscg.KafkaChannelNameLabel:                channel.Name, // Identifies the new ConsumerGroup as associated with this channel (same namespace)
+				internalscg.UserFacingResourceSelectorAnnotation: strings.ToLower(channel.GetGroupVersionKind().Kind),
 			},
 		},
 		Spec: internalscg.ConsumerGroupSpec{

@@ -83,9 +83,9 @@ func NewController(ctx context.Context) *controller.Impl {
 	}
 
 	schedulers := map[string]scheduler.Scheduler{
-		KafkaSourceScheduler:  createKafkaScheduler(ctx, c, "kafka-source-dispatcher"),
-		KafkaTriggerScheduler: createKafkaScheduler(ctx, c, "kafka-broker-dispatcher"),
-		KafkaChannelScheduler: createKafkaScheduler(ctx, c, "kafka-channel-dispatcher"),
+		KafkaSourceScheduler:  createKafkaScheduler(ctx, c, kafkainternals.SourceStatefulSetName),
+		KafkaTriggerScheduler: createKafkaScheduler(ctx, c, kafkainternals.BrokerStatefulSetName),
+		KafkaChannelScheduler: createKafkaScheduler(ctx, c, kafkainternals.ChannelStatefulSetName),
 	}
 
 	r := &Reconciler{
@@ -97,9 +97,10 @@ func NewController(ctx context.Context) *controller.Impl {
 	}
 
 	impl := cgreconciler.NewImpl(ctx, r)
+	consumerInformer := consumer.Get(ctx)
 
 	consumergroup.Get(ctx).Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
-	consumer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
+	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
 
 	return impl
 }
@@ -127,7 +128,7 @@ func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string)
 			DeSchedulerPolicy:   c.DeSchedulerPolicy,
 		},
 		func() ([]scheduler.VPod, error) {
-			consumerGroups, err := lister.List(labels.Everything())
+			consumerGroups, err := lister.List(labels.SelectorFromSet(getSelectorLabel(ssName)))
 			if err != nil {
 				return nil, err
 			}
@@ -138,6 +139,26 @@ func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string)
 			return vpods, nil
 		},
 	)
+}
+
+func getSelectorLabel(ssName string) map[string]string {
+	//TODO remove hardcoded kinds
+	var selectorLabel map[string]string
+	switch ssName {
+	case kafkainternals.SourceStatefulSetName:
+		selectorLabel = map[string]string{
+			kafkainternals.UserFacingResourceSelectorAnnotation: "kafkasource",
+		}
+	case kafkainternals.BrokerStatefulSetName:
+		selectorLabel = map[string]string{
+			kafkainternals.UserFacingResourceSelectorAnnotation: "trigger",
+		}
+	case kafkainternals.ChannelStatefulSetName:
+		selectorLabel = map[string]string{
+			kafkainternals.UserFacingResourceSelectorAnnotation: "kafkachannel",
+		}
+	}
+	return selectorLabel
 }
 
 func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister scheduler.VPodLister) scheduler.Scheduler {

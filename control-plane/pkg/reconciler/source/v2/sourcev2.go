@@ -98,6 +98,9 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 			OwnerReferences: []metav1.OwnerReference{
 				*kmeta.NewControllerRef(ks),
 			},
+			Labels: map[string]string{
+				internalscg.UserFacingResourceSelectorAnnotation: strings.ToLower(ks.GetGroupVersionKind().Kind),
+			},
 		},
 		Spec: internalscg.ConsumerGroupSpec{
 			Template: internalscg.ConsumerTemplateSpec{

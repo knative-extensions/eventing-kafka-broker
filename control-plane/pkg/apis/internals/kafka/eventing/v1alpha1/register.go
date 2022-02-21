@@ -63,3 +63,15 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil
 }
+
+const (
+	SourceStatefulSetName  = "kafka-source-dispatcher"
+	ChannelStatefulSetName = "kafka-channel-dispatcher"
+	BrokerStatefulSetName  = "kafka-broker-dispatcher"
+)
+
+func IsKnownStatefulSet(name string) bool {
+	return SourceStatefulSetName == name ||
+		name == ChannelStatefulSetName ||
+		name == BrokerStatefulSetName
+}
