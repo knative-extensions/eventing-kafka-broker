@@ -8,7 +8,7 @@ fail() { echo; echo "$*"; exit 1; }
 cat >> "$TMPDIR"/reporterConfig <<EOF
   reporter_config:
     slack:
-      channel: '#knative-eventing'
+      channel: '#knative-eventing-ci'
       job_states_to_report:
       - success
       - failure
