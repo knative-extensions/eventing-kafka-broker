@@ -393,8 +393,8 @@ func cmNameFromPod(p *corev1.Pod, c *kafkainternals.Consumer) (string, error) {
 func podOwnerReference(p *corev1.Pod) base.ConfigMapOption {
 	return func(cm *corev1.ConfigMap) {
 		cm.OwnerReferences = append(cm.OwnerReferences, metav1.OwnerReference{
-			APIVersion:         p.APIVersion,
-			Kind:               p.Kind,
+			APIVersion:         corev1.SchemeGroupVersion.String(),
+			Kind:               "Pod",
 			Name:               p.Name,
 			UID:                p.UID,
 			Controller:         pointer.Bool(true),
