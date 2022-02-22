@@ -3,7 +3,7 @@ module knative.dev/eventing-kafka-broker
 go 1.16
 
 require (
-	github.com/Shopify/sarama v1.30.1
+	github.com/Shopify/sarama v1.31.1
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.4.1
 	github.com/cloudevents/sdk-go/v2 v2.8.0
 	github.com/google/go-cmp v0.5.6
@@ -12,7 +12,7 @@ require (
 	github.com/pierdipi/sacura v0.0.0-20210302185533-982357fc042b
 	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.7.0
-	github.com/xdg-go/scram v1.0.2
+	github.com/xdg-go/scram v1.1.0
 	go.uber.org/atomic v1.9.0
 	go.uber.org/multierr v1.6.0
 	go.uber.org/zap v1.19.1
