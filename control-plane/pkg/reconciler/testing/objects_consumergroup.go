@@ -37,11 +37,23 @@ var (
 	ConsumerLabels = map[string]string{"c": "C"}
 
 	ConsumerSourceLabel = map[string]string{
-		kafkainternals.ConsumerSelectorAnnotation: SourceUUID,
+		kafkainternals.ConsumerLabelSelector: SourceUUID,
 	}
 
 	ConsumerTriggerLabel = map[string]string{
-		kafkainternals.ConsumerSelectorAnnotation: TriggerUUID,
+		kafkainternals.ConsumerLabelSelector: TriggerUUID,
+	}
+
+	OwnerAsTriggerLabel = map[string]string{
+		kafkainternals.UserFacingResourceLabelSelector: "trigger",
+	}
+
+	OwnerAsSourceLabel = map[string]string{
+		kafkainternals.UserFacingResourceLabelSelector: "kafkasource",
+	}
+
+	OwnerAsChannelLabel = map[string]string{
+		kafkainternals.UserFacingResourceLabelSelector: "kafkachannel",
 	}
 )
 
@@ -114,6 +126,12 @@ func WithConsumerGroupNamespace(namespace string) ConsumerGroupOption {
 func WithConsumerGroupOwnerRef(ownerref *metav1.OwnerReference) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
 		cg.ObjectMeta.OwnerReferences = []metav1.OwnerReference{*ownerref}
+	}
+}
+
+func WithConsumerGroupMetaLabels(labels map[string]string) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.Labels = labels
 	}
 }
 

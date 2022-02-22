@@ -29,8 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/storage/names"
-	kafkainformer "knative.dev/eventing-kafka/pkg/client/injection/informers/sources/v1beta1/kafkasource"
-	sources "knative.dev/eventing-kafka/pkg/client/listers/sources/v1beta1"
 	"knative.dev/eventing/pkg/scheduler"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	nodeinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/node"
@@ -77,17 +75,17 @@ func NewController(ctx context.Context) *controller.Impl {
 
 	// TODO(pierDipi) use env variables to configure these.
 	c := SchedulerConfig{
-		RefreshPeriod:       2 * time.Minute,
-		Capacity:            50,
-		SchedulerPolicyType: "",
+		RefreshPeriod:       100 * time.Second,
+		Capacity:            20,
+		SchedulerPolicyType: "", // old non-HA scheduler
 		SchedulerPolicy:     schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaSchedulerName),
 		DeSchedulerPolicy:   schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaDeSchedulerName),
 	}
 
-	kafkaLister := kafkainformer.Get(ctx).Lister()
 	schedulers := map[string]scheduler.Scheduler{
-		KafkaSourceScheduler: createKafkaSourceScheduler(ctx, c, kafkaLister),
-		// TODO(pierDipi) Add Kafka Trigger and KafkaChannel schedulers.
+		KafkaSourceScheduler:  createKafkaScheduler(ctx, c, kafkainternals.SourceStatefulSetName),
+		KafkaTriggerScheduler: createKafkaScheduler(ctx, c, kafkainternals.BrokerStatefulSetName),
+		KafkaChannelScheduler: createKafkaScheduler(ctx, c, kafkainternals.ChannelStatefulSetName),
 	}
 
 	r := &Reconciler{
@@ -99,9 +97,10 @@ func NewController(ctx context.Context) *controller.Impl {
 	}
 
 	impl := cgreconciler.NewImpl(ctx, r)
+	consumerInformer := consumer.Get(ctx)
 
 	consumergroup.Get(ctx).Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
-	consumer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
+	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
 
 	return impl
 }
@@ -116,11 +115,12 @@ func enqueueConsumerGroupFromConsumer(enqueue func(name types.NamespacedName)) f
 	}
 }
 
-func createKafkaSourceScheduler(ctx context.Context, c SchedulerConfig, kafkaLister sources.KafkaSourceLister) scheduler.Scheduler {
+func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string) scheduler.Scheduler {
+	lister := consumergroup.Get(ctx).Lister()
 	return createStatefulSetScheduler(
 		ctx,
 		SchedulerConfig{
-			StatefulSetName:     "kafka-source-dispatcher",
+			StatefulSetName:     ssName,
 			RefreshPeriod:       c.RefreshPeriod,
 			Capacity:            c.Capacity,
 			SchedulerPolicyType: c.SchedulerPolicyType,
@@ -128,17 +128,37 @@ func createKafkaSourceScheduler(ctx context.Context, c SchedulerConfig, kafkaLis
 			DeSchedulerPolicy:   c.DeSchedulerPolicy,
 		},
 		func() ([]scheduler.VPod, error) {
-			kafkaSources, err := kafkaLister.List(labels.Everything())
+			consumerGroups, err := lister.List(labels.SelectorFromSet(getSelectorLabel(ssName)))
 			if err != nil {
 				return nil, err
 			}
-			vpods := make([]scheduler.VPod, len(kafkaSources))
-			for i := 0; i < len(kafkaSources); i++ {
-				vpods[i] = kafkaSources[i]
+			vpods := make([]scheduler.VPod, len(consumerGroups))
+			for i := 0; i < len(consumerGroups); i++ {
+				vpods[i] = consumerGroups[i]
 			}
 			return vpods, nil
 		},
 	)
+}
+
+func getSelectorLabel(ssName string) map[string]string {
+	//TODO remove hardcoded kinds
+	var selectorLabel map[string]string
+	switch ssName {
+	case kafkainternals.SourceStatefulSetName:
+		selectorLabel = map[string]string{
+			kafkainternals.UserFacingResourceLabelSelector: "kafkasource",
+		}
+	case kafkainternals.BrokerStatefulSetName:
+		selectorLabel = map[string]string{
+			kafkainternals.UserFacingResourceLabelSelector: "trigger",
+		}
+	case kafkainternals.ChannelStatefulSetName:
+		selectorLabel = map[string]string{
+			kafkainternals.UserFacingResourceLabelSelector: "kafkachannel",
+		}
+	}
+	return selectorLabel
 }
 
 func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister scheduler.VPodLister) scheduler.Scheduler {
@@ -150,9 +170,8 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 		c.RefreshPeriod,
 		c.Capacity,
 		c.SchedulerPolicyType,
-		// TODO add nodes to controller cluster role
 		nodeinformer.Get(ctx).Lister(),
-		nil, // TODO No evictor, is this ok?
+		newEvictor(ctx, zap.String("kafka.eventing.knative.dev/component", "evictor")).evict,
 		c.SchedulerPolicy,
 		c.DeSchedulerPolicy,
 	)

@@ -126,12 +126,15 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, trigger *eventin
 			OwnerReferences: []metav1.OwnerReference{
 				*kmeta.NewControllerRef(trigger),
 			},
+			Labels: map[string]string{
+				internalscg.UserFacingResourceLabelSelector: strings.ToLower(trigger.GetGroupVersionKind().Kind),
+			},
 		},
 		Spec: internalscg.ConsumerGroupSpec{
 			Template: internalscg.ConsumerTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						internalscg.ConsumerSelectorAnnotation: string(trigger.UID),
+						internalscg.ConsumerLabelSelector: string(trigger.UID),
 					},
 				},
 				Spec: internalscg.ConsumerSpec{
