@@ -696,6 +696,68 @@ class ResourcesReconcilerImplTest {
   }
 
   @Test
+  void reconcileEgressModifyingTheResourceWithDialectedFilters() {
+    new ResourceReconcilerTestRunner()
+      .enableEgressListener()
+      .reconcile(List.of(
+        baseResource("1-1234").build()
+      ))
+      .reconcile(List.of(
+        baseResource("1-1234")
+          .addEgresses(egress("aaa"))
+          .addEgresses(egress("bbb"))
+          .addEgresses(egress("ccc"))
+          .addEgresses(egress("ddd"))
+          .build()
+      ))
+      .expect()
+      .newEgress("aaa")
+      .newEgress("bbb")
+      .newEgress("ccc")
+      .newEgress("ddd")
+      .then()
+      .reconcile(List.of(
+        baseResource("1-1234")
+          .addEgresses(egress("aaa"))
+          .addEgresses(baseEgress("bbb").addDialectedFilter(DataPlaneContract.DialectedFilter.newBuilder().setExact(
+            DataPlaneContract.Exact.newBuilder().putAttributes("id", "hello").build()
+          )))
+          .addEgresses(baseEgress("ccc").addDialectedFilter(DataPlaneContract.DialectedFilter.newBuilder().setPrefix(
+            DataPlaneContract.Prefix.newBuilder().putAttributes("source", "dev.knative").build()
+          )))
+          .addEgresses(baseEgress("ddd").addDialectedFilter(DataPlaneContract.DialectedFilter.newBuilder().getAllBuilder()
+            .addFiltersBuilder().setPrefix(DataPlaneContract.Prefix.newBuilder().putAttributes("source", "dev.knative").build()).build()
+          ))
+          .build()
+      ))
+      .expect()
+      .updatedEgress("bbb")
+      .updatedEgress("ccc")
+      .updatedEgress("ddd")
+      .then()
+      .reconcile(List.of(
+        baseResource("1-1234")
+          .addEgresses(egress("aaa"))
+          .addEgresses(egress("ccc"))
+          .build()
+      ))
+      .expect()
+      .deletedEgress("bbb")
+      .deletedEgress("ddd")
+      .updatedEgress("ccc")
+      .then()
+      .reconcile(List.of(
+        baseResource("1-1234")
+          .build()
+      ))
+      .expect()
+      .deletedEgress("aaa")
+      .deletedEgress("ccc")
+      .then()
+      .run();
+  }
+
+  @Test
   void reconcileEgressModifyingTheGlobalEgressConfig() {
     new ResourceReconcilerTestRunner()
       .enableEgressListener()

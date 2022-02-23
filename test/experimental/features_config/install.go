@@ -23,8 +23,6 @@ import (
 	"knative.dev/reconciler-test/pkg/manifest"
 )
 
-const ConfigMapName = "config-features"
-
 func Install(ctx context.Context, t feature.T) {
 	if _, err := manifest.InstallLocalYaml(ctx, map[string]interface{}{}); err != nil {
 		t.Fatal(err)
