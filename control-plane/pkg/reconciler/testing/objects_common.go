@@ -25,6 +25,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
@@ -337,6 +338,15 @@ func NewDispatcherPod(name string, options ...PodOption) *corev1.Pod {
 			UID:       DispatcherPodUUID,
 		},
 		Spec: corev1.PodSpec{
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("125m"),
+					corev1.ResourceMemory: resource.MustParse("128Mi"),
+				},
+				Limits: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("2200m"),
+					corev1.ResourceMemory: resource.MustParse("2048Mi"),
+				},
 			Volumes: []corev1.Volume{{
 				Name: kafkainternals.DispatcherVolumeName,
 				VolumeSource: corev1.VolumeSource{
