@@ -215,6 +215,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
   private Filter getFilter(DataPlaneContract.Egress egress) {
     // Dialected filters should override the attributes filter
     if (egress.getDialectedFilterCount() > 0) {
+      logger.debug("Egress contains dialected-filters. Dialected-filters will be used for event filtering. Egress {}", egress.getReference());
       return getFilter(egress.getDialectedFilterList());
     } else if (egress.hasFilter()) {
       return new AttributesFilter(egress.getFilter().getAttributesMap());
