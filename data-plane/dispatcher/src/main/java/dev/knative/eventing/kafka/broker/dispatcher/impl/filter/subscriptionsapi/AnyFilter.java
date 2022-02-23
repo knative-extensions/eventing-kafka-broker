@@ -18,8 +18,12 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsap
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AnyFilter implements Filter {
+
+  private static final Logger logger = LoggerFactory.getLogger(AnyFilter.class);
 
   private final Set<Filter> filters;
 
@@ -29,11 +33,18 @@ public class AnyFilter implements Filter {
 
   @Override
   public boolean test(CloudEvent cloudEvent) {
+    logger.debug("{}: Testing event against ANY filter. Event {}", this.getClass().getSimpleName(),
+      cloudEvent);
+
     for (Filter filter : filters) {
       if (filter.test(cloudEvent)) {
+        logger.debug("{}: Test succeeded. Filter {} Event {}", this.getClass().getSimpleName(),
+          filter, cloudEvent);
         return true;
       }
     }
+    logger.debug("{}: Test failed. All filters failed. Event {}", this.getClass().getSimpleName(),
+      cloudEvent);
     return false;
   }
 }

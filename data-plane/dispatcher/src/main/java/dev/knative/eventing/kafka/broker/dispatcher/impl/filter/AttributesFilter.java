@@ -22,17 +22,20 @@ import io.cloudevents.core.v1.CloudEventV1;
 import io.cloudevents.lang.Nullable;
 import java.net.URI;
 import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 
 public class AttributesFilter implements Filter {
 
   private static final String DEFAULT_STRING = "";
+  private static final Logger logger = LoggerFactory.getLogger(AttributesFilter.class);
+
 
   static final Map<String, Function<CloudEvent, String>> attributesMapper = Map.of(
     CloudEventV1.SPECVERSION, event -> event.getSpecVersion().toString(),
@@ -46,11 +49,12 @@ public class AttributesFilter implements Filter {
     CloudEventV1.TIME, event -> getOrDefault(event.getTime(), time -> time.format(ISO_INSTANT))
   );
 
-  // the key represents the function to turn an event into a string value.
-  // the value represents the value to match.
+  // The key represents the attribute name, and the value is an Entry where the
+  // key is an extractor function to turn an event into a string value. The value
+  // in that Entry represents the value to match.
   // specversion -> 1.0
   // f(event) -> event.getSpecVersion().toString() -> 1.0
-  private final List<Entry<Function<CloudEvent, String>, String>> attributes;
+  private final Map<String, Entry<Function<CloudEvent, String>, String>> attributes;
 
   /**
    * All args constructor.
@@ -60,20 +64,20 @@ public class AttributesFilter implements Filter {
   public AttributesFilter(final Map<String, String> attributes) {
     this.attributes = attributes.entrySet().stream()
       .filter(entry -> isNotEmpty(entry.getValue()))
-      .map(entry -> new SimpleImmutableEntry<>(
-        attributesMapper.getOrDefault(
-          entry.getKey(),
-          event -> {
-            try {
-              return getOrDefault(event.getAttribute(entry.getKey()), Object::toString);
-            } catch (Exception ex) {
-              return getOrDefault(event.getExtension(entry.getKey()), Object::toString);
+      .collect(Collectors.toMap(Map.Entry::getKey,
+        entry ->
+          new SimpleImmutableEntry<>(attributesMapper.getOrDefault(
+            entry.getKey(),
+            event -> {
+              try {
+                return getOrDefault(event.getAttribute(entry.getKey()), Object::toString);
+              } catch (Exception ex) {
+                return getOrDefault(event.getExtension(entry.getKey()), Object::toString);
+              }
             }
-          }
-        ),
-        entry.getValue()
-      ))
-      .collect(Collectors.toUnmodifiableList());
+          ),
+            entry.getValue()
+          )));
   }
 
   /**
@@ -86,13 +90,18 @@ public class AttributesFilter implements Filter {
    */
   @Override
   public boolean test(final CloudEvent event) {
-
-    for (final var entry : attributes) {
-      if (!this.match(entry.getKey().apply(event), entry.getValue())) {
+    logger.debug("{}: Testing event attributes. Event {}", this.getClass().getSimpleName(), event);
+    for (final var attribute : attributes.keySet()) {
+      Function<CloudEvent, String> extractorFunc = attributes.get(attribute).getKey();
+      String wantedValue = attributes.get(attribute).getValue();
+      String existingValue = extractorFunc.apply(event);
+      if (!this.match(existingValue, wantedValue)) {
+        logger.debug("{}: Event attributes matching failed. Attribute: {} Want: {} Got: {} Event: {}",
+          this.getClass().getSimpleName(), attribute, wantedValue, existingValue, event);
         return false;
       }
     }
-
+    logger.debug("{}: Event attributes matching succeeded", this.getClass().getSimpleName());
     return true;
   }
 

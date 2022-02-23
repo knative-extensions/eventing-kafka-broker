@@ -22,13 +22,17 @@ import io.cloudevents.sql.EvaluationRuntime;
 import io.cloudevents.sql.Expression;
 import io.cloudevents.sql.Parser;
 import io.cloudevents.sql.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class SqlFilter implements Filter {
+public class CeSqlFilter implements Filter {
+
+  private static final Logger logger = LoggerFactory.getLogger(CeSqlFilter.class);
 
   private final Expression expression;
   private final EvaluationRuntime runtime;
 
-  public SqlFilter(String sqlExpression) {
+  public CeSqlFilter(String sqlExpression) {
     this.expression = Parser.parseDefault(sqlExpression);
     this.runtime = EvaluationRuntime.getDefault();
   }
@@ -36,9 +40,15 @@ public class SqlFilter implements Filter {
   @Override
   public boolean test(CloudEvent cloudEvent) {
     try {
+      logger.debug("{}: Testing event against CESQL expression. Expression {} - Event {}", this.getClass().getSimpleName(),
+        this.expression, cloudEvent);
       Object value = this.expression.tryEvaluate(this.runtime, cloudEvent);
+      logger.debug("{}: CESQL evaluation succeeded. Expression {} - Event {} - Result {}", this.getClass().getSimpleName(),
+        expression, cloudEvent, value);
       return (Boolean) this.runtime.cast(value, Type.BOOLEAN);
     } catch (EvaluationException evaluationException) {
+      logger.error("{}: Exception while evaluating CESQL expression. Test failed. Expression {} - Event {} - Exception {}",
+        this.expression, this.getClass().getSimpleName(), cloudEvent, evaluationException);
       return false;
     }
   }
