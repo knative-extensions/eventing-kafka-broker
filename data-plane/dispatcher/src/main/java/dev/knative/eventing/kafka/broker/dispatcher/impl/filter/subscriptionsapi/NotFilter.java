@@ -17,8 +17,12 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsap
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NotFilter implements Filter {
+
+  private static final Logger logger = LoggerFactory.getLogger(NotFilter.class);
 
   private final Filter filter;
 
@@ -28,6 +32,10 @@ public class NotFilter implements Filter {
 
   @Override
   public boolean test(CloudEvent cloudEvent) {
-    return !filter.test(cloudEvent);
+    logger.debug("{}: Testing NOT filter. Event {}", cloudEvent);
+    boolean passed = !filter.test(cloudEvent);
+    String result = passed ? "Succeeded" : "Failed";
+    logger.debug("{}: {} - Event {}", result, this.filter, cloudEvent);
+    return passed;
   }
 }

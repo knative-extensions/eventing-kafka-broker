@@ -27,7 +27,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SqlFilterTest {
+public class CeSqlFilterTest {
 
   final static CloudEvent event = CloudEventBuilder.v1()
     .withId("123-42")
@@ -46,7 +46,7 @@ public class SqlFilterTest {
   @ParameterizedTest
   @MethodSource(value = {"testCases"})
   public void match(CloudEvent event, String expression, boolean shouldMatch) {
-    var filter = new SqlFilter(expression);
+    var filter = new CeSqlFilter(expression);
     assertThat(filter.test(event))
       .isEqualTo(shouldMatch);
   }

@@ -42,9 +42,9 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsu
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AllFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AnyFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.CeSqlFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.NotFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.PrefixFilter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.SqlFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.SuffixFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.cloudevents.CloudEvent;
@@ -232,7 +232,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
         map(this::getFilter).collect(Collectors.toSet()));
       case ALL -> new AllFilter(filter.getAll().getFiltersList().stream().
         map(this::getFilter).collect(Collectors.toSet()));
-      case CESQL -> new SqlFilter(filter.getCesql().getExpression());
+      case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
       default -> Filter.noop();
     };
   }
