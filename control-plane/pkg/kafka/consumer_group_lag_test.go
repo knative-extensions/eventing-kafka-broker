@@ -305,6 +305,10 @@ func (s saramaClientMock) AlterConfig(sarama.ConfigResourceType, string, map[str
 	panic("implement me")
 }
 
+func (s saramaClientMock) IncrementalAlterConfig(resourceType sarama.ConfigResourceType, name string, entries map[string]sarama.IncrementalAlterConfigsEntry, validateOnly bool) error {
+	panic("implement me")
+}
+
 func (s saramaClientMock) CreateACL(sarama.Resource, sarama.Acl) error {
 	panic("implement me")
 }

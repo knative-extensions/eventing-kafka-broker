@@ -133,6 +133,10 @@ func (m *MockKafkaClusterAdmin) AlterConfig(resourceType sarama.ConfigResourceTy
 	panic("implement me")
 }
 
+func (m *MockKafkaClusterAdmin) IncrementalAlterConfig(resourceType sarama.ConfigResourceType, name string, entries map[string]sarama.IncrementalAlterConfigsEntry, validateOnly bool) error {
+	panic("implement me")
+}
+
 func (m *MockKafkaClusterAdmin) CreateACL(resource sarama.Resource, acl sarama.Acl) error {
 	panic("implement me")
 }
