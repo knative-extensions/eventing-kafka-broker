@@ -16,13 +16,11 @@ message Exact {
 }
 
 message Prefix {
-  string attribute = 1;
-  string prefix = 2;
+  map<string, string> attributes = 1;
 }
 
 message Suffix {
-  string attribute = 1;
-  string suffix = 2;
+  map<string, string> attributes = 1;
 }
 
 message All {
