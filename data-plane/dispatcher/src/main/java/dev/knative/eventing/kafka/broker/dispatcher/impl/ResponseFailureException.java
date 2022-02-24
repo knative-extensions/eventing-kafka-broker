@@ -15,7 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
-import java.net.http.HttpResponse;
+import io.vertx.ext.web.client.HttpResponse;
 
 public class ResponseFailureException extends RuntimeException {
 
@@ -23,12 +23,6 @@ public class ResponseFailureException extends RuntimeException {
 
   public ResponseFailureException(final HttpResponse response, final String msg) {
     super(msg);
-    this.response = response;
-  }
-
-  public ResponseFailureException(final HttpResponse<?> response,
-                                  final Throwable ex) {
-    super(ex);
     this.response = response;
   }
 
