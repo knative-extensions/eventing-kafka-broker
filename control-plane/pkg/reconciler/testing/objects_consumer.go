@@ -59,7 +59,6 @@ func NewConsumer(ordinal int, opts ...ConsumerOption) *kafkainternals.Consumer {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-%d", ConsumerNamePrefix, ordinal),
 			Namespace: ConsumerNamespace,
-			UID:       types.UID(ConsumerUUID),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         kafkainternals.SchemeGroupVersion.String(),
