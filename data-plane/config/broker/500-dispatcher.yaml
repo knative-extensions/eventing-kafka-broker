@@ -102,7 +102,13 @@ spec:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
+          resources:
+            limits:
+              cpu: 2220m
+              memory: 2048Mi
+            requests:
+              cpu: 125m
+              memory: 128Mi
           livenessProbe:
             failureThreshold: 3
             httpGet:
