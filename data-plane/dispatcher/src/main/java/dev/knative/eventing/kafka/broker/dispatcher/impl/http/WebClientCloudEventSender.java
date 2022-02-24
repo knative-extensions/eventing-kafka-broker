@@ -81,7 +81,6 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     });
   }
 
-  @SuppressWarnings("rawtypes")
   private void send(final CloudEvent event, final Promise<HttpResponse<Buffer>> breaker) {
     VertxMessageFactory
       .createWriter(client.postAbs(target).putHeader("Prefer", "reply"))
@@ -95,7 +94,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
         if (isRetryableStatusCode(response.statusCode())) {
           logError(event, response);
           breaker.tryFail(new ResponseFailureException(
-            (java.net.http.HttpResponse) response,
+            response,
             "Received failure response, status code: " + response.statusCode())
           );
           return;
