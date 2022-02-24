@@ -113,6 +113,12 @@ func NewConsumerSpecDelivery(order internals.DeliveryOrdering, options ...Delive
 	return d
 }
 
+func NewConsumerSpecSubscriber(uri string) duckv1.Destination {
+	return duckv1.Destination{
+		URI: apis.HTTP(uri),
+	}
+}
+
 func NewConsumerSpecDeliveryDeadLetterSink() DeliverySpecOption {
 	return func(spec *kafkainternals.DeliverySpec) {
 		if spec.DeliverySpec == nil {

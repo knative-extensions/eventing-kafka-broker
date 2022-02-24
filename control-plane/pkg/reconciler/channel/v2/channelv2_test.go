@@ -224,7 +224,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(ChannelTopic()),
 						ChannelAddressable(&env),
 						StatusProbeSucceeded,
-						StatusChannelConsumerGroup(),
+						StatusChannelSubscribers(),
 					),
 				},
 			},
@@ -274,7 +274,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusProbeFailed(prober.StatusNotReady),
-						StatusChannelConsumerGroup(),
+						StatusChannelSubscribers(),
 					),
 				},
 			},
@@ -327,7 +327,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusProbeFailed(prober.StatusUnknown),
-						StatusChannelConsumerGroup(),
+						StatusChannelSubscribers(),
 					),
 				},
 			},
@@ -350,8 +350,7 @@ func TestReconcileKind(t *testing.T) {
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
 			},
-			Key:         testKey,
-			WantUpdates: []clientgotesting.UpdateActionImpl{},
+			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
@@ -366,19 +365,40 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
 				),
 			},
-			WantErr:                 true,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: receiver.Path(ChannelNamespace, ChannelName),
+								},
+							},
+						},
+					},
+				}),
+			},
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnknownSubscriber)),
-						StatusChannelConsumerGroupFailed("failed to reconcile consumer groups", "Subscription not ready. Failed to reconcile consumer group. Consumer group not ready"),
+						StatusChannelSubscribersUnknown(),
 					),
 				},
 			},
@@ -387,11 +407,6 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeWarning,
-					"InternalError",
-					"Subscription not ready. Failed to reconcile consumer group. Consumer group not ready",
-				),
 			},
 		},
 		{
@@ -403,8 +418,7 @@ func TestReconcileKind(t *testing.T) {
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
 			},
-			Key:         testKey,
-			WantUpdates: []clientgotesting.UpdateActionImpl{},
+			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
@@ -419,19 +433,40 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
 				),
 			},
-			WantErr:                 true,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: receiver.Path(ChannelNamespace, ChannelName),
+								},
+							},
+						},
+					},
+				}),
+			},
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnknownSubscriber)),
-						StatusChannelConsumerGroupFailed("failed to reconcile consumer groups", "Subscription not ready. Failed to reconcile consumer group. Consumer group not ready"),
+						StatusChannelSubscribersUnknown(),
 					),
 				},
 			},
@@ -440,11 +475,6 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeWarning,
-					"InternalError",
-					"Subscription not ready. Failed to reconcile consumer group. Consumer group not ready",
-				),
 			},
 		},
 		{
@@ -471,19 +501,40 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
 				),
 			},
-			WantErr:                 true,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: receiver.Path(ChannelNamespace, ChannelName),
+								},
+							},
+						},
+					},
+				}),
+			},
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnknownSubscriber)),
-						StatusChannelConsumerGroupFailed("failed to reconcile consumer groups", "Subscription not ready. Failed to reconcile consumer group. Consumer group not ready"),
+						StatusChannelSubscribersUnknown(),
 					),
 				},
 			},
@@ -492,11 +543,6 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeWarning,
-					"InternalError",
-					"Subscription not ready. Failed to reconcile consumer group. Consumer group not ready",
-				),
 			},
 		},
 		{
@@ -547,6 +593,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							),
 							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+							ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						)),
 						ConsumerGroupReady,
 					),
@@ -561,7 +608,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(ChannelTopic()),
 						ChannelAddressable(&env),
 						WithSubscribers(Subscriber1(WithFreshSubscriber)),
-						StatusChannelConsumerGroup(),
+						StatusChannelSubscribers(),
 						StatusProbeSucceeded,
 					),
 				},
@@ -594,33 +641,49 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
-					WithConsumerGroupFailed("Failed to reconcile consumer group. ", "Failed"),
+					WithConsumerGroupFailed("failed to reconcile consumer group,", "internal error"),
 				),
 			},
-			Key:     testKey,
-			WantErr: true,
+			Key: testKey,
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnreadySubscriber)),
-						StatusChannelConsumerGroupFailed("failed to reconcile consumer groups", "Subscription not ready. Failed to reconcile consumer group. Failed"),
+						StatusChannelSubscribersUnknown(),
 					),
 				},
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: receiver.Path(ChannelNamespace, ChannelName),
+								},
+							},
+						},
+					},
+				}),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeWarning,
-					"InternalError",
-					"Subscription not ready. Failed to reconcile consumer group. Failed",
-				),
 			},
 		},
 		{
@@ -635,8 +698,7 @@ func TestReconcileKind(t *testing.T) {
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
 			},
-			Key:         testKey,
-			WantUpdates: []clientgotesting.UpdateActionImpl{},
+			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
@@ -651,6 +713,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
 				),
 				NewConsumerGroup(
@@ -666,19 +729,40 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription2URI)),
 					)),
 				),
 			},
-			WantErr:                 true,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: receiver.Path(ChannelNamespace, ChannelName),
+								},
+							},
+						},
+					},
+				}),
+			},
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnknownSubscriber), Subscriber2(WithUnknownSubscriber)),
-						StatusChannelConsumerGroupFailed("failed to reconcile consumer groups", "Subscription not ready. Failed to reconcile consumer group. Consumer group not ready; Subscription not ready. Failed to reconcile consumer group. Consumer group not ready"),
+						StatusChannelSubscribersUnknown(),
 					),
 				},
 			},
@@ -687,11 +771,6 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeWarning,
-					"InternalError",
-					"Subscription not ready. Failed to reconcile consumer group. Consumer group not ready; Subscription not ready. Failed to reconcile consumer group. Consumer group not ready",
-				),
 			},
 		},
 		{
@@ -717,12 +796,11 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription2URI)),
 					)),
 				),
 			},
-			Key:         testKey,
-			WantUpdates: []clientgotesting.UpdateActionImpl{},
-			WantErr:     true,
+			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
@@ -737,8 +815,27 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
 				),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								IngressType: &contract.Ingress_Path{
+									Path: receiver.Path(ChannelNamespace, ChannelName),
+								},
+							},
+						},
+					},
+				}),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -746,9 +843,12 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnknownSubscriber)),
-						StatusChannelConsumerGroupFailed("failed to reconcile consumer groups", "Subscription not ready. Failed to reconcile consumer group. Consumer group not ready"),
+						StatusChannelSubscribersUnknown(),
 					),
 				},
 			},
@@ -770,11 +870,6 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				Eventf(
-					corev1.EventTypeWarning,
-					"InternalError",
-					"Subscription not ready. Failed to reconcile consumer group. Consumer group not ready",
-				),
 			},
 		},
 		{
@@ -917,7 +1012,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(ChannelTopic()),
 						ChannelAddressable(&env),
 						StatusProbeSucceeded,
-						StatusChannelConsumerGroup(),
+						StatusChannelSubscribers(),
 					),
 				},
 			},
@@ -951,6 +1046,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
 					ConsumerGroupReady,
 				),
@@ -993,7 +1089,7 @@ func TestReconcileKind(t *testing.T) {
 						ChannelAddressable(&env),
 						WithSubscribers(Subscriber1(WithFreshSubscriber)),
 						StatusProbeSucceeded,
-						StatusChannelConsumerGroup(),
+						StatusChannelSubscribers(),
 					),
 				},
 			},
@@ -1044,7 +1140,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(ChannelTopic()),
 						ChannelAddressable(&env),
 						StatusProbeSucceeded,
-						StatusChannelConsumerGroup(),
+						StatusChannelSubscribers(),
 					),
 				},
 			},
@@ -1092,7 +1188,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(ChannelTopic()),
 						ChannelAddressable(&env),
 						StatusProbeSucceeded,
-						StatusChannelConsumerGroup(),
+						StatusChannelSubscribers(),
 					),
 				},
 			},
@@ -1206,24 +1302,24 @@ func TestReconcileKind(t *testing.T) {
 	}))
 }
 
-func StatusChannelConsumerGroup() KRShapedOption {
+func StatusChannelSubscribers() KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ch := obj.(*messagingv1beta.KafkaChannel)
-		ch.GetConditionSet().Manage(ch.GetStatus()).MarkTrue(KafkaChannelConditionConsumerGroups)
+		ch.GetConditionSet().Manage(ch.GetStatus()).MarkTrue(KafkaChannelConditionSubscribersReady)
 	}
 }
 
-func StatusChannelConsumerGroupFailed(reason string, msg string) KRShapedOption {
+func StatusChannelSubscribersUnknown() KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ch := obj.(*messagingv1beta.KafkaChannel)
-		ch.GetConditionSet().Manage(ch.GetStatus()).MarkFalse(KafkaChannelConditionConsumerGroups, reason, msg)
+		ch.GetConditionSet().Manage(ch.GetStatus()).MarkUnknown(KafkaChannelConditionSubscribersReady, "all subscribers not ready", "failed to reconcile consumer group")
 	}
 }
 
-func StatusChannelConsumerGroupUnknown() KRShapedOption {
+func StatusChannelSubscribersFailed(reason string, msg string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ch := obj.(*messagingv1beta.KafkaChannel)
-		ch.GetConditionSet().Manage(ch.GetStatus()).MarkUnknown(KafkaChannelConditionConsumerGroups, "failed to reconcile consumer group", "consumer group not ready")
+		ch.GetConditionSet().Manage(ch.GetStatus()).MarkFalse(KafkaChannelConditionSubscribersReady, reason, msg)
 	}
 }
 

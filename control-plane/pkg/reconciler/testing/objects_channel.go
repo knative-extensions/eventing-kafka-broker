@@ -281,10 +281,10 @@ func WithNoSubscriberURI(sub *SubscriberInfo) {
 
 func WithUnreadySubscriber(sub *SubscriberInfo) {
 	sub.status.Ready = "False"
-	sub.status.Message = "Subscription not ready. Failed to reconcile consumer group. Failed"
+	sub.status.Message = fmt.Sprintf("Subscriber %v not ready: %v %v", sub.spec.UID, "failed to reconcile consumer group,", "internal error")
 }
 
 func WithUnknownSubscriber(sub *SubscriberInfo) {
 	sub.status.Ready = "Unknown"
-	sub.status.Message = "Subscription not ready. Failed to reconcile consumer group. Consumer group not ready"
+	sub.status.Message = fmt.Sprintf("Subscriber %v not ready: %v", sub.spec.UID, "consumer group status unknown")
 }

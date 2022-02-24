@@ -67,12 +67,12 @@ const (
 	TopicPrefix          = "knative-messaging-kafka"
 	DefaultDeliveryOrder = internals.Ordered
 
-	KafkaChannelConditionConsumerGroups apis.ConditionType = "ConsumerGroups" //condition is registered by controller
+	KafkaChannelConditionSubscribersReady apis.ConditionType = "SubscribersReady" //condition is registered by controller
 )
 
 var (
 	conditionSet = apis.NewLivingConditionSet(
-		KafkaChannelConditionConsumerGroups,
+		KafkaChannelConditionSubscribersReady,
 		base.ConditionTopicReady,
 		base.ConditionConfigMapUpdated,
 		base.ConditionConfigParsed,
@@ -204,12 +204,16 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	// Get resource configuration
 	channelConfig := r.getChannelContractResource(topic, channel, secret, topicConfig)
 
-	subscriptionError := r.reconcileSubscribers(ctx, channel, topicName, topicConfig.BootstrapServers)
-	if subscriptionError != nil {
-		channel.GetConditionSet().Manage(&channel.Status).MarkFalse(KafkaChannelConditionConsumerGroups, "failed to reconcile consumer groups", subscriptionError.Error())
-		return subscriptionError
+	allReady, subscribersError := r.reconcileSubscribers(ctx, channel, topicName, topicConfig.BootstrapServers)
+	if subscribersError != nil {
+		channel.GetConditionSet().Manage(&channel.Status).MarkFalse(KafkaChannelConditionSubscribersReady, "failed to reconcile all subscribers", subscribersError.Error())
+		return subscribersError
 	}
-	channel.GetConditionSet().Manage(&channel.Status).MarkTrue(KafkaChannelConditionConsumerGroups)
+	if !allReady { //no need to return error. Not ready because of consumer group status. Will be ok once consumer group is reconciled
+		channel.GetConditionSet().Manage(&channel.Status).MarkUnknown(KafkaChannelConditionSubscribersReady, "all subscribers not ready", "failed to reconcile consumer group")
+	} else {
+		channel.GetConditionSet().Manage(&channel.Status).MarkTrue(KafkaChannelConditionSubscribersReady)
+	}
 
 	// Update contract data with the new contract configuration (add/update channel resource)
 	channelIndex := coreconfig.FindResource(ct, channel.UID)
@@ -409,29 +413,32 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	return nil
 }
 
-func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagingv1beta1.KafkaChannel, topicName string, bootstrapServers []string) error {
+func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagingv1beta1.KafkaChannel, topicName string, bootstrapServers []string) (bool, error) {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
 
 	channel.Status.Subscribers = make([]v1.SubscriberStatus, 0)
 	var globalErr error
 	currentCgs := make(map[string]*internalscg.ConsumerGroup, len(channel.Spec.Subscribers))
+	allReady := true
 	for i := range channel.Spec.Subscribers {
 		s := &channel.Spec.Subscribers[i]
-		logger = logger.With(zap.Any("subscription", s))
+		logger = logger.With(zap.Any("subscriber", s))
 		cg, err := r.reconcileConsumerGroup(ctx, channel, s, topicName, bootstrapServers)
 		if err != nil {
-			logger.Error("error reconciling subscription. marking subscription as not ready", zap.Error(err))
+			logger.Error("error reconciling subscriber. marking subscriber as not ready", zap.Error(err))
+			msg := fmt.Sprintf("Subscriber %v not ready: %v", s.UID, err)
 			channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
 				UID:                s.UID,
 				ObservedGeneration: s.Generation,
 				Ready:              corev1.ConditionFalse,
-				Message:            fmt.Sprint("Subscription not ready. ", err),
+				Message:            msg,
 			})
-			globalErr = multierr.Append(globalErr, err)
+			allReady = false
+			globalErr = multierr.Append(globalErr, errors.New(msg))
 		} else {
 			currentCgs[cg.Name] = cg // Adding reconciled consumer group to map
 			if cg.IsReady() {
-				logger.Debug("marking subscription as ready")
+				logger.Debug("marking subscriber as ready")
 				channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
 					UID:                s.UID,
 					ObservedGeneration: s.Generation,
@@ -440,23 +447,23 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 			} else {
 				topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
 				if topLevelCondition == nil {
-					msg := fmt.Sprint("Subscription not ready. ", "Failed to reconcile consumer group. ", "Consumer group not ready")
+					msg := fmt.Sprintf("Subscriber %v not ready: %v", s.UID, "consumer group status unknown")
 					channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
 						UID:                s.UID,
 						ObservedGeneration: s.Generation,
 						Ready:              corev1.ConditionUnknown,
 						Message:            msg,
 					})
-					globalErr = multierr.Append(globalErr, errors.New(msg))
+					allReady = false
 				} else {
-					msg := fmt.Sprint("Subscription not ready. ", topLevelCondition.Reason, topLevelCondition.Message)
+					msg := fmt.Sprintf("Subscriber %v not ready: %v %v", s.UID, topLevelCondition.Reason, topLevelCondition.Message)
 					channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
 						UID:                s.UID,
 						ObservedGeneration: s.Generation,
 						Ready:              corev1.ConditionFalse,
 						Message:            msg,
 					})
-					globalErr = multierr.Append(globalErr, errors.New(msg))
+					allReady = false
 				}
 			}
 		}
@@ -478,7 +485,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 		}
 	}
 
-	return globalErr
+	return allReady, globalErr
 }
 
 func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec, topicName string, bootstrapServers []string) (*internalscg.ConsumerGroup, error) {
