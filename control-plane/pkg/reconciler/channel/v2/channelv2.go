@@ -37,6 +37,7 @@ import (
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/reconciler"
@@ -413,7 +414,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 
 	channel.Status.Subscribers = make([]v1.SubscriberStatus, 0)
 	var globalErr error
-	currentCgs := make(map[string]*internalscg.ConsumerGroup)
+	currentCgs := make(map[string]*internalscg.ConsumerGroup, len(channel.Spec.Subscribers))
 	for i := range channel.Spec.Subscribers {
 		s := &channel.Spec.Subscribers[i]
 		logger = logger.With(zap.Any("subscription", s))
@@ -509,6 +510,9 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 					Delivery: &internalscg.DeliverySpec{
 						DeliverySpec: channel.Spec.Delivery,
 						Ordering:     DefaultDeliveryOrder,
+					},
+					Subscriber: duckv1.Destination{
+						URI: s.SubscriberURI,
 					},
 				},
 			},

@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"github.com/Shopify/sarama"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
@@ -33,6 +34,8 @@ import (
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
+	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
+	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 
 	"knative.dev/pkg/controller"
 
@@ -52,9 +55,12 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
+			PodLister:                   podinformer.Get(ctx).Lister(),
+			SecretLister:                secretinformer.Get(ctx).Lister(),
 			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
 			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
+			SystemNamespace:             configs.SystemNamespace,
 		},
 		NewKafkaClient:             sarama.NewClient,
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
@@ -68,9 +74,20 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, configs.IngressPodPort, reconciler.ReceiverSelector(), impl.EnqueueKey)
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
 
-	channelInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		Handler: controller.HandleAll(impl.Enqueue),
-	})
+	reconciler.SecretTracker = impl.Tracker
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
+
+	reconciler.ConfigMapTracker = impl.Tracker
+	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
+		// Call the tracker's OnChanged method, but we've seen the objects
+		// coming through this path missing TypeMeta, so ensure it is properly
+		// populated.
+		controller.EnsureTypeMeta(
+			reconciler.ConfigMapTracker.OnChanged,
+			corev1.SchemeGroupVersion.WithKind("ConfigMap"),
+		),
+	))
+	channelInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	// ConsumerGroup changes and enqueue associated channel
 	consumerGroupInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
