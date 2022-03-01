@@ -74,6 +74,8 @@ func (k *kafkaSender) SendEvent(ce cloudevents.Event, rawEndpoint interface{}) e
 		WithClientId("continualtests-kafka-sender").
 		WithDefaults().
 		Build(k.ctx)
+	// Prevent excessive wait time.
+	conf.Producer.RequiredAcks = sarama.WaitForLocal
 	if err != nil {
 		return err
 	}
