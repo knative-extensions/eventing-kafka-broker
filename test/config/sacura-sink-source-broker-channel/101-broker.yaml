@@ -17,6 +17,8 @@ kind: Broker
 metadata:
   name: broker
   namespace: sacura-sink-source-broker-channel
+  annotations:
+    eventing.knative.dev/broker.class: Kafka
 spec:
 
   config:
