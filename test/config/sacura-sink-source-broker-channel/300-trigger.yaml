@@ -21,6 +21,6 @@ spec:
   broker: broker
   subscriber:
     ref:
-      apiVersion: v1
+      apiVersion: v1beta1
       kind: KafkaChannel
       name: channel
