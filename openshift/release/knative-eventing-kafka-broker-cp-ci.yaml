@@ -811,23 +811,6 @@ webhooks:
     failurePolicy: Fail
     name: defaulting.webhook.kafka.eventing.knative.dev
     timeoutSeconds: 2
-  - admissionReviewVersions: [ "v1", "v1beta1" ]
-    clientConfig:
-      service:
-        name: kafka-webhook-eventing
-        namespace: knative-eventing
-    sideEffects: None
-    failurePolicy: Fail
-    name: pods.defaulting.webhook.kafka.eventing.knative.dev
-    timeoutSeconds: 2
-    reinvocationPolicy: IfNeeded
-    matchPolicy: Equivalent
-    namespaceSelector:
-      matchLabels:
-        app.kubernetes.io/name: knative-eventing
-    objectSelector:
-      matchLabels:
-        app.kubernetes.io/component: kafka-dispatcher
 ---
 apiVersion: v1
 kind: Secret
