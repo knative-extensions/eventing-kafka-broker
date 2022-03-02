@@ -130,7 +130,7 @@ spec:
     spec:
       serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       containers:
         - name: kafka-broker-dispatcher
           image: registry.ci.openshift.org/openshift/knative-v1.1.3:knative-eventing-kafka-broker-dispatcher
@@ -263,7 +263,7 @@ spec:
     spec:
       serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -504,7 +504,7 @@ spec:
     spec:
       serviceAccountName: knative-kafka-sink-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -775,7 +775,7 @@ spec:
     spec:
       serviceAccountName: knative-kafka-source-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       containers:
         - name: kafka-source-dispatcher
           image: registry.ci.openshift.org/openshift/knative-v1.1.3:knative-eventing-kafka-broker-dispatcher

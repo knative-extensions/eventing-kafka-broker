@@ -293,25 +293,6 @@ data:
       </root>
     </configuration>
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: config-tracing
-  namespace: knative-eventing
-  labels:
-    kafka.eventing.knative.dev/release: v1.1.3
-    knative.dev/config-propagation: original
-    knative.dev/config-category: eventing
-  annotations:
-    knative.dev/example-checksum: "4002b4c2"
-data:
-  _example: |
-    backend: "none"
-    zipkin-endpoint: "http://zipkin.istio-system.svc.cluster.local:9411/api/v2/spans"
-    stackdriver-project-id: "my-project"
-    debug: "false"
-    sample-rate: "0.1"
----
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -583,7 +564,7 @@ spec:
         kafka.eventing.knative.dev/release: v1.1.3
     spec:
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       serviceAccountName: kafka-controller
       affinity:
         podAntiAffinity:
@@ -866,7 +847,7 @@ spec:
               weight: 100
       serviceAccountName: kafka-webhook-eventing
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       containers:
         - name: kafka-webhook-eventing
           terminationMessagePolicy: FallbackToLogsOnError

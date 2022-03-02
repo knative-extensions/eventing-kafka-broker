@@ -34,7 +34,7 @@ spec:
         kafka.eventing.knative.dev/release: devel
     spec:
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       serviceAccountName: kafka-controller
 
       # To avoid node becoming SPOF, spread our replicas to different nodes.
