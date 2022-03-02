@@ -102,9 +102,9 @@ func NewController(ctx context.Context) *controller.Impl {
 	impl := cgreconciler.NewImpl(ctx, r)
 	consumerInformer := consumer.Get(ctx)
 
-	consumerGroupInformer := consumer.Get(ctx)
+	consumerGroupInformer := consumergroup.Get(ctx)
 
-	consumergroup.Get(ctx).Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+	consumerGroupInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
 
 	globalResync := func(interface{}) {
