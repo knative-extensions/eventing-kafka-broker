@@ -19,6 +19,9 @@ package consumer
 import (
 	"context"
 
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
+	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/resolver"
 
@@ -27,9 +30,7 @@ import (
 	creconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
-	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
-	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
+	cgreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 )
 
 func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
@@ -52,6 +53,12 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 
 	r.Tracker = impl.Tracker
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(r.Tracker.OnChanged))
+
+	globalResync := func(interface{}) {
+		impl.GlobalResync(consumerInformer.Informer())
+	}
+
+	cgreconciler.ResyncOnStatefulSetChange(ctx, globalResync)
 
 	return impl
 }
