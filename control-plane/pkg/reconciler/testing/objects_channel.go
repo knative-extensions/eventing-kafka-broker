@@ -54,11 +54,11 @@ const (
 )
 
 func ChannelTopic() string {
-	c := NewChannel().(metav1.Object)
+	c := NewChannel()
 	return kafka.ChannelTopic(TopicPrefix, c)
 }
 
-func NewChannel(options ...KRShapedOption) runtime.Object {
+func NewChannel(options ...KRShapedOption) *messagingv1beta1.KafkaChannel {
 	c := &messagingv1beta1.KafkaChannel{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: ChannelNamespace,
@@ -237,6 +237,10 @@ func Subscriber1(options ...subscriberInfoOption) *SubscriberInfo {
 	return s
 }
 
+func GetSubscriberSpec(s *SubscriberInfo) *eventingduckv1.SubscriberSpec {
+	return s.spec
+}
+
 func Subscriber2(options ...subscriberInfoOption) *SubscriberInfo {
 	s := &SubscriberInfo{
 		spec: &eventingduckv1.SubscriberSpec{
@@ -258,7 +262,9 @@ func Subscriber2(options ...subscriberInfoOption) *SubscriberInfo {
 }
 
 func WithFreshSubscriber(sub *SubscriberInfo) {
-	sub.status = nil
+	sub.status.UID = sub.spec.UID
+	sub.status.ObservedGeneration = sub.spec.Generation
+	sub.status.Ready = corev1.ConditionTrue
 }
 
 func WithNoSubscriberURI(sub *SubscriberInfo) {
@@ -275,4 +281,10 @@ func WithNoSubscriberURI(sub *SubscriberInfo) {
 
 func WithUnreadySubscriber(sub *SubscriberInfo) {
 	sub.status.Ready = "False"
+	sub.status.Message = fmt.Sprintf("Subscriber %v not ready: %v %v", sub.spec.UID, "failed to reconcile consumer group,", "internal error")
+}
+
+func WithUnknownSubscriber(sub *SubscriberInfo) {
+	sub.status.Ready = "Unknown"
+	sub.status.Message = fmt.Sprintf("Subscriber %v not ready: %v", sub.spec.UID, "consumer group status unknown")
 }
