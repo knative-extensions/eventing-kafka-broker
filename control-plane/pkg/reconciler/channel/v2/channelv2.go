@@ -67,7 +67,7 @@ const (
 	TopicPrefix          = "knative-messaging-kafka"
 	DefaultDeliveryOrder = internals.Ordered
 
-	KafkaChannelConditionSubscribersReady apis.ConditionType = "SubscribersReady" //condition is registered by controller
+	KafkaChannelConditionSubscribersReady apis.ConditionType = "Subscribers" // condition is registered by controller
 )
 
 var (
