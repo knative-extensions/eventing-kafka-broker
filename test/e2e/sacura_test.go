@@ -34,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/utils/pointer"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
@@ -128,7 +129,7 @@ func runSacuraTest(t *testing.T, config SacuraTestConfig) {
 					c.Tracker,
 					types.NamespacedName{
 						Namespace: config.Namespace,
-						Name:      sacuraVerifyCommittedOffsetJob + "-" + *topic,
+						Name:      names.SimpleNameGenerator.GenerateName(sacuraVerifyCommittedOffsetJob + "-" + *topic),
 					},
 					&kafkatest.AdminConfig{
 						BootstrapServers: pkgtesting.BootstrapServersPlaintext,
