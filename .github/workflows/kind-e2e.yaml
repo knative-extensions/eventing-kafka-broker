@@ -18,8 +18,8 @@ jobs:
       fail-fast: false # Keep running if one leg fails.
       matrix:
         k8s-version:
-          - v1.21.1
-          - v1.22.2
+          - v1.22.5
+          - v1.23.3
 
         eventing-config:
           - "./third_party/eventing-latest/"
@@ -40,12 +40,12 @@ jobs:
         # This is attempting to make it a bit clearer what's being tested.
         # See: https://github.com/kubernetes-sigs/kind/releases/tag/v0.9.0
         include:
-          - k8s-version: v1.21.1
+          - k8s-version: v1.22.5
             kind-version: v0.11.1
-            kind-image-sha: sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
-          - k8s-version: v1.22.2
+            kind-image-sha: sha256:d409e1b1b04d3290195e0263e12606e1b83d5289e1f80e54914f60cd1237499d
+          - k8s-version: v1.23.3
             kind-version: v0.11.1
-            kind-image-sha: sha256:f638a08c1f68fe2a99e724ace6df233a546eaf6713019a0b310130a4f91ebe7f
+            kind-image-sha: sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a
           - test-suite: ./test/e2e_channel
             extra-test-flags: -channels=messaging.knative.dev/v1beta1:KafkaChannel
 
