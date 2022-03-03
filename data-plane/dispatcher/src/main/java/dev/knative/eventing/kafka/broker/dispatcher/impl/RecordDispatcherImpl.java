@@ -185,7 +185,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     final var pass = filter.test(recordContext.getRecord().value());
 
     Metrics
-      .eventProcessingLatency(this.resourceContext.getTags())
+      .eventProcessingLatency(getTags(recordContext))
       .register(meterRegistry)
       .record(recordContext.performLatency());
 
@@ -218,7 +218,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
                                    final Promise<Void> finalProm) {
     logDebug("Successfully sent event to subscriber", recordContext.getRecord());
 
-    incrementEventCount(response);
+    incrementEventCount(response, recordContext);
     recordDispatchLatency(response, recordContext);
 
     recordDispatcherListener.successfullySentToSubscriber(recordContext.getRecord());
@@ -230,7 +230,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
                                    final Promise<Void> finalProm) {
 
     final var response = getResponse(failure);
-    incrementEventCount(response);
+    incrementEventCount(response, recordContext);
     recordDispatchLatency(response, recordContext);
 
     dlsSender.apply(recordContext.getRecord())
@@ -282,9 +282,10 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       );
   }
 
-  private void incrementEventCount(@Nullable final HttpResponse<?> response) {
+  private void incrementEventCount(@Nullable final HttpResponse<?> response,
+                                   final ConsumerRecordContext recordContext) {
     Metrics
-      .eventCount(getTags(response))
+      .eventCount(getTags(response, recordContext))
       .register(meterRegistry)
       .increment();
   }
@@ -295,7 +296,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     logger.debug("Dispatch latency {}", keyValue("latency", latency));
 
     Metrics
-      .eventDispatchLatency(getTags(response))
+      .eventDispatchLatency(getTags(response, recordContext))
       .register(meterRegistry)
       .record(latency);
   }
@@ -310,17 +311,26 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     return null;
   }
 
-  private Tags getTags(HttpResponse<?> response) {
+  private Tags getTags(HttpResponse<?> response, ConsumerRecordContext recordContext) {
     Tags tags;
     if (response == null) {
-      tags = this.noResponseResourceTags;
+      tags = this.noResponseResourceTags.and(
+        Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType())
+      );
     } else {
       tags = this.resourceContext.getTags().and(
         Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, response.statusCode() / 100 + "xx"),
-        Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(response.statusCode()))
+        Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(response.statusCode())),
+        Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType())
       );
     }
     return tags;
+  }
+
+  private Tags getTags(final ConsumerRecordContext recordContext) {
+    return this.resourceContext.getTags().and(
+      Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType())
+    );
   }
 
   private static void logError(
