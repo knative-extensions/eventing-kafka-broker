@@ -18,6 +18,8 @@ metadata:
   name: channel
   namespace: sacura-sink-source-broker-channel
 spec:
+  numPartitions: 10
+  replicationFactor: 3
 
   delivery:
     retry: 5
