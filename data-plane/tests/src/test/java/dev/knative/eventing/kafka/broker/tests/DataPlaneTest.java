@@ -147,7 +147,7 @@ public class DataPlaneTest {
 
    */
   @Test
-  @Timeout(timeUnit = TimeUnit.MINUTES, value = 1)
+  @Timeout(timeUnit = TimeUnit.MINUTES, value = 5)
   public void execute(final Vertx vertx, final VertxTestContext context) throws InterruptedException {
 
     final var checkpoints = context.checkpoint(4);
