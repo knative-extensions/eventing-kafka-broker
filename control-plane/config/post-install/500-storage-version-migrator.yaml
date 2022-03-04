@@ -15,7 +15,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  generateName: knative-kafka-storage-version-migrator-
+  name: knative-kafka-storage-version-migrator
   namespace: knative-eventing
   labels:
     app: "knative-kafka-storage-version-migrator"
