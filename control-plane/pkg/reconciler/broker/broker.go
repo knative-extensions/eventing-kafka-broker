@@ -90,7 +90,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 	statusConditionManager.DataPlaneAvailable()
 
-	topicConfig, brokerConfig, err := r.topicConfig(ctx, logger, broker)
+	topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -305,7 +305,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return controller.NewRequeueAfter(5 * time.Second)
 	}
 
-	topicConfig, brokerConfig, err := r.topicConfig(ctx, logger, broker)
+	topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
 	if err != nil {
 		return fmt.Errorf("failed to resolve broker config: %w", err)
 	}
@@ -356,7 +356,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	return nil
 }
 
-func (r *Reconciler) topicConfig(ctx context.Context, logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, *corev1.ConfigMap, error) {
+func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, *corev1.ConfigMap, error) {
 
 	logger.Debug("broker config", zap.Any("broker.spec.config", broker.Spec.Config))
 
