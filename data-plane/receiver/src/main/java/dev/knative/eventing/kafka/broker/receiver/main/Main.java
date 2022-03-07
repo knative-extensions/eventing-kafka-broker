@@ -47,6 +47,10 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public class Main {
 
+  static {
+    System.setProperty("logback.configurationFile", "/etc/logging/config.xml");
+  }
+
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
   /**
