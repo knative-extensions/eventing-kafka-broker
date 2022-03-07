@@ -348,6 +348,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 	logger.Debug("Topic deleted", zap.String("topic", topic))
 
+	// TODO(pierDipi) remove after some releases (released in 1.4)
 	if err := r.removeFinalizerCM(ctx, finalizerCM(broker), brokerConfig); err != nil {
 		return err
 	}
@@ -368,21 +369,60 @@ func (r *Reconciler) topicConfig(ctx context.Context, logger *zap.Logger, broker
 		// Namespace not specified, use broker namespace.
 		namespace = broker.Namespace
 	}
-	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(broker.Spec.Config.Name)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, err)
-	}
 
-	if err := r.addFinalizerCM(ctx, finalizerCM(broker), cm); err != nil {
-		return nil, nil, err
+	// There might be cases where the ConfigMap is deleted before the Broker.
+	// In these cases, we rebuild the ConfigMap from broker status annotations.
+	//
+	// These annotations aren't guaranteed to be there or valid since there might
+	// be other actions messing with them, so when we try to rebuild the ConfigMap's
+	// data but the guess is wrong or data are invalid we return the
+	// `StatusReasonNotFound` error instead of the error generated from the fake
+	// "re-built" ConfigMap.
+
+	isRebuilt := false
+	cm, getCmError := r.ConfigMapLister.ConfigMaps(namespace).Get(broker.Spec.Config.Name)
+	if getCmError != nil && !apierrors.IsNotFound(getCmError) {
+		return nil, nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, getCmError)
+	}
+	if apierrors.IsNotFound(getCmError) {
+		cm = rebuildCMFromAnnotations(broker)
+		isRebuilt = true
 	}
 
 	topicConfig, err := kafka.TopicConfigFromConfigMap(logger, cm)
 	if err != nil {
+		if isRebuilt {
+			return nil, cm, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, getCmError)
+		}
 		return nil, cm, fmt.Errorf("unable to build topic config from configmap: %w - ConfigMap data: %v", err, cm.Data)
 	}
 
+	if broker.Status.Annotations == nil {
+		broker.Status.Annotations = make(map[string]string, len(cm.Data))
+	}
+
+	// Save ConfigMap's data into broker annotations
+	for k, v := range cm.Data {
+		broker.Status.Annotations[k] = v
+	}
+
 	return topicConfig, cm, nil
+}
+
+func rebuildCMFromAnnotations(br *eventing.Broker) *corev1.ConfigMap {
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: br.Spec.Config.Namespace,
+			Name:      br.Spec.Config.Name,
+		},
+	}
+	for k, v := range br.Status.Annotations {
+		if cm.Data == nil {
+			cm.Data = make(map[string]string, len(br.Status.Annotations))
+		}
+		cm.Data[k] = v
+	}
+	return cm
 }
 
 func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
@@ -420,18 +460,6 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 	resource.EgressConfig = egressConfig
 
 	return resource, nil
-}
-
-func (r *Reconciler) addFinalizerCM(ctx context.Context, finalizer string, cm *corev1.ConfigMap) error {
-	if !containsFinalizerCM(cm, finalizer) {
-		cm := cm.DeepCopy() // Do not modify informer copy.
-		cm.Finalizers = append(cm.Finalizers, finalizer)
-		_, err := r.KubeClient.CoreV1().ConfigMaps(cm.GetNamespace()).Update(ctx, cm, metav1.UpdateOptions{})
-		if err != nil && !apierrors.IsNotFound(err) {
-			return fmt.Errorf("failed to add finalizer to ConfigMap %s/%s: %w", cm.GetNamespace(), cm.GetName(), err)
-		}
-	}
-	return nil
 }
 
 func containsFinalizerCM(cm *corev1.ConfigMap, finalizer string) bool {
