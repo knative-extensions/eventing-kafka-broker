@@ -73,7 +73,8 @@ jobs:
 
     env:
       GOPATH: ${{ github.workspace }}
-      KO_DOCKER_REPO: kind.local
+      KO_DOCKER_REPO: localhost:5001
+      REGISTRY_PORT: 5001
       REPLICAS: 1
       SYSTEM_NAMESPACE: knative-eventing
       # Use a semi-random cluster suffix, but somewhat predictable
@@ -106,6 +107,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: ./src/knative.dev/eventing-kafka-broker
+
+      - name: Setup java
+        uses: actions/setup-java@v2
+        with:
+          cache: 'maven'
+          java-version: 17
+          distribution: 'temurin' # Eclipse Temurin, the new home for AdoptOpenJDK
 
       - name: Install KinD
         run: |

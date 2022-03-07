@@ -394,6 +394,8 @@
           <artifactId>jib-maven-plugin</artifactId>
           <version>${jib.version}</version>
           <configuration>
+            <!--  KinD e2e tests registry uses HTTP -->
+            <allowInsecureRegistries>true</allowInsecureRegistries>
             <from>
               <image>gcr.io/distroless/java17-debian11:nonroot</image>
               <platforms>
