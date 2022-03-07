@@ -12,7 +12,6 @@ So you want to hack on Knative Eventing Kafka Broker? Yay! Please refer to Knati
 You need to install:
 
 - [`ko`](https://github.com/google/ko) - (_required_)
-- [`docker`](https://www.docker.com/) - (_required_)
 - [`Go`](https://golang.org/) - (_required_)
     - check
       [go \<version\>](https://github.com/knative-sandbox/eventing-kafka-broker/blob/master/go.mod)

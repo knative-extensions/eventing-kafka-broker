@@ -31,7 +31,6 @@ update another one will be created. This allows to not block or use locks.
 ├── config
 ├── core
 ├── dispatcher
-├── docker
 ├── generated
 ├── receiver
 ```
@@ -39,7 +38,6 @@ update another one will be created. This allows to not block or use locks.
 - `config` directory contains Kubernetes artifacts (yaml).
 - `core` directory contains the core module, in particular, it contains classes for representing Eventing objects
 - `dispatcher` directory contains the [_Dispatcher_](#dispatcher) application.
-- `docker` directory contains `Dockerfile`s.
-- `generated` directory contains a module in which the protobuf compiler (`protoc`) generates code. Git ignores the
+- `contract` directory contains a module in which the protobuf compiler (`protoc`) generates code. Git ignores the
   generated code.
 - `receiver` directory contains the [_Receiver_](#receiver) application.
