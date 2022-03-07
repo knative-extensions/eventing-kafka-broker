@@ -24,6 +24,9 @@ import (
 	_ "knative.dev/pkg/configmap/hash-gen"
 	_ "knative.dev/pkg/hack"
 
+	// Needed for the storage version migration.
+	_ "knative.dev/pkg/apiextensions/storageversion/cmd/migrate"
+
 	// Test images from eventing
 	_ "knative.dev/eventing/test/test_images/event-flaker"
 	_ "knative.dev/eventing/test/test_images/event-library"
