@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
+package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
 
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
@@ -31,7 +31,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AttributesFilterTest {
+public class ExactFilterTest {
 
   @ParameterizedTest
   @MethodSource(value = {"testCases"})
@@ -40,7 +40,7 @@ public class AttributesFilterTest {
     final CloudEvent event,
     final boolean shouldMatch) {
 
-    final var filter = new AttributesFilter(attributes);
+    final var filter = new ExactFilter(attributes);
 
     final var match = filter.test(event);
 
@@ -62,7 +62,7 @@ public class AttributesFilterTest {
       "type", ""
     );
 
-    final var filter = new AttributesFilter(attributes);
+    final var filter = new ExactFilter(attributes);
 
     final boolean match = filter.test(event);
 
@@ -87,7 +87,7 @@ public class AttributesFilterTest {
       "extension2", "valueExtension2"
     );
 
-    final var filter = new AttributesFilter(attributes);
+    final var filter = new ExactFilter(attributes);
 
     final boolean match = filter.test(event);
 
@@ -109,7 +109,7 @@ public class AttributesFilterTest {
       "extension2", "valueExtension"
     );
 
-    final var filter = new AttributesFilter(attributes);
+    final var filter = new ExactFilter(attributes);
 
     final boolean match = filter.test(event);
 
@@ -133,7 +133,7 @@ public class AttributesFilterTest {
       "type", ""
     );
 
-    final var filter = new AttributesFilter(attributes);
+    final var filter = new ExactFilter(attributes);
 
     final boolean match = filter.test(event);
 

@@ -39,10 +39,10 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserialize
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AllFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AnyFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.CeSqlFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.ExactFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.NotFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.PrefixFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.SuffixFilter;
@@ -218,28 +218,28 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
       logger.debug("Egress contains dialected-filters. Dialected-filters will be used for event filtering. Egress {}", egress.getReference());
       return getFilter(egress.getDialectedFilterList());
     } else if (egress.hasFilter()) {
-      return new AttributesFilter(egress.getFilter().getAttributesMap());
+      return new ExactFilter(egress.getFilter().getAttributesMap());
     }
     return Filter.noop();
   }
 
-  private Filter getFilter(DataPlaneContract.DialectedFilter filter) {
+  private static Filter getFilter(DataPlaneContract.DialectedFilter filter) {
     return switch (filter.getFilterCase()) {
-      case EXACT -> new AttributesFilter(filter.getExact().getAttributesMap());
+      case EXACT -> new ExactFilter(filter.getExact().getAttributesMap());
       case PREFIX -> new PrefixFilter(filter.getPrefix().getAttributesMap());
       case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttributesMap());
       case NOT -> new NotFilter(getFilter(filter.getNot().getFilter()));
       case ANY -> new AnyFilter(filter.getAny().getFiltersList().stream().
-        map(this::getFilter).collect(Collectors.toSet()));
+        map(ConsumerVerticleFactoryImpl::getFilter).collect(Collectors.toSet()));
       case ALL -> new AllFilter(filter.getAll().getFiltersList().stream().
-        map(this::getFilter).collect(Collectors.toSet()));
+        map(ConsumerVerticleFactoryImpl::getFilter).collect(Collectors.toSet()));
       case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
       default -> Filter.noop();
     };
   }
 
-  private Filter getFilter(List<DataPlaneContract.DialectedFilter> filters) {
-    return new AllFilter(filters.stream().map(this::getFilter).collect(Collectors.toSet()));
+  private static Filter getFilter(List<DataPlaneContract.DialectedFilter> filters) {
+    return new AllFilter(filters.stream().map(ConsumerVerticleFactoryImpl::getFilter).collect(Collectors.toSet()));
   }
 
   static ResponseHandler getResponseHandler(final DataPlaneContract.Egress egress,
