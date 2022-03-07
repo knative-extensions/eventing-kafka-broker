@@ -23,4 +23,9 @@ public class ExactFilter extends AttributesFilter {
   public ExactFilter(Map<String, String> attributes) {
     super(attributes);
   }
+
+  @Override
+  public boolean match(String given, String wanted) {
+    return given.equals(wanted);
+  }
 }

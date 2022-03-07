@@ -32,10 +32,10 @@ public class NotFilter implements Filter {
 
   @Override
   public boolean test(CloudEvent cloudEvent) {
-    logger.debug("{}: Testing NOT filter. Event {}", cloudEvent);
+    logger.debug("Testing NOT filter. Event {}", cloudEvent);
     boolean passed = !filter.test(cloudEvent);
     String result = passed ? "Succeeded" : "Failed";
-    logger.debug("{}: {} - Event {}", result, this.filter, cloudEvent);
+    logger.debug("{}: Filter {} - Event {}", result, this.filter, cloudEvent);
     return passed;
   }
 }
