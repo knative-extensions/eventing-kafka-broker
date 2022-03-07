@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"go.uber.org/zap"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -54,8 +55,9 @@ type Reconciler struct {
 	EventingClient eventingclientset.Interface
 	Resolver       *resolver.URIResolver
 
-	Env   *config.Env
-	Flags *feature.Flags
+	Env       *config.Env
+	Flags     feature.Flags
+	FlagsLock sync.RWMutex
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -284,8 +286,13 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 			Name:      trigger.GetName(),
 		},
 	}
+	newFiltersEnabled := func() bool {
+		r.FlagsLock.RLock()
+		defer r.FlagsLock.RUnlock()
+		return r.Flags.IsEnabled(feature.NewTriggerFilters)
+	}()
 
-	if r.Flags.IsEnabled(feature.NewTriggerFilters) && len(trigger.Spec.Filters) > 0 {
+	if newFiltersEnabled && len(trigger.Spec.Filters) > 0 {
 		dialectedFilters := make([]*contract.DialectedFilter, 0, len(trigger.Spec.Filters))
 		for _, f := range trigger.Spec.Filters {
 			dialectedFilters = append(dialectedFilters, contract.FromSubscriptionFilter(f))

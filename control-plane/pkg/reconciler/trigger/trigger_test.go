@@ -2767,7 +2767,7 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 			EventingClient: eventingclient.Get(ctx),
 			Resolver:       nil,
 			Env:            env,
-			Flags:          &flags,
+			Flags:          flags,
 		}
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))

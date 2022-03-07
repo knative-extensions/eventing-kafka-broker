@@ -18,7 +18,7 @@ package contract
 
 import v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 
-// NewExactFilter converts the SubscriptionsAPIFilter into the exact dialect of
+// newExactFilter converts the SubscriptionsAPIFilter into the exact dialect of
 // the DialectedFilter as defined in CloudEvents Subscriptions API.
 //
 // Exact contains exactly one attribute where the key is the name of the CloudEvent
@@ -27,7 +27,7 @@ import v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 //
 // See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
 // https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#all-filter-dialect
-func NewExactFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
+func newExactFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 	return &DialectedFilter{
 		Filter: &DialectedFilter_Exact{
 			Exact: &Exact{
@@ -37,7 +37,7 @@ func NewExactFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 	}
 }
 
-// NewPrefixFilter converts the SubscriptionsAPIFilter into the suffix dialect of
+// newPrefixFilter converts the SubscriptionsAPIFilter into the suffix dialect of
 // the DialectedFilter as defined in CloudEvents Subscriptions API.
 //
 // Prefix contains exactly one attribute where the key is the name of the CloudEvent
@@ -45,7 +45,7 @@ func NewExactFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 //
 // See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
 // https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#prefix-filter-dialect
-func NewPrefixFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
+func newPrefixFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 	return &DialectedFilter{
 		Filter: &DialectedFilter_Prefix{
 			Prefix: &Prefix{
@@ -55,7 +55,7 @@ func NewPrefixFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 	}
 }
 
-// NewSuffixFilter converts the SubscriptionsAPIFilter into the suffix dialect of
+// newSuffixFilter converts the SubscriptionsAPIFilter into the suffix dialect of
 // the DialectedFilter as defined in CloudEvents Subscriptions API.
 //
 // Suffix contains exactly one attribute where the key is the name of the CloudEvent
@@ -63,7 +63,7 @@ func NewPrefixFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 //
 // See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
 // https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#suffix-filter-dialect
-func NewSuffixFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
+func newSuffixFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 	return &DialectedFilter{
 		Filter: &DialectedFilter_Suffix{
 			Suffix: &Suffix{
@@ -73,56 +73,53 @@ func NewSuffixFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 	}
 }
 
-// NewAllFilter converts the SubscriptionsAPIFilter into the all dialect of the
+// newAllFilter converts the SubscriptionsAPIFilter into the all dialect of the
 // DialectedFilter as defined in CloudEvents Subscriptions API.
 //
 // All filter evaluates to true when all nested filters evaluate to true.
 //
 // See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
 // https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#all-filter-dialect
-func NewAllFilter(filters []v1.SubscriptionsAPIFilter) *DialectedFilter {
-	all := All{
-		Filters: make([]*DialectedFilter, 0, len(filters)),
-	}
+func newAllFilter(filters []v1.SubscriptionsAPIFilter) *DialectedFilter {
+	all := make([]*DialectedFilter, 0, len(filters))
+
 	for _, f := range filters {
-		all.Filters = append(all.Filters, FromSubscriptionFilter(f))
+		all = append(all, FromSubscriptionFilter(f))
 	}
 	return &DialectedFilter{
 		Filter: &DialectedFilter_All{
-			All: &all,
+			All: &All{Filters: all},
 		},
 	}
 }
 
-// NewAnyFilter converts the SubscriptionsAPIFilter into the any dialect of the
+// newAnyFilter converts the SubscriptionsAPIFilter into the any dialect of the
 // DialectedFilter as defined in CloudEvents Subscriptions API.
 //
 // All filter evaluates to true when all nested filters evaluate to true.
 //
 // See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
 // https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#any-filter-dialect
-func NewAnyFilter(filters []v1.SubscriptionsAPIFilter) *DialectedFilter {
-	any := Any{
-		Filters: make([]*DialectedFilter, 0, len(filters)),
-	}
+func newAnyFilter(filters []v1.SubscriptionsAPIFilter) *DialectedFilter {
+	any := make([]*DialectedFilter, 0, len(filters))
 	for _, f := range filters {
-		any.Filters = append(any.Filters, FromSubscriptionFilter(f))
+		any = append(any, FromSubscriptionFilter(f))
 	}
 	return &DialectedFilter{
 		Filter: &DialectedFilter_Any{
-			Any: &any,
+			Any: &Any{Filters: any},
 		},
 	}
 }
 
-// NewNotFilter converts the SubscriptionsAPIFilter into the not dialect of the
+// newNotFilter converts the SubscriptionsAPIFilter into the not dialect of the
 // DialectedFilter as defined in CloudEvents Subscriptions API.
 //
 // Not filter evaluates to true when the nested filter evaluates to false.
 //
 // See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
 // https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#not-filter-dialect
-func NewNotFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
+func newNotFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 	return &DialectedFilter{
 		Filter: &DialectedFilter_Not{
 			Not: &Not{
@@ -132,7 +129,7 @@ func NewNotFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 	}
 }
 
-// NewCESQLFilter converts the SubscriptionsAPIFilter into the sql dialect of the
+// newCESQLFilter converts the SubscriptionsAPIFilter into the sql dialect of the
 // DialectedFilter as defined in CloudEvents Subscriptions API.
 //
 // CESOL filter is a Cloud Events SQL Expression
@@ -142,11 +139,11 @@ func NewNotFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 //
 // See "CNCF CloudEvents SQL Expression Language"
 // https://github.com/cloudevents/spec/blob/main/cesql/spec.md
-func NewCESQLFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
+func newCESQLFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 	return &DialectedFilter{
 		Filter: &DialectedFilter_Cesql{
 			Cesql: &CESQL{
-				Expression: f.SQL,
+				Expression: f.CESQL,
 			},
 		},
 	}
@@ -160,27 +157,27 @@ func NewCESQLFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 // E.g a SubscriptionsAPIFilter with the Exact field set will be converted to a DialectedFilter
 // which Filter is of type DialectedFilter_Exact.
 func FromSubscriptionFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
-	filters := make([]*DialectedFilter, 0, 0)
+	filters := make([]*DialectedFilter, 0)
 	if len(f.All) > 0 {
-		filters = append(filters, NewAllFilter(f.All))
+		filters = append(filters, newAllFilter(f.All))
 	}
 	if len(f.Any) > 0 {
-		filters = append(filters, NewAnyFilter(f.All))
+		filters = append(filters, newAnyFilter(f.All))
 	}
 	if f.Not != nil {
-		filters = append(filters, NewNotFilter(*f.Not))
+		filters = append(filters, newNotFilter(*f.Not))
 	}
 	if f.Exact != nil {
-		filters = append(filters, NewExactFilter(f))
+		filters = append(filters, newExactFilter(f))
 	}
 	if f.Prefix != nil {
-		filters = append(filters, NewPrefixFilter(f))
+		filters = append(filters, newPrefixFilter(f))
 	}
 	if f.Suffix != nil {
-		filters = append(filters, NewSuffixFilter(f))
+		filters = append(filters, newSuffixFilter(f))
 	}
-	if f.SQL != "" {
-		filters = append(filters, NewCESQLFilter(f))
+	if f.CESQL != "" {
+		filters = append(filters, newCESQLFilter(f))
 	}
 	switch {
 	case len(filters) == 1:
