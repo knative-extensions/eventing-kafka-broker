@@ -75,7 +75,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		BrokerLister:   brokerInformer.Lister(),
 		EventingClient: eventingclient.Get(ctx),
 		Env:            configs,
-		Flags:          &feature.Flags{},
+		Flags:          feature.Flags{},
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -88,14 +88,17 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	})
 
 	featureStore := feature.NewStore(
-		logging.FromContext(ctx).Named("feature-config-store"),
+		logging.FromContext(ctx).Named("feature-config-eventing-store"),
 		func(name string, value interface{}) {
 			flags, ok := value.(feature.Flags)
 			if !ok {
-				logger.Warn("Features ConfigMap updated but we didn't get expected flags. Skipping updating cached features")
+				logger.Warn("Features ConfigMap " + name + " updated but we didn't get expected flags. Skipping updating cached features")
 			}
-			logger.Debug("Features ConfigMap updated. Updating cached features.")
-			reconciler.Flags = &flags
+			logger.Debug("Features ConfigMap " + name + " updated. Updating cached features.")
+			reconciler.FlagsLock.Lock()
+			defer reconciler.FlagsLock.Unlock()
+			reconciler.Flags = flags
+			impl.GlobalResync(triggerInformer.Informer())
 		},
 	)
 	featureStore.WatchConfigs(watcher)

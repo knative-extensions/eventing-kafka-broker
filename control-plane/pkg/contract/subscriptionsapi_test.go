@@ -21,6 +21,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+
 	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 )
 
@@ -54,7 +55,7 @@ func TestFromSubscriptionFilter(t *testing.T) {
 						},
 					},
 					{
-						SQL: "subject = 'source'",
+						CESQL: "subject = 'source'",
 					},
 				},
 			},
