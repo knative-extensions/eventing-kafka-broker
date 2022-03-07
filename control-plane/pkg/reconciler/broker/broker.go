@@ -462,18 +462,6 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 	return resource, nil
 }
 
-func containsFinalizerCM(cm *corev1.ConfigMap, finalizer string) bool {
-	if cm == nil {
-		return false
-	}
-	for _, f := range cm.Finalizers {
-		if f == finalizer {
-			return true
-		}
-	}
-	return false
-}
-
 func (r *Reconciler) removeFinalizerCM(ctx context.Context, finalizer string, cm *corev1.ConfigMap) error {
 	newFinalizers := make([]string, 0, len(cm.Finalizers))
 	for _, f := range cm.Finalizers {
