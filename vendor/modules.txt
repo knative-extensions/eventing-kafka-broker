@@ -1339,6 +1339,8 @@ knative.dev/hack
 knative.dev/hack/shell
 # knative.dev/pkg v0.0.0-20220301181942-2fdd5f232e77
 ## explicit
+knative.dev/pkg/apiextensions/storageversion
+knative.dev/pkg/apiextensions/storageversion/cmd/migrate
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
 knative.dev/pkg/apis/duck/ducktypes
