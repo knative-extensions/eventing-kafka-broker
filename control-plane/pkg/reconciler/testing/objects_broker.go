@@ -18,6 +18,7 @@ package testing
 
 import (
 	"fmt"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -85,6 +86,7 @@ func NewDeletedBroker(options ...reconcilertesting.BrokerOption) runtime.Object 
 			func(broker *eventing.Broker) {
 				WithDeletedTimeStamp(broker)
 			},
+			BrokerConfigMapAnnotations(),
 		)...,
 	)
 }
@@ -138,9 +140,8 @@ type CMOption func(cm *corev1.ConfigMap)
 func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int, options ...CMOption) *corev1.ConfigMap {
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace:  ConfigMapNamespace,
-			Name:       ConfigMapName,
-			Finalizers: []string{"finalizer-that-we-should-not-drop"},
+			Namespace: ConfigMapNamespace,
+			Name:      ConfigMapName,
 		},
 		Data: map[string]string{
 			kafka.BootstrapServersConfigMapKey:              bootstrapServers,
@@ -334,5 +335,25 @@ func StatusBrokerProbeSucceeded(broker *eventing.Broker) {
 func StatusBrokerProbeFailed(status prober.Status) reconcilertesting.BrokerOption {
 	return func(broker *eventing.Broker) {
 		StatusProbeFailed(status)(broker)
+	}
+}
+
+func BrokerConfigMapAnnotations() reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		if broker.Status.Annotations == nil {
+			broker.Status.Annotations = make(map[string]string, 10)
+		}
+		broker.Status.Annotations[kafka.BootstrapServersConfigMapKey] = strings.Join(bootstrapServers, ",")
+		broker.Status.Annotations[kafka.DefaultTopicNumPartitionConfigMapKey] = fmt.Sprintf("%d", DefaultNumPartitions)
+		broker.Status.Annotations[kafka.DefaultTopicReplicationFactorConfigMapKey] = fmt.Sprintf("%d", DefaultReplicationFactor)
+	}
+}
+
+func BrokerConfigMapSecretAnnotation(name string) reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		if broker.Status.Annotations == nil {
+			broker.Status.Annotations = make(map[string]string, 10)
+		}
+		broker.Status.Annotations[security.AuthSecretNameKey] = name
 	}
 }
