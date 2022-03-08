@@ -136,7 +136,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -171,6 +170,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerTopicReady,
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
+						BrokerConfigMapAnnotations(),
 					),
 				},
 			},
@@ -196,7 +196,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -230,6 +229,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						StatusBrokerProbeFailed(prober.StatusNotReady),
+						BrokerConfigMapAnnotations(),
 					),
 				},
 			},
@@ -258,7 +258,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -291,6 +290,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						StatusBrokerProbeFailed(prober.StatusUnknown),
 					),
 				},
@@ -318,7 +318,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -350,6 +349,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
@@ -377,7 +377,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -409,6 +408,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
@@ -436,9 +436,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					BrokerTopic(), createTopicError,
 				),
 			},
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
-			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
 			},
@@ -449,6 +446,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerConfigParsed,
 						StatusBrokerFailedToCreateTopic,
+						BrokerConfigMapAnnotations(),
 					),
 				},
 			},
@@ -482,7 +480,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -515,6 +512,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
@@ -539,7 +537,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -570,6 +567,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 					),
@@ -609,7 +607,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -651,6 +648,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 					),
@@ -701,7 +699,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -748,6 +745,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved("http://www.my-sink.com/api"),
@@ -793,7 +791,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -833,6 +830,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 					),
@@ -873,7 +871,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -910,6 +907,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 					),
@@ -954,9 +952,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			},
 			Key:     testKey,
 			WantErr: true,
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
-			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
 				Eventf(
@@ -981,6 +976,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerConfigNotParsed("failed to resolve Spec.Delivery.DeadLetterSink: destination missing Ref and URI, expected at least one"),
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 					),
 				},
 			},
@@ -999,11 +995,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			},
 			Key:     testKey,
 			WantErr: true,
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName, func(cm *corev1.ConfigMap) {
-					cm.Data["bootstrap.servers"] = ""
-				}),
-			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
 				Eventf(
@@ -1050,7 +1041,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1086,6 +1076,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 					),
@@ -1122,7 +1113,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName, BrokerAuthConfig("secret-1")),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1166,6 +1156,8 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
+						BrokerConfigMapSecretAnnotation("secret-1"),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 					),
@@ -1318,7 +1310,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1374,6 +1365,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
@@ -1429,7 +1421,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1467,6 +1458,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
@@ -1495,7 +1487,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1533,6 +1524,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
@@ -1561,7 +1553,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1596,6 +1587,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
@@ -1624,7 +1616,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1662,6 +1653,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
@@ -1675,6 +1667,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			Objects: []runtime.Object{
 				NewBroker(
 					WithDelivery(),
+					BrokerConfigMapAnnotations(),
 				),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
@@ -1698,9 +1691,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			WantEvents: []string{
 				finalizerUpdatedEvent,
 			},
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
-			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
 			},
@@ -1716,6 +1706,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
+						BrokerConfigMapAnnotations(),
 					),
 				},
 			},
@@ -1749,7 +1740,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdate(ConfigMapFinalizerName),
 				BrokerReceiverPodUpdate(env.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "1"}),
 				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "1"}),
 			},
@@ -1768,6 +1758,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
+						BrokerConfigMapAnnotations(),
 					),
 				},
 			},
@@ -1779,23 +1770,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 	}
 
 	useTable(t, table, &env)
-}
-
-func ConfigMapFinalizerUpdate(name string, opts ...CMOption) clientgotesting.UpdateActionImpl {
-	return clientgotesting.NewUpdateAction(
-		schema.GroupVersionResource{
-			Group:    "*",
-			Version:  "v1",
-			Resource: "ConfigMap",
-		},
-		ConfigMapNamespace,
-		BrokerConfig(bootstrapServers, 20, 5,
-			append(
-				[]CMOption{BrokerConfigFinalizer(name)},
-				opts...,
-			)...,
-		),
-	)
 }
 
 func ConfigMapFinalizerUpdateRemove(name string, opts ...CMOption) clientgotesting.UpdateActionImpl {
@@ -1855,6 +1829,34 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					Generation: 2,
 				}),
 				ConfigMapFinalizerUpdateRemove(ConfigMapFinalizerName),
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
+			},
+		},
+		{
+			Name: "Reconciled normal - no ConfigMap, rebuild from annotations",
+			Objects: []runtime.Object{
+				NewDeletedBroker(
+					BrokerConfigMapAnnotations(),
+				),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+						},
+					},
+					Generation: 1,
+				}, &env),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources:  []*contract.Resource{},
+					Generation: 2,
+				}),
 			},
 			OtherTestData: map[string]interface{}{
 				testProber: probertesting.MockProber(prober.StatusNotReady),
