@@ -1360,8 +1360,8 @@ k8s.io/utils v0.0.0-20211208161948-7d6a63dca704 h1:ZKMMxTvduyf5WUtREOqg5LiXaN1KO
 k8s.io/utils v0.0.0-20211208161948-7d6a63dca704/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 knative.dev/control-protocol v0.0.0-20220201152531-79a0b1ad34b9/go.mod h1:OGZyr8rJQoDs8pE9gQ47koLdhJ+Vb0QubzntQbrwjdY=
 knative.dev/eventing v0.29.1-0.20220228193110-f2045b0d65b7/go.mod h1:1PF6Gr2r+y0PrJ/sgoN8jcAi599SLbKDuGulAsdGX/w=
-knative.dev/eventing v0.29.1-0.20220307093036-6fabdd586db7 h1:lGhM4CYQjo0VLqmYYt2Julns4b2HvZxXoKswsFdRzxs=
-knative.dev/eventing v0.29.1-0.20220307093036-6fabdd586db7/go.mod h1:JCqC8evTls1WiBTmYhPEGME6OQD8HFnLQjFPImwOEOg=
+knative.dev/eventing v0.29.1-0.20220307200636-9590bc3a96a3 h1:RWDEEbt3LdhbFYOFPs2udE8X9TtrgZkcbAKaRH8Cv3k=
+knative.dev/eventing v0.29.1-0.20220307200636-9590bc3a96a3/go.mod h1:JCqC8evTls1WiBTmYhPEGME6OQD8HFnLQjFPImwOEOg=
 knative.dev/eventing-kafka v0.28.1-0.20220304062435-fb7769ca5216 h1:RMXWs9ycE9IYkjCb9MoNmKWWg4pHQ7PZwxBaMiT1RYA=
 knative.dev/eventing-kafka v0.28.1-0.20220304062435-fb7769ca5216/go.mod h1:f9NT3MrbeIORmRzUhzuDtVhrC8/MajxJukpEyQlplVw=
 knative.dev/hack v0.0.0-20220118141833-9b2ed8471e30/go.mod h1:PHt8x8yX5Z9pPquBEfIj0X66f8iWkWfR0S/sarACJrI=
