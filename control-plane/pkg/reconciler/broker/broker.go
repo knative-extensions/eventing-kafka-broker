@@ -222,6 +222,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 	statusConditionManager.Addressable(address)
 
+	// TODO(pierDipi) remove after some releases (released in 1.4)
+	if err := r.removeFinalizerCM(ctx, finalizerCM(broker), brokerConfig); err != nil {
+		return err
+	}
+
 	return nil
 }
 
