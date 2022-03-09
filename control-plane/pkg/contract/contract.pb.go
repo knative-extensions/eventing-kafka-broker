@@ -1191,10 +1191,11 @@ func (*Egress_DiscardReply) isEgress_ReplyStrategy() {}
 // Ingress is the definition for HTTP ingress that is receiving the events
 // into the Knative Kafka component.
 //
-// When path is defined, ingress will listen that path.
-// When it is not defined, it will listen "/" path but it will match the host header.
-// When both path and host are defined, it will do both exclusively, meaning still there will
-// not be any host header matching for the path defined in path field.
+// path and host fields are used for identifying the targets. They are exclusive.
+// When a request comes with "/some-path", hostname will not be checked.
+// When a request comes with "/", only hostname matching will be done.
+// It is allowed to specify both path and host in ingress contract
+// to support both modes.
 type Ingress struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
