@@ -121,7 +121,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     final var requestContext = new RequestContext(request);
 
     // Look up for the ingress producer
-    IngressProducer producer = this.ingressProducerStore.resolve(request.path());
+    IngressProducer producer = this.ingressProducerStore.resolve(request.host(), request.path());
     if (producer == null) {
       request.response().setStatusCode(NOT_FOUND.code()).end();
       logger.warn("Resource not found {}", keyValue("path", request.path()));

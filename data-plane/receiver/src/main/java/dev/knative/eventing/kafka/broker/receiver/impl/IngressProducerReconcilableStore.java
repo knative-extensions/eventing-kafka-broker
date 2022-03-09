@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl;
 
+import com.google.common.base.Strings;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
@@ -29,16 +30,15 @@ import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
-
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class implements a store of {@link IngressProducer} that can be reconciled
@@ -61,6 +61,9 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
   // path -> IngressInfo
   // We use this map on the hot path to directly resolve the producer from the path
   private final Map<String, IngressProducerImpl> pathMapper;
+  // host -> IngressInfo
+  // We use this map on the root path to directly resolve the producer from the hostname
+  private final Map<String, IngressProducerImpl> hostMapper;
 
   public IngressProducerReconcilableStore(
     final AuthProvider authProvider,
@@ -78,10 +81,20 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     this.ingressInfos = new HashMap<>();
     this.producerReferences = new HashMap<>();
     this.pathMapper = new HashMap<>();
+    this.hostMapper = new HashMap<>();
   }
 
-  public IngressProducer resolve(String path) {
-    return pathMapper.get(path);
+  public IngressProducer resolve(String host, String path) {
+    // Ignore the host when there's a path given in the request.
+    // That means, we support these modes:
+    // - Request coming to "/path" --> path is used for matching
+    // - Request coming to "/" --> hostname is used for matching
+    if (pathMapper.get(path) != null) {
+      return pathMapper.get(path);
+    } else if (hostMapper.get(host) != null) {
+      return hostMapper.get(host);
+    }
+    return null;
   }
 
   @Override
@@ -122,10 +135,20 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
         rc.getValue().getProducer(),
         resource,
         ingress.getPath(),
+        ingress.getHost(),
         producerProps
       );
 
-      this.pathMapper.put(ingress.getPath(), ingressInfo);
+      if(isRootPath(ingress.getPath()) && Strings.isNullOrEmpty(ingress.getHost())){
+        throw new IllegalArgumentException("Ingress path and host is blank. One of them should be defined. Resource UID: " + resource.getUid());
+      }
+
+      if(!isRootPath(ingress.getPath())){
+        this.pathMapper.put(ingress.getPath(), ingressInfo);
+      }
+      if (!Strings.isNullOrEmpty(ingress.getHost())){
+        this.hostMapper.put(ingress.getHost(), ingressInfo);
+      }
       this.ingressInfos.put(resource.getUid(), ingressInfo);
 
       return Future.succeededFuture();
@@ -162,12 +185,22 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
       return rc.getValue().close()
         .onSuccess(r -> {
           // Remove ingress info from the maps
-          this.pathMapper.remove(ingressInfo.getPath());
+          if(!isRootPath(ingressInfo.getPath())){
+            this.pathMapper.remove(ingressInfo.getPath());
+          }
+          if(!Strings.isNullOrEmpty(ingressInfo.getHost())){
+            this.hostMapper.remove(ingressInfo.getHost());
+          }
           this.ingressInfos.remove(resource.getUid());
         });
     }
     // Remove ingress info from the maps
-    this.pathMapper.remove(ingressInfo.getPath());
+    if(!isRootPath(ingressInfo.getPath())){
+      this.pathMapper.remove(ingressInfo.getPath());
+    }
+    if(!Strings.isNullOrEmpty(ingressInfo.getHost())){
+      this.hostMapper.remove(ingressInfo.getHost());
+    }
     this.ingressInfos.remove(resource.getUid());
 
     return Future.succeededFuture();
@@ -222,17 +255,20 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     private final KafkaProducer<String, CloudEvent> producer;
     private final String topic;
     private final String path;
+    private final String host;
     private final Properties producerProperties;
     private final DataPlaneContract.Reference reference;
 
     IngressProducerImpl(final KafkaProducer<String, CloudEvent> producer,
                         final DataPlaneContract.Resource resource,
                         final String path,
+                        final String host,
                         final Properties producerProperties) {
       this.producer = producer;
       this.topic = resource.getTopics(0);
       this.reference = resource.getReference();
       this.path = path;
+      this.host = host;
       this.producerProperties = producerProperties;
     }
 
@@ -255,9 +291,16 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
       return path;
     }
 
+    String getHost() {
+      return host;
+    }
+
     Properties getProducerProperties() {
       return producerProperties;
     }
   }
 
+  private boolean isRootPath(String path) {
+    return Strings.isNullOrEmpty(path) || path.equals("/");
+  }
 }
