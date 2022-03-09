@@ -365,20 +365,22 @@ public class IngressProducerReconcilableStoreTest {
     KafkaProducer<String, CloudEvent> producer3 = mockProducer();
     KafkaProducer<String, CloudEvent> producer4 = mockProducer();
 
+    Map<String, KafkaProducer<String, CloudEvent>> producerMap = Map.of(
+      "kafka-1:9092", producer1,
+      "kafka-2:9092", producer2,
+      "kafka-3:9092", producer3,
+      "kafka-4:9092", producer4
+    );
+
     final var store = new IngressProducerReconcilableStore(
       AuthProvider.noAuth(),
       new Properties(),
       properties -> {
-        if ("kafka-1:9092".equals(properties.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG))) {
-          return producer1;
-        } else if ("kafka-2:9092".equals(properties.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG))) {
-          return producer2;
-        } else if ("kafka-3:9092".equals(properties.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG))) {
-          return producer3;
-        } else if ("kafka-4:9092".equals(properties.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG))) {
-          return producer4;
+        KafkaProducer<String, CloudEvent> producer = producerMap.get(properties.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+        if (producer == null) {
+          throw new IllegalStateException("Can't determine what producer to return");
         }
-        throw new IllegalStateException("Can't determine what producer to return");
+        return producer;
       }
     );
 
@@ -398,6 +400,9 @@ public class IngressProducerReconcilableStoreTest {
           // match by host
           assertThat(store.resolve("http://host2", "/").getKafkaProducer()).isSameAs(producer2);
           assertThat(store.resolve("http://host4", "/").getKafkaProducer()).isSameAs(producer4);
+          assertThat(store.resolve("http://host2", "").getKafkaProducer()).isSameAs(producer2);
+          assertThat(store.resolve("http://host4", "").getKafkaProducer()).isSameAs(producer4);
+
 
           // only use path when the path is registered
           assertThat(store.resolve("http://host1", "/hello1").getKafkaProducer()).isSameAs(producer1);
@@ -413,6 +418,7 @@ public class IngressProducerReconcilableStoreTest {
 
           // don't return anything when there's nothing matching
           assertThat(store.resolve("http://unknown", "/")).isNull();
+          assertThat(store.resolve("http://unknown", "")).isNull();
           assertThat(store.resolve("", "/doesntExist")).isNull();
           assertThat(store.resolve("http://unknown", "/doesntExist")).isNull();
 

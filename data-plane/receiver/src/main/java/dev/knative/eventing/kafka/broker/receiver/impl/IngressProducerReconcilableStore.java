@@ -91,10 +91,8 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     // - Request coming to "/" --> hostname is used for matching
     if (pathMapper.get(path) != null) {
       return pathMapper.get(path);
-    } else if (hostMapper.get(host) != null) {
-      return hostMapper.get(host);
     }
-    return null;
+    return hostMapper.get(host);
   }
 
   @Override
