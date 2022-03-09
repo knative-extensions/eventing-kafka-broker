@@ -25,7 +25,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )
 
 const (
