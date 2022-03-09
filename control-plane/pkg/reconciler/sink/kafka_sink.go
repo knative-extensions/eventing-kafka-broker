@@ -173,7 +173,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		Topics: []string{ks.Spec.Topic},
 		Ingress: &contract.Ingress{
 			ContentMode: coreconfig.ContentModeFromString(*ks.Spec.ContentMode),
-			IngressType: &contract.Ingress_Path{Path: receiver.PathFromObject(ks)},
+			Path:        receiver.PathFromObject(ks),
 		},
 		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
 		Reference: &contract.Reference{

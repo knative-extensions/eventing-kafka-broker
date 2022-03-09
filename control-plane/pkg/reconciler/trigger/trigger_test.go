@@ -110,7 +110,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -129,7 +129,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -174,7 +174,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -193,7 +193,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -238,7 +238,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -257,7 +257,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -309,7 +309,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -328,7 +328,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -374,7 +374,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -393,7 +393,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -439,7 +439,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -458,7 +458,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -511,7 +511,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "z",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -524,7 +524,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Filter: &contract.Filter{Attributes: map[string]string{
@@ -563,7 +563,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "z",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -576,7 +576,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Filter: &contract.Filter{Attributes: map[string]string{
@@ -873,7 +873,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -932,7 +932,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -966,7 +966,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1013,7 +1013,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1050,7 +1050,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1121,7 +1121,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1154,7 +1154,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -1196,7 +1196,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1229,7 +1229,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -1300,7 +1300,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1333,7 +1333,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -1369,7 +1369,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1416,7 +1416,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1449,7 +1449,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -1483,7 +1483,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1726,7 +1726,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1759,7 +1759,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1806,7 +1806,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/3",
@@ -1834,7 +1834,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1892,7 +1892,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1925,7 +1925,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -1972,7 +1972,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2005,7 +2005,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -2058,7 +2058,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2091,7 +2091,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -2124,7 +2124,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2171,7 +2171,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2204,7 +2204,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -2232,7 +2232,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
