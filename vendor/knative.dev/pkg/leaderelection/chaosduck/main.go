@@ -105,6 +105,20 @@ func buildComponents(ctx context.Context, kc kubernetes.Interface) (components, 
 		}
 		set.Insert(pod)
 	}
+
+	for _, c := range []string{"kafka-broker-dispatcher"} {
+		pods, err := kc.CoreV1().Pods(system.Namespace()).List(ctx, metav1.ListOptions{LabelSelector: "app=" + c})
+		if err != nil {
+			return nil, err
+		}
+		log.Println("Got %v pods %d", c, len(pods.Items))
+		
+		cs[c] = sets.NewString()
+		for _, p := range pods.Items {
+			cs[c].Insert(p.GetName())
+		}
+	}
+
 	return cs, nil
 }
 

@@ -9,6 +9,7 @@ fi
 
 if ! ${LOCAL_DEVELOPMENT}; then
   scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
+  scale_controlplane kafka-broker-dispatcher kafka-source-dispatcher kafka-channel-dispatcher
   apply_sacura || fail_test "Failed to apply Sacura"
   apply_chaos || fail_test "Failed to apply chaos"
 fi
