@@ -54,4 +54,4 @@
 
 | Sponsoring WG                                                                                                      |
 | ------------------------------------------------------------------------------------------------------------------ |
-| [Event Delivery](https://github.com/knative/community/blob/master/working-groups/WORKING-GROUPS.md#event-delivery) |
+| [Eventing](https://github.com/knative/community/blob/main/working-groups/WORKING-GROUPS.md#eventing)               |
