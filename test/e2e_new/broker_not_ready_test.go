@@ -22,14 +22,15 @@ package e2e_new
 import (
 	"testing"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
-	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
 )
 
 func TestBrokerNotReadyAfterBeingReady(t *testing.T) {

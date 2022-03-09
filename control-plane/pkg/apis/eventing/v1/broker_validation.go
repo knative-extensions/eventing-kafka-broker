@@ -29,7 +29,7 @@ import (
 	"knative.dev/pkg/webhook"
 	"knative.dev/pkg/webhook/resourcesemantics/validation"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )
 
 type BrokerPartial struct {

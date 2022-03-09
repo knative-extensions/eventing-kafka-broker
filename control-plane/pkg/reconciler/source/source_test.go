@@ -35,6 +35,7 @@ import (
 	"knative.dev/pkg/tracker"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -45,7 +46,6 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 )

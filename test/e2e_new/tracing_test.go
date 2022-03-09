@@ -35,9 +35,9 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/resources/svc"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
-
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )
 
 func TestTracingHeaders(t *testing.T) {

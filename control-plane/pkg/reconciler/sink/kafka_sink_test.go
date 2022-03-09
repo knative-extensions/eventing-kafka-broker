@@ -27,6 +27,7 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober/probertesting"
 
@@ -47,7 +48,6 @@ import (
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 	reconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"

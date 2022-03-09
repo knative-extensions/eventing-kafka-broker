@@ -34,24 +34,26 @@ import (
 	. "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/system"
 
+	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober/probertesting"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
-	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	fakeeventingkafkaclient "knative.dev/eventing-kafka/pkg/client/injection/client/fake"
 	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 )
 
 const (
