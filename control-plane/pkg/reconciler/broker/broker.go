@@ -48,6 +48,9 @@ import (
 const (
 	// TopicPrefix is the Kafka Broker topic prefix - (topic name: knative-broker-<broker-namespace>-<broker-name>).
 	TopicPrefix = "knative-broker-"
+
+	// ExternalTopicAnnotation for using external kafka topic for the broker
+	ExternalTopicAnnotation = "kafka.eventing.knative.dev/external.topic"
 )
 
 type Reconciler struct {
@@ -227,26 +230,42 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 func (r *Reconciler) reconcileBrokerTopic(broker *eventing.Broker, securityOption kafka.ConfigOption, statusConditionManager base.StatusConditionManager, topicConfig *kafka.TopicConfig, logger *zap.Logger) (string, reconciler.Event) {
 
-	topicName := kafka.BrokerTopic(TopicPrefix, broker)
 	saramaConfig, err := kafka.GetSaramaConfig(securityOption)
 	if err != nil {
-		return "", statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin config: %w", err))
+		return "", statusConditionManager.FailedToResolveConfig(fmt.Errorf("error getting cluster admin config: %w", err))
 	}
 
 	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(topicConfig.BootstrapServers, saramaConfig)
 	if err != nil {
-		return "", statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
+		return "", statusConditionManager.FailedToResolveConfig(fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
 	}
 	defer kafkaClusterAdminClient.Close()
 
-	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
-	if err != nil {
-		return "", statusConditionManager.FailedToCreateTopic(topic, err)
+	// if we have a custom topic annotation
+	// the topic is externally manged and we do NOT need to create it
+	topicName, externalTopic := isExternalTopic(broker)
+	if externalTopic {
+		isPresentAndValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdminClient, topicName)
+		if err != nil {
+			return "", statusConditionManager.TopicsNotPresentOrInvalidErr([]string{topicName}, err)
+		}
+		if !isPresentAndValid {
+			// The topic might be invalid.
+			return "", statusConditionManager.TopicsNotPresentOrInvalid([]string{topicName})
+		}
+	} else {
+		// no external topic, we create it
+		topicName = kafka.BrokerTopic(TopicPrefix, broker)
+
+		topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
+		if err != nil {
+			return "", statusConditionManager.FailedToCreateTopic(topic, err)
+		}
 	}
 
-	statusConditionManager.TopicReady(topic)
-	logger.Debug("Topic created", zap.Any("topic", topic))
-	return topic, nil
+	statusConditionManager.TopicReady(topicName)
+	logger.Debug("Topic created", zap.Any("topic", topicName))
+	return topicName, nil
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -313,34 +332,38 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return controller.NewRequeueAfter(5 * time.Second)
 	}
 
-	topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
-	if err != nil {
-		return fmt.Errorf("failed to resolve broker config: %w", err)
-	}
+	// External topics are not managed by the broker,
+	// therefore we do not delete them
+	_, externalTopic := isExternalTopic(broker)
+	if !externalTopic {
+		topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
+		if err != nil {
+			return fmt.Errorf("failed to resolve broker config: %w", err)
+		}
 
-	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig, UseNamespaceInConfigmap: false}, r.SecretProviderFunc())
-	if err != nil {
-		return fmt.Errorf("failed to get secret: %w", err)
-	}
-	if secret != nil {
-		logger.Debug("Secret reference",
-			zap.String("apiVersion", secret.APIVersion),
-			zap.String("name", secret.Name),
-			zap.String("namespace", secret.Namespace),
-			zap.String("kind", secret.Kind),
-		)
-	}
+		secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig, UseNamespaceInConfigmap: false}, r.SecretProviderFunc())
+		if err != nil {
+			return fmt.Errorf("failed to get secret: %w", err)
+		}
+		if secret != nil {
+			logger.Debug("Secret reference",
+				zap.String("apiVersion", secret.APIVersion),
+				zap.String("name", secret.Name),
+				zap.String("namespace", secret.Namespace),
+				zap.String("kind", secret.Kind),
+			)
+		}
 
-	// get security option for Sarama with secret info in it
-	securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
-	if err := r.finalizeBrokerTopic(broker, securityOption, topicConfig, logger); err != nil {
-		return err
+		// get security option for Sarama with secret info in it
+		securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
+		if err := r.finalizeNonExternalBrokerTopic(broker, securityOption, topicConfig, logger); err != nil {
+			return err
+		}
 	}
-
 	return nil
 }
 
-func (r *Reconciler) finalizeBrokerTopic(broker *eventing.Broker, securityOption kafka.ConfigOption, topicConfig *kafka.TopicConfig, logger *zap.Logger) reconciler.Event {
+func (r *Reconciler) finalizeNonExternalBrokerTopic(broker *eventing.Broker, securityOption kafka.ConfigOption, topicConfig *kafka.TopicConfig, logger *zap.Logger) reconciler.Event {
 	saramaConfig, err := kafka.GetSaramaConfig(securityOption)
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
@@ -467,4 +490,9 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 	resource.EgressConfig = egressConfig
 
 	return resource, nil
+}
+
+func isExternalTopic(broker *eventing.Broker) (string, bool) {
+	topicAnnotationValue, ok := broker.Annotations[ExternalTopicAnnotation]
+	return topicAnnotationValue, ok
 }
