@@ -27,15 +27,17 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+import org.apache.kafka.clients.producer.MockProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-import org.apache.kafka.clients.producer.MockProducer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -320,5 +322,137 @@ public class IngressProducerReconcilableStoreTest {
     when(producer.close()).thenReturn(Future.succeededFuture());
     when(producer.unwrap()).thenReturn(new MockProducer<>());
     return producer;
+  }
+
+  @Test
+  public void shouldResolvePathCorrectly(final Vertx vertx,
+                                         final VertxTestContext context) {
+    final var resource1 = DataPlaneContract.Resource.newBuilder()
+      .setUid("1")
+      .addTopics("topic1")
+      .setBootstrapServers("kafka-1:9092")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/hello1")
+        .setContentMode(DataPlaneContract.ContentMode.STRUCTURED).build())
+      .build();
+
+    final var resource2 = DataPlaneContract.Resource.newBuilder()
+      .setUid("2")
+      .addTopics("topic2")
+      .setBootstrapServers("kafka-2:9092")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setHost("http://host2").setPath("/")
+        .setContentMode(DataPlaneContract.ContentMode.STRUCTURED).build())
+      .build();
+
+    final var resource3 = DataPlaneContract.Resource.newBuilder()
+      .setUid("3")
+      .addTopics("topic3")
+      .setBootstrapServers("kafka-3:9092")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setHost("http://host3").setPath("/hello3")
+        .setContentMode(DataPlaneContract.ContentMode.STRUCTURED).build())
+      .build();
+
+    // additional resource to make sure path "/" don't mean anything
+    final var resource4 = DataPlaneContract.Resource.newBuilder()
+      .setUid("4")
+      .addTopics("topic4")
+      .setBootstrapServers("kafka-4:9092")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setHost("http://host4").setPath("/")
+        .setContentMode(DataPlaneContract.ContentMode.STRUCTURED).build())
+      .build();
+
+    KafkaProducer<String, CloudEvent> producer1 = mockProducer();
+    KafkaProducer<String, CloudEvent> producer2 = mockProducer();
+    KafkaProducer<String, CloudEvent> producer3 = mockProducer();
+    KafkaProducer<String, CloudEvent> producer4 = mockProducer();
+
+    Map<String, KafkaProducer<String, CloudEvent>> producerMap = Map.of(
+      "kafka-1:9092", producer1,
+      "kafka-2:9092", producer2,
+      "kafka-3:9092", producer3,
+      "kafka-4:9092", producer4
+    );
+
+    final var store = new IngressProducerReconcilableStore(
+      AuthProvider.noAuth(),
+      new Properties(),
+      properties -> {
+        KafkaProducer<String, CloudEvent> producer = producerMap.get(properties.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+        if (producer == null) {
+          throw new IllegalStateException("Can't determine what producer to return");
+        }
+        return producer;
+      }
+    );
+
+    final var reconciler = ResourcesReconciler
+      .builder()
+      .watchIngress(store)
+      .build();
+
+    vertx.runOnContext(v -> {
+      Future.succeededFuture()
+        .compose(v1 -> reconciler.reconcile(List.of(resource1, resource2, resource3, resource4)))
+        .onSuccess(event -> {
+          // match by path
+          assertThat(store.resolve("", "/hello1").getKafkaProducer()).isSameAs(producer1);
+          assertThat(store.resolve("", "/hello3").getKafkaProducer()).isSameAs(producer3);
+
+          // match by host
+          assertThat(store.resolve("http://host2", "/").getKafkaProducer()).isSameAs(producer2);
+          assertThat(store.resolve("http://host4", "/").getKafkaProducer()).isSameAs(producer4);
+          assertThat(store.resolve("http://host2", "").getKafkaProducer()).isSameAs(producer2);
+          assertThat(store.resolve("http://host4", "").getKafkaProducer()).isSameAs(producer4);
+
+
+          // only use path when the path is registered
+          assertThat(store.resolve("http://host1", "/hello1").getKafkaProducer()).isSameAs(producer1);
+          assertThat(store.resolve("http://host2", "/hello1").getKafkaProducer()).isSameAs(producer1);
+          assertThat(store.resolve("http://host1", "/hello3").getKafkaProducer()).isSameAs(producer3);
+          assertThat(store.resolve("http://host2", "/hello3").getKafkaProducer()).isSameAs(producer3);
+          assertThat(store.resolve("http://host3", "/hello3").getKafkaProducer()).isSameAs(producer3);
+
+          // match the host when the path is not registered
+          assertThat(store.resolve("http://host2", "/doesntExist").getKafkaProducer()).isSameAs(producer2);
+          assertThat(store.resolve("http://host3", "/doesntExist").getKafkaProducer()).isSameAs(producer3);
+          assertThat(store.resolve("http://host4", "/doesntExist").getKafkaProducer()).isSameAs(producer4);
+
+          // don't return anything when there's nothing matching
+          assertThat(store.resolve("http://unknown", "/")).isNull();
+          assertThat(store.resolve("http://unknown", "")).isNull();
+          assertThat(store.resolve("", "/doesntExist")).isNull();
+          assertThat(store.resolve("http://unknown", "/doesntExist")).isNull();
+
+          context.completeNow();
+        })
+        .onFailure(context::failNow);
+    });
+  }
+
+  @Test
+  public void shouldRejectIngressWithRootPathAndEmptyHost(final Vertx vertx, final VertxTestContext context) {
+    final var resource = DataPlaneContract.Resource.newBuilder()
+      .setUid("1")
+      .addTopics("topic")
+      .setBootstrapServers("kafka-1:9092,kafka-2:9092")
+      .setIngress(DataPlaneContract.Ingress.newBuilder().setHost("").setPath("/").build())
+      .build();
+
+    final var store = new IngressProducerReconcilableStore(
+      AuthProvider.noAuth(),
+      new Properties(),
+      properties -> mockProducer()
+    );
+
+    final var reconciler = ResourcesReconciler
+      .builder()
+      .watchIngress(store)
+      .build();
+
+    vertx.runOnContext(v -> {
+      Future.succeededFuture()
+        .compose(v1 -> reconciler.reconcile(List.of(resource)))
+        .onSuccess(event -> context.failNow("Reconcile should've failed"))
+        .onFailure(event -> context.completeNow());
+    });
   }
 }
