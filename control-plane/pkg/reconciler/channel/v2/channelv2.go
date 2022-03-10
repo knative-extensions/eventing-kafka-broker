@@ -564,9 +564,7 @@ func (r *Reconciler) getChannelContractResource(topic string, channel *messaging
 		Uid:    string(channel.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
-			IngressType: &contract.Ingress_Path{
-				Path: receiver.PathFromObject(channel),
-			},
+			Path: receiver.PathFromObject(channel),
 		},
 		BootstrapServers: config.GetBootstrapServers(),
 		Reference: &contract.Reference{
