@@ -1212,6 +1212,7 @@ knative.dev/eventing/test
 knative.dev/eventing/test/conformance/helpers
 knative.dev/eventing/test/conformance/helpers/tracing
 knative.dev/eventing/test/e2e/helpers
+knative.dev/eventing/test/experimental/features/new_trigger_filters
 knative.dev/eventing/test/flags
 knative.dev/eventing/test/lib
 knative.dev/eventing/test/lib/dropevents

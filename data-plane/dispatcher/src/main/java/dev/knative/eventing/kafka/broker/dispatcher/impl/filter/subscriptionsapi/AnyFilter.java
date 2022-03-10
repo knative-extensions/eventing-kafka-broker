@@ -13,33 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
+package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
-import io.cloudevents.sql.EvaluationException;
-import io.cloudevents.sql.EvaluationRuntime;
-import io.cloudevents.sql.Expression;
-import io.cloudevents.sql.Parser;
-import io.cloudevents.sql.Type;
+import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class SqlFilter implements Filter {
+public class AnyFilter implements Filter {
 
-  private final Expression expression;
-  private final EvaluationRuntime runtime;
+  private static final Logger logger = LoggerFactory.getLogger(AnyFilter.class);
 
-  public SqlFilter(String sqlExpression) {
-    this.expression = Parser.parseDefault(sqlExpression);
-    this.runtime = EvaluationRuntime.getDefault();
+  private final Set<Filter> filters;
+
+  public AnyFilter(Set<Filter> filters) {
+    this.filters = filters;
   }
 
   @Override
   public boolean test(CloudEvent cloudEvent) {
-    try {
-      Object value = this.expression.tryEvaluate(this.runtime, cloudEvent);
-      return (Boolean) this.runtime.cast(value, Type.BOOLEAN);
-    } catch (EvaluationException evaluationException) {
-      return false;
+    logger.debug("Testing event against ANY filter. Event {}", cloudEvent);
+
+    for (Filter filter : filters) {
+      if (filter.test(cloudEvent)) {
+        logger.debug("Test succeeded. Filter {} Event {}", filter, cloudEvent);
+        return true;
+      }
     }
+    logger.debug("Test failed. All filters failed. Event {}", cloudEvent);
+    return false;
   }
 }

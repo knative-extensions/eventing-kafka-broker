@@ -13,15 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
+package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AllFilter implements Filter {
 
   private final Set<Filter> filters;
+  private static final Logger logger = LoggerFactory.getLogger(AllFilter.class);
+
 
   public AllFilter(Set<Filter> filters) {
     this.filters = filters;
@@ -29,11 +33,14 @@ public class AllFilter implements Filter {
 
   @Override
   public boolean test(CloudEvent cloudEvent) {
+    logger.debug("Testing event against ALL filters. Event {}", cloudEvent);
     for (Filter filter : filters) {
       if (!filter.test(cloudEvent)) {
+        logger.debug("Test failed. Filter {} Event {}", filter, cloudEvent);
         return false;
       }
     }
+    logger.debug("Test ALL filters succeeded. Event {}", cloudEvent);
     return true;
   }
 }

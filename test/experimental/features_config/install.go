@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
+ * Copyright 2021 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
-import io.cloudevents.CloudEvent;
+package features_config
 
-public class ExactFilter extends BaseStringFilter {
+import (
+	"context"
 
-  public ExactFilter(String attribute, String expectedValue) {
-    super(attribute, expectedValue);
-  }
+	"knative.dev/reconciler-test/pkg/feature"
+	"knative.dev/reconciler-test/pkg/manifest"
+)
 
-  @Override
-  public boolean test(CloudEvent cloudEvent) {
-    return expectedValue.equals(this.extractor.apply(cloudEvent));
-  }
+func Install(ctx context.Context, t feature.T) {
+	if _, err := manifest.InstallLocalYaml(ctx, map[string]interface{}{}); err != nil {
+		t.Fatal(err)
+	}
 }

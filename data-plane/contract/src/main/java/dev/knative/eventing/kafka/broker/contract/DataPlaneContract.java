@@ -1939,28 +1939,38 @@ public final class DataPlaneContract {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>string attribute = 1;</code>
-     * @return The attribute.
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
-    java.lang.String getAttribute();
+    int getAttributesCount();
     /**
-     * <code>string attribute = 1;</code>
-     * @return The bytes for attribute.
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
-    com.google.protobuf.ByteString
-        getAttributeBytes();
+    boolean containsAttributes(
+        java.lang.String key);
+    /**
+     * Use {@link #getAttributesMap()} instead.
+     */
+    @java.lang.Deprecated
+    java.util.Map<java.lang.String, java.lang.String>
+    getAttributes();
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    java.util.Map<java.lang.String, java.lang.String>
+    getAttributesMap();
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
 
+    java.lang.String getAttributesOrDefault(
+        java.lang.String key,
+        java.lang.String defaultValue);
     /**
-     * <code>string prefix = 2;</code>
-     * @return The prefix.
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
-    java.lang.String getPrefix();
-    /**
-     * <code>string prefix = 2;</code>
-     * @return The bytes for prefix.
-     */
-    com.google.protobuf.ByteString
-        getPrefixBytes();
+
+    java.lang.String getAttributesOrThrow(
+        java.lang.String key);
   }
   /**
    * Protobuf type {@code Prefix}
@@ -1975,8 +1985,6 @@ public final class DataPlaneContract {
       super(builder);
     }
     private Prefix() {
-      attribute_ = "";
-      prefix_ = "";
     }
 
     @java.lang.Override
@@ -1999,6 +2007,7 @@ public final class DataPlaneContract {
       if (extensionRegistry == null) {
         throw new java.lang.NullPointerException();
       }
+      int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -2010,15 +2019,16 @@ public final class DataPlaneContract {
               done = true;
               break;
             case 10: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              attribute_ = s;
-              break;
-            }
-            case 18: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              prefix_ = s;
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                attributes_ = com.google.protobuf.MapField.newMapField(
+                    AttributesDefaultEntryHolder.defaultEntry);
+                mutable_bitField0_ |= 0x00000001;
+              }
+              com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
+              attributes__ = input.readMessage(
+                  AttributesDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+              attributes_.getMutableMap().put(
+                  attributes__.getKey(), attributes__.getValue());
               break;
             }
             default: {
@@ -2045,6 +2055,18 @@ public final class DataPlaneContract {
       return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Prefix_descriptor;
     }
 
+    @SuppressWarnings({"rawtypes"})
+    @java.lang.Override
+    protected com.google.protobuf.MapField internalGetMapField(
+        int number) {
+      switch (number) {
+        case 1:
+          return internalGetAttributes();
+        default:
+          throw new RuntimeException(
+              "Invalid map field number: " + number);
+      }
+    }
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
@@ -2053,80 +2075,85 @@ public final class DataPlaneContract {
               dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.Builder.class);
     }
 
-    public static final int ATTRIBUTE_FIELD_NUMBER = 1;
-    private volatile java.lang.Object attribute_;
-    /**
-     * <code>string attribute = 1;</code>
-     * @return The attribute.
-     */
-    @java.lang.Override
-    public java.lang.String getAttribute() {
-      java.lang.Object ref = attribute_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        attribute_ = s;
-        return s;
-      }
+    public static final int ATTRIBUTES_FIELD_NUMBER = 1;
+    private static final class AttributesDefaultEntryHolder {
+      static final com.google.protobuf.MapEntry<
+          java.lang.String, java.lang.String> defaultEntry =
+              com.google.protobuf.MapEntry
+              .<java.lang.String, java.lang.String>newDefaultInstance(
+                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Prefix_AttributesEntry_descriptor, 
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "",
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "");
     }
-    /**
-     * <code>string attribute = 1;</code>
-     * @return The bytes for attribute.
-     */
-    @java.lang.Override
-    public com.google.protobuf.ByteString
-        getAttributeBytes() {
-      java.lang.Object ref = attribute_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        attribute_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
+    private com.google.protobuf.MapField<
+        java.lang.String, java.lang.String> attributes_;
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+    internalGetAttributes() {
+      if (attributes_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(
+            AttributesDefaultEntryHolder.defaultEntry);
       }
+      return attributes_;
     }
 
-    public static final int PREFIX_FIELD_NUMBER = 2;
-    private volatile java.lang.Object prefix_;
-    /**
-     * <code>string prefix = 2;</code>
-     * @return The prefix.
-     */
-    @java.lang.Override
-    public java.lang.String getPrefix() {
-      java.lang.Object ref = prefix_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        prefix_ = s;
-        return s;
-      }
+    public int getAttributesCount() {
+      return internalGetAttributes().getMap().size();
     }
     /**
-     * <code>string prefix = 2;</code>
-     * @return The bytes for prefix.
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+
+    @java.lang.Override
+    public boolean containsAttributes(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      return internalGetAttributes().getMap().containsKey(key);
+    }
+    /**
+     * Use {@link #getAttributesMap()} instead.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getPrefixBytes() {
-      java.lang.Object ref = prefix_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        prefix_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
+    @java.lang.Deprecated
+    public java.util.Map<java.lang.String, java.lang.String> getAttributes() {
+      return getAttributesMap();
+    }
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    @java.lang.Override
+
+    public java.util.Map<java.lang.String, java.lang.String> getAttributesMap() {
+      return internalGetAttributes().getMap();
+    }
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    @java.lang.Override
+
+    public java.lang.String getAttributesOrDefault(
+        java.lang.String key,
+        java.lang.String defaultValue) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, java.lang.String> map =
+          internalGetAttributes().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    @java.lang.Override
+
+    public java.lang.String getAttributesOrThrow(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, java.lang.String> map =
+          internalGetAttributes().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
       }
+      return map.get(key);
     }
 
     private byte memoizedIsInitialized = -1;
@@ -2143,12 +2170,12 @@ public final class DataPlaneContract {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (!getAttributeBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, attribute_);
-      }
-      if (!getPrefixBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, prefix_);
-      }
+      com.google.protobuf.GeneratedMessageV3
+        .serializeStringMapTo(
+          output,
+          internalGetAttributes(),
+          AttributesDefaultEntryHolder.defaultEntry,
+          1);
       unknownFields.writeTo(output);
     }
 
@@ -2158,11 +2185,15 @@ public final class DataPlaneContract {
       if (size != -1) return size;
 
       size = 0;
-      if (!getAttributeBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, attribute_);
-      }
-      if (!getPrefixBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, prefix_);
+      for (java.util.Map.Entry<java.lang.String, java.lang.String> entry
+           : internalGetAttributes().getMap().entrySet()) {
+        com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
+        attributes__ = AttributesDefaultEntryHolder.defaultEntry.newBuilderForType()
+            .setKey(entry.getKey())
+            .setValue(entry.getValue())
+            .build();
+        size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(1, attributes__);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2179,10 +2210,8 @@ public final class DataPlaneContract {
       }
       dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) obj;
 
-      if (!getAttribute()
-          .equals(other.getAttribute())) return false;
-      if (!getPrefix()
-          .equals(other.getPrefix())) return false;
+      if (!internalGetAttributes().equals(
+          other.internalGetAttributes())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -2194,10 +2223,10 @@ public final class DataPlaneContract {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + ATTRIBUTE_FIELD_NUMBER;
-      hash = (53 * hash) + getAttribute().hashCode();
-      hash = (37 * hash) + PREFIX_FIELD_NUMBER;
-      hash = (53 * hash) + getPrefix().hashCode();
+      if (!internalGetAttributes().getMap().isEmpty()) {
+        hash = (37 * hash) + ATTRIBUTES_FIELD_NUMBER;
+        hash = (53 * hash) + internalGetAttributes().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -2305,6 +2334,28 @@ public final class DataPlaneContract {
         return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Prefix_descriptor;
       }
 
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMapField(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetAttributes();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMutableMapField(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetMutableAttributes();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
@@ -2331,10 +2382,7 @@ public final class DataPlaneContract {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        attribute_ = "";
-
-        prefix_ = "";
-
+        internalGetMutableAttributes().clear();
         return this;
       }
 
@@ -2361,8 +2409,9 @@ public final class DataPlaneContract {
       @java.lang.Override
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix buildPartial() {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix(this);
-        result.attribute_ = attribute_;
-        result.prefix_ = prefix_;
+        int from_bitField0_ = bitField0_;
+        result.attributes_ = internalGetAttributes();
+        result.attributes_.makeImmutable();
         onBuilt();
         return result;
       }
@@ -2411,14 +2460,8 @@ public final class DataPlaneContract {
 
       public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix other) {
         if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.getDefaultInstance()) return this;
-        if (!other.getAttribute().isEmpty()) {
-          attribute_ = other.attribute_;
-          onChanged();
-        }
-        if (!other.getPrefix().isEmpty()) {
-          prefix_ = other.prefix_;
-          onChanged();
-        }
+        internalGetMutableAttributes().mergeFrom(
+            other.internalGetAttributes());
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -2447,156 +2490,133 @@ public final class DataPlaneContract {
         }
         return this;
       }
+      private int bitField0_;
 
-      private java.lang.Object attribute_ = "";
-      /**
-       * <code>string attribute = 1;</code>
-       * @return The attribute.
-       */
-      public java.lang.String getAttribute() {
-        java.lang.Object ref = attribute_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          attribute_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
+      private com.google.protobuf.MapField<
+          java.lang.String, java.lang.String> attributes_;
+      private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+      internalGetAttributes() {
+        if (attributes_ == null) {
+          return com.google.protobuf.MapField.emptyMapField(
+              AttributesDefaultEntryHolder.defaultEntry);
         }
+        return attributes_;
       }
-      /**
-       * <code>string attribute = 1;</code>
-       * @return The bytes for attribute.
-       */
-      public com.google.protobuf.ByteString
-          getAttributeBytes() {
-        java.lang.Object ref = attribute_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          attribute_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
+      private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+      internalGetMutableAttributes() {
+        onChanged();;
+        if (attributes_ == null) {
+          attributes_ = com.google.protobuf.MapField.newMapField(
+              AttributesDefaultEntryHolder.defaultEntry);
         }
-      }
-      /**
-       * <code>string attribute = 1;</code>
-       * @param value The attribute to set.
-       * @return This builder for chaining.
-       */
-      public Builder setAttribute(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  
-        attribute_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string attribute = 1;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearAttribute() {
-        
-        attribute_ = getDefaultInstance().getAttribute();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string attribute = 1;</code>
-       * @param value The bytes for attribute to set.
-       * @return This builder for chaining.
-       */
-      public Builder setAttributeBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
-        attribute_ = value;
-        onChanged();
-        return this;
+        if (!attributes_.isMutable()) {
+          attributes_ = attributes_.copy();
+        }
+        return attributes_;
       }
 
-      private java.lang.Object prefix_ = "";
-      /**
-       * <code>string prefix = 2;</code>
-       * @return The prefix.
-       */
-      public java.lang.String getPrefix() {
-        java.lang.Object ref = prefix_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          prefix_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
+      public int getAttributesCount() {
+        return internalGetAttributes().getMap().size();
       }
       /**
-       * <code>string prefix = 2;</code>
-       * @return The bytes for prefix.
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
-      public com.google.protobuf.ByteString
-          getPrefixBytes() {
-        java.lang.Object ref = prefix_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          prefix_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
+
+      @java.lang.Override
+      public boolean containsAttributes(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        return internalGetAttributes().getMap().containsKey(key);
       }
       /**
-       * <code>string prefix = 2;</code>
-       * @param value The prefix to set.
-       * @return This builder for chaining.
+       * Use {@link #getAttributesMap()} instead.
        */
-      public Builder setPrefix(
+      @java.lang.Override
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.String> getAttributes() {
+        return getAttributesMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+      @java.lang.Override
+
+      public java.util.Map<java.lang.String, java.lang.String> getAttributesMap() {
+        return internalGetAttributes().getMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+      @java.lang.Override
+
+      public java.lang.String getAttributesOrDefault(
+          java.lang.String key,
+          java.lang.String defaultValue) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, java.lang.String> map =
+            internalGetAttributes().getMap();
+        return map.containsKey(key) ? map.get(key) : defaultValue;
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+      @java.lang.Override
+
+      public java.lang.String getAttributesOrThrow(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, java.lang.String> map =
+            internalGetAttributes().getMap();
+        if (!map.containsKey(key)) {
+          throw new java.lang.IllegalArgumentException();
+        }
+        return map.get(key);
+      }
+
+      public Builder clearAttributes() {
+        internalGetMutableAttributes().getMutableMap()
+            .clear();
+        return this;
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+
+      public Builder removeAttributes(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableAttributes().getMutableMap()
+            .remove(key);
+        return this;
+      }
+      /**
+       * Use alternate mutation accessors instead.
+       */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.String>
+      getMutableAttributes() {
+        return internalGetMutableAttributes().getMutableMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+      public Builder putAttributes(
+          java.lang.String key,
           java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  
-        prefix_ = value;
-        onChanged();
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        if (value == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableAttributes().getMutableMap()
+            .put(key, value);
         return this;
       }
       /**
-       * <code>string prefix = 2;</code>
-       * @return This builder for chaining.
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
-      public Builder clearPrefix() {
-        
-        prefix_ = getDefaultInstance().getPrefix();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string prefix = 2;</code>
-       * @param value The bytes for prefix to set.
-       * @return This builder for chaining.
-       */
-      public Builder setPrefixBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
-        prefix_ = value;
-        onChanged();
+
+      public Builder putAllAttributes(
+          java.util.Map<java.lang.String, java.lang.String> values) {
+        internalGetMutableAttributes().getMutableMap()
+            .putAll(values);
         return this;
       }
       @java.lang.Override
@@ -2657,28 +2677,38 @@ public final class DataPlaneContract {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>string attribute = 1;</code>
-     * @return The attribute.
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
-    java.lang.String getAttribute();
+    int getAttributesCount();
     /**
-     * <code>string attribute = 1;</code>
-     * @return The bytes for attribute.
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
-    com.google.protobuf.ByteString
-        getAttributeBytes();
+    boolean containsAttributes(
+        java.lang.String key);
+    /**
+     * Use {@link #getAttributesMap()} instead.
+     */
+    @java.lang.Deprecated
+    java.util.Map<java.lang.String, java.lang.String>
+    getAttributes();
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    java.util.Map<java.lang.String, java.lang.String>
+    getAttributesMap();
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
 
+    java.lang.String getAttributesOrDefault(
+        java.lang.String key,
+        java.lang.String defaultValue);
     /**
-     * <code>string suffix = 2;</code>
-     * @return The suffix.
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
      */
-    java.lang.String getSuffix();
-    /**
-     * <code>string suffix = 2;</code>
-     * @return The bytes for suffix.
-     */
-    com.google.protobuf.ByteString
-        getSuffixBytes();
+
+    java.lang.String getAttributesOrThrow(
+        java.lang.String key);
   }
   /**
    * Protobuf type {@code Suffix}
@@ -2693,8 +2723,6 @@ public final class DataPlaneContract {
       super(builder);
     }
     private Suffix() {
-      attribute_ = "";
-      suffix_ = "";
     }
 
     @java.lang.Override
@@ -2717,6 +2745,7 @@ public final class DataPlaneContract {
       if (extensionRegistry == null) {
         throw new java.lang.NullPointerException();
       }
+      int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -2728,15 +2757,16 @@ public final class DataPlaneContract {
               done = true;
               break;
             case 10: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              attribute_ = s;
-              break;
-            }
-            case 18: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              suffix_ = s;
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                attributes_ = com.google.protobuf.MapField.newMapField(
+                    AttributesDefaultEntryHolder.defaultEntry);
+                mutable_bitField0_ |= 0x00000001;
+              }
+              com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
+              attributes__ = input.readMessage(
+                  AttributesDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+              attributes_.getMutableMap().put(
+                  attributes__.getKey(), attributes__.getValue());
               break;
             }
             default: {
@@ -2763,6 +2793,18 @@ public final class DataPlaneContract {
       return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Suffix_descriptor;
     }
 
+    @SuppressWarnings({"rawtypes"})
+    @java.lang.Override
+    protected com.google.protobuf.MapField internalGetMapField(
+        int number) {
+      switch (number) {
+        case 1:
+          return internalGetAttributes();
+        default:
+          throw new RuntimeException(
+              "Invalid map field number: " + number);
+      }
+    }
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
@@ -2771,80 +2813,85 @@ public final class DataPlaneContract {
               dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.Builder.class);
     }
 
-    public static final int ATTRIBUTE_FIELD_NUMBER = 1;
-    private volatile java.lang.Object attribute_;
-    /**
-     * <code>string attribute = 1;</code>
-     * @return The attribute.
-     */
-    @java.lang.Override
-    public java.lang.String getAttribute() {
-      java.lang.Object ref = attribute_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        attribute_ = s;
-        return s;
-      }
+    public static final int ATTRIBUTES_FIELD_NUMBER = 1;
+    private static final class AttributesDefaultEntryHolder {
+      static final com.google.protobuf.MapEntry<
+          java.lang.String, java.lang.String> defaultEntry =
+              com.google.protobuf.MapEntry
+              .<java.lang.String, java.lang.String>newDefaultInstance(
+                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Suffix_AttributesEntry_descriptor, 
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "",
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "");
     }
-    /**
-     * <code>string attribute = 1;</code>
-     * @return The bytes for attribute.
-     */
-    @java.lang.Override
-    public com.google.protobuf.ByteString
-        getAttributeBytes() {
-      java.lang.Object ref = attribute_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        attribute_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
+    private com.google.protobuf.MapField<
+        java.lang.String, java.lang.String> attributes_;
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+    internalGetAttributes() {
+      if (attributes_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(
+            AttributesDefaultEntryHolder.defaultEntry);
       }
+      return attributes_;
     }
 
-    public static final int SUFFIX_FIELD_NUMBER = 2;
-    private volatile java.lang.Object suffix_;
-    /**
-     * <code>string suffix = 2;</code>
-     * @return The suffix.
-     */
-    @java.lang.Override
-    public java.lang.String getSuffix() {
-      java.lang.Object ref = suffix_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        suffix_ = s;
-        return s;
-      }
+    public int getAttributesCount() {
+      return internalGetAttributes().getMap().size();
     }
     /**
-     * <code>string suffix = 2;</code>
-     * @return The bytes for suffix.
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+
+    @java.lang.Override
+    public boolean containsAttributes(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      return internalGetAttributes().getMap().containsKey(key);
+    }
+    /**
+     * Use {@link #getAttributesMap()} instead.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getSuffixBytes() {
-      java.lang.Object ref = suffix_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        suffix_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
+    @java.lang.Deprecated
+    public java.util.Map<java.lang.String, java.lang.String> getAttributes() {
+      return getAttributesMap();
+    }
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    @java.lang.Override
+
+    public java.util.Map<java.lang.String, java.lang.String> getAttributesMap() {
+      return internalGetAttributes().getMap();
+    }
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    @java.lang.Override
+
+    public java.lang.String getAttributesOrDefault(
+        java.lang.String key,
+        java.lang.String defaultValue) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, java.lang.String> map =
+          internalGetAttributes().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /**
+     * <code>map&lt;string, string&gt; attributes = 1;</code>
+     */
+    @java.lang.Override
+
+    public java.lang.String getAttributesOrThrow(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, java.lang.String> map =
+          internalGetAttributes().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
       }
+      return map.get(key);
     }
 
     private byte memoizedIsInitialized = -1;
@@ -2861,12 +2908,12 @@ public final class DataPlaneContract {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (!getAttributeBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, attribute_);
-      }
-      if (!getSuffixBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, suffix_);
-      }
+      com.google.protobuf.GeneratedMessageV3
+        .serializeStringMapTo(
+          output,
+          internalGetAttributes(),
+          AttributesDefaultEntryHolder.defaultEntry,
+          1);
       unknownFields.writeTo(output);
     }
 
@@ -2876,11 +2923,15 @@ public final class DataPlaneContract {
       if (size != -1) return size;
 
       size = 0;
-      if (!getAttributeBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, attribute_);
-      }
-      if (!getSuffixBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, suffix_);
+      for (java.util.Map.Entry<java.lang.String, java.lang.String> entry
+           : internalGetAttributes().getMap().entrySet()) {
+        com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
+        attributes__ = AttributesDefaultEntryHolder.defaultEntry.newBuilderForType()
+            .setKey(entry.getKey())
+            .setValue(entry.getValue())
+            .build();
+        size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(1, attributes__);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2897,10 +2948,8 @@ public final class DataPlaneContract {
       }
       dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) obj;
 
-      if (!getAttribute()
-          .equals(other.getAttribute())) return false;
-      if (!getSuffix()
-          .equals(other.getSuffix())) return false;
+      if (!internalGetAttributes().equals(
+          other.internalGetAttributes())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -2912,10 +2961,10 @@ public final class DataPlaneContract {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + ATTRIBUTE_FIELD_NUMBER;
-      hash = (53 * hash) + getAttribute().hashCode();
-      hash = (37 * hash) + SUFFIX_FIELD_NUMBER;
-      hash = (53 * hash) + getSuffix().hashCode();
+      if (!internalGetAttributes().getMap().isEmpty()) {
+        hash = (37 * hash) + ATTRIBUTES_FIELD_NUMBER;
+        hash = (53 * hash) + internalGetAttributes().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -3023,6 +3072,28 @@ public final class DataPlaneContract {
         return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Suffix_descriptor;
       }
 
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMapField(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetAttributes();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMutableMapField(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetMutableAttributes();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
@@ -3049,10 +3120,7 @@ public final class DataPlaneContract {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        attribute_ = "";
-
-        suffix_ = "";
-
+        internalGetMutableAttributes().clear();
         return this;
       }
 
@@ -3079,8 +3147,9 @@ public final class DataPlaneContract {
       @java.lang.Override
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix buildPartial() {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix(this);
-        result.attribute_ = attribute_;
-        result.suffix_ = suffix_;
+        int from_bitField0_ = bitField0_;
+        result.attributes_ = internalGetAttributes();
+        result.attributes_.makeImmutable();
         onBuilt();
         return result;
       }
@@ -3129,14 +3198,8 @@ public final class DataPlaneContract {
 
       public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix other) {
         if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.getDefaultInstance()) return this;
-        if (!other.getAttribute().isEmpty()) {
-          attribute_ = other.attribute_;
-          onChanged();
-        }
-        if (!other.getSuffix().isEmpty()) {
-          suffix_ = other.suffix_;
-          onChanged();
-        }
+        internalGetMutableAttributes().mergeFrom(
+            other.internalGetAttributes());
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -3165,156 +3228,133 @@ public final class DataPlaneContract {
         }
         return this;
       }
+      private int bitField0_;
 
-      private java.lang.Object attribute_ = "";
-      /**
-       * <code>string attribute = 1;</code>
-       * @return The attribute.
-       */
-      public java.lang.String getAttribute() {
-        java.lang.Object ref = attribute_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          attribute_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
+      private com.google.protobuf.MapField<
+          java.lang.String, java.lang.String> attributes_;
+      private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+      internalGetAttributes() {
+        if (attributes_ == null) {
+          return com.google.protobuf.MapField.emptyMapField(
+              AttributesDefaultEntryHolder.defaultEntry);
         }
+        return attributes_;
       }
-      /**
-       * <code>string attribute = 1;</code>
-       * @return The bytes for attribute.
-       */
-      public com.google.protobuf.ByteString
-          getAttributeBytes() {
-        java.lang.Object ref = attribute_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          attribute_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
+      private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+      internalGetMutableAttributes() {
+        onChanged();;
+        if (attributes_ == null) {
+          attributes_ = com.google.protobuf.MapField.newMapField(
+              AttributesDefaultEntryHolder.defaultEntry);
         }
-      }
-      /**
-       * <code>string attribute = 1;</code>
-       * @param value The attribute to set.
-       * @return This builder for chaining.
-       */
-      public Builder setAttribute(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  
-        attribute_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string attribute = 1;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearAttribute() {
-        
-        attribute_ = getDefaultInstance().getAttribute();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string attribute = 1;</code>
-       * @param value The bytes for attribute to set.
-       * @return This builder for chaining.
-       */
-      public Builder setAttributeBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
-        attribute_ = value;
-        onChanged();
-        return this;
+        if (!attributes_.isMutable()) {
+          attributes_ = attributes_.copy();
+        }
+        return attributes_;
       }
 
-      private java.lang.Object suffix_ = "";
-      /**
-       * <code>string suffix = 2;</code>
-       * @return The suffix.
-       */
-      public java.lang.String getSuffix() {
-        java.lang.Object ref = suffix_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          suffix_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
+      public int getAttributesCount() {
+        return internalGetAttributes().getMap().size();
       }
       /**
-       * <code>string suffix = 2;</code>
-       * @return The bytes for suffix.
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
-      public com.google.protobuf.ByteString
-          getSuffixBytes() {
-        java.lang.Object ref = suffix_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          suffix_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
+
+      @java.lang.Override
+      public boolean containsAttributes(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        return internalGetAttributes().getMap().containsKey(key);
       }
       /**
-       * <code>string suffix = 2;</code>
-       * @param value The suffix to set.
-       * @return This builder for chaining.
+       * Use {@link #getAttributesMap()} instead.
        */
-      public Builder setSuffix(
+      @java.lang.Override
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.String> getAttributes() {
+        return getAttributesMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+      @java.lang.Override
+
+      public java.util.Map<java.lang.String, java.lang.String> getAttributesMap() {
+        return internalGetAttributes().getMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+      @java.lang.Override
+
+      public java.lang.String getAttributesOrDefault(
+          java.lang.String key,
+          java.lang.String defaultValue) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, java.lang.String> map =
+            internalGetAttributes().getMap();
+        return map.containsKey(key) ? map.get(key) : defaultValue;
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+      @java.lang.Override
+
+      public java.lang.String getAttributesOrThrow(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, java.lang.String> map =
+            internalGetAttributes().getMap();
+        if (!map.containsKey(key)) {
+          throw new java.lang.IllegalArgumentException();
+        }
+        return map.get(key);
+      }
+
+      public Builder clearAttributes() {
+        internalGetMutableAttributes().getMutableMap()
+            .clear();
+        return this;
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+
+      public Builder removeAttributes(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableAttributes().getMutableMap()
+            .remove(key);
+        return this;
+      }
+      /**
+       * Use alternate mutation accessors instead.
+       */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.String>
+      getMutableAttributes() {
+        return internalGetMutableAttributes().getMutableMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
+       */
+      public Builder putAttributes(
+          java.lang.String key,
           java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  
-        suffix_ = value;
-        onChanged();
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        if (value == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableAttributes().getMutableMap()
+            .put(key, value);
         return this;
       }
       /**
-       * <code>string suffix = 2;</code>
-       * @return This builder for chaining.
+       * <code>map&lt;string, string&gt; attributes = 1;</code>
        */
-      public Builder clearSuffix() {
-        
-        suffix_ = getDefaultInstance().getSuffix();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string suffix = 2;</code>
-       * @param value The bytes for suffix to set.
-       * @return This builder for chaining.
-       */
-      public Builder setSuffixBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
-        suffix_ = value;
-        onChanged();
+
+      public Builder putAllAttributes(
+          java.util.Map<java.lang.String, java.lang.String> values) {
+        internalGetMutableAttributes().getMutableMap()
+            .putAll(values);
         return this;
       }
       @java.lang.Override
@@ -24577,10 +24617,20 @@ public final class DataPlaneContract {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Prefix_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_Prefix_AttributesEntry_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_Prefix_AttributesEntry_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Suffix_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Suffix_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_Suffix_AttributesEntry_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_Suffix_AttributesEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_All_descriptor;
   private static final 
@@ -24683,69 +24733,72 @@ public final class DataPlaneContract {
       "\n\016contract.proto\"\007\n\005Empty\"f\n\005Exact\022*\n\nat" +
       "tributes\030\001 \003(\0132\026.Exact.AttributesEntry\0321" +
       "\n\017AttributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030" +
-      "\002 \001(\t:\0028\001\"+\n\006Prefix\022\021\n\tattribute\030\001 \001(\t\022\016" +
-      "\n\006prefix\030\002 \001(\t\"+\n\006Suffix\022\021\n\tattribute\030\001 " +
-      "\001(\t\022\016\n\006suffix\030\002 \001(\t\"(\n\003All\022!\n\007filters\030\001 " +
-      "\003(\0132\020.DialectedFilter\"(\n\003Any\022!\n\007filters\030" +
-      "\001 \003(\0132\020.DialectedFilter\"\'\n\003Not\022 \n\006filter" +
-      "\030\001 \001(\0132\020.DialectedFilter\"\033\n\005CESQL\022\022\n\nexp" +
-      "ression\030\001 \001(\t\"\302\001\n\017DialectedFilter\022\027\n\005exa" +
-      "ct\030\001 \001(\0132\006.ExactH\000\022\031\n\006prefix\030\002 \001(\0132\007.Pre" +
-      "fixH\000\022\031\n\006suffix\030\003 \001(\0132\007.SuffixH\000\022\023\n\003all\030" +
-      "\004 \001(\0132\004.AllH\000\022\023\n\003any\030\005 \001(\0132\004.AnyH\000\022\023\n\003no" +
-      "t\030\006 \001(\0132\004.NotH\000\022\027\n\005cesql\030\007 \001(\0132\006.CESQLH\000" +
-      "B\010\n\006filter\"h\n\006Filter\022+\n\nattributes\030\001 \003(\013" +
-      "2\027.Filter.AttributesEntry\0321\n\017AttributesE" +
-      "ntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\177\n\014" +
-      "EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\r\n\005retr" +
-      "y\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.Backoff" +
-      "Policy\022\024\n\014backoffDelay\030\004 \001(\004\022\017\n\007timeout\030" +
-      "\005 \001(\004\"\370\002\n\006Egress\022\025\n\rconsumerGroup\030\001 \001(\t\022" +
-      "\023\n\013destination\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000" +
-      "\022&\n\024replyToOriginalTopic\030\004 \001(\0132\006.EmptyH\000" +
-      "\022\036\n\014discardReply\030\t \001(\0132\006.EmptyH\000\022\027\n\006filt" +
-      "er\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001(\t\022#\n\014egress" +
-      "Config\030\007 \001(\0132\r.EgressConfig\022%\n\rdeliveryO" +
-      "rder\030\010 \001(\0162\016.DeliveryOrder\022\031\n\007keyType\030\n " +
-      "\001(\0162\010.KeyType\022\035\n\treference\030\013 \001(\0132\n.Refer" +
-      "ence\022)\n\017dialectedFilter\030\014 \003(\0132\020.Dialecte" +
-      "dFilterB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n\013c" +
-      "ontentMode\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002" +
-      " \001(\tH\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"K\n" +
-      "\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 " +
-      "\001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"`\n\017Se" +
-      "cretReference\022\035\n\treference\030\001 \001(\0132\n.Refer" +
-      "ence\022.\n\022keyFieldReferences\030\002 \003(\0132\022.KeyFi" +
-      "eldReference\"C\n\021KeyFieldReference\022\021\n\tsec" +
-      "retKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.SecretFiel" +
-      "d\"Y\n\024MultiSecretReference\022\033\n\010protocol\030\001 " +
-      "\001(\0162\t.Protocol\022$\n\nreferences\030\002 \003(\0132\020.Sec" +
-      "retReference\"\202\001\n\023CloudEventOverrides\0228\n\n" +
-      "extensions\030\001 \003(\0132$.CloudEventOverrides.E" +
-      "xtensionsEntry\0321\n\017ExtensionsEntry\022\013\n\003key" +
-      "\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010Resource\022\013" +
-      "\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrap" +
-      "Servers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress" +
-      "\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig\022\031\n" +
-      "\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAuth\030\007" +
-      " \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n.Ref" +
-      "erenceH\000\0220\n\017multiAuthSecret\030\t \001(\0132\025.Mult" +
-      "iSecretReferenceH\000\0221\n\023cloudEventOverride" +
-      "s\030\n \001(\0132\024.CloudEventOverrides\022\035\n\treferen" +
-      "ce\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"<\n\010Contract" +
-      "\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132" +
-      "\t.Resource*,\n\rBackoffPolicy\022\017\n\013Exponenti" +
-      "al\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r\n\tUNO" +
-      "RDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006Stri" +
-      "ng\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tByteArr" +
-      "ay\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUC" +
-      "TURED\020\001*a\n\013SecretField\022\022\n\016SASL_MECHANISM" +
-      "\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY" +
-      "\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol\022\r" +
-      "\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL" +
-      "\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.eventing" +
-      ".kafka.broker.contractB\021DataPlaneContrac" +
-      "tZ\032control-plane/pkg/contractb\006proto3"
+      "\002 \001(\t:\0028\001\"h\n\006Prefix\022+\n\nattributes\030\001 \003(\0132" +
+      "\027.Prefix.AttributesEntry\0321\n\017AttributesEn" +
+      "try\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"h\n\006S" +
+      "uffix\022+\n\nattributes\030\001 \003(\0132\027.Suffix.Attri" +
+      "butesEntry\0321\n\017AttributesEntry\022\013\n\003key\030\001 \001" +
+      "(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"(\n\003All\022!\n\007filters\030" +
+      "\001 \003(\0132\020.DialectedFilter\"(\n\003Any\022!\n\007filter" +
+      "s\030\001 \003(\0132\020.DialectedFilter\"\'\n\003Not\022 \n\006filt" +
+      "er\030\001 \001(\0132\020.DialectedFilter\"\033\n\005CESQL\022\022\n\ne" +
+      "xpression\030\001 \001(\t\"\302\001\n\017DialectedFilter\022\027\n\005e" +
+      "xact\030\001 \001(\0132\006.ExactH\000\022\031\n\006prefix\030\002 \001(\0132\007.P" +
+      "refixH\000\022\031\n\006suffix\030\003 \001(\0132\007.SuffixH\000\022\023\n\003al" +
+      "l\030\004 \001(\0132\004.AllH\000\022\023\n\003any\030\005 \001(\0132\004.AnyH\000\022\023\n\003" +
+      "not\030\006 \001(\0132\004.NotH\000\022\027\n\005cesql\030\007 \001(\0132\006.CESQL" +
+      "H\000B\010\n\006filter\"h\n\006Filter\022+\n\nattributes\030\001 \003" +
+      "(\0132\027.Filter.AttributesEntry\0321\n\017Attribute" +
+      "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\177" +
+      "\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\r\n\005re" +
+      "try\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.Backo" +
+      "ffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\022\017\n\007timeou" +
+      "t\030\005 \001(\004\"\370\002\n\006Egress\022\025\n\rconsumerGroup\030\001 \001(" +
+      "\t\022\023\n\013destination\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\t" +
+      "H\000\022&\n\024replyToOriginalTopic\030\004 \001(\0132\006.Empty" +
+      "H\000\022\036\n\014discardReply\030\t \001(\0132\006.EmptyH\000\022\027\n\006fi" +
+      "lter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001(\t\022#\n\014egre" +
+      "ssConfig\030\007 \001(\0132\r.EgressConfig\022%\n\rdeliver" +
+      "yOrder\030\010 \001(\0162\016.DeliveryOrder\022\031\n\007keyType\030" +
+      "\n \001(\0162\010.KeyType\022\035\n\treference\030\013 \001(\0132\n.Ref" +
+      "erence\022)\n\017dialectedFilter\030\014 \003(\0132\020.Dialec" +
+      "tedFilterB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n" +
+      "\013contentMode\030\001 \001(\0162\014.ContentMode\022\016\n\004path" +
+      "\030\002 \001(\tH\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"" +
+      "K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030" +
+      "\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"`\n\017" +
+      "SecretReference\022\035\n\treference\030\001 \001(\0132\n.Ref" +
+      "erence\022.\n\022keyFieldReferences\030\002 \003(\0132\022.Key" +
+      "FieldReference\"C\n\021KeyFieldReference\022\021\n\ts" +
+      "ecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.SecretFi" +
+      "eld\"Y\n\024MultiSecretReference\022\033\n\010protocol\030" +
+      "\001 \001(\0162\t.Protocol\022$\n\nreferences\030\002 \003(\0132\020.S" +
+      "ecretReference\"\202\001\n\023CloudEventOverrides\0228" +
+      "\n\nextensions\030\001 \003(\0132$.CloudEventOverrides" +
+      ".ExtensionsEntry\0321\n\017ExtensionsEntry\022\013\n\003k" +
+      "ey\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010Resource" +
+      "\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstr" +
+      "apServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingre" +
+      "ss\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig\022" +
+      "\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAuth" +
+      "\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n.R" +
+      "eferenceH\000\0220\n\017multiAuthSecret\030\t \001(\0132\025.Mu" +
+      "ltiSecretReferenceH\000\0221\n\023cloudEventOverri" +
+      "des\030\n \001(\0132\024.CloudEventOverrides\022\035\n\trefer" +
+      "ence\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"<\n\010Contra" +
+      "ct\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 \003(" +
+      "\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Exponen" +
+      "tial\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r\n\tU" +
+      "NORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006St" +
+      "ring\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tByteA" +
+      "rray\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTR" +
+      "UCTURED\020\001*a\n\013SecretField\022\022\n\016SASL_MECHANI" +
+      "SM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_K" +
+      "EY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol" +
+      "\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003S" +
+      "SL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.eventi" +
+      "ng.kafka.broker.contractB\021DataPlaneContr" +
+      "actZ\032control-plane/pkg/contractb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -24774,13 +24827,25 @@ public final class DataPlaneContract {
     internal_static_Prefix_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Prefix_descriptor,
-        new java.lang.String[] { "Attribute", "Prefix", });
+        new java.lang.String[] { "Attributes", });
+    internal_static_Prefix_AttributesEntry_descriptor =
+      internal_static_Prefix_descriptor.getNestedTypes().get(0);
+    internal_static_Prefix_AttributesEntry_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_Prefix_AttributesEntry_descriptor,
+        new java.lang.String[] { "Key", "Value", });
     internal_static_Suffix_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_Suffix_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Suffix_descriptor,
-        new java.lang.String[] { "Attribute", "Suffix", });
+        new java.lang.String[] { "Attributes", });
+    internal_static_Suffix_AttributesEntry_descriptor =
+      internal_static_Suffix_descriptor.getNestedTypes().get(0);
+    internal_static_Suffix_AttributesEntry_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_Suffix_AttributesEntry_descriptor,
+        new java.lang.String[] { "Key", "Value", });
     internal_static_All_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_All_fieldAccessorTable = new
