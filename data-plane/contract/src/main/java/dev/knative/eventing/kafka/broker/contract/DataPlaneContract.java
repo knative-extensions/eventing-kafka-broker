@@ -6083,15 +6083,6 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string path = 2;</code>
-     * @return Whether the path field is set.
-     */
-    boolean hasPath();
-    /**
-     * <pre>
-     * path to listen for incoming events.
-     * </pre>
-     *
-     * <code>string path = 2;</code>
      * @return The path.
      */
     java.lang.String getPath();
@@ -6112,15 +6103,6 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string host = 3;</code>
-     * @return Whether the host field is set.
-     */
-    boolean hasHost();
-    /**
-     * <pre>
-     * host header to match
-     * </pre>
-     *
-     * <code>string host = 3;</code>
      * @return The host.
      */
     java.lang.String getHost();
@@ -6134,10 +6116,18 @@ public final class DataPlaneContract {
      */
     com.google.protobuf.ByteString
         getHostBytes();
-
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.IngressTypeCase getIngressTypeCase();
   }
   /**
+   * <pre>
+   * Ingress is the definition for HTTP ingress that is receiving the events
+   * into the Knative Kafka component.
+   * path and host fields are used for identifying the targets. They are exclusive.
+   * When a request comes with "/some-path", hostname will not be checked.
+   * When a request comes with "/", only hostname matching will be done.
+   * It is allowed to specify both path and host in ingress contract
+   * to support both modes.
+   * </pre>
+   *
    * Protobuf type {@code Ingress}
    */
   public static final class Ingress extends
@@ -6151,6 +6141,8 @@ public final class DataPlaneContract {
     }
     private Ingress() {
       contentMode_ = 0;
+      path_ = "";
+      host_ = "";
     }
 
     @java.lang.Override
@@ -6191,14 +6183,14 @@ public final class DataPlaneContract {
             }
             case 18: {
               java.lang.String s = input.readStringRequireUtf8();
-              ingressTypeCase_ = 2;
-              ingressType_ = s;
+
+              path_ = s;
               break;
             }
             case 26: {
               java.lang.String s = input.readStringRequireUtf8();
-              ingressTypeCase_ = 3;
-              ingressType_ = s;
+
+              host_ = s;
               break;
             }
             default: {
@@ -6233,47 +6225,6 @@ public final class DataPlaneContract {
               dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder.class);
     }
 
-    private int ingressTypeCase_ = 0;
-    private java.lang.Object ingressType_;
-    public enum IngressTypeCase
-        implements com.google.protobuf.Internal.EnumLite,
-            com.google.protobuf.AbstractMessage.InternalOneOfEnum {
-      PATH(2),
-      HOST(3),
-      INGRESSTYPE_NOT_SET(0);
-      private final int value;
-      private IngressTypeCase(int value) {
-        this.value = value;
-      }
-      /**
-       * @param value The number of the enum to look for.
-       * @return The enum associated with the given number.
-       * @deprecated Use {@link #forNumber(int)} instead.
-       */
-      @java.lang.Deprecated
-      public static IngressTypeCase valueOf(int value) {
-        return forNumber(value);
-      }
-
-      public static IngressTypeCase forNumber(int value) {
-        switch (value) {
-          case 2: return PATH;
-          case 3: return HOST;
-          case 0: return INGRESSTYPE_NOT_SET;
-          default: return null;
-        }
-      }
-      public int getNumber() {
-        return this.value;
-      }
-    };
-
-    public IngressTypeCase
-    getIngressTypeCase() {
-      return IngressTypeCase.forNumber(
-          ingressTypeCase_);
-    }
-
     public static final int CONTENTMODE_FIELD_NUMBER = 1;
     private int contentMode_;
     /**
@@ -6302,17 +6253,7 @@ public final class DataPlaneContract {
     }
 
     public static final int PATH_FIELD_NUMBER = 2;
-    /**
-     * <pre>
-     * path to listen for incoming events.
-     * </pre>
-     *
-     * <code>string path = 2;</code>
-     * @return Whether the path field is set.
-     */
-    public boolean hasPath() {
-      return ingressTypeCase_ == 2;
-    }
+    private volatile java.lang.Object path_;
     /**
      * <pre>
      * path to listen for incoming events.
@@ -6321,20 +6262,16 @@ public final class DataPlaneContract {
      * <code>string path = 2;</code>
      * @return The path.
      */
+    @java.lang.Override
     public java.lang.String getPath() {
-      java.lang.Object ref = "";
-      if (ingressTypeCase_ == 2) {
-        ref = ingressType_;
-      }
+      java.lang.Object ref = path_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (ingressTypeCase_ == 2) {
-          ingressType_ = s;
-        }
+        path_ = s;
         return s;
       }
     }
@@ -6346,19 +6283,15 @@ public final class DataPlaneContract {
      * <code>string path = 2;</code>
      * @return The bytes for path.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getPathBytes() {
-      java.lang.Object ref = "";
-      if (ingressTypeCase_ == 2) {
-        ref = ingressType_;
-      }
+      java.lang.Object ref = path_;
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        if (ingressTypeCase_ == 2) {
-          ingressType_ = b;
-        }
+        path_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
@@ -6366,17 +6299,7 @@ public final class DataPlaneContract {
     }
 
     public static final int HOST_FIELD_NUMBER = 3;
-    /**
-     * <pre>
-     * host header to match
-     * </pre>
-     *
-     * <code>string host = 3;</code>
-     * @return Whether the host field is set.
-     */
-    public boolean hasHost() {
-      return ingressTypeCase_ == 3;
-    }
+    private volatile java.lang.Object host_;
     /**
      * <pre>
      * host header to match
@@ -6385,20 +6308,16 @@ public final class DataPlaneContract {
      * <code>string host = 3;</code>
      * @return The host.
      */
+    @java.lang.Override
     public java.lang.String getHost() {
-      java.lang.Object ref = "";
-      if (ingressTypeCase_ == 3) {
-        ref = ingressType_;
-      }
+      java.lang.Object ref = host_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (ingressTypeCase_ == 3) {
-          ingressType_ = s;
-        }
+        host_ = s;
         return s;
       }
     }
@@ -6410,19 +6329,15 @@ public final class DataPlaneContract {
      * <code>string host = 3;</code>
      * @return The bytes for host.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getHostBytes() {
-      java.lang.Object ref = "";
-      if (ingressTypeCase_ == 3) {
-        ref = ingressType_;
-      }
+      java.lang.Object ref = host_;
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        if (ingressTypeCase_ == 3) {
-          ingressType_ = b;
-        }
+        host_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
@@ -6446,11 +6361,11 @@ public final class DataPlaneContract {
       if (contentMode_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.BINARY.getNumber()) {
         output.writeEnum(1, contentMode_);
       }
-      if (ingressTypeCase_ == 2) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, ingressType_);
+      if (!getPathBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, path_);
       }
-      if (ingressTypeCase_ == 3) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, ingressType_);
+      if (!getHostBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, host_);
       }
       unknownFields.writeTo(output);
     }
@@ -6465,11 +6380,11 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, contentMode_);
       }
-      if (ingressTypeCase_ == 2) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, ingressType_);
+      if (!getPathBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, path_);
       }
-      if (ingressTypeCase_ == 3) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, ingressType_);
+      if (!getHostBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, host_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -6487,19 +6402,10 @@ public final class DataPlaneContract {
       dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress) obj;
 
       if (contentMode_ != other.contentMode_) return false;
-      if (!getIngressTypeCase().equals(other.getIngressTypeCase())) return false;
-      switch (ingressTypeCase_) {
-        case 2:
-          if (!getPath()
-              .equals(other.getPath())) return false;
-          break;
-        case 3:
-          if (!getHost()
-              .equals(other.getHost())) return false;
-          break;
-        case 0:
-        default:
-      }
+      if (!getPath()
+          .equals(other.getPath())) return false;
+      if (!getHost()
+          .equals(other.getHost())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -6513,18 +6419,10 @@ public final class DataPlaneContract {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + CONTENTMODE_FIELD_NUMBER;
       hash = (53 * hash) + contentMode_;
-      switch (ingressTypeCase_) {
-        case 2:
-          hash = (37 * hash) + PATH_FIELD_NUMBER;
-          hash = (53 * hash) + getPath().hashCode();
-          break;
-        case 3:
-          hash = (37 * hash) + HOST_FIELD_NUMBER;
-          hash = (53 * hash) + getHost().hashCode();
-          break;
-        case 0:
-        default:
-      }
+      hash = (37 * hash) + PATH_FIELD_NUMBER;
+      hash = (53 * hash) + getPath().hashCode();
+      hash = (37 * hash) + HOST_FIELD_NUMBER;
+      hash = (53 * hash) + getHost().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -6621,6 +6519,16 @@ public final class DataPlaneContract {
       return builder;
     }
     /**
+     * <pre>
+     * Ingress is the definition for HTTP ingress that is receiving the events
+     * into the Knative Kafka component.
+     * path and host fields are used for identifying the targets. They are exclusive.
+     * When a request comes with "/some-path", hostname will not be checked.
+     * When a request comes with "/", only hostname matching will be done.
+     * It is allowed to specify both path and host in ingress contract
+     * to support both modes.
+     * </pre>
+     *
      * Protobuf type {@code Ingress}
      */
     public static final class Builder extends
@@ -6660,8 +6568,10 @@ public final class DataPlaneContract {
         super.clear();
         contentMode_ = 0;
 
-        ingressTypeCase_ = 0;
-        ingressType_ = null;
+        path_ = "";
+
+        host_ = "";
+
         return this;
       }
 
@@ -6689,13 +6599,8 @@ public final class DataPlaneContract {
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress buildPartial() {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress(this);
         result.contentMode_ = contentMode_;
-        if (ingressTypeCase_ == 2) {
-          result.ingressType_ = ingressType_;
-        }
-        if (ingressTypeCase_ == 3) {
-          result.ingressType_ = ingressType_;
-        }
-        result.ingressTypeCase_ = ingressTypeCase_;
+        result.path_ = path_;
+        result.host_ = host_;
         onBuilt();
         return result;
       }
@@ -6747,22 +6652,13 @@ public final class DataPlaneContract {
         if (other.contentMode_ != 0) {
           setContentModeValue(other.getContentModeValue());
         }
-        switch (other.getIngressTypeCase()) {
-          case PATH: {
-            ingressTypeCase_ = 2;
-            ingressType_ = other.ingressType_;
-            onChanged();
-            break;
-          }
-          case HOST: {
-            ingressTypeCase_ = 3;
-            ingressType_ = other.ingressType_;
-            onChanged();
-            break;
-          }
-          case INGRESSTYPE_NOT_SET: {
-            break;
-          }
+        if (!other.getPath().isEmpty()) {
+          path_ = other.path_;
+          onChanged();
+        }
+        if (!other.getHost().isEmpty()) {
+          host_ = other.host_;
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -6792,21 +6688,6 @@ public final class DataPlaneContract {
         }
         return this;
       }
-      private int ingressTypeCase_ = 0;
-      private java.lang.Object ingressType_;
-      public IngressTypeCase
-          getIngressTypeCase() {
-        return IngressTypeCase.forNumber(
-            ingressTypeCase_);
-      }
-
-      public Builder clearIngressType() {
-        ingressTypeCase_ = 0;
-        ingressType_ = null;
-        onChanged();
-        return this;
-      }
-
 
       private int contentMode_ = 0;
       /**
@@ -6882,18 +6763,7 @@ public final class DataPlaneContract {
         return this;
       }
 
-      /**
-       * <pre>
-       * path to listen for incoming events.
-       * </pre>
-       *
-       * <code>string path = 2;</code>
-       * @return Whether the path field is set.
-       */
-      @java.lang.Override
-      public boolean hasPath() {
-        return ingressTypeCase_ == 2;
-      }
+      private java.lang.Object path_ = "";
       /**
        * <pre>
        * path to listen for incoming events.
@@ -6902,19 +6772,13 @@ public final class DataPlaneContract {
        * <code>string path = 2;</code>
        * @return The path.
        */
-      @java.lang.Override
       public java.lang.String getPath() {
-        java.lang.Object ref = "";
-        if (ingressTypeCase_ == 2) {
-          ref = ingressType_;
-        }
+        java.lang.Object ref = path_;
         if (!(ref instanceof java.lang.String)) {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (ingressTypeCase_ == 2) {
-            ingressType_ = s;
-          }
+          path_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -6928,20 +6792,14 @@ public final class DataPlaneContract {
        * <code>string path = 2;</code>
        * @return The bytes for path.
        */
-      @java.lang.Override
       public com.google.protobuf.ByteString
           getPathBytes() {
-        java.lang.Object ref = "";
-        if (ingressTypeCase_ == 2) {
-          ref = ingressType_;
-        }
+        java.lang.Object ref = path_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
-          if (ingressTypeCase_ == 2) {
-            ingressType_ = b;
-          }
+          path_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
@@ -6961,8 +6819,8 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  ingressTypeCase_ = 2;
-        ingressType_ = value;
+  
+        path_ = value;
         onChanged();
         return this;
       }
@@ -6975,11 +6833,9 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearPath() {
-        if (ingressTypeCase_ == 2) {
-          ingressTypeCase_ = 0;
-          ingressType_ = null;
-          onChanged();
-        }
+        
+        path_ = getDefaultInstance().getPath();
+        onChanged();
         return this;
       }
       /**
@@ -6997,24 +6853,13 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        ingressTypeCase_ = 2;
-        ingressType_ = value;
+        
+        path_ = value;
         onChanged();
         return this;
       }
 
-      /**
-       * <pre>
-       * host header to match
-       * </pre>
-       *
-       * <code>string host = 3;</code>
-       * @return Whether the host field is set.
-       */
-      @java.lang.Override
-      public boolean hasHost() {
-        return ingressTypeCase_ == 3;
-      }
+      private java.lang.Object host_ = "";
       /**
        * <pre>
        * host header to match
@@ -7023,19 +6868,13 @@ public final class DataPlaneContract {
        * <code>string host = 3;</code>
        * @return The host.
        */
-      @java.lang.Override
       public java.lang.String getHost() {
-        java.lang.Object ref = "";
-        if (ingressTypeCase_ == 3) {
-          ref = ingressType_;
-        }
+        java.lang.Object ref = host_;
         if (!(ref instanceof java.lang.String)) {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (ingressTypeCase_ == 3) {
-            ingressType_ = s;
-          }
+          host_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -7049,20 +6888,14 @@ public final class DataPlaneContract {
        * <code>string host = 3;</code>
        * @return The bytes for host.
        */
-      @java.lang.Override
       public com.google.protobuf.ByteString
           getHostBytes() {
-        java.lang.Object ref = "";
-        if (ingressTypeCase_ == 3) {
-          ref = ingressType_;
-        }
+        java.lang.Object ref = host_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
-          if (ingressTypeCase_ == 3) {
-            ingressType_ = b;
-          }
+          host_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
@@ -7082,8 +6915,8 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  ingressTypeCase_ = 3;
-        ingressType_ = value;
+  
+        host_ = value;
         onChanged();
         return this;
       }
@@ -7096,11 +6929,9 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearHost() {
-        if (ingressTypeCase_ == 3) {
-          ingressTypeCase_ = 0;
-          ingressType_ = null;
-          onChanged();
-        }
+        
+        host_ = getDefaultInstance().getHost();
+        onChanged();
         return this;
       }
       /**
@@ -7118,8 +6949,8 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        ingressTypeCase_ = 3;
-        ingressType_ = value;
+        
+        host_ = value;
         onChanged();
         return this;
       }
@@ -17061,44 +16892,43 @@ public final class DataPlaneContract {
       "\006 \001(\t\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConf" +
       "ig\022%\n\rdeliveryOrder\030\010 \001(\0162\016.DeliveryOrde" +
       "r\022\031\n\007keyType\030\n \001(\0162\010.KeyType\022\035\n\treferenc" +
-      "e\030\013 \001(\0132\n.ReferenceB\017\n\rreplyStrategy\"[\n\007" +
+      "e\030\013 \001(\0132\n.ReferenceB\017\n\rreplyStrategy\"H\n\007" +
       "Ingress\022!\n\013contentMode\030\001 \001(\0162\014.ContentMo" +
-      "de\022\016\n\004path\030\002 \001(\tH\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013in" +
-      "gressType\"K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\t" +
-      "namespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version" +
-      "\030\004 \001(\t\"`\n\017SecretReference\022\035\n\treference\030\001" +
-      " \001(\0132\n.Reference\022.\n\022keyFieldReferences\030\002" +
-      " \003(\0132\022.KeyFieldReference\"C\n\021KeyFieldRefe" +
-      "rence\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162" +
-      "\014.SecretField\"Y\n\024MultiSecretReference\022\033\n" +
-      "\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nreferences" +
-      "\030\002 \003(\0132\020.SecretReference\"\202\001\n\023CloudEventO" +
-      "verrides\0228\n\nextensions\030\001 \003(\0132$.CloudEven" +
-      "tOverrides.ExtensionsEntry\0321\n\017Extensions" +
-      "Entry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002" +
-      "\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022" +
-      "\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001" +
-      "(\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.Egr" +
-      "essConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\n" +
-      "absentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret" +
-      "\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAuthSecret\030" +
-      "\t \001(\0132\025.MultiSecretReferenceH\000\0221\n\023cloudE" +
-      "ventOverrides\030\n \001(\0132\024.CloudEventOverride" +
-      "s\022\035\n\treference\030\013 \001(\0132\n.ReferenceB\006\n\004Auth" +
-      "\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\treso" +
-      "urces\030\002 \003(\0132\t.Resource*,\n\rBackoffPolicy\022" +
-      "\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n\rDelivery" +
-      "Order\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007Key" +
-      "Type\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020" +
-      "\002\022\r\n\tByteArray\020\003*)\n\013ContentMode\022\n\n\006BINAR" +
-      "Y\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013SecretField\022\022\n\016SA" +
-      "SL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002" +
-      "\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D" +
-      "\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINT" +
-      "EXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knat" +
-      "ive.eventing.kafka.broker.contractB\021Data" +
-      "PlaneContractZ\032control-plane/pkg/contrac" +
-      "tb\006proto3"
+      "de\022\014\n\004path\030\002 \001(\t\022\014\n\004host\030\003 \001(\t\"K\n\tRefere" +
+      "nce\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004" +
+      "name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"`\n\017SecretRef" +
+      "erence\022\035\n\treference\030\001 \001(\0132\n.Reference\022.\n" +
+      "\022keyFieldReferences\030\002 \003(\0132\022.KeyFieldRefe" +
+      "rence\"C\n\021KeyFieldReference\022\021\n\tsecretKey\030" +
+      "\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.SecretField\"Y\n\024Mu" +
+      "ltiSecretReference\022\033\n\010protocol\030\001 \001(\0162\t.P" +
+      "rotocol\022$\n\nreferences\030\002 \003(\0132\020.SecretRefe" +
+      "rence\"\202\001\n\023CloudEventOverrides\0228\n\nextensi" +
+      "ons\030\001 \003(\0132$.CloudEventOverrides.Extensio" +
+      "nsEntry\0321\n\017ExtensionsEntry\022\013\n\003key\030\001 \001(\t\022" +
+      "\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010Resource\022\013\n\003uid\030\001" +
+      " \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrapServers" +
+      "\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress\022#\n\014egr" +
+      "essConfig\030\005 \001(\0132\r.EgressConfig\022\031\n\010egress" +
+      "es\030\006 \003(\0132\007.Egress\022\034\n\nabsentAuth\030\007 \001(\0132\006." +
+      "EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n.ReferenceH" +
+      "\000\0220\n\017multiAuthSecret\030\t \001(\0132\025.MultiSecret" +
+      "ReferenceH\000\0221\n\023cloudEventOverrides\030\n \001(\013" +
+      "2\024.CloudEventOverrides\022\035\n\treference\030\013 \001(" +
+      "\0132\n.ReferenceB\006\n\004Auth\"<\n\010Contract\022\022\n\ngen" +
+      "eration\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t.Resou" +
+      "rce*,\n\rBackoffPolicy\022\017\n\013Exponential\020\000\022\n\n" +
+      "\006Linear\020\001*+\n\rDeliveryOrder\022\r\n\tUNORDERED\020" +
+      "\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006String\020\000\022\013\n" +
+      "\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tByteArray\020\003*)\n" +
+      "\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001" +
+      "*a\n\013SecretField\022\022\n\016SASL_MECHANISM\020\000\022\n\n\006C" +
+      "A_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004U" +
+      "SER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol\022\r\n\tPLAIN" +
+      "TEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010S" +
+      "ASL_SSL\020\003B[\n*dev.knative.eventing.kafka." +
+      "broker.contractB\021DataPlaneContractZ\032cont" +
+      "rol-plane/pkg/contractb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -17139,7 +16969,7 @@ public final class DataPlaneContract {
     internal_static_Ingress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Ingress_descriptor,
-        new java.lang.String[] { "ContentMode", "Path", "Host", "IngressType", });
+        new java.lang.String[] { "ContentMode", "Path", "Host", });
     internal_static_Reference_descriptor =
       getDescriptor().getMessageTypes().get(5);
     internal_static_Reference_fieldAccessorTable = new
