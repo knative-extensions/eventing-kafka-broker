@@ -373,41 +373,44 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     );
   }
 
-  private static void logError(
+  private void logError(
     final String msg,
     final KafkaConsumerRecord<Object, CloudEvent> record,
     final Throwable cause) {
 
     if (logger.isDebugEnabled()) {
-      logger.error(msg + " {} {} {} {} {}",
+      logger.error(msg + " {} {} {} {} {} {}",
         keyValue("topic", record.topic()),
         keyValue("partition", record.partition()),
         keyValue("headers", record.headers()),
         keyValue("offset", record.offset()),
         keyValue("event", record.value()),
+        keyValue("group", resourceContext.getEgress().getConsumerGroup()),
         cause
       );
     } else {
-      logger.error(msg + " {} {} {}",
+      logger.error(msg + " {} {} {} {}",
         keyValue("topic", record.topic()),
         keyValue("partition", record.partition()),
         keyValue("offset", record.offset()),
+        keyValue("group", resourceContext.getEgress().getConsumerGroup()),
         cause
       );
     }
   }
 
-  private static void logDebug(
+  private void logDebug(
     final String msg,
     final KafkaConsumerRecord<Object, CloudEvent> record) {
 
-    logger.debug(msg + " {} {} {} {} {} {}",
+    logger.debug(msg + " {} {} {} {} {} {} {}",
       keyValue("topic", record.topic()),
       keyValue("partition", record.partition()),
       keyValue("headers", record.headers()),
       keyValue("offset", record.offset()),
       keyValue("key", record.key()),
-      keyValue("event", record.value())
+      keyValue("event", record.value()),
+      keyValue("group", resourceContext.getEgress().getConsumerGroup())
     );
   }
 
