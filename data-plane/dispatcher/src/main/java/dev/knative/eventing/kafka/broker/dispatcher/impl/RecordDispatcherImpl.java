@@ -278,7 +278,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     finalProm.complete();
   }
 
-  private static ConsumerRecordContext maybeDeserializeValueFromHeaders(ConsumerRecordContext recordContext) {
+  private ConsumerRecordContext maybeDeserializeValueFromHeaders(ConsumerRecordContext recordContext) {
     if (recordContext.getRecord().value() != null) {
       return recordContext;
     }
@@ -296,7 +296,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     return recordContext;
   }
 
-  private static Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> composeSenderAndSinkHandler(
+  private Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> composeSenderAndSinkHandler(
     CloudEventSender sender, ResponseHandler sinkHandler, String senderType) {
     return rec -> sender.send(rec.value())
       .onFailure(ex -> logError("Failed to send event to " + senderType, rec, ex))
