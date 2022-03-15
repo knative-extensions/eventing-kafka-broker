@@ -23,6 +23,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgotesting "k8s.io/client-go/testing"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
@@ -69,7 +70,15 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT500S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerReply(ConsumerNoReply()),
 					)),
@@ -108,7 +117,15 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT500S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerReply(ConsumerNoReply()),
 						ConsumerCloudEventOverrides(&duckv1.CloudEventOverrides{
@@ -147,7 +164,15 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT500S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerReply(ConsumerNoReply()),
 					)),
@@ -171,7 +196,15 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerBootstrapServersConfig(SourceBootstrapServers),
 							),
 							ConsumerAuth(NewConsumerSpecAuth()),
-							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+							ConsumerDelivery(
+								NewConsumerSpecDelivery(
+									internals.Ordered,
+									NewConsumerTimeout("PT500S"),
+									NewConsumerRetry(10),
+									NewConsumerBackoffDelay("PT10S"),
+									NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+								),
+							),
 							ConsumerSubscriber(NewSourceSink2Reference()),
 							ConsumerReply(ConsumerNoReply()),
 						)),
@@ -220,7 +253,15 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerBootstrapServersConfig(SourceBootstrapServers),
 							),
 							ConsumerAuth(NewConsumerSpecAuth()),
-							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+							ConsumerDelivery(
+								NewConsumerSpecDelivery(
+									internals.Ordered,
+									NewConsumerTimeout("PT500S"),
+									NewConsumerRetry(10),
+									NewConsumerBackoffDelay("PT10S"),
+									NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+								),
+							),
 							ConsumerSubscriber(NewSourceSinkReference()),
 							ConsumerReply(ConsumerNoReply()),
 						)),
@@ -268,7 +309,15 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerBootstrapServersConfig(SourceBootstrapServers),
 							),
 							ConsumerAuth(NewConsumerSpecAuth()),
-							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+							ConsumerDelivery(
+								NewConsumerSpecDelivery(
+									internals.Ordered,
+									NewConsumerTimeout("PT500S"),
+									NewConsumerRetry(10),
+									NewConsumerBackoffDelay("PT10S"),
+									NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+								),
+							),
 							ConsumerSubscriber(NewSourceSinkReference()),
 							ConsumerReply(ConsumerNoReply()),
 						)),
@@ -302,7 +351,15 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT500S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerReply(ConsumerNoReply()),
 					)),
@@ -337,7 +394,15 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT500S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerReply(ConsumerNoReply()),
 					)),
@@ -372,7 +437,15 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT500S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerReply(ConsumerNoReply()),
 					)),
@@ -408,7 +481,15 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT500S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerReply(ConsumerNoReply()),
 					)),

@@ -57,11 +57,11 @@ type Reconciler struct {
 }
 
 var (
-	_ consumer.Interface = Reconciler{}
-	_ consumer.Finalizer = Reconciler{}
+	_ consumer.Interface = &Reconciler{}
+	_ consumer.Finalizer = &Reconciler{}
 )
 
-func (r Reconciler) ReconcileKind(ctx context.Context, c *kafkainternals.Consumer) reconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, c *kafkainternals.Consumer) reconciler.Event {
 	logger := logging.FromContext(ctx).Desugar()
 
 	resourceCt, err := r.reconcileContractResource(ctx, c)
@@ -88,7 +88,7 @@ func (r Reconciler) ReconcileKind(ctx context.Context, c *kafkainternals.Consume
 	return nil
 }
 
-func (r Reconciler) FinalizeKind(ctx context.Context, c *kafkainternals.Consumer) reconciler.Event {
+func (r *Reconciler) FinalizeKind(ctx context.Context, c *kafkainternals.Consumer) reconciler.Event {
 
 	logger := logging.FromContext(ctx).Desugar()
 
