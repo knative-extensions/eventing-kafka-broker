@@ -202,7 +202,12 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
       })
         .mapEmpty();
 
-    return getConsumerVerticle(deliveryOrder, initializer, new HashSet<>(resource.getTopicsList()));
+    return getConsumerVerticle(
+      deliveryOrder,
+      initializer,
+      new HashSet<>(resource.getTopicsList()),
+      consumerConfigs.get(ConsumerConfig.MAX_POLL_RECORDS_CONFIG)
+    );
   }
 
   static ResponseHandler getResponseHandler(final DataPlaneContract.Egress egress,
@@ -311,10 +316,13 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
   private static AbstractVerticle getConsumerVerticle(final DeliveryOrder type,
                                                       final BaseConsumerVerticle.Initializer initializer,
-                                                      final Set<String> topics) {
+                                                      final Set<String> topics,
+                                                      final Object maxPollRecords) {
     return switch (type) {
       case ORDERED -> new OrderedConsumerVerticle(initializer, topics);
-      case UNORDERED -> new UnorderedConsumerVerticle(initializer, topics);
+      case UNORDERED -> new UnorderedConsumerVerticle(
+        initializer, topics, maxPollRecords == null ? 0 : Integer.parseInt(maxPollRecords.toString())
+      );
     };
   }
 
