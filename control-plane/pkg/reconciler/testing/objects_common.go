@@ -395,8 +395,8 @@ func DispatcherPodAsOwnerReference(name string) reconcilertesting.ConfigMapOptio
 			Kind:               d.Kind,
 			Name:               d.Name,
 			UID:                d.UID,
-			Controller:         pointer.Bool(true),
-			BlockOwnerDeletion: pointer.Bool(true),
+			Controller:         pointer.Bool(false),
+			BlockOwnerDeletion: pointer.Bool(false),
 		})
 	}
 }

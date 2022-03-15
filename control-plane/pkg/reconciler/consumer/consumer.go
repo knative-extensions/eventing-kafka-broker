@@ -396,8 +396,8 @@ func podOwnerReference(p *corev1.Pod) base.ConfigMapOption {
 			Kind:               "Pod",
 			Name:               p.Name,
 			UID:                p.UID,
-			Controller:         pointer.Bool(true),
-			BlockOwnerDeletion: pointer.Bool(true),
+			Controller:         pointer.Bool(false),
+			BlockOwnerDeletion: pointer.Bool(false),
 		})
 	}
 }
