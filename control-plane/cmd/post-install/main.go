@@ -70,7 +70,29 @@ func run(ctx context.Context) error {
 		k8s: kubernetes.NewForConfigOrDie(config),
 	}
 	if err := sourceDeleter.Delete(ctx); err != nil {
-		return fmt.Errorf("source migration failed: %w", err)
+		return fmt.Errorf("source deletion failed: %w", err)
+	}
+
+	channelPreMigrationDeleter := &kafkaChannelPreMigrationDeleter{
+		k8s: kubernetes.NewForConfigOrDie(config),
+	}
+	if err := channelPreMigrationDeleter.Delete(ctx); err != nil {
+		return fmt.Errorf("channel pre-deletion failed: %w", err)
+	}
+
+	channelMigrator := &kafkaChannelMigrator{
+		kcs: kcs.NewForConfigOrDie(config),
+		k8s: kubernetes.NewForConfigOrDie(config),
+	}
+	if err := channelMigrator.Migrate(ctx); err != nil {
+		return fmt.Errorf("channel migration failed: %w", err)
+	}
+
+	channelPostMigrationDeleter := &kafkaChannelPostMigrationDeleter{
+		k8s: kubernetes.NewForConfigOrDie(config),
+	}
+	if err := channelPostMigrationDeleter.Delete(ctx); err != nil {
+		return fmt.Errorf("channel post-deletion failed: %w", err)
 	}
 
 	return nil

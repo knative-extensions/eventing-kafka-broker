@@ -36,6 +36,7 @@ type KafkaSourceMigrator struct {
 func (m *KafkaSourceMigrator) Migrate(ctx context.Context) error {
 
 	// cont takes care of results pagination.
+	// there might be more resources than a single rest call can return, so we need to think about the pagination.
 	cont := ""
 	first := true
 	for first || cont != "" {
