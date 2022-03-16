@@ -21,18 +21,36 @@ import io.cloudevents.core.v03.CloudEventV03;
 import io.cloudevents.core.v1.CloudEventV1;
 import io.cloudevents.lang.Nullable;
 import java.net.URI;
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 
-public class AttributesFilter implements Filter {
+public abstract class AttributesFilter implements Filter {
+
+  static class AttributeEntry {
+    private final String name;
+    private final String expectedValue;
+    // An extractor function to turn an event into a string value.
+    // specversion -> 1.0
+    // f(event) -> event.getSpecVersion().toString() -> 1.0
+    private final Function<CloudEvent, String> extractor;
+
+    public AttributeEntry(String name, String expectedValue, Function<CloudEvent, String> extractor) {
+      this.name = name;
+      this.expectedValue = expectedValue;
+      this.extractor = extractor;
+    }
+  }
 
   private static final String DEFAULT_STRING = "";
+
+  protected final Logger logger = LoggerFactory.getLogger(getClass());
+
 
   static final Map<String, Function<CloudEvent, String>> attributesMapper = Map.of(
     CloudEventV1.SPECVERSION, event -> event.getSpecVersion().toString(),
@@ -46,11 +64,7 @@ public class AttributesFilter implements Filter {
     CloudEventV1.TIME, event -> getOrDefault(event.getTime(), time -> time.format(ISO_INSTANT))
   );
 
-  // the key represents the function to turn an event into a string value.
-  // the value represents the value to match.
-  // specversion -> 1.0
-  // f(event) -> event.getSpecVersion().toString() -> 1.0
-  private final List<Entry<Function<CloudEvent, String>, String>> attributes;
+  private final List<AttributeEntry> attributes;
 
   /**
    * All args constructor.
@@ -60,7 +74,9 @@ public class AttributesFilter implements Filter {
   public AttributesFilter(final Map<String, String> attributes) {
     this.attributes = attributes.entrySet().stream()
       .filter(entry -> isNotEmpty(entry.getValue()))
-      .map(entry -> new SimpleImmutableEntry<>(
+      .map(entry -> new AttributeEntry(
+        entry.getKey(),
+        entry.getValue(),
         attributesMapper.getOrDefault(
           entry.getKey(),
           event -> {
@@ -70,9 +86,7 @@ public class AttributesFilter implements Filter {
               return getOrDefault(event.getExtension(entry.getKey()), Object::toString);
             }
           }
-        ),
-        entry.getValue()
-      ))
+        )))
       .collect(Collectors.toUnmodifiableList());
   }
 
@@ -86,15 +100,30 @@ public class AttributesFilter implements Filter {
    */
   @Override
   public boolean test(final CloudEvent event) {
-
+    logger.debug("Testing event attributes. Event {}", event);
     for (final var entry : attributes) {
-      if (!entry.getKey().apply(event).equals(entry.getValue())) {
+      Function<CloudEvent, String> extractorFunc = entry.extractor;
+      String wantedValue = entry.expectedValue;
+      String existingValue = extractorFunc.apply(event);
+      if (!this.match(existingValue, wantedValue)) {
+        logger.debug("Event attributes matching failed. Attribute: {} Want: {} Got: {} Event: {}",
+          entry.name, wantedValue, existingValue, event);
         return false;
       }
     }
-
+    logger.debug("Event attributes matching succeeded");
     return true;
   }
+
+
+  /**
+   * Matches the given value against the wanted value.
+   *
+   * @param wanted desired attribute value
+   * @param given  cloud event current attribute value
+   * @return
+   */
+  protected abstract boolean match(String given, String wanted);
 
   private static <T> String getOrDefault(
     @Nullable final T s,

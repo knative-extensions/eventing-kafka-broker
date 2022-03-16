@@ -33,6 +33,7 @@ import (
 
 	apiseventing "knative.dev/eventing/pkg/apis/eventing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/apis/feature"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger"
@@ -50,7 +51,7 @@ const (
 	FinalizerName = "kafka.triggers.eventing.knative.dev"
 )
 
-func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env) *controller.Impl {
+func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
 
 	logger := logging.FromContext(ctx).Desugar()
 
@@ -74,6 +75,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 		BrokerLister:   brokerInformer.Lister(),
 		EventingClient: eventingclient.Get(ctx),
 		Env:            configs,
+		Flags:          feature.Flags{},
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -84,6 +86,22 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 			PromoteFilterFunc: filterTriggers(reconciler.BrokerLister),
 		}
 	})
+
+	featureStore := feature.NewStore(
+		logging.FromContext(ctx).Named("feature-config-eventing-store"),
+		func(name string, value interface{}) {
+			flags, ok := value.(feature.Flags)
+			if !ok {
+				logger.Warn("Features ConfigMap " + name + " updated but we didn't get expected flags. Skipping updating cached features")
+			}
+			logger.Debug("Features ConfigMap " + name + " updated. Updating cached features.")
+			reconciler.FlagsLock.Lock()
+			defer reconciler.FlagsLock.Unlock()
+			reconciler.Flags = flags
+			impl.GlobalResync(triggerInformer.Informer())
+		},
+	)
+	featureStore.WatchConfigs(watcher)
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 

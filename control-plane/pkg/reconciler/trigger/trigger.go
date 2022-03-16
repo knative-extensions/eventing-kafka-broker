@@ -20,24 +20,26 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"go.uber.org/zap"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/apis/feature"
+	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
@@ -53,7 +55,9 @@ type Reconciler struct {
 	EventingClient eventingclientset.Interface
 	Resolver       *resolver.URIResolver
 
-	Env *config.Env
+	Env       *config.Env
+	Flags     feature.Flags
+	FlagsLock sync.RWMutex
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -282,10 +286,23 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 			Name:      trigger.GetName(),
 		},
 	}
+	newFiltersEnabled := func() bool {
+		r.FlagsLock.RLock()
+		defer r.FlagsLock.RUnlock()
+		return r.Flags.IsEnabled(feature.NewTriggerFilters)
+	}()
 
-	if trigger.Spec.Filter != nil && trigger.Spec.Filter.Attributes != nil {
-		egress.Filter = &contract.Filter{
-			Attributes: trigger.Spec.Filter.Attributes,
+	if newFiltersEnabled && len(trigger.Spec.Filters) > 0 {
+		dialectedFilters := make([]*contract.DialectedFilter, 0, len(trigger.Spec.Filters))
+		for _, f := range trigger.Spec.Filters {
+			dialectedFilters = append(dialectedFilters, contract.FromSubscriptionFilter(f))
+		}
+		egress.DialectedFilter = dialectedFilters
+	} else {
+		if trigger.Spec.Filter != nil && trigger.Spec.Filter.Attributes != nil {
+			egress.Filter = &contract.Filter{
+				Attributes: trigger.Spec.Filter.Attributes,
+			}
 		}
 	}
 

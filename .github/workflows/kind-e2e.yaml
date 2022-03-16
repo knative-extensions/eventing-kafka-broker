@@ -35,6 +35,7 @@ jobs:
           - ./test/e2e_new
           - ./test/e2e_channel
           - ./test/e2e_new_channel
+          - ./test/experimental
 
         # Map between K8s and KinD versions.
         # This is attempting to make it a bit clearer what's being tested.
@@ -62,6 +63,12 @@ jobs:
           - test-suite: ./test/e2e_new
             channel-auth-scenario: "SASL_SSL"
           - test-suite: ./test/e2e_new
+            channel-auth-scenario: "SASL_PLAIN"
+          - test-suite: ./test/experimental
+            channel-auth-scenario: "SSL"
+          - test-suite: ./test/experimental
+            channel-auth-scenario: "SASL_SSL"
+          - test-suite: ./test/experimental
             channel-auth-scenario: "SASL_PLAIN"
 
     env:
