@@ -6,7 +6,7 @@ metadata:
   name: kafka-broker-config
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 data:
   default.topic.partitions: "10"
   default.topic.replication.factor: "3"
@@ -19,7 +19,7 @@ metadata:
   labels:
     duck.knative.dev/addressable: "true"
     knative.dev/crd-install: "true"
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 spec:
   group: eventing.knative.dev
   names:
@@ -243,7 +243,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: eventing-kafka-source-observer
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
     duck.knative.dev/source: "true"
 rules:
   - apiGroups:
@@ -259,7 +259,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
   name: config-kafka-leader-election
   namespace: knative-eventing
   annotations:
@@ -281,7 +281,7 @@ metadata:
   name: kafka-config-logging
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 data:
   config.xml: |
     <configuration>
@@ -298,7 +298,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: knative-kafka-addressable-resolver
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
     duck.knative.dev/addressable: "true"
 rules:
   - apiGroups:
@@ -325,7 +325,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-channelable-manipulator
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
     duck.knative.dev/channelable: "true"
 rules:
   - apiGroups:
@@ -348,7 +348,7 @@ kind: ClusterRole
 metadata:
   name: kafka-controller
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 rules:
   - apiGroups:
       - "*"
@@ -510,7 +510,7 @@ metadata:
   name: kafka-controller
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 ---
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -518,7 +518,7 @@ kind: ClusterRoleBinding
 metadata:
   name: kafka-controller
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 subjects:
   - kind: ServiceAccount
     name: kafka-controller
@@ -533,7 +533,7 @@ kind: ClusterRoleBinding
 metadata:
   name: kafka-controller-addressable-resolver
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 subjects:
   - kind: ServiceAccount
     name: kafka-controller
@@ -551,7 +551,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-controller
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 spec:
   selector:
     matchLabels:
@@ -561,7 +561,7 @@ spec:
       name: kafka-controller
       labels:
         app: kafka-controller
-        kafka.eventing.knative.dev/release: v1.1.3
+        kafka.eventing.knative.dev/release: v1.2.3
     spec:
       securityContext:
         runAsNonRoot: false
@@ -577,7 +577,7 @@ spec:
               weight: 100
       containers:
         - name: controller
-          image: registry.ci.openshift.org/openshift/knative-v1.1.3:knative-eventing-kafka-broker-kafka-controller
+          image: registry.ci.openshift.org/openshift/knative-v1.2.3:knative-eventing-kafka-broker-kafka-controller
           imagePullPolicy: IfNotPresent
           env:
             - name: BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE
@@ -677,7 +677,7 @@ kind: ClusterRole
 metadata:
   name: kafka-webhook-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 rules:
   - apiGroups:
       - ""
@@ -758,7 +758,7 @@ metadata:
   name: kafka-webhook-eventing
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 ---
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -766,7 +766,7 @@ kind: ClusterRoleBinding
 metadata:
   name: kafka-webhook-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 subjects:
   - kind: ServiceAccount
     name: kafka-webhook-eventing
@@ -781,7 +781,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: defaulting.webhook.kafka.eventing.knative.dev
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 webhooks:
   - admissionReviewVersions: [ "v1", "v1beta1" ]
     clientConfig:
@@ -799,14 +799,14 @@ metadata:
   name: kafka-webhook-eventing-certs
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: validation.webhook.kafka.eventing.knative.dev
   labels:
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 webhooks:
   - admissionReviewVersions: ["v1", "v1beta1"]
     clientConfig:
@@ -825,7 +825,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-webhook-eventing
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 spec:
   selector:
     matchLabels:
@@ -834,7 +834,7 @@ spec:
     metadata:
       labels:
         app: kafka-webhook-eventing
-        kafka.eventing.knative.dev/release: v1.1.3
+        kafka.eventing.knative.dev/release: v1.2.3
     spec:
       affinity:
         podAntiAffinity:
@@ -851,7 +851,7 @@ spec:
       containers:
         - name: kafka-webhook-eventing
           terminationMessagePolicy: FallbackToLogsOnError
-          image: registry.ci.openshift.org/openshift/knative-v1.1.3:knative-eventing-kafka-broker-webhook-kafka
+          image: registry.ci.openshift.org/openshift/knative-v1.2.3:knative-eventing-kafka-broker-webhook-kafka
           resources:
             requests:
               cpu: 20m
@@ -907,7 +907,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-webhook-eventing
-    kafka.eventing.knative.dev/release: v1.1.3
+    kafka.eventing.knative.dev/release: v1.2.3
 spec:
   ports:
     - name: https-webhook
