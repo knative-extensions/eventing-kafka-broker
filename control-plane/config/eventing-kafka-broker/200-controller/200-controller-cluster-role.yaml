@@ -43,6 +43,12 @@ rules:
   - apiGroups:
       - "*"
     resources:
+      - configmaps/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - "*"
+    resources:
       - events
     verbs:
       - patch
