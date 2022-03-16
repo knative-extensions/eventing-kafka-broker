@@ -34,7 +34,7 @@ import (
 	"knative.dev/eventing/test/lib/sender"
 	pkgtest "knative.dev/pkg/test"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 

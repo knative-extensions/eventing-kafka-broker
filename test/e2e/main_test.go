@@ -24,18 +24,13 @@ import (
 	"testing"
 
 	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/pkg/system"
 )
 
-const (
-	SystemNamespace = "knative-eventing"
-	LogsDir         = "knative-eventing-logs"
-)
+func TestMain(m *testing.M) {
+	os.Exit(func() int {
+		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
 
-func TestMain(t *testing.M) {
-
-	exit := t.Run()
-
-	testlib.ExportLogs(LogsDir, SystemNamespace)
-
-	os.Exit(exit)
+		return m.Run()
+	}())
 }

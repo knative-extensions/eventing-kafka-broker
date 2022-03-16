@@ -22,11 +22,27 @@ import (
 	"knative.dev/eventing-kafka-broker/test/upgrade/continual"
 )
 
+// ContinualTests returns all continual tests.
+func ContinualTests() []pkgupgrade.BackgroundOperation {
+	c := BrokerContinualTests()
+	c = append(c, SinkContinualTests()...)
+	return c
+}
+
 // BrokerContinualTests returns background operations to test broker
 // functionality in continual manner during the whole upgrade and downgrade
 // process asserting that all events are propagated.
 func BrokerContinualTests() []pkgupgrade.BackgroundOperation {
 	return []pkgupgrade.BackgroundOperation{
 		continual.BrokerTest(continual.KafkaBrokerTestOptions{}),
+	}
+}
+
+// SinkContinualTests returns background operations to test KafkaSink
+// functionality in continual manner during the whole upgrade and downgrade
+// process asserting that all events are propagated.
+func SinkContinualTests() []pkgupgrade.BackgroundOperation {
+	return []pkgupgrade.BackgroundOperation{
+		continual.SinkSourceTest(continual.KafkaSinkSourceTestOptions{}),
 	}
 }
