@@ -1,0 +1,80 @@
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-kafka-broker-cm-watcher
+  namespace: knative-eventing
+  labels:
+    app: test-kafka-broker-cm-watcher
+    kafka.eventing.knative.dev/release: devel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-kafka-broker-cm-watcher
+  template:
+    metadata:
+      name: test-kafka-broker-cm-watcher
+      labels:
+        app: test-kafka-broker-cm-watcher
+        kafka.eventing.knative.dev/release: devel
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: kafka-controller # use the same service account of our controller
+      containers:
+        - name: test-kafka-broker-cm-watcher
+          image: ko://knative.dev/eventing-kafka-broker/test/cmd/watch-cm
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: config-logging
+              mountPath: /etc/config-logging
+              readOnly: true
+          env:
+            - name: DATA_PLANE_CONFIG_MAP_NAMESPACE
+              value: knative-eventing
+            - name: DATA_PLANE_CONFIG_MAP_NAME
+              value: kafka-broker-brokers-triggers
+            - name: CONFIG_LOGGING_NAME
+              value: config-logging
+            - name: CONFIG_OBSERVABILITY_NAME
+              value: config-observability
+            - name: METRICS_DOMAIN
+              value: knative.dev/eventing
+            - name: DATA_PLANE_CONFIG_FORMAT
+              value: json
+            - name: INGRESS_NAME
+              value: kafka-broker-ingress
+            - name: GENERAL_CONFIG_MAP_NAME
+              value: kafka-broker-config
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          ports:
+            - containerPort: 9090
+              name: metrics
+          terminationMessagePolicy: FallbackToLogsOnError
+          terminationMessagePath: /dev/temination-log
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+      volumes:
+        - name: config-logging
+          configMap:
+            name: config-logging
+      restartPolicy: Always

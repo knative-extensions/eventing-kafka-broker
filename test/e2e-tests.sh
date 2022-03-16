@@ -1,28 +1,6 @@
 #!/usr/bin/env bash
 
-# TODO work around networking issues, see https://github.com/kubernetes/test-infra/issues/23741
-iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-
-# variables used:
-# - SKIP_INITIALIZE (default: false) - skip cluster creation.
-# - LOCAL_DEVELOPMENT (default: false) - skip heavy workloads installation like load and chaos generators.
-
-readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
-readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
-export REPLICAS=${REPLICAS:-3}
-
-ROOT_DIR=$(dirname $0)/..
-
 source $(dirname $0)/e2e-common.sh
-
-# If gcloud is not available make it a no-op, not an error.
-which gcloud &>/dev/null || gcloud() { echo "[ignore-gcloud $*]" 1>&2; }
-
-# Use GNU tools on macOS. Requires the 'grep' and 'gnu-sed' Homebrew formulae.
-if [ "$(uname)" == "Darwin" ]; then
-  sed=gsed
-  grep=ggrep
-fi
 
 if ! ${SKIP_INITIALIZE}; then
   initialize $@ --skip-istio-addon
@@ -39,15 +17,21 @@ header "Waiting Knative eventing to come up"
 
 wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing didn't come up"
 
+export_logs_continuously
+
 header "Running tests"
 
-export_logs_continuously "kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver"
+if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
+  # if this flag exists, only test Kafka channel scenarios with auth
+  $(dirname $0)/channel-e2e-tests.sh || fail_test "Failed to execute KafkaChannel tests"
+  success
+fi
 
-go_test_e2e -timeout=30m ./test/e2e_new/... || fail_test "E2E (new) suite failed"
-go_test_e2e -timeout=30m ./test/e2e/... || fail_test "E2E suite failed"
+go_test_e2e -timeout=1h ./test/e2e/... || fail_test "E2E suite failed"
+
+go_test_e2e -timeout=1h ./test/e2e_channel/... -channels=messaging.knative.dev/v1beta1:KafkaChannel || fail_test "E2E suite (KafkaChannel) failed"
 
 go_test_e2e -tags=deletecm ./test/e2e/... || fail_test "E2E (deletecm) suite failed"
-go_test_e2e -tags=deletecm ./test/e2e_new/... || fail_test "E2E (new deletecm) suite failed"
 
 if ! ${LOCAL_DEVELOPMENT}; then
   go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E (sacura) suite failed"

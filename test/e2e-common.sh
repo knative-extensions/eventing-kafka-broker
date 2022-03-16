@@ -14,9 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
+readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
+export REPLICAS=${REPLICAS:-3}
+
 source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
 source $(pwd)/hack/data-plane.sh
 source $(pwd)/hack/control-plane.sh
+source $(pwd)/hack/artifacts-env.sh
+
+# If gcloud is not available make it a no-op, not an error.
+which gcloud &>/dev/null || gcloud() { echo "[ignore-gcloud $*]" 1>&2; }
+
+# Use GNU tools on macOS. Requires the 'grep' and 'gnu-sed' Homebrew formulae.
+if [ "$(uname)" == "Darwin" ]; then
+  sed=gsed
+  grep=ggrep
+fi
 
 # Latest release. If user does not supply this as a flag, the latest tagged release on the current branch will be used.
 readonly LATEST_RELEASE_VERSION=$(latest_version)
@@ -27,10 +41,13 @@ readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
 # Vendored eventing test images.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
 
-export EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT="eventing-kafka-controller.yaml"
-export EVENTING_KAFKA_SOURCE_ARTIFACT="eventing-kafka-source.yaml"
-export EVENTING_KAFKA_BROKER_ARTIFACT="eventing-kafka-broker.yaml"
-export EVENTING_KAFKA_SINK_ARTIFACT="eventing-kafka-sink.yaml"
+export MONITORING_ARTIFACTS_PATH="manifests/monitoring/prometheus-operator"
+export EVENTING_KAFKA_CONTROLLER_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/controller"
+export EVENTING_KAFKA_WEBHOOK_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/webhook"
+export EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/source"
+export EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/broker"
+export EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/sink"
+export EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/channel"
 
 # The number of control plane replicas to run.
 readonly REPLICAS=${REPLICAS:-1}
@@ -90,12 +107,16 @@ function build_components_from_source() {
   [ -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SOURCE_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" ] && rm "${EVENTING_KAFKA_BROKER_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_SINK_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SINK_ARTIFACT}"
+  [ -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" ] && rm "${EVENTING_KAFKA_CHANNEL_ARTIFACT}"
 
   header "Data plane setup"
   data_plane_setup || fail_test "Failed to set up data plane components"
 
   header "Control plane setup"
   control_plane_setup || fail_test "Failed to set up control plane components"
+
+  header "Building Monitoring artifacts"
+  build_monitoring_artifacts || fail_test "Failed to create monitoring artifacts"
 
   return $?
 }
@@ -108,6 +129,8 @@ function install_latest_release() {
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
+  kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
+  # kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
 }
 
 function install_head() {
@@ -117,6 +140,8 @@ function install_head() {
   kubectl apply -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
+  kubectl apply -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
+  kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 }
 
 function test_setup() {
@@ -130,16 +155,22 @@ function test_setup() {
   # Apply test configurations, and restart data plane components (we don't have hot reload)
   ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
 
+  setup_kafka_channel_auth || fail_test "Failed to apply channel auth configuration ${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO}"
+
   kubectl rollout restart deployment -n knative-eventing kafka-source-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
+  kubectl rollout restart deployment -n knative-eventing kafka-channel-receiver
+  kubectl rollout restart deployment -n knative-eventing kafka-channel-dispatcher
 }
 
 function test_teardown() {
   kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || fail_test "Failed to tear down control plane"
   kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to tear down kafka broker"
   kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to tear down kafka sink"
+  kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || fail_test "Failed to tear down kafka channel"
+  kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" || fail_test "Failed to tear down kafka source"
 }
 
 function scale_controlplane() {
@@ -183,9 +214,11 @@ function delete_sacura() {
 
 function export_logs_continuously() {
 
+  labels=("kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver" "kafka-channel-receiver" "kafka-channel-dispatcher" "kafka-source-dispatcher" "kafka-webhook-eventing" "kafka-controller")
+
   mkdir -p "$ARTIFACTS/${SYSTEM_NAMESPACE}"
 
-  for deployment in "$@"; do
+  for deployment in "${labels[@]}"; do
     kubectl logs -n ${SYSTEM_NAMESPACE} -f -l=app="$deployment" >"$ARTIFACTS/${SYSTEM_NAMESPACE}/$deployment" 2>&1 &
   done
 }
@@ -194,6 +227,71 @@ function save_release_artifacts() {
   # Copy our release artifacts into artifacts, so that release artifacts of a PR can be tested and reviewed without
   # building the project from source.
   cp "${EVENTING_KAFKA_BROKER_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
+  cp "${EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
+  cp "${EVENTING_KAFKA_SOURCE_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
+  cp "${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
   cp "${EVENTING_KAFKA_SINK_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
+  cp "${EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
+  cp "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
+  cp "${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
   cp "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
+  cp "${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+}
+
+function build_monitoring_artifacts() {
+
+  ko resolve ${KO_FLAGS} \
+    -Rf "${EVENTING_KAFKA_CONTROLLER_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" \
+    -Rf "${EVENTING_KAFKA_WEBHOOK_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
+    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
+  ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
+    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
+  ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
+    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
+  ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
+    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
+  ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
+    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+}
+
+function setup_kafka_channel_auth() {
+  echo "Apply channel auth config ${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO}"
+
+  if [ "$EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO" == "SSL" ]; then
+    echo "Setting up SSL configuration for KafkaChannel"
+    kubectl patch configmap/kafka-channel-config \
+      -n knative-eventing \
+      --type merge \
+      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9093", "auth.secret.ref.name": "strimzi-tls-secret"}}'
+  elif [ "$EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO" == "SASL_SSL" ]; then
+    echo "Setting up SASL_SSL configuration for KafkaChannel"
+    kubectl patch configmap/kafka-channel-config \
+      -n knative-eventing \
+      --type merge \
+      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9094", "auth.secret.ref.name": "strimzi-sasl-secret"}}'
+  elif [ "$EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO" == "SASL_PLAIN" ]; then
+    echo "Setting up SASL_PLAIN configuration for KafkaChannel"
+    kubectl patch configmap/kafka-channel-config \
+      -n knative-eventing \
+      --type merge \
+      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9095", "auth.secret.ref.name": "strimzi-sasl-plain-secret"}}'
+  else
+    echo "Setting up no auth configuration for KafkaChannel"
+    kubectl patch configmap/kafka-channel-config \
+      -n knative-eventing \
+      --type merge \
+      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9092"}}'
+    kubectl patch configmap/kafka-channel-config \
+      -n knative-eventing \
+      --type=json \
+      -p='[{"op": "remove", "path": "/data/auth.secret.ref.name"}]' || true
+  fi
 }

@@ -17,10 +17,13 @@
 package continual
 
 import (
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade/continual"
 	"knative.dev/eventing/test/upgrade/prober"
 	"knative.dev/eventing/test/upgrade/prober/sut"
 	"knative.dev/eventing/test/upgrade/prober/wathola/event"
+
+	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 )
 
 // TestOptions holds options for EventingKafka continual tests.
@@ -37,6 +40,16 @@ type Broker struct {
 	Name string
 	*eventingkafkaupgrade.ReplicationOptions
 	*eventingkafkaupgrade.RetryOptions
+}
+
+type Sink struct {
+	Name string
+	Spec eventing.KafkaSinkSpec
+}
+
+type Source struct {
+	Name string
+	Spec sources.KafkaSourceSpec
 }
 
 var eventTypes = []string{

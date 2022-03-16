@@ -50,7 +50,6 @@ const (
 )
 
 func TestSacuraJob(t *testing.T) {
-	t.Skip("for now")
 
 	c := testlib.Setup(t, false)
 	defer testlib.TearDown(c)

@@ -28,7 +28,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apiserver/pkg/storage/names"
 	testlib "knative.dev/eventing/test/lib"
-	pkgtest "knative.dev/pkg/test"
 )
 
 type EventMutator func(event *cloudevents.Event)
@@ -54,8 +53,6 @@ func SendN(t *testing.T, n int, addressable Addressable, mutators ...EventMutato
 				go func(i int) {
 
 					client, err := testlib.NewClient(
-						pkgtest.Flags.Kubeconfig,
-						pkgtest.Flags.Cluster,
 						addressable.Namespace,
 						t,
 					)

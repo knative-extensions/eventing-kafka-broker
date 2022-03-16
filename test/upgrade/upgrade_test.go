@@ -22,19 +22,10 @@ package upgrade
 import (
 	"testing"
 
-	"go.uber.org/zap"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 )
 
 func TestUpgrades(t *testing.T) {
 	suite := Suite()
-	suite.Execute(newUpgradeConfig(t))
-}
-
-func newUpgradeConfig(t *testing.T) pkgupgrade.Configuration {
-	log, err := zap.NewDevelopment()
-	if err != nil {
-		t.Fatal(err)
-	}
-	return pkgupgrade.Configuration{T: t, Log: log}
+	suite.Execute(pkgupgrade.Configuration{T: t})
 }

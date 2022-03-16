@@ -20,22 +20,24 @@
 package conformance
 
 import (
+	"log"
 	"os"
 	"testing"
 
 	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/pkg/system"
+	"knative.dev/pkg/test/zipkin"
 )
 
-const (
-	SystemNamespace = "knative-eventing"
-	LogsDir         = "knative-eventing-logs"
-)
+func TestMain(m *testing.M) {
 
-func TestMain(t *testing.M) {
+	os.Exit(func() int {
+		// Any tests may SetupZipkinTracing, it will only actually be done once. This should be the ONLY
+		// place that cleans it up. If an individual test calls this instead, then it will break other
+		// tests that need the tracing in place.
+		defer zipkin.CleanupZipkinTracingSetup(log.Printf)
+		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
 
-	exit := t.Run()
-
-	testlib.ExportLogs(LogsDir, SystemNamespace)
-
-	os.Exit(exit)
+		return m.Run()
+	}())
 }
