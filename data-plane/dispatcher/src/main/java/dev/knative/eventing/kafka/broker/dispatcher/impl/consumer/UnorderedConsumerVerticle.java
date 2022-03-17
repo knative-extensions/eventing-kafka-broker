@@ -21,6 +21,7 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,10 +42,20 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
   // This shouldn't be more than 2000, which is the default max time allowed
   // to block a verticle thread.
   private static final Duration POLL_TIMEOUT = Duration.ofMillis(1000);
+  private final int maxPollRecords;
 
-  public UnorderedConsumerVerticle(Initializer initializer,
-                                   Set<String> topics) {
+  private int inFlightRecords;
+
+  public UnorderedConsumerVerticle(final Initializer initializer,
+                                   final Set<String> topics,
+                                   final int maxPollRecords) {
     super(initializer, topics);
+    if (maxPollRecords <= 0) {
+      this.maxPollRecords = 500;
+    } else {
+      this.maxPollRecords = maxPollRecords;
+    }
+    this.inFlightRecords = 0;
   }
 
   @Override
@@ -69,7 +80,17 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
    * with the consumer parameter `max.poll.records`, and it's critical to
    * control the memory consumption of the dispatcher.
    */
-  private void poll() {
+  private synchronized void poll() {
+    if (inFlightRecords >= maxPollRecords) {
+      logger.info(
+        "In flight records exceeds " + ConsumerConfig.MAX_POLL_RECORDS_CONFIG +
+          " waiting for response from subscriber before polling for new records {} {}",
+        keyValue(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords),
+        keyValue("records", inFlightRecords)
+      );
+      return;
+    }
+
     this.consumer
       .poll(POLL_TIMEOUT)
       .onSuccess(this::handleRecords)
@@ -81,11 +102,17 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
   }
 
   private void handleRecords(final KafkaConsumerRecords<Object, CloudEvent> records) {
-    final var futures = new ArrayList<Future>(records.size());
+    // We are not forcing the dispatcher to send less than `max.poll.records`
+    // requests because we don't want to keep records in-memory by waiting
+    // for responses.
     for (int i = 0; i < records.size(); i++) {
-      futures.add(this.recordDispatcher.dispatch(records.recordAt(i)));
+      this.inFlightRecords++;
+      this.recordDispatcher.dispatch(records.recordAt(i))
+        .onComplete(v -> {
+          this.inFlightRecords--;
+          poll();
+        });
     }
-    CompositeFuture.join(futures)
-      .onComplete(v -> poll());
+    poll();
   }
 }
