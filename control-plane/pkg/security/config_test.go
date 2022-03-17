@@ -70,6 +70,39 @@ func TestSecret(t *testing.T) {
 						Name:      "my-name",
 					},
 					Data: map[string]string{
+						AuthSecretNameKey:      "my-name",
+						AuthSecretNamespaceKey: "my-ns",
+					},
+				},
+			},
+			secretProviderFunc: (&SecretProviderFuncMock{
+				secret: &corev1.Secret{
+					Data: map[string][]byte{
+						ProtocolKey: []byte(ProtocolPlaintext),
+					},
+				},
+				err:           nil,
+				wantName:      "my-name",
+				wantNamespace: "my-ns",
+				t:             t,
+			}).F,
+			wantSecret: &corev1.Secret{
+				Data: map[string][]byte{
+					ProtocolKey: []byte(ProtocolPlaintext),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "happy case with fallback to configmap namespace",
+			ctx:  context.Background(),
+			config: &MTConfigMapSecretLocator{
+				&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "my-ns",
+						Name:      "my-name",
+					},
+					Data: map[string]string{
 						AuthSecretNameKey: "my-name",
 					},
 				},
@@ -123,7 +156,8 @@ func TestSecret(t *testing.T) {
 						Name:      "my-name",
 					},
 					Data: map[string]string{
-						AuthSecretNameKey: "my-name",
+						AuthSecretNameKey:      "my-name",
+						AuthSecretNamespaceKey: "my-ns",
 					},
 				},
 			},
