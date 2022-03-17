@@ -64,7 +64,7 @@ data:
     # ssl.truststore.location=
     # ssl.truststore.password=
     allow.auto.create.topics=true
-    auto.offset.reset=earliest
+    auto.offset.reset=latest
     client.dns.lookup=use_all_dns_ips
     connections.max.idle.ms=540000
     default.api.timeout.ms=60000
