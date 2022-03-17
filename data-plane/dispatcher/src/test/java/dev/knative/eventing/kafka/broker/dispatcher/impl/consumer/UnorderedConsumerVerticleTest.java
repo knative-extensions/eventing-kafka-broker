@@ -22,6 +22,6 @@ public class UnorderedConsumerVerticleTest extends AbstractConsumerVerticleTest 
   @Override
   BaseConsumerVerticle createConsumerVerticle(
     BaseConsumerVerticle.Initializer initializer, Set<String> topics) {
-    return new UnorderedConsumerVerticle(initializer, topics);
+    return new UnorderedConsumerVerticle(initializer, topics, 5);
   }
 }
