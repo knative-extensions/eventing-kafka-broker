@@ -1311,6 +1311,7 @@ knative.dev/eventing-kafka/pkg/apis/sources/config
 knative.dev/eventing-kafka/pkg/apis/sources/v1beta1
 knative.dev/eventing-kafka/pkg/channel/consolidated/apis/messaging
 knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/testing
+knative.dev/eventing-kafka/pkg/channel/consolidated/utils
 knative.dev/eventing-kafka/pkg/channel/distributed/common/kafka/constants
 knative.dev/eventing-kafka/pkg/client/clientset/versioned
 knative.dev/eventing-kafka/pkg/client/clientset/versioned/fake

@@ -27,7 +27,9 @@ import (
 	types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
+	consolidatedutils "knative.dev/eventing-kafka/pkg/channel/consolidated/utils"
 	kcs "knative.dev/eventing-kafka/pkg/client/clientset/versioned"
+	consolidatedsarama "knative.dev/eventing-kafka/pkg/common/kafka/sarama"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
@@ -47,6 +49,8 @@ const (
 	NewChannelReceiverDeploymentName   = "kafka-channel-receiver"
 
 	NewChannelDispatcherServiceName = "kafka-channel-dispatcher"
+
+	OldConfigmapName = "config-kafka"
 )
 
 func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
@@ -132,6 +136,52 @@ func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
 
 	// TODO: auth migration
 	// TODO: config migration
+
+	// consolidated configmap looks like this:
+	//
+	// apiVersion: v1
+	// data:
+	//   eventing-kafka: |
+	//     kafka:
+	//       brokers: my-cluster-kafka-bootstrap.kafka:9092
+	//       authSecretNamespace: my-namespace
+	//       authSecretName: my-secret
+	//   version: 1.0.0
+	// kind: ConfigMap
+	// metadata:
+	//   name: config-kafka
+	//   namespace: knative-eventing
+
+	// the new configmap should look like this:
+	//
+	// apiVersion: v1
+	// kind: ConfigMap
+	// metadata:
+	//   name: kafka-channel-config
+	//   namespace: knative-eventing
+	//  data:
+	//    bootstrap.servers: "my-cluster-kafka-bootstrap.kafka:9092"
+	//    auth.secret.ref.name: my-secret
+	// TODO:
+	//    default.topic.partitions: "10"
+	//    default.topic.replication.factor: "3"
+
+	// get the old configmap, extract eventing-kafka/kafka/brokers and set it into bootstrap.servers
+	oldcm, err := m.k8s.CoreV1().
+		ConfigMaps(system.Namespace()).
+		Get(ctx, OldConfigmapName, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		// configmap will be missing if we did the migration already
+		return fmt.Errorf("failed to migrate consolidated channel configmap %s: %w", OldConfigmapName, err)
+	}
+
+	oldconfig, err := consolidatedutils.GetKafkaConfig(ctx, "", oldcm.Data, consolidatedsarama.LoadAuthConfig)
+	if 1 == 1 {
+		fmt.Println(oldconfig)
+	}
+	// oldconfig.Brokers
+	// oldconfig.EventingKafka.Kafka.AuthSecretNamespace
+	// oldconfig.EventingKafka.Kafka.AuthSecretName
 
 	return nil
 }
