@@ -182,9 +182,6 @@ func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
 		return fmt.Errorf("failed to get consolidated channel configmap for migration %s: %w", OldConfigmapName, err)
 	}
 
-	// Can't use this as it defaults auth settings in case they're blank
-	// oldconfig, err := consolidatedutils.GetKafkaConfig(ctx, "", oldcm.Data, consolidatedsarama.LoadAuthConfig)
-
 	oldconfig, err := getEventingKafkaConfig(oldcm.Data)
 	if err != nil && !apierrors.IsNotFound(err) {
 		// configmap will be missing if we did the migration already
