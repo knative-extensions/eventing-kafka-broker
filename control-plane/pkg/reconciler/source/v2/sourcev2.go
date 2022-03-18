@@ -61,30 +61,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		ks.GetConditionSet().Manage(&ks.Status).MarkFalse(KafkaConditionConsumerGroup, "failed to reconcile consumer group", err.Error())
 		return err
 	}
-	if cg.IsReady() {
-		ks.GetConditionSet().Manage(&ks.Status).MarkTrue(KafkaConditionConsumerGroup)
-	} else {
-		topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
-		if topLevelCondition == nil {
-			ks.GetConditionSet().Manage(&ks.Status).MarkUnknown(
-				KafkaConditionConsumerGroup,
-				"failed to reconcile consumer group",
-				"consumer group not ready",
-			)
-		} else {
-			ks.GetConditionSet().Manage(&ks.Status).MarkFalse(
-				KafkaConditionConsumerGroup,
-				topLevelCondition.Reason,
-				topLevelCondition.Message,
-			)
-		}
-	}
 
-	ks.Status.MarkSink(cg.Status.SubscriberURI)
-	ks.Status.Placeable = cg.Status.Placeable
-	if cg.Status.Replicas != nil {
-		ks.Status.Consumers = *cg.Status.Replicas
-	}
+	propagateConsumerGroupStatus(cg, ks)
 
 	return nil
 }
@@ -162,4 +140,30 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 	}
 
 	return cg, nil
+}
+
+func propagateConsumerGroupStatus(cg *internalscg.ConsumerGroup, ks *sources.KafkaSource) {
+	if cg.IsReady() {
+		ks.GetConditionSet().Manage(&ks.Status).MarkTrue(KafkaConditionConsumerGroup)
+	} else {
+		topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
+		if topLevelCondition == nil {
+			ks.GetConditionSet().Manage(&ks.Status).MarkUnknown(
+				KafkaConditionConsumerGroup,
+				"failed to reconcile consumer group",
+				"consumer group is not ready",
+			)
+		} else {
+			ks.GetConditionSet().Manage(&ks.Status).MarkFalse(
+				KafkaConditionConsumerGroup,
+				topLevelCondition.Reason,
+				topLevelCondition.Message,
+			)
+		}
+	}
+	ks.Status.MarkSink(cg.Status.SubscriberURI)
+	ks.Status.Placeable = cg.Status.Placeable
+	if cg.Status.Replicas != nil {
+		ks.Status.Consumers = *cg.Status.Replicas
+	}
 }
