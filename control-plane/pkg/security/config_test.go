@@ -105,7 +105,8 @@ func TestSecret(t *testing.T) {
 						Name:      "my-name",
 					},
 					Data: map[string]string{
-						AuthSecretNameKey: "my-name",
+						AuthSecretNamespaceKey: "my-ns",
+						AuthSecretNameKey:      "my-name",
 					},
 				},
 			},
