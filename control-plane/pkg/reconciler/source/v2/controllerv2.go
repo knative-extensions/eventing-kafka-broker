@@ -30,11 +30,10 @@ import (
 	kafkainformer "knative.dev/eventing-kafka/pkg/client/injection/informers/sources/v1beta1/kafkasource"
 	"knative.dev/eventing-kafka/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 )
 
-func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
+func NewController(ctx context.Context) *controller.Impl {
 
 	kafkaInformer := kafkainformer.Get(ctx)
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
