@@ -44,10 +44,7 @@ import (
 )
 
 type Reconciler struct {
-	SerDe contract.FormatSerDe
-
-	Enqueue func(c *kafkainternals.Consumer)
-
+	SerDe               contract.FormatSerDe
 	Resolver            *resolver.URIResolver
 	Tracker             tracker.Interface
 	ConsumerGroupLister kafkainternalslisters.ConsumerGroupLister
@@ -136,7 +133,7 @@ func (r Reconciler) reconcileContractResource(ctx context.Context, c *kafkainter
 func (r Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainternals.Consumer) (*contract.Egress, error) {
 	destination, err := r.Resolver.URIFromDestinationV1(ctx, c.Spec.Subscriber, c)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve subcriber: %w", err)
+		return nil, fmt.Errorf("failed to resolve subscriber: %w", err)
 	}
 	c.Status.SubscriberURI = destination
 
