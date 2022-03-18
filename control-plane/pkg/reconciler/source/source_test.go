@@ -14,130 +14,84 @@
  * limitations under the License.
  */
 
-package source_test
+package source
 
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/Shopify/sarama"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
-	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
-	"knative.dev/pkg/resolver"
-	"knative.dev/pkg/tracker"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/pkg/kmeta"
 
+	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
 
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	fakeeventingkafkaclient "knative.dev/eventing-kafka/pkg/client/injection/client/fake"
 	eventingkafkasourcereconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source"
+	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
+
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
-)
-
-const (
-	finalizerName = "kafkasources.sources.knative.dev"
-)
-
-var DefaultEnv = &config.Env{
-	DataPlaneConfigMapNamespace: "knative-eventing",
-	DataPlaneConfigMapName:      "kafka-source-sources",
-	GeneralConfigMapName:        "kafka-broker-config",
-	IngressName:                 "kafka-source-ingress",
-	SystemNamespace:             "knative-eventing",
-	DataPlaneConfigFormat:       base.Json,
-}
-
-var (
-	finalizerUpdatedEvent = Eventf(
-		corev1.EventTypeNormal,
-		"FinalizerUpdate",
-		fmt.Sprintf(`Updated %q finalizers`, SourceName),
-	)
 )
 
 func TestReconcileKind(t *testing.T) {
 
-	sources.RegisterAlternateKafkaConditionSet(base.EgressConditionSet)
-
-	env := *DefaultEnv
 	testKey := fmt.Sprintf("%s/%s", SourceNamespace, SourceName)
+
+	sources.RegisterAlternateKafkaConditionSet(conditionSet)
 
 	table := TableTest{
 		{
-			Name: "Reconciled normal - no auth",
+			Name: "Reconciled normal",
 			Objects: []runtime.Object{
-				NewSourceSinkObject(),
 				NewSource(),
-				SourceDispatcherPod(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve": "value_to_preserve",
-				}),
 			},
 			Key: testKey,
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
-					Generation: 1,
-					Resources: []*contract.Resource{
-						{
-							Uid:              SourceUUID,
-							Topics:           SourceTopics,
-							BootstrapServers: SourceBootstrapServers,
-							Egresses: []*contract.Egress{
-								{
-									ConsumerGroup: SourceConsumerGroup,
-									Destination:   ServiceURL,
-									Uid:           SourceUUID,
-									EgressConfig:  &DefaultEgressConfig,
-									DeliveryOrder: DefaultDeliveryOrder,
-									ReplyStrategy: &contract.Egress_DiscardReply{},
-									Reference:     SourceReference(),
-								},
-							},
-							Auth:      &contract.Resource_AbsentAuth{},
-							Reference: SourceReference(),
-						},
-					},
-				}),
-				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve":           "value_to_preserve",
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-			},
-			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(1),
+				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
-						StatusConfigMapUpdatedReady(&env),
-						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
-						StatusDataPlaneAvailable,
-						StatusInitialOffsetsCommitted,
-						StatusSourceSinkResolved(ServiceURL),
+						StatusSourceConsumerGroupUnknown(),
+						StatusSourceSinkResolved(""),
 					),
 				},
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(),
-			},
-			WantEvents: []string{
-				finalizerUpdatedEvent,
 			},
 		},
 		{
@@ -147,46 +101,39 @@ func TestReconcileKind(t *testing.T) {
 				NewSource(WithCloudEventOverrides(&duckv1.CloudEventOverrides{
 					Extensions: map[string]string{"a": "foo", "b": "foo"},
 				})),
-				SourceDispatcherPod(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve": "value_to_preserve",
-				}),
 			},
 			Key: testKey,
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
-					Generation: 1,
-					Resources: []*contract.Resource{
-						{
-							Uid:              SourceUUID,
-							Topics:           SourceTopics,
-							BootstrapServers: SourceBootstrapServers,
-							CloudEventOverrides: &contract.CloudEventOverrides{
-								Extensions: map[string]string{"a": "foo", "b": "foo"},
-							},
-							Egresses: []*contract.Egress{
-								{
-									ConsumerGroup: SourceConsumerGroup,
-									Destination:   ServiceURL,
-									Uid:           SourceUUID,
-									EgressConfig:  &DefaultEgressConfig,
-									DeliveryOrder: DefaultDeliveryOrder,
-									ReplyStrategy: &contract.Egress_DiscardReply{},
-									Reference:     SourceReference(),
-								},
-							},
-							Auth:      &contract.Resource_AbsentAuth{},
-							Reference: SourceReference(),
-						},
-					},
-				}),
-				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve":           "value_to_preserve",
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-			},
-			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+						ConsumerCloudEventOverrides(&duckv1.CloudEventOverrides{
+							Extensions: map[string]string{"a": "foo", "b": "foo"},
+						}),
+					)),
+					ConsumerGroupReplicas(1),
+				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -194,354 +141,383 @@ func TestReconcileKind(t *testing.T) {
 						WithCloudEventOverrides(&duckv1.CloudEventOverrides{
 							Extensions: map[string]string{"a": "foo", "b": "foo"},
 						}),
-						StatusConfigMapUpdatedReady(&env),
-						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
-						StatusDataPlaneAvailable,
-						StatusInitialOffsetsCommitted,
-						StatusSourceSinkResolved(ServiceURL),
+						StatusSourceConsumerGroupUnknown(),
+						StatusSourceSinkResolved(""),
 					),
 				},
 			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(),
-			},
-			WantEvents: []string{
-				finalizerUpdatedEvent,
-			},
 		},
 		{
-			Name: "Reconciled normal - key type string",
+			Name: "Reconciled normal - existing cg with sink update",
 			Objects: []runtime.Object{
-				NewSourceSinkObject(),
-				NewSource(WithKeyType("string")),
-				SourceDispatcherPod(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve": "value_to_preserve",
-				}),
+				NewSource(WithSourceSink(NewSourceSink2Reference())),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(1),
+					ConsumerGroupReady,
+				),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
-					Generation: 1,
-					Resources: []*contract.Resource{
-						{
-							Uid:              SourceUUID,
-							Topics:           SourceTopics,
-							BootstrapServers: SourceBootstrapServers,
-							Egresses: []*contract.Egress{
-								{
-									ConsumerGroup: SourceConsumerGroup,
-									Destination:   ServiceURL,
-									Uid:           SourceUUID,
-									EgressConfig:  &DefaultEgressConfig,
-									DeliveryOrder: DefaultDeliveryOrder,
-									KeyType:       contract.KeyType_String,
-									ReplyStrategy: &contract.Egress_DiscardReply{},
-									Reference:     SourceReference(),
-								},
-							},
-							Auth:      &contract.Resource_AbsentAuth{},
-							Reference: SourceReference(),
-						},
-					},
-				}),
-				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve":           "value_to_preserve",
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-			},
-			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
-			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&env, nil),
+				{
+					Object: NewConsumerGroup(
+						WithConsumerGroupName(SourceUUID),
+						WithConsumerGroupNamespace(SourceNamespace),
+						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+						WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+						WithConsumerGroupLabels(ConsumerSourceLabel),
+						ConsumerGroupConsumerSpec(NewConsumerSpec(
+							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+							ConsumerConfigs(
+								ConsumerGroupIdConfig(SourceConsumerGroup),
+								ConsumerBootstrapServersConfig(SourceBootstrapServers),
+							),
+							ConsumerAuth(NewConsumerSpecAuth()),
+							ConsumerDelivery(
+								NewConsumerSpecDelivery(
+									internals.Ordered,
+									NewConsumerTimeout("PT600S"),
+									NewConsumerRetry(10),
+									NewConsumerBackoffDelay("PT10S"),
+									NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+								),
+							),
+							ConsumerSubscriber(NewSourceSink2Reference()),
+							ConsumerReply(ConsumerNoReply()),
+						)),
+						ConsumerGroupReplicas(1),
+						ConsumerGroupReady,
+					),
+				},
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
-						WithKeyType("string"),
-						StatusConfigMapUpdatedReady(&env),
-						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
-						StatusDataPlaneAvailable,
-						StatusInitialOffsetsCommitted,
-						StatusSourceSinkResolved(ServiceURL),
+						WithSourceSink(NewSourceSink2Reference()),
+						StatusSourceConsumerGroup(),
+						StatusSourceSinkResolved(""),
 					),
 				},
 			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(),
-			},
-			WantEvents: []string{
-				finalizerUpdatedEvent,
-			},
 		},
 		{
-			Name: "Reconciled normal - key type int",
-			Objects: []runtime.Object{
-				NewSourceSinkObject(),
-				NewSource(WithKeyType("int")),
-				SourceDispatcherPod(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve": "value_to_preserve",
-				}),
-			},
-			Key: testKey,
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
-					Generation: 1,
-					Resources: []*contract.Resource{
-						{
-							Uid:              SourceUUID,
-							Topics:           SourceTopics,
-							BootstrapServers: SourceBootstrapServers,
-							Egresses: []*contract.Egress{
-								{
-									ConsumerGroup: SourceConsumerGroup,
-									Destination:   ServiceURL,
-									Uid:           SourceUUID,
-									EgressConfig:  &DefaultEgressConfig,
-									DeliveryOrder: DefaultDeliveryOrder,
-									KeyType:       contract.KeyType_Integer,
-									ReplyStrategy: &contract.Egress_DiscardReply{},
-									Reference:     SourceReference(),
-								},
-							},
-							Auth:      &contract.Resource_AbsentAuth{},
-							Reference: SourceReference(),
-						},
-					},
-				}),
-				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve":           "value_to_preserve",
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-			},
-			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
-			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&env, nil),
-			},
-			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
-				{
-					Object: NewSource(
-						WithKeyType("int"),
-						StatusConfigMapUpdatedReady(&env),
-						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
-						StatusDataPlaneAvailable,
-						StatusInitialOffsetsCommitted,
-						StatusSourceSinkResolved(ServiceURL),
-					),
-				},
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(),
-			},
-			WantEvents: []string{
-				finalizerUpdatedEvent,
-			},
-		},
-		{
-			Name: "Reconciled normal - key type byte-array",
-			Objects: []runtime.Object{
-				NewSourceSinkObject(),
-				NewSource(WithKeyType("byte-array")),
-				SourceDispatcherPod(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve": "value_to_preserve",
-				}),
-			},
-			Key: testKey,
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
-					Generation: 1,
-					Resources: []*contract.Resource{
-						{
-							Uid:              SourceUUID,
-							Topics:           SourceTopics,
-							BootstrapServers: SourceBootstrapServers,
-							Egresses: []*contract.Egress{
-								{
-									ConsumerGroup: SourceConsumerGroup,
-									Destination:   ServiceURL,
-									Uid:           SourceUUID,
-									EgressConfig:  &DefaultEgressConfig,
-									DeliveryOrder: DefaultDeliveryOrder,
-									KeyType:       contract.KeyType_ByteArray,
-									ReplyStrategy: &contract.Egress_DiscardReply{},
-									Reference:     SourceReference(),
-								},
-							},
-							Auth:      &contract.Resource_AbsentAuth{},
-							Reference: SourceReference(),
-						},
-					},
-				}),
-				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve":           "value_to_preserve",
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-			},
-			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
-			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&env, nil),
-			},
-			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
-				{
-					Object: NewSource(
-						WithKeyType("byte-array"),
-						StatusConfigMapUpdatedReady(&env),
-						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
-						StatusDataPlaneAvailable,
-						StatusInitialOffsetsCommitted,
-						StatusSourceSinkResolved(ServiceURL),
-					),
-				},
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(),
-			},
-			WantEvents: []string{
-				finalizerUpdatedEvent,
-			},
-		},
-		{
-			Name: "Reconciled normal - key type float",
-			Objects: []runtime.Object{
-				NewSourceSinkObject(),
-				NewSource(WithKeyType("float")),
-				SourceDispatcherPod(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve": "value_to_preserve",
-				}),
-			},
-			Key: testKey,
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
-					Generation: 1,
-					Resources: []*contract.Resource{
-						{
-							Uid:              SourceUUID,
-							Topics:           SourceTopics,
-							BootstrapServers: SourceBootstrapServers,
-							Egresses: []*contract.Egress{
-								{
-									ConsumerGroup: SourceConsumerGroup,
-									Destination:   ServiceURL,
-									Uid:           SourceUUID,
-									EgressConfig:  &DefaultEgressConfig,
-									DeliveryOrder: DefaultDeliveryOrder,
-									KeyType:       contract.KeyType_Double,
-									ReplyStrategy: &contract.Egress_DiscardReply{},
-									Reference:     SourceReference(),
-								},
-							},
-							Auth:      &contract.Resource_AbsentAuth{},
-							Reference: SourceReference(),
-						},
-					},
-				}),
-				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve":           "value_to_preserve",
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-			},
-			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
-			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&env, nil),
-			},
-			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
-				{
-					Object: NewSource(
-						WithKeyType("float"),
-						StatusConfigMapUpdatedReady(&env),
-						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
-						StatusDataPlaneAvailable,
-						StatusInitialOffsetsCommitted,
-						StatusSourceSinkResolved(ServiceURL),
-					),
-				},
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(),
-			},
-			WantEvents: []string{
-				finalizerUpdatedEvent,
-			},
-		},
-		{
-			Name: "Reconciled failed - no sink",
+			Name: "Reconciled normal - existing cg with update",
 			Objects: []runtime.Object{
 				NewSource(),
-				SourceDispatcherPod(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve": "value_to_preserve",
-				}),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupReplicas(1),
+					ConsumerGroupReady,
+				),
 			},
-			Key:                     testKey,
-			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
-			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewSource(
-						InitSourceConditions,
-						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
-						StatusDataPlaneAvailable,
-						StatusInitialOffsetsCommitted,
-						StatusSourceSinkNotResolved("failed to resolve destination: failed to get object test-service-namespace/test-service: services \"test-service\" not found"),
+					Object: NewConsumerGroup(
+						WithConsumerGroupName(SourceUUID),
+						WithConsumerGroupNamespace(SourceNamespace),
+						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+						WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+						WithConsumerGroupLabels(ConsumerSourceLabel),
+						ConsumerGroupConsumerSpec(NewConsumerSpec(
+							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+							ConsumerConfigs(
+								ConsumerGroupIdConfig(SourceConsumerGroup),
+								ConsumerBootstrapServersConfig(SourceBootstrapServers),
+							),
+							ConsumerAuth(NewConsumerSpecAuth()),
+							ConsumerDelivery(
+								NewConsumerSpecDelivery(
+									internals.Ordered,
+									NewConsumerTimeout("PT600S"),
+									NewConsumerRetry(10),
+									NewConsumerBackoffDelay("PT10S"),
+									NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+								),
+							),
+							ConsumerSubscriber(NewSourceSinkReference()),
+							ConsumerReply(ConsumerNoReply()),
+						)),
+						ConsumerGroupReplicas(1),
+						ConsumerGroupReady,
 					),
 				},
 			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(),
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						StatusSourceConsumerGroup(),
+						StatusSourceSinkResolved(""),
+					),
+				},
 			},
-			WantEvents: []string{
-				finalizerUpdatedEvent,
-				"Warning InternalError failed to resolve sink: failed to resolve destination: failed to get object test-service-namespace/test-service: services \"test-service\" not found",
+		},
+		{
+			Name: "Reconciled normal - existing cg with update but not ready",
+			Objects: []runtime.Object{
+				NewSource(),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupReplicas(1),
+				),
 			},
-			WantErr: true,
+			Key:         testKey,
+			WantCreates: []runtime.Object{},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewConsumerGroup(
+						WithConsumerGroupName(SourceUUID),
+						WithConsumerGroupNamespace(SourceNamespace),
+						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+						WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+						WithConsumerGroupLabels(ConsumerSourceLabel),
+						ConsumerGroupConsumerSpec(NewConsumerSpec(
+							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+							ConsumerConfigs(
+								ConsumerGroupIdConfig(SourceConsumerGroup),
+								ConsumerBootstrapServersConfig(SourceBootstrapServers),
+							),
+							ConsumerAuth(NewConsumerSpecAuth()),
+							ConsumerDelivery(
+								NewConsumerSpecDelivery(
+									internals.Ordered,
+									NewConsumerTimeout("PT600S"),
+									NewConsumerRetry(10),
+									NewConsumerBackoffDelay("PT10S"),
+									NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+								),
+							),
+							ConsumerSubscriber(NewSourceSinkReference()),
+							ConsumerReply(ConsumerNoReply()),
+						)),
+						ConsumerGroupReplicas(1),
+					),
+				},
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						StatusSourceConsumerGroupUnknown(),
+						StatusSourceSinkResolved(""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - existing cg without update",
+			Objects: []runtime.Object{
+				NewSource(),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(1),
+					ConsumerGroupReady,
+				),
+			},
+			Key: testKey,
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						StatusSourceConsumerGroup(),
+						StatusSourceSinkResolved(""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - existing cg without update but not ready",
+			Objects: []runtime.Object{
+				NewSource(),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(1),
+				),
+			},
+			Key:         testKey,
+			WantCreates: []runtime.Object{},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						StatusSourceConsumerGroupUnknown(),
+						StatusSourceSinkResolved(""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - existing cg but failed",
+			Objects: []runtime.Object{
+				NewSource(),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(1),
+					WithConsumerGroupFailed("failed", "failed"),
+				),
+			},
+			Key:         testKey,
+			WantCreates: []runtime.Object{},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						StatusSourceConsumerGroupFailed("failed", "failed"),
+						StatusSourceSinkResolved(""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - existing cg with replicas set in status",
+			Objects: []runtime.Object{
+				NewSource(),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(1),
+					ConsumerGroupReplicasStatus(1),
+					ConsumerGroupReady,
+				),
+			},
+			Key:         testKey,
+			WantCreates: []runtime.Object{},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						StatusSourceConsumerGroup(),
+						StatusSourceSinkResolved(""),
+						StatusSourceConsumerGroupReplicas(1),
+					),
+				},
+			},
 		},
 	}
 
-	useTable(t, table, env)
-}
-
-func useTable(t *testing.T, table TableTest, env config.Env) {
-	table.Test(t, NewFactory(&env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
-
-		var topicMetadata []*sarama.TopicMetadata
-		for _, t := range SourceTopics {
-			topicMetadata = append(topicMetadata, &sarama.TopicMetadata{Name: t, Partitions: []*sarama.PartitionMetadata{{}}})
-		}
+	table.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		reconciler := &Reconciler{
-			Reconciler: &base.Reconciler{
-				KubeClient:                  kubeclient.Get(ctx),
-				PodLister:                   listers.GetPodLister(),
-				SecretLister:                listers.GetSecretLister(),
-				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
-				SystemNamespace:             env.SystemNamespace,
-				DispatcherLabel:             base.SourceDispatcherLabel,
-			},
-			Env: env,
-			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
-				return 1, nil
-			},
-			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
-				return &kafkatesting.MockKafkaClient{}, nil
-			},
-			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
-				return &kafkatesting.MockKafkaClusterAdmin{
-					ExpectedTopicName:                      "",
-					ExpectedTopicDetail:                    sarama.TopicDetail{},
-					ErrorOnCreateTopic:                     nil,
-					ErrorOnDeleteTopic:                     nil,
-					ExpectedClose:                          false,
-					ExpectedCloseError:                     nil,
-					ExpectedTopics:                         SourceTopics,
-					ExpectedErrorOnDescribeTopics:          nil,
-					ExpectedTopicsMetadataOnDescribeTopics: topicMetadata,
-					T:                                      t,
-				}, nil
-			},
+			ConsumerGroupLister: listers.GetConsumerGroupLister(),
+			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
 		}
-
-		reconciler.ConfigMapTracker = &FakeTracker{}
-		reconciler.SecretTracker = &FakeTracker{}
-
-		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))
 
 		r := eventingkafkasourcereconciler.NewReconciler(
 			ctx,
@@ -555,67 +531,30 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 	}))
 }
 
-func TestFinalizeKind(t *testing.T) {
-
-	sources.RegisterAlternateKafkaConditionSet(base.EgressConditionSet)
-
-	env := *DefaultEnv
-	testKey := fmt.Sprintf("%s/%s", SourceNamespace, SourceName)
-
-	table := TableTest{
-		{
-			Name: "Finalize normal - no auth",
-			Objects: []runtime.Object{
-				NewDeletedSource(),
-				NewConfigMapFromContract(&contract.Contract{
-					Generation: 1,
-					Resources: []*contract.Resource{
-						{
-							Uid:              SourceUUID,
-							Topics:           SourceTopics,
-							BootstrapServers: SourceBootstrapServers,
-						},
-					},
-				}, &env),
-				SourceDispatcherPod(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve": "value_to_preserve",
-				}),
-			},
-			Key: testKey,
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
-					Generation: 2,
-					Resources:  []*contract.Resource{},
-				}),
-				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve":           "value_to_preserve",
-					base.VolumeGenerationAnnotationKey: "2",
-				}),
-			},
-			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
-		},
+func StatusSourceConsumerGroup() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(KafkaConditionConsumerGroup)
 	}
-
-	useTable(t, table, env)
 }
 
-func SourceDispatcherPodUpdate(namespace string, annotations map[string]string) clientgotesting.UpdateActionImpl {
-	return clientgotesting.NewUpdateAction(
-		schema.GroupVersionResource{
-			Group:    "*",
-			Version:  "v1",
-			Resource: "Pod",
-		},
-		namespace,
-		SourceDispatcherPod(namespace, annotations),
-	)
+func StatusSourceConsumerGroupFailed(reason string, msg string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.GetConditionSet().Manage(ks.GetStatus()).MarkFalse(KafkaConditionConsumerGroup, reason, msg)
+	}
 }
 
-func patchFinalizers() clientgotesting.PatchActionImpl {
-	action := clientgotesting.PatchActionImpl{}
-	action.Name = SourceName
-	action.Namespace = SourceNamespace
-	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
-	action.Patch = []byte(patch)
-	return action
+func StatusSourceConsumerGroupUnknown() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.GetConditionSet().Manage(ks.GetStatus()).MarkUnknown(KafkaConditionConsumerGroup, "failed to reconcile consumer group", "consumer group is not ready")
+	}
+}
+
+func StatusSourceConsumerGroupReplicas(replicas int32) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.Status.Consumers = replicas
+	}
 }
