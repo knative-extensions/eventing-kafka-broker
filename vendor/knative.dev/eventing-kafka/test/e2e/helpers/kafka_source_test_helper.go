@@ -137,7 +137,7 @@ func testKafkaSourceUpdate(t *testing.T, name string, test updateTest) {
 
 func waitForKafkaSourceReconcilerToReconcileSource(t *testing.T, client *testlib.Client, kafkaSourceName string) *sourcesv1beta1.KafkaSource {
 	var ksObj *sourcesv1beta1.KafkaSource
-	err := wait.Poll(10*time.Second, 4*time.Minute, func() (done bool, err error) {
+	err := wait.Poll(30*time.Second, 4*time.Minute, func() (done bool, err error) {
 		ksObj = contribtestlib.GetKafkaSourceV1Beta1OrFail(client, kafkaSourceName)
 		if ksObj == nil {
 			t.Fatalf("Unabled to Get kafkasource: %s/%s\n", client.Namespace, kafkaSourceName)
@@ -248,11 +248,11 @@ func TestKafkaSourceUpdate(t *testing.T) {
 			topicName: defaultKafkaSource.topicName,
 			sinkName:  "update-event-recorder",
 		},
-		// "change-topic": {
-		// 	auth:      defaultKafkaSource.auth,
-		// 	topicName: "update-topic",
-		// 	sinkName:  defaultKafkaSource.sinkName,
-		// },
+		"change-topic": {
+			auth:      defaultKafkaSource.auth,
+			topicName: "update-topic",
+			sinkName:  defaultKafkaSource.sinkName,
+		},
 		"change-bootstrap-server": {
 			auth: authSetup{
 				bootStrapServer: KafkaBootstrapUrlPlain,
