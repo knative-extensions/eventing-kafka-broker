@@ -127,7 +127,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	statusConditionManager.ConfigResolved()
 
 	// get the secret to access Kafka
-	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap}, r.SecretProviderFunc())
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap, UseNamespaceInConfigmap: true}, r.SecretProviderFunc())
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -374,7 +374,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	logger.Debug("topic config resolved", zap.Any("config", topicConfig))
 
 	// get the secret to access Kafka
-	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap}, r.SecretProviderFunc())
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap, UseNamespaceInConfigmap: true}, r.SecretProviderFunc())
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}

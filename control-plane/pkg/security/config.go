@@ -99,10 +99,12 @@ func DefaultSecretProviderFunc(lister corelisters.SecretLister, kc kubernetes.In
 // MTConfigMapSecretLocator is a SecretLocator that locates a secret using a reference in a ConfigMap.
 //
 // The name is taken from the data field using the key: AuthSecretNameKey.
-// The namespace is taken from the data field using the key: AuthSecretNamespaceKey but if it is not defined,
-// namespace of the ConfigMap is returned.
+// When UseNamespaceInConfigmap=true, the namespace is taken from the data field using the
+// key: AuthSecretNamespaceKey. When false, namespace of the ConfigMap is returned.
 type MTConfigMapSecretLocator struct {
 	*corev1.ConfigMap
+	// if false, secret namespace is NOT read from the configmap
+	UseNamespaceInConfigmap bool
 }
 
 func (cmp *MTConfigMapSecretLocator) SecretName() (string, bool) {
@@ -114,12 +116,9 @@ func (cmp *MTConfigMapSecretLocator) SecretName() (string, bool) {
 }
 
 func (cmp *MTConfigMapSecretLocator) SecretNamespace() (string, bool) {
-	if cmp.ConfigMap == nil {
-		return cmp.Namespace, true
-	}
-
-	if v, ok := cmp.Data[AuthSecretNamespaceKey]; ok {
-		return v, true
+	if cmp.UseNamespaceInConfigmap {
+		v, ok := cmp.Data[AuthSecretNamespaceKey]
+		return v, ok
 	}
 
 	return cmp.Namespace, true
