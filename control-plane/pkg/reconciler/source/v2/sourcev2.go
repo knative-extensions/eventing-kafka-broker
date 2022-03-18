@@ -126,8 +126,8 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 						DeliverySpec: &eventingduck.DeliverySpec{
 							Retry:         pointer.Int32(10),
 							BackoffPolicy: &backoffPolicy,
-							BackoffDelay:  pointer.String("PT10S"), // 10 seconds
-							Timeout:       pointer.String("PT500S"),
+							BackoffDelay:  pointer.String("PT10S"),
+							Timeout:       pointer.String("PT600S"),
 						},
 						Ordering: DefaultDeliveryOrder,
 					},
