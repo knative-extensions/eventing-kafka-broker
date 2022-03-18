@@ -58,11 +58,6 @@ func main() {
 		log.Fatal("cannot process environment variables with prefix SINK", err)
 	}
 
-	sourceEnv, err := config.GetEnvConfig("SOURCE")
-	if err != nil {
-		log.Fatal("cannot process environment variables with prefix SINK", err)
-	}
-
 	sharedmain.MainNamed(signals.NewContext(), component,
 
 		// Broker controller
@@ -101,7 +96,7 @@ func main() {
 		injection.NamedControllerConstructor{
 			Name: "source-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				return sourcev2.NewController(ctx, sourceEnv)
+				return sourcev2.NewController(ctx)
 			},
 		},
 
