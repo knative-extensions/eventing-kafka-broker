@@ -17,6 +17,7 @@
 package consumergroup
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -33,6 +34,15 @@ import (
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer/fake"
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup/fake"
+)
+
+const (
+	RefreshPeriod = "100"
+	PodCapacity   = "20"
+	// ConfigKafkaSchedulerName is the name of the ConfigMap to configure the scheduler.
+	ConfigKafkaSchedulerName = "config-kafka-scheduler"
+	// ConfigKafkaDeSchedulerName is the name of the ConfigMap to configure the descheduler.
+	ConfigKafkaDeSchedulerName = "config-kafka-descheduler"
 )
 
 func TestNewController(t *testing.T) {
@@ -77,6 +87,10 @@ func TestNewController(t *testing.T) {
 		},
 	)
 
+	os.Setenv("AUTOSCALER_REFRESH_PERIOD", RefreshPeriod)
+	os.Setenv("POD_CAPACITY", PodCapacity)
+	os.Setenv("SCHEDULER_CONFIG", ConfigKafkaSchedulerName)
+	os.Setenv("DESCHEDULER_CONFIG", ConfigKafkaDeSchedulerName)
 	controller := NewController(ctx)
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
