@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
@@ -58,31 +59,36 @@ const (
 	// KafkaChannelScheduler is the key for the scheduler map for any KafkaChannel.
 	// Keep this constant lowercase.
 	KafkaChannelScheduler = "kafkachannel"
-
-	// ConfigKafkaSchedulerName is the name of the ConfigMap to configure the scheduler.
-	ConfigKafkaSchedulerName = "config-kafka-scheduler"
-	// ConfigKafkaDeSchedulerName is the name of the ConfigMap to configure the descheduler.
-	ConfigKafkaDeSchedulerName = "config-kafka-descheduler"
 )
 
+type envConfig struct {
+	SchedulerRefreshPeriod     int64  `envconfig:"AUTOSCALER_REFRESH_PERIOD" required:"true"`
+	PodCapacity                int32  `envconfig:"POD_CAPACITY" required:"true"`
+	SchedulerPolicyConfigMap   string `envconfig:"SCHEDULER_CONFIG" required:"true"`
+	DeSchedulerPolicyConfigMap string `envconfig:"DESCHEDULER_CONFIG" required:"true"`
+}
+
 type SchedulerConfig struct {
-	StatefulSetName     string
-	RefreshPeriod       time.Duration
-	Capacity            int32
-	SchedulerPolicyType scheduler.SchedulerPolicyType
-	SchedulerPolicy     *scheduler.SchedulerPolicy
-	DeSchedulerPolicy   *scheduler.SchedulerPolicy
+	StatefulSetName   string
+	RefreshPeriod     time.Duration
+	Capacity          int32
+	SchedulerPolicy   *scheduler.SchedulerPolicy
+	DeSchedulerPolicy *scheduler.SchedulerPolicy
 }
 
 func NewController(ctx context.Context) *controller.Impl {
+	logger := logging.FromContext(ctx)
 
-	// TODO(pierDipi) use env variables to configure these.
+	env := &envConfig{}
+	if err := envconfig.Process("", env); err != nil {
+		logger.Panicf("unable to process required environment variables: %v", err)
+	}
+
 	c := SchedulerConfig{
-		RefreshPeriod:       100 * time.Second,
-		Capacity:            20,
-		SchedulerPolicyType: "", // old non-HA scheduler
-		SchedulerPolicy:     schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaSchedulerName),
-		DeSchedulerPolicy:   schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaDeSchedulerName),
+		RefreshPeriod:     time.Duration(env.SchedulerRefreshPeriod),
+		Capacity:          env.PodCapacity,
+		SchedulerPolicy:   schedulerPolicyFromConfigMapOrFail(ctx, env.SchedulerPolicyConfigMap),
+		DeSchedulerPolicy: schedulerPolicyFromConfigMapOrFail(ctx, env.DeSchedulerPolicyConfigMap),
 	}
 
 	schedulers := map[string]scheduler.Scheduler{
@@ -143,12 +149,11 @@ func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string)
 	return createStatefulSetScheduler(
 		ctx,
 		SchedulerConfig{
-			StatefulSetName:     ssName,
-			RefreshPeriod:       c.RefreshPeriod,
-			Capacity:            c.Capacity,
-			SchedulerPolicyType: c.SchedulerPolicyType,
-			SchedulerPolicy:     c.SchedulerPolicy,
-			DeSchedulerPolicy:   c.DeSchedulerPolicy,
+			StatefulSetName:   ssName,
+			RefreshPeriod:     c.RefreshPeriod,
+			Capacity:          c.Capacity,
+			SchedulerPolicy:   c.SchedulerPolicy,
+			DeSchedulerPolicy: c.DeSchedulerPolicy,
 		},
 		func() ([]scheduler.VPod, error) {
 			consumerGroups, err := lister.List(labels.SelectorFromSet(getSelectorLabel(ssName)))
@@ -192,7 +197,7 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 		lister,
 		c.RefreshPeriod,
 		c.Capacity,
-		c.SchedulerPolicyType,
+		"", //  scheduler.SchedulerPolicyType field only applicable for old scheduler policy
 		nodeinformer.Get(ctx).Lister(),
 		newEvictor(ctx, zap.String("kafka.eventing.knative.dev/component", "evictor")).evict,
 		c.SchedulerPolicy,
