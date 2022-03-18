@@ -85,7 +85,7 @@ func NewController(ctx context.Context) *controller.Impl {
 	}
 
 	c := SchedulerConfig{
-		RefreshPeriod:     time.Duration(env.SchedulerRefreshPeriod),
+		RefreshPeriod:     time.Duration(env.SchedulerRefreshPeriod) * time.Second,
 		Capacity:          env.PodCapacity,
 		SchedulerPolicy:   schedulerPolicyFromConfigMapOrFail(ctx, env.SchedulerPolicyConfigMap),
 		DeSchedulerPolicy: schedulerPolicyFromConfigMapOrFail(ctx, env.DeSchedulerPolicyConfigMap),
