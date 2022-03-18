@@ -129,6 +129,20 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
 
+            # How often (in seconds) the autoscaler tries to scale down the statefulset.
+            - name: AUTOSCALER_REFRESH_PERIOD
+              value: '100'
+
+            # The number of virtual replicas each adapter pod can handle.
+            - name: POD_CAPACITY
+              value: '20'
+
+            - name: SCHEDULER_CONFIG
+              value: 'config-kafka-scheduler'
+
+            - name: DESCHEDULER_CONFIG
+              value: 'config-kafka-descheduler'
+
             - name: CONFIG_LEADERELECTION_NAME
               value: config-kafka-leader-election
             - name: CONFIG_LOGGING_NAME
