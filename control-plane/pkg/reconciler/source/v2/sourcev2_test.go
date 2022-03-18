@@ -467,7 +467,7 @@ func StatusSourceConsumerGroupFailed(reason string, msg string) KRShapedOption {
 func StatusSourceConsumerGroupUnknown() KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*sources.KafkaSource)
-		ks.GetConditionSet().Manage(ks.GetStatus()).MarkUnknown(KafkaConditionConsumerGroup, "failed to reconcile consumer group", "consumer group not ready")
+		ks.GetConditionSet().Manage(ks.GetStatus()).MarkUnknown(KafkaConditionConsumerGroup, "failed to reconcile consumer group", "consumer group is not ready")
 	}
 }
 
