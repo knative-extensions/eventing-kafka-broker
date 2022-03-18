@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
@@ -83,31 +84,17 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 		return nil
 	}
 
-	cg, err := r.reconcileConsumerGroup(ctx, trigger)
+	cg, err := r.reconcileConsumerGroup(ctx, broker, trigger)
 	if err != nil {
 		trigger.Status.MarkDependencyFailed("failed to reconcile consumer group", err.Error())
 		return err
 	}
-	if cg.IsReady() {
-		trigger.Status.MarkDependencySucceeded()
-	} else {
-		topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
-		if topLevelCondition == nil {
-			trigger.Status.MarkDependencyUnknown("failed to reconcile consumer group", "consumer group not ready")
-		} else {
-			trigger.Status.MarkDependencyFailed(topLevelCondition.Reason, topLevelCondition.Message)
-		}
-	}
-	trigger.Status.SubscriberURI = cg.Status.SubscriberURI
-	trigger.Status.MarkSubscriberResolvedSucceeded()
-
-	trigger.Status.DeadLetterSinkURI = cg.Status.DeadLetterSinkURI
-	trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
+	propagateConsumerGroupStatus(cg, trigger)
 
 	return nil
 }
 
-func (r Reconciler) reconcileConsumerGroup(ctx context.Context, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
+func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
 
 	var deliveryOrdering = internals.Unordered
 	var err error
@@ -141,8 +128,9 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, trigger *eventin
 					Topics:  []string{},                                                                               //todo get topics from broker resource
 					Configs: internalscg.ConsumerConfigs{Configs: map[string]string{"group.id": string(trigger.UID)}}, //todo get bootstrap.servers from broker resource
 					Delivery: &internalscg.DeliverySpec{
-						DeliverySpec: trigger.Spec.Delivery,
-						Ordering:     deliveryOrdering},
+						DeliverySpec: deliverySpec(broker, trigger),
+						Ordering:     deliveryOrdering,
+					},
 					Filters: &internalscg.Filters{
 						Filter:  trigger.Spec.Filter,
 						Filters: trigger.Spec.Filters,
@@ -185,6 +173,32 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, trigger *eventin
 	}
 
 	return cg, nil
+}
+
+func deliverySpec(broker *eventing.Broker, trigger *eventing.Trigger) *eventingduck.DeliverySpec {
+	// TOOD(pierDipi) use `Merge` in https://github.com/knative/eventing/pull/6277/files
+	if trigger.Spec.Delivery != nil {
+		return trigger.Spec.Delivery
+	}
+	return broker.Spec.Delivery
+}
+
+func propagateConsumerGroupStatus(cg *internalscg.ConsumerGroup, trigger *eventing.Trigger) {
+	if cg.IsReady() {
+		trigger.Status.MarkDependencySucceeded()
+	} else {
+		topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
+		if topLevelCondition == nil {
+			trigger.Status.MarkDependencyUnknown("failed to reconcile consumer group", "consumer group not ready")
+		} else {
+			trigger.Status.MarkDependencyFailed(topLevelCondition.Reason, topLevelCondition.Message)
+		}
+	}
+	trigger.Status.SubscriberURI = cg.Status.SubscriberURI
+	trigger.Status.MarkSubscriberResolvedSucceeded()
+
+	trigger.Status.DeadLetterSinkURI = cg.Status.DeadLetterSinkURI
+	trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
 }
 
 func isKnativeKafkaBroker(broker *eventing.Broker) (bool, string) {
