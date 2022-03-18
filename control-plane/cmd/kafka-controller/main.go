@@ -114,8 +114,7 @@ func main() {
 		injection.NamedControllerConstructor{
 			Name: "consumer-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				// TODO(pierDipi) pass consumer controller specific config
-				return consumer.NewController(ctx, brokerEnv)
+				return consumer.NewController(ctx)
 			},
 		},
 	)

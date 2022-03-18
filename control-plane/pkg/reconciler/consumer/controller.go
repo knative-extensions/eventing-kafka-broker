@@ -18,7 +18,9 @@ package consumer
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/kelseyhightower/envconfig"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
@@ -28,17 +30,25 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	creconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumer"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	cgreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 )
 
-func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
+type ControllerConfig struct {
+	DataPlaneConfigFormat string `required:"true" split_words:"true"`
+}
+
+func NewController(ctx context.Context) *controller.Impl {
+
+	config := &ControllerConfig{}
+	if err := envconfig.Process("CONSUMER", config); err != nil {
+		panic(fmt.Errorf("failed to process env variables for consumer controller, prefix CONSUMER: %v", err))
+	}
 
 	consumerInformer := consumer.Get(ctx)
 
 	r := &Reconciler{
-		SerDe:               formatSerDeFromString(configs.DataPlaneConfigFormat),
+		SerDe:               formatSerDeFromString(config.DataPlaneConfigFormat),
 		ConsumerGroupLister: consumergroup.Get(ctx).Lister(),
 		SecretLister:        secretinformer.Get(ctx).Lister(),
 		PodLister:           podinformer.Get(ctx).Lister(),
