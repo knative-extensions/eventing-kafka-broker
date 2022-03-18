@@ -24,7 +24,9 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
@@ -69,6 +71,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 
 func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
 
+	backoffPolicy := eventingduck.BackoffPolicyExponential
+
 	expectedCg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(ks.UID),
@@ -97,6 +101,12 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 						NetSpec: &ks.Spec.KafkaAuthSpec.Net,
 					},
 					Delivery: &internalscg.DeliverySpec{
+						DeliverySpec: &eventingduck.DeliverySpec{
+							Retry:         pointer.Int32(10),
+							BackoffPolicy: &backoffPolicy,
+							BackoffDelay:  pointer.String("PT10S"),
+							Timeout:       pointer.String("PT600S"),
+						},
 						Ordering: DefaultDeliveryOrder,
 					},
 					Subscriber: ks.Spec.Sink,
