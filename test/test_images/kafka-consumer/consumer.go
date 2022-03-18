@@ -33,7 +33,7 @@ import (
 	"knative.dev/pkg/signals"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
 )
 
