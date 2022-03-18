@@ -73,7 +73,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
 								internals.Ordered,
-								NewConsumerTimeout("PT500S"),
+								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT10S"),
 								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
@@ -120,7 +120,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
 								internals.Ordered,
-								NewConsumerTimeout("PT500S"),
+								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT10S"),
 								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
@@ -167,7 +167,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
 								internals.Ordered,
-								NewConsumerTimeout("PT500S"),
+								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT10S"),
 								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
@@ -199,7 +199,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerDelivery(
 								NewConsumerSpecDelivery(
 									internals.Ordered,
-									NewConsumerTimeout("PT500S"),
+									NewConsumerTimeout("PT600S"),
 									NewConsumerRetry(10),
 									NewConsumerBackoffDelay("PT10S"),
 									NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
@@ -256,7 +256,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerDelivery(
 								NewConsumerSpecDelivery(
 									internals.Ordered,
-									NewConsumerTimeout("PT500S"),
+									NewConsumerTimeout("PT600S"),
 									NewConsumerRetry(10),
 									NewConsumerBackoffDelay("PT10S"),
 									NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
@@ -312,7 +312,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerDelivery(
 								NewConsumerSpecDelivery(
 									internals.Ordered,
-									NewConsumerTimeout("PT500S"),
+									NewConsumerTimeout("PT600S"),
 									NewConsumerRetry(10),
 									NewConsumerBackoffDelay("PT10S"),
 									NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
@@ -354,7 +354,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
 								internals.Ordered,
-								NewConsumerTimeout("PT500S"),
+								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT10S"),
 								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
@@ -397,7 +397,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
 								internals.Ordered,
-								NewConsumerTimeout("PT500S"),
+								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT10S"),
 								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
@@ -440,7 +440,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
 								internals.Ordered,
-								NewConsumerTimeout("PT500S"),
+								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT10S"),
 								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
@@ -484,7 +484,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
 								internals.Ordered,
-								NewConsumerTimeout("PT500S"),
+								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT10S"),
 								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
