@@ -117,8 +117,9 @@ func (cmp *MTConfigMapSecretLocator) SecretName() (string, bool) {
 
 func (cmp *MTConfigMapSecretLocator) SecretNamespace() (string, bool) {
 	if cmp.UseNamespaceInConfigmap {
-		v, ok := cmp.Data[AuthSecretNamespaceKey]
-		return v, ok
+		if v, ok := cmp.Data[AuthSecretNamespaceKey]; ok && len(v) > 0 {
+			return v, ok
+		}
 	}
 
 	return cmp.Namespace, true
