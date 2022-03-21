@@ -1,0 +1,3 @@
+[submodule "third_party/eventing"]
+	path = third_party/eventing
+	url = https://github.com/knative/eventing.git

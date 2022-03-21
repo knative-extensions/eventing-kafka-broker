@@ -26,6 +26,9 @@ source $(pwd)/hack/artifacts-env.sh
 # If gcloud is not available make it a no-op, not an error.
 which gcloud &>/dev/null || gcloud() { echo "[ignore-gcloud $*]" 1>&2; }
 
+# Init Git submodules
+git submodule update --init --recursive
+
 # Use GNU tools on macOS. Requires the 'grep' and 'gnu-sed' Homebrew formulae.
 if [ "$(uname)" == "Darwin" ]; then
   sed=gsed
@@ -301,4 +304,16 @@ function setup_kafka_channel_auth() {
       --type=json \
       -p='[{"op": "remove", "path": "/data/auth.secret.ref.name"}, {"op": "remove", "path": "/data/auth.secret.ref.namespace"}]' || true
   fi
+}
+
+function run_eventing_core_tests() {
+  pushd $(pwd)/third_party/eventing || return $?
+
+  export BROKER_CLASS="Kafka"
+  export CHANNEL_GROUP_KIND="KafkaChannel.messaging.knative.dev"
+  export CHANNEL_VERSION="v1beta1"
+
+  go_test_e2e -timeout=1h ./test/rekt/... || return $?
+
+  popd || return $?
 }

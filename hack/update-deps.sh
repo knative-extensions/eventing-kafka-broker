@@ -20,6 +20,30 @@ set -o pipefail
 
 source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
+version=$(echo $@ | grep -o "\-\-release \S*" | awk '{print $2}' || echo "")
+upgrade=$(echo $@ | grep '\-\-upgrade' || echo "")
+
+function update_eventing_submodule() {
+  pushd $(dirname "$0")/../third_party/eventing
+
+  if [ "${version}" = "" ] || [ "${version}" = "v9000.1" ]; then
+    if [ "${upgrade}" != "" ]; then
+      git fetch origin main:main || return $?
+      git checkout main || return $?
+    fi
+  else
+    version=${version:1} # Remove 'v' prefix
+    git fetch origin "release-$version:release-$version" || return $?
+    git checkout "release-$version" || return $?
+  fi
+
+  popd
+}
+
+update_eventing_submodule || exit $?
+
+git submodule update --init --recursive
+
 go_update_deps "$@"
 
 # Apply Git patches

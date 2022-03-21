@@ -68,7 +68,7 @@ if ! ${GITHUB_ACTIONS:-false}; then
 
   # Update Java third party file
   pushd data-plane
-  ./mvnw -Dlicense.outputDirectory=. license:aggregate-add-third-party
+  ./mvnw -Dlicense.outputDirectory=. license:aggregate-add-third-party --no-transfer-progress
   popd
 fi
 
