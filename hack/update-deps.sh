@@ -28,13 +28,11 @@ function update_eventing_submodule() {
 
   if [ "${version}" = "" ] || [ "${version}" = "v9000.1" ]; then
     if [ "${upgrade}" != "" ]; then
-      git fetch origin main:main || return $?
-      git checkout main || return $?
+      git pull origin main || return $?
     fi
   else
-    version=${version:1} # Remove 'v' prefix
-    git fetch origin "release-$version:release-$version" || return $?
-    git checkout "release-$version" || return $?
+    major_minor=${version:1} # Remove 'v' prefix
+    git pull origin "release-$major_minor:release-$major_minor" || return $?
   fi
 
   popd
