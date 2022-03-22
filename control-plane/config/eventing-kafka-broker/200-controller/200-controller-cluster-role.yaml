@@ -45,7 +45,11 @@ rules:
     resources:
       - pods/finalizers
     verbs:
+      - get
+      - list
+      - create
       - update
+      - delete
   - apiGroups:
       - "*"
     resources:
