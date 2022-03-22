@@ -270,19 +270,19 @@ function setup_kafka_channel_auth() {
     kubectl patch configmap/kafka-channel-config \
       -n knative-eventing \
       --type merge \
-      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9093", "auth.secret.ref.name": "strimzi-tls-secret", "auth.secret.ref.name": "knative-eventing"}}'
+      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9093", "auth.secret.ref.name": "strimzi-tls-secret", "auth.secret.ref.namespace": "knative-eventing"}}'
   elif [ "$EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO" == "SASL_SSL" ]; then
     echo "Setting up SASL_SSL configuration for KafkaChannel"
     kubectl patch configmap/kafka-channel-config \
       -n knative-eventing \
       --type merge \
-      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9094", "auth.secret.ref.name": "strimzi-sasl-secret", "auth.secret.ref.name": "knative-eventing"}}'
+      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9094", "auth.secret.ref.name": "strimzi-sasl-secret", "auth.secret.ref.namespace": "knative-eventing"}}'
   elif [ "$EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO" == "SASL_PLAIN" ]; then
     echo "Setting up SASL_PLAIN configuration for KafkaChannel"
     kubectl patch configmap/kafka-channel-config \
       -n knative-eventing \
       --type merge \
-      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9095", "auth.secret.ref.name": "strimzi-sasl-plain-secret", "auth.secret.ref.name": "knative-eventing"}}'
+      -p '{"data":{"bootstrap.servers":"my-cluster-kafka-bootstrap.kafka:9095", "auth.secret.ref.name": "strimzi-sasl-plain-secret", "auth.secret.ref.namespace": "knative-eventing"}}'
   else
     echo "Setting up no auth configuration for KafkaChannel"
     kubectl patch configmap/kafka-channel-config \
