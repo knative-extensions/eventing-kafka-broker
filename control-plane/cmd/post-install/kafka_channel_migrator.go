@@ -19,6 +19,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+	"time"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -27,13 +31,13 @@ import (
 	types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	consolidatedutils "knative.dev/eventing-kafka/pkg/channel/consolidated/utils"
 	kcs "knative.dev/eventing-kafka/pkg/client/clientset/versioned"
-	consolidatedsarama "knative.dev/eventing-kafka/pkg/common/kafka/sarama"
+	"knative.dev/eventing-kafka/pkg/common/config"
+	"knative.dev/eventing-kafka/pkg/common/constants"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
-	"time"
+	"sigs.k8s.io/yaml"
 )
 
 type kafkaChannelMigrator struct {
@@ -51,6 +55,9 @@ const (
 	NewChannelDispatcherServiceName = "kafka-channel-dispatcher"
 
 	OldConfigmapName = "config-kafka"
+
+	NewConfigmapNameKey     = "CHANNEL_GENERAL_CONFIG_MAP_NAME"
+	NewConfigmapNameDefault = "kafka-channel-config"
 )
 
 func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
@@ -116,9 +123,6 @@ func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
 		}
 		for _, svc := range kafkaChannelServiceList.Items {
 
-			svc.Spec.ExternalName = newDispatcherExternalName
-
-			// patch := []byte(fmt.Sprintf(`[{"spec":{"externalName":"%s"}}]`, newDispatcherExternalName))
 			patch := []byte(fmt.Sprintf(`[{"op":"replace", "path": "/spec/externalName", "value": "%s"}]`, newDispatcherExternalName))
 
 			_, err := m.k8s.CoreV1().
@@ -128,14 +132,10 @@ func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
 				// just log and continue with other services
 				logger.Errorf("error while patching KafkaChannel service %s/%s: %w", svc.Namespace, svc.Name, err)
 			}
-
-			cont = kafkaChannelServiceList.Continue
-			first = false
 		}
+		cont = kafkaChannelServiceList.Continue
+		first = false
 	}
-
-	// TODO: auth migration
-	// TODO: config migration
 
 	// consolidated configmap looks like this:
 	//
@@ -161,29 +161,75 @@ func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
 	//   namespace: knative-eventing
 	//  data:
 	//    bootstrap.servers: "my-cluster-kafka-bootstrap.kafka:9092"
+	//    auth.secret.ref.namespace: my-ns
 	//    auth.secret.ref.name: my-secret
 	// TODO:
 	//    default.topic.partitions: "10"
 	//    default.topic.replication.factor: "3"
 
-	// get the old configmap, extract eventing-kafka/kafka/brokers and set it into bootstrap.servers
+	// get the old configmap, extract these and set it in the new configmap:
+	// OLD CM PATH                                   NEW CM PATH
+	// ----------------------------                  ------------------------
+	// eventing-kafka/kafka/brokers              --> bootstrap.servers
+	// eventing-kafka/kafka/authSecretNamespace  --> auth.secret.ref.namespace
+	// eventing-kafka/kafka/authSecretName       --> auth.secret.ref.name
+	//
 	oldcm, err := m.k8s.CoreV1().
 		ConfigMaps(system.Namespace()).
 		Get(ctx, OldConfigmapName, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		// configmap will be missing if we did the migration already
-		return fmt.Errorf("failed to migrate consolidated channel configmap %s: %w", OldConfigmapName, err)
+		return fmt.Errorf("failed to get consolidated channel configmap for migration %s: %w", OldConfigmapName, err)
 	}
 
-	oldconfig, err := consolidatedutils.GetKafkaConfig(ctx, "", oldcm.Data, consolidatedsarama.LoadAuthConfig)
-	if 1 == 1 {
-		fmt.Println(oldconfig)
-	}
-	// oldconfig.Brokers
-	// oldconfig.EventingKafka.Kafka.AuthSecretNamespace
-	// oldconfig.EventingKafka.Kafka.AuthSecretName
+	// Can't use this as it defaults auth settings in case they're blank
+	// oldconfig, err := consolidatedutils.GetKafkaConfig(ctx, "", oldcm.Data, consolidatedsarama.LoadAuthConfig)
 
+	oldconfig, err := getEventingKafkaConfig(oldcm.Data)
+	if err != nil && !apierrors.IsNotFound(err) {
+		// configmap will be missing if we did the migration already
+		return fmt.Errorf("failed to build config from consolidated channel configmap for migration %s: %w", OldConfigmapName, err)
+	}
+
+	newConfigmapName := os.Getenv(NewConfigmapNameKey)
+	if newConfigmapName == "" {
+		newConfigmapName = NewConfigmapNameDefault
+	}
+
+	patches := []string{}
+
+	patches = append(patches,
+		fmt.Sprintf(`{"op":"replace", "path": "/data/bootstrap.servers", "value": "%s"}`, oldconfig.Kafka.Brokers),
+		fmt.Sprintf(`{"op":"replace", "path": "/data/auth.secret.ref.namespace", "value": "%s"}`, oldconfig.Kafka.AuthSecretNamespace),
+		fmt.Sprintf(`{"op":"replace", "path": "/data/auth.secret.ref.name", "value": "%s"}`, oldconfig.Kafka.AuthSecretName),
+	)
+
+	logger.Infof("Patching configmap %s with patch %s", newConfigmapName, patches)
+
+	patch := []byte(fmt.Sprintf("[%s]", strings.Join(patches, ",")))
+
+	_, err = m.k8s.CoreV1().
+		ConfigMaps(system.Namespace()).
+		Patch(ctx, newConfigmapName, types.JSONPatchType, patch, metav1.PatchOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to patch new channel configmap for migration %s: %w", newConfigmapName, err)
+	}
 	return nil
+}
+
+func getEventingKafkaConfig(configMap map[string]string) (*config.EventingKafkaConfig, error) {
+	if len(configMap) == 0 {
+		return nil, fmt.Errorf("missing configuration")
+	}
+
+	// Unmarshal The Eventing-Kafka ConfigMap YAML Into A EventingKafkaSettings Struct
+	eventingKafkaConfig := &config.EventingKafkaConfig{}
+	err := yaml.Unmarshal([]byte(configMap[constants.EventingKafkaSettingsConfigKey]), &eventingKafkaConfig)
+	if err != nil {
+		return nil, fmt.Errorf("ConfigMap's eventing-kafka value could not be converted to an EventingKafkaConfig struct: %s : %v", err, configMap[constants.EventingKafkaSettingsConfigKey])
+	}
+
+	return eventingKafkaConfig, nil
 }
 
 func (m *kafkaChannelMigrator) waitForNewDataPlaneReady(ctx context.Context) error {

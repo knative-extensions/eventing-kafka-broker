@@ -20,6 +20,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"knative.dev/pkg/injection"
 	"log"
 
 	"k8s.io/client-go/kubernetes"
@@ -57,6 +58,9 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to get kubeconfig: %w", err)
 	}
+
+	// we don't care about starting informers
+	ctx, _ = injection.EnableInjectionOrDie(ctx, config)
 
 	sourceMigrator := &KafkaSourceMigrator{
 		kcs: kcs.NewForConfigOrDie(config),
