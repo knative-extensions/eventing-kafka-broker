@@ -127,7 +127,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	statusConditionManager.ConfigResolved()
 
 	// get the secret to access Kafka
-	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap}, r.SecretProviderFunc())
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap, UseNamespaceInConfigmap: true}, r.SecretProviderFunc())
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -275,7 +275,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		},
 	}
 
+	logger.Debug("Going to probe address to check ingress readiness for the channel.", zap.Any("proberAddressable", proberAddressable))
 	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusReady); status != prober.StatusReady {
+		logger.Debug("Ingress is not ready for the channel. Going to requeue.", zap.Any("proberAddressable", proberAddressable))
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
@@ -374,7 +376,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	logger.Debug("topic config resolved", zap.Any("config", topicConfig))
 
 	// get the secret to access Kafka
-	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap}, r.SecretProviderFunc())
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap, UseNamespaceInConfigmap: true}, r.SecretProviderFunc())
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
