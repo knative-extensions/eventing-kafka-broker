@@ -16,15 +16,14 @@
 package dev.knative.eventing.kafka.broker.core;
 
 import io.vertx.core.Closeable;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Interface for components that can be closed asynchronously.
@@ -64,13 +63,21 @@ public interface AsyncCloseable extends Closeable {
    * @return the composed closeables
    */
   static AsyncCloseable compose(AsyncCloseable... closeables) {
-    return () -> CompositeFuture.all(
-      Arrays.stream(closeables)
-        .filter(Objects::nonNull)
-        .map(AsyncCloseable::close)
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList())
-    ).mapEmpty();
+    return () -> compose(Arrays.stream(closeables).filter(Objects::nonNull).iterator());
+  }
+
+  private static Future<Void> compose(final Iterator<AsyncCloseable> closeableIterator) {
+    if (!closeableIterator.hasNext()) {
+      return Future.succeededFuture();
+    }
+
+    return closeableIterator.
+      next().
+      close().
+      compose(
+        v -> compose(closeableIterator),
+        v -> compose(closeableIterator)
+      );
   }
 
   /**

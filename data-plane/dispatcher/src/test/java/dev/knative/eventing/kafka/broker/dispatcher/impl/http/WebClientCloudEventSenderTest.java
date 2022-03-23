@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 
 import io.vertx.circuitbreaker.CircuitBreaker;
+import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -48,7 +49,7 @@ public class WebClientCloudEventSenderTest {
     doNothing().when(webClient).close();
 
     final var consumerRecordSender = new WebClientCloudEventSender(
-      webClient, circuitBreaker, "http://localhost:12345"
+      webClient, circuitBreaker, new CircuitBreakerOptions(), "http://localhost:12345"
     );
 
     consumerRecordSender.close()

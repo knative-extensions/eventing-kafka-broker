@@ -21,12 +21,13 @@ import io.vertx.core.Promise;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
@@ -57,7 +58,6 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   @Override
   void startConsumer(Promise<Void> startPromise) {
-    this.consumer.exceptionHandler(this::exceptionHandler);
     // We need to sub first, then we can start the polling loop
     this.consumer.subscribe(this.topics)
       .onFailure(startPromise::fail)

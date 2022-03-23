@@ -72,6 +72,10 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private final Tags noResponseResourceTags;
 
+  private boolean closed = false;
+  private int inFlightEvents = 0;
+  private final Promise<Void> closePromise = Promise.promise();
+
   /**
    * All args constructor.
    *
@@ -104,7 +108,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     this.subscriberSender = composeSenderAndSinkHandler(subscriberSender, responseHandler, "subscriber");
     this.dlsSender = composeSenderAndSinkHandler(deadLetterSinkSender, responseHandler, "dead letter sink");
     this.recordDispatcherListener = recordDispatcherListener;
-    this.closeable = AsyncCloseable.compose(responseHandler, deadLetterSinkSender, subscriberSender, recordDispatcherListener);
+    this.closeable = AsyncCloseable.compose(subscriberSender, deadLetterSinkSender, recordDispatcherListener, responseHandler);
     this.consumerTracer = consumerTracer;
     this.meterRegistry = meterRegistry;
 
@@ -118,6 +122,10 @@ public class RecordDispatcherImpl implements RecordDispatcher {
    */
   @Override
   public Future<Void> dispatch(KafkaConsumerRecord<Object, CloudEvent> record) {
+    if (closed) {
+      return Future.failedFuture("Dispatcher closed");
+    }
+
     /*
     That's pretty much what happens here:
 
@@ -161,24 +169,23 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   }
 
   private void onRecordReceived(final ConsumerRecordContext recordContext, Promise<Void> finalProm) {
-    logDebug("Handling record", recordContext.getRecord());
+    recordReceived(recordContext);
 
     // Trace record received event
     // This needs to be done manually in order to work properly with both ordered and unordered delivery.
-    if (consumerTracer != null) {
-      Context context = Vertx.currentContext();
-      ConsumerTracer.StartedSpan span = consumerTracer.prepareMessageReceived(context, recordContext.getRecord().record());
-      if (span != null) {
-        finalProm.future()
-          .onComplete(ar -> {
-            if (ar.succeeded()) {
-              span.finish(context);
-            } else {
-              span.fail(context, ar.cause());
-            }
-          });
-      }
-    }
+    Context context = Vertx.currentContext();
+    final ConsumerTracer.StartedSpan span = getStartedSpan(recordContext, context);
+    finalProm.future()
+      .onComplete(ar -> {
+        recordHandlingCompleted(recordContext);
+        if (span != null) {
+          if (ar.succeeded()) {
+            span.finish(context);
+          } else {
+            span.fail(context, ar.cause());
+          }
+        }
+      });
 
     recordDispatcherListener.recordReceived(recordContext.getRecord());
     // Execute filtering
@@ -304,8 +311,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   private HttpResponse<?> getResponse(final Throwable throwable) {
     for (Throwable c = throwable; c != null; c = c.getCause()) {
       if (c instanceof ResponseFailureException) {
-        final var response = (HttpResponse<?>) ((ResponseFailureException) c).getResponse();
-        return response;
+        return ((ResponseFailureException) c).getResponse();
       }
     }
     return null;
@@ -371,7 +377,37 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     );
   }
 
+  private ConsumerTracer.StartedSpan getStartedSpan(ConsumerRecordContext recordContext, Context context) {
+    if (consumerTracer != null) {
+      return consumerTracer.prepareMessageReceived(context, recordContext.getRecord().record());
+    }
+    return null;
+  }
+
+  private void recordHandlingCompleted(final ConsumerRecordContext recordContext) {
+    logDebug("Record handling completed", recordContext.getRecord());
+    inFlightEvents--;
+    if (closed && inFlightEvents == 0) {
+      closePromise.tryComplete();
+    }
+  }
+
+  private void recordReceived(final ConsumerRecordContext recordContext) {
+    logDebug("Handling record", recordContext.getRecord());
+    inFlightEvents++;
+  }
+
   public Future<Void> close() {
-    return this.closeable.close();
+    this.closed = true;
+
+    if (inFlightEvents == 0) {
+      closePromise.tryComplete();
+    }
+
+    return closePromise.future()
+      .compose(
+        v -> this.closeable.close(),
+        v -> this.closeable.close()
+      );
   }
 }
