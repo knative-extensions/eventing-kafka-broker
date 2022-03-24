@@ -45,6 +45,7 @@ rules:
       - mutatingwebhookconfigurations
     resourceNames:
       - defaulting.webhook.kafka.sources.knative.dev
+      - defaulting.webhook.kafka.messaging.knative.dev
     verbs:
       - delete
 
@@ -55,6 +56,7 @@ rules:
     resourceNames:
       - validation.webhook.kafka.sources.knative.dev
       - config.webhook.kafka.sources.knative.dev
+      - validation.webhook.kafka.messaging.knative.dev
     verbs:
       - delete
 
@@ -65,8 +67,19 @@ rules:
     resourceNames:
       - kafka-source-webhook
       - kafka-controller
+      - kafka-webhook
+      - kafka-ch-dispatcher
     verbs:
       - delete
+
+  # to be able to list channel services and patch them
+  - apiGroups:
+      - "*"
+    resources:
+      - services
+    verbs:
+      - list
+      - patch
 
   - apiGroups:
       - apps
@@ -74,8 +87,22 @@ rules:
       - deployments
     resourceNames:
       - kafka-controller-manager
+      - kafka-webhook
+      - kafka-ch-controller
+      - kafka-ch-dispatcher
     verbs:
       - delete
+
+  # to be able to check readiness of the new dataplane
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    resourceNames:
+      - kafka-channel-dispatcher
+      - kafka-channel-receiver
+    verbs:
+      - get
 
   - apiGroups:
       - rbac.authorization.k8s.io
@@ -84,6 +111,9 @@ rules:
     resourceNames:
       - eventing-sources-kafka-controller
       - eventing-sources-kafka-controller-addressable-resolver
+      - kafka-webhook
+      - kafka-ch-controller
+      - kafka-ch-dispatcher
     verbs:
       - delete
   - apiGroups:
@@ -92,6 +122,11 @@ rules:
       - clusterroles
     resourceNames:
       - eventing-sources-kafka-controller
+      - kafka-webhook
+      - kafka-ch-controller
+      - kafka-addressable-resolver
+      - kafka-channelable-manipulator
+      - kafka-ch-dispatcher
     verbs:
       - delete
 
@@ -101,6 +136,9 @@ rules:
       - serviceaccounts
     resourceNames:
       - kafka-controller-manager
+      - kafka-webhook
+      - kafka-ch-controller
+      - kafka-ch-dispatcher
     verbs:
       - delete
 
@@ -110,5 +148,53 @@ rules:
       - secrets
     resourceNames:
       - kafka-source-webhook-certs
+      - messaging-webhook-certs
     verbs:
       - delete
+
+  - apiGroups:
+      - "autoscaling/v1"
+    resources:
+      - horizontalpodautoscalers
+    resourceNames:
+      - kafka-webhook
+    verbs:
+      - delete
+
+  - apiGroups:
+      - "policy/v1"
+    resources:
+      - poddisruptionbudgets
+    resourceNames:
+      - kafka-webhook
+    verbs:
+      - delete
+
+  - apiGroups:
+      - "*"
+    resources:
+      - configmaps
+    resourceNames:
+      - config-leader-election-kafkachannel
+    verbs:
+      - delete
+
+  # to be able to read the old configmap and migrate it
+  - apiGroups:
+      - "*"
+    resources:
+      - configmaps
+    resourceNames:
+      - config-kafka
+    verbs:
+      - get
+
+  # to be able update config in the new configmap
+  - apiGroups:
+      - "*"
+    resources:
+      - configmaps
+    resourceNames:
+      - kafka-channel-config
+    verbs:
+      - patch
