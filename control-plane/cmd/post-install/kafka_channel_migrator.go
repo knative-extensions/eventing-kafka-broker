@@ -163,7 +163,7 @@ func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
 	//    bootstrap.servers: "my-cluster-kafka-bootstrap.kafka:9092"
 	//    auth.secret.ref.namespace: my-ns
 	//    auth.secret.ref.name: my-secret
-	// TODO:
+	// These 2 things don't have anything in old configmap. Defaults of them in the old channel are hardcoded.
 	//    default.topic.partitions: "10"
 	//    default.topic.replication.factor: "3"
 
