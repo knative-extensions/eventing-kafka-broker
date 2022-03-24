@@ -89,35 +89,20 @@ func (d *kafkaChannelPostMigrationDeleter) Delete(ctx context.Context) error {
 		return fmt.Errorf("failed to delete service account %s/%s: %w", system.Namespace(), dispatcherServiceAccount, err)
 	}
 
-	// TODO: Delete configmaps?
-	// Resource: configmaps
-	// NAME                                  DATA
-	// config-kafka                          2
-	// config-leader-election-kafkachannel   4
-	//
+	// Delete configmap/config-leader-election-kafkachannel
+	// Delete clusterrole/kafka-ch-dispatcher
+	const kafkaChannelLeaderElectionConfigmap = "config-leader-election-kafkachannel"
+	err = d.k8s.
+		CoreV1().
+		ConfigMaps(system.Namespace()).
+		Delete(ctx, kafkaChannelLeaderElectionConfigmap, metav1.DeleteOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete Configmap %s: %w", kafkaChannelLeaderElectionConfigmap, err)
+	}
+
+	// TODO: DO NOT delete configmap/config-kafka
 
 	// TODO: leases need some work!
-	// Resource: leases.coordination.k8s.io
-	// ========== LEASES =============
-	// ========== LEASES =============
-	// ========== LEASES =============
-
-	// --- TO BE DELETED ---
-	// kafkachannel-webhook.conversionwebhook.00-of-01                                                                         kafka-webhook-6df77d9bb6-55t9t_8837a699-a004-4c7e-9a5e-18f312766fff            59m
-
-	// --- NOT SURE WHAT THIS IS ---
-	// kafka-webhook-eventing.pods.defaulting.webhook.kafka.eventing.knative.dev.00-of-01                                      kafka-webhook-eventing-857769fd77-zt49r_07db2e2e-8d6c-4d13-a34f-447fad6b69a6   23m
-
-	// --- THESE need to be mapped in the components. We should not delete them: ---
-	// kafka-broker-controller.knative.dev.eventing-kafka-broker.control-plane.pkg.reconciler.broker.reconciler.00-of-01   <-- ...
-	// kafka-broker-controller.knative.dev.eventing-kafka-broker.control-plane.pkg.reconciler.sink.reconciler.00-of-01     <-- ...
-	// kafka-broker-controller.knative.dev.eventing-kafka-broker.control-plane.pkg.reconciler.source.reconciler.00-of-01   <-- ...
-	// kafka-broker-controller.knative.dev.eventing-kafka-broker.control-plane.pkg.reconciler.trigger.reconciler.00-of-01  <-- ...
-	// kafka-broker-controller.knative.dev.eventing-kafka-broker.control-plane.pkg.reconciler.channel.reconciler.00-of-01  <-- kafkachannel-controller.knative.dev.eventing-kafka.pkg.channel.consolidated.reconciler.controller.reconciler.00-of-01
-	// kafka-webhook-eventing.defaulting.webhook.kafka.eventing.knative.dev.00-of-01                                       <-- kafkachannel-webhook.defaultingwebhook.00-of-01
-	// kafka-webhook-eventing.validationwebhook.00-of-01    															   <-- kafkachannel-webhook.validationwebhook.00-of-01
-	// kafka-webhook-eventing.webhookcertificates.00-of-01  															   <-- kafkachannel-webhook.webhookcertificates.00-of-01
-
 	// --- This needs to be deleted
 	// kafkachannel-dispatcher.knative.dev.eventing-kafka.pkg.channel.consolidated.reconciler.dispatcher.reconciler.00-of-01
 

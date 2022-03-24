@@ -89,11 +89,12 @@ func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
 func (m *kafkaChannelMigrator) migrateChannelServices(ctx context.Context, logger *zap.SugaredLogger) error {
 	newDispatcherExternalName := network.GetServiceHostname(NewChannelDispatcherServiceName, system.Namespace())
 
+	logger.Infof("Starting migration of channel services to new dispatcher service: %s.", newDispatcherExternalName)
+
 	// Sample YAML for a consolidated KafkaChannel service:
 	// apiVersion: v1
 	//kind: Service
 	//metadata:
-	//  creationTimestamp: "2022-03-14T07:12:39Z"
 	//  labels:
 	//    messaging.knative.dev/role: kafka-channel
 	// ...
@@ -101,13 +102,7 @@ func (m *kafkaChannelMigrator) migrateChannelServices(ctx context.Context, logge
 	//  namespace: default
 	//  ownerReferences:
 	//  - apiVersion: messaging.knative.dev/v1beta1
-	//    blockOwnerDeletion: true
-	//    controller: true
-	//    kind: KafkaChannel
-	//    name: kafka-channel
-	//    uid: 7e638b1f-3227-42e3-9dcc-fcb36c7c6b4a
-	//  resourceVersion: "86280"
-	//  uid: 55aeaff5-207a-49bc-af17-118c513eb640
+	//    ...
 	//spec:
 	//  externalName: kafka-ch-dispatcher.knative-eventing.svc.cluster.local
 	//  sessionAffinity: None
@@ -138,6 +133,8 @@ func (m *kafkaChannelMigrator) migrateChannelServices(ctx context.Context, logge
 		for _, svc := range kafkaChannelServiceList.Items {
 
 			patch := []byte(fmt.Sprintf(`[{"op":"replace", "path": "/spec/externalName", "value": "%s"}]`, newDispatcherExternalName))
+
+			logger.Infof("Patching service %s/%s with the patch: %s.", svc.Namespace, svc.Name, patch)
 
 			_, err := m.k8s.CoreV1().
 				Services(svc.Namespace).
@@ -191,6 +188,9 @@ func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, err error, 
 	// eventing-kafka/kafka/authSecretNamespace  --> auth.secret.ref.namespace
 	// eventing-kafka/kafka/authSecretName       --> auth.secret.ref.name
 	//
+
+	logger.Infof("Migrating configmap.")
+
 	oldcm, err := m.k8s.CoreV1().
 		ConfigMaps(system.Namespace()).
 		Get(ctx, OldConfigmapName, metav1.GetOptions{})
