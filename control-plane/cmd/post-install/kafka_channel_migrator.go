@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap"
 	"os"
 	"strings"
 	"time"
@@ -73,6 +74,19 @@ func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
 
 	logger.Infof("New data plane is ready, progressing with the migration")
 
+	err = m.migrateChannelServices(ctx, logger)
+	if err != nil {
+		return err
+	}
+
+	err = m.migrateConfigmap(ctx, err, logger)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *kafkaChannelMigrator) migrateChannelServices(ctx context.Context, logger *zap.SugaredLogger) error {
 	newDispatcherExternalName := network.GetServiceHostname(NewChannelDispatcherServiceName, system.Namespace())
 
 	// Sample YAML for a consolidated KafkaChannel service:
@@ -136,7 +150,10 @@ func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
 		cont = kafkaChannelServiceList.Continue
 		first = false
 	}
+	return nil
+}
 
+func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, err error, logger *zap.SugaredLogger) error {
 	// consolidated configmap looks like this:
 	//
 	// apiVersion: v1
