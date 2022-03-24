@@ -27,3 +27,7 @@ data:
       kind: ConfigMap
       name: kafka-broker-config
       namespace: knative-eventing
+      delivery:
+        retry: 10
+        backoffPolicy: exponential
+        backoffDelay: PT0.2S
