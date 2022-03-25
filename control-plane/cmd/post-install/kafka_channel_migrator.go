@@ -19,10 +19,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"go.uber.org/zap"
 	"os"
 	"strings"
 	"time"
+
+	"go.uber.org/zap"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
