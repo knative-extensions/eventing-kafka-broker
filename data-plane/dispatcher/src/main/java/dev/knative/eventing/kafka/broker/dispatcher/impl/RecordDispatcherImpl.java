@@ -225,7 +225,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   }
 
   private void onFilterMatching(final ConsumerRecordContext recordContext, final Promise<Void> finalProm) {
-    logDebug("Record matched filtering", recordContext.getRecord());
+    logTrace("Record matched filtering", recordContext.getRecord());
     subscriberSender.apply(recordContext.getRecord())
       .onSuccess(response -> onSubscriberSuccess(response, recordContext, finalProm))
       .onFailure(ex -> onSubscriberFailure(ex, recordContext, finalProm));
@@ -233,7 +233,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private void onFilterNotMatching(final ConsumerRecordContext recordContext,
                                    final Promise<Void> finalProm) {
-    logDebug("Record did not match filtering", recordContext.getRecord());
+    logTrace("Record did not match filtering", recordContext.getRecord());
     recordDispatcherListener.recordDiscarded(recordContext.getRecord());
     finalProm.complete();
   }
@@ -241,7 +241,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   private void onSubscriberSuccess(final HttpResponse<?> response,
                                    final ConsumerRecordContext recordContext,
                                    final Promise<Void> finalProm) {
-    logDebug("Successfully sent event to subscriber", recordContext.getRecord());
+    logTrace("Successfully sent event to subscriber", recordContext.getRecord());
 
     incrementEventCount(response, recordContext);
     recordDispatchLatency(response, recordContext);
@@ -265,7 +265,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private void onDeadLetterSinkSuccess(final ConsumerRecordContext recordContext,
                                        final Promise<Void> finalProm) {
-    logDebug("Successfully sent event to the dead letter sink", recordContext.getRecord());
+    logTrace("Successfully sent event to the dead letter sink", recordContext.getRecord());
     recordDispatcherListener.successfullySentToDeadLetterSink(recordContext.getRecord());
     finalProm.complete();
   }
@@ -290,7 +290,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     //
     // That means that we get a record with a null value and some CE
     // headers even though the record is a valid CloudEvent.
-    logDebug("Value is null", recordContext.getRecord());
+    logTrace("Value is null", recordContext.getRecord());
     final var value = cloudEventDeserializer.deserialize(recordContext.getRecord().record().topic(), recordContext.getRecord().record().headers(), null);
     recordContext.setRecord(new KafkaConsumerRecordImpl<>(KafkaConsumerRecordUtils.copyRecordAssigningValue(recordContext.getRecord().record(), value)));
     return recordContext;
@@ -378,7 +378,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     final KafkaConsumerRecord<Object, CloudEvent> record,
     final Throwable cause) {
 
-    if (logger.isDebugEnabled()) {
+    if (logger.isTraceEnabled()) {
       logger.error(msg + " {} {} {} {} {} {}",
         keyValue("topic", record.topic()),
         keyValue("partition", record.partition()),
@@ -399,11 +399,11 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     }
   }
 
-  private void logDebug(
+  private void logTrace(
     final String msg,
     final KafkaConsumerRecord<Object, CloudEvent> record) {
 
-    logger.debug(msg + " {} {} {} {} {} {} {}",
+    logger.trace(msg + " {} {} {} {} {} {} {}",
       keyValue("topic", record.topic()),
       keyValue("partition", record.partition()),
       keyValue("headers", record.headers()),
