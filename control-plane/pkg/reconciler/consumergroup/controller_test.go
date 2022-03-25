@@ -48,7 +48,7 @@ const (
 func TestNewController(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
-	t.Setenv("SYSTEM_NAMESPACE", systemNamespace)
+	os.Setenv("SYSTEM_NAMESPACE", systemNamespace)
 
 	ctx, _ = kubeclient.With(ctx,
 		&corev1.ConfigMap{

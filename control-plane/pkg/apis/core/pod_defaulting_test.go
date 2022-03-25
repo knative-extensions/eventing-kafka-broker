@@ -18,6 +18,7 @@ package core
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -31,7 +32,7 @@ import (
 )
 
 func TestPodDefaulting(t *testing.T) {
-	t.Setenv("SYSTEM_NAMESPACE", "knative-eventing")
+	os.Setenv("SYSTEM_NAMESPACE", "knative-eventing")
 
 	id := uuid.New()
 
