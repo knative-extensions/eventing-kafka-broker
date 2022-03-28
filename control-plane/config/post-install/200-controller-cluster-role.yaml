@@ -153,7 +153,7 @@ rules:
       - delete
 
   - apiGroups:
-      - "autoscaling/v1"
+      - "*"
     resources:
       - horizontalpodautoscalers
     resourceNames:
@@ -162,7 +162,7 @@ rules:
       - delete
 
   - apiGroups:
-      - "policy/v1"
+      - "*"
     resources:
       - poddisruptionbudgets
     resourceNames:
