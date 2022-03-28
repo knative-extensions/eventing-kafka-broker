@@ -1032,9 +1032,10 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 					security.AuthSecretNameKey:         "secret-1",
+					security.AuthSecretNamespaceKey:    "ns-1",
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
-				NewSSLSecret(system.Namespace(), "secret-1"),
+				NewSSLSecret("ns-1", "secret-1"),
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
@@ -1066,7 +1067,7 @@ func TestReconcileKind(t *testing.T) {
 							Auth: &contract.Resource_AuthSecret{
 								AuthSecret: &contract.Reference{
 									Uuid:      SecretUUID,
-									Namespace: system.Namespace(),
+									Namespace: "ns-1",
 									Name:      "secret-1",
 									Version:   SecretResourceVersion,
 								},

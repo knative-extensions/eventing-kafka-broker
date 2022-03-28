@@ -61,16 +61,52 @@ func TestSecret(t *testing.T) {
 		wantErr            bool
 	}{
 		{
-			name: "happy case",
+			name: "happy case - use configmap namespace",
 			ctx:  context.Background(),
 			config: &MTConfigMapSecretLocator{
-				&corev1.ConfigMap{
+				UseNamespaceInConfigmap: false,
+				ConfigMap: &corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "my-ns",
 						Name:      "my-name",
 					},
 					Data: map[string]string{
-						AuthSecretNameKey: "my-name",
+						AuthSecretNameKey:      "my-name",
+						AuthSecretNamespaceKey: "NOT_USED",
+					},
+				},
+			},
+			secretProviderFunc: (&SecretProviderFuncMock{
+				secret: &corev1.Secret{
+					Data: map[string][]byte{
+						ProtocolKey: []byte(ProtocolPlaintext),
+					},
+				},
+				err:           nil,
+				wantName:      "my-name",
+				wantNamespace: "my-ns",
+				t:             t,
+			}).F,
+			wantSecret: &corev1.Secret{
+				Data: map[string][]byte{
+					ProtocolKey: []byte(ProtocolPlaintext),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "happy case - use namespace in configmap",
+			ctx:  context.Background(),
+			config: &MTConfigMapSecretLocator{
+				UseNamespaceInConfigmap: true,
+				ConfigMap: &corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "my-ns",
+						Name:      "my-name",
+					},
+					Data: map[string]string{
+						AuthSecretNamespaceKey: "my-ns",
+						AuthSecretNameKey:      "my-name",
 					},
 				},
 			},
@@ -95,14 +131,15 @@ func TestSecret(t *testing.T) {
 		{
 			name:       "no secret in MTConfigMapSecretLocator config",
 			ctx:        context.Background(),
-			config:     &MTConfigMapSecretLocator{nil},
+			config:     &MTConfigMapSecretLocator{ConfigMap: nil},
 			wantSecret: nil,
 		},
 		{
 			name: "no secret in MTConfigMapSecretLocator",
 			ctx:  context.Background(),
 			config: &MTConfigMapSecretLocator{
-				&corev1.ConfigMap{
+				UseNamespaceInConfigmap: false,
+				ConfigMap: &corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "my-ns",
 						Name:      "my-name",
@@ -117,13 +154,15 @@ func TestSecret(t *testing.T) {
 			name: "secret provider error",
 			ctx:  context.Background(),
 			config: &MTConfigMapSecretLocator{
-				&corev1.ConfigMap{
+				UseNamespaceInConfigmap: false,
+				ConfigMap: &corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "my-ns",
 						Name:      "my-name",
 					},
 					Data: map[string]string{
-						AuthSecretNameKey: "my-name",
+						AuthSecretNameKey:      "my-name",
+						AuthSecretNamespaceKey: "my-ns",
 					},
 				},
 			},
