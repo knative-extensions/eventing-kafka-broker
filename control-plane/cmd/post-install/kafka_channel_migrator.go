@@ -200,6 +200,11 @@ func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, err error, 
 		return fmt.Errorf("failed to get consolidated channel configmap for migration %s: %w", OldConfigmapName, err)
 	}
 
+	if len(oldcm.Data) == 0 {
+		logger.Infof("Old configmap %s is either missing or empty. Skipping the configmap migration", OldConfigmapName)
+		return nil
+	}
+
 	oldconfig, err := getEventingKafkaConfig(oldcm.Data)
 	if err != nil && !apierrors.IsNotFound(err) {
 		// configmap will be missing if we did the migration already
@@ -233,10 +238,6 @@ func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, err error, 
 }
 
 func getEventingKafkaConfig(configMap map[string]string) (*config.EventingKafkaConfig, error) {
-	if len(configMap) == 0 {
-		return nil, fmt.Errorf("missing configuration")
-	}
-
 	// Unmarshal The Eventing-Kafka ConfigMap YAML Into A EventingKafkaSettings Struct
 	eventingKafkaConfig := &config.EventingKafkaConfig{}
 	err := yaml.Unmarshal([]byte(configMap[constants.EventingKafkaSettingsConfigKey]), &eventingKafkaConfig)
