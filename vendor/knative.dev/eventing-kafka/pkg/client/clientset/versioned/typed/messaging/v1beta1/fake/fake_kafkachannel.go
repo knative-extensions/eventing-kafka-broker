@@ -117,7 +117,7 @@ func (c *FakeKafkaChannels) UpdateStatus(ctx context.Context, kafkaChannel *v1be
 // Delete takes name of the kafkaChannel and deletes it. Returns an error if one occurs.
 func (c *FakeKafkaChannels) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(kafkachannelsResource, c.ns, name), &v1beta1.KafkaChannel{})
+		Invokes(testing.NewDeleteActionWithOptions(kafkachannelsResource, c.ns, name, opts), &v1beta1.KafkaChannel{})
 
 	return err
 }

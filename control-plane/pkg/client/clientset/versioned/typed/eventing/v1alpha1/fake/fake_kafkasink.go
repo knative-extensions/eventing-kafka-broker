@@ -117,7 +117,7 @@ func (c *FakeKafkaSinks) UpdateStatus(ctx context.Context, kafkaSink *v1alpha1.K
 // Delete takes name of the kafkaSink and deletes it. Returns an error if one occurs.
 func (c *FakeKafkaSinks) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(kafkasinksResource, c.ns, name), &v1alpha1.KafkaSink{})
+		Invokes(testing.NewDeleteActionWithOptions(kafkasinksResource, c.ns, name, opts), &v1alpha1.KafkaSink{})
 
 	return err
 }

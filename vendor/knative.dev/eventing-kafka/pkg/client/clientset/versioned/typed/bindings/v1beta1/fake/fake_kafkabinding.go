@@ -117,7 +117,7 @@ func (c *FakeKafkaBindings) UpdateStatus(ctx context.Context, kafkaBinding *v1be
 // Delete takes name of the kafkaBinding and deletes it. Returns an error if one occurs.
 func (c *FakeKafkaBindings) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(kafkabindingsResource, c.ns, name), &v1beta1.KafkaBinding{})
+		Invokes(testing.NewDeleteActionWithOptions(kafkabindingsResource, c.ns, name, opts), &v1beta1.KafkaBinding{})
 
 	return err
 }

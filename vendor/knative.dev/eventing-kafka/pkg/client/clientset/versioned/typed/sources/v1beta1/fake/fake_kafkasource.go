@@ -118,7 +118,7 @@ func (c *FakeKafkaSources) UpdateStatus(ctx context.Context, kafkaSource *v1beta
 // Delete takes name of the kafkaSource and deletes it. Returns an error if one occurs.
 func (c *FakeKafkaSources) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(kafkasourcesResource, c.ns, name), &v1beta1.KafkaSource{})
+		Invokes(testing.NewDeleteActionWithOptions(kafkasourcesResource, c.ns, name, opts), &v1beta1.KafkaSource{})
 
 	return err
 }
