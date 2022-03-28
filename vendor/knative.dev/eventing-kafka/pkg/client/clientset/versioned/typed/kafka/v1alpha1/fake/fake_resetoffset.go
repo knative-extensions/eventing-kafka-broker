@@ -117,7 +117,7 @@ func (c *FakeResetOffsets) UpdateStatus(ctx context.Context, resetOffset *v1alph
 // Delete takes name of the resetOffset and deletes it. Returns an error if one occurs.
 func (c *FakeResetOffsets) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(resetoffsetsResource, c.ns, name), &v1alpha1.ResetOffset{})
+		Invokes(testing.NewDeleteActionWithOptions(resetoffsetsResource, c.ns, name, opts), &v1alpha1.ResetOffset{})
 
 	return err
 }

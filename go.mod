@@ -17,15 +17,15 @@ require (
 	go.uber.org/multierr v1.6.0
 	go.uber.org/zap v1.19.1
 	google.golang.org/protobuf v1.27.1
-	k8s.io/api v0.22.5
-	k8s.io/apiextensions-apiserver v0.22.5
-	k8s.io/apimachinery v0.22.5
-	k8s.io/apiserver v0.22.5
-	k8s.io/client-go v0.22.5
-	k8s.io/utils v0.0.0-20211208161948-7d6a63dca704
-	knative.dev/eventing v0.30.1-0.20220314144118-19935b19d61e
-	knative.dev/eventing-kafka v0.30.1-0.20220314063517-bc254c796e2f
-	knative.dev/hack v0.0.0-20220314052818-c9c3ea17a2e9
-	knative.dev/pkg v0.0.0-20220314170718-721abec0a377
-	knative.dev/reconciler-test v0.0.0-20220314160418-3b7a0d7f7b4b
+	k8s.io/api v0.23.5
+	k8s.io/apiextensions-apiserver v0.23.4
+	k8s.io/apimachinery v0.23.5
+	k8s.io/apiserver v0.23.4
+	k8s.io/client-go v0.23.5
+	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
+	knative.dev/eventing v0.30.1-0.20220325083448-4be06cdde807
+	knative.dev/eventing-kafka v0.30.1-0.20220322160026-ad099b074a0f
+	knative.dev/hack v0.0.0-20220318020218-14f832e506f8
+	knative.dev/pkg v0.0.0-20220325200448-1f7514acd0c2
+	knative.dev/reconciler-test v0.0.0-20220322134612-e134f58f3163
 )
