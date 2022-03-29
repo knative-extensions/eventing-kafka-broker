@@ -292,15 +292,16 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     final String target,
     final EgressConfig egress) {
 
+    final var circuitBreakerOptions = createCircuitBreakerOptions(egress);
     final var circuitBreaker = CircuitBreaker
-      .create(target, vertx, createCircuitBreakerOptions(egress))
+      .create(target, vertx, circuitBreakerOptions)
       .retryPolicy(computeRetryPolicy(egress))
       .openHandler(r -> logger.info("Circuit breaker opened {}", keyValue("target", target)))
       .halfOpenHandler(r -> logger.info("Circuit breaker half-opened {}", keyValue("target", target)))
       .closeHandler(r -> logger.info("Circuit breaker closed {}", keyValue("target", target)));
 
     return new WebClientCloudEventSender(
-      WebClient.create(vertx, this.webClientOptions), circuitBreaker, target
+      WebClient.create(vertx, this.webClientOptions), circuitBreaker, circuitBreakerOptions, target
     );
   }
 

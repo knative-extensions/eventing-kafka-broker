@@ -22,6 +22,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 
 import java.util.Objects;
@@ -30,6 +31,8 @@ import java.util.function.BiFunction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public abstract class BaseConsumerVerticle extends AbstractVerticle {
 
@@ -61,6 +64,7 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
       .onFailure(startPromise::fail)
       .onSuccess(v -> {
         this.consumer.exceptionHandler(this::exceptionHandler);
+
         startConsumer(startPromise);
       });
   }
@@ -69,15 +73,9 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
   public void stop(Promise<Void> stopPromise) {
     logger.info("Stopping consumer");
 
-    final Promise<Void> dependenciesClosedPromise = Promise.promise();
-
-    // Close consumer after other objects have been closed.
-    dependenciesClosedPromise.future()
-      .onComplete(r -> this.consumer.close().onComplete(stopPromise));
-
     AsyncCloseable
-      .compose(this.recordDispatcher, this.closeable)
-      .close(dependenciesClosedPromise);
+      .compose(this.recordDispatcher, this.closeable, this.consumer::close)
+      .close(stopPromise);
   }
 
   public void setConsumer(KafkaConsumer<Object, CloudEvent> consumer) {
@@ -102,5 +100,4 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
       this.context.exceptionHandler().handle(cause);
     }
   }
-
 }

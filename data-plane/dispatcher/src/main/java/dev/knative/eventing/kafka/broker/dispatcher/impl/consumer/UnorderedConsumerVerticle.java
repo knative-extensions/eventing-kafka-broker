@@ -17,8 +17,6 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
 import io.cloudevents.CloudEvent;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -26,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Set;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
@@ -42,8 +39,10 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
   // This shouldn't be more than 2000, which is the default max time allowed
   // to block a verticle thread.
   private static final Duration POLL_TIMEOUT = Duration.ofMillis(1000);
+
   private final int maxPollRecords;
 
+  private boolean stopPolling;
   private int inFlightRecords;
 
   public UnorderedConsumerVerticle(final Initializer initializer,
@@ -56,11 +55,11 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
       this.maxPollRecords = maxPollRecords;
     }
     this.inFlightRecords = 0;
+    this.stopPolling = false;
   }
 
   @Override
   void startConsumer(Promise<Void> startPromise) {
-    this.consumer.exceptionHandler(this::exceptionHandler);
     this.consumer.subscribe(this.topics, startPromise);
 
     startPromise.future()
@@ -81,6 +80,9 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
    * control the memory consumption of the dispatcher.
    */
   private synchronized void poll() {
+    if (stopPolling) {
+      return;
+    }
     if (inFlightRecords >= maxPollRecords) {
       logger.info(
         "In flight records exceeds " + ConsumerConfig.MAX_POLL_RECORDS_CONFIG +
@@ -114,5 +116,12 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
         });
     }
     poll();
+  }
+
+  @Override
+  public void stop(Promise<Void> stopPromise) {
+    this.stopPolling = true;
+    // Stop the consumer
+    super.stop(stopPromise);
   }
 }
