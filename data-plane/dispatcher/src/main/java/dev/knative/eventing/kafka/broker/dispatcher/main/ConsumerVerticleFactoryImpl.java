@@ -205,7 +205,12 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
       })
         .mapEmpty();
 
-    return getConsumerVerticle(deliveryOrder, initializer, new HashSet<>(resource.getTopicsList()));
+    return getConsumerVerticle(
+      deliveryOrder,
+      initializer,
+      new HashSet<>(resource.getTopicsList()),
+      consumerConfigs.get(ConsumerConfig.MAX_POLL_RECORDS_CONFIG)
+    );
   }
 
   static ResponseHandler getResponseHandler(final DataPlaneContract.Egress egress,
@@ -253,15 +258,16 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     final String target,
     final EgressConfig egress) {
 
+    final var circuitBreakerOptions = createCircuitBreakerOptions(egress);
     final var circuitBreaker = CircuitBreaker
-      .create(target, vertx, createCircuitBreakerOptions(egress))
+      .create(target, vertx, circuitBreakerOptions)
       .retryPolicy(computeRetryPolicy(egress))
       .openHandler(r -> logger.info("Circuit breaker opened {}", keyValue("target", target)))
       .halfOpenHandler(r -> logger.info("Circuit breaker half-opened {}", keyValue("target", target)))
       .closeHandler(r -> logger.info("Circuit breaker closed {}", keyValue("target", target)));
 
     return new WebClientCloudEventSender(
-      WebClient.create(vertx, this.webClientOptions), circuitBreaker, target
+      WebClient.create(vertx, this.webClientOptions), circuitBreaker, circuitBreakerOptions, target
     );
   }
 
@@ -314,10 +320,13 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
   private static AbstractVerticle getConsumerVerticle(final DeliveryOrder type,
                                                       final BaseConsumerVerticle.Initializer initializer,
-                                                      final Set<String> topics) {
+                                                      final Set<String> topics,
+                                                      final Object maxPollRecords) {
     return switch (type) {
       case ORDERED -> new OrderedConsumerVerticle(initializer, topics);
-      case UNORDERED -> new UnorderedConsumerVerticle(initializer, topics);
+      case UNORDERED -> new UnorderedConsumerVerticle(
+        initializer, topics, maxPollRecords == null ? 0 : Integer.parseInt(maxPollRecords.toString())
+      );
     };
   }
 

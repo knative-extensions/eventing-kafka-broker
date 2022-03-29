@@ -307,7 +307,9 @@ public class RecordDispatcherTest {
   }
 
   public static RecordDispatcherListener offsetManagerMock() {
-    return mock(RecordDispatcherListener.class);
+    final var m = mock(RecordDispatcherListener.class);
+    when(m.close()).thenReturn(Future.succeededFuture());
+    return m;
   }
 
   private void assertNoEventCount() {

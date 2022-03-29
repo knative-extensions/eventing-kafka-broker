@@ -21,11 +21,15 @@ import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
+import java.util.function.Function;
+
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 /**
  * This class implements a {@link ResponseHandler} that will convert the sink response into a {@link CloudEvent} and push it to a Kafka topic.
@@ -35,6 +39,10 @@ public final class ResponseToKafkaTopicHandler extends BaseResponseHandler imple
   private final String topic;
   private final KafkaProducer<String, CloudEvent> producer;
   private final AutoCloseable producerMeterBinder;
+
+  private int inFlightEvents = 0;
+  private boolean closed = false;
+  private final Promise<Void> closePromise = Promise.promise();
 
   /**
    * All args constructor.
@@ -55,16 +63,55 @@ public final class ResponseToKafkaTopicHandler extends BaseResponseHandler imple
 
   @Override
   protected Future<Void> doHandleEvent(CloudEvent event) {
-    return producer
+    if (closed) {
+      return Future.failedFuture("Response for Kafka topic handler closed");
+    }
+
+    eventReceived();
+
+    final Future<Void> f = producer
       .send(KafkaProducerRecord.create(topic, event))
       .mapEmpty();
+
+    f.onComplete(v -> eventProduced());
+
+    return f;
+  }
+
+  private void eventReceived() {
+    inFlightEvents++;
+  }
+
+  private void eventProduced() {
+    inFlightEvents--;
+
+    if (closed && inFlightEvents == 0) {
+      closePromise.tryComplete(null);
+    }
   }
 
   @Override
   public Future<Void> close() {
-    return CompositeFuture.all(
+    this.closed = true;
+
+    logger.info("Closing response handler {} {}",
+      keyValue("topic", topic),
+      keyValue("inFlightEvents", inFlightEvents)
+    );
+
+    if (inFlightEvents == 0) {
+      closePromise.tryComplete(null);
+    }
+
+    final Function<Void, Future<Void>> closeF = v -> CompositeFuture.all(
       this.producer.close(),
       AsyncCloseable.wrapAutoCloseable(producerMeterBinder).close()
     ).mapEmpty();
+
+    return closePromise.future()
+      .compose(
+        v -> closeF.apply(null),
+        v -> closeF.apply(null)
+      );
   }
 }
