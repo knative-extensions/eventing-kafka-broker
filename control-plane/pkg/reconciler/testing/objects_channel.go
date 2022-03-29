@@ -94,6 +94,20 @@ func WithRetentionDuration(rd string) KRShapedOption {
 	}
 }
 
+func WithChannelDelivery(d *eventingduckv1.DeliverySpec) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*messagingv1beta1.KafkaChannel)
+		ch.Spec.Delivery = d
+	}
+}
+
+func WithChannelDeadLetterSinkURI(uri string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*messagingv1beta1.KafkaChannel)
+		ch.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(uri)
+	}
+}
+
 func ChannelReceiverPod(namespace string, annotations map[string]string) runtime.Object {
 	return &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{

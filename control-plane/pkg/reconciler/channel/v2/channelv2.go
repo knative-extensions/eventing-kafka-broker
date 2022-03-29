@@ -34,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
+	"knative.dev/pkg/resolver"
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
@@ -83,6 +84,8 @@ var (
 type Reconciler struct {
 	*base.Reconciler
 	*config.Env
+
+	Resolver *resolver.URIResolver
 
 	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
@@ -202,7 +205,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
 	// Get resource configuration
-	channelConfig := r.getChannelContractResource(topic, channel, secret, topicConfig)
+	channelResource, err := r.getChannelContractResource(ctx, topic, channel, secret, topicConfig)
+	if err != nil {
+		return statusConditionManager.FailedToResolveConfig(err)
+	}
+	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&channel.Status.DeliveryStatus, channelResource.EgressConfig)
 
 	allReady, subscribersError := r.reconcileSubscribers(ctx, channel, topicName, topicConfig.BootstrapServers)
 	if subscribersError != nil {
@@ -217,7 +224,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 
 	// Update contract data with the new contract configuration (add/update channel resource)
 	channelIndex := coreconfig.FindResource(ct, channel.UID)
-	changed := coreconfig.AddOrUpdateResourceConfig(ct, channelConfig, channelIndex, logger)
+	changed := coreconfig.AddOrUpdateResourceConfig(ct, channelResource, channelIndex, logger)
 	logger.Debug("Change detector", zap.Int("changed", changed))
 
 	if changed == coreconfig.ResourceChanged {
@@ -559,7 +566,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 	return cg, nil
 }
 
-func (r *Reconciler) getChannelContractResource(topic string, channel *messagingv1beta1.KafkaChannel, secret *corev1.Secret, config *kafka.TopicConfig) *contract.Resource {
+func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
 	resource := &contract.Resource{
 		Uid:    string(channel.UID),
 		Topics: []string{topic},
@@ -585,7 +592,13 @@ func (r *Reconciler) getChannelContractResource(topic string, channel *messaging
 		}
 	}
 
-	return resource
+	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.DefaultBackoffDelayMs)
+	if err != nil {
+		return nil, err
+	}
+	resource.EgressConfig = egressConfig
+
+	return resource, nil
 }
 
 // consumerGroup returns a consumerGroup name for the given channel and subscription
