@@ -30,6 +30,7 @@ import (
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/utils/pointer"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
@@ -63,7 +64,8 @@ const (
 var (
 	Formats = []string{base.Protobuf, base.Json}
 
-	ServiceURL = ServiceURLFrom(ServiceNamespace, ServiceName)
+	ServiceURL         = ServiceURLFrom(ServiceNamespace, ServiceName)
+	ServiceDestination = ServiceURLDestination(ServiceNamespace, ServiceName)
 )
 
 func NewService(mutations ...func(*corev1.Service)) *corev1.Service {
@@ -108,6 +110,11 @@ func WithServiceNamespace(ns string) func(s *corev1.Service) {
 
 func ServiceURLFrom(ns, name string) string {
 	return fmt.Sprintf("http://%s.%s.svc.cluster.local", name, ns)
+}
+
+func ServiceURLDestination(ns, name string) *duckv1.Destination {
+	uri, _ := apis.ParseURL(ServiceURL)
+	return &duckv1.Destination{URI: uri}
 }
 
 func NewConfigMapWithBinaryData(env *config.Env, data []byte, options ...reconcilertesting.ConfigMapOption) runtime.Object {
