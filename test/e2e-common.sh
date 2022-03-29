@@ -108,6 +108,7 @@ function build_components_from_source() {
   [ -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" ] && rm "${EVENTING_KAFKA_BROKER_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_SINK_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SINK_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" ] && rm "${EVENTING_KAFKA_CHANNEL_ARTIFACT}"
+  [ -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" ] && rm "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}"
 
   header "Data plane setup"
   data_plane_setup || fail_test "Failed to set up data plane components"

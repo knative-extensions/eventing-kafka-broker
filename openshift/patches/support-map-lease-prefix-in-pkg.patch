@@ -1,0 +1,35 @@
+diff --git a/vendor/knative.dev/pkg/configmap/parse.go b/vendor/knative.dev/pkg/configmap/parse.go
+index b2f8d4f2..e6299168 100644
+--- a/vendor/knative.dev/pkg/configmap/parse.go
++++ b/vendor/knative.dev/pkg/configmap/parse.go
+@@ -247,11 +247,15 @@ func Parse(data map[string]string, parsers ...ParseFunc) error {
+ 
+ // AsOptionalMap parses the data into the target as a map[string]string, if it exists.
+ // The map is represented as a list of key-value pairs with a common prefix.
+-func AsOptionalMap(prefix string, target map[string]string) ParseFunc {
++func AsOptionalMap(prefix string, target *map[string]string) ParseFunc {
+ 	return func(data map[string]string) error {
+ 		for k, v := range data {
+ 			if strings.HasPrefix(k, prefix) && len(k) > len(prefix)+1 {
+-				target[k[len(prefix)+1: /* remove dot `.` */]] = v
++				if *target == nil {
++					m := make(map[string]string, 2)
++					*target = m
++				}
++				(*target)[k[len(prefix)+1: /* remove dot `.` */]] = v
+ 			}
+ 		}
+ 		return nil
+diff --git a/vendor/knative.dev/pkg/leaderelection/config.go b/vendor/knative.dev/pkg/leaderelection/config.go
+index 3ef47483..f23103c0 100644
+--- a/vendor/knative.dev/pkg/leaderelection/config.go
++++ b/vendor/knative.dev/pkg/leaderelection/config.go
+@@ -57,7 +57,7 @@ func NewConfigFromMap(data map[string]string) (*Config, error) {
+ 
+ 		cm.AsUint32("buckets", &config.Buckets),
+ 
+-		cm.AsOptionalMap("map-lease-prefix", config.LeaseNamesPrefixMapping),
++		cm.AsOptionalMap("map-lease-prefix", &config.LeaseNamesPrefixMapping),
+ 	); err != nil {
+ 		return nil, err
+ 	}
