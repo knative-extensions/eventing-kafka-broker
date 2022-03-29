@@ -108,9 +108,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 							},
 						},
 						Ingress: &contract.Ingress{
-							IngressType: &contract.Ingress_Path{
-								Path: "/broker-ns/broker-name",
-							},
+							Path:        "/broker-ns/broker-name",
 							ContentMode: contract.ContentMode_STRUCTURED,
 						},
 						BootstrapServers: "broker:9092",
@@ -122,9 +120,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 				Uid:    "1",
 				Topics: []string{"topic-name-1"},
 				Ingress: &contract.Ingress{
-					IngressType: &contract.Ingress_Path{
-						Path: "/broker-ns/broker-name",
-					},
+					Path:        "/broker-ns/broker-name",
 					ContentMode: contract.ContentMode_STRUCTURED,
 				},
 				Egresses: []*contract.Egress{
@@ -148,9 +144,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 						Uid:    "2",
 						Topics: []string{"topic-name-1"},
 						Ingress: &contract.Ingress{
-							IngressType: &contract.Ingress_Path{
-								Path: "/broker-ns/broker-name",
-							},
+							Path:        "/broker-ns/broker-name",
 							ContentMode: contract.ContentMode_STRUCTURED,
 						},
 						Egresses: []*contract.Egress{
@@ -184,9 +178,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 						},
 						BootstrapServers: "broker:9092",
 						Ingress: &contract.Ingress{
-							IngressType: &contract.Ingress_Path{
-								Path: "/broker-ns/broker-name",
-							},
+							Path:        "/broker-ns/broker-name",
 							ContentMode: contract.ContentMode_STRUCTURED,
 						},
 					},
@@ -215,9 +207,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 						},
 						BootstrapServers: "broker:9092",
 						Ingress: &contract.Ingress{
-							IngressType: &contract.Ingress_Path{
-								Path: "/broker-ns/broker-name",
-							},
+							Path:        "/broker-ns/broker-name",
 							ContentMode: contract.ContentMode_STRUCTURED,
 						},
 					},
@@ -243,9 +233,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 				},
 				BootstrapServers: "broker:9092,broker-2:9092",
 				Ingress: &contract.Ingress{
-					IngressType: &contract.Ingress_Path{
-						Path: "/broker-ns/broker-name",
-					},
+					Path:        "/broker-ns/broker-name",
 					ContentMode: contract.ContentMode_STRUCTURED,
 				},
 			},
@@ -269,9 +257,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 						},
 						BootstrapServers: "broker:9092,broker-2:9092",
 						Ingress: &contract.Ingress{
-							IngressType: &contract.Ingress_Path{
-								Path: "/broker-ns/broker-name",
-							},
+							Path:        "/broker-ns/broker-name",
 							ContentMode: contract.ContentMode_STRUCTURED,
 						},
 					},
@@ -300,9 +286,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 						},
 						BootstrapServers: "broker:9092",
 						Ingress: &contract.Ingress{
-							IngressType: &contract.Ingress_Path{
-								Path: "/broker-ns/broker-name",
-							},
+							Path:        "/broker-ns/broker-name",
 							ContentMode: contract.ContentMode_STRUCTURED,
 						},
 					},
@@ -326,9 +310,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 				},
 				BootstrapServers: "broker:9092",
 				Ingress: &contract.Ingress{
-					IngressType: &contract.Ingress_Path{
-						Path: "/broker-ns/broker-name",
-					},
+					Path:        "/broker-ns/broker-name",
 					ContentMode: contract.ContentMode_STRUCTURED,
 				},
 			},
@@ -353,9 +335,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 						},
 						BootstrapServers: "broker:9092",
 						Ingress: &contract.Ingress{
-							IngressType: &contract.Ingress_Path{
-								Path: "/broker-ns/broker-name",
-							},
+							Path:        "/broker-ns/broker-name",
 							ContentMode: contract.ContentMode_STRUCTURED,
 						},
 					},

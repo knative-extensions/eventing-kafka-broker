@@ -170,9 +170,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: receiver.Path(ChannelNamespace, ChannelName),
-								},
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -239,9 +237,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: receiver.Path(ChannelNamespace, ChannelName),
-								},
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -310,9 +306,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: receiver.Path(ChannelNamespace, ChannelName),
-								},
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -382,9 +376,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: receiver.Path(ChannelNamespace, ChannelName),
-								},
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{},
 						},
@@ -455,9 +447,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: receiver.Path(ChannelNamespace, ChannelName),
-								},
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
 								ConsumerGroup: "kafka." + ChannelNamespace + "." + ChannelName + "." + Subscription1UUID,
@@ -530,9 +520,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: receiver.Path(ChannelNamespace, ChannelName),
-								},
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
 								ConsumerGroup: "kafka." + ChannelNamespace + "." + ChannelName + "." + Subscription1UUID,
@@ -605,9 +593,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: receiver.Path(ChannelNamespace, ChannelName),
-								},
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
 								ConsumerGroup: "kafka." + ChannelNamespace + "." + ChannelName + "." + Subscription1UUID,
@@ -683,9 +669,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: receiver.Path(ChannelNamespace, ChannelName),
-								},
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
 								ConsumerGroup: "kafka." + ChannelNamespace + "." + ChannelName + "." + Subscription1UUID,
@@ -963,9 +947,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: receiver.Path(ChannelNamespace, ChannelName),
-								},
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1047,9 +1029,7 @@ func TestReconcileKind(t *testing.T) {
 								},
 							},
 							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: receiver.Path(ChannelNamespace, ChannelName),
-								},
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
 								ConsumerGroup: "kafka." + ChannelNamespace + "." + ChannelName + "." + Subscription1UUID,
@@ -1121,9 +1101,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: receiver.Path(ChannelNamespace, ChannelName),
-								},
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1191,9 +1169,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								IngressType: &contract.Ingress_Path{
-									Path: receiver.Path(ChannelNamespace, ChannelName),
-								},
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
