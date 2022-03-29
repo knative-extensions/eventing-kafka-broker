@@ -91,7 +91,6 @@ func (d *kafkaChannelPostMigrationDeleter) Delete(ctx context.Context) error {
 	}
 
 	// Delete configmap/config-leader-election-kafkachannel
-	// Delete clusterrole/kafka-ch-dispatcher
 	const kafkaChannelLeaderElectionConfigmap = "config-leader-election-kafkachannel"
 	err = d.k8s.
 		CoreV1().
@@ -101,11 +100,15 @@ func (d *kafkaChannelPostMigrationDeleter) Delete(ctx context.Context) error {
 		return fmt.Errorf("failed to delete Configmap %s: %w", kafkaChannelLeaderElectionConfigmap, err)
 	}
 
-	// TODO: DO NOT delete configmap/config-kafka
-
-	// TODO: leases need some work!
-	// --- This needs to be deleted
-	// kafkachannel-dispatcher.knative.dev.eventing-kafka.pkg.channel.consolidated.reconciler.dispatcher.reconciler.00-of-01
+	// Delete lease/kafkachannel-dispatcher.knative.dev.eventing-kafka.pkg.channel.consolidated.reconciler.dispatcher.reconciler.00-of-01
+	const kafkaChannelDispatcherLease = "kafkachannel-dispatcher.knative.dev.eventing-kafka.pkg.channel.consolidated.reconciler.dispatcher.reconciler.00-of-01"
+	err = d.k8s.
+		CoordinationV1().
+		Leases(system.Namespace()).
+		Delete(ctx, kafkaChannelDispatcherLease, metav1.DeleteOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete Lease %s: %w", kafkaChannelDispatcherLease, err)
+	}
 
 	return nil
 }
