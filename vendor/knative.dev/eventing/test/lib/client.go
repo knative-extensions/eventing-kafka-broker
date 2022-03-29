@@ -21,9 +21,12 @@ package lib
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 
+	"k8s.io/apimachinery/pkg/runtime"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/system"
 
@@ -38,6 +41,7 @@ import (
 	configtracing "knative.dev/pkg/tracing/config"
 
 	eventing "knative.dev/eventing/pkg/client/clientset/versioned"
+	"knative.dev/eventing/test/lib/duck"
 	ti "knative.dev/eventing/test/test_images"
 )
 
@@ -65,11 +69,11 @@ type Client struct {
 
 // NewClient instantiates and returns several clientsets required for making request to the
 // cluster specified by the combination of clusterName and configPath.
-func NewClient(configPath string, clusterName string, namespace string, t *testing.T) (*Client, error) {
+func NewClient(namespace string, t *testing.T) (*Client, error) {
 	var err error
 
 	client := &Client{}
-	client.Config, err = test.BuildClientConfig(configPath, clusterName)
+	client.Config, err = test.Flags.GetRESTConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -137,6 +141,24 @@ func (c *Client) runCleanup() (err error) {
 
 	c.cleanup()
 	return nil
+}
+
+func (c *Client) dumpResources() {
+	for _, metaResource := range c.Tracker.resourcesToCheckStatus {
+		obj, err := duck.GetGenericObject(c.Dynamic, &metaResource, getGenericResource(metaResource.TypeMeta))
+		if err != nil {
+			c.T.Logf("Failed to get generic object %s/%s: %v", metaResource.GetNamespace(), metaResource.GetName(), err)
+		}
+		b, _ := json.MarshalIndent(obj, "", " ")
+		c.T.Logf("Resource %s/%s %v:\n%s\n", metaResource.GetNamespace(), metaResource.GetName(), obj.GetObjectKind(), string(b))
+	}
+}
+
+func getGenericResource(tm metav1.TypeMeta) runtime.Object {
+	if tm.APIVersion == "v1" && tm.Kind == "Pod" {
+		return &corev1.Pod{}
+	}
+	return &duckv1.KResource{}
 }
 
 func getTracingConfig(c kubernetes.Interface) (corev1.EnvVar, error) {

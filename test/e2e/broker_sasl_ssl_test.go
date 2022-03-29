@@ -38,7 +38,7 @@ import (
 	"knative.dev/eventing/test/lib/sender"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	. "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
