@@ -22,6 +22,7 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.rw.CloudEventRWException;
 import io.vertx.circuitbreaker.CircuitBreaker;
+import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.Objects;
+import java.util.function.Function;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -43,19 +45,30 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   private final CircuitBreaker circuitBreaker;
   private final String target;
 
+  private final Promise<Void> closePromise = Promise.promise();
+  private final CircuitBreakerOptions circuitBreakerOptions;
+
+  private boolean closed;
+  private int inFlightRequests = 0;
+
   /**
    * All args constructor.
    *
-   * @param client         http client.
-   * @param circuitBreaker circuit breaker
-   * @param target         subscriber URI
+   * @param client                http client.
+   * @param circuitBreaker        circuit breaker
+   * @param circuitBreakerOptions circuit breaker options.
+   * @param target                subscriber URI
    */
-  public WebClientCloudEventSender(final WebClient client, final CircuitBreaker circuitBreaker, final String target) {
+  public WebClientCloudEventSender(final WebClient client,
+                                   final CircuitBreaker circuitBreaker,
+                                   final CircuitBreakerOptions circuitBreakerOptions,
+                                   final String target) {
+    this.circuitBreakerOptions = circuitBreakerOptions;
     Objects.requireNonNull(client, "provide client");
     if (target == null || target.equals("")) {
       throw new IllegalArgumentException("provide a target");
     }
-    if (!URI.create(target).isAbsolute()){
+    if (!URI.create(target).isAbsolute()) {
       throw new IllegalArgumentException("provide a valid target, provided target: " + target);
     }
     Objects.requireNonNull(circuitBreaker, "provide circuitBreaker");
@@ -67,13 +80,23 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
   @Override
   public Future<HttpResponse<Buffer>> send(CloudEvent event) {
-    logger.debug("Sending event {} {}", keyValue("id", event.getId()), keyValue("subscriberURI", target));
+    logger.debug("Sending event {} {}",
+      keyValue("id", event.getId()),
+      keyValue("subscriberURI", target)
+    );
 
     TracingSpan.decorateCurrentWithEvent(event);
 
     return circuitBreaker.execute(breaker -> {
+      if (closed) {
+        breaker.tryFail("Sender for target " + target + " closed");
+        return;
+      }
+
       try {
-        send(event, breaker);
+        requestEmitted();
+        send(event, breaker).
+          onComplete(v -> requestCompleted());
       } catch (CloudEventRWException e) {
         logger.error("failed to write event to the request {}", keyValue("subscriberURI", target), e);
         breaker.tryFail(e);
@@ -81,9 +104,22 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     });
   }
 
-  private void send(final CloudEvent event, final Promise<HttpResponse<Buffer>> breaker) {
-    VertxMessageFactory
-      .createWriter(client.postAbs(target).putHeader("Prefer", "reply"))
+  private void requestCompleted() {
+    inFlightRequests--;
+    if (closed && inFlightRequests == 0) {
+      closePromise.tryComplete(null);
+    }
+  }
+
+  private void requestEmitted() {
+    inFlightRequests++;
+  }
+
+  private Future<?> send(final CloudEvent event, final Promise<HttpResponse<Buffer>> breaker) {
+    return VertxMessageFactory
+      .createWriter(client.postAbs(target)
+        .timeout(this.circuitBreakerOptions.getTimeout())
+        .putHeader("Prefer", "reply"))
       .writeBinary(event)
       .onFailure(ex -> {
         logError(event, ex);
@@ -137,9 +173,28 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
   @Override
   public Future<Void> close() {
-    this.circuitBreaker.close();
-    this.client.close();
-    return Future.succeededFuture();
+    this.closed = true;
+
+    logger.info("Close {} {}",
+      keyValue("target", target),
+      keyValue("inFlightRequests", inFlightRequests)
+    );
+
+    if (inFlightRequests == 0) {
+      closePromise.tryComplete(null);
+    }
+
+    final Function<Void, Future<Void>> closeF = v -> {
+      this.circuitBreaker.close();
+      this.client.close();
+      return Future.succeededFuture();
+    };
+
+    return closePromise.future()
+      .compose(
+        v -> closeF.apply(null),
+        v -> closeF.apply(null)
+      );
   }
 
   static boolean isRetryableStatusCode(final int statusCode) {
