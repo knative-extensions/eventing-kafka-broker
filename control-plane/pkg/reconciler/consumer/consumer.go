@@ -144,7 +144,9 @@ func (r Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainterna
 			return nil, err
 		}
 	}
-	c.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(egressConfig.DeadLetter)
+	if egressConfig != nil {
+		c.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(egressConfig.DeadLetter)
+	}
 
 	egress := &contract.Egress{
 		ConsumerGroup: c.Spec.Configs.Configs["group.id"],

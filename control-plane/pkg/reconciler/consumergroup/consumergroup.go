@@ -23,12 +23,16 @@ import (
 	"math"
 	"sort"
 
+	"github.com/Shopify/sarama"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apiserver/pkg/storage/names"
+	"k8s.io/client-go/kubernetes"
+	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/utils/pointer"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/reconciler"
 
@@ -38,6 +42,7 @@ import (
 	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )
 
 var (
@@ -51,13 +56,28 @@ type Reconciler struct {
 	SchedulerFunc   schedulerFunc
 	ConsumerLister  kafkainternalslisters.ConsumerLister
 	InternalsClient internalv1alpha1.InternalV1alpha1Interface
+	SecretLister    corelisters.SecretLister
+	KubeClient      kubernetes.Interface
 
 	NameGenerator names.NameGenerator
+
+	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
+	// mock the function used during the reconciliation loop.
+	NewKafkaClient kafka.NewClientFunc
+
+	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
+	// It's convenient to add this as Reconciler field so that we can mock the function used during the
+	// reconciliation loop.
+	InitOffsetsFunc kafka.InitOffsetsFunc
 
 	SystemNamespace string
 }
 
 func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
+	if err := r.reconcileInitialOffset(ctx, cg); err != nil {
+		return cg.MarkInitializeOffsetFailed("InitializeOffset", err)
+	}
+
 	if err := r.schedule(cg); err != nil {
 		return err
 	}
@@ -289,6 +309,41 @@ func (r Reconciler) propagateStatus(cg *kafkainternals.ConsumerGroup) error {
 		}
 	}
 	cg.Status.Replicas = pointer.Int32(count)
+
+	return nil
+}
+
+func (r Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+	if cg.Spec.Template.Spec.Delivery == nil || cg.Spec.Template.Spec.Delivery.InitialOffset == sources.OffsetEarliest {
+		return nil
+	}
+
+	options, err := r.newAuthConfigOption(ctx, cg)
+	if err != nil {
+		return fmt.Errorf("failed to create config options for Kafka cluster auth: %w", err)
+	}
+
+	saramaConfig, err := kafka.GetSaramaConfig(options)
+	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
+
+	kafkaClient, err := r.NewKafkaClient(bootstrapServers, saramaConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create Kafka cluster client: %w", err)
+	}
+	defer kafkaClient.Close()
+
+	kafkaAdminClient, err := sarama.NewClusterAdminFromClient(kafkaClient)
+	if err != nil {
+		return fmt.Errorf("failed to create Kafka cluster admin client: %w", err)
+	}
+	defer kafkaAdminClient.Close()
+
+	groupId := cg.Spec.Template.Spec.Configs.Configs["group.id"]
+	topics := cg.Spec.Template.Spec.Topics
+
+	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaAdminClient, topics, groupId); err != nil {
+		return fmt.Errorf("failed to initialize offset: %w", err)
+	}
 
 	return nil
 }

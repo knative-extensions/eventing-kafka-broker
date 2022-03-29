@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 )
 
 func TestConsumerSetDefaults(t *testing.T) {
@@ -37,7 +38,7 @@ func TestConsumerSetDefaults(t *testing.T) {
 				Spec: ConsumerSpec{Delivery: &DeliverySpec{}},
 			},
 			want: &Consumer{
-				Spec: ConsumerSpec{Delivery: &DeliverySpec{}},
+				Spec: ConsumerSpec{Delivery: &DeliverySpec{InitialOffset: sources.OffsetLatest}},
 			},
 		},
 	}

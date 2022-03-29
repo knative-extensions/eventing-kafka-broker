@@ -28,6 +28,7 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/node/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"

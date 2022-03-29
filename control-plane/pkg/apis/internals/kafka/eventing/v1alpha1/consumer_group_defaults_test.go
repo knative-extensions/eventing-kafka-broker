@@ -23,6 +23,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 )
 
 func TestConsumerGroupSetDefaults(t *testing.T) {
@@ -58,6 +59,11 @@ func TestConsumerGroupSetDefaults(t *testing.T) {
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: "ns",
 						},
+						Spec: ConsumerSpec{
+							Delivery: &DeliverySpec{
+								InitialOffset: sources.OffsetLatest,
+							},
+						},
 					},
 					Replicas: pointer.Int32Ptr(1),
 				},
@@ -92,6 +98,11 @@ func TestConsumerGroupSetDefaults(t *testing.T) {
 							Namespace: "ns",
 							Labels:    map[string]string{"app": "app"},
 						},
+						Spec: ConsumerSpec{
+							Delivery: &DeliverySpec{
+								InitialOffset: sources.OffsetLatest,
+							},
+						},
 					},
 					Replicas: pointer.Int32Ptr(1),
 					Selector: map[string]string{"app": "app"},
@@ -119,6 +130,11 @@ func TestConsumerGroupSetDefaults(t *testing.T) {
 					Template: ConsumerTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: "ns",
+						},
+						Spec: ConsumerSpec{
+							Delivery: &DeliverySpec{
+								InitialOffset: sources.OffsetLatest,
+							},
 						},
 					},
 					Replicas: pointer.Int32Ptr(1),
