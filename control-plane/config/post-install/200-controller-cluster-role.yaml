@@ -101,6 +101,7 @@ rules:
     resourceNames:
       - kafka-channel-dispatcher
       - kafka-channel-receiver
+      - kafka-controller
     verbs:
       - get
 
