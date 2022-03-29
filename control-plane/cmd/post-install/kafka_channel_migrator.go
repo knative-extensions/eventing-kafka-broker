@@ -48,8 +48,8 @@ type kafkaChannelMigrator struct {
 }
 
 const (
-	DataPlaneReadinessCheckInterval = 1 * time.Second
-	DataPlaneReadinessCheckTimeout  = 2 * time.Minute
+	DataPlaneReadinessCheckInterval = 10 * time.Second
+	DataPlaneReadinessCheckTimeout  = 10 * time.Minute
 
 	NewChannelDispatcherDeploymentName = "kafka-channel-dispatcher"
 	NewChannelReceiverDeploymentName   = "kafka-channel-receiver"
@@ -80,7 +80,7 @@ func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
 		return err
 	}
 
-	err = m.migrateConfigmap(ctx, err, logger)
+	err = m.migrateConfigmap(ctx, logger)
 	if err != nil {
 		return err
 	}
@@ -141,8 +141,8 @@ func (m *kafkaChannelMigrator) migrateChannelServices(ctx context.Context, logge
 				Services(svc.Namespace).
 				Patch(ctx, svc.Name, types.JSONPatchType, patch, metav1.PatchOptions{})
 			if err != nil {
-				// just log and continue with other services
-				logger.Errorf("error while patching KafkaChannel service %s/%s: %w", svc.Namespace, svc.Name, err)
+				// return error to crash so that the job can retry
+				return fmt.Errorf("error while patching KafkaChannel service %s/%s: %w", svc.Namespace, svc.Name, err)
 			}
 		}
 		cont = kafkaChannelServiceList.Continue
@@ -151,7 +151,7 @@ func (m *kafkaChannelMigrator) migrateChannelServices(ctx context.Context, logge
 	return nil
 }
 
-func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, err error, logger *zap.SugaredLogger) error {
+func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, logger *zap.SugaredLogger) error {
 	// consolidated configmap looks like this:
 	//
 	// apiVersion: v1
@@ -195,14 +195,14 @@ func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, err error, 
 	oldcm, err := m.k8s.CoreV1().
 		ConfigMaps(system.Namespace()).
 		Get(ctx, OldConfigmapName, metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		// configmap will be missing if we did the migration already
-		return fmt.Errorf("failed to get consolidated channel configmap for migration %s: %w", OldConfigmapName, err)
-	}
-
-	if len(oldcm.Data) == 0 {
+	if apierrors.IsNotFound(err) || len(oldcm.Data) == 0 {
 		logger.Infof("Old configmap %s is either missing or empty. Skipping the configmap migration", OldConfigmapName)
 		return nil
+	}
+
+	if err != nil {
+		// there's some other problem
+		return fmt.Errorf("failed to get consolidated channel configmap for migration %s: %w", OldConfigmapName, err)
 	}
 
 	oldconfig, err := getEventingKafkaConfig(oldcm.Data)
@@ -216,13 +216,11 @@ func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, err error, 
 		newConfigmapName = NewConfigmapNameDefault
 	}
 
-	patches := []string{}
-
-	patches = append(patches,
+	patches := []string{
 		fmt.Sprintf(`{"op":"replace", "path": "/data/bootstrap.servers", "value": "%s"}`, oldconfig.Kafka.Brokers),
 		fmt.Sprintf(`{"op":"replace", "path": "/data/auth.secret.ref.namespace", "value": "%s"}`, oldconfig.Kafka.AuthSecretNamespace),
 		fmt.Sprintf(`{"op":"replace", "path": "/data/auth.secret.ref.name", "value": "%s"}`, oldconfig.Kafka.AuthSecretName),
-	)
+	}
 
 	logger.Infof("Patching configmap %s with patch %s", newConfigmapName, patches)
 
@@ -270,7 +268,8 @@ func (m *kafkaChannelMigrator) isDeploymentReady(ctx context.Context, namespace,
 	if apierrors.IsNotFound(err) {
 		// Return false as we are not done yet.
 		// We swallow the error to keep on polling.
-		// It should only happen if we wait for the auto-created resources, like default Broker.
+		// It should only happen if we wait for the auto-created resources, like default Broker,
+		// or if the KafkaChannel wasn't installed previously.
 		return false, nil
 	} else if err != nil {
 		// Return error to stop the polling.
