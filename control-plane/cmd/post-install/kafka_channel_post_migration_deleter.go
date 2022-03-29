@@ -19,11 +19,21 @@ package main
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"knative.dev/pkg/logging"
+	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"knative.dev/pkg/system"
+)
+
+const (
+	ControlPlaneReadinessCheckInterval = 10 * time.Second
+	ControlPlaneReadinessCheckTimeout  = 10 * time.Minute
+
+	NewControllerDeploymentName = "kafka-controller"
 )
 
 type kafkaChannelPostMigrationDeleter struct {
@@ -35,6 +45,18 @@ func (d *kafkaChannelPostMigrationDeleter) Delete(ctx context.Context) error {
 	// - we deleted the old controler
 	// - we made the existing channel services to point to new data plane pods
 	// - we can now delete the old dispatcher resources and all the other leftovers
+	// HOWEVER, we need to check if the new controller is up and running.
+
+	logger := logging.FromContext(ctx)
+	logger.Infof("Waiting %s for the new control plane to become ready before the migration.", ControlPlaneReadinessCheckTimeout)
+
+	// wait until the new control plane is ready
+	err := d.waitForNewControlPlaneReady(ctx)
+	if err != nil {
+		return fmt.Errorf("error while waiting the new control plane to become ready %w", err)
+	}
+
+	logger.Infof("New control plane is ready, progressing with the migration")
 
 	///////////////////////////////////////////////////////////////////////////////
 	/////////// START DELETING DISPATCHER RESOURCES
@@ -42,7 +64,7 @@ func (d *kafkaChannelPostMigrationDeleter) Delete(ctx context.Context) error {
 
 	// Delete service knative-eventing/kafka-ch-dispatcher
 	const dispatcherServiceName = "kafka-ch-dispatcher"
-	err := d.k8s.
+	err = d.k8s.
 		CoreV1().
 		Services(system.Namespace()).
 		Delete(ctx, dispatcherServiceName, metav1.DeleteOptions{})
@@ -111,4 +133,10 @@ func (d *kafkaChannelPostMigrationDeleter) Delete(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (d *kafkaChannelPostMigrationDeleter) waitForNewControlPlaneReady(ctx context.Context) error {
+	return wait.PollImmediate(ControlPlaneReadinessCheckInterval, ControlPlaneReadinessCheckTimeout, func() (bool, error) {
+		return isDeploymentReady(ctx, d.k8s, system.Namespace(), NewControllerDeploymentName)
+	})
 }

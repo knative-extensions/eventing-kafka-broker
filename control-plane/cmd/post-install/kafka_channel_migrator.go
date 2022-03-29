@@ -248,7 +248,7 @@ func getEventingKafkaConfig(configMap map[string]string) (*config.EventingKafkaC
 
 func (m *kafkaChannelMigrator) waitForNewDataPlaneReady(ctx context.Context) error {
 	return wait.PollImmediate(DataPlaneReadinessCheckInterval, DataPlaneReadinessCheckTimeout, func() (bool, error) {
-		ready, err := m.isDeploymentReady(ctx, system.Namespace(), NewChannelDispatcherDeploymentName)
+		ready, err := isDeploymentReady(ctx, m.k8s, system.Namespace(), NewChannelDispatcherDeploymentName)
 		if err != nil {
 			return false, err
 		}
@@ -256,28 +256,8 @@ func (m *kafkaChannelMigrator) waitForNewDataPlaneReady(ctx context.Context) err
 			return false, nil
 		}
 
-		return m.isDeploymentReady(ctx, system.Namespace(), NewChannelReceiverDeploymentName)
+		return isDeploymentReady(ctx, m.k8s, system.Namespace(), NewChannelReceiverDeploymentName)
 	})
-}
-
-func (m *kafkaChannelMigrator) isDeploymentReady(ctx context.Context, namespace, name string) (bool, error) {
-	deployment, err := m.k8s.
-		AppsV1().
-		Deployments(namespace).
-		Get(ctx, name, metav1.GetOptions{})
-	if apierrors.IsNotFound(err) {
-		// Return false as we are not done yet.
-		// We swallow the error to keep on polling.
-		// It should only happen if we wait for the auto-created resources, like default Broker,
-		// or if the KafkaChannel wasn't installed previously.
-		return false, nil
-	} else if err != nil {
-		// Return error to stop the polling.
-		return false, err
-	}
-
-	ready := GetDeploymentCondition(deployment.Status, appsv1.DeploymentAvailable)
-	return ready != nil && ready.Status == corev1.ConditionTrue, nil
 }
 
 func GetDeploymentCondition(status appsv1.DeploymentStatus, t appsv1.DeploymentConditionType) *appsv1.DeploymentCondition {
