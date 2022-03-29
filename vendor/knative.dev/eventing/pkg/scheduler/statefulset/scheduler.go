@@ -422,6 +422,10 @@ func (s *StatefulSetScheduler) findFeasiblePods(ctx context.Context, state *st.S
 		status := statusMap.Merge()
 		if status.IsSuccess() {
 			feasiblePods = append(feasiblePods, podId)
+		} else {
+			s.logger.Info("Unfeasible pod",
+				zap.Int32("podId", podId),
+				zap.String("msg", status.Message()))
 		}
 	}
 
@@ -508,7 +512,8 @@ func (s *StatefulSetScheduler) selectPod(podScoreList st.PodScoreList) (int32, e
 // If any of these plugins doesn't return "Success", the pod is not suitable for placing the vrep.
 // Meanwhile, the failure message and status are set for the given pod.
 func (s *StatefulSetScheduler) RunFilterPlugins(ctx context.Context, states *st.State, vpod scheduler.VPod, podID int32, policy *scheduler.SchedulerPolicy) st.PluginToStatus {
-	logger := s.logger.Named("run all filter plugins")
+	logger := s.logger.Named("run all filter plugins").
+		With("podId", podID)
 
 	statuses := make(st.PluginToStatus)
 	for _, plugin := range policy.Predicates {

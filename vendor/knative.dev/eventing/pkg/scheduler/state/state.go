@@ -214,17 +214,19 @@ func (s *stateBuilder) State(reserved map[types.NamespacedName]map[string]int32)
 		}
 
 		taints := node.Spec.Taints
-		if contains(taints, noexec) || contains(taints, nosched) {
+		if contains(taints, noexec) || contains(taints, nosched) || !isWorkerNode(node) {
 			continue //ignore node that is currently unschedulable
 		}
 
 		zoneName, ok := node.GetLabels()[scheduler.ZoneLabel]
-		if !ok {
-			continue //ignore node that doesn't have zone info (maybe a test setup or control node)
+		if ok {
+			nodeToZoneMap[node.Name] = zoneName
+			zoneMap[zoneName] = struct{}{}
+		} else {
+			nodeToZoneMap[node.Name] = "unknown"
+			zoneMap["unknown"] = struct{}{}
 		}
 
-		nodeToZoneMap[node.Name] = zoneName
-		zoneMap[zoneName] = struct{}{}
 	}
 
 	for podId := int32(0); podId < scale.Spec.Replicas && s.podLister != nil; podId++ {
@@ -247,11 +249,9 @@ func (s *stateBuilder) State(reserved map[types.NamespacedName]map[string]int32)
 				return nil, err
 			}
 
-			_, okZone := node.GetLabels()[scheduler.ZoneLabel] //Node has no zone info (maybe zone is down or a control node) - CANNOT SCHEDULE VREPS on a pod running on this node
-
 			taints := node.Spec.Taints
 
-			if (!ok || !unschedulable) && !node.Spec.Unschedulable && okZone && !contains(taints, noexec) && !contains(taints, nosched) { //Pod has no annotation or not annotated as unschedulable and not on an unschedulable node, so add to feasible
+			if (!ok || !unschedulable) && !node.Spec.Unschedulable && isWorkerNode(node) && !contains(taints, noexec) && !contains(taints, nosched) { //Pod has no annotation or not annotated as unschedulable and not on an unschedulable node, so add to feasible
 				schedulablePods = append(schedulablePods, podId)
 			}
 		}
@@ -325,6 +325,13 @@ func (s *stateBuilder) State(reserved map[types.NamespacedName]map[string]int32)
 	return &State{FreeCap: free, SchedulablePods: schedulablePods, LastOrdinal: last, Capacity: s.capacity, Replicas: scale.Spec.Replicas, NumZones: int32(len(zoneMap)), NumNodes: int32(len(nodeToZoneMap)),
 		SchedulerPolicy: s.schedulerPolicy, SchedPolicy: s.schedPolicy, DeschedPolicy: s.deschedPolicy, NodeToZoneMap: nodeToZoneMap, StatefulSetName: s.statefulSetName, PodLister: s.podLister,
 		PodSpread: podSpread, NodeSpread: nodeSpread, ZoneSpread: zoneSpread}, nil
+}
+
+func isWorkerNode(node *v1.Node) bool {
+	labels := node.GetLabels()
+	_, m := labels["node-role.kubernetes.io/master"]
+	_, cp := labels["node-role.kubernetes.io/control-plane"]
+	return !m && !cp
 }
 
 func (s *stateBuilder) updateFreeCapacity(free []int32, last int32, podName string, vreplicas int32) ([]int32, int32) {

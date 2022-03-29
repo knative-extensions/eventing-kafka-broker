@@ -133,7 +133,8 @@ func (a *autoscaler) doautoscale(ctx context.Context, attemptScaleDown bool, pen
 	a.logger.Infow("checking adapter capacity",
 		zap.Int32("pending", pending),
 		zap.Int32("replicas", scale.Spec.Replicas),
-		zap.Int32("last ordinal", state.LastOrdinal))
+		zap.Int32("last ordinal", state.LastOrdinal),
+		zap.Any("schedulablePods", state.SchedulablePods))
 
 	var scaleUpFactor, newreplicas, minNumPods int32
 	scaleUpFactor = 1                                                                                         // Non-HA scaling
@@ -167,6 +168,11 @@ func (a *autoscaler) doautoscale(ctx context.Context, attemptScaleDown bool, pen
 	if !attemptScaleDown && newreplicas < scale.Spec.Replicas {
 		newreplicas = scale.Spec.Replicas
 	}
+
+	a.logger.Infow("Updating replicas",
+		zap.Int32("replicas", newreplicas),
+		zap.Int32("minNumPods", minNumPods),
+		zap.Int32("scaleUpFactor", scaleUpFactor))
 
 	if newreplicas != scale.Spec.Replicas {
 		scale.Spec.Replicas = newreplicas
