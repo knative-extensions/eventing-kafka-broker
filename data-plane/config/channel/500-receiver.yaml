@@ -33,10 +33,14 @@ spec:
         app: kafka-channel-receiver
         kafka.eventing.knative.dev/release: devel
     spec:
-      serviceAccountName: knative-kafka-channel-data-plane
-      securityContext:
-        runAsNonRoot: true
-      # To avoid node becoming SPOF, spread our replicas to different nodes.
+      # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
+      topologySpreadConstraints:
+        - maxSkew: 2
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: kafka-channel-receiver
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -46,6 +50,9 @@ spec:
                     app: kafka-channel-receiver
                 topologyKey: kubernetes.io/hostname
               weight: 100
+      serviceAccountName: knative-kafka-channel-data-plane
+      securityContext:
+        runAsNonRoot: true
       containers:
         - name: kafka-channel-receiver
           image: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
