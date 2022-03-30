@@ -54,7 +54,7 @@ const (
 	NewChannelDispatcherDeploymentName = "kafka-channel-dispatcher"
 	NewChannelReceiverDeploymentName   = "kafka-channel-receiver"
 
-	NewChannelDispatcherServiceName = "kafka-channel-dispatcher"
+	NewChannelDispatcherServiceName = "kafka-channel-ingress"
 
 	OldConfigmapName = "config-kafka"
 
