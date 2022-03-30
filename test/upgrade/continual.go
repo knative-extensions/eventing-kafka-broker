@@ -26,7 +26,7 @@ import (
 // ContinualTests returns all continual tests.
 func ContinualTests() []pkgupgrade.BackgroundOperation {
 	c := BrokerContinualTests()
-	//c = append(c, ChannelContinualTests()...)
+	c = append(c, ChannelContinualTests()...)
 	c = append(c, SinkContinualTests()...)
 	return c
 }
