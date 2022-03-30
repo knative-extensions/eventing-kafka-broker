@@ -34,6 +34,7 @@ import (
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
+	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -52,6 +53,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.IngressConditionSet)
 
 	configmapInformer := configmapinformer.Get(ctx)
+	serviceInformer := serviceinformer.Get(ctx)
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
@@ -70,6 +72,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		InitOffsetsFunc:            offset.InitOffsets,
 		Env:                        configs,
 		ConfigMapLister:            configmapInformer.Lister(),
+		ServiceLister:              serviceInformer.Lister(),
 	}
 
 	logger := logging.FromContext(ctx)
@@ -95,6 +98,11 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	globalResync := func(_ interface{}) {
 		impl.GlobalResync(channelInformer.Informer())
 	}
+
+	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterController(&messagingv1beta.KafkaChannel{}),
+		Handler:    controller.HandleAll(globalResync),
+	})
 
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),

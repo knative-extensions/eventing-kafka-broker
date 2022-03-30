@@ -74,7 +74,7 @@ var DefaultEnv = &config.Env{
 	DataPlaneConfigMapNamespace: "knative-eventing",
 	DataPlaneConfigMapName:      "kafka-channel-channels-subscriptions",
 	GeneralConfigMapName:        "kafka-channel-config",
-	IngressName:                 "kafka-channel-ingress",
+	IngressName:                 "kafka-channel-dispatcher",
 	SystemNamespace:             "knative-eventing",
 	DataPlaneConfigFormat:       base.Json,
 }
@@ -189,6 +189,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
 				NewConfigMapWithBinaryData(&env, nil),
+				NewPerChannelService(DefaultEnv),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -221,6 +222,7 @@ func TestReconcileKind(t *testing.T) {
 					}),
 				),
 				NewService(),
+				NewPerChannelService(DefaultEnv),
 				ChannelReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -505,6 +507,7 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
 				NewService(),
+				NewPerChannelService(DefaultEnv),
 				ChannelReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -578,6 +581,7 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewChannel(WithSubscribers(Subscriber1(WithUnreadySubscriber))),
 				NewService(),
+				NewPerChannelService(DefaultEnv),
 				ChannelReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -651,6 +655,7 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewChannel(WithSubscribers(Subscriber1())),
 				NewService(),
+				NewPerChannelService(DefaultEnv),
 				ChannelReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -727,6 +732,7 @@ func TestReconcileKind(t *testing.T) {
 					WithSubscribers(Subscriber2(WithFreshSubscriber)),
 				),
 				NewService(),
+				NewPerChannelService(DefaultEnv),
 				ChannelReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -1002,6 +1008,7 @@ func TestReconcileKind(t *testing.T) {
 					WithRetentionDuration("1000"),
 				),
 				NewService(),
+				NewPerChannelService(DefaultEnv),
 				ChannelReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -1076,6 +1083,7 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
 				NewService(),
+				NewPerChannelService(DefaultEnv),
 				ChannelReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -1160,6 +1168,7 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewChannel(),
 				NewService(),
+				NewPerChannelService(DefaultEnv),
 				ChannelReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -1227,6 +1236,7 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewChannel(),
 				NewService(),
+				NewPerChannelService(DefaultEnv),
 				ChannelReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -1371,6 +1381,7 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 			},
 			Env:             env,
 			ConfigMapLister: listers.GetConfigMapLister(),
+			ServiceLister:   listers.GetServiceLister(),
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
 			},

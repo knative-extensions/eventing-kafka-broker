@@ -17,7 +17,6 @@
 package consumergroup
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -87,10 +86,10 @@ func TestNewController(t *testing.T) {
 		},
 	)
 
-	os.Setenv("AUTOSCALER_REFRESH_PERIOD", RefreshPeriod)
-	os.Setenv("POD_CAPACITY", PodCapacity)
-	os.Setenv("SCHEDULER_CONFIG", ConfigKafkaSchedulerName)
-	os.Setenv("DESCHEDULER_CONFIG", ConfigKafkaDeSchedulerName)
+	t.Setenv("AUTOSCALER_REFRESH_PERIOD", RefreshPeriod)
+	t.Setenv("POD_CAPACITY", PodCapacity)
+	t.Setenv("SCHEDULER_CONFIG", ConfigKafkaSchedulerName)
+	t.Setenv("DESCHEDULER_CONFIG", ConfigKafkaDeSchedulerName)
 	controller := NewController(ctx)
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
