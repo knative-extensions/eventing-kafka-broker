@@ -76,6 +76,15 @@ func NewChannel(options ...KRShapedOption) *messagingv1beta1.KafkaChannel {
 	return c
 }
 
+func NewDeletedChannel(options ...KRShapedOption) runtime.Object {
+	return NewChannel(
+		append(
+			options,
+			WithDeletedTimeStamp,
+		)...,
+	)
+}
+
 func WithNumPartitions(np int32) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ch := obj.(*messagingv1beta1.KafkaChannel)
