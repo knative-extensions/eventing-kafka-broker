@@ -59,9 +59,9 @@ import (
 
 const (
 	// TopicPrefix is the Kafka Channel topic prefix - (topic name: knative-messaging-kafka.<channel-namespace>.<channel-name>).
-	TopicPrefix                     = "knative-messaging-kafka"
-	DefaultDeliveryOrder            = contract.DeliveryOrder_ORDERED
-	NewChannelDispatcherServiceName = "kafka-channel-dispatcher"
+	TopicPrefix                  = "knative-messaging-kafka"
+	DefaultDeliveryOrder         = contract.DeliveryOrder_ORDERED
+	NewChannelIngressServiceName = "kafka-channel-dispatcher"
 )
 
 type Reconciler struct {
@@ -602,7 +602,7 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 }
 
 func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messagingv1beta1.KafkaChannel) error {
-	expected, err := resources.MakeK8sService(channel, resources.ExternalService(system.Namespace(), NewChannelDispatcherServiceName))
+	expected, err := resources.MakeK8sService(channel, resources.ExternalService(system.Namespace(), NewChannelIngressServiceName))
 	if err != nil {
 		return fmt.Errorf("failed to create the channel service object: %w", err)
 	}
