@@ -126,7 +126,7 @@ func (d *kafkaChannelPreMigrationDeleter) Delete(ctx context.Context) error {
 	}
 
 	// Delete secret/messaging-webhook-certs
-	const channelWebhookSecret = "messaging-webhook-certs"
+	const channelWebhookSecret = "messaging-webhook-certs" /* #nosec G101 */ /* Potential hardcoded credentials (gosec) */
 	err = d.k8s.
 		CoreV1().
 		Secrets(system.Namespace()).

@@ -19,11 +19,12 @@ package channel
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strconv"
-	"time"
 
 	"github.com/Shopify/sarama"
 
@@ -610,7 +611,7 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messa
 	svc, err := r.ServiceLister.Services(channel.Namespace).Get(resources.MakeChannelServiceName(channel.Name))
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			svc, err = r.KubeClient.CoreV1().Services(channel.Namespace).Create(ctx, expected, metav1.CreateOptions{})
+			_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Create(ctx, expected, metav1.CreateOptions{})
 			if err != nil {
 				return fmt.Errorf("failed to create the channel service object: %w", err)
 			}
@@ -621,7 +622,7 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messa
 		svc = svc.DeepCopy()
 		svc.Spec = expected.Spec
 
-		svc, err = r.KubeClient.CoreV1().Services(channel.Namespace).Update(ctx, svc, metav1.UpdateOptions{})
+		_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Update(ctx, svc, metav1.UpdateOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to update the channel service: %w", err)
 		}
