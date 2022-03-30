@@ -222,6 +222,7 @@ func TestReconcileKind(t *testing.T) {
 					}),
 				),
 				NewService(),
+				NewPerChannelService(DefaultEnv),
 				ChannelReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
