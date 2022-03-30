@@ -196,3 +196,10 @@ func SourceAsOwnerReference() metav1.OwnerReference {
 		BlockOwnerDeletion: pointer.Bool(true),
 	}
 }
+
+func SourceInitializeConditions() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.GetConditionSet().Manage(ks.GetStatus()).InitializeConditions()
+	}
+}

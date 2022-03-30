@@ -25,8 +25,6 @@ import (
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 
-	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
-
 	kafkainformer "knative.dev/eventing-kafka/pkg/client/injection/informers/sources/v1beta1/kafkasource"
 	"knative.dev/eventing-kafka/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
 
@@ -37,8 +35,6 @@ func NewController(ctx context.Context) *controller.Impl {
 
 	kafkaInformer := kafkainformer.Get(ctx)
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
-
-	sources.RegisterAlternateKafkaConditionSet(conditionSet)
 
 	r := &Reconciler{
 		ConsumerGroupLister: consumerGroupInformer.Lister(),

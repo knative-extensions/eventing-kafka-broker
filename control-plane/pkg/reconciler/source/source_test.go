@@ -218,7 +218,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewSource(
 						WithSourceSink(NewSourceSink2Reference()),
 						StatusSourceConsumerGroup(),
-						StatusSourceSinkResolved(""),
+						StatusSourceSinkResolved(ServiceURL),
 					),
 				},
 			},

@@ -44,6 +44,10 @@ const (
 	KafkaConditionConsumerGroup apis.ConditionType = "ConsumerGroup" //condition is registered by controller
 )
 
+func init() {
+	sources.RegisterAlternateKafkaConditionSet(conditionSet)
+}
+
 var (
 	conditionSet = apis.NewLivingConditionSet(
 		KafkaConditionConsumerGroup,

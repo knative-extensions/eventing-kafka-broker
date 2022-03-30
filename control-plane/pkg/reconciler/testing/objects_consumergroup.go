@@ -17,7 +17,6 @@
 package testing
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
@@ -106,11 +105,12 @@ func ConsumerGroupSubscriber(d duckv1.Destination) ConsumerGroupOption {
 }
 
 func ConsumerGroupReady(cg *kafkainternals.ConsumerGroup) {
-	cg.Status.Conditions = duckv1.Conditions{
-		{
-			Type:   apis.ConditionReady,
-			Status: corev1.ConditionTrue,
-		},
+	cg.InitializeConditions()
+	cg.MarkReconcileConsumersSucceeded()
+	cg.MarkScheduleSucceeded()
+	cg.Status.SubscriberURI = ConsumerSubscriberURI
+	if cg.HasDeadLetterSink() {
+		cg.Status.DeadLetterSinkURI = ConsumerDeadLetterSinkURI
 	}
 }
 
