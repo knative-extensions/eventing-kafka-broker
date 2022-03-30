@@ -32,6 +32,7 @@ import (
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/test/e2e"
+	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade"
 )
 
 // BrokerPostUpgradeTest tests channel operations after upgrade.
@@ -45,6 +46,11 @@ func BrokerPostUpgradeTest() pkgupgrade.Operation {
 			runBrokerSmokeTest(t)
 		})
 	})
+}
+
+// ChannelPostUpgradeTest tests channel operations after upgrade.
+func ChannelPostUpgradeTest() pkgupgrade.Operation {
+	return eventingkafkaupgrade.ChannelPostUpgradeTest()
 }
 
 // SinkPostUpgradeTest tests sink basic operations post upgrade.

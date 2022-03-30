@@ -21,13 +21,20 @@ import (
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/test/e2e"
+
+	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade"
 )
 
-// BrokerPreUpgradeTest tests channel operations before upgrade.
+// BrokerPreUpgradeTest tests broker basic operations before upgrade.
 func BrokerPreUpgradeTest() pkgupgrade.Operation {
 	return pkgupgrade.NewOperation("BrokerPreUpgradeTest", func(c pkgupgrade.Context) {
 		runBrokerSmokeTest(c.T)
 	})
+}
+
+// ChannelPreUpgradeTest tests channel basic operations before upgrade.
+func ChannelPreUpgradeTest() pkgupgrade.Operation {
+	return eventingkafkaupgrade.ChannelPreUpgradeTest()
 }
 
 // SinkPreUpgradeTest tests sink basic operations pre upgrade.
