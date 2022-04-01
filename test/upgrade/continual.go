@@ -44,10 +44,9 @@ func BrokerContinualTests() []pkgupgrade.BackgroundOperation {
 // functionality in continual manner during the whole upgrade and downgrade
 // process asserting that all events are propagated.
 func ChannelContinualTests() []pkgupgrade.BackgroundOperation {
-	// don't want to run the Broker-Backed-By-KafkaChannel tests,
-	// so, we don't call the test method directly
 	return []pkgupgrade.BackgroundOperation{
 		eventingkafkacontinual.ChannelTest(eventingkafkacontinual.ChannelTestOptions{}),
+		eventingkafkacontinual.BrokerBackedByChannelTest(eventingkafkacontinual.ChannelTestOptions{}),
 	}
 }
 
