@@ -529,8 +529,6 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 }
 
 func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
-	// TODO: do we want to support namespaced channels? they're not supported at the moment.
-
 	namespace := system.Namespace()
 	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(r.Env.GeneralConfigMapName)
 	if err != nil {

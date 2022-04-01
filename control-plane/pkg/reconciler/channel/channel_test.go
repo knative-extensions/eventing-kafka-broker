@@ -85,11 +85,12 @@ var DefaultEnv = &config.Env{
 // TODO: test if things from channel spec is used properly?
 // TODO: test if things from subscription spec is used properly?
 // TODO: rename test cases consistently
-// TODO: test finalize?
 // TODO: fix the order of status updates
 // TODO: add tests where there are no CM updates
 
 func TestReconcileKind(t *testing.T) {
+
+	t.Setenv("SYSTEM_NAMESPACE", "knative-eventing")
 
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.IngressConditionSet)
 
@@ -1342,6 +1343,71 @@ func TestReconcileKind(t *testing.T) {
 					"InternalError",
 					"failed to get broker and triggers data from config map knative-eventing/kafka-channel-channels-subscriptions: failed to unmarshal contract: 'corrupt'",
 				),
+			},
+		},
+	}
+
+	useTable(t, table, env)
+}
+
+func TestFinalizeKind(t *testing.T) {
+
+	t.Setenv("SYSTEM_NAMESPACE", "knative-eventing")
+
+	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.IngressConditionSet)
+
+	env := *DefaultEnv
+	testKey := fmt.Sprintf("%s/%s", ChannelNamespace, ChannelName)
+
+	table := TableTest{
+		{
+			Name: "Finalize normal - no auth",
+			Objects: []runtime.Object{
+				NewDeletedChannel(),
+				NewConfigMapFromContract(&contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
+							},
+						},
+					},
+				}, &env),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 2,
+					Resources:  []*contract.Resource{},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
 			},
 		},
 	}
