@@ -90,6 +90,8 @@ var DefaultEnv = &config.Env{
 
 func TestReconcileKind(t *testing.T) {
 
+	t.Setenv("SYSTEM_NAMESPACE", "knative-eventing")
+
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.IngressConditionSet)
 
 	env := *DefaultEnv
@@ -1349,6 +1351,8 @@ func TestReconcileKind(t *testing.T) {
 }
 
 func TestFinalizeKind(t *testing.T) {
+
+	t.Setenv("SYSTEM_NAMESPACE", "knative-eventing")
 
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.IngressConditionSet)
 
