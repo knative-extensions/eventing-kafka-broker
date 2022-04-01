@@ -24,9 +24,7 @@ data:
                   [
                     {"Name": "PodFitsResources"},
                     {"Name": "NoMaxResourceCount",
-                    "Args": "{\"NumPartitions\": 100}"},
-                    {"Name": "EvenPodSpread",
-                    "Args": "{\"MaxSkew\": 2}"}
+                    "Args": "{\"NumPartitions\": 100}"}
                   ]
     priorities: |+
                   [
@@ -34,5 +32,8 @@ data:
                     "Weight": 10,
                     "Args":  "{\"MaxSkew\": 2}"},
                     {"Name": "LowestOrdinalPriority",
-                    "Weight": 2}
+                    "Weight": 2},
+                    {"Name": "EvenPodSpread",
+                    "Weight": 2,
+                    "Args": "{\"MaxSkew\": 2}"}
                   ]
