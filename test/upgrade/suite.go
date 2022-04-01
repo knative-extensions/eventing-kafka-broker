@@ -38,7 +38,7 @@ func Suite() pkgupgrade.Suite {
 			},
 			PostDowngrade: []pkgupgrade.Operation{
 				BrokerPostDowngradeTest(),
-				//ChannelPostDowngradeTest(),
+				ChannelPostDowngradeTest(),
 				SinkPostDowngradeTest(),
 			},
 			Continual: ContinualTests(),
