@@ -127,11 +127,15 @@ function install_latest_release() {
 
   ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
 
+  oc get cm config-tracing -n knative-eventing -oyaml
+
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
+
+  oc get cm config-tracing -n knative-eventing -oyaml
 }
 
 function install_head() {
@@ -143,6 +147,8 @@ function install_head() {
   kubectl apply -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
+
+  oc get cm config-tracing -n knative-eventing -oyaml
 }
 
 function test_setup() {
