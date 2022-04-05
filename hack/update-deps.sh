@@ -23,20 +23,29 @@ source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 version=$(echo $@ | grep -o "\-\-release \S*" | awk '{print $2}' || echo "")
 upgrade=$(echo $@ | grep '\-\-upgrade' || echo "")
 
+function update_submodule() {
+  echo "Pulling branch main"
+  branch=${1}
+  git fetch origin "${branch}":"${branch}" || return $?
+  git checkout "origin/${branch}" || return $?
+}
+
 function update_eventing_submodule() {
   pushd $(dirname "$0")/../third_party/eventing
 
   if [ "${version}" = "" ] || [ "${version}" = "v9000.1" ]; then
     if [ "${upgrade}" != "" ]; then
-      git pull origin main || return $?
+      update_submodule "main" || return $?
     fi
   else
     major_minor=${version:1} # Remove 'v' prefix
-    git pull origin "release-$major_minor:release-$major_minor" || return $?
+    update_submodule "release-${major_minor}" || return $?
   fi
 
   popd
 }
+
+git submodule update --init --recursive
 
 update_eventing_submodule || exit $?
 
