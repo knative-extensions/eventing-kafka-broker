@@ -79,15 +79,6 @@ var DefaultEnv = &config.Env{
 	DataPlaneConfigFormat:       base.Json,
 }
 
-// TODO: compare with inmemorychannel_test.go at /Users/aliok/code/github.com/knative/eventing/pkg/reconciler/inmemorychannel/controller/inmemorychannel_test.go
-// TODO: compare with channel_test.go at /Users/aliok/code/github.com/knative/eventing/pkg/reconciler/channel/channel_test.go
-// TODO: are we setting a InitialOffsetsCommitted status? we gotta set it on the subscription. 1) can we do it? 2) does it make sense?
-// TODO: test if things from channel spec is used properly?
-// TODO: test if things from subscription spec is used properly?
-// TODO: rename test cases consistently
-// TODO: fix the order of status updates
-// TODO: add tests where there are no CM updates
-
 func TestReconcileKind(t *testing.T) {
 
 	t.Setenv("SYSTEM_NAMESPACE", "knative-eventing")
@@ -200,7 +191,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
-						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
 						StatusProbeSucceeded,
 					),
@@ -348,7 +338,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
-						//StatusInitialOffsetsCommitted,
 						StatusProbeFailed(prober.StatusNotReady),
 					),
 				},
@@ -417,7 +406,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
-						//StatusInitialOffsetsCommitted,
 						StatusProbeFailed(prober.StatusUnknown),
 					),
 				},
@@ -486,7 +474,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
-						//StatusInitialOffsetsCommitted,
 						WithSubscribers(Subscriber1(WithFreshSubscriber, WithNoSubscriberURI)),
 					),
 				},
@@ -563,7 +550,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
-						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
 						WithSubscribers(Subscriber1()),
 						StatusProbeSucceeded,
@@ -637,7 +623,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
-						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
 						WithSubscribers(Subscriber1()),
 						StatusProbeSucceeded,
@@ -711,7 +696,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
-						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
 						WithSubscribers(Subscriber1()),
 						StatusProbeSucceeded,
@@ -794,7 +778,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
-						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
 						WithSubscribers(Subscriber1(), Subscriber2()),
 						StatusProbeSucceeded,
@@ -1066,7 +1049,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
-						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
 						StatusProbeSucceeded,
 					),
@@ -1150,7 +1132,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
-						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
 						WithSubscribers(Subscriber1()),
 						StatusProbeSucceeded,
@@ -1219,7 +1200,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
-						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
 						StatusProbeSucceeded,
 					),
@@ -1285,7 +1265,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
-						//StatusInitialOffsetsCommitted,
 						ChannelAddressable(&env),
 						StatusProbeSucceeded,
 					),
