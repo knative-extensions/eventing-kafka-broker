@@ -422,7 +422,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   }
 
   private void recordHandlingCompleted(final ConsumerRecordContext recordContext) {
-    logDebug("Record handling completed", recordContext.getRecord());
+    logTrace("Record handling completed", recordContext.getRecord());
     inFlightEvents.decrementAndGet();
     if (closed.get() && inFlightEvents.get() == 0) {
       closePromise.tryComplete();
@@ -430,7 +430,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   }
 
   private void recordReceived(final ConsumerRecordContext recordContext) {
-    logDebug("Handling record", recordContext.getRecord());
+    logTrace("Handling record", recordContext.getRecord());
     inFlightEvents.incrementAndGet();
   }
 
