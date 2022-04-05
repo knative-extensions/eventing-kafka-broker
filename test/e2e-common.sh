@@ -136,6 +136,8 @@ function install_latest_release() {
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
 
   oc get cm config-tracing -n knative-eventing -oyaml
+  kubectl replace -f ./test/config/config-tracing.yaml
+  oc get cm config-tracing -n knative-eventing -oyaml
 }
 
 function install_head() {
@@ -148,6 +150,8 @@ function install_head() {
   kubectl apply -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 
+  oc get cm config-tracing -n knative-eventing -oyaml
+  kubectl replace -f ./test/config/config-tracing.yaml
   oc get cm config-tracing -n knative-eventing -oyaml
 }
 
