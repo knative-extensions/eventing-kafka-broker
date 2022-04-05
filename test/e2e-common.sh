@@ -127,17 +127,14 @@ function install_latest_release() {
 
   ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
 
-  kubectl get cm config-tracing -n knative-eventing -oyaml
-
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
 
-  kubectl get cm config-tracing -n knative-eventing -oyaml
-  kubectl replace -f ./test/config/config-tracing.yaml
-  kubectl get cm config-tracing -n knative-eventing -oyaml
+  # Restore test config-tracing.
+  kubectl replace -f ./test/config/100-config-tracing.yaml
 }
 
 function install_head() {
@@ -150,9 +147,8 @@ function install_head() {
   kubectl apply -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 
-  kubectl get cm config-tracing -n knative-eventing -oyaml
-  kubectl replace -f ./test/config/config-tracing.yaml
-  kubectl get cm config-tracing -n knative-eventing -oyaml
+  # Restore test config-tracing.
+  kubectl replace -f ./test/config/100-config-tracing.yaml
 }
 
 function test_setup() {
