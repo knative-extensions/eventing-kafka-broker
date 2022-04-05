@@ -21,6 +21,7 @@ package duck
 
 import (
 	"time"
+	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -65,7 +66,11 @@ func getGenericResource(tm metav1.TypeMeta) runtime.Object {
 func checkResourceReady(dynamicClient dynamic.Interface, obj *resources.MetaResource) (bool, error) {
 	gr := getGenericResource(obj.TypeMeta)
 	untyped, err := GetGenericObject(dynamicClient, obj, gr)
-	return isResourceReady(untyped, err)
+	ready, err := isResourceReady(untyped, err)
+	//if !ready{
+	fmt.Printf("XXXXXXXXXXXXXXX :%v\n\n\n", untyped)
+	//}
+	return ready, err
 }
 
 func checkResourcesReady(dynamicClient dynamic.Interface, objList *resources.MetaResourceList) (bool, error) {

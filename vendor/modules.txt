@@ -1360,7 +1360,9 @@ knative.dev/eventing-kafka/test/lib/resources
 knative.dev/eventing-kafka/test/rekt/features/kafkachannel
 knative.dev/eventing-kafka/test/rekt/resources/kafkachannel
 knative.dev/eventing-kafka/test/rekt/resources/resetoffset
+knative.dev/eventing-kafka/test/upgrade
 knative.dev/eventing-kafka/test/upgrade/continual
+knative.dev/eventing-kafka/test/upgrade/installation
 # knative.dev/hack v0.0.0-20220328133751-f06773764ce3
 ## explicit
 knative.dev/hack
