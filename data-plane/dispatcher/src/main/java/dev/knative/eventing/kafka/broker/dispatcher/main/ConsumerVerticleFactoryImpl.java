@@ -62,6 +62,7 @@ import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
+
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,6 +75,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
@@ -164,6 +166,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
          egress.hasEgressConfig() ?
            egress.getEgressConfig() :
            resource.getEgressConfig();
+
+       consumerConfigs.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxProcessingTimeMs(egressConfig));
 
        final var egressSubscriberSender = createConsumerRecordSender(
          vertx,
@@ -366,5 +370,22 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
   private static boolean isResourceReferenceDefined(DataPlaneContract.Reference resource) {
     return resource != null && !resource.getNamespace().isBlank() && !resource.getName().isBlank();
+  }
+
+  private static long maxProcessingTimeMs(final EgressConfig egressConfig) {
+    final var retryPolicy = computeRetryPolicy(egressConfig);
+    final var retry = egressConfig.getRetry();
+    final var timeout = egressConfig.getTimeout();
+
+    var maxProcessingTime = 0;
+    for (int i = 1; i <= retry; i++) {
+      maxProcessingTime += timeout + retryPolicy.apply(i);
+    }
+    // In addition, we add some seconds as overhead for each retry.
+    final var overhead = 10_000 * retry;
+    maxProcessingTime += overhead;
+    // 2 times since we consider maximum processing time as the time we take for sending events to
+    // a subscriber and to the dead letter sink (including retries).
+    return 2L * maxProcessingTime + overhead;
   }
 }
