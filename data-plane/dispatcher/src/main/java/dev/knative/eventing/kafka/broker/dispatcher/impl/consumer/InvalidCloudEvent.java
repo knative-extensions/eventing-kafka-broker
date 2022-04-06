@@ -28,11 +28,11 @@ import java.util.Set;
  * <p>
  * See {@link InvalidCloudEventInterceptor} and {@link CloudEventDeserializer} for more details.
  */
-class InvalidCloudEvent implements CloudEvent {
+public class InvalidCloudEvent implements CloudEvent {
 
   private final byte[] data;
 
-  InvalidCloudEvent(byte[] data) {
+  public InvalidCloudEvent(byte[] data) {
     this.data = data;
   }
 
