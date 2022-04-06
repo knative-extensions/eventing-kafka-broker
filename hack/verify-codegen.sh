@@ -43,6 +43,8 @@ DIRS=(
   "/control-plane/pkg/core/config"
   "/control-plane/pkg/apis"
   "/control-plane/pkg/client"
+  "/vendor"
+  "/third_party"
 )
 
 for d in "${DIRS[@]}"; do
