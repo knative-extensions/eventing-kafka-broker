@@ -158,6 +158,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
             egress.getEgressConfig() :
             resource.getEgressConfig();
 
+        consumerConfigs.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxProcessingTimeMs(egressConfig));
+
         final var egressSubscriberSender = createConsumerRecordSender(
           vertx,
           egress.getDestination(),
@@ -329,4 +331,22 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
   private static boolean isResourceReferenceDefined(DataPlaneContract.Reference resource) {
     return resource != null && !resource.getNamespace().isBlank() && !resource.getName().isBlank();
   }
+
+  private static long maxProcessingTimeMs(final EgressConfig egressConfig) {
+    final var retryPolicy = computeRetryPolicy(egressConfig);
+    final var retry = egressConfig.getRetry();
+    final var timeout = egressConfig.getTimeout();
+
+    var maxProcessingTime = 0;
+    for (int i = 1; i <= retry; i++) {
+      maxProcessingTime += timeout + retryPolicy.apply(i);
+    }
+    // In addition, we add some seconds as overhead for each retry.
+    final var overhead = 10_000 * retry;
+    maxProcessingTime += overhead;
+    // 2 times since we consider maximum processing time as the time we take for sending events to
+    // a subscriber and to the dead letter sink (including retries).
+    return 2L * maxProcessingTime + overhead;
+  }
+
 }
