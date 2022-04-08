@@ -223,7 +223,7 @@ public class Metrics {
   public static Counter.Builder discardedEventCount(final io.micrometer.core.instrument.Tags tags) {
     return Counter
       .builder(DISCARDED_EVENTS_COUNT)
-      .description("Number of events discarded")
+      .description("Number of invalid events discarded")
       .tags(tags)
       .baseUnit(Metrics.Units.DIMENSIONLESS);
   }
