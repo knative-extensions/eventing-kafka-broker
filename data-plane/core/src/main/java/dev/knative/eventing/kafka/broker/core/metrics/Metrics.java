@@ -81,7 +81,7 @@ public class Metrics {
    * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
    * @see Metrics#discardedEventCount(io.micrometer.core.instrument.Tags)
    */
-  public static final String DISCARDED_EVENTS_COUNT = "discarded_event_count";
+  public static final String DISCARDED_EVENTS_COUNT = "discarded_invalid_event_count";
 
   /**
    * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
