@@ -117,20 +117,16 @@ spec:
 
           livenessProbe:
             failureThreshold: 3
-            httpGet:
+            tcpSocket:
               port: 9090
-              path: /metrics
-              scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 3
             successThreshold: 1
             timeoutSeconds: 1
           readinessProbe:
             failureThreshold: 3
-            httpGet:
+            tcpSocket:
               port: 9090
-              path: /metrics
-              scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 3
             successThreshold: 1
