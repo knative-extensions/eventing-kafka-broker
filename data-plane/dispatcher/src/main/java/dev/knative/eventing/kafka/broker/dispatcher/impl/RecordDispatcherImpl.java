@@ -62,6 +62,9 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   // we only add the code class tag in the "error" class (5xx).
   private static final Tag NO_RESPONSE_CODE_CLASS_TAG = Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, "5xx");
 
+  // Invalid cloud event records that are discarded by dispatch may not have a record type. So we set Tag as below.
+  private static final Tag INVALID_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "InvalidCloudEvent");
+
   private final Filter filter;
   private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> subscriberSender;
   private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> dlsSender;
@@ -353,9 +356,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private Tags getTags(final ConsumerRecordContext recordContext) {
     if (recordContext.getRecord().record().value() instanceof InvalidCloudEvent) {
-      return this.resourceContext.getTags().and(
-        Tag.of(Metrics.Tags.EVENT_TYPE, "InvalidCloudEvent")
-      );
+      return this.resourceContext.getTags().and(INVALID_EVENT_TYPE_TAG);
     }
     return this.resourceContext.getTags().and(
       Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType())
