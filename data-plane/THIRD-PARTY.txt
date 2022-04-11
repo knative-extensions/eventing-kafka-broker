@@ -117,7 +117,7 @@ Lists of 158 third-party dependencies.
      (Eclipse Public License 1.0) JUnit (junit:junit:4.12 - http://junit.org)
      (Apache License, Version 2.0) Byte Buddy (without dependencies) (net.bytebuddy:byte-buddy:1.12.8 - https://bytebuddy.net/byte-buddy)
      (Apache License, Version 2.0) Byte Buddy agent (net.bytebuddy:byte-buddy-agent:1.12.8 - https://bytebuddy.net/byte-buddy-agent)
-     (Apache License, Version 2.0) (MIT License) Logstash Logback Encoder (net.logstash.logback:logstash-logback-encoder:7.0.1 - https://github.com/logfellow/logstash-logback-encoder)
+     (Apache License, Version 2.0) (MIT License) Logstash Logback Encoder (net.logstash.logback:logstash-logback-encoder:7.1 - https://github.com/logfellow/logstash-logback-encoder)
      (The MIT License) JOpt Simple (net.sf.jopt-simple:jopt-simple:5.0.4 - http://jopt-simple.github.io/jopt-simple)
      (MIT) argparse4j (net.sourceforge.argparse4j:argparse4j:0.7.0 - http://argparse4j.github.io)
      (The BSD License) ANTLR 4 Runtime (org.antlr:antlr4-runtime:4.9.2 - http://www.antlr.org/antlr4-runtime)
