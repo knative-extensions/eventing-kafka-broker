@@ -76,11 +76,9 @@ public final class OffsetManager implements RecordDispatcherListener {
       partitions.forEach(offsetTrackers::remove);
     });
 
-    this.consumer.partitionsAssignedHandler(partitions -> {
-      partitions.forEach(tp -> this.consumer.committed(tp).
-        onSuccess(m -> offsetTrackers.put(tp, new OffsetTracker(m.getOffset()))));
-      logPartitions("assigned", partitions);
-    });
+    this.consumer.partitionsAssignedHandler(partitions ->
+      partitions.forEach(tp -> logPartitions("assigned", partitions))
+    );
   }
 
   /**
@@ -141,7 +139,9 @@ public final class OffsetManager implements RecordDispatcherListener {
       // Reset the state
       tracker.setCommitted(newOffset);
 
-      logger.debug("Committing offset for {} offset {}", topicPartition, newOffset);
+      logger.debug("Committing offset for {} offset {}",
+        keyValue("topicPartition", topicPartition),
+        keyValue("offset", newOffset));
 
       // Execute the actual commit
       return consumer.commit(Map.of(topicPartition, new OffsetAndMetadata(newOffset, "")))
@@ -150,7 +150,10 @@ public final class OffsetManager implements RecordDispatcherListener {
             onCommit.accept((int) newOffset);
           }
         })
-        .onFailure(cause -> logger.error("failed to commit topic partition {} offset {}", topicPartition, newOffset, cause))
+        .onFailure(cause -> logger.error("Failed to commit topic partition {} offset {}",
+          keyValue("topicPartition", topicPartition),
+          keyValue("offset", newOffset),
+          cause))
         .mapEmpty();
     }
     return null;
