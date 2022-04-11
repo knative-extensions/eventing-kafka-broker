@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-
 /**
  * CloudEventDeserializer is the deserializer used for deserializing {@link CloudEvent}.
  * <p>
@@ -41,7 +39,6 @@ public class CloudEventDeserializer implements Deserializer<CloudEvent> {
 
   public static final String INVALID_CE_WRAPPER_ENABLED = "cloudevent.invalid.transformer.enabled";
 
-  private boolean isInvalidLogicEnabled = false;
   private final io.cloudevents.kafka.CloudEventDeserializer internalDeserializer;
 
   public CloudEventDeserializer() {
@@ -57,21 +54,10 @@ public class CloudEventDeserializer implements Deserializer<CloudEvent> {
   @Override
   public void configure(Map<String, ?> configs, boolean isKey) {
     internalDeserializer.configure(configs, isKey);
-
-    if (configs.containsKey(INVALID_CE_WRAPPER_ENABLED)) {
-      isInvalidLogicEnabled = Boolean.parseBoolean(configs.get(INVALID_CE_WRAPPER_ENABLED).toString());
-    }
-
-    logger.info("Deserializer config {}",
-      keyValue("isInvalidLogicEnabled", isInvalidLogicEnabled)
-    );
   }
 
   @Override
   public CloudEvent deserialize(final String topic, final byte[] data) {
-    if (!this.isInvalidLogicEnabled) {
-      throw new UnsupportedOperationException("CloudEventDeserializer supports only the signature deserialize(String, Headers, byte[])");
-    }
     logger.debug("Found invalid CloudEvent for topic {}", topic);
     return new InvalidCloudEvent(data);
   }
@@ -87,10 +73,6 @@ public class CloudEventDeserializer implements Deserializer<CloudEvent> {
    */
   @Override
   public CloudEvent deserialize(final String topic, final Headers headers, byte[] data) {
-    if (!isInvalidLogicEnabled) {
-      return internalDeserializer.deserialize(topic, headers, data);
-    }
-
     try {
       return internalDeserializer.deserialize(topic, headers, data);
     } catch (final Throwable ignored) {

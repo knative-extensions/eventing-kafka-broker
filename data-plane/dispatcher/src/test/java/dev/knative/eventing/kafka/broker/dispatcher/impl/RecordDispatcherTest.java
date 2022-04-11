@@ -25,6 +25,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandlerMock;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEvent;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.prometheus.PrometheusConfig;
@@ -104,6 +105,7 @@ public class RecordDispatcherTest {
     assertNoEventCount();
     assertNoEventDispatchLatency();
     assertEventProcessingLatency();
+    assertNoDiscardedEventCount();
   }
 
   @Test
@@ -146,6 +148,7 @@ public class RecordDispatcherTest {
     assertEventDispatchLatency();
     assertEventProcessingLatency();
     assertEventCount();
+    assertNoDiscardedEventCount();
   }
 
   @Test
@@ -189,6 +192,7 @@ public class RecordDispatcherTest {
     assertEventDispatchLatency();
     assertEventProcessingLatency();
     assertEventCount();
+    assertNoDiscardedEventCount();
   }
 
   @Test
@@ -232,6 +236,7 @@ public class RecordDispatcherTest {
     assertEventDispatchLatency();
     assertEventProcessingLatency();
     assertEventCount();
+    assertNoDiscardedEventCount();
   }
 
   @Test
@@ -268,6 +273,7 @@ public class RecordDispatcherTest {
     assertEventDispatchLatency();
     assertEventProcessingLatency();
     assertEventCount();
+    assertNoDiscardedEventCount();
   }
 
   @Test
@@ -302,8 +308,43 @@ public class RecordDispatcherTest {
       }));
   }
 
+  @Test
+  public void shouldDiscardRecordIfInvalidCloudEvent() {
+
+    final RecordDispatcherListener receiver = offsetManagerMock();
+
+    final var dispatcherHandler = new RecordDispatcherImpl(
+      resourceContext,
+      Filter.noop(),
+      CloudEventSender.noop("subscriber send called"),
+      CloudEventSender.noop("DLS send called"),
+      new ResponseHandlerMock(),
+      receiver,
+      null,
+      registry
+    );
+
+    final var record = invalidRecord();
+    dispatcherHandler.dispatch(record);
+
+    verify(receiver, times(1)).recordReceived(record);
+    verify(receiver, times(1)).recordDiscarded(record);
+    verify(receiver, never()).successfullySentToSubscriber(any());
+    verify(receiver, never()).successfullySentToDeadLetterSink(any());
+    verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
+
+    assertDiscardedEventCount();
+    assertNoEventCount();
+    assertNoEventDispatchLatency();
+  }
+
   private static KafkaConsumerRecord<Object, CloudEvent> record() {
     return new KafkaConsumerRecordImpl<>(new ConsumerRecord<>("", 0, 0L, "", CoreObjects.event()));
+  }
+
+
+  private static KafkaConsumerRecord<Object, CloudEvent> invalidRecord() {
+    return new KafkaConsumerRecordImpl<>(new ConsumerRecord<>("", 0, 0L, "", new InvalidCloudEvent(new byte[]{1, 4})));
   }
 
   public static RecordDispatcherListener offsetManagerMock() {
@@ -385,6 +426,35 @@ public class RecordDispatcherTest {
           .max()
       ).isGreaterThan(0)
     );
+  }
+
+  private void assertNoDiscardedEventCount() {
+    var counterNotFound = false;
+    try {
+      assertThat(
+        registry
+          .get(Metrics.DISCARDED_EVENTS_COUNT)
+          .counters()
+          .stream()
+          .reduce((a, b) -> b)
+          .isEmpty()
+      ).isTrue();
+    } catch (MeterNotFoundException ignored) {
+      counterNotFound = true;
+    }
+    assertThat(counterNotFound).isTrue();
+  }
+
+  private void assertDiscardedEventCount() {
+    assertThat(
+      registry
+        .get(Metrics.DISCARDED_EVENTS_COUNT)
+        .counters()
+        .stream()
+        .reduce((a, b) -> b)
+        .get()
+        .count()
+    ).isGreaterThan(0);
   }
 
   private void simulateLatency() {
