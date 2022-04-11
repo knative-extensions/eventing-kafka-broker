@@ -139,7 +139,7 @@ public final class OffsetManager implements RecordDispatcherListener {
       // Reset the state
       tracker.setCommitted(newOffset);
 
-      logger.info("Committing offset for {} offset {}",
+      logger.debug("Committing offset for {} offset {}",
         keyValue("topicPartition", topicPartition),
         keyValue("offset", newOffset));
 
