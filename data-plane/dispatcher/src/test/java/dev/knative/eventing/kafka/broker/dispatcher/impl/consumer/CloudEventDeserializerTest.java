@@ -76,7 +76,7 @@ public class CloudEventDeserializerTest {
   }
 
   @Test
-  public void shouldDeserializeInvalidCloudEventWhenEnabled() {
+  public void shouldDeserializeInvalidCloudEvent() {
     final var topic = "test";
 
     final var headers = new RecordHeaders()
@@ -84,46 +84,26 @@ public class CloudEventDeserializerTest {
 
     final var deserializer = new CloudEventDeserializer();
     final var configs = new HashMap<String, String>();
-    configs.put(CloudEventDeserializer.INVALID_CE_WRAPPER_ENABLED, "true");
     deserializer.configure(configs, false);
 
     final var event = deserializer.deserialize(topic, headers, new byte[]{1, 4});
-
-    assertThat(event).isInstanceOf(InvalidCloudEvent.class);
 
     assertThat(event).isInstanceOf(InvalidCloudEvent.class);
     assertOnInvalidCloudEvent((InvalidCloudEvent) event);
   }
 
   @Test
-  public void shouldDeserializeInvalidCloudWithoutHeadersEventWhenEnabled() {
+  public void shouldDeserializeInvalidCloudWithoutHeadersEvent() {
     final var topic = "test";
 
     final var deserializer = new CloudEventDeserializer();
     final var configs = new HashMap<String, String>();
-    configs.put(CloudEventDeserializer.INVALID_CE_WRAPPER_ENABLED, "true");
     deserializer.configure(configs, false);
 
     final var event = deserializer.deserialize(topic, new byte[]{1, 4});
 
     assertThat(event).isInstanceOf(InvalidCloudEvent.class);
     assertOnInvalidCloudEvent((InvalidCloudEvent) event);
-  }
-
-  @Test
-  public void shouldNotDeserializeInvalidCloudEventWhenDisabled() {
-    final var topic = "test";
-
-    final var headers = new RecordHeaders()
-      .add(new RecordHeader("knative", "knative".getBytes(StandardCharsets.UTF_8)));
-
-    final var deserializer = new CloudEventDeserializer();
-
-    final var configs = new HashMap<String, String>();
-    deserializer.configure(configs, false);
-
-    assertThatThrownBy(() -> deserializer.deserialize(topic, headers, new byte[]{1, 4}));
-    assertThatThrownBy(() -> deserializer.deserialize(topic, new byte[]{1, 4}));
   }
 
   private void assertOnInvalidCloudEvent(InvalidCloudEvent invalid) {
