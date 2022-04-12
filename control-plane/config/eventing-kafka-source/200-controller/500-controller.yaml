@@ -1,6 +1,6 @@
 ---
 
-# Copyright 2020 The Knative Authors
+# Copyright 2022 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,20 +17,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kafka-controller
+  name: kafka-source-controller
   namespace: knative-eventing
   labels:
-    app: kafka-controller
+    app: kafka-source-controller
     kafka.eventing.knative.dev/release: devel
 spec:
   selector:
     matchLabels:
-      app: kafka-controller
+      app: kafka-source-controller
   template:
     metadata:
-      name: kafka-controller
+      name: kafka-source-controller
       labels:
-        app: kafka-controller
+        app: kafka-source-controller
         kafka.eventing.knative.dev/release: devel
     spec:
       securityContext:
@@ -44,93 +44,37 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: kafka-controller
+              app: kafka-source-controller
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: kafka-controller
+                    app: kafka-source-controller
                 topologyKey: kubernetes.io/hostname
               weight: 100
 
       containers:
         - name: controller
-          image: ko://knative.dev/eventing-kafka-broker/control-plane/cmd/kafka-controller
+          image: ko://knative.dev/eventing-kafka-broker/control-plane/cmd/kafka-source-controller
           imagePullPolicy: IfNotPresent
           env:
-            - name: BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE
-              value: knative-eventing
-            - name: CHANNEL_DATA_PLANE_CONFIG_MAP_NAMESPACE
-              value: knative-eventing
-            - name: SINK_DATA_PLANE_CONFIG_MAP_NAMESPACE
-              value: knative-eventing
             - name: SOURCE_DATA_PLANE_CONFIG_MAP_NAMESPACE
               value: knative-eventing
-
-            - name: BROKER_DATA_PLANE_CONFIG_MAP_NAME
-              value: kafka-broker-brokers-triggers
-            - name: CHANNEL_DATA_PLANE_CONFIG_MAP_NAME
-              value: kafka-channel-channels-subscriptions
-            - name: SINK_DATA_PLANE_CONFIG_MAP_NAME
-              value: kafka-sink-sinks
             - name: SOURCE_DATA_PLANE_CONFIG_MAP_NAME
               value: kafka-source-sources
-
-            - name: BROKER_DATA_PLANE_CONFIG_FORMAT
-              value: json
-            - name: CHANNEL_DATA_PLANE_CONFIG_FORMAT
-              value: json
-            - name: SINK_DATA_PLANE_CONFIG_FORMAT
-              value: json
             - name: SOURCE_DATA_PLANE_CONFIG_FORMAT
               value: json
-
-            - name: BROKER_INGRESS_NAME
-              value: kafka-broker-ingress
-            - name: CHANNEL_INGRESS_NAME
-              value: kafka-channel-ingress
-            - name: SINK_INGRESS_NAME
-              value: kafka-sink-ingress
             - name: SOURCE_INGRESS_NAME
               value: kafka-source-ingress
-
-            - name: BROKER_GENERAL_CONFIG_MAP_NAME
-              value: kafka-broker-config
-            - name: CHANNEL_GENERAL_CONFIG_MAP_NAME
-              value: kafka-channel-config
-            - name: SINK_GENERAL_CONFIG_MAP_NAME
-              value: kafka-broker-config
             - name: SOURCE_GENERAL_CONFIG_MAP_NAME
               value: kafka-broker-config
-
-            - name: BROKER_INGRESS_POD_PORT
-              value: "8080"
-            - name: CHANNEL_INGRESS_POD_PORT
-              value: "8080"
-            - name: SINK_INGRESS_POD_PORT
-              value: "8080"
-
-            - name: BROKER_SYSTEM_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: CHANNEL_SYSTEM_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: SINK_SYSTEM_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
             - name: SOURCE_SYSTEM_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
 
-            - name: BROKER_DEFAULT_BACKOFF_DELAY_MS
-              value: "1000" # 1 second
             - name: SYSTEM_NAMESPACE
               valueFrom:
                 fieldRef:

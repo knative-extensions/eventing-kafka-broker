@@ -122,6 +122,24 @@ function build_components_from_source() {
   return $?
 }
 
+function build_source_components_from_source() {
+
+  [ -f "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
+  [ -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SOURCE_ARTIFACT}"
+  [ -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" ] && rm "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}"
+
+  header "Data plane setup"
+  data_plane_dispatcher_setup || fail_test "Failed to set up data plane dispatcher"
+
+  header "Control plane setup"
+  control_plane_setup || fail_test "Failed to set up control plane components"
+
+  header "Building Monitoring artifacts"
+  build_monitoring_artifacts || fail_test "Failed to create monitoring artifacts"
+
+  return $?
+}
+
 function install_latest_release() {
   echo "Installing latest release from ${PREVIOUS_RELEASE_URL}"
 
@@ -145,6 +163,29 @@ function install_head() {
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
+  kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
+
+  # Restore test config-tracing.
+  kubectl replace -f ./test/config/100-config-tracing.yaml
+}
+
+function install_latest_release_source() {
+  echo "Installing latest release from ${PREVIOUS_RELEASE_URL}"
+
+  ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
+
+  kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || return $?
+  kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
+
+  # Restore test config-tracing.
+  kubectl replace -f ./test/config/100-config-tracing.yaml
+}
+
+function install_head_source() {
+  echo "Installing head"
+
+  kubectl apply -f "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || return $?
+  kubectl apply -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 
   # Restore test config-tracing.
@@ -177,6 +218,25 @@ function test_teardown() {
   kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to tear down kafka broker"
   kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || fail_test "Failed to tear down kafka sink"
   kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || fail_test "Failed to tear down kafka channel"
+  kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" || fail_test "Failed to tear down kafka source"
+}
+
+function test_source_setup() {
+
+  build_source_components_from_source || return $?
+
+  install_head_source || return $?
+
+  wait_until_pods_running knative-eventing || fail_test "System did not come up"
+
+  # Apply test configurations, and restart data plane components (we don't have hot reload)
+  ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
+
+  kubectl rollout restart statefulset -n knative-eventing kafka-source-dispatcher
+}
+
+function test_source_teardown() {
+  kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || fail_test "Failed to tear down control plane"
   kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" || fail_test "Failed to tear down kafka source"
 }
 
@@ -221,7 +281,7 @@ function delete_sacura() {
 
 function export_logs_continuously() {
 
-  labels=("kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver" "kafka-channel-receiver" "kafka-channel-dispatcher" "kafka-source-dispatcher" "kafka-webhook-eventing" "kafka-controller")
+  labels=("kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver" "kafka-channel-receiver" "kafka-channel-dispatcher" "kafka-source-dispatcher" "kafka-webhook-eventing" "kafka-controller" "kafka-source-controller")
 
   mkdir -p "$ARTIFACTS/${SYSTEM_NAMESPACE}"
 
@@ -247,6 +307,8 @@ function save_release_artifacts() {
 
   cp "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
   cp "${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
+  cp "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || return $?
 }
 
 function build_monitoring_artifacts() {
