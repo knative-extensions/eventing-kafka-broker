@@ -79,7 +79,7 @@ func run(ctx context.Context) error {
 		k8s:     kubernetes.NewForConfigOrDie(config),
 	}
 	if err := soSourceDeleter.Delete(ctx); err != nil {
-		return fmt.Errorf("serverless operator deleter failed")
+		return fmt.Errorf("serverless operator deleter failed: %w", err)
 	}
 
 	return nil
