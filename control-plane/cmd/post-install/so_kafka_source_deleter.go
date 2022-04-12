@@ -37,7 +37,7 @@ func (d KafkaSourceSoDeleter) Delete(ctx context.Context) error {
 	smGVR := schema.GroupVersionResource{
 		Group:    "monitoring.coreos.com",
 		Version:  "v1",
-		Resource: "ServiceMonitor",
+		Resource: "servicemonitors",
 	}
 
 	controllerServiceMonitor := "kafka-controller-manager-sm"
