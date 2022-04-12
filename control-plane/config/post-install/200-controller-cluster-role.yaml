@@ -94,6 +94,7 @@ rules:
     resourceNames:
       - eventing-sources-kafka-controller
       - eventing-sources-kafka-controller-addressable-resolver
+      - eventing-sources-kafka-controller-podspecable-binding
     verbs:
       - delete
   - apiGroups:
