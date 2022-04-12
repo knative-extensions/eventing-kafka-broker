@@ -56,7 +56,7 @@ public class OrderedAsyncExecutor {
   }
 
   private void consume() {
-    if (queue.isEmpty() || this.inFlight) {
+    if (queue.isEmpty() || this.inFlight || this.isStopped) {
       return;
     }
     this.inFlight = true;
