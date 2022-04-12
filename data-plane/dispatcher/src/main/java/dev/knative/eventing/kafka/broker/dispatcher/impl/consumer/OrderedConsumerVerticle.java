@@ -34,10 +34,12 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private static final Logger logger = LoggerFactory.getLogger(OrderedConsumerVerticle.class);
 
-  private static final long POLLING_MS = 1000L;
-  private static final Duration POLLING_TIMEOUT = Duration.ofMillis(5000L);
+  private static final long POLLING_MS = 200L;
+  private static final Duration POLLING_TIMEOUT = Duration.ofMillis(1000L);
 
   private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
+
+  private Long lastPollTimer = null;
 
   private boolean stopPolling;
 
@@ -54,11 +56,15 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       .onFailure(startPromise::fail)
       .onSuccess(v -> {
         startPromise.complete();
-        this.poll();
+        this.poll(false);
       });
   }
 
-  private void poll() {
+  private void poll(final boolean isTimer) {
+    if (isTimer) {
+      vertx.cancelTimer(lastPollTimer);
+      this.lastPollTimer = null;
+    }
     if (this.stopPolling) {
       return;
     }
@@ -71,7 +77,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
           return;
         }
         exceptionHandler(t);
-        poll(); // Keep polling.
+        poll(/* isTimer poll */ false); // Keep polling.
       });
   }
 
@@ -85,11 +91,13 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   }
 
   private void recordsHandler(KafkaConsumerRecords<Object, CloudEvent> records) {
+    if (this.stopPolling) {
+      return;
+    }
     if (records == null || records.size() == 0) {
-      if (this.stopPolling) {
-        return;
+      if (lastPollTimer == null) {
+        lastPollTimer = vertx.setTimer(POLLING_MS, l -> poll(/* isTimer poll */ true));
       }
-      vertx.setTimer(POLLING_MS, l -> poll());
       return;
     }
     // Put records in queues
@@ -119,7 +127,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private void maybePoll(final OrderedAsyncExecutor executor) {
     if (executor.isWaitingForTasks()) {
-      poll();
+      poll(/* isTimer poll */ false);
     }
   }
 }
