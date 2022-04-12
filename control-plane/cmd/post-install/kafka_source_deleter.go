@@ -109,6 +109,15 @@ func (d *kafkaSourceDeleter) Delete(ctx context.Context) error {
 		return fmt.Errorf("failed to delete ClusterRoleBinding %s: %w", kafkaControllerAddressableResolverClusterRoleBinding, err)
 	}
 
+	const kafkaBindingClusterRoleBinding = "eventing-sources-kafka-controller-podspecable-binding"
+	err = d.k8s.
+		RbacV1().
+		ClusterRoleBindings().
+		Delete(ctx, kafkaBindingClusterRoleBinding, metav1.DeleteOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete ClusterRoleBinding %s: %w", kafkaBindingClusterRoleBinding, err)
+	}
+
 	const kafkaControllerClusterRole = "eventing-sources-kafka-controller"
 	err = d.k8s.
 		RbacV1().
