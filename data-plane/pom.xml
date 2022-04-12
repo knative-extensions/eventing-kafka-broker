@@ -109,16 +109,39 @@
       <!-- Vertx -->
       <dependency>
         <groupId>io.vertx</groupId>
-        <artifactId>vertx-stack-depchain</artifactId>
+        <artifactId>vertx-core</artifactId>
         <version>${vertx.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-web-client</artifactId>
+        <version>${vertx.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-kafka-client</artifactId>
+        <version>${vertx.version}</version>
         <exclusions>
           <exclusion>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-circuit-breaker</artifactId>
+        <version>${vertx.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-opentelemetry</artifactId>
+        <version>${vertx.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-micrometer-metrics</artifactId>
+        <version>${vertx.version}</version>
       </dependency>
 
       <dependency>
@@ -175,6 +198,10 @@
           <exclusion>
             <artifactId>builder-annotations</artifactId>
             <groupId>io.sundr</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>junit-jupiter-api</artifactId>
+            <groupId>org.junit.jupiter</groupId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -280,6 +307,10 @@
           <exclusion>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
