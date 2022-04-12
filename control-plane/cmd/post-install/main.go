@@ -22,10 +22,10 @@ import (
 	"fmt"
 	"log"
 
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	kcs "knative.dev/eventing-kafka/pkg/client/clientset/versioned"
 	"knative.dev/pkg/environment"
-	"knative.dev/pkg/injection/clients/dynamicclient"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/signals"
 )
@@ -75,7 +75,7 @@ func run(ctx context.Context) error {
 	}
 
 	soSourceDeleter := KafkaSourceSoDeleter{
-		dynamic: dynamicclient.Get(ctx),
+		dynamic: dynamic.NewForConfigOrDie(config),
 		k8s:     kubernetes.NewForConfigOrDie(config),
 	}
 	if err := soSourceDeleter.Delete(ctx); err != nil {
