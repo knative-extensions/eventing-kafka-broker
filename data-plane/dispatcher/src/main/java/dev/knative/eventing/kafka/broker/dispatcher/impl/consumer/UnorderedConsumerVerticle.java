@@ -38,12 +38,13 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
   private static final long BACKOFF_DELAY_MS = 200;
   // This shouldn't be more than 2000, which is the default max time allowed
   // to block a verticle thread.
-  private static final Duration POLL_TIMEOUT = Duration.ofMillis(1000);
+  private static final Duration POLL_TIMEOUT = Duration.ofMillis(500);
 
   private final int maxPollRecords;
 
-  private boolean stopPolling;
+  private boolean closed;
   private int inFlightRecords;
+  private boolean isPollInFlight;
 
   public UnorderedConsumerVerticle(final Initializer initializer,
                                    final Set<String> topics,
@@ -55,7 +56,8 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
       this.maxPollRecords = maxPollRecords;
     }
     this.inFlightRecords = 0;
-    this.stopPolling = false;
+    this.closed = false;
+    this.isPollInFlight = true;
   }
 
   @Override
@@ -80,7 +82,7 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
    * control the memory consumption of the dispatcher.
    */
   private synchronized void poll() {
-    if (stopPolling) {
+    if (closed || isPollInFlight) {
       return;
     }
     if (inFlightRecords >= maxPollRecords) {
@@ -92,11 +94,12 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
       );
       return;
     }
-
+    isPollInFlight = true;
     this.consumer
       .poll(POLL_TIMEOUT)
       .onSuccess(this::handleRecords)
       .onFailure(cause -> {
+        isPollInFlight = false;
         logger.error("Failed to poll messages {}", keyValue("topics", topics), cause);
         // Wait before retrying.
         vertx.setTimer(BACKOFF_DELAY_MS, t -> poll());
@@ -104,11 +107,18 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
   }
 
   private void handleRecords(final KafkaConsumerRecords<Object, CloudEvent> records) {
+    if (closed) {
+      isPollInFlight = false;
+      return;
+    }
+
     // We are not forcing the dispatcher to send less than `max.poll.records`
     // requests because we don't want to keep records in-memory by waiting
     // for responses.
+    this.inFlightRecords += records.size();
+    isPollInFlight = false;
+
     for (int i = 0; i < records.size(); i++) {
-      this.inFlightRecords++;
       this.recordDispatcher.dispatch(records.recordAt(i))
         .onComplete(v -> {
           this.inFlightRecords--;
@@ -120,7 +130,7 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
 
   @Override
   public void stop(Promise<Void> stopPromise) {
-    this.stopPolling = true;
+    this.closed = true;
     // Stop the consumer
     super.stop(stopPromise);
   }
