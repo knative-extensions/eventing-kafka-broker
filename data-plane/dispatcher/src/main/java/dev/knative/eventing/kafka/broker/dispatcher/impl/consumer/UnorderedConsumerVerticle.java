@@ -126,7 +126,12 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
           poll();
         });
     }
-    poll();
+    if (records.size() == 0) {
+      // If there are no records wait for `BACKOFF_DELAY_MS` before polling again
+      vertx.setTimer(BACKOFF_DELAY_MS, v -> poll());
+    } else {
+      poll();
+    }
   }
 
   @Override
