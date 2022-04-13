@@ -22,6 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -135,6 +136,9 @@ type DeliverySpec struct {
 
 	// Ordering is the ordering of the event delivery.
 	Ordering eventing.DeliveryOrdering `json:"ordering"`
+
+	// InitialOffset initial offset.
+	InitialOffset sources.Offset `json:"initialOffset"`
 
 	// TODO Add rate limiting
 

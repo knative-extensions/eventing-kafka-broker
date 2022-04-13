@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"context"
 
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/apis"
 )
 
@@ -33,6 +34,9 @@ func (c *Consumer) SetDefaults(ctx context.Context) {
 }
 
 func (c *ConsumerSpec) SetDefaults(ctx context.Context) {
+	if c.Delivery == nil {
+		c.Delivery = &DeliverySpec{}
+	}
 	c.Delivery.SetDefaults(ctx)
 	c.Subscriber.SetDefaults(ctx)
 }
@@ -40,6 +44,9 @@ func (c *ConsumerSpec) SetDefaults(ctx context.Context) {
 func (d *DeliverySpec) SetDefaults(ctx context.Context) {
 	if d == nil {
 		return
+	}
+	if d.InitialOffset == "" {
+		d.InitialOffset = sources.OffsetLatest
 	}
 	d.DeliverySpec.SetDefaults(ctx)
 }

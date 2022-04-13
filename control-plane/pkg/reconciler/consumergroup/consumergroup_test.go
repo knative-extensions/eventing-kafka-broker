@@ -18,14 +18,20 @@ package consumergroup
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"testing"
 
+	"github.com/Shopify/sarama"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/utils/pointer"
+	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
@@ -33,11 +39,13 @@ import (
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/scheduler"
 
+	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 )
 
@@ -126,6 +134,583 @@ func TestReconcileKind(t *testing.T) {
 						}
 						_ = cg.MarkReconcileConsumersFailed("PropagateSubscriberURI", ErrNoSubscriberURI)
 						cg.MarkScheduleSucceeded()
+						return cg
+					}(),
+				},
+			},
+		},
+		{
+			Name: "Consumers in multiple pods, with auth spec, one exists - secret not found",
+			Objects: []runtime.Object{
+				NewConsumer(2,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerAuth(&kafkainternals.Auth{
+							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
+								Name: "non-existing secret",
+							}}},
+						}),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{
+							PodName:      "p2",
+							PodNamespace: systemNamespace,
+						}),
+					)),
+					ConsumerReady(),
+				),
+				NewConsumerGroup(
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerAuth(&kafkainternals.Auth{
+							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
+								Name: "non-existing secret",
+							}}},
+						}),
+					)),
+					ConsumerForTrigger(),
+					ConsumerGroupReplicas(2),
+				),
+			},
+			Key: ConsumerGroupTestKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return []eventingduckv1alpha1.Placement{
+						{PodName: "p1", VReplicas: 1},
+						{PodName: "p2", VReplicas: 1},
+					}, nil
+				}),
+			},
+			WantErr: true,
+			WantEvents: []string{
+				"Warning InternalError failed to initialize consumer group offset: failed to create config options for Kafka cluster auth: failed to get secret test-cg-ns/non-existing secret: secrets \"non-existing secret\" not found",
+			},
+			WantCreates: []runtime.Object{},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						cg := NewConsumerGroup(
+							ConsumerGroupConsumerSpec(NewConsumerSpec(
+								ConsumerTopics("t1", "t2"),
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+									ConsumerGroupIdConfig("my.group.id"),
+								),
+								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+								ConsumerAuth(&kafkainternals.Auth{
+									AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
+										Name: "non-existing secret",
+									}}},
+								}),
+							)),
+							ConsumerGroupReplicas(2),
+							ConsumerForTrigger(),
+						)
+						cg.InitializeConditions()
+						_ = cg.MarkInitializeOffsetFailed("InitializeOffset", errors.New("failed to create config options for Kafka cluster auth: failed to get secret test-cg-ns/non-existing secret: secrets \"non-existing secret\" not found"))
+						return cg
+					}(),
+				},
+			},
+		},
+		{
+			Name: "Consumers in multiple pods, with auth spec, one exists - ready",
+			Objects: []runtime.Object{
+				NewSSLSecret(ConsumerGroupNamespace, SecretName),
+				NewConsumer(2,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerAuth(&kafkainternals.Auth{
+							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
+								Name: SecretName,
+							}}},
+						}),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{
+							PodName:      "p2",
+							PodNamespace: systemNamespace,
+						}),
+					)),
+					ConsumerReady(),
+				),
+				NewConsumerGroup(
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerAuth(&kafkainternals.Auth{
+							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
+								Name: SecretName,
+							}}},
+						}),
+					)),
+					ConsumerForTrigger(),
+					ConsumerGroupReplicas(2),
+				),
+			},
+			Key: ConsumerGroupTestKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return []eventingduckv1alpha1.Placement{
+						{PodName: "p1", VReplicas: 1},
+						{PodName: "p2", VReplicas: 1},
+					}, nil
+				}),
+			},
+			WantCreates: []runtime.Object{
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerAuth(&kafkainternals.Auth{
+							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
+								Name: SecretName,
+							}}},
+						}),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+					)),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						cg := NewConsumerGroup(
+							ConsumerGroupConsumerSpec(NewConsumerSpec(
+								ConsumerTopics("t1", "t2"),
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+									ConsumerGroupIdConfig("my.group.id"),
+								),
+								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+								ConsumerAuth(&kafkainternals.Auth{
+									AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
+										Name: SecretName,
+									}}},
+								}),
+							)),
+							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusReplicas(1),
+							ConsumerForTrigger(),
+						)
+						cg.Status.Placements = []eventingduckv1alpha1.Placement{
+							{PodName: "p1", VReplicas: 1},
+							{PodName: "p2", VReplicas: 1},
+						}
+						cg.MarkReconcileConsumersSucceeded()
+						cg.MarkScheduleSucceeded()
+						cg.Status.SubscriberURI = ConsumerSubscriberURI
+						return cg
+					}(),
+				},
+			},
+		},
+		{
+			Name: "Consumers in multiple pods, with net spec, one exists - secret not found",
+			Objects: []runtime.Object{
+				NewConsumer(2,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerAuth(&kafkainternals.Auth{
+							NetSpec: &bindings.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "non-existing secret",
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "non-existing secret",
+											},
+											Key: "password",
+										},
+									},
+									Type: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "non-existing secret",
+											},
+											Key: "type",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						}),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{
+							PodName:      "p2",
+							PodNamespace: systemNamespace,
+						}),
+					)),
+					ConsumerReady(),
+				),
+				NewConsumerGroup(
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerAuth(&kafkainternals.Auth{
+							NetSpec: &bindings.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "non-existing secret",
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "non-existing secret",
+											},
+											Key: "password",
+										},
+									},
+									Type: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "non-existing secret",
+											},
+											Key: "type",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						}),
+					)),
+					ConsumerForTrigger(),
+					ConsumerGroupReplicas(2),
+				),
+			},
+			Key: ConsumerGroupTestKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return []eventingduckv1alpha1.Placement{
+						{PodName: "p1", VReplicas: 1},
+						{PodName: "p2", VReplicas: 1},
+					}, nil
+				}),
+			},
+			WantErr: true,
+			WantEvents: []string{
+				"Warning InternalError failed to initialize consumer group offset: failed to create config options for Kafka cluster auth: failed to read secret test-cg-ns/non-existing secret: secret \"non-existing secret\" not found",
+			},
+			WantCreates: []runtime.Object{},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						cg := NewConsumerGroup(
+							ConsumerGroupConsumerSpec(NewConsumerSpec(
+								ConsumerTopics("t1", "t2"),
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+									ConsumerGroupIdConfig("my.group.id"),
+								),
+								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+								ConsumerAuth(&kafkainternals.Auth{
+									NetSpec: &bindings.KafkaNetSpec{
+										SASL: bindings.KafkaSASLSpec{
+											Enable: true,
+											User: bindings.SecretValueFromSource{
+												SecretKeyRef: &corev1.SecretKeySelector{
+													LocalObjectReference: corev1.LocalObjectReference{
+														Name: "non-existing secret",
+													},
+													Key: "user",
+												},
+											},
+											Password: bindings.SecretValueFromSource{
+												SecretKeyRef: &corev1.SecretKeySelector{
+													LocalObjectReference: corev1.LocalObjectReference{
+														Name: "non-existing secret",
+													},
+													Key: "password",
+												},
+											},
+											Type: bindings.SecretValueFromSource{
+												SecretKeyRef: &corev1.SecretKeySelector{
+													LocalObjectReference: corev1.LocalObjectReference{
+														Name: "non-existing secret",
+													},
+													Key: "type",
+												},
+											},
+										},
+										TLS: bindings.KafkaTLSSpec{
+											Enable: true,
+										},
+									},
+								}),
+							)),
+							ConsumerGroupReplicas(2),
+							ConsumerForTrigger(),
+						)
+						cg.InitializeConditions()
+						_ = cg.MarkInitializeOffsetFailed("InitializeOffset", errors.New("failed to create config options for Kafka cluster auth: failed to read secret test-cg-ns/non-existing secret: secret \"non-existing secret\" not found"))
+						return cg
+					}(),
+				},
+			},
+		},
+		{
+			Name: "Consumers in multiple pods, with net spec, one exists - ready",
+			Objects: []runtime.Object{
+				NewSASLSSLSecret(ConsumerGroupNamespace, SecretName),
+				NewConsumer(2,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerAuth(&kafkainternals.Auth{
+							NetSpec: &bindings.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "password",
+										},
+									},
+									Type: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "type",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						}),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{
+							PodName:      "p2",
+							PodNamespace: systemNamespace,
+						}),
+					)),
+					ConsumerReady(),
+				),
+				NewConsumerGroup(
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerAuth(&kafkainternals.Auth{
+							NetSpec: &bindings.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "password",
+										},
+									},
+									Type: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "type",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						}),
+					)),
+					ConsumerForTrigger(),
+					ConsumerGroupReplicas(2),
+				),
+			},
+			Key: ConsumerGroupTestKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return []eventingduckv1alpha1.Placement{
+						{PodName: "p1", VReplicas: 1},
+						{PodName: "p2", VReplicas: 1},
+					}, nil
+				}),
+			},
+			WantCreates: []runtime.Object{
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerAuth(&kafkainternals.Auth{
+							NetSpec: &bindings.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "password",
+										},
+									},
+									Type: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "type",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						}),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+					)),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						cg := NewConsumerGroup(
+							ConsumerGroupConsumerSpec(NewConsumerSpec(
+								ConsumerTopics("t1", "t2"),
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+									ConsumerGroupIdConfig("my.group.id"),
+								),
+								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+								ConsumerAuth(&kafkainternals.Auth{
+									NetSpec: &bindings.KafkaNetSpec{
+										SASL: bindings.KafkaSASLSpec{
+											Enable: true,
+											User: bindings.SecretValueFromSource{
+												SecretKeyRef: &corev1.SecretKeySelector{
+													LocalObjectReference: corev1.LocalObjectReference{
+														Name: SecretName,
+													},
+													Key: "user",
+												},
+											},
+											Password: bindings.SecretValueFromSource{
+												SecretKeyRef: &corev1.SecretKeySelector{
+													LocalObjectReference: corev1.LocalObjectReference{
+														Name: SecretName,
+													},
+													Key: "password",
+												},
+											},
+											Type: bindings.SecretValueFromSource{
+												SecretKeyRef: &corev1.SecretKeySelector{
+													LocalObjectReference: corev1.LocalObjectReference{
+														Name: SecretName,
+													},
+													Key: "type",
+												},
+											},
+										},
+										TLS: bindings.KafkaTLSSpec{
+											Enable: true,
+										},
+									},
+								}),
+							)),
+							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusReplicas(1),
+							ConsumerForTrigger(),
+						)
+						cg.Status.Placements = []eventingduckv1alpha1.Placement{
+							{PodName: "p1", VReplicas: 1},
+							{PodName: "p2", VReplicas: 1},
+						}
+						cg.MarkReconcileConsumersSucceeded()
+						cg.MarkScheduleSucceeded()
+						cg.Status.SubscriberURI = ConsumerSubscriberURI
 						return cg
 					}(),
 				},
@@ -396,6 +981,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
 							NewConsumerSpecDeliveryDeadLetterSink(),
+							ConsumerInitialOffset(sources.OffsetLatest),
 						)),
 					)),
 					ConsumerGroupReplicas(3),
@@ -421,6 +1007,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
 							NewConsumerSpecDeliveryDeadLetterSink(),
+							ConsumerInitialOffset(sources.OffsetLatest),
 						)),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -444,6 +1031,7 @@ func TestReconcileKind(t *testing.T) {
 							),
 							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
 								NewConsumerSpecDeliveryDeadLetterSink(),
+								ConsumerInitialOffset(sources.OffsetLatest),
 							)),
 							ConsumerVReplicas(2),
 							ConsumerPlacement(kafkainternals.PodBind{PodName: "p2", PodNamespace: systemNamespace}),
@@ -464,6 +1052,7 @@ func TestReconcileKind(t *testing.T) {
 								),
 								ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
 									NewConsumerSpecDeliveryDeadLetterSink(),
+									ConsumerInitialOffset(sources.OffsetLatest),
 								)),
 							)),
 							ConsumerGroupReplicas(3),
@@ -739,7 +1328,15 @@ func TestReconcileKind(t *testing.T) {
 			},
 			ConsumerLister:  listers.GetConsumerLister(),
 			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
+			SecretLister:    listers.GetSecretLister(),
+			KubeClient:      kubeclient.Get(ctx),
 			NameGenerator:   &CounterGenerator{},
+			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
+				return &kafkatesting.MockKafkaClient{}, nil
+			},
+			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
+				return 1, nil
+			},
 			SystemNamespace: systemNamespace,
 		}
 

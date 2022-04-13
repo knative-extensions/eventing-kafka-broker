@@ -190,6 +190,29 @@ func NewSSLSecret(ns, name string) *corev1.Secret {
 	}
 }
 
+func NewSASLSSLSecret(ns, name string) *corev1.Secret {
+
+	ca, userKey, userCert := loadCerts()
+
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:       ns,
+			Name:            name,
+			ResourceVersion: SecretResourceVersion,
+			UID:             SecretUUID,
+		},
+		Data: map[string][]byte{
+			security.ProtocolKey:      []byte(security.ProtocolSSL),
+			security.CaCertificateKey: ca,
+			security.UserKey:          userKey,
+			security.UserCertificate:  userCert,
+			security.SaslUserKey:      []byte("user"),
+			security.SaslPasswordKey:  []byte("password"),
+			"type":                    []byte("PLAIN"),
+		},
+	}
+}
+
 func loadCerts() (ca, userKey, userCert []byte) {
 	ca, err := ioutil.ReadFile("testdata/ca.crt")
 	if err != nil {

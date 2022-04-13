@@ -17,12 +17,14 @@
 package testing
 
 import (
+	"context"
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
 	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/apis"
@@ -35,6 +37,8 @@ import (
 const (
 	ConsumerNamePrefix = "test-cg"
 	ConsumerNamespace  = "test-cg-ns"
+
+	SecretName = "secret-name"
 )
 
 var (
@@ -75,6 +79,9 @@ func NewConsumer(ordinal int, opts ...ConsumerOption) *kafkainternals.Consumer {
 					APIVersion: "v1",
 				},
 			},
+			Delivery: &kafkainternals.DeliverySpec{
+				InitialOffset: sources.OffsetLatest,
+			},
 		},
 	}
 
@@ -87,6 +94,7 @@ func NewConsumer(ordinal int, opts ...ConsumerOption) *kafkainternals.Consumer {
 
 func NewConsumerSpec(opts ...ConsumerSpecOption) kafkainternals.ConsumerSpec {
 	spec := &kafkainternals.ConsumerSpec{}
+	spec.SetDefaults(context.Background())
 
 	for _, opt := range opts {
 		opt(spec)
@@ -205,6 +213,15 @@ func ConsumerConfigs(opts ...ConsumerConfigsOption) ConsumerSpecOption {
 		}
 
 		c.Configs = *configs
+	}
+}
+
+func ConsumerInitialOffset(offset sources.Offset) DeliverySpecOption {
+	return func(spec *kafkainternals.DeliverySpec) {
+		if spec == nil {
+			spec = &kafkainternals.DeliverySpec{}
+		}
+		spec.InitialOffset = offset
 	}
 }
 

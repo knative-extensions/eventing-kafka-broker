@@ -113,7 +113,6 @@ func TestReconcileKind(t *testing.T) {
 								ReplyStrategy: nil,
 								Filter:        nil,
 								Uid:           ConsumerUUID,
-								EgressConfig:  &contract.EgressConfig{},
 								DeliveryOrder: contract.DeliveryOrder_UNORDERED,
 								KeyType:       0,
 								Reference: &contract.Reference{

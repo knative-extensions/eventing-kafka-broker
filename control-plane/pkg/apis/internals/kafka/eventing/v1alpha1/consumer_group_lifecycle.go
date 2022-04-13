@@ -38,6 +38,10 @@ var (
 	)
 )
 
+func (cg *ConsumerGroup) InitializeConditions() {
+	cg.GetConditionSet().Manage(cg.GetStatus()).InitializeConditions()
+}
+
 func (c *ConsumerGroup) GetConditionSet() apis.ConditionSet {
 	return conditionSet
 }
@@ -54,6 +58,12 @@ func (cg *ConsumerGroup) MarkReconcileConsumersSucceeded() {
 
 func (cg *ConsumerGroup) MarkScheduleConsumerFailed(reason string, err error) error {
 	err = fmt.Errorf("failed to schedule consumers: %w", err)
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumerGroupConsumers, reason, err.Error())
+	return err
+}
+
+func (cg *ConsumerGroup) MarkInitializeOffsetFailed(reason string, err error) error {
+	err = fmt.Errorf("failed to initialize consumer group offset: %w", err)
 	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumerGroupConsumers, reason, err.Error())
 	return err
 }

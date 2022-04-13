@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
@@ -32,10 +33,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
 	"knative.dev/eventing/pkg/scheduler"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
 	nodeinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/node"
+	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/system"
@@ -101,7 +104,11 @@ func NewController(ctx context.Context) *controller.Impl {
 		SchedulerFunc:   func(s string) scheduler.Scheduler { return schedulers[strings.ToLower(s)] },
 		ConsumerLister:  consumer.Get(ctx).Lister(),
 		InternalsClient: internalsclient.Get(ctx).InternalV1alpha1(),
+		SecretLister:    secretinformer.Get(ctx).Lister(),
+		KubeClient:      kubeclient.Get(ctx),
 		NameGenerator:   names.SimpleNameGenerator,
+		NewKafkaClient:  sarama.NewClient,
+		InitOffsetsFunc: offset.InitOffsets,
 		SystemNamespace: system.Namespace(),
 	}
 

@@ -34,7 +34,7 @@ func (m MockKafkaClient) Config() *sarama.Config {
 }
 
 func (m MockKafkaClient) Controller() (*sarama.Broker, error) {
-	panic("implement me")
+	return &sarama.Broker{}, nil
 }
 
 func (m MockKafkaClient) RefreshController() (*sarama.Broker, error) {
