@@ -39,8 +39,6 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
 
-  private Long lastPollTimer = null;
-
   private boolean stopPolling;
 
   public OrderedConsumerVerticle(Initializer initializer, Set<String> topics) {
@@ -56,15 +54,11 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       .onFailure(startPromise::fail)
       .onSuccess(v -> {
         startPromise.complete();
-        this.poll(false);
+        this.poll();
       });
   }
 
-  private void poll(final boolean isTimer) {
-    if (isTimer) {
-      vertx.cancelTimer(lastPollTimer);
-      this.lastPollTimer = null;
-    }
+  private void poll() {
     if (this.stopPolling) {
       return;
     }
@@ -77,7 +71,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
           return;
         }
         exceptionHandler(t);
-        poll(/* isTimer poll */ false); // Keep polling.
+        vertx.setTimer(POLLING_MS, v -> poll()); // Keep polling.
       });
   }
 
@@ -95,9 +89,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       return;
     }
     if (records == null || records.size() == 0) {
-      if (lastPollTimer == null) {
-        lastPollTimer = vertx.setTimer(POLLING_MS, l -> poll(/* isTimer poll */ true));
-      }
+      vertx.setTimer(POLLING_MS, v -> poll());
       return;
     }
     // Put records in queues
@@ -127,7 +119,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private void maybePoll(final OrderedAsyncExecutor executor) {
     if (executor.isWaitingForTasks()) {
-      poll(/* isTimer poll */ false);
+      poll();
     }
   }
 }
