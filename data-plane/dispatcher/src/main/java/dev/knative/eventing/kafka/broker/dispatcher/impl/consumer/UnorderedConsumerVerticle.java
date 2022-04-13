@@ -57,7 +57,7 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
     }
     this.inFlightRecords = 0;
     this.closed = false;
-    this.isPollInFlight = true;
+    this.isPollInFlight = false;
   }
 
   @Override
@@ -88,9 +88,10 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
     if (inFlightRecords >= maxPollRecords) {
       logger.info(
         "In flight records exceeds " + ConsumerConfig.MAX_POLL_RECORDS_CONFIG +
-          " waiting for response from subscriber before polling for new records {} {}",
+          " waiting for response from subscriber before polling for new records {} {} {}",
         keyValue(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords),
-        keyValue("records", inFlightRecords)
+        keyValue("records", inFlightRecords),
+        keyValue("topics", topics)
       );
       return;
     }
