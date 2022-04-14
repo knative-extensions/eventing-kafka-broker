@@ -1,0 +1,58 @@
+# Copyright 2022 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-kafka-source-defaults
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
+  annotations:
+    knative.dev/example-checksum: "b6ed351d"
+data:
+  _example: |
+    ################################
+    #                              #
+    #    EXAMPLE CONFIGURATION     #
+    #                              #
+    ################################
+
+    # This block is not actually functional configuration,
+    # but serves to illustrate the available configuration
+    # options and document them in a way that is accessible
+    # to users that `kubectl edit` this config map.
+    #
+    # These sample configuration options may be copied out of
+    # this example block and unindented to be in the data block
+    # to actually change the configuration.
+
+    # autoscalingClass is the autoscaler class name to use.
+    # valid value: keda.autoscaling.knative.dev
+    # autoscalingClass: ""
+
+    # minScale is the minimum number of replicas to scale down to.
+    # minScale: "1"
+
+    # maxScale is the maximum number of replicas to scale up to.
+    # maxScale: "1"
+
+    # pollingInterval is the interval in seconds KEDA uses to poll metrics.
+    # pollingInterval: "30"
+
+    # cooldownPeriod is the period of time in seconds KEDA waits until it scales down.
+    # cooldownPeriod: "300"
+
+    # kafkaLagThreshold is the lag (ie. number of messages in a partition) threshold for KEDA to scale up sources.
+    # kafkaLagThreshold: "10"
