@@ -38,15 +38,16 @@ import (
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
 
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+
+	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -80,7 +81,7 @@ var (
 )
 
 type EgressBuilder struct {
-	contract.Egress
+	*contract.Egress
 }
 
 func (b EgressBuilder) build(useDialectedFilters bool) *contract.Egress {
@@ -89,7 +90,7 @@ func (b EgressBuilder) build(useDialectedFilters bool) *contract.Egress {
 	} else {
 		b.DialectedFilter = nil
 	}
-	return &b.Egress
+	return b.Egress
 }
 
 func TestTriggerReconciler(t *testing.T) {
@@ -549,7 +550,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Filter: &contract.Filter{Attributes: map[string]string{
 											"source": "source_value",
 										}},
@@ -568,7 +569,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Filter: &contract.Filter{Attributes: map[string]string{
 											"source": "source_value",
 										}},
@@ -623,7 +624,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Filter: &contract.Filter{Attributes: map[string]string{
 											"source": "source_value",
 										}},
@@ -939,7 +940,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Filter: &contract.Filter{Attributes: map[string]string{
 											"type": "type1",
 										}},
@@ -1036,7 +1037,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1055,7 +1056,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1091,7 +1092,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1110,7 +1111,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1150,7 +1151,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   ServiceURL,
 										ConsumerGroup: TriggerUUID,
 										Uid:           TriggerUUID,
@@ -1175,7 +1176,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1194,7 +1195,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1230,7 +1231,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1249,7 +1250,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1339,7 +1340,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1358,7 +1359,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1389,7 +1390,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1408,7 +1409,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1458,7 +1459,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1477,7 +1478,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1508,7 +1509,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1527,7 +1528,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1546,7 +1547,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   ServiceURL,
 										ConsumerGroup: TriggerUUID,
 										Uid:           TriggerUUID,
@@ -1625,7 +1626,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1644,7 +1645,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1675,7 +1676,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1694,7 +1695,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   ServiceURL,
 										ConsumerGroup: TriggerUUID,
 										Uid:           TriggerUUID,
@@ -1713,7 +1714,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1749,7 +1750,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1768,7 +1769,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1818,7 +1819,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1837,7 +1838,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1868,7 +1869,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1893,7 +1894,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Reference:     TriggerReference(),
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1929,7 +1930,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1948,7 +1949,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
