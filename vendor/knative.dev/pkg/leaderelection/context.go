@@ -192,7 +192,11 @@ func newStandardBuckets(queueName string, cc ComponentConfig) []reconciler.Bucke
 }
 
 func standardBucketName(ordinal uint32, queueName string, cc ComponentConfig) string {
-	return strings.ToLower(fmt.Sprintf("%s.%s.%02d-of-%02d", cc.Component, queueName, ordinal, cc.Buckets))
+	prefix := fmt.Sprintf("%s.%s", cc.Component, queueName)
+	if v, ok := cc.LeaseNamesPrefixMapping[prefix]; ok && len(v) > 0 {
+		prefix = v
+	}
+	return strings.ToLower(fmt.Sprintf("%s.%02d-of-%02d", prefix, ordinal, cc.Buckets))
 }
 
 type statefulSetBuilder struct {
