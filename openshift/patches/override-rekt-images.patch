@@ -25,7 +25,7 @@ index 207c3d68..63858bce 100644
        env:
          - name: "K_SINK"
 diff --git a/vendor/knative.dev/reconciler-test/pkg/eventshub/103-pod.yaml b/vendor/knative.dev/reconciler-test/pkg/eventshub/103-pod.yaml
-index 80f37d08..22603114 100644
+index 80f37d08..860600a1 100644
 --- a/vendor/knative.dev/reconciler-test/pkg/eventshub/103-pod.yaml
 +++ b/vendor/knative.dev/reconciler-test/pkg/eventshub/103-pod.yaml
 @@ -24,7 +24,7 @@ spec:
@@ -37,4 +37,3 @@ index 80f37d08..22603114 100644
        imagePullPolicy: "IfNotPresent"
        env:
          - name: "SYSTEM_NAMESPACE"
-           valueFrom:
