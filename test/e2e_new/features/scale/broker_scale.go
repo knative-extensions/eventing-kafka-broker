@@ -31,17 +31,19 @@ import (
 func BrokerTriggerLimits() *feature.Feature {
 	f := feature.NewFeatureNamed("Broker and Trigger limits")
 
-	nBrokers := 50
-	nTriggers := 20
+	timings := []time.Duration{5 * time.Second, 20 * time.Minute}
+
+	nBrokers := 100
+	nTriggers := 5
 	exponential := eventingduck.BackoffPolicyExponential
 
 	for b := 0; b < nBrokers; b++ {
 		cfg := broker.WithEnvConfig()
 		cfg = append(cfg, broker.WithRetry(10, &exponential, pointer.String("PT0.2S")))
-		cfg = append(cfg, broker.WithDeadLetterSink(nil, ""))
+		cfg = append(cfg, broker.WithDeadLetterSink(nil, "https://my-sink.com"))
 
 		f.Setup("Install broker "+brokerName(b), broker.Install(brokerName(b), cfg...))
-		f.Setup("Broker "+brokerName(b)+" is ready", broker.IsReady(brokerName(b), 5*time.Second, 10*time.Minute))
+		f.Setup("Broker "+brokerName(b)+" is ready", broker.IsReady(brokerName(b), timings...))
 
 		for i := 0; i < nTriggers; i++ {
 			cfg := []manifest.CfgFn{
@@ -50,10 +52,11 @@ func BrokerTriggerLimits() *feature.Feature {
 					"subject": "ping",
 				}),
 				trigger.WithRetry(10, &exponential, pointer.String("PT0.2S")),
-				trigger.WithDeadLetterSink(nil, ""),
+				trigger.WithDeadLetterSink(nil, "https://example.com"),
+				trigger.WithSubscriber(nil, "https://example.com"),
 			}
 			f.Setup("Install trigger "+triggerName(b, i), trigger.Install(triggerName(b, i), brokerName(b), cfg...))
-			f.Setup("Trigger "+triggerName(b, i)+" is ready", trigger.IsReady(triggerName(b, i)))
+			f.Setup("Trigger "+triggerName(b, i)+" is ready", trigger.IsReady(triggerName(b, i), timings...))
 		}
 	}
 
@@ -65,7 +68,7 @@ func BrokerTriggerLimits() *feature.Feature {
 func BrokerLimits() *feature.Feature {
 	f := feature.NewFeatureNamed("Broker scale")
 
-	nBrokers := 1000
+	nBrokers := 500
 	exponential := eventingduck.BackoffPolicyExponential
 
 	for i := 0; i < nBrokers; i++ {
