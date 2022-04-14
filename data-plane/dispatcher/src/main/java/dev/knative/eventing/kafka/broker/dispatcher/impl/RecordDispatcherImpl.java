@@ -23,6 +23,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDeserializer;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEvent;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KafkaConsumerRecordUtils;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -60,6 +61,9 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   // When we don't have an HTTP response, due to other errors for networking, etc,
   // we only add the code class tag in the "error" class (5xx).
   private static final Tag NO_RESPONSE_CODE_CLASS_TAG = Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, "5xx");
+
+  // Invalid cloud event records that are discarded by dispatch may not have a record type. So we set Tag as below.
+  private static final Tag INVALID_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "InvalidCloudEvent");
 
   private final Filter filter;
   private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> subscriberSender;
@@ -147,9 +151,18 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       |        |                       +-------------+----------> end
       +->end<--+
      */
+    final var recordContext = new ConsumerRecordContext(record);
+
+    if (record.record().value() instanceof InvalidCloudEvent) {
+      incrementDiscardedRecord(recordContext);
+      final var msg = String.format("Invalid record received topic %s, partition %d, offset %d", record.topic(), record.partition(), record.offset());
+      logger.error(msg);
+      recordDispatcherListener.recordReceived(record);
+      recordDispatcherListener.recordDiscarded(record);
+      return Future.failedFuture(msg);
+    }
 
     try {
-      final var recordContext = new ConsumerRecordContext(record);
       Promise<Void> promise = Promise.promise();
       onRecordReceived(maybeDeserializeValueFromHeaders(recordContext), promise);
       return promise.future();
@@ -161,6 +174,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       //
       // So discard record if we can't deal with the record, so that we can
       // make progress in the partition.
+      incrementDiscardedRecord(recordContext);
       logError("Exception occurred, discarding the record", record, ex);
       recordDispatcherListener.recordReceived(record);
       recordDispatcherListener.recordDiscarded(record);
@@ -297,6 +311,13 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       .increment();
   }
 
+  private void incrementDiscardedRecord(final ConsumerRecordContext recordContext) {
+    Metrics
+    .discardedEventCount(getTags(recordContext))
+    .register(meterRegistry)
+    .increment();
+  }
+
   private void recordDispatchLatency(final HttpResponse<?> response,
                                      final ConsumerRecordContext recordContext) {
     final var latency = recordContext.performLatency();
@@ -334,6 +355,9 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   }
 
   private Tags getTags(final ConsumerRecordContext recordContext) {
+    if (recordContext.getRecord().record().value() instanceof InvalidCloudEvent) {
+      return this.resourceContext.getTags().and(INVALID_EVENT_TYPE_TAG);
+    }
     return this.resourceContext.getTags().and(
       Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType())
     );

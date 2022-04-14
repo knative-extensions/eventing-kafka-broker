@@ -77,6 +77,12 @@ public class Metrics {
    */
   public static final String EVENT_PROCESSING_LATENCY = "event_processing_latencies";
 
+    /**
+   * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
+   * @see Metrics#discardedEventCount(io.micrometer.core.instrument.Tags)
+   */
+  public static final String DISCARDED_EVENTS_COUNT = "discarded_invalid_event_count";
+
   /**
    * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
    */
@@ -212,5 +218,13 @@ public class Metrics {
       .tags(tags)
       .baseUnit(BaseUnits.MILLISECONDS)
       .serviceLevelObjectives(LATENCY_SLOs);
+  }
+
+  public static Counter.Builder discardedEventCount(final io.micrometer.core.instrument.Tags tags) {
+    return Counter
+      .builder(DISCARDED_EVENTS_COUNT)
+      .description("Number of invalid events discarded")
+      .tags(tags)
+      .baseUnit(Metrics.Units.DIMENSIONLESS);
   }
 }
