@@ -79,6 +79,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
   private static final Logger logger = LoggerFactory.getLogger(ConsumerVerticleFactoryImpl.class);
 
+  private static final long DEFAULT_TIMEOUT_MS = 600_000L;
+
   private final static CloudEventSender NO_DEAD_LETTER_SINK_SENDER = CloudEventSender.noop("No dead letter sink set");
 
   private final Map<String, Object> consumerConfigs;
@@ -284,7 +286,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
       options.setTimeout(
         egressConfig.getTimeout() > 0 ?
           egressConfig.getTimeout() :
-          CircuitBreakerOptions.DEFAULT_TIMEOUT
+          DEFAULT_TIMEOUT_MS
       );
 
       // Retry options
