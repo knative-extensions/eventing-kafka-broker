@@ -15,6 +15,9 @@ require (
 	github.com/xdg-go/scram v1.0.2
 	go.uber.org/atomic v1.9.0
 	go.uber.org/zap v1.19.1
+	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
+	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
 	google.golang.org/protobuf v1.27.1
 	k8s.io/api v0.22.5
 	k8s.io/apiextensions-apiserver v0.22.5
@@ -22,9 +25,9 @@ require (
 	k8s.io/apiserver v0.22.5
 	k8s.io/client-go v0.22.5
 	k8s.io/utils v0.0.0-20211208161948-7d6a63dca704
-	knative.dev/eventing v0.30.1
-	knative.dev/eventing-kafka v0.28.0
-	knative.dev/hack v0.0.0-20220224013837-e1785985d364
-	knative.dev/pkg v0.0.0-20220301181942-2fdd5f232e77
-	knative.dev/reconciler-test v0.0.0-20220303141206-84821d26ed1f
+	knative.dev/eventing v0.29.1
+	knative.dev/eventing-kafka v0.29.1
+	knative.dev/hack v0.0.0-20220118141833-9b2ed8471e30
+	knative.dev/pkg v0.0.0-20220222214439-083dd97300e1
+	knative.dev/reconciler-test v0.0.0-20220118183433-c8bfbe66bada
 )

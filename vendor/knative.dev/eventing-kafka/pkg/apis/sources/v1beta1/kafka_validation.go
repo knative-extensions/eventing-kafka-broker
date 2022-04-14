@@ -36,15 +36,15 @@ func (ks *KafkaSource) Validate(ctx context.Context) *apis.FieldError {
 func (kss *KafkaSourceSpec) Validate(ctx context.Context) *apis.FieldError {
 	var errs *apis.FieldError
 
-	// Validate sink
-	errs = errs.Also(kss.Sink.Validate(ctx).ViaField("sink"))
+	// Validate source spec
+	errs = errs.Also(kss.SourceSpec.Validate(ctx))
 
 	// Check for mandatory fields
 	if len(kss.Topics) <= 0 {
 		errs = errs.Also(apis.ErrMissingField("topics"))
 	}
 	if len(kss.BootstrapServers) <= 0 {
-		errs = errs.Also(apis.ErrMissingField("bootstrapServer"))
+		errs = errs.Also(apis.ErrMissingField("bootstrapServers"))
 	}
 	switch kss.InitialOffset {
 	case OffsetEarliest, OffsetLatest:

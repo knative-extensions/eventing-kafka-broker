@@ -421,6 +421,7 @@ go.uber.org/zap/internal/ztest
 go.uber.org/zap/zapcore
 go.uber.org/zap/zaptest
 # golang.org/x/crypto v0.0.0-20220214200702-86341886e292
+## explicit
 golang.org/x/crypto/cast5
 golang.org/x/crypto/md4
 golang.org/x/crypto/openpgp
@@ -435,6 +436,7 @@ golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
 # golang.org/x/net v0.0.0-20220225172249-27dd8689420f
+## explicit
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/http/httpguts
@@ -458,6 +460,7 @@ golang.org/x/oauth2/jwt
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
 # golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9
+## explicit
 golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
@@ -1123,7 +1126,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.30.1
+# knative.dev/eventing v0.29.1
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck
@@ -1257,7 +1260,7 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/eventing-kafka v0.28.0
+# knative.dev/eventing-kafka v0.29.1
 ## explicit
 knative.dev/eventing-kafka/pkg/apis/bindings
 knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
@@ -1267,6 +1270,7 @@ knative.dev/eventing-kafka/pkg/apis/messaging
 knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1
 knative.dev/eventing-kafka/pkg/apis/sources/config
 knative.dev/eventing-kafka/pkg/apis/sources/v1beta1
+knative.dev/eventing-kafka/pkg/channel/consolidated/apis/messaging
 knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/testing
 knative.dev/eventing-kafka/pkg/channel/distributed/common/kafka/constants
 knative.dev/eventing-kafka/pkg/client/clientset/versioned
@@ -1314,11 +1318,11 @@ knative.dev/eventing-kafka/test/rekt/features/kafkachannel
 knative.dev/eventing-kafka/test/rekt/resources/kafkachannel
 knative.dev/eventing-kafka/test/rekt/resources/resetoffset
 knative.dev/eventing-kafka/test/upgrade/continual
-# knative.dev/hack v0.0.0-20220224013837-e1785985d364
+# knative.dev/hack v0.0.0-20220118141833-9b2ed8471e30
 ## explicit
 knative.dev/hack
 knative.dev/hack/shell
-# knative.dev/pkg v0.0.0-20220301181942-2fdd5f232e77
+# knative.dev/pkg v0.0.0-20220222214439-083dd97300e1
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1413,7 +1417,7 @@ knative.dev/pkg/webhook/json
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20220303141206-84821d26ed1f
+# knative.dev/reconciler-test v0.0.0-20220118183433-c8bfbe66bada
 ## explicit
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment

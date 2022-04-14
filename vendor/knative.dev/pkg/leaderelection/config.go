@@ -56,8 +56,6 @@ func NewConfigFromMap(data map[string]string) (*Config, error) {
 		cm.AsDuration("retry-period", &config.RetryPeriod),
 
 		cm.AsUint32("buckets", &config.Buckets),
-
-		cm.AsOptionalMap("map-lease-prefix", &config.LeaseNamesPrefixMapping),
 	); err != nil {
 		return nil, err
 	}
@@ -81,21 +79,19 @@ func NewConfigFromConfigMap(configMap *corev1.ConfigMap) (*Config, error) {
 // contained within a single namespace. Typically these will correspond to a
 // single source repository, viz: serving or eventing.
 type Config struct {
-	Buckets                 uint32
-	LeaseDuration           time.Duration
-	RenewDeadline           time.Duration
-	RetryPeriod             time.Duration
-	LeaseNamesPrefixMapping map[string]string
+	Buckets       uint32
+	LeaseDuration time.Duration
+	RenewDeadline time.Duration
+	RetryPeriod   time.Duration
 }
 
 func (c *Config) GetComponentConfig(name string) ComponentConfig {
 	return ComponentConfig{
-		Component:               name,
-		Buckets:                 c.Buckets,
-		LeaseDuration:           c.LeaseDuration,
-		RenewDeadline:           c.RenewDeadline,
-		RetryPeriod:             c.RetryPeriod,
-		LeaseNamesPrefixMapping: c.LeaseNamesPrefixMapping,
+		Component:     name,
+		Buckets:       c.Buckets,
+		LeaseDuration: c.LeaseDuration,
+		RenewDeadline: c.RenewDeadline,
+		RetryPeriod:   c.RetryPeriod,
 	}
 }
 
@@ -127,11 +123,6 @@ type ComponentConfig struct {
 	// be generated to be used as identity for each BuildElector call.
 	// Autoscaler uses the pod IP as identity.
 	Identity string
-
-	// LeaseNamesPrefixMapping maps lease prefixes
-	// from <component>.<package>.<reconciler_type_name> to the
-	// associated value when using standardBuilder.
-	LeaseNamesPrefixMapping map[string]string
 }
 
 // statefulSetID is a envconfig Decodable controller ordinal and name.
