@@ -36,7 +36,6 @@ import (
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 
-	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
@@ -47,8 +46,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
-// TODO: no need for a configmap watcher?
-func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
+func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.IngressConditionSet)
 
