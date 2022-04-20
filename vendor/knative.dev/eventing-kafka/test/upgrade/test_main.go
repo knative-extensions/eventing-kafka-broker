@@ -17,6 +17,7 @@ limitations under the License.
 package upgrade
 
 import (
+	"log"
 	"os"
 	"testing"
 
@@ -25,6 +26,7 @@ import (
 	eventingTest "knative.dev/eventing/test"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/pkg/system"
+	"knative.dev/pkg/test/zipkin"
 )
 
 var (
@@ -46,7 +48,10 @@ func RunMainTest(m *testing.M) {
 	}
 	os.Exit(func() int {
 		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
-
+		// Any tests may SetupZipkinTracing, it will only actually be done once. This should be the ONLY
+		// place that cleans it up. If an individual test calls this instead, then it will break other
+		// tests that need the tracing in place.
+		defer zipkin.CleanupZipkinTracingSetup(log.Printf)
 		return m.Run()
 	}())
 }
