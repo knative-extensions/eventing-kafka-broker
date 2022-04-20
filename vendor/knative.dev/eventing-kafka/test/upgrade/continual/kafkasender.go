@@ -26,8 +26,10 @@ import (
 	protocolkafka "github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 	"knative.dev/eventing-kafka/pkg/common/client"
+	"knative.dev/eventing-kafka/pkg/common/tracing"
 	"knative.dev/eventing/test/upgrade/prober/wathola/sender"
 )
 
@@ -47,7 +49,7 @@ var (
 
 // CreateKafkaSender will create a wathola sender that sends events to Kafka
 // topic directly.
-func CreateKafkaSender(ctx context.Context, log *zap.SugaredLogger) sender.EventSender {
+func CreateKafkaSender(ctx context.Context, log *zap.SugaredLogger) sender.EventSenderWithContext {
 	return &kafkaSender{
 		ctx: ctx,
 		log: log,
@@ -64,14 +66,17 @@ func (k *kafkaSender) Supports(endpoint interface{}) bool {
 	}
 }
 
-func (k *kafkaSender) SendEvent(ce cloudevents.Event, rawEndpoint interface{}) error {
+func (k *kafkaSender) SendEventWithContext(ctx context.Context, ce cloudevents.Event, rawEndpoint interface{}) error {
 	endpoint, err := castAsTopicEndpoint(rawEndpoint)
 	if err != nil {
 		// this should never happen, as Supports func should be called first.
 		return err
 	}
+	clientID := "continualtests-kafka-sender"
+	kafkaSenderCtx, span := trace.StartSpan(ctx, clientID+"-"+endpoint.TopicName)
+	defer span.End()
 	conf, err := client.NewConfigBuilder().
-		WithClientId("continualtests-kafka-sender").
+		WithClientId(clientID).
 		WithDefaults().
 		Build(k.ctx)
 	// Prevent excessive wait time.
@@ -92,6 +97,7 @@ func (k *kafkaSender) SendEvent(ce cloudevents.Event, rawEndpoint interface{}) e
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrCantSend, err)
 	}
+	kafkaProducerMessage.Headers = append(kafkaProducerMessage.Headers, tracing.SerializeTrace(trace.FromContext(kafkaSenderCtx).SpanContext())...)
 	part, offset, err := producer.SendMessage(kafkaProducerMessage)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrCantSend, err)

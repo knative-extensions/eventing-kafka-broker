@@ -22,5 +22,6 @@ import pkgupgrade "knative.dev/pkg/test/upgrade"
 func EventingCore() pkgupgrade.Operation {
 	return pkgupgrade.NewOperation("EventingCore", func(c pkgupgrade.Context) {
 		runShellFunc("start_latest_knative_eventing", c)
+		runShellFunc("install_zipkin", c)
 	})
 }
