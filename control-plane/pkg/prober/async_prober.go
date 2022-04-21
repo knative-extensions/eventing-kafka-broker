@@ -22,57 +22,55 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
-	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	"knative.dev/pkg/logging"
 )
+
+type IPsLister func() ([]string, error)
 
 type asyncProber struct {
 	client    httpClient
 	enqueue   EnqueueFunc
 	logger    *zap.Logger
 	cache     Cache
-	podLister func() ([]*corev1.Pod, error)
+	IPsLister IPsLister
 	port      string
 }
 
 // NewAsync creates an async Prober.
 //
 // It reports status changes using the provided EnqueueFunc.
-func NewAsync(ctx context.Context, client httpClient, port string, podsLabelsSelector labels.Selector, enqueue EnqueueFunc) Prober {
+func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPsLister, enqueue EnqueueFunc) Prober {
 	logger := logging.FromContext(ctx).Desugar().
 		With(zap.String("scope", "prober"))
 
 	if len(port) == 0 {
 		logger.Fatal("Port is required")
 	}
-	podLister := podinformer.Get(ctx).Lister()
 	return &asyncProber{
 		client:    client,
 		enqueue:   enqueue,
 		logger:    logger,
 		cache:     NewLocalExpiringCache(ctx, 30*time.Minute),
-		podLister: func() ([]*corev1.Pod, error) { return podLister.List(podsLabelsSelector) },
+		IPsLister: IPsLister,
 		port:      port,
 	}
 }
 
 func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expected Status) Status {
 	address := addressable.Address
-	pods, err := a.podLister()
+	IPs, err := a.IPsLister()
 	if err != nil {
-		a.logger.Error("Failed to list pods", zap.Error(err))
+		a.logger.Error("Failed to list IPs", zap.Error(err))
 		return StatusUnknown
 	}
-	// Return `StatusNotReady` when there are no pods.
-	if len(pods) == 0 {
+	// Return `StatusNotReady` when there are no IPs.
+	if len(IPs) == 0 {
 		return StatusNotReady
 	}
 
 	// aggregatedCurrentKnownStatus keeps track of the current status in the cache excluding `StatusReady`
-	// since we just skip pods that have `StatusReady`.
+	// since we just skip IPs that have `StatusReady`.
 	//
 	// If there is a status that is `StatusUnknown` the final status  we want to return is `StatusUnknown`,
 	// while we return `StatusNotReady` when the status is known and all probes returned `StatusNotReady`.
@@ -83,18 +81,18 @@ func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expect
 	// It goes to done once we have all probe request results regardless of whether they are coming from
 	// the cache or from an actual request.
 	var wg sync.WaitGroup
-	wg.Add(len(pods))
+	wg.Add(len(IPs))
 
 	// enqueueOnce allows requeuing the resource only once, when we have all probe request results.
 	var enqueueOnce sync.Once
 
-	for _, p := range pods {
+	for _, IP := range IPs {
 		podUrl := *address
-		podUrl.Host = p.Status.PodIP + ":" + a.port
+		podUrl.Host = IP + ":" + a.port
 		address := podUrl.String()
 
 		logger := a.logger.
-			With(zap.String("pod.metadata.name", p.Name)).
+			With(zap.String("IP", IP)).
 			With(zap.String("address", address))
 
 		currentStatus := a.cache.GetStatus(address)
