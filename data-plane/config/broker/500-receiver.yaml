@@ -181,6 +181,10 @@ spec:
       port: 80
       protocol: TCP
       targetPort: 8080
+    - name: http-container
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
     - name: http-metrics
       port: 9090
       protocol: TCP
