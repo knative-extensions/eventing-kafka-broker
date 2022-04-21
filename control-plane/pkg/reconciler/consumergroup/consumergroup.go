@@ -324,6 +324,9 @@ func (r Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkainterna
 	}
 
 	saramaConfig, err := kafka.GetSaramaConfig(options)
+	if err != nil {
+		return fmt.Errorf("failed to create Admin client config: %w", err)
+	}
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
 	kafkaClient, err := r.NewKafkaClient(bootstrapServers, saramaConfig)
