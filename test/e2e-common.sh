@@ -313,7 +313,7 @@ function run_eventing_core_tests() {
   export CHANNEL_GROUP_KIND="KafkaChannel.messaging.knative.dev"
   export CHANNEL_VERSION="v1beta1"
 
-  go_test_e2e -timeout=1h -parallel=12 ./test/rekt/... || return $?
+  go_test_e2e -timeout=1h40m -parallel=12 ./test/rekt/... || return $?
 
   popd || return $?
 }
