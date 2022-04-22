@@ -30,6 +30,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private static final Logger logger = LoggerFactory.getLogger(OrderedConsumerVerticle.class);
@@ -39,12 +41,12 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
 
-  private boolean stopPolling;
+  private boolean closed;
 
   public OrderedConsumerVerticle(Initializer initializer, Set<String> topics) {
     super(initializer, topics);
     this.recordDispatcherExecutors = new HashMap<>();
-    this.stopPolling = false;
+    this.closed = false;
   }
 
   @Override
@@ -59,14 +61,15 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   }
 
   private void poll() {
-    if (this.stopPolling) {
+    if (this.closed) {
       return;
     }
-    logger.debug("Polling for records");
+    logger.debug("Polling for records {}", keyValue("topics", topics));
+
     this.consumer.poll(POLLING_TIMEOUT)
       .onSuccess(this::recordsHandler)
       .onFailure(t -> {
-        if (this.stopPolling) {
+        if (this.closed) {
           // The failure might have been caused by stopping the consumer, so we just ignore it
           return;
         }
@@ -78,14 +81,14 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   @Override
   public void stop(Promise<Void> stopPromise) {
     // Stop the executors
-    this.stopPolling = true;
+    this.closed = true;
     this.recordDispatcherExecutors.values().forEach(OrderedAsyncExecutor::stop);
     // Stop the consumer
     super.stop(stopPromise);
   }
 
   private void recordsHandler(KafkaConsumerRecords<Object, CloudEvent> records) {
-    if (this.stopPolling) {
+    if (this.closed) {
       return;
     }
     if (records == null || records.size() == 0) {
@@ -103,11 +106,14 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record,
                                 final OrderedAsyncExecutor executor) {
+    if (this.closed) {
+      return Future.failedFuture("Consumer verticle closed topics=" + topics);
+    }
     return this.recordDispatcher.dispatch(record)
       .onComplete(v -> maybePoll(executor));
   }
 
-  private OrderedAsyncExecutor executorFor(final TopicPartition topicPartition) {
+  private synchronized OrderedAsyncExecutor executorFor(final TopicPartition topicPartition) {
     var executor = this.recordDispatcherExecutors.get(topicPartition);
     if (executor != null) {
       return executor;
