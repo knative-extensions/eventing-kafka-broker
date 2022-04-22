@@ -27,12 +27,12 @@ if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
   success
 fi
 
+# TODO: move this into a separate test job
+run_eventing_core_tests || fail_test "Failed to run eventing core tests"
+
 go_test_e2e -timeout=1h ./test/e2e/... || fail_test "E2E suite failed"
 
 go_test_e2e -timeout=1h ./test/e2e_channel/... -channels=messaging.knative.dev/v1beta1:KafkaChannel || fail_test "E2E suite (KafkaChannel) failed"
-
-# TODO: move this into a separate test job
-run_eventing_core_tests || fail_test "Failed to run eventing core tests"
 
 go_test_e2e -tags=deletecm ./test/e2e/... || fail_test "E2E (deletecm) suite failed"
 
