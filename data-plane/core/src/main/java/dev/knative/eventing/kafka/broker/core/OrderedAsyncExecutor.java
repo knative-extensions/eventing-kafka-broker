@@ -80,5 +80,6 @@ public class OrderedAsyncExecutor {
    */
   public void stop() {
     this.isStopped = true;
+    this.queue.clear();
   }
 }
