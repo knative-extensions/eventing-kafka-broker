@@ -162,7 +162,7 @@ func (m *MockKafkaClusterAdmin) ListConsumerGroupOffsets(group string, topicPart
 }
 
 func (m *MockKafkaClusterAdmin) DeleteConsumerGroup(group string) error {
-	panic("implement me")
+	return nil
 }
 
 func (m *MockKafkaClusterAdmin) DescribeCluster() (brokers []*sarama.Broker, controllerID int32, err error) {

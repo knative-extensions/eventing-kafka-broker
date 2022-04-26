@@ -19,11 +19,13 @@ package v2
 import (
 	"context"
 
+	"github.com/Shopify/sarama"
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/pkg/controller"
 
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
+	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 
@@ -41,13 +43,18 @@ func NewController(ctx context.Context) *controller.Impl {
 	sources.RegisterAlternateKafkaConditionSet(conditionSet)
 
 	r := &Reconciler{
-		ConsumerGroupLister: consumerGroupInformer.Lister(),
-		InternalsClient:     consumergroupclient.Get(ctx),
+		SecretLister:               secretinformer.Get(ctx).Lister(),
+		ConsumerGroupLister:        consumerGroupInformer.Lister(),
+		InternalsClient:            consumergroupclient.Get(ctx).InternalV1alpha1(),
+		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 	}
 
 	impl := kafkasource.NewImpl(ctx, r)
 
 	kafkaInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+
+	r.SecretTracker = impl.Tracker
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(r.SecretTracker.OnChanged))
 
 	// ConsumerGroup changes and enqueue associated KafkaSource
 	consumerGroupInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
