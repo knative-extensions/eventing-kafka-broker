@@ -148,6 +148,9 @@ message Egress {
 
   // CNCF CloudEvents SubscriptionsAPI compliant filters
   repeated DialectedFilter dialectedFilter = 12;
+
+  // Number of virtual replicas.
+  int32 vReplicas = 13;
 }
 
 // CloudEvent content mode
