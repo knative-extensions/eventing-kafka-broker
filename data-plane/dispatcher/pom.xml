@@ -129,6 +129,15 @@
         <version>${maven.shade.plugin.version}</version>
         <configuration>
           <minimizeJar>true</minimizeJar>
+          <filters>
+            <filter>
+              <!-- Some LZ4 classes are loaded via reflection. Required explicit inclusion due to minimizeJar=true -->
+              <artifact>org.lz4:lz4-java</artifact>
+              <includes>
+                <include>**</include>
+              </includes>
+            </filter>
+          </filters>
         </configuration>
         <executions>
           <execution>
