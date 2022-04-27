@@ -15,13 +15,20 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.OrderedAsyncExecutor;
 import io.cloudevents.CloudEvent;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Refill;
+import io.github.bucket4j.local.LocalBucketBuilder;
+import io.github.bucket4j.local.SynchronizationStrategy;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,13 +48,32 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
   private final PartitionRevokedHandler partitionRevokedHandler;
+  private final DataPlaneContract.Egress egress;
+  private final Bucket bucket;
 
   private boolean closed;
   private long pollTimer;
   private boolean isPollInFlight;
 
-  public OrderedConsumerVerticle(Initializer initializer, Set<String> topics) {
+  public OrderedConsumerVerticle(final DataPlaneContract.Egress egress,
+                                 final Initializer initializer,
+                                 final Set<String> topics,
+                                 final int maxPollRecords) {
     super(initializer, topics);
+
+    final var vReplicas = Math.max(1, egress.getVReplicas());
+    final var tokens = maxPollRecords * vReplicas;
+    if (egress.getFeatureFlags().getEnableRateLimiter()) {
+      this.bucket = new LocalBucketBuilder()
+        .addLimit(Bandwidth.classic(tokens, Refill.greedy(tokens, Duration.ofSeconds(1))))
+        .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
+        .withMillisecondPrecision()
+        .build();
+    } else {
+      this.bucket = null;
+    }
+
+    this.egress = egress;
     this.recordDispatcherExecutors = new HashMap<>();
     this.closed = false;
     this.isPollInFlight = false;
@@ -78,12 +104,35 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   }
 
   private void poll() {
-    if (this.closed || this.isPollInFlight || !isWaitingForTasks()) {
+    if (this.closed || this.isPollInFlight) {
+      logger.debug("Consumer closed or poll is in-flight");
       return;
     }
+
+    // When we don't have tokens available, we just wait `POLLING_MS`
+    // before trying to poll again.
+    if (bucket != null && bucket.getAvailableTokens() <= 0) {
+      logger.info("Rate limiter, tokens unavailable {} {} {}",
+        keyValue("resource", egress.getReference()),
+        keyValue(ConsumerConfig.GROUP_ID_CONFIG, egress.getConsumerGroup()),
+        keyValue("wait.ms", POLLING_MS)
+      );
+      return;
+    }
+
+    // Only poll new records when at-least one internal per-partition queue
+    // needs more records.
+    if (areAllExecutorsBusy()) {
+      logger.debug("all executors are busy");
+      return;
+    }
+
     this.isPollInFlight = true;
 
-    logger.debug("Polling for records {}", keyValue("topics", topics));
+    logger.debug("Polling for records {} {}",
+      keyValue("topics", topics),
+      keyValue("resource", egress.getReference())
+    );
 
     this.consumer.poll(POLLING_TIMEOUT)
       .onSuccess(this::recordsHandler)
@@ -121,8 +170,13 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     if (records == null || records.size() == 0) {
       return;
     }
-    // Put records in queues
-    // I assume the records are ordered per topic-partition
+
+    if (bucket != null) {
+      // Once we have new records, we force add them to internal per-partition queues.
+      bucket.forceAddTokens(records.size());
+    }
+
+    // Put records in internal per-partition queues.
     for (int i = 0; i < records.size(); i++) {
       final var record = records.recordAt(i);
       final var executor = executorFor(new TopicPartition(record.topic(), record.partition()));
@@ -132,7 +186,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record) {
     if (this.closed) {
-      return Future.failedFuture("Consumer verticle closed topics=" + topics);
+      return Future.failedFuture("Consumer verticle closed topics=" + topics + " resource=" + egress.getReference());
     }
     return this.recordDispatcher.dispatch(record);
   }
@@ -147,12 +201,19 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     return executor;
   }
 
-  private boolean isWaitingForTasks() {
-    for (OrderedAsyncExecutor value : this.recordDispatcherExecutors.values()) {
-      if (value.isWaitingForTasks()) {
-        return true;
+  private boolean areAllExecutorsBusy() {
+    if (recordDispatcherExecutors.isEmpty()) {
+      // No executors
+      return false;
+    }
+
+    for (OrderedAsyncExecutor executor: recordDispatcherExecutors.values()) {
+      if (executor.isWaitingForTasks()) {
+        return false;
       }
     }
-    return this.recordDispatcherExecutors.size() == 0;
+
+    // All executors are busy
+    return true;
   }
 }

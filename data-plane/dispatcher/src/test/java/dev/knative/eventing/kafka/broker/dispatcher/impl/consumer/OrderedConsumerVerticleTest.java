@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
@@ -55,25 +56,38 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
 
   private static Stream<Arguments> inputArgs() {
     return Stream.of(
-      Arguments.of(0L, 10, 10, true),
-      Arguments.of(0L, 100, 10, true),
-      Arguments.of(0L, 1_000, 10, true),
-      Arguments.of(0L, 10_000, 10, true),
-      Arguments.of(50L, 500, 10, true),
-      Arguments.of(50L, 100_000, 1_000, true),
-      Arguments.of(50L, 100_000, 1_000, false),
-      Arguments.of(100L, 10, 10, true),
-      Arguments.of(100L, 100, 10, true),
-      Arguments.of(1000L, 10, 10, true),
-      Arguments.of(1000L, 100, 10, false), // ~10 seconds +- 5 seconds
-      Arguments.of(500L, 10_000 * 4, 10_000, false)
+      Arguments.of(0L, 10, 10, true, false),
+      Arguments.of(0L, 100, 10, true, false),
+      Arguments.of(0L, 1_000, 10, true, false),
+      Arguments.of(0L, 10_000, 10, true, false),
+      Arguments.of(50L, 500, 10, true, false),
+      Arguments.of(50L, 100_000, 1_000, true, false),
+      Arguments.of(50L, 100_000, 1_000, false, false),
+      Arguments.of(100L, 10, 10, true, false),
+      Arguments.of(100L, 100, 10, true, false),
+      Arguments.of(1000L, 10, 10, true, false),
+      Arguments.of(1000L, 100, 10, false, false), // ~10 seconds +- 5 seconds
+      Arguments.of(500L, 10_000 * 4, 10_000, false, false),
+      Arguments.of(0L, 10, 10, true, true),
+      Arguments.of(0L, 100, 10, true, true),
+      Arguments.of(0L, 1_000, 10, true, true),
+      Arguments.of(0L, 10_000, 10, true, true),
+      Arguments.of(0L, 10_000, 10, false, true),
+      Arguments.of(50L, 500, 10, true, true),
+      Arguments.of(50L, 100_000, 1_000, true, true),
+      Arguments.of(50L, 100_000, 1_000, false, true),
+      Arguments.of(100L, 10, 10, true, true),
+      Arguments.of(100L, 100, 10, true, true),
+      Arguments.of(1000L, 10, 10, true, true),
+      Arguments.of(1000L, 100, 10, false, true), // ~10 seconds +- 5 seconds
+      Arguments.of(500L, 10_000 * 4, 10_000, false, true)
     );
   }
 
-  @ParameterizedTest(name = "with delay {0}ms, {1} tasks, {2} partitions and random partition assignment {3}")
+  @ParameterizedTest(name = "with delay {0}ms, {1} tasks, {2} partitions and random partition assignment {3}, rate limiter enabled {4}")
   @MethodSource("inputArgs")
   public void consumeOneByOne(final long delay, final int tasks, final int partitions, final boolean randomAssignment,
-                              final Vertx vertx) throws InterruptedException {
+                              final boolean rateLimiterEnabled, final Vertx vertx) throws InterruptedException {
     final var topic = "topic1";
     final Random random = new Random();
     final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
@@ -89,6 +103,11 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
     when(recordDispatcher.close()).thenReturn(Future.succeededFuture());
 
     final var verticle = createConsumerVerticle(
+      DataPlaneContract.Egress.newBuilder()
+        .setFeatureFlags(DataPlaneContract.EgressFeatureFlags.newBuilder()
+          .setEnableRateLimiter(rateLimiterEnabled)
+          .build())
+        .build(),
       (vx, consumerVerticle) -> {
         consumerVerticle.setConsumer(KafkaConsumer.create(vx, consumer));
         consumerVerticle.setRecordDispatcher(recordDispatcher);
@@ -160,9 +179,15 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
   }
 
   @Override
-  BaseConsumerVerticle createConsumerVerticle(
-    BaseConsumerVerticle.Initializer initializer, Set<String> topics) {
-    return new OrderedConsumerVerticle(initializer, topics);
+  BaseConsumerVerticle createConsumerVerticle(final BaseConsumerVerticle.Initializer initializer,
+                                              final Set<String> topics) {
+    return createConsumerVerticle(DataPlaneContract.Egress.newBuilder().build(), initializer, topics);
+  }
+
+  BaseConsumerVerticle createConsumerVerticle(final DataPlaneContract.Egress egress,
+                                              final BaseConsumerVerticle.Initializer initializer,
+                                              final Set<String> topics) {
+    return new OrderedConsumerVerticle(egress, initializer, topics, 2);
   }
 
   protected static ConsumerRecord<Object, CloudEvent> record(String topic, int partition, long offset) {

@@ -82,6 +82,11 @@
     </dependency>
 
     <dependency>
+      <groupId>com.github.vladimir-bukhtoyarov</groupId>
+      <artifactId>bucket4j-core</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
       <artifactId>core</artifactId>
       <classifier>tests</classifier>
