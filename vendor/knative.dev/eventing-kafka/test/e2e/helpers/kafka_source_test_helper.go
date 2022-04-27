@@ -78,6 +78,7 @@ func testKafkaSourceUpdate(t *testing.T, name string, test updateTest) {
 	client.WaitForAllTestResourcesReadyOrFail(context.Background())
 
 	kafkaSourceName := "e2e-kafka-source-" + name
+	groupId := client.Namespace + "-" + name
 
 	t.Logf("Creating kafkasource: %s\n", kafkaSourceName)
 	contribtestlib.CreateKafkaSourceV1Beta1OrFail(client, contribresources.KafkaSourceV1Beta1(
@@ -86,6 +87,7 @@ func testKafkaSourceUpdate(t *testing.T, name string, test updateTest) {
 		resources.ServiceRef(defaultKafkaSource.sinkName),
 		contribresources.WithNameV1Beta1(kafkaSourceName),
 		withAuthEnablementV1Beta1(defaultKafkaSource.auth),
+		contribresources.WithConsumerGroupV1Beta1(groupId),
 	))
 	client.WaitForAllTestResourcesReadyOrFail(context.Background())
 
