@@ -96,12 +96,12 @@ func secretData(data map[string][]byte) kafka.ConfigOption {
 func saslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 	return func(config *sarama.Config) error {
 
-		// Supported mechanism SASL/PLAIN or SASL/SCRAM.
+		// Supported mechanism SASL/PLAIN (default if not specified) or SASL/SCRAM.
+		saslMechanism := SaslPlain
 		givenSASLMechanism, ok := data[SaslMechanismKey]
-		if !ok {
-			return fmt.Errorf("[protocol %s] SASL mechanism required (key: %s)", protocol, SaslMechanismKey)
+		if ok {
+			saslMechanism = string(givenSASLMechanism)
 		}
-		saslMechanism := string(givenSASLMechanism)
 
 		user, ok := data[SaslUserKey]
 		if !ok || len(user) == 0 {
