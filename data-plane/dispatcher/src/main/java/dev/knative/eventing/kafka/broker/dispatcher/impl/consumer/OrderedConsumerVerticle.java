@@ -57,17 +57,19 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       .onFailure(startPromise::fail)
       .onSuccess(v -> {
         startPromise.complete();
-        this.poll();
-        this.pollPeriodicTimer = vertx.setPeriodic(POLLING_MS, x -> poll());
+        this.poll(true);
+        this.pollPeriodicTimer = vertx.setPeriodic(POLLING_MS, x -> poll(false));
       });
   }
 
-  private void poll() {
+  private void poll(final boolean force) {
     if (this.closed) {
       return;
     }
 
-    if (!waitingForTasks()) {
+    logger.debug("Polling for records {} {} {}", keyValue("topics", topics), keyValue("force", force), keyValue("isWaitingForTasks", waitingForTasks()));
+
+    if (!force && !waitingForTasks()) {
       return;
     }
 
@@ -90,7 +92,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
         return true;
       }
     }
-    return false;
+    return recordDispatcherExecutors.size() == 0;
   }
 
   @Override
@@ -124,8 +126,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     if (this.closed) {
       return Future.failedFuture("Consumer verticle closed topics=" + topics);
     }
-    return this.recordDispatcher.dispatch(record)
-      .onComplete(v -> maybePoll(executor));
+    return this.recordDispatcher.dispatch(record);
   }
 
   private synchronized OrderedAsyncExecutor executorFor(final TopicPartition topicPartition) {
@@ -136,11 +137,5 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     executor = new OrderedAsyncExecutor();
     this.recordDispatcherExecutors.put(topicPartition, executor);
     return executor;
-  }
-
-  private void maybePoll(final OrderedAsyncExecutor executor) {
-    if (executor.isWaitingForTasks()) {
-      poll();
-    }
   }
 }
