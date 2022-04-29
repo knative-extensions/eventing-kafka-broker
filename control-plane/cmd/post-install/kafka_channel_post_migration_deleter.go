@@ -34,6 +34,8 @@ const (
 	ControlPlaneReadinessCheckInterval = 10 * time.Second
 	ControlPlaneReadinessCheckTimeout  = 10 * time.Minute
 
+	WaitDurationBeforePostMigration = 10 * time.Minute
+
 	NewControllerDeploymentName = "kafka-controller"
 )
 
@@ -57,7 +59,9 @@ func (d *kafkaChannelPostMigrationDeleter) Delete(ctx context.Context) error {
 		return fmt.Errorf("error while waiting the new control plane to become ready %w", err)
 	}
 
-	logger.Infof("New control plane is ready, progressing with the migration")
+	logger.Infof("New control plane is ready, waiting %s before deleting old data plane", WaitDurationBeforePostMigration)
+	time.Sleep(WaitDurationBeforePostMigration)
+	logger.Infof("Done waiting %s. Deleting old data plane...", WaitDurationBeforePostMigration)
 
 	///////////////////////////////////////////////////////////////////////////////
 	/////////// START DELETING DISPATCHER RESOURCES
