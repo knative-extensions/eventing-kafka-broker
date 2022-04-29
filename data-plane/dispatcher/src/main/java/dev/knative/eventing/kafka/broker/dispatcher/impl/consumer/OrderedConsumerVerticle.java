@@ -42,6 +42,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
 
   private boolean closed;
+  private long pollTimer;
 
   public OrderedConsumerVerticle(Initializer initializer, Set<String> topics) {
     super(initializer, topics);
@@ -55,8 +56,9 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     this.consumer.subscribe(this.topics)
       .onFailure(startPromise::fail)
       .onSuccess(v -> {
-        startPromise.complete();
+        this.pollTimer = vertx.setPeriodic(POLLING_MS, x -> poll());
         this.poll();
+        startPromise.complete();
       });
   }
 
@@ -64,6 +66,11 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     if (this.closed) {
       return;
     }
+
+    if (!isWaitingForTasks()) {
+      return;
+    }
+
     logger.debug("Polling for records {}", keyValue("topics", topics));
 
     this.consumer.poll(POLLING_TIMEOUT)
@@ -74,7 +81,6 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
           return;
         }
         exceptionHandler(t);
-        vertx.setTimer(POLLING_MS, v -> poll()); // Keep polling.
       });
   }
 
@@ -82,6 +88,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   public void stop(Promise<Void> stopPromise) {
     // Stop the executors
     this.closed = true;
+    this.vertx.cancelTimer(this.pollTimer);
     this.recordDispatcherExecutors.values().forEach(OrderedAsyncExecutor::stop);
     // Stop the consumer
     super.stop(stopPromise);
@@ -92,7 +99,6 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       return;
     }
     if (records == null || records.size() == 0) {
-      vertx.setTimer(POLLING_MS, v -> poll());
       return;
     }
     // Put records in queues
@@ -100,17 +106,15 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     for (int i = 0; i < records.size(); i++) {
       final var record = records.recordAt(i);
       final var executor = executorFor(new TopicPartition(record.topic(), record.partition()));
-      executor.offer(() -> dispatch(record, executor));
+      executor.offer(() -> dispatch(record));
     }
   }
 
-  private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record,
-                                final OrderedAsyncExecutor executor) {
+  private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record) {
     if (this.closed) {
       return Future.failedFuture("Consumer verticle closed topics=" + topics);
     }
-    return this.recordDispatcher.dispatch(record)
-      .onComplete(v -> maybePoll(executor));
+    return this.recordDispatcher.dispatch(record);
   }
 
   private synchronized OrderedAsyncExecutor executorFor(final TopicPartition topicPartition) {
@@ -123,9 +127,12 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     return executor;
   }
 
-  private void maybePoll(final OrderedAsyncExecutor executor) {
-    if (executor.isWaitingForTasks()) {
-      poll();
+  private boolean isWaitingForTasks() {
+    for (OrderedAsyncExecutor value : this.recordDispatcherExecutors.values()) {
+      if (value.isWaitingForTasks()) {
+        return true;
+      }
     }
+    return this.recordDispatcherExecutors.size() == 0;
   }
 }

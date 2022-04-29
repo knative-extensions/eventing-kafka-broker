@@ -72,7 +72,7 @@ public class OrderedAsyncExecutor {
   public boolean isWaitingForTasks() {
     // TODO To perform this flag would be nice to take into account also the time that it takes for a sink to process a
     //  message so that we can fetch records in advance and keep queues busy.
-    return this.queue.size() == 0;
+    return this.queue.isEmpty();
   }
 
   /**
