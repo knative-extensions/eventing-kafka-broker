@@ -51,4 +51,4 @@ FROM ${BASE_IMAGE} as running
 COPY --from=builder /app /app
 
 # Configure PATH
-ENV PATH="/app/jdk/bin:${PATH}"
+# ENV PATH="/app/jdk/bin:${PATH}"

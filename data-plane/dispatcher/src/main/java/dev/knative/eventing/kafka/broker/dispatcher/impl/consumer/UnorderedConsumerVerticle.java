@@ -45,6 +45,7 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
   private boolean closed;
   private int inFlightRecords;
   private boolean isPollInFlight;
+  private long pollPeriodicTimer;
 
   public UnorderedConsumerVerticle(final Initializer initializer,
                                    final Set<String> topics,
@@ -65,7 +66,10 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
     this.consumer.subscribe(this.topics, startPromise);
 
     startPromise.future()
-      .onSuccess(v -> poll());
+      .onSuccess(v -> {
+        poll();
+        this.pollPeriodicTimer = vertx.setPeriodic(BACKOFF_DELAY_MS, x -> poll());
+      });
   }
 
   /**
@@ -86,7 +90,7 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
       return;
     }
     if (inFlightRecords >= maxPollRecords) {
-      logger.info(
+      logger.debug(
         "In flight records exceeds " + ConsumerConfig.MAX_POLL_RECORDS_CONFIG +
           " waiting for response from subscriber before polling for new records {} {} {}",
         keyValue(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords),
@@ -102,13 +106,15 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
       .onFailure(cause -> {
         isPollInFlight = false;
         logger.error("Failed to poll messages {}", keyValue("topics", topics), cause);
-        // Wait before retrying.
-        vertx.setTimer(BACKOFF_DELAY_MS, t -> poll());
       });
   }
 
   private void handleRecords(final KafkaConsumerRecords<Object, CloudEvent> records) {
     if (closed) {
+      isPollInFlight = false;
+      return;
+    }
+    if (records == null || records.size() == 0) {
       isPollInFlight = false;
       return;
     }
@@ -121,17 +127,14 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
 
     for (int i = 0; i < records.size(); i++) {
       this.recordDispatcher.dispatch(records.recordAt(i))
-        .onComplete(v -> {
-          this.inFlightRecords--;
-          poll();
-        });
+        .onComplete(v -> this.inFlightRecords--);
     }
-    poll();
   }
 
   @Override
   public void stop(Promise<Void> stopPromise) {
     this.closed = true;
+    vertx.cancelTimer(pollPeriodicTimer);
     // Stop the consumer
     super.stop(stopPromise);
   }

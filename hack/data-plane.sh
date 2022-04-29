@@ -37,7 +37,7 @@ readonly CHANNEL_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/channel
 
 # The BASE_IMAGE must have system libraries (libc, zlib, etc) compatible with the JAVA_IMAGE because
 # Jlink generates a jdk linked to the same system libraries available on the base images.
-readonly BASE_IMAGE=${BASE_IMAGE:-"gcr.io/distroless/java-debian11:base-nonroot"} # Based on debian:buster
+readonly BASE_IMAGE=${BASE_IMAGE:-"docker.io/eclipse-temurin:17-jdk-centos7"} # Based on debian:buster
 readonly JAVA_IMAGE=${JAVA_IMAGE:-"docker.io/eclipse-temurin:17-jdk-centos7"}     # Based on centos7
 
 readonly RECEIVER_JAR="receiver-1.0-SNAPSHOT.jar"
@@ -163,6 +163,9 @@ function k8s() {
 
   echo "Dispatcher image ---> ${KNATIVE_KAFKA_DISPATCHER_IMAGE}"
   echo "Receiver image   ---> ${KNATIVE_KAFKA_RECEIVER_IMAGE}"
+
+  rm -rf "${BUILD_DIR}"
+  mkdir -p "${BUILD_DIR}"
 
   ko resolve ${KO_FLAGS} -Rf ${SOURCE_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SOURCE_ARTIFACT}"
   ko resolve ${KO_FLAGS} -Rf ${BROKER_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}"

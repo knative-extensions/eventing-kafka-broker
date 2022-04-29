@@ -42,6 +42,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
 
   private boolean closed;
+  private long pollPeriodicTimer;
 
   public OrderedConsumerVerticle(Initializer initializer, Set<String> topics) {
     super(initializer, topics);
@@ -57,6 +58,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       .onSuccess(v -> {
         startPromise.complete();
         this.poll();
+        this.pollPeriodicTimer = vertx.setPeriodic(POLLING_MS, x -> poll());
       });
   }
 
@@ -64,6 +66,11 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     if (this.closed) {
       return;
     }
+
+    if (!waitingForTasks()) {
+      return;
+    }
+
     logger.debug("Polling for records {}", keyValue("topics", topics));
 
     this.consumer.poll(POLLING_TIMEOUT)
@@ -74,14 +81,23 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
           return;
         }
         exceptionHandler(t);
-        vertx.setTimer(POLLING_MS, v -> poll()); // Keep polling.
       });
+  }
+
+  private boolean waitingForTasks() {
+    for (OrderedAsyncExecutor value : recordDispatcherExecutors.values()) {
+      if (value.isWaitingForTasks()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
   public void stop(Promise<Void> stopPromise) {
     // Stop the executors
     this.closed = true;
+    this.vertx.cancelTimer(this.pollPeriodicTimer);
     this.recordDispatcherExecutors.values().forEach(OrderedAsyncExecutor::stop);
     // Stop the consumer
     super.stop(stopPromise);
@@ -92,7 +108,6 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       return;
     }
     if (records == null || records.size() == 0) {
-      vertx.setTimer(POLLING_MS, v -> poll());
       return;
     }
     // Put records in queues
