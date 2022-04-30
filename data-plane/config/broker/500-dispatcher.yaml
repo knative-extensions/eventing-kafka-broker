@@ -52,7 +52,7 @@ spec:
               weight: 100
       serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       containers:
         - name: kafka-broker-dispatcher
           image: ${KNATIVE_KAFKA_DISPATCHER_IMAGE}
@@ -72,6 +72,9 @@ spec:
             - mountPath: /etc/tracing
               name: config-tracing
               readOnly: true
+            - mountPath: /heap-dump
+              name: heap-dump
+              readOnly: false
           ports:
             - containerPort: 9090
               name: http-metrics
@@ -116,10 +119,24 @@ spec:
           command:
             - "java"
           args:
+            - "-XX:CrashOnOutOfMemoryError"
+            - "-XX:+HeapDumpOnOutOfMemoryError"
+            - "-XX:HeapDumpPath=/heap-dump/oom.bin"
+            - "-Dcom.sun.management.jmxremote"
+            - "-Dcom.sun.management.jmxremote.authenticate=false"
+            - "-Dcom.sun.management.jmxremote.ssl=false"
+            - "-Dcom.sun.management.jmxremote.local.only=false"
+            - "-Dcom.sun.management.jmxremote.port=5000"
+            - "-Dcom.sun.management.jmxremote.rmi.port=5000"
+            - "-Djava.rmi.server.hostname=127.0.0.1"
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
           # TODO set resources (limits and requests)
+          resources:
+            limits:
+              memory: "1G"
+              cpu: "1"
           livenessProbe:
             failureThreshold: 3
             tcpSocket:
@@ -143,7 +160,7 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             privileged: false
-            readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: false
       volumes:
         - name: config-kafka-broker-data-plane
           configMap:
@@ -152,6 +169,8 @@ spec:
           configMap:
             name: kafka-broker-brokers-triggers
         - name: cache
+          emptyDir: { }
+        - name: heap-dump
           emptyDir: { }
         - name: kafka-broker-config-logging
           configMap:

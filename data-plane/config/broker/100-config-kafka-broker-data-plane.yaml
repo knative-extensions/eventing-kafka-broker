@@ -26,9 +26,9 @@ data:
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
     value.serializer=io.cloudevents.kafka.CloudEventSerializer
     acks=all
-    buffer.memory=33554432
+    buffer.memory=3554432
     # compression.type=snappy
-    retries=2147483647
+    retries=100
     batch.size=16384
     client.dns.lookup=use_all_dns_ips
     connections.max.idle.ms=600000
@@ -63,14 +63,14 @@ data:
     # ssl.keystore.password=
     # ssl.truststore.location=
     # ssl.truststore.password=
-    allow.auto.create.topics=true
+    allow.auto.create.topics=false
     auto.offset.reset=earliest
     client.dns.lookup=use_all_dns_ips
     connections.max.idle.ms=540000
     default.api.timeout.ms=60000
     enable.auto.commit=false
     exclude.internal.topics=true
-    fetch.max.bytes=52428800
+    fetch.max.bytes=5428800
     isolation.level=read_uncommitted
     max.poll.interval.ms=300000
     max.poll.records=500
@@ -117,4 +117,4 @@ data:
   config-kafka-broker-webclient.properties: |
     idleTimeout=10000
   config-kafka-broker-httpserver.properties: |
-    idleTimeout=0
+    idleTimeout=10000
