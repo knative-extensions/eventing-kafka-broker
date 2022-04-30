@@ -120,7 +120,7 @@ spec:
           command:
             - "java"
           args:
-            - "-XX:CrashOnOutOfMemoryError"
+            - "-XX:+CrashOnOutOfMemoryError"
             - "-XX:+HeapDumpOnOutOfMemoryError"
             - "-XX:HeapDumpPath=/heap-dump/oom.bin"
             - "-Dcom.sun.management.jmxremote"

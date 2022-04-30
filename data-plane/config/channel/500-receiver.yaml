@@ -52,7 +52,7 @@ spec:
               weight: 100
       serviceAccountName: knative-kafka-channel-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       containers:
         - name: kafka-channel-receiver
           image: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
@@ -72,6 +72,9 @@ spec:
             - mountPath: /etc/tracing
               name: config-tracing
               readOnly: true
+            - mountPath: /heap-dump
+              name: heap-dump
+              readOnly: false
           ports:
             - containerPort: 9090
               name: http-metrics
@@ -117,6 +120,16 @@ spec:
           command:
             - "java"
           args:
+            - "-XX:+CrashOnOutOfMemoryError"
+            - "-XX:+HeapDumpOnOutOfMemoryError"
+            - "-XX:HeapDumpPath=/heap-dump/oom.bin"
+            - "-Dcom.sun.management.jmxremote"
+            - "-Dcom.sun.management.jmxremote.authenticate=false"
+            - "-Dcom.sun.management.jmxremote.ssl=false"
+            - "-Dcom.sun.management.jmxremote.local.only=false"
+            - "-Dcom.sun.management.jmxremote.port=5000"
+            - "-Dcom.sun.management.jmxremote.rmi.port=5000"
+            - "-Djava.rmi.server.hostname=127.0.0.1"
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
@@ -146,7 +159,7 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             privileged: false
-            readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: false
       volumes:
         - name: kafka-channel-channels-subscriptions
           configMap:
@@ -155,6 +168,8 @@ spec:
           configMap:
             name: config-kafka-channel-data-plane
         - name: cache
+          emptyDir: { }
+        - name: heap-dump
           emptyDir: { }
         - name: kafka-channel-config-logging
           configMap:

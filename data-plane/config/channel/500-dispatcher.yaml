@@ -52,7 +52,7 @@ spec:
               weight: 100
       serviceAccountName: knative-kafka-channel-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       containers:
         - name: kafka-channel-dispatcher
           image: ${KNATIVE_KAFKA_DISPATCHER_IMAGE}
@@ -72,6 +72,9 @@ spec:
             - mountPath: /etc/tracing
               name: config-tracing
               readOnly: true
+            - mountPath: /heap-dump
+              name: heap-dump
+              readOnly: false
           ports:
             - containerPort: 9090
               name: http-metrics
@@ -116,6 +119,16 @@ spec:
           command:
             - "java"
           args:
+            - "-XX:+CrashOnOutOfMemoryError"
+            - "-XX:+HeapDumpOnOutOfMemoryError"
+            - "-XX:HeapDumpPath=/heap-dump/oom.bin"
+            - "-Dcom.sun.management.jmxremote"
+            - "-Dcom.sun.management.jmxremote.authenticate=false"
+            - "-Dcom.sun.management.jmxremote.ssl=false"
+            - "-Dcom.sun.management.jmxremote.local.only=false"
+            - "-Dcom.sun.management.jmxremote.port=5000"
+            - "-Dcom.sun.management.jmxremote.rmi.port=5000"
+            - "-Djava.rmi.server.hostname=127.0.0.1"
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
@@ -130,10 +143,8 @@ spec:
             timeoutSeconds: 1
           readinessProbe:
             failureThreshold: 3
-            httpGet:
+            tcpSocket:
               port: 9090
-              path: /metrics
-              scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 3
             successThreshold: 1
@@ -143,7 +154,7 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             privileged: false
-            readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: false
       volumes:
         - name: config-kafka-channel-data-plane
           configMap:
@@ -152,6 +163,8 @@ spec:
           configMap:
             name: kafka-channel-channels-subscriptions
         - name: cache
+          emptyDir: { }
+        - name: heap-dump
           emptyDir: { }
         - name: kafka-channel-config-logging
           configMap:

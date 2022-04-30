@@ -52,7 +52,7 @@ spec:
               weight: 100
       serviceAccountName: knative-kafka-sink-data-plane
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
       containers:
         - name: kafka-sink-receiver
           image: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
