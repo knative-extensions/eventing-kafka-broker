@@ -43,6 +43,7 @@ readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_imag
 
 export MONITORING_ARTIFACTS_PATH="manifests/monitoring/prometheus-operator"
 export EVENTING_KAFKA_CONTROLLER_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/controller"
+export EVENTING_KAFKA_CONTROLLER_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/controller-source"
 export EVENTING_KAFKA_WEBHOOK_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/webhook"
 export EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/source"
 export EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_ARTIFACTS_PATH}/broker"
@@ -125,17 +126,16 @@ function build_components_from_source() {
 function build_source_components_from_source() {
 
   [ -f "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
-  [ -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SOURCE_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" ] && rm "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}"
 
-  header "Data plane setup"
-  data_plane_dispatcher_setup || fail_test "Failed to set up data plane dispatcher"
+  header "Data plane sourcev2 setup"
+  data_plane_sourcev2_setup || fail_test "Failed to set up sourcev2 data plane dispatcher"
 
-  header "Control plane setup"
-  control_plane_setup || fail_test "Failed to set up control plane components"
+  header "Control plane sourcev2 setup"
+  control_plane_sourcev2_setup || fail_test "Failed to set up sourcev2 control plane components"
 
-  header "Building Monitoring artifacts"
-  build_monitoring_artifacts || fail_test "Failed to create monitoring artifacts"
+  header "Building sourcev2 Monitoring artifacts"
+  build_monitoring_artifacts_source || fail_test "Failed to create monitoring artifacts"
 
   return $?
 }
@@ -175,7 +175,6 @@ function install_latest_release_source() {
   ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
 
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || return $?
-  kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
 
   # Restore test config-tracing.
   kubectl replace -f ./test/config/100-config-tracing.yaml
@@ -185,7 +184,6 @@ function install_head_source() {
   echo "Installing head"
 
   kubectl apply -f "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || return $?
-  kubectl apply -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 
   # Restore test config-tracing.
@@ -229,15 +227,11 @@ function test_source_setup() {
 
   wait_until_pods_running knative-eventing || fail_test "System did not come up"
 
-  # Apply test configurations, and restart data plane components (we don't have hot reload)
-  ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
-
   kubectl rollout restart statefulset -n knative-eventing kafka-source-dispatcher
 }
 
 function test_source_teardown() {
-  kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || fail_test "Failed to tear down control plane"
-  kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" || fail_test "Failed to tear down kafka source"
+  kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || fail_test "Failed to tear down kafka source"
 }
 
 function scale_controlplane() {
@@ -307,8 +301,6 @@ function save_release_artifacts() {
 
   cp "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
   cp "${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
-
-  cp "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" "${ARTIFACTS}/${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || return $?
 }
 
 function build_monitoring_artifacts() {
@@ -329,6 +321,17 @@ function build_monitoring_artifacts() {
 
   ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
     "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+}
+
+function build_monitoring_artifacts_source() {
+
+  ko resolve ${KO_FLAGS} \
+    -Rf "${EVENTING_KAFKA_CONTROLLER_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" \
+    -Rf "${EVENTING_KAFKA_WEBHOOK_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
+    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+
+  ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
+    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
 }
 
 function setup_kafka_channel_auth() {

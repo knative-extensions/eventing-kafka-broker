@@ -18,7 +18,6 @@ package main
 
 import (
 	"context"
-	"log"
 
 	"knative.dev/pkg/injection"
 	"knative.dev/pkg/signals"
@@ -27,7 +26,6 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/sharedmain"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 	sourcev2 "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source/v2"
@@ -38,11 +36,6 @@ const (
 )
 
 func main() {
-
-	consumerEnv, err := config.GetEnvConfig("SOURCE")
-	if err != nil {
-		log.Fatal("cannot process environment variables with prefix SOURCE", err)
-	}
 
 	sharedmain.MainNamed(signals.NewContext(), component,
 
@@ -66,7 +59,7 @@ func main() {
 		injection.NamedControllerConstructor{
 			Name: "consumer-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				return consumer.NewController(ctx, consumerEnv)
+				return consumer.NewController(ctx)
 			},
 		},
 	)
