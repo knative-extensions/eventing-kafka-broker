@@ -24,6 +24,13 @@ ARG APP_JAR
 
 WORKDIR /build
 
+#RUN yum install -y \
+#    git \
+#    cmake \
+#    make
+
+#RUN yum group install "Development Tools"
+
 COPY pom.xml .
 COPY .editorconfig .
 COPY core/pom.xml core/pom.xml

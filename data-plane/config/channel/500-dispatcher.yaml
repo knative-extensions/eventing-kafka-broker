@@ -133,6 +133,10 @@ spec:
             - "-jar"
             - "/app/app.jar"
           # TODO set resources (limits and requests)
+          resources:
+            limits:
+              memory: "1G"
+              cpu: "1"
           livenessProbe:
             failureThreshold: 3
             tcpSocket:

@@ -51,7 +51,7 @@ spec:
               name: config
           resources:
             limits:
-              cpu: 2000m
+              cpu: 4000m
               memory: 4Gi
           ports:
             - containerPort: 8080

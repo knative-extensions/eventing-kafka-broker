@@ -3,6 +3,8 @@ kind: Broker
 metadata:
   name: broker
   namespace: sacura
+  annotations:
+    eventing.knative.dev/broker.class: Kafka
 spec:
 
   config:

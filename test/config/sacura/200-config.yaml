@@ -7,8 +7,8 @@ data:
   sacura.yaml: |
     sender:
       target: http://kafka-broker-ingress.knative-eventing.svc.cluster.local/sacura/broker
-      frequency: 100
-      workers: 4
+      frequency: 10000
+      workers: 1000
       keepAlive: true
     receiver:
       port: 8080
