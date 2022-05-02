@@ -155,7 +155,7 @@ class KubernetesCredentials implements Credentials {
     if (SASLMechanism == null) {
       final var SASLMechanism = secret.getData().get(SASL_MECHANISM);
       if (SASLMechanism == null) {
-        this.SASLMechanism  = "PLAIN"; //default when not specified
+        return null;
       } else {
         this.SASLMechanism = switch (new String(Base64.getDecoder().decode(SASLMechanism))) {
           case "PLAIN" -> "PLAIN";
