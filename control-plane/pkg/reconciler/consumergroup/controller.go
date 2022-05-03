@@ -101,15 +101,16 @@ func NewController(ctx context.Context) *controller.Impl {
 	}
 
 	r := &Reconciler{
-		SchedulerFunc:   func(s string) scheduler.Scheduler { return schedulers[strings.ToLower(s)] },
-		ConsumerLister:  consumer.Get(ctx).Lister(),
-		InternalsClient: internalsclient.Get(ctx).InternalV1alpha1(),
-		SecretLister:    secretinformer.Get(ctx).Lister(),
-		KubeClient:      kubeclient.Get(ctx),
-		NameGenerator:   names.SimpleNameGenerator,
-		NewKafkaClient:  sarama.NewClient,
-		InitOffsetsFunc: offset.InitOffsets,
-		SystemNamespace: system.Namespace(),
+		SchedulerFunc:              func(s string) scheduler.Scheduler { return schedulers[strings.ToLower(s)] },
+		ConsumerLister:             consumer.Get(ctx).Lister(),
+		InternalsClient:            internalsclient.Get(ctx).InternalV1alpha1(),
+		SecretLister:               secretinformer.Get(ctx).Lister(),
+		KubeClient:                 kubeclient.Get(ctx),
+		NameGenerator:              names.SimpleNameGenerator,
+		NewKafkaClient:             sarama.NewClient,
+		InitOffsetsFunc:            offset.InitOffsets,
+		SystemNamespace:            system.Namespace(),
+		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 	}
 
 	impl := cgreconciler.NewImpl(ctx, r)

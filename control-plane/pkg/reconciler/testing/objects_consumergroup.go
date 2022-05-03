@@ -17,8 +17,11 @@
 package testing
 
 import (
+	"time"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -194,4 +197,17 @@ func ConsumerGroupOwnerRef(reference metav1.OwnerReference) ConsumerGroupOption 
 	return func(cg *kafkainternals.ConsumerGroup) {
 		cg.OwnerReferences = append(cg.OwnerReferences, reference)
 	}
+}
+
+func NewDeletedConsumeGroup(opts ...ConsumerGroupOption) runtime.Object {
+	return NewConsumerGroup(
+		append(
+			opts,
+			WithDeletedTimeStampConsumeGroup,
+		)...,
+	)
+}
+
+func WithDeletedTimeStampConsumeGroup(cg *kafkainternals.ConsumerGroup) {
+	cg.GetObjectMeta().SetDeletionTimestamp(&metav1.Time{Time: time.Now()})
 }
