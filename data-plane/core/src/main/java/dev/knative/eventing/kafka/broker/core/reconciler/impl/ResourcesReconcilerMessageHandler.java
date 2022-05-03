@@ -21,8 +21,10 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,17 +69,19 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
       logger.info("Reconciling contract {}", keyValue("contractGeneration", contract.getGeneration()));
 
       resourcesReconciler.reconcile(contract.getResourcesList())
-        .onSuccess(v -> logger.info(
-          "Reconciled contract generation {}",
-          keyValue("contractGeneration", contract.getGeneration()))
-        )
-        .onFailure(cause -> logger.error(
-          "Failed to reconcile contract generation {}",
-          keyValue("contractGeneration", contract.getGeneration()),
-          cause
-          )
-        )
         .onComplete(r -> {
+          if (r.succeeded()) {
+            logger.info(
+              "Reconciled contract generation {}",
+              keyValue("contractGeneration", contract.getGeneration())
+            );
+          } else {
+            logger.error(
+              "Failed to reconcile contract generation {}",
+              keyValue("contractGeneration", contract.getGeneration()),
+              r.cause()
+            );
+          }
 
           // We have reconciled the last known contract.
           reconciling.set(false);
