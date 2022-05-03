@@ -38,7 +38,10 @@ public class MetricsTest {
 
   @Test
   public void get() {
-    final var metricsOptions = Metrics.getOptions(new BaseEnv(s -> "1"));
+    final var metricsOptions = Metrics.getOptions(new BaseEnv(s -> switch (s) {
+      case BaseEnv.METRICS_ENABLED -> "true";
+      default -> "1";
+    }));
     assertThat(metricsOptions.isEnabled()).isTrue();
   }
 

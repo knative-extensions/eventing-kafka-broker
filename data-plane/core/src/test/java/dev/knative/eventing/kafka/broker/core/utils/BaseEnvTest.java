@@ -27,7 +27,7 @@ public class BaseEnvTest {
     case "DATA_PLANE_CONFIG_FILE_PATH" -> "/tmp/config-data";
     case "METRICS_PORT" -> "9092";
     case "METRICS_PATH" -> "/path";
-    case "METRICS_PUBLISH_QUANTILES" -> "TRUE";
+    case "METRICS_PUBLISH_QUANTILES", "METRICS_ENABLED" -> "TRUE";
     case "CONFIG_TRACING_PATH" -> "/etc/tracing";
     case "METRICS_JVM_ENABLED" -> "false";
     case "WAIT_STARTUP_SECONDS" -> "1";
