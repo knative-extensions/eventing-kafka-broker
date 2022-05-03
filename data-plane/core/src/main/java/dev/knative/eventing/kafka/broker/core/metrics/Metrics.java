@@ -116,6 +116,11 @@ public class Metrics {
     final var registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
     return new MicrometerMetricsOptions()
       .setEnabled(true)
+      .addDisabledMetricsCategory(MetricsDomain.HTTP_CLIENT)
+      .addDisabledMetricsCategory(MetricsDomain.HTTP_SERVER)
+      .addDisabledMetricsCategory(MetricsDomain.VERTICLES)
+      .addDisabledMetricsCategory(MetricsDomain.NET_CLIENT)
+      .addDisabledMetricsCategory(MetricsDomain.NET_SERVER)
       .addDisabledMetricsCategory(MetricsDomain.EVENT_BUS)
       .addDisabledMetricsCategory(MetricsDomain.DATAGRAM_SOCKET)
       // NAMED_POOL allocates a lot, so disable it.
