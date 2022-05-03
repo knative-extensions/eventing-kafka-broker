@@ -60,7 +60,6 @@ public class KafkaClientsAuth {
     final String mechanism;
     final var saslMechanism = credentials.SASLMechanism();
     if (saslMechanism == null) {
-      //throw new IllegalStateException("SASL mechanism required");
       mechanism = "PLAIN";
     } else {
       mechanism = saslMechanism;
