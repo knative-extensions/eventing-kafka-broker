@@ -48,7 +48,7 @@ func (m *KafkaSourceMigrator) Migrate(ctx context.Context) error {
 			List(ctx, metav1.ListOptions{Continue: cont})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
-				logger.Infof("KafkaSource resource not found - ignore migration")
+				logger.Infof("KafkaSources not found - ignore migration due to %s", err)
 				return nil
 			}
 			return fmt.Errorf("failed to list KafkaSources: %w", err)
