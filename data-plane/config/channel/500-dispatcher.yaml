@@ -124,6 +124,7 @@ spec:
             - "-XX:+CrashOnOutOfMemoryError"
             - "-XX:+HeapDumpOnOutOfMemoryError"
             - "-XX:HeapDumpPath=/heap-dump/oom.bin"
+            - "-XX:MaxRAMPercentage=90"
             - "-Dcom.sun.management.jmxremote"
             - "-Dcom.sun.management.jmxremote.authenticate=false"
             - "-Dcom.sun.management.jmxremote.ssl=false"

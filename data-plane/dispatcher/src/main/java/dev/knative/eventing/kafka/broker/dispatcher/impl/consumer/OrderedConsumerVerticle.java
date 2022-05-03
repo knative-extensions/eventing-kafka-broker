@@ -43,11 +43,13 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private boolean closed;
   private long pollTimer;
+  private boolean isPollInFlight;
 
   public OrderedConsumerVerticle(Initializer initializer, Set<String> topics) {
     super(initializer, topics);
     this.recordDispatcherExecutors = new HashMap<>();
     this.closed = false;
+    this.isPollInFlight = false;
   }
 
   @Override
@@ -63,13 +65,10 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   }
 
   private void poll() {
-    if (this.closed) {
+    if (this.closed || this.isPollInFlight || !isWaitingForTasks()) {
       return;
     }
-
-    if (!isWaitingForTasks()) {
-      return;
-    }
+    this.isPollInFlight = true;
 
     logger.debug("Polling for records {}", keyValue("topics", topics));
 
@@ -80,6 +79,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
           // The failure might have been caused by stopping the consumer, so we just ignore it
           return;
         }
+        isPollInFlight = false;
         exceptionHandler(t);
       });
   }
@@ -98,6 +98,8 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     if (this.closed) {
       return;
     }
+    isPollInFlight = false;
+
     if (records == null || records.size() == 0) {
       return;
     }
