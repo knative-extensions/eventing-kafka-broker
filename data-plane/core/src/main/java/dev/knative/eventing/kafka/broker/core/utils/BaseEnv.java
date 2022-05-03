@@ -27,6 +27,9 @@ public class BaseEnv {
   public static final String DATA_PLANE_CONFIG_FILE_PATH = "DATA_PLANE_CONFIG_FILE_PATH";
   private final String dataPlaneConfigFilePath;
 
+  public static final String METRICS_ENABLED = "METRICS_ENABLED";
+  private final boolean metricsEnabled;
+
   public static final String METRICS_PORT = "METRICS_PORT";
   private final int metricsPort;
 
@@ -50,6 +53,7 @@ public class BaseEnv {
     this.metricsPort = Integer.parseInt(requireNonNull(envProvider.apply(METRICS_PORT)));
     this.metricsPublishQuantiles = Boolean.parseBoolean(envProvider.apply(METRICS_PUBLISH_QUANTILES));
     this.metricsJvmEnabled = Boolean.parseBoolean(envProvider.apply(METRICS_JVM_ENABLED));
+    this.metricsEnabled = Boolean.parseBoolean(envProvider.apply(METRICS_ENABLED));
     this.producerConfigFilePath = requireNonNull(envProvider.apply(PRODUCER_CONFIG_FILE_PATH));
     this.dataPlaneConfigFilePath = requireNonNull(envProvider.apply(DATA_PLANE_CONFIG_FILE_PATH));
     this.configTracingPath = requireNonNull(envProvider.apply(CONFIG_TRACING_PATH));
@@ -79,6 +83,11 @@ public class BaseEnv {
   public boolean isMetricsJvmEnabled() {
     return metricsJvmEnabled;
   }
+
+  public boolean isMetricsEnabled() {
+    return metricsEnabled;
+  }
+
 
   public String getConfigTracingPath() {
     return configTracingPath;

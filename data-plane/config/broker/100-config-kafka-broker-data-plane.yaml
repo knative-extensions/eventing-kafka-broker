@@ -26,7 +26,7 @@ data:
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
     value.serializer=io.cloudevents.kafka.CloudEventSerializer
     acks=all
-    buffer.memory=3554432
+    buffer.memory=33554432
     # compression.type=snappy
     retries=100
     batch.size=16384

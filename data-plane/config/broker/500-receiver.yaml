@@ -107,6 +107,8 @@ spec:
               value: "9090"
             - name: METRICS_PUBLISH_QUANTILES
               value: "false"
+            - name: METRICS_ENABLED
+              value: "true"
             - name: METRICS_JVM_ENABLED
               value: "false"
             - name: CONFIG_TRACING_PATH

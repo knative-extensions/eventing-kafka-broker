@@ -104,6 +104,8 @@ spec:
               value: "9090"
             - name: METRICS_PUBLISH_QUANTILES
               value: "false"
+            - name: METRICS_ENABLED
+              value: "true"
             - name: METRICS_JVM_ENABLED
               value: "false"
             - name: CONFIG_TRACING_PATH
@@ -121,26 +123,26 @@ spec:
             - "-jar"
             - "/app/app.jar"
           # TODO set resources (limits and requests)
-          livenessProbe:
-            failureThreshold: 3
-            httpGet:
-              port: 8080
-              path: /healthz
-              scheme: HTTP
-            initialDelaySeconds: 10
-            periodSeconds: 3
-            successThreshold: 1
-            timeoutSeconds: 1
-          readinessProbe:
-            failureThreshold: 3
-            httpGet:
-              port: 8080
-              path: /readyz
-              scheme: HTTP
-            initialDelaySeconds: 10
-            periodSeconds: 3
-            successThreshold: 1
-            timeoutSeconds: 1
+#          livenessProbe:
+#            failureThreshold: 3
+#            httpGet:
+#              port: 8080
+#              path: /healthz
+#              scheme: HTTP
+#            initialDelaySeconds: 10
+#            periodSeconds: 3
+#            successThreshold: 1
+#            timeoutSeconds: 1
+#          readinessProbe:
+#            failureThreshold: 3
+#            httpGet:
+#              port: 8080
+#              path: /readyz
+#              scheme: HTTP
+#            initialDelaySeconds: 10
+#            periodSeconds: 3
+#            successThreshold: 1
+#            timeoutSeconds: 1
           terminationMessagePolicy: FallbackToLogsOnError
           terminationMessagePath: /dev/temination-log
           securityContext:

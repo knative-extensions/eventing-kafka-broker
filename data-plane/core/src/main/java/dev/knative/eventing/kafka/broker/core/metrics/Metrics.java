@@ -115,7 +115,10 @@ public class Metrics {
   public static MetricsOptions getOptions(final BaseEnv metricsConfigs) {
     final var registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
     return new MicrometerMetricsOptions()
-      .setEnabled(true)
+      .setEnabled(metricsConfigs.isMetricsEnabled())
+      .addDisabledMetricsCategory(MetricsDomain.HTTP_CLIENT)
+      .addDisabledMetricsCategory(MetricsDomain.HTTP_SERVER)
+      .addDisabledMetricsCategory(MetricsDomain.VERTICLES)
       .addDisabledMetricsCategory(MetricsDomain.EVENT_BUS)
       .addDisabledMetricsCategory(MetricsDomain.DATAGRAM_SOCKET)
       // NAMED_POOL allocates a lot, so disable it.
@@ -156,9 +159,13 @@ public class Metrics {
    * @return A meter binder to close once the consumer is closed.
    */
   public static <K, V> AutoCloseable register(final Consumer<K, V> consumer) {
-    final var clientMetrics = new KafkaClientMetrics(consumer);
-    clientMetrics.bindTo(getRegistry());
-    return clientMetrics;
+    final var registry = getRegistry();
+    if (registry != null) {
+      final var clientMetrics = new KafkaClientMetrics(consumer);
+      clientMetrics.bindTo(registry);
+      return clientMetrics;
+    }
+    return () -> {};
   }
 
   /**
@@ -170,9 +177,13 @@ public class Metrics {
    * @return A meter binder to close once the producer is closed.
    */
   public static <K, V> AutoCloseable register(final Producer<K, V> producer) {
-    final var clientMetrics = new KafkaClientMetrics(producer);
-    clientMetrics.bindTo(getRegistry());
-    return clientMetrics;
+    final var registry = getRegistry();
+    if (registry != null) {
+      final var clientMetrics = new KafkaClientMetrics(producer);
+      clientMetrics.bindTo(registry);
+      return clientMetrics;
+    }
+    return () -> {};
   }
 
   public static PemKeyCertOptions permKeyCertOptions() {
