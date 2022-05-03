@@ -20,6 +20,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -56,17 +58,17 @@ public class OrderedAsyncExecutorTest {
 
   @ParameterizedTest(name = "with delay {0}ms and tasks {1}")
   @MethodSource("inputArgs")
-  public void shouldExecuteInOrder(final long millis, final int tasks, Vertx vertx) throws InterruptedException {
+  public void shouldExecuteInOrder(final long millis, final int tasks, final Vertx parentVertx) throws InterruptedException {
     Random random = new Random();
 
     // Deploy the verticle
     AVerticle verticle = new AVerticle();
     CountDownLatch startVerticleLatch = new CountDownLatch(1);
-    vertx.deployVerticle(verticle, v -> startVerticleLatch.countDown());
+    parentVertx.deployVerticle(verticle, v -> startVerticleLatch.countDown());
     startVerticleLatch.await();
 
     // Rewrite the vertx instance in order to make sure we run always in the same context
-    vertx = verticle.getVertx();
+    final var vertx = verticle.getVertx();
 
     CountDownLatch tasksLatch = new CountDownLatch(tasks);
     List<Integer> executed = new ArrayList<>(tasks);
@@ -74,8 +76,8 @@ public class OrderedAsyncExecutorTest {
     OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor();
 
     for (int i = 0; i < tasks; i++) {
-      Supplier<Future<?>> task = generateTask(vertx, random, millis, i, tasksLatch, executed);
-      vertx.runOnContext((v) -> asyncExecutor.offer(task));
+      final var n = i;
+      vertx.runOnContext((v) -> asyncExecutor.offer(generateTask(vertx, random, millis, n, tasksLatch, executed)));
     }
 
     assertThat(
@@ -152,7 +154,7 @@ public class OrderedAsyncExecutorTest {
     }
   }
 
-  private class AVerticle extends AbstractVerticle {
+  private static class AVerticle extends AbstractVerticle {
   }
 
 }
