@@ -49,13 +49,20 @@ public class KafkaClientsAuthTest {
     shouldConfigureSaslSsl(PlainLoginModule.class, "PLAIN");
   }
 
+  @Test
+  public void shouldConfigureSaslDefaultedPlainSsl() {
+    shouldConfigureSaslSsl(PlainLoginModule.class, null);
+  }
+
   private static void shouldConfigureSaslSsl(final Class<? extends LoginModule> module, final String mechanism) {
     final var props = new Properties();
 
     final var credentials = mock(Credentials.class);
     when(credentials.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
     when(credentials.caCertificates()).thenReturn("xyz");
-    when(credentials.SASLMechanism()).thenReturn(mechanism);
+    if(mechanism != null) {
+      when(credentials.SASLMechanism()).thenReturn(mechanism);
+    }
     when(credentials.SASLUsername()).thenReturn("aaa");
     when(credentials.SASLPassword()).thenReturn("bbb");
 
@@ -65,7 +72,12 @@ public class KafkaClientsAuthTest {
     expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_SSL.name());
     expected.setProperty(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
     expected.setProperty(SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG, "xyz");
-    expected.setProperty(SaslConfigs.SASL_MECHANISM, mechanism);
+    if(mechanism != null) {
+      expected.setProperty(SaslConfigs.SASL_MECHANISM, mechanism);
+    } else {
+      expected.setProperty(SaslConfigs.SASL_MECHANISM, "PLAIN"); // it is defaulted
+
+    }
     expected.setProperty(
       SaslConfigs.SASL_JAAS_CONFIG,
       module.getName() + " required username=\"" + credentials.SASLUsername() + "\" password=\"" +

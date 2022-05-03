@@ -110,12 +110,19 @@ public class CredentialsValidatorTest {
     securityProtocolSaslPlaintextValid("PLAIN");
   }
 
+  @Test
+  public void securityProtocolSaslPlaintextDefauledPlainValid() {
+    securityProtocolSaslPlaintextValid(null);
+  }
+
   private static void securityProtocolSaslPlaintextValid(final String mechanism) {
 
     final var credential = mock(Credentials.class);
 
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
-    when(credential.SASLMechanism()).thenReturn(mechanism);
+    if(mechanism != null) {
+      when(credential.SASLMechanism()).thenReturn(mechanism);
+    }
     when(credential.SASLUsername()).thenReturn("aaa");
     when(credential.SASLPassword()).thenReturn("bbb");
 
@@ -178,6 +185,18 @@ public class CredentialsValidatorTest {
     when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
     when(credential.caCertificates()).thenReturn("xyz");
     when(credential.SASLMechanism()).thenReturn("PLAIN");
+    when(credential.SASLUsername()).thenReturn("aaa");
+    when(credential.SASLPassword()).thenReturn("bbb");
+
+    assertThat(CredentialsValidator.validate(credential)).isNull();
+  }
+
+  @Test
+  public void securityProtocolSaslDefaultedPlainSslValid() {
+    final var credential = mock(Credentials.class);
+
+    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+    when(credential.caCertificates()).thenReturn("xyz");
     when(credential.SASLUsername()).thenReturn("aaa");
     when(credential.SASLPassword()).thenReturn("bbb");
 
