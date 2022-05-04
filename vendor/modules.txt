@@ -1385,6 +1385,8 @@ knative.dev/eventing-kafka/test/lib
 knative.dev/eventing-kafka/test/lib/resources
 knative.dev/eventing-kafka/test/rekt/features/kafkachannel
 knative.dev/eventing-kafka/test/rekt/resources/kafkachannel
+knative.dev/eventing-kafka/test/rekt/resources/kafkasource
+knative.dev/eventing-kafka/test/rekt/resources/kafkatopic
 knative.dev/eventing-kafka/test/rekt/resources/resetoffset
 knative.dev/eventing-kafka/test/upgrade
 knative.dev/eventing-kafka/test/upgrade/continual
