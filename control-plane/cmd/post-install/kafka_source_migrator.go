@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	kcs "knative.dev/eventing-kafka/pkg/client/clientset/versioned"
+	"knative.dev/pkg/logging"
 )
 
 type KafkaSourceMigrator struct {
@@ -34,6 +35,7 @@ type KafkaSourceMigrator struct {
 }
 
 func (m *KafkaSourceMigrator) Migrate(ctx context.Context) error {
+	logger := logging.FromContext(ctx)
 
 	// cont takes care of results pagination.
 	// there might be more resources than a single rest call can return, so we need to think about the pagination.
@@ -45,6 +47,10 @@ func (m *KafkaSourceMigrator) Migrate(ctx context.Context) error {
 			KafkaSources(corev1.NamespaceAll).
 			List(ctx, metav1.ListOptions{Continue: cont})
 		if err != nil {
+			if apierrors.IsNotFound(err) {
+				logger.Infof("KafkaSources not found - ignore migration due to %s", err)
+				return nil
+			}
 			return fmt.Errorf("failed to list KafkaSources: %w", err)
 		}
 

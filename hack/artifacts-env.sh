@@ -18,3 +18,5 @@ export EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT="eventing-kafka-chann
 export EVENTING_KAFKA_POST_INSTALL_ARTIFACT="eventing-kafka-post-install.yaml"
 
 export EVENTING_KAFKA_ARTIFACT="eventing-kafka.yaml"
+
+export EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT="eventing-kafka-source-bundle.yaml"

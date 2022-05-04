@@ -26,7 +26,6 @@ import (
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 	dynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
@@ -48,11 +47,9 @@ func TestNewController(t *testing.T) {
 
 	dynamicclient.With(ctx, dynamicScheme)
 
-	configs := &config.Env{
-		DataPlaneConfigFormat: "json",
-	}
+	t.Setenv("CONSUMER_DATA_PLANE_CONFIG_FORMAT", "json")
 
-	controller := NewController(ctx, configs)
+	controller := NewController(ctx)
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
 	}

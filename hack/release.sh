@@ -36,6 +36,7 @@ function build_release() {
   [ -f "${EVENTING_KAFKA_SINK_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SINK_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" ] && rm "${EVENTING_KAFKA_CHANNEL_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" ] && rm "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}"
+  [ -f "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
 
   control_plane_setup
   if [[ $? -ne 0 ]]; then
@@ -45,6 +46,16 @@ function build_release() {
   data_plane_setup
   if [[ $? -ne 0 ]]; then
     fail "failed to create data plane artifact"
+  fi
+
+  control_plane_sourcev2_setup
+  if [[ $? -ne 0 ]]; then
+    fail "failed to setup control plane source bundle artifact"
+  fi
+
+  data_plane_sourcev2_setup
+  if [[ $? -ne 0 ]]; then
+    fail "failed to create data plane source bundle artifact"
   fi
 
   {
@@ -68,6 +79,7 @@ function build_release() {
     "${EVENTING_KAFKA_CHANNEL_ARTIFACT}"
     "${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT}"
     "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}"
+    "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
   )
 
   # ARTIFACTS_TO_PUBLISH has to be a string, not an array.

@@ -70,6 +70,10 @@ func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
 	// wait until the new data plane is ready
 	err := m.waitForNewDataPlaneReady(ctx)
 	if err != nil {
+		if err == wait.ErrWaitTimeout {
+			logger.Infof("Channel data plane does not exist - ignore migration")
+			return nil
+		}
 		return fmt.Errorf("error while waiting the new data plane to become ready %w", err)
 	}
 

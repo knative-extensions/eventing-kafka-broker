@@ -18,7 +18,9 @@ function usage() {
   echo "   teardown-infra                                          Remove eventing, Kafka (Strimzi)"
   echo "   deploy-kafka                                            Deploy Kafka (Strimzi)"
   echo "   deploy                                                  Deploy eventing-kafka-broker"
+  echo "   deploy-source                                           Deploy eventing-kafka-broker source bundle"
   echo "   teardown                                                Remove eventing-kafka-broker"
+  echo "   teardown-source                                         Remove eventing-kafka-broker source bundle"
   echo "   unit-tests, unit-test                                   Run unit tests"
   echo "   unit-tests-data-plane, unit-test-data-plane             Run data-plane unit tests"
   echo "   unit-tests-control-plane, unit-test-control-plane       Run control-plane unit tests"
@@ -31,6 +33,7 @@ function usage() {
   echo "   profiler                                                Run profiling tests"
   echo "   generate                                                Run code generators"
   echo "   build-from-source                                       Build artifacts from source"
+  echo "   build-for-source-from-source                            Build artifacts from source for source bundle only"
   echo ""
 }
 
@@ -42,10 +45,16 @@ elif [[ "${action}" == "deploy-kafka" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && kafka_setup
 elif [[ "${action}" == "deploy" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && test_setup
+elif [[ "${action}" == "deploy-source" ]]; then
+  source "${ROOT_DIR}"/test/e2e-common.sh && test_source_setup
 elif [[ "${action}" == "build-from-source" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && build_components_from_source
+elif [[ "${action}" == "build-for-source-from-source" ]]; then
+  source "${ROOT_DIR}"/test/e2e-common.sh && build_source_components_from_source
 elif [[ "${action}" == "teardown" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && test_teardown
+elif [[ "${action}" == "teardown-source" ]]; then
+  source "${ROOT_DIR}"/test/e2e-common.sh && test_source_teardown
 elif [[ "${action}" == "unit-test" || "${action}" == "unit-tests" ]]; then
   "${ROOT_DIR}"/test/presubmit-tests.sh --unit-tests
 elif [[ "${action}" == "unit-test-data-plane" || "${action}" == "unit-tests-data-plane" ]]; then

@@ -36,6 +36,9 @@ spec:
       containers:
         - name: migrate
           image: ko://knative.dev/pkg/apiextensions/storageversion/cmd/migrate
+          env:
+            - name: IGNORE_NOT_FOUND
+              value: "true"
           args:
             - "kafkasources.sources.knative.dev"
             - "kafkachannels.messaging.knative.dev"

@@ -56,6 +56,10 @@ func (d *kafkaChannelPostMigrationDeleter) Delete(ctx context.Context) error {
 	// wait until the new control plane is ready
 	err := d.waitForNewControlPlaneReady(ctx)
 	if err != nil {
+		if err == wait.ErrWaitTimeout {
+			logger.Infof("Channel data plane does not exist - ignore migration")
+			return nil
+		}
 		return fmt.Errorf("error while waiting the new control plane to become ready %w", err)
 	}
 
