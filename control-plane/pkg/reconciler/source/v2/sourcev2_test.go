@@ -21,8 +21,13 @@ import (
 	"fmt"
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgotesting "k8s.io/client-go/testing"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
+	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
 
@@ -90,6 +95,244 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewSource(
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal with SASL with type",
+			Objects: []runtime.Object{
+				//NewSourceSASL(),
+				&sources.KafkaSource{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: SourceNamespace,
+						Name:      SourceName,
+						UID:       SourceUUID,
+					},
+					Spec: sources.KafkaSourceSpec{
+						KafkaAuthSpec: v1beta1.KafkaAuthSpec{
+							BootstrapServers: []string{SourceBootstrapServers},
+							Net: v1beta1.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "password",
+										},
+									},
+									Type: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "type",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						},
+						Topics:        SourceTopics,
+						ConsumerGroup: SourceConsumerGroup,
+						SourceSpec: duckv1.SourceSpec{
+							Sink: NewSourceSinkReference(),
+						},
+					},
+				},
+			},
+			Key: testKey,
+			WantCreates: []runtime.Object{
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(&kafkainternals.Auth{
+							NetSpec: &bindings.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "password",
+										},
+									},
+									Type: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "type",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						}),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(1),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						StatusSourceConsumerGroupUnknown(),
+						StatusSourceSinkResolved(""),
+						SourceNetSaslTls(true),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal with SASL without type",
+			Objects: []runtime.Object{
+				//NewSourceSASL(),
+				&sources.KafkaSource{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: SourceNamespace,
+						Name:      SourceName,
+						UID:       SourceUUID,
+					},
+					Spec: sources.KafkaSourceSpec{
+						KafkaAuthSpec: v1beta1.KafkaAuthSpec{
+							BootstrapServers: []string{SourceBootstrapServers},
+							Net: v1beta1.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "password",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						},
+						Topics:        SourceTopics,
+						ConsumerGroup: SourceConsumerGroup,
+						SourceSpec: duckv1.SourceSpec{
+							Sink: NewSourceSinkReference(),
+						},
+					},
+				},
+			},
+			Key: testKey,
+			WantCreates: []runtime.Object{
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(&kafkainternals.Auth{
+							NetSpec: &bindings.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "password",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						}),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(1),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						StatusSourceConsumerGroupUnknown(),
+						StatusSourceSinkResolved(""),
+						SourceNetSaslTls(false),
 					),
 				},
 			},
@@ -556,5 +799,53 @@ func StatusSourceConsumerGroupReplicas(replicas int32) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*sources.KafkaSource)
 		ks.Status.Consumers = replicas
+	}
+}
+
+func SourceNetSaslTls(withType bool) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.Spec.Net = bindings.KafkaNetSpec{
+			SASL: bindings.KafkaSASLSpec{
+				Enable: true,
+				User: bindings.SecretValueFromSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: SecretName,
+						},
+						Key: "user",
+					},
+				},
+				Password: bindings.SecretValueFromSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: SecretName,
+						},
+						Key: "password",
+					},
+				},
+				// Type: bindings.SecretValueFromSource{
+				// 	SecretKeyRef: &corev1.SecretKeySelector{
+				// 		LocalObjectReference: corev1.LocalObjectReference{
+				// 			Name: SecretName,
+				// 		},
+				// 		Key: "type",
+				// 	},
+				// },
+			},
+			TLS: bindings.KafkaTLSSpec{
+				Enable: true,
+			},
+		}
+		if withType {
+			ks.Spec.Net.SASL.Type = bindings.SecretValueFromSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: SecretName,
+					},
+					Key: "type",
+				},
+			}
+		}
 	}
 }
