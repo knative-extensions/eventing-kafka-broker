@@ -27,6 +27,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/utils/pointer"
+	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
@@ -179,10 +180,14 @@ func (r Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainterna
 }
 
 func (r Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consumer, resource *contract.Resource) error {
-
 	if c.Spec.Auth == nil {
 		return nil
 	}
+
+	if err := r.trackAuthContext(c, c.Spec.Auth); err != nil {
+		return err
+	}
+
 	if c.Spec.Auth.NetSpec != nil {
 		authContext, err := security.ResolveAuthContextFromNetSpec(r.SecretLister, c.GetNamespace(), *c.Spec.Auth.NetSpec)
 		if err != nil {
@@ -191,6 +196,7 @@ func (r Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consume
 		resource.Auth = &contract.Resource_MultiAuthSecret{MultiAuthSecret: authContext.MultiSecretReference}
 		return nil
 	}
+
 	if c.Spec.Auth.AuthSpec != nil {
 		secret, err := security.Secret(ctx, &SecretLocator{Consumer: c}, r.SecretProviderFunc())
 		if err != nil {
@@ -203,15 +209,6 @@ func (r Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consume
 				Name:      secret.Name,
 				Version:   secret.ResourceVersion,
 			},
-		}
-		ref := tracker.Reference{
-			APIVersion: c.APIVersion,
-			Kind:       c.Kind,
-			Namespace:  c.GetNamespace(),
-			Name:       c.GetName(),
-		}
-		if err := r.Tracker.TrackReference(ref, c); err != nil {
-			return fmt.Errorf("failed to track reference %v: %w", ref, err)
 		}
 		return nil
 	}
@@ -411,5 +408,75 @@ func podOwnerReference(p *corev1.Pod) base.ConfigMapOption {
 			Controller:         pointer.Bool(true),
 			BlockOwnerDeletion: pointer.Bool(true),
 		})
+	}
+}
+
+func (r *Reconciler) trackSingleSecretAuthContext(c *kafkainternals.Consumer, auth *contract.Resource_AuthSecret) error {
+	if auth == nil || auth.AuthSecret == nil {
+		return nil
+	}
+
+	ref := tracker.Reference{
+		APIVersion: "v1",
+		Kind:       "Secret",
+		Namespace:  auth.AuthSecret.Namespace,
+		Name:       auth.AuthSecret.Name,
+	}
+	if err := r.Tracker.TrackReference(ref, c); err != nil {
+		return fmt.Errorf("failed to track secret for rotation %s/%s: %w", ref.Namespace, ref.Name, err)
+	}
+	return nil
+}
+
+func (r *Reconciler) trackAuthContext(c *kafkainternals.Consumer, auth *kafkainternals.Auth) error {
+	if auth == nil {
+		return nil
+	}
+
+	if auth.AuthSpec.HasAuth() {
+		ref := tracker.Reference{
+			APIVersion: "v1",
+			Kind:       "Secret",
+			Namespace:  c.GetNamespace(),
+			Name:       auth.AuthSpec.Secret.Ref.Name,
+		}
+		if err := r.Tracker.TrackReference(ref, c); err != nil {
+			return fmt.Errorf("failed to track secret for rotation %s/%s: %w", ref.Namespace, ref.Name, err)
+		}
+		return nil
+	}
+
+	if auth.NetSpec != nil {
+		secrets := make([]corev1.LocalObjectReference, 0, 6)
+		if auth.NetSpec.TLS.Enable {
+			addRefIfNotNil(auth.NetSpec.TLS.Key, secrets)
+			addRefIfNotNil(auth.NetSpec.TLS.Cert, secrets)
+			addRefIfNotNil(auth.NetSpec.TLS.CACert, secrets)
+		}
+		if auth.NetSpec.SASL.Enable {
+			addRefIfNotNil(auth.NetSpec.SASL.User, secrets)
+			addRefIfNotNil(auth.NetSpec.SASL.Password, secrets)
+			addRefIfNotNil(auth.NetSpec.SASL.Type, secrets)
+		}
+
+		for _, s := range secrets {
+			ref := tracker.Reference{
+				APIVersion: "v1",
+				Kind:       "Secret",
+				Namespace:  c.GetNamespace(),
+				Name:       s.Name,
+			}
+			if err := r.Tracker.TrackReference(ref, c); err != nil {
+				return fmt.Errorf("failed to track secret for rotation %s/%s: %w", ref.Namespace, ref.Name, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func addRefIfNotNil(ref bindings.SecretValueFromSource, secrets []corev1.LocalObjectReference) {
+	if ref.SecretKeyRef != nil && ref.SecretKeyRef.LocalObjectReference.Name != "" {
+		secrets = append(secrets, ref.SecretKeyRef.LocalObjectReference)
 	}
 }

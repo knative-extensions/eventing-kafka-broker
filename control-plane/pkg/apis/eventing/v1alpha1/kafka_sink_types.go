@@ -103,6 +103,11 @@ type Auth struct {
 	Secret *Secret `json:"secret,omitempty"`
 }
 
+func (a *Auth) HasAuth() bool {
+	return a != nil && a.Secret != nil &&
+		a.Secret.Ref != nil && a.Secret.Ref.Name != ""
+}
+
 type Secret struct {
 	// Secret reference for SASL and SSL configurations.
 	Ref *SecretReference `json:"ref,omitempty"`
