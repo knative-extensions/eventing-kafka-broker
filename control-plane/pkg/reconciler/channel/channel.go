@@ -548,7 +548,7 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, cm *corev1.ConfigMap, chann
 	retentionDuration, err := channel.Spec.ParseRetentionDuration()
 	if err != nil {
 		// Should never happen with webhook defaulting and validation in place.
-		logger.Error("Error parsing RetentionDuration, using default instead", zap.String("RetentionDuration", channel.Spec.RetentionDuration), zap.Error(err))
+		logger.Debug("Error parsing RetentionDuration, using default instead", zap.String("RetentionDuration", channel.Spec.RetentionDuration), zap.Error(err))
 		retentionDuration = constants.DefaultRetentionDuration
 	}
 	retentionMillisString := strconv.FormatInt(retentionDuration.Milliseconds(), 10)
