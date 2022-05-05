@@ -77,7 +77,7 @@ public class WebClientCloudEventSenderTest {
     return Stream.concat(
       Stream.concat(
         IntStream.range(200, 404).boxed(),
-        IntStream.range(405, 409).boxed()
+        IntStream.range(405, 408).boxed()
       ),
       Stream.concat(
         IntStream.range(410, 429).boxed(),
@@ -89,7 +89,7 @@ public class WebClientCloudEventSenderTest {
   public static Stream<Integer> retryableStatusCodes() {
     return Stream.concat(
       IntStream.range(500, 600).boxed(),
-      IntStream.of(404, 409, 429).boxed()
+      IntStream.of(404, 408, 409, 429).boxed()
     );
   }
 }
