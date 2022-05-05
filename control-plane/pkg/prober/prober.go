@@ -18,6 +18,7 @@ package prober
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -88,4 +89,10 @@ func probe(ctx context.Context, client httpClient, logger *zap.Logger, address s
 	}
 
 	return StatusReady
+}
+
+func IPsListerFromService(svc types.NamespacedName) IPsLister {
+	return func() ([]string, error) {
+		return []string{fmt.Sprintf("%s.%s.svc", svc.Name, svc.Namespace)}, nil
+	}
 }
