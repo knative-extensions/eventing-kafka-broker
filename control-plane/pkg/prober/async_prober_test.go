@@ -132,7 +132,18 @@ func TestAsyncProber(t *testing.T) {
 			u, _ := url.Parse(s.URL)
 
 			wantRequeueCountMin := atomic.NewInt64(int64(tc.wantRequeueCountMin))
-			prober := NewAsync(ctx, s.Client(), u.Port(), tc.podsLabelsSelector, func(key types.NamespacedName) {
+			var IPsLister IPsLister = func() ([]string, error) {
+				pods, err := podinformer.Get(ctx).Lister().List(tc.podsLabelsSelector)
+				if err != nil {
+					return nil, err
+				}
+				ips := make([]string, 0, len(pods))
+				for _, p := range pods {
+					ips = append(ips, p.Status.PodIP)
+				}
+				return ips, nil
+			}
+			prober := NewAsync(ctx, s.Client(), u.Port(), IPsLister, func(key types.NamespacedName) {
 				wantRequeueCountMin.Dec()
 			})
 
