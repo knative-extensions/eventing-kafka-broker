@@ -46,6 +46,7 @@ public class OrderedAsyncExecutor {
    */
   public void offer(Supplier<Future<?>> task) {
     if (this.isStopped) {
+      // Executor is stopped, return without adding the task to the queue.
       return;
     }
     boolean wasEmpty = this.queue.isEmpty();
