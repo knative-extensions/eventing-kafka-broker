@@ -75,6 +75,24 @@ func TestSASLPlain(t *testing.T) {
 	assert.Equal(t, "my-user-password", config.Net.SASL.Password)
 }
 
+func TestSASLPlainDefaulted(t *testing.T) {
+	secret := map[string][]byte{
+		"protocol": []byte("SASL_PLAINTEXT"),
+		"user":     []byte("my-user-name"),
+		"password": []byte("my-user-password"),
+	}
+	config := sarama.NewConfig()
+
+	err := kafka.Options(config, secretData(secret))
+
+	assert.Nil(t, err)
+	assert.True(t, config.Net.SASL.Enable)
+	assert.True(t, config.Net.SASL.Handshake)
+	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypePlaintext), config.Net.SASL.Mechanism)
+	assert.Equal(t, "my-user-name", config.Net.SASL.User)
+	assert.Equal(t, "my-user-password", config.Net.SASL.Password)
+}
+
 func TestSASLPlainLSCRAM256(t *testing.T) {
 	secret := map[string][]byte{
 		"protocol":       []byte("SASL_PLAINTEXT"),

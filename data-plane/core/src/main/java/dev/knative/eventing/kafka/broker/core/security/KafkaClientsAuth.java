@@ -57,9 +57,12 @@ public class KafkaClientsAuth {
   }
 
   private static void sasl(final BiConsumer<String, String> propertiesSetter, final Credentials credentials) {
-    final var mechanism = credentials.SASLMechanism();
-    if (mechanism == null) {
-      throw new IllegalStateException("SASL mechanism required");
+    final String mechanism;
+    final var saslMechanism = credentials.SASLMechanism();
+    if (saslMechanism == null) {
+      mechanism = "PLAIN";
+    } else {
+      mechanism = saslMechanism;
     }
     propertiesSetter.accept(SaslConfigs.SASL_MECHANISM, mechanism);
     if ("PLAIN".equals(mechanism)) {
