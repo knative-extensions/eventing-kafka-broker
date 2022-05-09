@@ -21,9 +21,10 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/network"
+
+	"knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 )
 
 const (
@@ -31,13 +32,21 @@ const (
 	portNumber         = 80
 	MessagingRoleLabel = "messaging.knative.dev/role"
 	MessagingRole      = "kafka-channel"
+
+	ChannelSuffix = "-kn-channel"
+	// MaxResourceNameLength is the maximum number of characters for a Kubernetes resource name.
+	// See vendor/k8s.io/apiserver/pkg/storage/names/generate.go
+	MaxResourceNameLength = 63
 )
 
 // ServiceOption can be used to optionally modify the K8s service in MakeK8sService.
 type ServiceOption func(*corev1.Service) error
 
 func MakeChannelServiceName(name string) string {
-	return fmt.Sprintf("%s-kn-channel", name)
+	if len(name)+len(ChannelSuffix) > MaxResourceNameLength {
+		return name
+	}
+	return fmt.Sprintf("%s%s", name, ChannelSuffix)
 }
 
 // ExternalService is a functional option for MakeK8sService to create a K8s service of type ExternalName
