@@ -113,6 +113,9 @@ readonly KAFKA_MT_SOURCE_TEMPLATE_DIR="config/source/multi"
 # This is the namespace of knative-eventing itself
 export EVENTING_NAMESPACE="knative-eventing"
 
+# Only build linux/amd64 image by default
+export KO_FLAGS="${KO_FLAGS:---platform=linux/amd64}"
+
 # Namespace where we install eventing-kafka components (may be different than EVENTING_NAMESPACE)
 readonly SYSTEM_NAMESPACE="knative-eventing"
 export SYSTEM_NAMESPACE
@@ -180,11 +183,11 @@ function install_knative_eventing {
     cd ${GOPATH} && mkdir -p src/knative.dev && cd src/knative.dev
     git clone https://github.com/knative/eventing
     cd eventing
-    ko apply -f "${EVENTING_CONFIG}"
+    ko apply ${KO_FLAGS} -f "${EVENTING_CONFIG}"
     # Install MT Channel Based Broker
-    ko apply -f "${EVENTING_MT_CHANNEL_BROKER_CONFIG}"
+    ko apply ${KO_FLAGS} -f "${EVENTING_MT_CHANNEL_BROKER_CONFIG}"
     # Install IMC
-    ko apply -Rf "${EVENTING_IN_MEMORY_CHANNEL_CONFIG}"
+    ko apply ${KO_FLAGS} -Rf "${EVENTING_IN_MEMORY_CHANNEL_CONFIG}"
     popd
   fi
    wait_until_pods_running "${EVENTING_NAMESPACE}" || fail_test "Knative Eventing did not come up"
@@ -287,7 +290,7 @@ function install_consolidated_channel_crds {
       "${KAFKA_CRD_CONFIG_DIR}/"*yaml
     sed -i "s/REPLACE_WITH_CLUSTER_URL/${KAFKA_CLUSTER_URL}/" \
       "${KAFKA_CRD_CONFIG_DIR}/${KAFKA_CRD_CONFIG_TEMPLATE}"
-    ko apply -f "${KAFKA_CRD_CONFIG_DIR}"
+    ko apply ${KO_FLAGS} -f "${KAFKA_CRD_CONFIG_DIR}"
     run_postinstall_jobs
   elif [[ "${source}" == 'latest-release' ]]; then
     ver="${LATEST_RELEASE_VERSION}"
@@ -327,7 +330,7 @@ function install_consolidated_sources_crds() {
     rm -rf "${KAFKA_SOURCE_CRD_CONFIG_DIR}" && mkdir -p "${KAFKA_SOURCE_CRD_CONFIG_DIR}"
     cp "${KAFKA_SOURCE_TEMPLATE_DIR}/"*yaml "${KAFKA_SOURCE_CRD_CONFIG_DIR}"
     sed -i "s/namespace: knative-eventing/namespace: ${SYSTEM_NAMESPACE}/g" "${KAFKA_SOURCE_CRD_CONFIG_DIR}/"*yaml
-    ko apply -f "${KAFKA_SOURCE_CRD_CONFIG_DIR}" || return $?
+    ko apply ${KO_FLAGS} -f "${KAFKA_SOURCE_CRD_CONFIG_DIR}" || return $?
   elif [[ "${source}" == 'latest-release' ]]; then
     ver="${LATEST_RELEASE_VERSION}"
     echo "Installing consolidated Kafka Source CRD (from latest release: ${ver})"
@@ -404,7 +407,7 @@ function install_distributed_channel_crds() {
   sed -i '/^ *TLS:/{n;s/true/false/};/^ *SASL:/{n;s/true/false/}' "${KAFKA_CRD_CONFIG_DIR}/${EVENTING_KAFKA_CONFIG_TEMPLATE}"
 
   # Install The eventing-kafka KafkaChannel Implementation
-  ko apply -f "${KAFKA_CRD_CONFIG_DIR}" || return 1
+  ko apply ${KO_FLAGS} -f "${KAFKA_CRD_CONFIG_DIR}" || return 1
 
    # Add The kn-eventing-test-pull-secret (If Present) To ServiceAccount & Restart eventing-kafka Deployment
   add_kn_eventing_test_pull_secret "${SYSTEM_NAMESPACE}" eventing-kafka-channel-controller eventing-kafka-channel-controller
@@ -419,7 +422,7 @@ function install_mt_source() {
   rm -rf "${KAFKA_SOURCE_CRD_CONFIG_DIR}" && mkdir -p "${KAFKA_SOURCE_CRD_CONFIG_DIR}"
   cp "${KAFKA_MT_SOURCE_TEMPLATE_DIR}/"*yaml "${KAFKA_SOURCE_CRD_CONFIG_DIR}"
   sed -i "s/namespace: knative-eventing/namespace: ${SYSTEM_NAMESPACE}/g" "${KAFKA_SOURCE_CRD_CONFIG_DIR}/"*yaml
-  ko apply -f "${KAFKA_SOURCE_CRD_CONFIG_DIR}" || return 1
+  ko apply ${KO_FLAGS} -f "${KAFKA_SOURCE_CRD_CONFIG_DIR}" || return 1
 
   # FIXME: integration-test-mt-source fails if post-install scripts are executed (knative-sandbox/eventing-kafka#495)
   # run_postinstall_jobs
