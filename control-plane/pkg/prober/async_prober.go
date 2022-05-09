@@ -26,7 +26,7 @@ import (
 	"knative.dev/pkg/logging"
 )
 
-type IPsLister func() ([]string, error)
+type IPsLister func(addressable Addressable) ([]string, error)
 
 type asyncProber struct {
 	client    httpClient
@@ -44,8 +44,8 @@ func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPs
 	logger := logging.FromContext(ctx).Desugar().
 		With(zap.String("scope", "prober"))
 
-	if len(port) == 0 {
-		logger.Fatal("Port is required")
+	if len(port) > 0 && port[0] != ':' {
+		port = ":" + port
 	}
 	return &asyncProber{
 		client:    client,
@@ -59,7 +59,7 @@ func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPs
 
 func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expected Status) Status {
 	address := addressable.Address
-	IPs, err := a.IPsLister()
+	IPs, err := a.IPsLister(addressable)
 	if err != nil {
 		a.logger.Error("Failed to list IPs", zap.Error(err))
 		return StatusUnknown
@@ -88,7 +88,7 @@ func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expect
 
 	for _, IP := range IPs {
 		podUrl := *address
-		podUrl.Host = IP + ":" + a.port
+		podUrl.Host = IP + a.port
 		address := podUrl.String()
 
 		logger := a.logger.
