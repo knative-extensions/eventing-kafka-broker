@@ -44,7 +44,7 @@
     <vertx.version>4.2.5</vertx.version>
     <cloudevents.sdk.version>2.3.0</cloudevents.sdk.version>
     <micrometer.version>1.8.5</micrometer.version>
-    <opentelemetry.version>1.13.0</opentelemetry.version>
+    <opentelemetry.version>1.14.0</opentelemetry.version>
     <jackson.version>2.13.2.20220328</jackson.version>
     <protobuf.version>3.20.0</protobuf.version>
     <slf4j.version>1.7.36</slf4j.version>
