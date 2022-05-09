@@ -89,9 +89,27 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     // That means, we support these modes:
     // - Request coming to "/path" --> path is used for matching
     // - Request coming to "/" --> hostname is used for matching
-    if (pathMapper.get(path) != null) {
-      return pathMapper.get(path);
+    final var p = pathMapper.get(path);
+    if (p != null) {
+      return p;
     }
+
+    // Host based routing is not as simple as path based routing, since the host header
+    // is variable.
+    // For example an external name service might be hit in multiple ways producing
+    // different host headers:
+    // - my-kafka-channel-kn-channel.default
+    // - my-kafka-channel-kn-channel.default:80
+    // - my-kafka-channel-kn-channel.default.svc
+    // - my-kafka-channel-kn-channel.default.svc:80
+    // - my-kafka-channel-kn-channel.default.svc.cluster.local [1]
+    // - my-kafka-channel-kn-channel.default.svc.cluster.local:80
+    //
+    // Current implementations expects only the long form that contains the cluster
+    // domain without the port [1], however, this is clearly a non-robust implementation,
+    // or it might be wrong with some clients, for now, we keep the same behavior as
+    // the old implementations.
+
     return hostMapper.get(host);
   }
 
@@ -137,14 +155,14 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
         producerProps
       );
 
-      if(isRootPath(ingress.getPath()) && Strings.isNullOrEmpty(ingress.getHost())){
+      if (isRootPath(ingress.getPath()) && Strings.isNullOrEmpty(ingress.getHost())) {
         throw new IllegalArgumentException("Ingress path and host is blank. One of them should be defined. Resource UID: " + resource.getUid());
       }
 
-      if(!isRootPath(ingress.getPath())){
+      if (!isRootPath(ingress.getPath())) {
         this.pathMapper.put(ingress.getPath(), ingressInfo);
       }
-      if (!Strings.isNullOrEmpty(ingress.getHost())){
+      if (!Strings.isNullOrEmpty(ingress.getHost())) {
         this.hostMapper.put(ingress.getHost(), ingressInfo);
       }
       this.ingressInfos.put(resource.getUid(), ingressInfo);
@@ -183,20 +201,20 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
       return rc.getValue().close()
         .onSuccess(r -> {
           // Remove ingress info from the maps
-          if(!isRootPath(ingressInfo.getPath())){
+          if (!isRootPath(ingressInfo.getPath())) {
             this.pathMapper.remove(ingressInfo.getPath());
           }
-          if(!Strings.isNullOrEmpty(ingressInfo.getHost())){
+          if (!Strings.isNullOrEmpty(ingressInfo.getHost())) {
             this.hostMapper.remove(ingressInfo.getHost());
           }
           this.ingressInfos.remove(resource.getUid());
         });
     }
     // Remove ingress info from the maps
-    if(!isRootPath(ingressInfo.getPath())){
+    if (!isRootPath(ingressInfo.getPath())) {
       this.pathMapper.remove(ingressInfo.getPath());
     }
-    if(!Strings.isNullOrEmpty(ingressInfo.getHost())){
+    if (!Strings.isNullOrEmpty(ingressInfo.getHost())) {
       this.hostMapper.remove(ingressInfo.getHost());
     }
     this.ingressInfos.remove(resource.getUid());
