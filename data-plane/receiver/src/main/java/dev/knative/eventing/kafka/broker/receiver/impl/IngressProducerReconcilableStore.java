@@ -89,9 +89,27 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     // That means, we support these modes:
     // - Request coming to "/path" --> path is used for matching
     // - Request coming to "/" --> hostname is used for matching
-    if (pathMapper.get(path) != null) {
-      return pathMapper.get(path);
+    final var p = pathMapper.get(path);
+    if (p != null) {
+      return p;
     }
+
+    // Host based routing is not as simple as path based routing, since the host header
+    // is variable.
+    // For example an external name service might be hit in multiple ways producing
+    // different host headers:
+    // - my-kafka-channel-kn-channel.default
+    // - my-kafka-channel-kn-channel.default:80
+    // - my-kafka-channel-kn-channel.default.svc
+    // - my-kafka-channel-kn-channel.default.svc:80
+    // - my-kafka-channel-kn-channel.default.svc.cluster.local [1]
+    // - my-kafka-channel-kn-channel.default.svc.cluster.local:80
+    //
+    // Current implementations expects only the long form that contains the cluster
+    // domain without the port [1], however, this is clearly a non-robust implementation,
+    // or it might be wrong with some clients, for now, we keep the same behavior as
+    // the old implementations.
+
     return hostMapper.get(host);
   }
 
