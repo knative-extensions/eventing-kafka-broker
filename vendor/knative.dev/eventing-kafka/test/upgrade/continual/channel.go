@@ -250,7 +250,7 @@ func (b *brokerBackedByKafkaChannelSut) setKafkaAsDefaultForBroker(ctx sut.Conte
 			Name:      "config-br-default-channel",
 		},
 		Data: map[string]string{
-			"channelTemplateSpec": fmt.Sprintf(`apiVersion: %s
+			"channel-template-spec": fmt.Sprintf(`apiVersion: %s
 kind: %s
 spec:
   numPartitions: %d
