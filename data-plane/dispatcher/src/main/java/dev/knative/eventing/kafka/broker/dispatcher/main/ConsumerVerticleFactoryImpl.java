@@ -95,7 +95,6 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
   private final WebClientOptions webClientOptions;
   private final Map<String, Object> producerConfigs;
   private final AuthProvider authProvider;
-  private final Counter eventsSentCounter;
 
   /**
    * All args constructor.
@@ -116,7 +115,6 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     Objects.requireNonNull(consumerConfigs, "provide consumerConfigs");
     Objects.requireNonNull(webClientOptions, "provide webClientOptions");
     Objects.requireNonNull(producerConfigs, "provide producerConfigs");
-    Objects.requireNonNull(metricsRegistry, "provide metricsRegistry");
 
     this.consumerConfigs = consumerConfigs.entrySet()
       .stream()
@@ -128,7 +126,6 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
       .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     this.webClientOptions = webClientOptions;
     this.authProvider = authProvider;
-    this.eventsSentCounter = metricsRegistry.counter(Metrics.HTTP_EVENTS_SENT_COUNT);
   }
 
   /**
@@ -195,7 +192,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
            egressSubscriberSender,
            egressDeadLetterSender,
            responseHandler,
-           new OffsetManager(vertx, consumer, eventsSentCounter::increment, commitIntervalMs),
+           new OffsetManager(vertx, consumer, (v) -> {}, commitIntervalMs),
            ConsumerTracer.create(
              ((VertxInternal) vertx).tracer(),
              new KafkaClientOptions()

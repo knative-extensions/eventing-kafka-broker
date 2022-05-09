@@ -42,9 +42,9 @@ class ReceiverEnvTest {
         case ReceiverEnv.HTTPSERVER_CONFIG_FILE_PATH -> HTTPSERVER_CONFIG_FILE_PATH;
         case BaseEnv.PRODUCER_CONFIG_FILE_PATH -> PRODUCER_CONFIG_PATH;
         case BaseEnv.DATA_PLANE_CONFIG_FILE_PATH -> DATA_PLANE_CONFIG_FILE_PATH;
+        case BaseEnv.METRICS_PUBLISH_QUANTILES -> "TRUE";
         case BaseEnv.METRICS_PORT -> "9092";
         case BaseEnv.METRICS_PATH -> "/path";
-        case BaseEnv.METRICS_PUBLISH_QUANTILES -> "TRUE";
         case BaseEnv.CONFIG_TRACING_PATH -> TRACING_CONFIG_PATH;
         case BaseEnv.METRICS_JVM_ENABLED -> METRICS_JVM_ENABLED;
         case BaseEnv.WAIT_STARTUP_SECONDS -> Integer.valueOf(WAIT_STARTUP_SECONDS).toString();

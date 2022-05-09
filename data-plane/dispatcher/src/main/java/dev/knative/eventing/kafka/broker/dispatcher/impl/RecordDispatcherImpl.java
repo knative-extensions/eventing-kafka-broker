@@ -105,7 +105,6 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     Objects.requireNonNull(deadLetterSinkSender, "provide deadLetterSinkSender");
     Objects.requireNonNull(recordDispatcherListener, "provide offsetStrategy");
     Objects.requireNonNull(responseHandler, "provide sinkResponseHandler");
-    Objects.requireNonNull(meterRegistry, "provide meterRegistry");
 
     this.resourceContext = resourceContext;
     this.filter = filter;
@@ -205,10 +204,12 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     // Execute filtering
     final var pass = filter.test(recordContext.getRecord().value());
 
-    Metrics
-      .eventProcessingLatency(getTags(recordContext))
-      .register(meterRegistry)
-      .record(recordContext.performLatency());
+    if (meterRegistry != null) {
+      Metrics
+        .eventProcessingLatency(getTags(recordContext))
+        .register(meterRegistry)
+        .record(recordContext.performLatency());
+    }
 
     // reset timer to start calculating the dispatch latency.
     recordContext.resetTimer();
@@ -305,17 +306,21 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private void incrementEventCount(@Nullable final HttpResponse<?> response,
                                    final ConsumerRecordContext recordContext) {
-    Metrics
-      .eventCount(getTags(response, recordContext))
-      .register(meterRegistry)
-      .increment();
+    if (meterRegistry != null) {
+      Metrics
+        .eventCount(getTags(response, recordContext))
+        .register(meterRegistry)
+        .increment();
+    }
   }
 
   private void incrementDiscardedRecord(final ConsumerRecordContext recordContext) {
-    Metrics
-    .discardedEventCount(getTags(recordContext))
-    .register(meterRegistry)
-    .increment();
+    if (meterRegistry != null) {
+      Metrics
+        .discardedEventCount(getTags(recordContext))
+        .register(meterRegistry)
+        .increment();
+    }
   }
 
   private void recordDispatchLatency(final HttpResponse<?> response,
@@ -323,10 +328,12 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     final var latency = recordContext.performLatency();
     logger.debug("Dispatch latency {}", keyValue("latency", latency));
 
-    Metrics
-      .eventDispatchLatency(getTags(response, recordContext))
-      .register(meterRegistry)
-      .record(latency);
+    if (meterRegistry != null) {
+      Metrics
+        .eventDispatchLatency(getTags(response, recordContext))
+        .register(meterRegistry)
+        .record(latency);
+    }
   }
 
   private HttpResponse<?> getResponse(final Throwable throwable) {
