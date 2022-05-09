@@ -108,9 +108,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
   @Override
   public void stop(Promise<Void> stopPromise) {
     CompositeFuture.all(
-      server.close().mapEmpty(),
-      messageConsumer.unregister()
-    )
+        server.close().mapEmpty(),
+        messageConsumer.unregister()
+      )
       .<Void>mapEmpty()
       .onComplete(stopPromise);
   }
@@ -124,7 +124,11 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     IngressProducer producer = this.ingressProducerStore.resolve(request.host(), request.path());
     if (producer == null) {
       request.response().setStatusCode(NOT_FOUND.code()).end();
-      logger.warn("Resource not found {}", keyValue("path", request.path()));
+      logger.warn("Resource not found {} {} {}",
+        keyValue("path", request.path()),
+        keyValue("host", request.host()),
+        keyValue("hostHeader", request.getHeader("Host"))
+      );
       return;
     }
 
