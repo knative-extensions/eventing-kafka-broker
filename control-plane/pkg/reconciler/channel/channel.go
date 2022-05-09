@@ -19,12 +19,14 @@ package channel
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/pkg/network"
 
 	"github.com/Shopify/sarama"
 
@@ -62,7 +64,7 @@ const (
 	// TopicPrefix is the Kafka Channel topic prefix - (topic name: knative-messaging-kafka.<channel-namespace>.<channel-name>).
 	TopicPrefix                  = "knative-messaging-kafka"
 	DefaultDeliveryOrder         = contract.DeliveryOrder_ORDERED
-	NewChannelIngressServiceName = "kafka-channel-dispatcher"
+	NewChannelIngressServiceName = "kafka-channel-ingress"
 )
 
 type Reconciler struct {
@@ -278,7 +280,13 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return subscriptionError
 	}
 
-	address := receiver.Address(r.IngressHost, channel)
+	channelService, err := r.reconcileChannelService(ctx, channel)
+	if err != nil {
+		logger.Error("Error reconciling the backwards compatibility channel service.", zap.Error(err))
+		return err
+	}
+
+	address, _ := url.Parse(fmt.Sprintf("http://%s.%s.svc.%s", channelService.Name, channelService.Namespace, network.GetClusterDomainName()))
 	proberAddressable := prober.Addressable{
 		Address: address,
 		ResourceKey: types.NamespacedName{
@@ -294,12 +302,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return nil // Object will get re-queued once probe status changes.
 	}
 	statusConditionManager.Addressable(address)
-
-	err = r.reconcileChannelService(ctx, channel)
-	if err != nil {
-		logger.Error("Error reconciling the backwards compatibility channel service.", zap.Error(err))
-		return err
-	}
 
 	return nil
 }
@@ -580,7 +582,7 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		Uid:    string(channel.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
-			Path: receiver.PathFromObject(channel),
+			Host: receiver.Host(channel.GetNamespace(), channel.GetName()),
 		},
 		BootstrapServers: config.GetBootstrapServers(),
 		Reference: &contract.Reference{
@@ -605,10 +607,10 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 	return resource, nil
 }
 
-func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messagingv1beta1.KafkaChannel) error {
+func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messagingv1beta1.KafkaChannel) (*corev1.Service, error) {
 	expected, err := resources.MakeK8sService(channel, resources.ExternalService(system.Namespace(), NewChannelIngressServiceName))
 	if err != nil {
-		return fmt.Errorf("failed to create the channel service object: %w", err)
+		return expected, fmt.Errorf("failed to create the channel service object: %w", err)
 	}
 
 	svc, err := r.ServiceLister.Services(channel.Namespace).Get(resources.MakeChannelServiceName(channel.Name))
@@ -616,25 +618,25 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messa
 		if apierrors.IsNotFound(err) {
 			_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Create(ctx, expected, metav1.CreateOptions{})
 			if err != nil {
-				return fmt.Errorf("failed to create the channel service object: %w", err)
+				return expected, fmt.Errorf("failed to create the channel service object: %w", err)
 			}
-			return nil
+			return expected, nil
 		}
-		return err
+		return expected, err
 	} else if !equality.Semantic.DeepEqual(svc.Spec, expected.Spec) {
 		svc = svc.DeepCopy()
 		svc.Spec = expected.Spec
 
 		_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Update(ctx, svc, metav1.UpdateOptions{})
 		if err != nil {
-			return fmt.Errorf("failed to update the channel service: %w", err)
+			return expected, fmt.Errorf("failed to update the channel service: %w", err)
 		}
 	}
 	// Check to make sure that the KafkaChannel owns this service and if not, complain.
 	if !metav1.IsControlledBy(svc, channel) {
-		return fmt.Errorf("kafkachannel: %s/%s does not own Service: %q", channel.Namespace, channel.Name, svc.Name)
+		return expected, fmt.Errorf("kafkachannel: %s/%s does not own Service: %q", channel.Namespace, channel.Name, svc.Name)
 	}
-	return nil
+	return expected, nil
 }
 
 // consumerGroup returns a consumerGroup name for the given channel and subscription

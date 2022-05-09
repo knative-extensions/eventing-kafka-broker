@@ -23,7 +23,6 @@ import (
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
 
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
@@ -85,8 +84,8 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	}
 
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)
-	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: configs.SystemNamespace, Name: configs.IngressName})
-	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, configs.IngressPodPort, IPsLister, impl.EnqueueKey)
+	IPsLister := prober.IdentityIPsLister()
+	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, "", IPsLister, impl.EnqueueKey)
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
 
 	channelInformer := kafkachannelinformer.Get(ctx)

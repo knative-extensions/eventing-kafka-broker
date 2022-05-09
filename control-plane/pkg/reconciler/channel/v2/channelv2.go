@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -34,6 +35,8 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
+	"knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources"
+	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
@@ -53,6 +56,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	channelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
@@ -96,6 +100,7 @@ type Reconciler struct {
 	NewKafkaClient kafka.NewClientFunc
 
 	ConfigMapLister corelisters.ConfigMapLister
+	ServiceLister   corelisters.ServiceLister
 
 	Prober prober.Prober
 
@@ -277,7 +282,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
-	address := receiver.Address(r.IngressHost, channel)
+	channelService, err := r.reconcileChannelService(ctx, channel)
+	if err != nil {
+		logger.Error("Error reconciling the backwards compatibility channel service.", zap.Error(err))
+		return err
+	}
+
+	address, _ := url.Parse(fmt.Sprintf("http://%s.%s.svc.%s", channelService.Name, channelService.Namespace, network.GetClusterDomainName()))
 	proberAddressable := prober.Addressable{
 		Address: address,
 		ResourceKey: types.NamespacedName{
@@ -286,13 +297,47 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		},
 	}
 
+	logger.Debug("Going to probe address to check ingress readiness for the channel.", zap.Any("proberAddressable", proberAddressable))
 	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusReady); status != prober.StatusReady {
+		logger.Debug("Ingress is not ready for the channel. Going to requeue.", zap.Any("proberAddressable", proberAddressable))
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
 	statusConditionManager.Addressable(address)
 
 	return nil
+}
+
+func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messagingv1beta1.KafkaChannel) (*corev1.Service, error) {
+	expected, err := resources.MakeK8sService(channel, resources.ExternalService(r.Env.SystemNamespace, channelreconciler.NewChannelIngressServiceName))
+	if err != nil {
+		return expected, fmt.Errorf("failed to create the channel service object: %w", err)
+	}
+
+	svc, err := r.ServiceLister.Services(channel.Namespace).Get(resources.MakeChannelServiceName(channel.Name))
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Create(ctx, expected, metav1.CreateOptions{})
+			if err != nil {
+				return expected, fmt.Errorf("failed to create the channel service object: %w", err)
+			}
+			return expected, nil
+		}
+		return expected, err
+	} else if !equality.Semantic.DeepEqual(svc.Spec, expected.Spec) {
+		svc = svc.DeepCopy()
+		svc.Spec = expected.Spec
+
+		_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Update(ctx, svc, metav1.UpdateOptions{})
+		if err != nil {
+			return expected, fmt.Errorf("failed to update the channel service: %w", err)
+		}
+	}
+	// Check to make sure that the KafkaChannel owns this service and if not, complain.
+	if !metav1.IsControlledBy(svc, channel) {
+		return expected, fmt.Errorf("kafkachannel: %s/%s does not own Service: %q", channel.Namespace, channel.Name, svc.Name)
+	}
+	return expected, nil
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
@@ -571,7 +616,7 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		Uid:    string(channel.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
-			Path: receiver.PathFromObject(channel),
+			Host: receiver.Host(channel.GetNamespace(), channel.GetName()),
 		},
 		BootstrapServers: config.GetBootstrapServers(),
 		Reference: &contract.Reference{

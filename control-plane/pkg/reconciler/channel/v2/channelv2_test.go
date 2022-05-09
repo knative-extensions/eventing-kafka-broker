@@ -155,7 +155,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -197,7 +197,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -214,6 +214,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
 				NewConfigMapWithBinaryData(&env, nil),
+				NewPerChannelService(&env),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -267,7 +268,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							EgressConfig: &contract.EgressConfig{
 								DeadLetter: ServiceURL,
@@ -288,6 +289,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
 				NewConfigMapWithBinaryData(&env, nil),
+				NewPerChannelService(&env),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -333,7 +335,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -342,6 +344,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
 				NewConfigMapWithBinaryData(&env, nil),
+				NewPerChannelService(&env),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -384,7 +387,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -393,6 +396,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
 				NewConfigMapWithBinaryData(&env, nil),
+				NewPerChannelService(&env),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -427,6 +431,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: testKey,
 			WantCreates: []runtime.Object{
+				NewPerChannelService(&env),
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
@@ -454,7 +459,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -493,6 +498,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: testKey,
 			WantCreates: []runtime.Object{
+				NewPerChannelService(&env),
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
@@ -520,7 +526,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -559,6 +565,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: testKey,
 			WantCreates: []runtime.Object{
+				NewPerChannelService(&env),
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
@@ -586,7 +593,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -631,6 +638,9 @@ func TestReconcileKind(t *testing.T) {
 				),
 			},
 			Key: testKey,
+			WantCreates: []runtime.Object{
+				NewPerChannelService(&env),
+			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&env, &contract.Contract{
 					Generation: 1,
@@ -641,7 +651,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -714,6 +724,9 @@ func TestReconcileKind(t *testing.T) {
 				),
 			},
 			Key: testKey,
+			WantCreates: []runtime.Object{
+				NewPerChannelService(&env),
+			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewChannel(
@@ -738,7 +751,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -765,6 +778,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: testKey,
 			WantCreates: []runtime.Object{
+				NewPerChannelService(&env),
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
@@ -808,7 +822,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -865,6 +879,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: testKey,
 			WantCreates: []runtime.Object{
+				NewPerChannelService(&env),
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
@@ -892,7 +907,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1049,7 +1064,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1058,6 +1073,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
 				NewConfigMapWithBinaryData(&env, nil),
+				NewPerChannelService(&env),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -1112,6 +1128,9 @@ func TestReconcileKind(t *testing.T) {
 				),
 			},
 			Key: testKey,
+			WantCreates: []runtime.Object{
+				NewPerChannelService(&env),
+			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&env, &contract.Contract{
 					Generation: 1,
@@ -1130,7 +1149,7 @@ func TestReconcileKind(t *testing.T) {
 								},
 							},
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1177,7 +1196,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1186,6 +1205,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
 				NewConfigMapWithBinaryData(&env, nil),
+				NewPerChannelService(&env),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -1217,6 +1237,9 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithBinaryData(&env, nil),
 			},
 			Key: testKey,
+			WantCreates: []runtime.Object{
+				NewPerChannelService(&env),
+			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(&env, &contract.Contract{
 					Generation: 1,
@@ -1227,7 +1250,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1336,6 +1359,7 @@ func TestReconcileKind(t *testing.T) {
 				}, nil
 			},
 			ConfigMapLister:     listers.GetConfigMapLister(),
+			ServiceLister:       listers.GetServiceLister(),
 			ConsumerGroupLister: listers.GetConsumerGroupLister(),
 			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
 			Prober:              proberMock,
