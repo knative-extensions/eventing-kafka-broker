@@ -411,23 +411,6 @@ func podOwnerReference(p *corev1.Pod) base.ConfigMapOption {
 	}
 }
 
-func (r *Reconciler) trackSingleSecretAuthContext(c *kafkainternals.Consumer, auth *contract.Resource_AuthSecret) error {
-	if auth == nil || auth.AuthSecret == nil {
-		return nil
-	}
-
-	ref := tracker.Reference{
-		APIVersion: "v1",
-		Kind:       "Secret",
-		Namespace:  auth.AuthSecret.Namespace,
-		Name:       auth.AuthSecret.Name,
-	}
-	if err := r.Tracker.TrackReference(ref, c); err != nil {
-		return fmt.Errorf("failed to track secret for rotation %s/%s: %w", ref.Namespace, ref.Name, err)
-	}
-	return nil
-}
-
 func (r *Reconciler) trackAuthContext(c *kafkainternals.Consumer, auth *kafkainternals.Auth) error {
 	if auth == nil {
 		return nil
