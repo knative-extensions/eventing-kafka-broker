@@ -79,38 +79,4 @@ public interface AsyncCloseable extends Closeable {
         v -> compose(closeableIterator)
       );
   }
-
-  /**
-   * Wrap the provided blocking {@link AutoCloseable} into an {@link AsyncCloseable}.
-   * This is going to use the current context when the close is invoked.
-   *
-   * @param closeable the closeable to wrap
-   * @return the wrapped closeable
-   */
-  static AsyncCloseable wrapAutoCloseable(AutoCloseable closeable) {
-    return () -> {
-      Context context = Vertx.currentContext();
-
-      if (context == null) {
-        // I'm not on the event loop, I can just execute this as is!
-        try {
-          closeable.close();
-          return Future.succeededFuture();
-        } catch (Exception e) {
-          return Future.failedFuture(e);
-        }
-      }
-
-      // I'm on the event loop, I need to execute blocking.
-      return context.executeBlocking(promise -> {
-        try {
-          closeable.close();
-          promise.complete();
-        } catch (Exception e) {
-          promise.fail(e);
-        }
-      });
-    };
-  }
-
 }

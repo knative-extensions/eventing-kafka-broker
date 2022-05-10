@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.core.metrics;
 
+import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
@@ -23,6 +24,8 @@ import io.micrometer.core.instrument.binder.BaseUnits;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.metrics.MetricsOptions;
 import io.vertx.core.net.PemKeyCertOptions;
@@ -37,6 +40,12 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.function.Supplier;
+
 public class Metrics {
 
   private static final Logger logger = LoggerFactory.getLogger(Metrics.class);
@@ -45,6 +54,27 @@ public class Metrics {
   private static final String host = getHost();
 
   public static final String METRICS_REGISTRY_NAME = "metrics";
+
+  public static final boolean DISABLE_KAFKA_CLIENTS_METRICS =
+    Boolean.parseBoolean(System.getenv("DISABLE_KAFKA_CLIENTS_METRICS"));
+
+  // There are different thread polls usable, mainly, each with its own drawbacks for our use case:
+  //   - cached thread pools
+  //   - fixed thread pools
+  //
+  // A cached thread might grow unbounded and since creating, updating and deleting resources
+  // trigger the usage of this executor, a bad actor might start continuously creating, updating
+  // and deleting resources which will cause resource exhaustion.
+  //
+  // A fixed thread poll doesn't give the best possible latency for every resource, but it's
+  // bounded, so we keep the resource usage under control.
+  // We might want to provide configs to make it bigger than a single thread but a single thread
+  // to start with is good enough for now.
+  public static final ExecutorService meterBinderExecutor = Executors.newSingleThreadExecutor();
+
+  static {
+    Runtime.getRuntime().addShutdownHook(new Thread(meterBinderExecutor::shutdown));
+  }
 
   // Micrometer employs a naming convention that separates lowercase words with a '.' (dot) character.
   // Different monitoring systems have different recommendations regarding naming convention, and some naming
@@ -77,7 +107,7 @@ public class Metrics {
    */
   public static final String EVENT_PROCESSING_LATENCY = "event_processing_latencies";
 
-    /**
+  /**
    * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
    * @see Metrics#discardedEventCount(io.micrometer.core.instrument.Tags)
    */
@@ -160,14 +190,8 @@ public class Metrics {
    * @param <V>      Record value type.
    * @return A meter binder to close once the consumer is closed.
    */
-  public static <K, V> AutoCloseable register(final Consumer<K, V> consumer) {
-    final var registry = getRegistry();
-    if (registry != null) {
-      final var clientMetrics = new KafkaClientMetrics(consumer);
-      clientMetrics.bindTo(registry);
-      return clientMetrics;
-    }
-    return () -> {};
+  public static <K, V> AsyncCloseable register(final Consumer<K, V> consumer) {
+    return register(() -> new KafkaClientMetrics(consumer));
   }
 
   /**
@@ -178,14 +202,39 @@ public class Metrics {
    * @param <V>      Record value type.
    * @return A meter binder to close once the producer is closed.
    */
-  public static <K, V> AutoCloseable register(final Producer<K, V> producer) {
+  public static <K, V> AsyncCloseable register(final Producer<K, V> producer) {
+    return register(() -> new KafkaClientMetrics(producer));
+  }
+
+  /**
+   * Register the given metrics provider to the global meter registry.
+   *
+   * @param metricsProvider metrics to bind to the global registry.
+   * @return A meter binder to close once the consumer or producer is closed.
+   */
+  private static AsyncCloseable register(final Supplier<KafkaClientMetrics> metricsProvider) {
     final var registry = getRegistry();
-    if (registry != null) {
-      final var clientMetrics = new KafkaClientMetrics(producer);
-      clientMetrics.bindTo(registry);
-      return clientMetrics;
+    if (registry != null && !DISABLE_KAFKA_CLIENTS_METRICS) {
+      final var clientMetrics = metricsProvider.get();
+      try {
+        // The binding and close process is blocking, so execute them asynchronously.
+        meterBinderExecutor.execute(() -> clientMetrics.bindTo(registry));
+
+        return () -> {
+          final Promise<Void> p = Promise.promise();
+          meterBinderExecutor.execute(() -> {
+            clientMetrics.close();
+            p.complete();
+          });
+          return p.future();
+        };
+
+      } catch (final RejectedExecutionException ex) {
+        // if this task cannot be accepted for execution when the executor has been shutdown.
+        logger.warn("Failed to bind metrics for Kafka client", ex);
+      }
     }
-    return () -> {};
+    return Future::succeededFuture;
   }
 
   public static PemKeyCertOptions permKeyCertOptions() {
