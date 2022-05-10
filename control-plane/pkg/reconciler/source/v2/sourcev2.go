@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/utils/pointer"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
@@ -58,6 +59,12 @@ type Reconciler struct {
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
 
+	selector, err := GetLabelsAsSelector(ks.Name)
+	if err != nil {
+		return fmt.Errorf("getting labels as selector: %v", err)
+	}
+	ks.Status.Selector = selector.String()
+
 	cg, err := r.reconcileConsumerGroup(ctx, ks)
 	if err != nil {
 		ks.GetConditionSet().Manage(&ks.Status).MarkFalse(KafkaConditionConsumerGroup, "failed to reconcile consumer group", err.Error())
@@ -67,6 +74,21 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 	propagateConsumerGroupStatus(cg, ks)
 
 	return nil
+}
+
+func GetLabelsAsSelector(name string) (labels.Selector, error) {
+	labels := GetLabels(name)
+	var labelSelector metav1.LabelSelector
+	labelSelector.MatchLabels = labels
+	selector, err := metav1.LabelSelectorAsSelector(&labelSelector)
+	return selector, err
+}
+
+func GetLabels(name string) map[string]string {
+	return map[string]string{
+		"eventing.knative.dev/source":     "kafka-source-controller",
+		"eventing.knative.dev/sourceName": name,
+	}
 }
 
 func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
