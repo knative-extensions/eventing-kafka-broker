@@ -153,13 +153,8 @@ function data_plane_build_push() {
 
 function replace_images() {
   local file=$1
-  if [[ $OSTYPE == 'darwin'* ]]; then
-    sed -i '' "s|\${KNATIVE_KAFKA_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_DISPATCHER_IMAGE}|g" "${file}" &&
-      sed -i '' "s|\${KNATIVE_KAFKA_RECEIVER_IMAGE}|${KNATIVE_KAFKA_RECEIVER_IMAGE}|g" "${file}"
-  else
-    sed -i "s|\${KNATIVE_KAFKA_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_DISPATCHER_IMAGE}|g" "${file}" &&
-      sed -i "s|\${KNATIVE_KAFKA_RECEIVER_IMAGE}|${KNATIVE_KAFKA_RECEIVER_IMAGE}|g" "${file}"
-  fi
+  sed -i "s|\${KNATIVE_KAFKA_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_DISPATCHER_IMAGE}|g" "${file}" &&
+    sed -i "s|\${KNATIVE_KAFKA_RECEIVER_IMAGE}|${KNATIVE_KAFKA_RECEIVER_IMAGE}|g" "${file}"
   return $?
 }
 
@@ -212,11 +207,7 @@ function data_plane_sourcev2_setup() {
 
   ko resolve ${KO_FLAGS} -Rf ${SOURCEV2_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
 
-  if [[ $OSTYPE == 'darwin'* ]]; then
-    sed -i '' "s|\${KNATIVE_KAFKA_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_DISPATCHER_IMAGE}|g" "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
-  else
-    sed -i "s|\${KNATIVE_KAFKA_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_DISPATCHER_IMAGE}|g" "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
-  fi
+  sed -i "s|\${KNATIVE_KAFKA_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_DISPATCHER_IMAGE}|g" "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
 
   return $?
 }
