@@ -24,7 +24,7 @@ import (
 
 	eventingkafkahelpers "knative.dev/eventing-kafka/test/e2e/helpers"
 
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 func TestKafkaSourceUpdate(t *testing.T) {

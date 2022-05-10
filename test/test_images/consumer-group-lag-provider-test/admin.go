@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 func main() {

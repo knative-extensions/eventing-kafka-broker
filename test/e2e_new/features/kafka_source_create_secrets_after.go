@@ -27,7 +27,7 @@ import (
 	"knative.dev/eventing-kafka/test/rekt/resources/kafkatopic"
 
 	"knative.dev/eventing-kafka-broker/test/e2e_new/features/featuressteps"
-	kafkatesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 func CreateSecretsAfterKafkaSource() *feature.Feature {
@@ -44,7 +44,7 @@ func CreateSecretsAfterKafkaSource() *feature.Feature {
 	f.Setup("install a service", svc.Install(sink, "app", "rekt"))
 	f.Setup("install a KafkaSource", kafkasource.Install(name,
 		kafkasource.WithSink(&duckv1.KReference{Kind: "Service", Name: sink, APIVersion: "v1"}, ""),
-		kafkasource.WithBootstrapServers(kafkatesting.BootstrapServersSslSaslScramArr),
+		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersSslSaslScramArr),
 		kafkasource.WithTopics([]string{topicName}),
 		kafkasource.WithSASLEnabled(),
 		kafkasource.WithSASLUser(saslSecretName, "user"),

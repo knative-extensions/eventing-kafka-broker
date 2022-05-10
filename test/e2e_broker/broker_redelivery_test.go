@@ -29,8 +29,8 @@ import (
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
 
+	kafkatesting "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/pkg/broker"
-	kafkatesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 const (
