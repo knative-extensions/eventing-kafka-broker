@@ -27,7 +27,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/utils/pointer"
-	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
@@ -429,37 +428,5 @@ func (r *Reconciler) trackAuthContext(c *kafkainternals.Consumer, auth *kafkaint
 		return nil
 	}
 
-	if auth.NetSpec != nil {
-		secrets := make([]corev1.LocalObjectReference, 0, 6)
-		if auth.NetSpec.TLS.Enable {
-			addRefIfNotNil(auth.NetSpec.TLS.Key, secrets)
-			addRefIfNotNil(auth.NetSpec.TLS.Cert, secrets)
-			addRefIfNotNil(auth.NetSpec.TLS.CACert, secrets)
-		}
-		if auth.NetSpec.SASL.Enable {
-			addRefIfNotNil(auth.NetSpec.SASL.User, secrets)
-			addRefIfNotNil(auth.NetSpec.SASL.Password, secrets)
-			addRefIfNotNil(auth.NetSpec.SASL.Type, secrets)
-		}
-
-		for _, s := range secrets {
-			ref := tracker.Reference{
-				APIVersion: "v1",
-				Kind:       "Secret",
-				Namespace:  c.GetNamespace(),
-				Name:       s.Name,
-			}
-			if err := r.Tracker.TrackReference(ref, c); err != nil {
-				return fmt.Errorf("failed to track secret for rotation %s/%s: %w", ref.Namespace, ref.Name, err)
-			}
-		}
-	}
-
-	return nil
-}
-
-func addRefIfNotNil(ref bindings.SecretValueFromSource, secrets []corev1.LocalObjectReference) {
-	if ref.SecretKeyRef != nil && ref.SecretKeyRef.LocalObjectReference.Name != "" {
-		secrets = append(secrets, ref.SecretKeyRef.LocalObjectReference)
-	}
+	return security.TrackNetSpecSecrets(r.Tracker, auth.NetSpec, c)
 }
