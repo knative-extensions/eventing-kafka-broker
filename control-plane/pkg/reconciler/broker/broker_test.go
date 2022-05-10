@@ -22,7 +22,6 @@ import (
 	"net/url"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/pointer"
 	"knative.dev/pkg/network"
 
@@ -1772,23 +1771,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 	useTable(t, table, &env)
 }
 
-func ConfigMapFinalizerUpdateRemove(name string, opts ...CMOption) clientgotesting.UpdateActionImpl {
-	return clientgotesting.NewUpdateAction(
-		schema.GroupVersionResource{
-			Group:    "*",
-			Version:  "v1",
-			Resource: "ConfigMap",
-		},
-		ConfigMapNamespace,
-		BrokerConfig(bootstrapServers, 20, 5,
-			append(
-				[]CMOption{BrokerConfigFinalizerRemove(name)},
-				opts...,
-			)...,
-		),
-	)
-}
-
 func TestBrokerFinalizer(t *testing.T) {
 	t.Parallel()
 
@@ -1808,9 +1790,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - no DLS",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
-				BrokerConfig(bootstrapServers, 20, 5,
-					BrokerConfigFinalizer(ConfigMapFinalizerName),
-				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1828,7 +1808,6 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					Resources:  []*contract.Resource{},
 					Generation: 2,
 				}),
-				ConfigMapFinalizerUpdateRemove(ConfigMapFinalizerName),
 			},
 			OtherTestData: map[string]interface{}{
 				testProber: probertesting.MockProber(prober.StatusNotReady),
@@ -1866,9 +1845,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled failed - probe not ready",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
-				BrokerConfig(bootstrapServers, 20, 5,
-					BrokerConfigFinalizer(ConfigMapFinalizerName),
-				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1898,9 +1875,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				NewDeletedBroker(
 					WithDelivery(),
 				),
-				BrokerConfig(bootstrapServers, 20, 5,
-					BrokerConfigFinalizer(ConfigMapFinalizerName),
-				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1918,7 +1893,6 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				ConfigMapUpdate(&env, &contract.Contract{
 					Generation: 2,
 				}),
-				ConfigMapFinalizerUpdateRemove(ConfigMapFinalizerName),
 			},
 			OtherTestData: map[string]interface{}{
 				testProber: probertesting.MockProber(prober.StatusNotReady),
@@ -1928,9 +1902,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Failed to delete topic",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
-				BrokerConfig(bootstrapServers, 20, 5,
-					BrokerConfigFinalizer(ConfigMapFinalizerName),
-				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1968,15 +1940,11 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				NewDeletedBroker(
 					WithDelivery(),
 				),
-				BrokerConfig(bootstrapServers, 20, 5,
-					BrokerConfigFinalizer(ConfigMapFinalizerName),
-				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewService(),
 			},
-			Key: testKey,
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdateRemove(ConfigMapFinalizerName),
-			},
+			Key:         testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{},
 			WantCreates: []runtime.Object{
 				NewConfigMapWithBinaryData(&env, nil),
 			},
@@ -1989,9 +1957,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - preserve config map previous state",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
-				BrokerConfig(bootstrapServers, 20, 5,
-					BrokerConfigFinalizer(ConfigMapFinalizerName),
-				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -2020,7 +1986,6 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					},
 					Generation: 6,
 				}),
-				ConfigMapFinalizerUpdateRemove(ConfigMapFinalizerName),
 			},
 			OtherTestData: map[string]interface{}{
 				testProber: probertesting.MockProber(prober.StatusNotReady),
@@ -2030,9 +1995,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - topic doesn't exist",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
-				BrokerConfig(bootstrapServers, 20, 5,
-					BrokerConfigFinalizer(ConfigMapFinalizerName),
-				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -2061,7 +2024,6 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					},
 					Generation: 6,
 				}),
-				ConfigMapFinalizerUpdateRemove(ConfigMapFinalizerName),
 			},
 			OtherTestData: map[string]interface{}{
 				wantErrorOnDeleteTopic: sarama.ErrUnknownTopicOrPartition,
@@ -2072,9 +2034,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - no broker found in config map",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
-				BrokerConfig(bootstrapServers, 20, 5,
-					BrokerConfigFinalizer(ConfigMapFinalizerName),
-				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -2086,10 +2046,8 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					Generation: 5,
 				}, &env),
 			},
-			Key: testKey,
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapFinalizerUpdateRemove(ConfigMapFinalizerName),
-			},
+			Key:         testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{},
 			OtherTestData: map[string]interface{}{
 				testProber: probertesting.MockProber(prober.StatusNotReady),
 			},
