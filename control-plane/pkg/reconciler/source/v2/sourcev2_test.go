@@ -126,6 +126,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewSource(
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
+						StatusSourcSelector("ks"),
 					),
 				},
 			},
@@ -253,6 +254,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						SourceNetSaslTls(true),
+						StatusSourcSelector("ks"),
 					),
 				},
 			},
@@ -364,6 +366,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						SourceNetSaslTls(false),
+						StatusSourcSelector("ks"),
 					),
 				},
 			},
@@ -417,6 +420,7 @@ func TestReconcileKind(t *testing.T) {
 						}),
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
+						StatusSourcSelector("ks"),
 					),
 				},
 			},
@@ -493,6 +497,7 @@ func TestReconcileKind(t *testing.T) {
 						WithSourceSink(NewSourceSink2Reference()),
 						StatusSourceConsumerGroup(),
 						StatusSourceSinkResolved(""),
+						StatusSourcSelector("ks"),
 					),
 				},
 			},
@@ -549,6 +554,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewSource(
 						StatusSourceConsumerGroup(),
 						StatusSourceSinkResolved(""),
+						StatusSourcSelector("ks"),
 					),
 				},
 			},
@@ -604,6 +610,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewSource(
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
+						StatusSourcSelector("ks"),
 					),
 				},
 			},
@@ -647,6 +654,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewSource(
 						StatusSourceConsumerGroup(),
 						StatusSourceSinkResolved(""),
+						StatusSourcSelector("ks"),
 					),
 				},
 			},
@@ -690,6 +698,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewSource(
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
+						StatusSourcSelector("ks"),
 					),
 				},
 			},
@@ -734,6 +743,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewSource(
 						StatusSourceConsumerGroupFailed("failed", "failed"),
 						StatusSourceSinkResolved(""),
+						StatusSourcSelector("ks"),
 					),
 				},
 			},
@@ -780,6 +790,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroup(),
 						StatusSourceSinkResolved(""),
 						StatusSourceConsumerGroupReplicas(1),
+						StatusSourcSelector("ks"),
 					),
 				},
 			},
@@ -803,6 +814,13 @@ func TestReconcileKind(t *testing.T) {
 		)
 		return r
 	}))
+}
+
+func StatusSourcSelector(srcName string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.Status.Selector = "eventing.knative.dev/source=kafka-source-controller,eventing.knative.dev/sourceName=" + srcName
+	}
 }
 
 func StatusSourceConsumerGroup() KRShapedOption {
