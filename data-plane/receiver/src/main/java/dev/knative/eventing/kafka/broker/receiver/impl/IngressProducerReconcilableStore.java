@@ -137,14 +137,14 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
         producerProps
       );
 
-      if(isRootPath(ingress.getPath()) && Strings.isNullOrEmpty(ingress.getHost())){
+      if (isRootPath(ingress.getPath()) && Strings.isNullOrEmpty(ingress.getHost())) {
         throw new IllegalArgumentException("Ingress path and host is blank. One of them should be defined. Resource UID: " + resource.getUid());
       }
 
-      if(!isRootPath(ingress.getPath())){
+      if (!isRootPath(ingress.getPath())) {
         this.pathMapper.put(ingress.getPath(), ingressInfo);
       }
-      if (!Strings.isNullOrEmpty(ingress.getHost())){
+      if (!Strings.isNullOrEmpty(ingress.getHost())) {
         this.hostMapper.put(ingress.getHost(), ingressInfo);
       }
       this.ingressInfos.put(resource.getUid(), ingressInfo);
@@ -183,20 +183,20 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
       return rc.getValue().close()
         .onSuccess(r -> {
           // Remove ingress info from the maps
-          if(!isRootPath(ingressInfo.getPath())){
+          if (!isRootPath(ingressInfo.getPath())) {
             this.pathMapper.remove(ingressInfo.getPath());
           }
-          if(!Strings.isNullOrEmpty(ingressInfo.getHost())){
+          if (!Strings.isNullOrEmpty(ingressInfo.getHost())) {
             this.hostMapper.remove(ingressInfo.getHost());
           }
           this.ingressInfos.remove(resource.getUid());
         });
     }
     // Remove ingress info from the maps
-    if(!isRootPath(ingressInfo.getPath())){
+    if (!isRootPath(ingressInfo.getPath())) {
       this.pathMapper.remove(ingressInfo.getPath());
     }
-    if(!Strings.isNullOrEmpty(ingressInfo.getHost())){
+    if (!Strings.isNullOrEmpty(ingressInfo.getHost())) {
       this.hostMapper.remove(ingressInfo.getHost());
     }
     this.ingressInfos.remove(resource.getUid());
@@ -217,7 +217,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     private static final Logger logger = LoggerFactory.getLogger(ProducerHolder.class);
 
     private final KafkaProducer<String, CloudEvent> producer;
-    private final AutoCloseable producerMeterBinder;
+    private final AsyncCloseable producerMeterBinder;
 
     ProducerHolder(final KafkaProducer<String, CloudEvent> producer) {
       this.producer = producer;
@@ -241,10 +241,9 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     }
 
     private Future<Void> closeNow() {
-      return AsyncCloseable.compose(
-        producer::close,
-        AsyncCloseable.wrapAutoCloseable(this.producerMeterBinder)
-      ).close();
+      return AsyncCloseable
+        .compose(this.producerMeterBinder, producer::close)
+        .close();
     }
   }
 

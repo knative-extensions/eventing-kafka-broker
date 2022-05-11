@@ -38,7 +38,7 @@ public final class ResponseToKafkaTopicHandler extends BaseResponseHandler imple
 
   private final String topic;
   private final KafkaProducer<String, CloudEvent> producer;
-  private final AutoCloseable producerMeterBinder;
+  private final AsyncCloseable producerMeterBinder;
 
   private int inFlightEvents = 0;
   private boolean closed = false;
@@ -103,10 +103,9 @@ public final class ResponseToKafkaTopicHandler extends BaseResponseHandler imple
       closePromise.tryComplete(null);
     }
 
-    final Function<Void, Future<Void>> closeF = v -> CompositeFuture.all(
-      this.producer.close(),
-      AsyncCloseable.wrapAutoCloseable(producerMeterBinder).close()
-    ).mapEmpty();
+    final Function<Void, Future<Void>> closeF = v -> AsyncCloseable
+      .compose(producerMeterBinder, this.producer::close)
+      .close();
 
     return closePromise.future()
       .compose(
