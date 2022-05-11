@@ -29,7 +29,6 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
-	"knative.dev/pkg/configmap"
 	dynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
@@ -61,11 +60,6 @@ func TestNewController(t *testing.T) {
 
 	controller := NewController(
 		ctx,
-		configmap.NewStaticWatcher(&corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "cm",
-			},
-		}),
 		configs,
 	)
 	if controller == nil {
