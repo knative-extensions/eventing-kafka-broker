@@ -128,9 +128,14 @@ public final class OffsetManager implements RecordDispatcherListener {
   }
 
   private void commit(final KafkaConsumerRecord<?, ?> record) {
-    this.offsetTrackers
-      .get(new TopicPartition(record.topic(), record.partition()))
-      .recordNewOffset(record.offset());
+    // We need to handle the case when the offset tracker was removed from our Map since when partitions are revoked we
+    // remove the associated offset tracker, however, we may get a response from the sink for a previously owned
+    // partition after a partition has been revoked.
+    // Note: it's not possible to commit offsets of partitions that this a particular consumer instance doesn't own.
+    final var ot = this.offsetTrackers.get(new TopicPartition(record.topic(), record.partition()));
+    if (ot != null) {
+      ot.recordNewOffset(record.offset());
+    }
   }
 
   private synchronized Future<Void> commit(final TopicPartition topicPartition, final OffsetTracker tracker) {
