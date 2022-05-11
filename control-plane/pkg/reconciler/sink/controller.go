@@ -23,6 +23,7 @@ import (
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
@@ -75,7 +76,8 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 	}
 
 	impl := sinkreconciler.NewImpl(ctx, reconciler)
-	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, configs.IngressPodPort, reconciler.ReceiverSelector(), impl.EnqueueKey)
+	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: configs.SystemNamespace, Name: configs.IngressName})
+	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, configs.IngressPodPort, IPsLister, impl.EnqueueKey)
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
 
 	sinkInformer := sinkinformer.Get(ctx)
