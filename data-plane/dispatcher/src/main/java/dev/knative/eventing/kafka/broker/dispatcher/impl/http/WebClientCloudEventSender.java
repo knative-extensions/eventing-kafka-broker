@@ -142,6 +142,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     // From https://github.com/knative/specs/blob/c348f501de9eb998b4fd010c54d9127033ee41be/specs/eventing/data-plane.md#event-acknowledgement-and-delivery-retry
     return statusCode >= 500 || // Generic error
       statusCode == 404 || // Endpoint does not exist
+      statusCode == 408 || // Request Timeout
       statusCode == 409 || // Conflict / Processing in progress
       statusCode == 429;   // Too Many Requests / Overloaded
   }
