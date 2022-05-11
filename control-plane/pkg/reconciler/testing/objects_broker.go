@@ -24,7 +24,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/util/sets"
 	clientgotesting "k8s.io/client-go/testing"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
@@ -50,8 +49,6 @@ const (
 
 	TriggerName      = "test-trigger"
 	TriggerNamespace = "test-namespace"
-
-	ConfigMapFinalizerName = "kafka.brokers.eventing.knative.dev/" + BrokerNamespace + "-" + BrokerName
 )
 
 func BrokerTopic() string {
@@ -153,18 +150,6 @@ func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int,
 		opt(cm)
 	}
 	return cm
-}
-
-func BrokerConfigFinalizer(finalizerName string) CMOption {
-	return func(cm *corev1.ConfigMap) {
-		cm.Finalizers = append(cm.Finalizers, finalizerName)
-	}
-}
-
-func BrokerConfigFinalizerRemove(finalizerName string) CMOption {
-	return func(cm *corev1.ConfigMap) {
-		cm.Finalizers = sets.NewString(cm.Finalizers...).Delete(finalizerName).List()
-	}
 }
 
 func BrokerAuthConfig(name string) CMOption {

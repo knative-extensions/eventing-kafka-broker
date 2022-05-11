@@ -222,11 +222,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 	statusConditionManager.Addressable(address)
 
-	// TODO(pierDipi) remove after some releases (released in 1.4)
-	if err := r.removeFinalizerCM(ctx, finalizerCM(broker), brokerConfig); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -339,11 +334,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	// get security option for Sarama with secret info in it
 	securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 	if err := r.finalizeBrokerTopic(broker, securityOption, topicConfig, logger); err != nil {
-		return err
-	}
-
-	// TODO(pierDipi) remove after some releases (released in 1.4)
-	if err := r.removeFinalizerCM(ctx, finalizerCM(broker), brokerConfig); err != nil {
 		return err
 	}
 
@@ -477,26 +467,4 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 	resource.EgressConfig = egressConfig
 
 	return resource, nil
-}
-
-func (r *Reconciler) removeFinalizerCM(ctx context.Context, finalizer string, cm *corev1.ConfigMap) error {
-	newFinalizers := make([]string, 0, len(cm.Finalizers))
-	for _, f := range cm.Finalizers {
-		if f != finalizer {
-			newFinalizers = append(newFinalizers, f)
-		}
-	}
-	if len(newFinalizers) != len(cm.Finalizers) {
-		cm := cm.DeepCopy() // Do not modify informer copy.
-		cm.Finalizers = newFinalizers
-		_, err := r.KubeClient.CoreV1().ConfigMaps(cm.GetNamespace()).Update(ctx, cm, metav1.UpdateOptions{})
-		if err != nil && !apierrors.IsNotFound(err) {
-			return fmt.Errorf("failed to remove finalizer %s to ConfigMap %s/%s: %w", finalizer, cm.GetNamespace(), cm.GetName(), err)
-		}
-	}
-	return nil
-}
-
-func finalizerCM(object metav1.Object) string {
-	return fmt.Sprintf("%s/%s-%s", "kafka.brokers.eventing.knative.dev", object.GetNamespace(), object.GetName())
 }
