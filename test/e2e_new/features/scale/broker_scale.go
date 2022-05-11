@@ -31,7 +31,7 @@ import (
 func BrokerTriggerLimits() *feature.Feature {
 	f := feature.NewFeatureNamed("Broker and Trigger limits")
 
-	timings := []time.Duration{5 * time.Second, 20 * time.Minute}
+	timings := []time.Duration{20 * time.Second, 20 * time.Minute}
 
 	nBrokers := 100
 	nTriggers := 5
@@ -43,7 +43,7 @@ func BrokerTriggerLimits() *feature.Feature {
 		cfg = append(cfg, broker.WithDeadLetterSink(nil, "https://my-sink.com"))
 
 		f.Setup("Install broker "+brokerName(b), broker.Install(brokerName(b), cfg...))
-		f.Setup("Broker "+brokerName(b)+" is ready", broker.IsReady(brokerName(b), timings...))
+		f.Assert("Broker "+brokerName(b)+" is ready", broker.IsReady(brokerName(b), timings...))
 
 		for i := 0; i < nTriggers; i++ {
 			cfg := []manifest.CfgFn{
@@ -56,7 +56,7 @@ func BrokerTriggerLimits() *feature.Feature {
 				trigger.WithSubscriber(nil, "https://example.com"),
 			}
 			f.Setup("Install trigger "+triggerName(b, i), trigger.Install(triggerName(b, i), brokerName(b), cfg...))
-			f.Setup("Trigger "+triggerName(b, i)+" is ready", trigger.IsReady(triggerName(b, i), timings...))
+			f.Assert("Trigger "+triggerName(b, i)+" is ready", trigger.IsReady(triggerName(b, i), timings...))
 		}
 	}
 
@@ -68,6 +68,8 @@ func BrokerTriggerLimits() *feature.Feature {
 func BrokerLimits() *feature.Feature {
 	f := feature.NewFeatureNamed("Broker scale")
 
+	timings := []time.Duration{20 * time.Second, 20 * time.Minute}
+
 	nBrokers := 500
 	exponential := eventingduck.BackoffPolicyExponential
 
@@ -77,7 +79,7 @@ func BrokerLimits() *feature.Feature {
 		cfg = append(cfg, broker.WithDeadLetterSink(nil, ""))
 
 		f.Setup("Install broker "+brokerName(i), broker.Install(brokerName(i), cfg...))
-		f.Setup(brokerName(i)+" is ready", broker.IsReady(brokerName(i)))
+		f.Assert(brokerName(i)+" is ready", broker.IsReady(brokerName(i), timings...))
 	}
 
 	f.Teardown("Delete resources", f.DeleteResources)
