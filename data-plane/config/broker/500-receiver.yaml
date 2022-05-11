@@ -117,6 +117,7 @@ spec:
           command:
             - "java"
           args:
+            - "-XX:+CrashOnOutOfMemoryError"
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
