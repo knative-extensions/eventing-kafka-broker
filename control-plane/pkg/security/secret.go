@@ -165,18 +165,20 @@ func sslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 			if err != nil {
 				return fmt.Errorf("[protocol %s] %w", protocol, err)
 			}
-
+			userKeyCert, userKeyExists := data[UserKey]
+			userCert, userCertExists := data[UserCertificate]
+			if !skipClientAuth && !userKeyExists && !userCertExists {
+				skipClientAuth = true
+			}
 			if !skipClientAuth {
-				userKeyCert, ok := data[UserKey]
-				if !ok {
+				if !userKeyExists {
 					return fmt.Errorf(
 						`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
 						protocol, UserKey, UserSkip,
 					)
 				}
 
-				userCert, ok := data[UserCertificate]
-				if !ok {
+				if !userCertExists {
 					return fmt.Errorf(
 						`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
 						protocol, UserCertificate, UserSkip,

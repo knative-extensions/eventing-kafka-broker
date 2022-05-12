@@ -37,6 +37,9 @@ class CredentialsValidator {
       if (credentials.skipClientAuth()) {
         return null;
       }
+      if (allBlank(credentials.userCertificate(), credentials.userKey())) {
+        return null;
+      }
       if (anyBlank(credentials.userCertificate(), credentials.userKey())) {
         return "Security protocol " + securityProtocol.name + ": invalid user certificate or user key or CA certificates";
       }
@@ -90,4 +93,14 @@ class CredentialsValidator {
     }
     return false;
   }
+
+  private static boolean allBlank(final String... stores) {
+    for (final var s : stores) {
+      if (!isBlank(s)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
 }

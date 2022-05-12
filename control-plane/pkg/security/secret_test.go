@@ -245,6 +245,23 @@ func TestSSLNoClientAuth(t *testing.T) {
 	ca, _, _ := loadCerts(t)
 
 	secret := map[string][]byte{
+		"protocol": []byte("SSL"),
+		"ca.crt":   ca,
+	}
+	config := sarama.NewConfig()
+
+	err := kafka.Options(config, secretData(secret))
+
+	assert.Nil(t, err)
+	assert.True(t, config.Net.TLS.Enable)
+	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
+	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
+}
+
+func TestSSLNoClientAuthUserSkip(t *testing.T) {
+	ca, _, _ := loadCerts(t)
+
+	secret := map[string][]byte{
 		"protocol":  []byte("SSL"),
 		"user.skip": []byte("true"),
 		"ca.crt":    ca,
