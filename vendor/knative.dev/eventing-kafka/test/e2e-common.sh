@@ -73,11 +73,11 @@ readonly EVENTING_KAFKA_SECRET_TEMPLATE="300-kafka-secret.yaml"
 readonly EVENTING_KAFKA_CONFIG_TEMPLATE="300-eventing-kafka-configmap.yaml"
 
 # Strimzi installation config template used for starting up Kafka clusters.
-readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-operator-0.27.0.yaml"
+readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-operator-0.28.0.yaml"
 # Strimzi installation config.
 readonly STRIMZI_INSTALLATION_CONFIG="$(mktemp "${ARTIFACTS}/strimzi-XXXXX.yaml")"
 # Kafka cluster CR config file.
-readonly KAFKA_INSTALLATION_CONFIG="test/config/100-kafka-ephemeral-triple-3.0.0.yaml"
+readonly KAFKA_INSTALLATION_CONFIG="test/config/100-kafka-ephemeral-triple-3.1.0.yaml"
 # Kafka TLS ConfigMap.
 readonly KAFKA_TLS_CONFIG="test/config/config-kafka-tls.yaml"
 # Kafka SASL ConfigMap.
