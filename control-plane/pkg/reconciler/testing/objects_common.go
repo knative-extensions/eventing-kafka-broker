@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -46,16 +47,21 @@ const (
 	ServiceNamespace = "test-service-namespace"
 	ServiceName      = "test-service"
 
+	Service2Name = "test-service-2"
+
 	TriggerUUID = "e7185016-5d98-4b54-84e8-3b1cd4acc6b5"
 
 	SecretResourceVersion = "1234"
 	SecretUUID            = "a7185016-5d98-4b54-84e8-3b1cd4acc6b6"
+
+	SystemNamespace = "knative-eventing"
 )
 
 var (
 	Formats = []string{base.Protobuf, base.Json}
 
-	ServiceURL = ServiceURLFrom(ServiceNamespace, ServiceName)
+	ServiceURL         = ServiceURLFrom(ServiceNamespace, ServiceName)
+	ServiceDestination = ServiceURLDestination(ServiceNamespace, ServiceName)
 )
 
 func NewService(mutations ...func(*corev1.Service)) *corev1.Service {
@@ -85,11 +91,16 @@ func ServiceURLFrom(ns, name string) string {
 	return fmt.Sprintf("http://%s.%s.svc.cluster.local", name, ns)
 }
 
-func NewConfigMapWithBinaryData(env *config.Env, data []byte) runtime.Object {
+func ServiceURLDestination(ns, name string) *duckv1.Destination {
+	uri, _ := apis.ParseURL(ServiceURL)
+	return &duckv1.Destination{URI: uri}
+}
+
+func NewConfigMapWithBinaryData(env *config.Env, data []byte, options ...reconcilertesting.ConfigMapOption) runtime.Object {
 	return reconcilertesting.NewConfigMap(
 		env.DataPlaneConfigMapName,
 		env.DataPlaneConfigMapNamespace,
-		func(configMap *corev1.ConfigMap) {
+		append(options, func(configMap *corev1.ConfigMap) {
 			if configMap.BinaryData == nil {
 				configMap.BinaryData = make(map[string][]byte, 1)
 			}
@@ -97,7 +108,7 @@ func NewConfigMapWithBinaryData(env *config.Env, data []byte) runtime.Object {
 				data = []byte("")
 			}
 			configMap.BinaryData[base.ConfigMapDataKey] = data
-		},
+		})...,
 	)
 }
 
@@ -111,7 +122,7 @@ func NewConfigMapWithTextData(namespace, name string, data map[string]string) ru
 	)
 }
 
-func NewConfigMapFromContract(contract *contract.Contract, env *config.Env) runtime.Object {
+func NewConfigMapFromContract(contract *contract.Contract, env *config.Env, options ...reconcilertesting.ConfigMapOption) runtime.Object {
 	var data []byte
 	var err error
 	if env.DataPlaneConfigFormat == base.Protobuf {
@@ -123,10 +134,10 @@ func NewConfigMapFromContract(contract *contract.Contract, env *config.Env) runt
 		panic(err)
 	}
 
-	return NewConfigMapWithBinaryData(env, data)
+	return NewConfigMapWithBinaryData(env, data, options...)
 }
 
-func ConfigMapUpdate(env *config.Env, contract *contract.Contract) clientgotesting.UpdateActionImpl {
+func ConfigMapUpdate(env *config.Env, contract *contract.Contract, options ...reconcilertesting.ConfigMapOption) clientgotesting.UpdateActionImpl {
 	return clientgotesting.NewUpdateAction(
 		schema.GroupVersionResource{
 			Group:    "*",
@@ -134,7 +145,7 @@ func ConfigMapUpdate(env *config.Env, contract *contract.Contract) clientgotesti
 			Resource: "ConfigMap",
 		},
 		env.DataPlaneConfigMapNamespace,
-		NewConfigMapFromContract(contract, env),
+		NewConfigMapFromContract(contract, env, options...),
 	)
 }
 
