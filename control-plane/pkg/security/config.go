@@ -25,11 +25,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 const (
-	AuthSecretNameKey = "auth.secret.ref.name" /* #nosec G101 */ /* Potential hardcoded credentials (gosec) */
+	AuthSecretNameKey      = "auth.secret.ref.name"      /* #nosec G101 */ /* Potential hardcoded credentials (gosec) */
+	AuthSecretNamespaceKey = "auth.secret.ref.namespace" /* #nosec G101 */ /* Potential hardcoded credentials (gosec) */
 )
 
 // SecretLocator locates a secret in a cluster.
@@ -96,10 +98,13 @@ func DefaultSecretProviderFunc(lister corelisters.SecretLister, kc kubernetes.In
 
 // MTConfigMapSecretLocator is a SecretLocator that locates a secret using a reference in a ConfigMap.
 //
-// The name is take from the data field using the key: AuthSecretNameKey.
-// The namespace is the same namespace of the ConfigMap.
+// The name is taken from the data field using the key: AuthSecretNameKey.
+// When UseNamespaceInConfigmap=true, the namespace is taken from the data field using the
+// key: AuthSecretNamespaceKey. When false, namespace of the ConfigMap is returned.
 type MTConfigMapSecretLocator struct {
 	*corev1.ConfigMap
+	// if false, secret namespace is NOT read from the configmap
+	UseNamespaceInConfigmap bool
 }
 
 func (cmp *MTConfigMapSecretLocator) SecretName() (string, bool) {
@@ -111,5 +116,11 @@ func (cmp *MTConfigMapSecretLocator) SecretName() (string, bool) {
 }
 
 func (cmp *MTConfigMapSecretLocator) SecretNamespace() (string, bool) {
+	if cmp.UseNamespaceInConfigmap {
+		if v, ok := cmp.Data[AuthSecretNamespaceKey]; ok && len(v) > 0 {
+			return v, ok
+		}
+	}
+
 	return cmp.Namespace, true
 }

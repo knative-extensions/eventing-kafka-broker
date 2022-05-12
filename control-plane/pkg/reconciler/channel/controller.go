@@ -23,7 +23,6 @@ import (
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
 
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
@@ -35,6 +34,7 @@ import (
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
+	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -51,6 +51,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.IngressConditionSet)
 
 	configmapInformer := configmapinformer.Get(ctx)
+	serviceInformer := serviceinformer.Get(ctx)
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
@@ -69,6 +70,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 		InitOffsetsFunc:            offset.InitOffsets,
 		Env:                        configs,
 		ConfigMapLister:            configmapInformer.Lister(),
+		ServiceLister:              serviceInformer.Lister(),
 	}
 
 	logger := logging.FromContext(ctx)
@@ -82,8 +84,8 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	}
 
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)
-	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: configs.SystemNamespace, Name: configs.IngressName})
-	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, configs.IngressPodPort, IPsLister, impl.EnqueueKey)
+	IPsLister := prober.IdentityIPsLister()
+	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, "", IPsLister, impl.EnqueueKey)
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
 
 	channelInformer := kafkachannelinformer.Get(ctx)
@@ -95,6 +97,11 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	globalResync := func(_ interface{}) {
 		impl.GlobalResync(channelInformer.Informer())
 	}
+
+	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterController(&messagingv1beta.KafkaChannel{}),
+		Handler:    controller.HandleAll(globalResync),
+	})
 
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),

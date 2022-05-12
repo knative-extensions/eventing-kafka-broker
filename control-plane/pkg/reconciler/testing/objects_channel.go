@@ -25,7 +25,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
+	"k8s.io/utils/pointer"
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
+	"knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -43,6 +45,7 @@ const (
 	ChannelNamespace        = "test-nc"
 	ChannelUUID             = "c1234567-8901-2345-6789-123456789101"
 	ChannelBootstrapServers = "kafka-1:9092,kafka-2:9093"
+	ChannelServiceName      = "kc-kn-channel"
 
 	Subscription1Name     = "sub-1"
 	Subscription2Name     = "sub-2"
@@ -54,11 +57,11 @@ const (
 )
 
 func ChannelTopic() string {
-	c := NewChannel().(metav1.Object)
+	c := NewChannel()
 	return kafka.ChannelTopic(TopicPrefix, c)
 }
 
-func NewChannel(options ...KRShapedOption) runtime.Object {
+func NewChannel(options ...KRShapedOption) *messagingv1beta1.KafkaChannel {
 	c := &messagingv1beta1.KafkaChannel{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: ChannelNamespace,
@@ -71,6 +74,15 @@ func NewChannel(options ...KRShapedOption) runtime.Object {
 	}
 	c.SetDefaults(context.Background())
 	return c
+}
+
+func NewDeletedChannel(options ...KRShapedOption) runtime.Object {
+	return NewChannel(
+		append(
+			options,
+			WithDeletedTimeStamp,
+		)...,
+	)
 }
 
 func WithNumPartitions(np int32) KRShapedOption {
@@ -91,6 +103,20 @@ func WithRetentionDuration(rd string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ch := obj.(*messagingv1beta1.KafkaChannel)
 		ch.Spec.RetentionDuration = rd
+	}
+}
+
+func WithChannelDelivery(d *eventingduckv1.DeliverySpec) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*messagingv1beta1.KafkaChannel)
+		ch.Spec.Delivery = d
+	}
+}
+
+func WithChannelDeadLetterSinkURI(uri string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*messagingv1beta1.KafkaChannel)
+		ch.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(uri)
 	}
 }
 
@@ -167,8 +193,7 @@ func ChannelAddressable(env *config.Env) func(obj duckv1.KRShaped) {
 
 		channel.Status.Address.URL = &apis.URL{
 			Scheme: "http",
-			Host:   network.GetServiceHostname(env.IngressName, env.SystemNamespace),
-			Path:   fmt.Sprintf("/%s/%s", channel.Namespace, channel.Name),
+			Host:   fmt.Sprintf("%s.%s.svc.%s", resources.MakeChannelServiceName(channel.Name), channel.Namespace, network.GetClusterDomainName()),
 		}
 
 		channel.GetConditionSet().Manage(&channel.Status).MarkTrue(base.ConditionAddressable)
@@ -237,6 +262,10 @@ func Subscriber1(options ...subscriberInfoOption) *SubscriberInfo {
 	return s
 }
 
+func GetSubscriberSpec(s *SubscriberInfo) *eventingduckv1.SubscriberSpec {
+	return s.spec
+}
+
 func Subscriber2(options ...subscriberInfoOption) *SubscriberInfo {
 	s := &SubscriberInfo{
 		spec: &eventingduckv1.SubscriberSpec{
@@ -258,7 +287,9 @@ func Subscriber2(options ...subscriberInfoOption) *SubscriberInfo {
 }
 
 func WithFreshSubscriber(sub *SubscriberInfo) {
-	sub.status = nil
+	sub.status.UID = sub.spec.UID
+	sub.status.ObservedGeneration = sub.spec.Generation
+	sub.status.Ready = corev1.ConditionTrue
 }
 
 func WithNoSubscriberURI(sub *SubscriberInfo) {
@@ -275,4 +306,46 @@ func WithNoSubscriberURI(sub *SubscriberInfo) {
 
 func WithUnreadySubscriber(sub *SubscriberInfo) {
 	sub.status.Ready = "False"
+	sub.status.Message = fmt.Sprintf("Subscriber %v not ready: %v %v", sub.spec.UID, "failed to reconcile consumer group,", "internal error")
+}
+
+func WithUnknownSubscriber(sub *SubscriberInfo) {
+	sub.status.Ready = "Unknown"
+	sub.status.Message = fmt.Sprintf("Subscriber %v not ready: %v", sub.spec.UID, "consumer group status unknown")
+}
+
+func NewPerChannelService(env *config.Env) *corev1.Service {
+	s := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ChannelServiceName,
+			Namespace: ChannelNamespace,
+			Labels: map[string]string{
+				resources.MessagingRoleLabel: resources.MessagingRole,
+			},
+			OwnerReferences: []metav1.OwnerReference{
+				ChannelAsOwnerReference(),
+			},
+		},
+		Spec: corev1.ServiceSpec{
+			Type:         corev1.ServiceTypeExternalName,
+			ExternalName: network.GetServiceHostname(env.IngressName, env.SystemNamespace),
+		},
+	}
+
+	return s
+}
+
+func ChannelAsOwnerReference() metav1.OwnerReference {
+	return metav1.OwnerReference{
+		APIVersion:         messagingv1beta1.SchemeGroupVersion.String(),
+		Kind:               "KafkaChannel",
+		Name:               ChannelName,
+		UID:                ChannelUUID,
+		Controller:         pointer.Bool(true),
+		BlockOwnerDeletion: pointer.Bool(true),
+	}
 }
