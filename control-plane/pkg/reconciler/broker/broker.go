@@ -430,9 +430,7 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 		Uid:    string(broker.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
-			IngressType: &contract.Ingress_Path{
-				Path: receiver.PathFromObject(broker),
-			},
+			Path: receiver.PathFromObject(broker),
 		},
 		BootstrapServers: config.GetBootstrapServers(),
 		Reference: &contract.Reference{

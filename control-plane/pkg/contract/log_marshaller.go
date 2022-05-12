@@ -67,13 +67,8 @@ func (x *Resource) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 }
 
 func (x *Ingress) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
-	switch it := x.IngressType.(type) {
-	case *Ingress_Path:
-		encoder.AddString("ingress_path", it.Path)
-	case *Ingress_Host:
-		encoder.AddString("ingress_host", it.Host)
-	}
-
+	encoder.AddString("ingress_path", x.Path)
+	encoder.AddString("ingress_host", x.Host)
 	encoder.AddString("contentMode", x.ContentMode.String())
 	return nil
 }

@@ -113,19 +113,23 @@ enum ContentMode {
   STRUCTURED = 1;
 }
 
+// Ingress is the definition for HTTP ingress that is receiving the events
+// into the Knative Kafka component.
+//
+// path and host fields are used for identifying the targets. They are exclusive.
+// When a request comes with "/some-path", hostname will not be checked.
+// When a request comes with "/", only hostname matching will be done.
+// It is allowed to specify both path and host in ingress contract
+// to support both modes.
 message Ingress {
   // Optional content mode to use when pushing messages to Kafka
   ContentMode contentMode = 1;
 
-  // Ingress can both listen on a specific HTTP path
-  // or listen to the / path but match the Host header
-  oneof ingressType {
-    // path to listen for incoming events.
-    string path = 2;
+  // path to listen for incoming events.
+  string path = 2;
 
-    // host header to match
-    string host = 3;
-  }
+  // host header to match
+  string host = 3;
 }
 
 // Kubernetes resource reference.
