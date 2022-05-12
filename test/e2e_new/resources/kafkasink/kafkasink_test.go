@@ -17,6 +17,7 @@
 package kafkasink_test
 
 import (
+	"embed"
 	"os"
 
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
@@ -24,6 +25,9 @@ import (
 
 	"knative.dev/reconciler-test/pkg/manifest"
 )
+
+//go:embed *.yaml
+var yaml embed.FS
 
 // The following examples validate the processing of the With* helper methods
 // applied to config and go template parser.
@@ -37,7 +41,7 @@ func Example_zero() {
 		"bootstrapServers": []string{"my-bootstrap-server:8082"},
 	}
 
-	files, err := manifest.ExecuteLocalYAML(images, cfg)
+	files, err := manifest.ExecuteYAML(yaml, images, cfg)
 	if err != nil {
 		panic(err)
 	}
@@ -68,7 +72,7 @@ func Example_full() {
 	kafkasink.WithNumPartitions(10)(cfg)
 	kafkasink.WithAuthSecretName("abc")(cfg)
 
-	files, err := manifest.ExecuteLocalYAML(images, cfg)
+	files, err := manifest.ExecuteYAML(yaml, images, cfg)
 	if err != nil {
 		panic(err)
 	}
