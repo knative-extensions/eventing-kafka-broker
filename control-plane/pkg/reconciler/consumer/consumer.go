@@ -112,6 +112,7 @@ func (r Reconciler) reconcileContractResource(ctx context.Context, c *kafkainter
 	}
 
 	egress.Reference = userFacingResourceRef
+	egress.VReplicas = *c.Spec.VReplicas
 
 	resource := &contract.Resource{
 		Uid:                 string(c.UID),

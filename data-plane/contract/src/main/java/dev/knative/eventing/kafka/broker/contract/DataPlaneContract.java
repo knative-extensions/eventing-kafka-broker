@@ -10498,6 +10498,16 @@ public final class DataPlaneContract {
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getDialectedFilterOrBuilder(
         int index);
 
+    /**
+     * <pre>
+     * Number of virtual replicas.
+     * </pre>
+     *
+     * <code>int32 vReplicas = 13;</code>
+     * @return The vReplicas.
+     */
+    int getVReplicas();
+
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.ReplyStrategyCase getReplyStrategyCase();
   }
   /**
@@ -10662,6 +10672,11 @@ public final class DataPlaneContract {
               }
               dialectedFilter_.add(
                   input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.parser(), extensionRegistry));
+              break;
+            }
+            case 104: {
+
+              vReplicas_ = input.readInt32();
               break;
             }
             default: {
@@ -11274,6 +11289,21 @@ public final class DataPlaneContract {
       return dialectedFilter_.get(index);
     }
 
+    public static final int VREPLICAS_FIELD_NUMBER = 13;
+    private int vReplicas_;
+    /**
+     * <pre>
+     * Number of virtual replicas.
+     * </pre>
+     *
+     * <code>int32 vReplicas = 13;</code>
+     * @return The vReplicas.
+     */
+    @java.lang.Override
+    public int getVReplicas() {
+      return vReplicas_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -11323,6 +11353,9 @@ public final class DataPlaneContract {
       }
       for (int i = 0; i < dialectedFilter_.size(); i++) {
         output.writeMessage(12, dialectedFilter_.get(i));
+      }
+      if (vReplicas_ != 0) {
+        output.writeInt32(13, vReplicas_);
       }
       unknownFields.writeTo(output);
     }
@@ -11377,6 +11410,10 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(12, dialectedFilter_.get(i));
       }
+      if (vReplicas_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(13, vReplicas_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -11417,6 +11454,8 @@ public final class DataPlaneContract {
       }
       if (!getDialectedFilterList()
           .equals(other.getDialectedFilterList())) return false;
+      if (getVReplicas()
+          != other.getVReplicas()) return false;
       if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
       switch (replyStrategyCase_) {
         case 3:
@@ -11471,6 +11510,8 @@ public final class DataPlaneContract {
         hash = (37 * hash) + DIALECTEDFILTER_FIELD_NUMBER;
         hash = (53 * hash) + getDialectedFilterList().hashCode();
       }
+      hash = (37 * hash) + VREPLICAS_FIELD_NUMBER;
+      hash = (53 * hash) + getVReplicas();
       switch (replyStrategyCase_) {
         case 3:
           hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
@@ -11655,6 +11696,8 @@ public final class DataPlaneContract {
         } else {
           dialectedFilterBuilder_.clear();
         }
+        vReplicas_ = 0;
+
         replyStrategyCase_ = 0;
         replyStrategy_ = null;
         return this;
@@ -11730,6 +11773,7 @@ public final class DataPlaneContract {
         } else {
           result.dialectedFilter_ = dialectedFilterBuilder_.build();
         }
+        result.vReplicas_ = vReplicas_;
         result.replyStrategyCase_ = replyStrategyCase_;
         onBuilt();
         return result;
@@ -11831,6 +11875,9 @@ public final class DataPlaneContract {
               dialectedFilterBuilder_.addAllMessages(other.dialectedFilter_);
             }
           }
+        }
+        if (other.getVReplicas() != 0) {
+          setVReplicas(other.getVReplicas());
         }
         switch (other.getReplyStrategyCase()) {
           case REPLYURL: {
@@ -13628,6 +13675,49 @@ public final class DataPlaneContract {
           dialectedFilter_ = null;
         }
         return dialectedFilterBuilder_;
+      }
+
+      private int vReplicas_ ;
+      /**
+       * <pre>
+       * Number of virtual replicas.
+       * </pre>
+       *
+       * <code>int32 vReplicas = 13;</code>
+       * @return The vReplicas.
+       */
+      @java.lang.Override
+      public int getVReplicas() {
+        return vReplicas_;
+      }
+      /**
+       * <pre>
+       * Number of virtual replicas.
+       * </pre>
+       *
+       * <code>int32 vReplicas = 13;</code>
+       * @param value The vReplicas to set.
+       * @return This builder for chaining.
+       */
+      public Builder setVReplicas(int value) {
+        
+        vReplicas_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Number of virtual replicas.
+       * </pre>
+       *
+       * <code>int32 vReplicas = 13;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearVReplicas() {
+        
+        vReplicas_ = 0;
+        onChanged();
+        return this;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -24584,7 +24674,7 @@ public final class DataPlaneContract {
       "\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\r\n\005re" +
       "try\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.Backo" +
       "ffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\022\017\n\007timeou" +
-      "t\030\005 \001(\004\"\370\002\n\006Egress\022\025\n\rconsumerGroup\030\001 \001(" +
+      "t\030\005 \001(\004\"\213\003\n\006Egress\022\025\n\rconsumerGroup\030\001 \001(" +
       "\t\022\023\n\013destination\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\t" +
       "H\000\022&\n\024replyToOriginalTopic\030\004 \001(\0132\006.Empty" +
       "H\000\022\036\n\014discardReply\030\t \001(\0132\006.EmptyH\000\022\027\n\006fi" +
@@ -24593,43 +24683,43 @@ public final class DataPlaneContract {
       "yOrder\030\010 \001(\0162\016.DeliveryOrder\022\031\n\007keyType\030" +
       "\n \001(\0162\010.KeyType\022\035\n\treference\030\013 \001(\0132\n.Ref" +
       "erence\022)\n\017dialectedFilter\030\014 \003(\0132\020.Dialec" +
-      "tedFilterB\017\n\rreplyStrategy\"H\n\007Ingress\022!\n" +
-      "\013contentMode\030\001 \001(\0162\014.ContentMode\022\014\n\004path" +
-      "\030\002 \001(\t\022\014\n\004host\030\003 \001(\t\"K\n\tReference\022\014\n\004uui" +
-      "d\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t" +
-      "\022\017\n\007version\030\004 \001(\t\"`\n\017SecretReference\022\035\n\t" +
-      "reference\030\001 \001(\0132\n.Reference\022.\n\022keyFieldR" +
-      "eferences\030\002 \003(\0132\022.KeyFieldReference\"C\n\021K" +
-      "eyFieldReference\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005f" +
-      "ield\030\003 \001(\0162\014.SecretField\"Y\n\024MultiSecretR" +
-      "eference\022\033\n\010protocol\030\001 \001(\0162\t.Protocol\022$\n" +
-      "\nreferences\030\002 \003(\0132\020.SecretReference\"\202\001\n\023" +
-      "CloudEventOverrides\0228\n\nextensions\030\001 \003(\0132" +
-      "$.CloudEventOverrides.ExtensionsEntry\0321\n" +
-      "\017ExtensionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002" +
-      " \001(\t:\0028\001\"\350\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006to" +
-      "pics\030\002 \003(\t\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007" +
-      "ingress\030\004 \001(\0132\010.Ingress\022#\n\014egressConfig\030" +
-      "\005 \001(\0132\r.EgressConfig\022\031\n\010egresses\030\006 \003(\0132\007" +
-      ".Egress\022\034\n\nabsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n" +
-      "\nauthSecret\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multi" +
-      "AuthSecret\030\t \001(\0132\025.MultiSecretReferenceH" +
-      "\000\0221\n\023cloudEventOverrides\030\n \001(\0132\024.CloudEv" +
-      "entOverrides\022\035\n\treference\030\013 \001(\0132\n.Refere" +
-      "nceB\006\n\004Auth\"<\n\010Contract\022\022\n\ngeneration\030\001 " +
-      "\001(\004\022\034\n\tresources\030\002 \003(\0132\t.Resource*,\n\rBac" +
-      "koffPolicy\022\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*" +
-      "+\n\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022\013\n\007ORDER" +
-      "ED\020\001*=\n\007KeyType\022\n\n\006String\020\000\022\013\n\007Integer\020\001" +
-      "\022\n\n\006Double\020\002\022\r\n\tByteArray\020\003*)\n\013ContentMo" +
-      "de\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013Secret" +
-      "Field\022\022\n\016SASL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n" +
-      "\010USER_CRT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010P" +
-      "ASSWORD\020\005*D\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016" +
-      "SASL_PLAINTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B" +
-      "[\n*dev.knative.eventing.kafka.broker.con" +
-      "tractB\021DataPlaneContractZ\032control-plane/" +
-      "pkg/contractb\006proto3"
+      "tedFilter\022\021\n\tvReplicas\030\r \001(\005B\017\n\rreplyStr" +
+      "ategy\"H\n\007Ingress\022!\n\013contentMode\030\001 \001(\0162\014." +
+      "ContentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004host\030\003 \001(\t\"" +
+      "K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030" +
+      "\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"`\n\017" +
+      "SecretReference\022\035\n\treference\030\001 \001(\0132\n.Ref" +
+      "erence\022.\n\022keyFieldReferences\030\002 \003(\0132\022.Key" +
+      "FieldReference\"C\n\021KeyFieldReference\022\021\n\ts" +
+      "ecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.SecretFi" +
+      "eld\"Y\n\024MultiSecretReference\022\033\n\010protocol\030" +
+      "\001 \001(\0162\t.Protocol\022$\n\nreferences\030\002 \003(\0132\020.S" +
+      "ecretReference\"\202\001\n\023CloudEventOverrides\0228" +
+      "\n\nextensions\030\001 \003(\0132$.CloudEventOverrides" +
+      ".ExtensionsEntry\0321\n\017ExtensionsEntry\022\013\n\003k" +
+      "ey\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010Resource" +
+      "\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstr" +
+      "apServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingre" +
+      "ss\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig\022" +
+      "\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAuth" +
+      "\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n.R" +
+      "eferenceH\000\0220\n\017multiAuthSecret\030\t \001(\0132\025.Mu" +
+      "ltiSecretReferenceH\000\0221\n\023cloudEventOverri" +
+      "des\030\n \001(\0132\024.CloudEventOverrides\022\035\n\trefer" +
+      "ence\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"<\n\010Contra" +
+      "ct\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 \003(" +
+      "\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Exponen" +
+      "tial\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r\n\tU" +
+      "NORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006St" +
+      "ring\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tByteA" +
+      "rray\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTR" +
+      "UCTURED\020\001*a\n\013SecretField\022\022\n\016SASL_MECHANI" +
+      "SM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_K" +
+      "EY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol" +
+      "\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003S" +
+      "SL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.eventi" +
+      "ng.kafka.broker.contractB\021DataPlaneContr" +
+      "actZ\032control-plane/pkg/contractb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -24730,7 +24820,7 @@ public final class DataPlaneContract {
     internal_static_Egress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Egress_descriptor,
-        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "KeyType", "Reference", "DialectedFilter", "ReplyStrategy", });
+        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "KeyType", "Reference", "DialectedFilter", "VReplicas", "ReplyStrategy", });
     internal_static_Ingress_descriptor =
       getDescriptor().getMessageTypes().get(12);
     internal_static_Ingress_fieldAccessorTable = new
