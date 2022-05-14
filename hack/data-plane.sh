@@ -73,7 +73,7 @@ function image_push() {
 function receiver_build_push() {
   header "Building receiver ..."
 
-  readonly receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver}"
+  local receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver}"
 
   local digest
   digest=$(docker build \
@@ -111,7 +111,7 @@ function receiver_build_push() {
 function dispatcher_build_push() {
   header "Building dispatcher ..."
 
-  readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher}"
+  local dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher}"
 
   local digest
   digest=$(docker build \
