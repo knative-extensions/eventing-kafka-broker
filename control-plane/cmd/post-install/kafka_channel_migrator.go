@@ -30,7 +30,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	kcs "knative.dev/eventing-kafka/pkg/client/clientset/versioned"
@@ -222,8 +222,12 @@ func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, logger *zap
 
 	patches := []string{
 		fmt.Sprintf(`{"op":"replace", "path": "/data/bootstrap.servers", "value": "%s"}`, oldconfig.Kafka.Brokers),
-		fmt.Sprintf(`{"op":"replace", "path": "/data/auth.secret.ref.namespace", "value": "%s"}`, oldconfig.Kafka.AuthSecretNamespace),
-		fmt.Sprintf(`{"op":"replace", "path": "/data/auth.secret.ref.name", "value": "%s"}`, oldconfig.Kafka.AuthSecretName),
+	}
+	if oldconfig.Kafka.AuthSecretNamespace != "" {
+		patches = append(patches, fmt.Sprintf(`{"op":"replace", "path": "/data/auth.secret.ref.namespace", "value": "%s"}`, oldconfig.Kafka.AuthSecretNamespace))
+	}
+	if oldconfig.Kafka.AuthSecretName != "" {
+		patches = append(patches, fmt.Sprintf(`{"op":"replace", "path": "/data/auth.secret.ref.name", "value": "%s"}`, oldconfig.Kafka.AuthSecretName))
 	}
 
 	logger.Infof("Patching configmap %s with patch %s", newConfigmapName, patches)
