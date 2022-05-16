@@ -141,6 +141,15 @@ func (d *kafkaChannelPostMigrationDeleter) Delete(ctx context.Context) error {
 		return fmt.Errorf("failed to delete Lease %s: %w", kafkaChannelDispatcherLease, err)
 	}
 
+	// Delete configmap/config-kafka
+	const kafkaChannelConfigmap = "config-kafka"
+	err = d.k8s.
+		CoreV1().
+		ConfigMaps(system.Namespace()).
+		Delete(ctx, kafkaChannelConfigmap, metav1.DeleteOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete Configmap %s: %w", kafkaChannelConfigmap, err)
+	}
 	return nil
 }
 
