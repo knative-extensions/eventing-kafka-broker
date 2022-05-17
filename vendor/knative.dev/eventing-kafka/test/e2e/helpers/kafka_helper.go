@@ -245,7 +245,7 @@ func MustCreateTopic(client *testlib.Client, clusterName, clusterNamespace, topi
 	client.Tracker.Add(topicGVR.Group, topicGVR.Version, topicGVR.Resource, clusterNamespace, topicName)
 
 	// Wait for the topic to be ready
-	if err := WaitForTopicReady(context.Background(), client, clusterNamespace, topicName, topicGVR); err != nil {
+	if err := WaitForKafkaResourceReady(context.Background(), client, clusterNamespace, topicName, topicGVR); err != nil {
 		client.T.Fatalf("Error while creating the topic %s: %v", topicName, err)
 	}
 }
@@ -295,7 +295,12 @@ func CheckRADeployment(ctx context.Context, c *testlib.Client, name string, inSt
 	return nil
 }
 
+// Deprecated: Use WaitForKafkaResourceReady instead.
 func WaitForTopicReady(ctx context.Context, client *testlib.Client, namespace, name string, gvr schema.GroupVersionResource) error {
+	return WaitForKafkaResourceReady(ctx, client, namespace, name, gvr)
+}
+
+func WaitForKafkaResourceReady(ctx context.Context, client *testlib.Client, namespace, name string, gvr schema.GroupVersionResource) error {
 	like := &duckv1.KResource{}
 	return wait.PollImmediate(interval, timeout, func() (bool, error) {
 		us, err := client.Dynamic.Resource(gvr).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
