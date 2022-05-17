@@ -49,6 +49,7 @@ const (
 	strimziApiGroup      = "kafka.strimzi.io"
 	strimziApiVersion    = "v1beta2"
 	strimziTopicResource = "kafkatopics"
+	strimziUserResource  = "kafkausers"
 	interval             = 3 * time.Second
 	timeout              = 4 * time.Minute
 	kafkaCatImage        = "docker.io/edenhill/kafkacat:1.6.0"
@@ -56,6 +57,7 @@ const (
 
 var (
 	topicGVR = schema.GroupVersionResource{Group: strimziApiGroup, Version: strimziApiVersion, Resource: strimziTopicResource}
+	userGVR  = schema.GroupVersionResource{Group: strimziApiGroup, Version: strimziApiVersion, Resource: strimziUserResource}
 	ImcGVR   = schema.GroupVersionResource{Group: "messaging.knative.dev", Version: "v1", Resource: "inmemorychannels"}
 )
 
@@ -245,8 +247,65 @@ func MustCreateTopic(client *testlib.Client, clusterName, clusterNamespace, topi
 	client.Tracker.Add(topicGVR.Group, topicGVR.Version, topicGVR.Resource, clusterNamespace, topicName)
 
 	// Wait for the topic to be ready
-	if err := WaitForTopicReady(context.Background(), client, clusterNamespace, topicName, topicGVR); err != nil {
+	if err := WaitForKafkaResourceReady(context.Background(), client, clusterNamespace, topicName, topicGVR); err != nil {
 		client.T.Fatalf("Error while creating the topic %s: %v", topicName, err)
+	}
+}
+
+func MustCreateKafkaUserForTopic(client *testlib.Client, clusterName, clusterNamespace, userName, topicName string) {
+	obj := unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": userGVR.GroupVersion().String(),
+			"kind":       "KafkaUser",
+			"metadata": map[string]interface{}{
+				"name": userName,
+				"labels": map[string]interface{}{
+					"strimzi.io/cluster": clusterName,
+				},
+			},
+			"spec": map[string]interface{}{
+				"authorization": map[string]interface{}{
+					"type": "simple",
+					"acls": []interface{}{
+						// For the consumer
+						map[string]interface{}{
+							"operation": "Read",
+							"resource": map[string]interface{}{
+								"type": "topic",
+								"name": topicName,
+							},
+						},
+						// For the producer
+						map[string]interface{}{
+							"operation": "Write",
+							"resource": map[string]interface{}{
+								"type": "topic",
+								"name": topicName,
+							},
+						},
+						// Generic operation for describing a topic
+						map[string]interface{}{
+							"operation": "Describe",
+							"resource": map[string]interface{}{
+								"type": "topic",
+								"name": topicName,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	_, err := client.Dynamic.Resource(userGVR).Namespace(clusterNamespace).Create(context.Background(), &obj, metav1.CreateOptions{})
+	if err != nil {
+		client.T.Fatalf("Error while creating the user %s for topic %s: %v", userName, topicName, err)
+	}
+	client.Tracker.Add(userGVR.Group, userGVR.Version, userGVR.Resource, clusterNamespace, topicName)
+
+	// Wait for the user to be ready
+	if err := WaitForKafkaResourceReady(context.Background(), client, clusterNamespace, topicName, userGVR); err != nil {
+		client.T.Fatalf("Error while creating the user %s for topic %s: %v", userName, topicName, err)
 	}
 }
 
@@ -295,7 +354,12 @@ func CheckRADeployment(ctx context.Context, c *testlib.Client, name string, inSt
 	return nil
 }
 
+// Deprecated: Use WaitForKafkaResourceReady instead.
 func WaitForTopicReady(ctx context.Context, client *testlib.Client, namespace, name string, gvr schema.GroupVersionResource) error {
+	return WaitForKafkaResourceReady(ctx, client, namespace, name, gvr)
+}
+
+func WaitForKafkaResourceReady(ctx context.Context, client *testlib.Client, namespace, name string, gvr schema.GroupVersionResource) error {
 	like := &duckv1.KResource{}
 	return wait.PollImmediate(interval, timeout, func() (bool, error) {
 		us, err := client.Dynamic.Resource(gvr).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
