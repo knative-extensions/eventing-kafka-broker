@@ -17,6 +17,7 @@
 readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
 readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
 export REPLICAS=${REPLICAS:-3}
+export KO_FLAGS="${KO_FLAGS:-}"
 
 source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
 source $(pwd)/hack/data-plane.sh
@@ -142,7 +143,7 @@ function build_source_components_from_source() {
 function install_latest_release() {
   echo "Installing latest release from ${PREVIOUS_RELEASE_URL}"
 
-  ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
+  ko apply ${KO_FLAGS} -f ./test/config/ || fail_test "Failed to apply test configurations"
 
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
@@ -171,7 +172,7 @@ function install_head() {
 function install_latest_release_source() {
   echo "Installing latest release from ${PREVIOUS_RELEASE_URL}"
 
-  ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
+  ko apply ${KO_FLAGS} -f ./test/config/ || fail_test "Failed to apply test configurations"
 
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || return $?
 
@@ -198,7 +199,7 @@ function test_setup() {
   wait_until_pods_running knative-eventing || fail_test "System did not come up"
 
   # Apply test configurations, and restart data plane components (we don't have hot reload)
-  ko apply -f ./test/config/ || fail_test "Failed to apply test configurations"
+  ko apply ${KO_FLAGS} -f ./test/config/ || fail_test "Failed to apply test configurations"
 
   setup_kafka_channel_auth || fail_test "Failed to apply channel auth configuration ${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO}"
 
@@ -245,7 +246,7 @@ function scale_controlplane() {
 }
 
 function apply_chaos() {
-  ko apply -f ./test/config/chaos || return $?
+  ko apply ${KO_FLAGS} -f ./test/config/chaos || return $?
 }
 
 function delete_chaos() {
@@ -253,9 +254,9 @@ function delete_chaos() {
 }
 
 function apply_sacura() {
-  ko apply -f ./test/config/sacura/0-namespace.yaml || return $?
-  ko apply -f ./test/config/sacura/100-broker-config.yaml || return $?
-  ko apply -f ./test/config/sacura/101-broker.yaml || return $?
+  ko apply ${KO_FLAGS} -f ./test/config/sacura/0-namespace.yaml || return $?
+  ko apply ${KO_FLAGS} -f ./test/config/sacura/100-broker-config.yaml || return $?
+  ko apply ${KO_FLAGS} -f ./test/config/sacura/101-broker.yaml || return $?
 
   kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || {
     local ret=$?
@@ -263,7 +264,7 @@ function apply_sacura() {
     return ${ret}
   }
 
-  ko apply -f ./test/config/sacura || return $?
+  ko apply ${KO_FLAGS} -f ./test/config/sacura || return $?
 }
 
 function delete_sacura() {
