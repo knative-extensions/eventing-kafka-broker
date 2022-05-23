@@ -19,7 +19,7 @@ readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
 export REPLICAS=${REPLICAS:-3}
 
 # Only build linux/amd64 image by default
-export KO_FLAGS="${KO_FLAGS:---platform=linux/amd64}"
+export KO_FLAGS="${KO_FLAGS:-}"
 
 source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
 source $(pwd)/hack/data-plane.sh
