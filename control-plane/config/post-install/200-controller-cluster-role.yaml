@@ -181,24 +181,18 @@ rules:
     verbs:
       - delete
 
+  # to be able to read the old configmap and migrate
+  # and then delete them
   - apiGroups:
       - "*"
     resources:
       - configmaps
     resourceNames:
       - config-leader-election-kafkachannel
-    verbs:
-      - delete
-
-  # to be able to read the old configmap and migrate it
-  - apiGroups:
-      - "*"
-    resources:
-      - configmaps
-    resourceNames:
       - config-kafka
     verbs:
       - get
+      - delete
 
   # to be able update config in the new configmap
   - apiGroups:
