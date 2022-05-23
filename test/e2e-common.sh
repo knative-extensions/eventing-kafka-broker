@@ -17,7 +17,6 @@
 readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
 readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
 export REPLICAS=${REPLICAS:-3}
-
 export KO_FLAGS="${KO_FLAGS:-}"
 
 source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
