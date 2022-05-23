@@ -1,2 +1,0 @@
-# sacura
-Detect CloudEvents loss

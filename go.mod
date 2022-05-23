@@ -9,13 +9,13 @@ require (
 	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/pierdipi/sacura v0.0.0-20210302185533-982357fc042b
 	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.7.0
 	github.com/xdg-go/scram v1.1.0
 	go.uber.org/atomic v1.9.0
 	go.uber.org/multierr v1.6.0
 	go.uber.org/zap v1.19.1
+	gonum.org/v1/gonum v0.0.0-20190331200053-3d26580ed485 // indirect
 	google.golang.org/protobuf v1.27.1
 	k8s.io/api v0.23.5
 	k8s.io/apiextensions-apiserver v0.23.4
