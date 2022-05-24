@@ -252,7 +252,7 @@ func MustCreateTopic(client *testlib.Client, clusterName, clusterNamespace, topi
 	}
 }
 
-func MustCreateKafkaUserForTopic(client *testlib.Client, clusterName, clusterNamespace, userName, topicName string) {
+func MustCreateKafkaUserForTopic(client *testlib.Client, clusterName, clusterNamespace, authenticationType, userName, topicName string) {
 	obj := unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": userGVR.GroupVersion().String(),
@@ -264,6 +264,9 @@ func MustCreateKafkaUserForTopic(client *testlib.Client, clusterName, clusterNam
 				},
 			},
 			"spec": map[string]interface{}{
+				"authentication": map[string]interface{}{
+					"type": authenticationType,
+				},
 				"authorization": map[string]interface{}{
 					"type": "simple",
 					"acls": []interface{}{
