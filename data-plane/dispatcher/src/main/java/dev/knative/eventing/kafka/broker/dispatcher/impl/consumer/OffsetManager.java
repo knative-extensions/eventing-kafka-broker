@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -72,12 +73,29 @@ public final class OffsetManager implements RecordDispatcherListener {
     this.vertx = vertx;
 
     this.consumer.partitionsRevokedHandler(partitions -> {
+      try {
+        // Async commit offsets.
+        final var commitFuture = commit(partitions);
+        // Remove revoked partitions.
+        partitions.forEach(offsetTrackers::remove);
+
+        // Wait for offsets to be actually committed.
+        commitFuture
+          .toCompletionStage()
+          .toCompletableFuture()
+          .get(1, TimeUnit.SECONDS);
+
+      } catch (final Exception ex) {
+        logger.warn("Failed to commit revoked partitions offsets {}", keyValue("partitions", partitions), ex);
+      } finally {
+        // Remove revoked partitions in any case.
+        partitions.forEach(offsetTrackers::remove);
+      }
       logPartitions("revoked", partitions);
-      partitions.forEach(offsetTrackers::remove);
     });
 
     this.consumer.partitionsAssignedHandler(partitions ->
-      partitions.forEach(tp -> logPartitions("assigned", partitions))
+      logPartitions("assigned", partitions)
     );
   }
 
@@ -173,6 +191,22 @@ public final class OffsetManager implements RecordDispatcherListener {
     return CompositeFuture.all(
       this.offsetTrackers.entrySet()
         .stream()
+        .map(e -> commit(e.getKey(), e.getValue()))
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList())
+    ).mapEmpty();
+  }
+
+  /**
+   * Commit all tracked offsets by colling commit on every offsetTracker entry.
+   *
+   * @return succeeded or failed future.
+   */
+  private Future<Void> commit(final Set<TopicPartition> partitions) {
+    return CompositeFuture.all(
+      this.offsetTrackers.entrySet()
+        .stream()
+        .filter(kv -> partitions.contains(kv.getKey()))
         .map(e -> commit(e.getKey(), e.getValue()))
         .filter(Objects::nonNull)
         .collect(Collectors.toList())
