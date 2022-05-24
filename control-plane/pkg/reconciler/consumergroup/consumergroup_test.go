@@ -32,6 +32,7 @@ import (
 	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
@@ -44,8 +45,10 @@ import (
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
+
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 )
 
@@ -59,6 +62,13 @@ const (
 	testSchedulerKey = "scheduler"
 
 	systemNamespace = "knative-eventing"
+	finalizerName   = "consumergroups.internal.kafka.eventing.knative.dev"
+)
+
+var finalizerUpdatedEvent = Eventf(
+	corev1.EventTypeNormal,
+	"FinalizerUpdate",
+	fmt.Sprintf(`Updated %q finalizers`, ConsumerGroupName),
 )
 
 func TestReconcileKind(t *testing.T) {
@@ -138,6 +148,12 @@ func TestReconcileKind(t *testing.T) {
 					}(),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Consumers in multiple pods, with auth spec, one exists - secret not found",
@@ -191,7 +207,11 @@ func TestReconcileKind(t *testing.T) {
 				}),
 			},
 			WantErr: true,
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
 			WantEvents: []string{
+				finalizerUpdatedEvent,
 				"Warning InternalError failed to initialize consumer group offset: failed to create config options for Kafka cluster auth: failed to get secret test-cg-ns/non-existing secret: secrets \"non-existing secret\" not found",
 			},
 			WantCreates: []runtime.Object{},
@@ -325,6 +345,12 @@ func TestReconcileKind(t *testing.T) {
 					}(),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Consumers in multiple pods, with net spec, one exists - secret not found",
@@ -436,7 +462,11 @@ func TestReconcileKind(t *testing.T) {
 				}),
 			},
 			WantErr: true,
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
 			WantEvents: []string{
+				finalizerUpdatedEvent,
 				"Warning InternalError failed to initialize consumer group offset: failed to create config options for Kafka cluster auth: failed to read secret test-cg-ns/non-existing secret: secret \"non-existing secret\" not found",
 			},
 			WantCreates: []runtime.Object{},
@@ -715,6 +745,12 @@ func TestReconcileKind(t *testing.T) {
 					}(),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Consumer update",
@@ -794,6 +830,12 @@ func TestReconcileKind(t *testing.T) {
 					}(),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Consumers in multiple pods, one exists - not ready",
@@ -870,6 +912,12 @@ func TestReconcileKind(t *testing.T) {
 						return cg
 					}(),
 				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 		},
 		{
@@ -949,6 +997,12 @@ func TestReconcileKind(t *testing.T) {
 						return cg
 					}(),
 				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 		},
 		{
@@ -1071,6 +1125,12 @@ func TestReconcileKind(t *testing.T) {
 					}(),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Consumers in multiple pods, one exists - ready, increase replicas",
@@ -1172,6 +1232,12 @@ func TestReconcileKind(t *testing.T) {
 					}(),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Consumers in multiple pods, one exists, different placement",
@@ -1271,6 +1337,12 @@ func TestReconcileKind(t *testing.T) {
 					}(),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Schedulers failed",
@@ -1294,7 +1366,11 @@ func TestReconcileKind(t *testing.T) {
 				}),
 			},
 			WantErr: true,
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
 			WantEvents: []string{
+				finalizerUpdatedEvent,
 				"Warning InternalError failed to schedule consumers: EOF",
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -1349,6 +1425,164 @@ func TestReconcileKind(t *testing.T) {
 			r,
 		)
 	}))
+
+}
+
+func TestFinalizeKind(t *testing.T) {
+
+	testKey := fmt.Sprintf("%s/%s", ConsumerGroupNamespace, ConsumerGroupName)
+
+	table := TableTest{
+		{
+			Name: "Finalize normal - no consumers",
+			Objects: []runtime.Object{
+				NewSASLSSLSecret(ConsumerGroupNamespace, SecretName),
+				NewDeletedConsumeGroup(
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerAuth(&kafkainternals.Auth{
+							NetSpec: &bindings.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "password",
+										},
+									},
+									Type: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "type",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						}),
+					)),
+				),
+			},
+			Key:                     testKey,
+			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
+		},
+		{
+			Name: "Finalize normal - with consumers",
+			Objects: []runtime.Object{
+				NewSASLSSLSecret(ConsumerGroupNamespace, SecretName),
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+						ConsumerSubscriber(NewSourceSinkReference()),
+					)),
+				),
+				NewDeletedConsumeGroup(
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerAuth(&kafkainternals.Auth{
+							NetSpec: &bindings.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "password",
+										},
+									},
+									Type: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "type",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						}),
+					)),
+				),
+			},
+			Key: testKey,
+			WantDeletes: []clientgotesting.DeleteActionImpl{
+				{
+					ActionImpl: clientgotesting.ActionImpl{
+						Namespace: ConsumerGroupNamespace,
+						Resource: schema.GroupVersionResource{
+							Group:    kafkainternals.SchemeGroupVersion.Group,
+							Version:  kafkainternals.SchemeGroupVersion.Version,
+							Resource: "consumers",
+						},
+					},
+					Name: fmt.Sprintf("%s-%d", ConsumerNamePrefix, 1),
+				},
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
+		},
+		//need to add support for DeleteConsumerGroup in admin_mock.go before adding more testcases
+	}
+
+	table.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
+
+		r := &Reconciler{
+			ConsumerLister:  listers.GetConsumerLister(),
+			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
+			SecretLister:    listers.GetSecretLister(),
+			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+				return &kafkatesting.MockKafkaClusterAdmin{
+					T: t,
+				}, nil
+			},
+		}
+
+		return consumergroup.NewReconciler(
+			ctx,
+			logging.FromContext(ctx),
+			fakekafkainternalsclient.Get(ctx),
+			listers.GetConsumerGroupLister(),
+			controller.GetEventRecorder(ctx),
+			r,
+		)
+	}))
 }
 
 type CounterGenerator struct {
@@ -1358,4 +1592,13 @@ type CounterGenerator struct {
 func (c *CounterGenerator) GenerateName(base string) string {
 	c.counter++
 	return fmt.Sprintf("%s%d", base, c.counter)
+}
+
+func patchFinalizers() clientgotesting.PatchActionImpl {
+	action := clientgotesting.PatchActionImpl{}
+	action.Name = ConsumerGroupName
+	action.Namespace = ConsumerGroupNamespace
+	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
+	action.Patch = []byte(patch)
+	return action
 }
