@@ -73,6 +73,13 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("source deletion failed: %w", err)
 	}
 
+	sourceDispatcherDeleter := &kafkaSourceDeleter{
+		k8s: kubernetes.NewForConfigOrDie(config),
+	}
+	if err := sourceDispatcherDeleter.DeleteDispatcher(ctx); err != nil {
+		return fmt.Errorf("source dispatcher deletion failed: %w", err)
+	}
+
 	channelPreMigrationDeleter := &kafkaChannelPreMigrationDeleter{
 		k8s: kubernetes.NewForConfigOrDie(config),
 	}

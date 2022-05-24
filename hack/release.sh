@@ -48,12 +48,12 @@ function build_release() {
     fail "failed to create data plane artifact"
   fi
 
-  control_plane_sourcev2_setup
+  control_plane_source_setup
   if [[ $? -ne 0 ]]; then
     fail "failed to setup control plane source bundle artifact"
   fi
 
-  data_plane_sourcev2_setup
+  data_plane_source_setup
   if [[ $? -ne 0 ]]; then
     fail "failed to create data plane source bundle artifact"
   fi

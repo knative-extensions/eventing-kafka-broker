@@ -28,8 +28,6 @@ readonly DATA_PLANE_CONFIG_DIR=${DATA_PLANE_DIR}/config
 
 # Source config
 readonly SOURCE_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/source
-# Temporary Sourcev2 config
-readonly SOURCEV2_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/sourcev2
 # Broker config
 readonly BROKER_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/broker
 # Sink config
@@ -207,13 +205,13 @@ function data_plane_setup() {
   return $?
 }
 
-function data_plane_sourcev2_setup() {
+function data_plane_source_setup() {
   dispatcher_build_push || dispatcher_build_push || fail_test "failed to build dispatcher"
   header "Creating artifacts"
 
   echo "Dispatcher image ---> ${KNATIVE_KAFKA_DISPATCHER_IMAGE}"
 
-  ko resolve ${KO_FLAGS} -Rf ${SOURCEV2_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
+  ko resolve ${KO_FLAGS} -Rf ${SOURCE_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
 
   sed -i "s|\${KNATIVE_KAFKA_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_DISPATCHER_IMAGE}|g" "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
 

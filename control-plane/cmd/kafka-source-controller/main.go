@@ -28,7 +28,7 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
-	sourcev2 "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source/v2"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source"
 )
 
 const (
@@ -43,7 +43,7 @@ func main() {
 		injection.NamedControllerConstructor{
 			Name: "source-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				return sourcev2.NewController(ctx)
+				return source.NewController(ctx)
 			},
 		},
 

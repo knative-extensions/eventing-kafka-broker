@@ -86,6 +86,8 @@ spec:
               value: json
             - name: SOURCE_DATA_PLANE_CONFIG_FORMAT
               value: json
+            - name: CONSUMER_DATA_PLANE_CONFIG_FORMAT
+              value: json
 
             - name: BROKER_INGRESS_NAME
               value: kafka-broker-ingress
