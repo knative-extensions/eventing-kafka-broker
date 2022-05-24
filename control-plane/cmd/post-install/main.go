@@ -20,6 +20,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	injectionclient "knative.dev/pkg/client/injection/kube/client"
 	"log"
 
 	"k8s.io/client-go/kubernetes"
@@ -57,6 +58,12 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to get kubeconfig: %w", err)
 	}
+
+	// Create A New Kubernetes Client From The K8S Configuration
+	k8sClient := kubernetes.NewForConfigOrDie(config)
+
+	// Put The Kubernetes Client Into The Context Where The Injection Framework Expects It
+	ctx = context.WithValue(ctx, injectionclient.Key{}, k8sClient)
 
 	sourceMigrator := &KafkaSourceMigrator{
 		kcs: kcs.NewForConfigOrDie(config),

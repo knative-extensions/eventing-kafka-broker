@@ -19,9 +19,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 	"os"
 	"strings"
 	"time"
+
+	"encoding/base64"
 
 	"go.uber.org/zap"
 
@@ -33,13 +36,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
+	oldChannelUtils "knative.dev/eventing-kafka/pkg/channel/consolidated/utils"
 	kcs "knative.dev/eventing-kafka/pkg/client/clientset/versioned"
-	"knative.dev/eventing-kafka/pkg/common/config"
-	"knative.dev/eventing-kafka/pkg/common/constants"
+	kafkasarama "knative.dev/eventing-kafka/pkg/common/kafka/sarama"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
-	"sigs.k8s.io/yaml"
 )
 
 type kafkaChannelMigrator struct {
@@ -85,6 +87,11 @@ func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
 	}
 
 	err = m.migrateConfigmap(ctx, logger)
+	if err != nil {
+		return err
+	}
+
+	err = m.migrateSecret(ctx, logger)
 	if err != nil {
 		return err
 	}
@@ -209,7 +216,7 @@ func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, logger *zap
 		return fmt.Errorf("failed to get consolidated channel configmap for migration %s: %w", OldConfigmapName, err)
 	}
 
-	oldconfig, err := getEventingKafkaConfig(oldcm.Data)
+	oldconfig, err := getEventingKafkaConfig(ctx, logger, oldcm.Data)
 	if err != nil && !apierrors.IsNotFound(err) {
 		// configmap will be missing if we did the migration already
 		return fmt.Errorf("failed to build config from consolidated channel configmap for migration %s: %w", OldConfigmapName, err)
@@ -221,13 +228,13 @@ func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, logger *zap
 	}
 
 	patches := []string{
-		fmt.Sprintf(`{"op":"replace", "path": "/data/bootstrap.servers", "value": "%s"}`, oldconfig.Kafka.Brokers),
+		fmt.Sprintf(`{"op":"replace", "path": "/data/bootstrap.servers", "value": "%s"}`, oldconfig.EventingKafka.Kafka.Brokers),
 	}
-	if oldconfig.Kafka.AuthSecretNamespace != "" {
-		patches = append(patches, fmt.Sprintf(`{"op":"replace", "path": "/data/auth.secret.ref.namespace", "value": "%s"}`, oldconfig.Kafka.AuthSecretNamespace))
+	if oldconfig.EventingKafka.Kafka.AuthSecretNamespace != "" {
+		patches = append(patches, fmt.Sprintf(`{"op":"replace", "path": "/data/auth.secret.ref.namespace", "value": "%s"}`, oldconfig.EventingKafka.Kafka.AuthSecretNamespace))
 	}
-	if oldconfig.Kafka.AuthSecretName != "" {
-		patches = append(patches, fmt.Sprintf(`{"op":"replace", "path": "/data/auth.secret.ref.name", "value": "%s"}`, oldconfig.Kafka.AuthSecretName))
+	if oldconfig.EventingKafka.Kafka.AuthSecretName != "" {
+		patches = append(patches, fmt.Sprintf(`{"op":"replace", "path": "/data/auth.secret.ref.name", "value": "%s"}`, oldconfig.EventingKafka.Kafka.AuthSecretName))
 	}
 
 	logger.Infof("Patching configmap %s with patch %s", newConfigmapName, patches)
@@ -243,15 +250,90 @@ func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, logger *zap
 	return nil
 }
 
-func getEventingKafkaConfig(configMap map[string]string) (*config.EventingKafkaConfig, error) {
-	// Unmarshal The Eventing-Kafka ConfigMap YAML Into A EventingKafkaSettings Struct
-	eventingKafkaConfig := &config.EventingKafkaConfig{}
-	err := yaml.Unmarshal([]byte(configMap[constants.EventingKafkaSettingsConfigKey]), &eventingKafkaConfig)
-	if err != nil {
-		return nil, fmt.Errorf("ConfigMap's eventing-kafka value could not be converted to an EventingKafkaConfig struct: %s : %v", err, configMap[constants.EventingKafkaSettingsConfigKey])
+func (m *kafkaChannelMigrator) migrateSecret(ctx context.Context, logger *zap.SugaredLogger) error {
+	// Old configmap doesn't require an explicit specification of the protocol.
+	// Thus, we build the old config, see if TLS and SASL are enabled and set the protocol on the secret accordingly.
+	// By this approach, we touch the secret but we don't need to do some on-the-fly config upgrade in the channel
+	// reconciliation code.
+
+	logger.Infof("Migrating auth secret.")
+
+	oldcm, err := m.k8s.CoreV1().
+		ConfigMaps(system.Namespace()).
+		Get(ctx, OldConfigmapName, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) || len(oldcm.Data) == 0 {
+		logger.Infof("Old configmap %s is either missing or empty. Skipping the configmap migration", OldConfigmapName)
+		return nil
 	}
 
-	return eventingKafkaConfig, nil
+	if err != nil {
+		// there's some other problem
+		return fmt.Errorf("failed to get consolidated channel configmap for migration %s: %w", OldConfigmapName, err)
+	}
+
+	oldconfig, err := getEventingKafkaConfig(ctx, logger, oldcm.Data)
+	if err != nil && !apierrors.IsNotFound(err) {
+		// configmap will be missing if we did the migration already
+		return fmt.Errorf("failed to build config from consolidated channel configmap for migration %s: %w", OldConfigmapName, err)
+	}
+
+	if oldconfig.EventingKafka.Kafka.AuthSecretName == "" {
+		logger.Infof("old configmap does not specify an authSecretName. Skipping the secret migration")
+		return nil
+	}
+
+	secret, err := m.k8s.CoreV1().
+		Secrets(oldconfig.EventingKafka.Kafka.AuthSecretNamespace).
+		Get(ctx, oldconfig.EventingKafka.Kafka.AuthSecretName, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("unable to find the old secret for migration %s/%s: %w", oldconfig.EventingKafka.Kafka.AuthSecretNamespace, oldconfig.EventingKafka.Kafka.AuthSecretName, err)
+	}
+
+	if _, ok := secret.Data[security.ProtocolKey]; ok {
+		logger.Infof("secret already has %s=%s key defined. Skipping the secret migration", security.ProtocolKey, secret.Data[security.ProtocolKey])
+		return nil
+	}
+
+	protocol := security.ProtocolPlaintext
+
+	if oldconfig.EventingKafka.Sarama.Config.Net.SASL.Enable && oldconfig.EventingKafka.Sarama.Config.Net.TLS.Enable {
+		protocol = security.ProtocolSASLSSL
+	} else if oldconfig.EventingKafka.Sarama.Config.Net.SASL.Enable {
+		protocol = security.ProtocolSASLPlaintext
+	} else if oldconfig.EventingKafka.Sarama.Config.Net.TLS.Enable {
+		protocol = security.ProtocolSSL
+	}
+
+	logger.Infof("secret does not have `%s` defined. Determined it as `%s` from old config", security.ProtocolKey, protocol)
+
+	base64EncodedProtocol := make([]byte, base64.StdEncoding.EncodedLen(len(protocol)))
+	base64.StdEncoding.Encode(base64EncodedProtocol, []byte(protocol))
+
+	patches := []string{
+		fmt.Sprintf(`{"op":"replace", "path": "/data/%s", "value": "%s"}`, security.ProtocolKey, base64EncodedProtocol),
+	}
+
+	logger.Infof("Patching secret %s/%s with patch %s", oldconfig.EventingKafka.Kafka.AuthSecretNamespace, oldconfig.EventingKafka.Kafka.AuthSecretName, patches)
+
+	patch := []byte(fmt.Sprintf("[%s]", strings.Join(patches, ",")))
+
+	_, err = m.k8s.CoreV1().
+		Secrets(oldconfig.EventingKafka.Kafka.AuthSecretNamespace).
+		Patch(ctx, oldconfig.EventingKafka.Kafka.AuthSecretName, types.JSONPatchType, patch, metav1.PatchOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to patch secret for migration %s%s: %w", oldconfig.EventingKafka.Kafka.AuthSecretNamespace, oldconfig.EventingKafka.Kafka.AuthSecretName, err)
+	}
+	return nil
+}
+
+func getEventingKafkaConfig(ctx context.Context, logger *zap.SugaredLogger, configMap map[string]string) (*oldChannelUtils.KafkaConfig, error) {
+	oldKafkaConfig, err := oldChannelUtils.GetKafkaConfig(ctx, "", configMap, kafkasarama.LoadAuthConfig)
+	if err != nil {
+		logger.Errorw("Error reading Kafka configuration", zap.Error(err))
+		return nil, err
+	}
+
+	return oldKafkaConfig, nil
 }
 
 func (m *kafkaChannelMigrator) waitForNewDataPlaneReady(ctx context.Context) error {
