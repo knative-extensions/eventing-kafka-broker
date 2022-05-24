@@ -12,12 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: eventing.knative.dev/v1alpha1
-kind: KafkaSink
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
 metadata:
-  name: sink
-  namespace: sacura-sink-source-broker-channel
+  name: sacura-sink-source-topic
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: my-cluster
 spec:
-  topic: sacura-sink-source-broker-channel-topic
-  bootstrapServers:
-    - my-cluster-kafka-bootstrap.kafka:9092
+  partitions: 10
+  replicas: 3
+  config:
+    retention.ms: 7200000
+    segment.bytes: 1073741824

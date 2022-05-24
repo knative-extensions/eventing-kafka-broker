@@ -15,9 +15,17 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: config-broker
-  namespace: sacura-sink-source-broker-channel
+  name: config-sacura
+  namespace: sacura-sink-source
 data:
-  default.topic.partitions: "10"
-  default.topic.replication.factor: "3"
-  bootstrap.servers: "my-cluster-kafka-bootstrap.kafka:9092"
+  sacura.yaml: |
+    sender:
+      target: http://kafka-sink-ingress.knative-eventing.svc.cluster.local/sacura-sink-source/sink
+      frequency: 100
+      workers: 4
+      keepAlive: true
+    receiver:
+      port: 8080
+      timeout: 5m
+    duration: 10m
+    timeout: 5m

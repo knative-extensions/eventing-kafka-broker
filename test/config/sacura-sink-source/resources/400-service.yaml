@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: kafka.strimzi.io/v1beta2
-kind: KafkaTopic
+apiVersion: v1
+kind: Service
 metadata:
-  name: sacura-sink-source-broker-channel-topic
-  namespace: kafka
-  labels:
-    strimzi.io/cluster: my-cluster
+  name: sacura
+  namespace: sacura-sink-source
 spec:
-  partitions: 10
-  replicas: 3
-  config:
-    retention.ms: 7200000
-    segment.bytes: 1073741824
+  selector:
+    app: sacura
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: receiver
+      name: http

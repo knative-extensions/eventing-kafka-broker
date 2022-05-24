@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: Namespace
+apiVersion: eventing.knative.dev/v1alpha1
+kind: KafkaSink
 metadata:
-  name: sacura-sink-source-broker-channel
+  name: sink
+  namespace: sacura-sink-source
+spec:
+  topic: sacura-sink-source-topic
+  bootstrapServers:
+    - my-cluster-kafka-bootstrap.kafka:9092

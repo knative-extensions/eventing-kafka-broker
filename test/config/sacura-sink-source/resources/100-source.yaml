@@ -12,16 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: messaging.knative.dev/v1beta1
-kind: KafkaChannel
+apiVersion: sources.knative.dev/v1beta1
+kind: KafkaSource
 metadata:
-  name: channel
-  namespace: sacura-sink-source-broker-channel
+  name: source
+  namespace: sacura-sink-source
 spec:
-  numPartitions: 10
-  replicationFactor: 3
-
-  delivery:
-    retry: 5
-    backoffPolicy: exponential
-    backoffDelay: PT5S
+  topics:
+    - sacura-sink-source-topic
+  bootstrapServers:
+    - my-cluster-kafka-bootstrap.kafka:9092
+  consumerGroup: sacura-sink-source-group
+  sink:
+    ref:
+      apiVersion: v1
+      kind: Service
+      name: sacura

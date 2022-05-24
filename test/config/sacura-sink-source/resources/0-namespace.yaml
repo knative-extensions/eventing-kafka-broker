@@ -13,15 +13,6 @@
 # limitations under the License.
 
 apiVersion: v1
-kind: Service
+kind: Namespace
 metadata:
-  name: sacura
-  namespace: sacura-sink-source-broker-channel
-spec:
-  selector:
-    app: sacura
-  ports:
-    - port: 80
-      protocol: TCP
-      targetPort: receiver
-      name: http
+  name: sacura-sink-source

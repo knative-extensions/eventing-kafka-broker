@@ -66,7 +66,7 @@ elif [[ "${action}" == "build-test" || "${action}" == "build-tests" ]]; then
 elif [[ "${action}" == "deploy-sacura" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh &&
     apply_sacura &&
-    apply_sacura_sink_source_broker_channel
+    apply_sacura_sink_source
 elif [[ "${action}" == "sacura-test" || "${action}" == "sacura-tests" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && go_test_e2e -tags=sacura -timeout=40m ./test/e2e/...
 elif [[ "${action}" == "teardown-sacura" ]]; then

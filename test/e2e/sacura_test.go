@@ -76,12 +76,17 @@ type SacuraTestConfig struct {
 	SourceTopic *string
 }
 
-func TestSacuraSinkSourceBrokerChannelJob(t *testing.T) {
+func TestSacuraSinkSourceJob(t *testing.T) {
 	runSacuraTest(t, SacuraTestConfig{
-		Namespace:    "sacura-sink-source-broker-channel",
-		BrokerTopic:  pointer.StringPtr("knative-broker-sacura-sink-source-broker-channel-broker"),
-		ChannelTopic: pointer.StringPtr("knative-messaging-kafka.sacura-sink-source-broker-channel.channel"),
-		SourceTopic:  pointer.StringPtr("sacura-sink-source-broker-channel-topic"),
+		Namespace:    "sacura-sink-source",
+		SourceTopic:  pointer.StringPtr("sacura-sink-source-topic"),
+	})
+}
+
+func TestSacuraBrokerJob(t *testing.T) {
+	runSacuraTest(t, SacuraTestConfig{
+		Namespace:    "sacura",
+		BrokerTopic:  pointer.StringPtr("knative-broker-sacura-sink-source-broker"),
 	})
 }
 

@@ -16,7 +16,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: sacura
-  namespace: sacura-sink-source-broker-channel
+  namespace: sacura-sink-source
   labels:
     app: sacura
 spec:
@@ -45,7 +45,7 @@ spec:
 
       containers:
         - name: sacura
-          image: ko://github.com/pierdipi/sacura/cmd/sacura
+          image: ghcr.io/pierdipi/sacura/sacura-7befbbbc92911c6727467cfbf23af88f
           args:
             - "--config"
             - "/etc/sacura/sacura.yaml"
