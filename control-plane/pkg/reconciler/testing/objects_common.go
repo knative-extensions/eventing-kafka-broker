@@ -374,6 +374,15 @@ func StatusFailedToCreateTopic(topicName string) func(obj duckv1.KRShaped) {
 		)
 	}
 }
+func StatusTopicNotPresentOrInvalid(topicName string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
+			base.ConditionTopicReady,
+			base.ReasonTopicNotPresentOrInvalid,
+			fmt.Sprintf("topics %v: invalid topic %s", []string{topicName}, topicName),
+		)
+	}
+}
 
 func StatusInitialOffsetsCommitted(obj duckv1.KRShaped) {
 	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionInitialOffsetsCommitted)
