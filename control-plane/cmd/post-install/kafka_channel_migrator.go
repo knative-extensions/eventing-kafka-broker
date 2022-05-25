@@ -91,10 +91,6 @@ func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
 		return err
 	}
 
-	err = m.migrateSecret(ctx, logger)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -247,40 +243,17 @@ func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, logger *zap
 	if err != nil {
 		return fmt.Errorf("failed to patch new channel configmap for migration %s: %w", newConfigmapName, err)
 	}
-	return nil
+
+	return m.migrateSecret(ctx, logger, oldconfig)
 }
 
-func (m *kafkaChannelMigrator) migrateSecret(ctx context.Context, logger *zap.SugaredLogger) error {
+func (m *kafkaChannelMigrator) migrateSecret(ctx context.Context, logger *zap.SugaredLogger, oldconfig *oldChannelUtils.KafkaConfig) error {
 	// Old secret doesn't require an explicit specification of the protocol.
 	// Thus, we build the old config, see if TLS and SASL are enabled and set the protocol on the secret accordingly.
 	// By this approach, we touch the secret but we don't need to do some on-the-fly config upgrade in the channel
 	// reconciliation code.
 
 	logger.Infof("Migrating auth secret.")
-
-	oldcm, err := m.k8s.CoreV1().
-		ConfigMaps(system.Namespace()).
-		Get(ctx, OldConfigmapName, metav1.GetOptions{})
-	if apierrors.IsNotFound(err) || len(oldcm.Data) == 0 {
-		logger.Infof("Old configmap %s is either missing or empty. Skipping the configmap migration", OldConfigmapName)
-		return nil
-	}
-
-	if err != nil {
-		// there's some other problem
-		return fmt.Errorf("failed to get consolidated channel configmap for migration %s: %w", OldConfigmapName, err)
-	}
-
-	oldconfig, err := getEventingKafkaConfig(ctx, logger, oldcm.Data)
-	if err != nil && !apierrors.IsNotFound(err) {
-		// configmap will be missing if we did the migration already
-		return fmt.Errorf("failed to build config from consolidated channel configmap for migration %s: %w", OldConfigmapName, err)
-	}
-
-	if oldconfig.EventingKafka.Kafka.AuthSecretName == "" {
-		logger.Infof("old configmap does not specify an authSecretName. Skipping the secret migration")
-		return nil
-	}
 
 	secret, err := m.k8s.CoreV1().
 		Secrets(oldconfig.EventingKafka.Kafka.AuthSecretNamespace).
