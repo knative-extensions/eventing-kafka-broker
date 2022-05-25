@@ -251,7 +251,7 @@ func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, logger *zap
 }
 
 func (m *kafkaChannelMigrator) migrateSecret(ctx context.Context, logger *zap.SugaredLogger) error {
-	// Old configmap doesn't require an explicit specification of the protocol.
+	// Old secret doesn't require an explicit specification of the protocol.
 	// Thus, we build the old config, see if TLS and SASL are enabled and set the protocol on the secret accordingly.
 	// By this approach, we touch the secret but we don't need to do some on-the-fly config upgrade in the channel
 	// reconciliation code.
@@ -304,7 +304,7 @@ func (m *kafkaChannelMigrator) migrateSecret(ctx context.Context, logger *zap.Su
 		protocol = security.ProtocolSSL
 	}
 
-	logger.Infof("secret does not have `%s` defined. Determined it as `%s` from old config", security.ProtocolKey, protocol)
+	logger.Infof("Secret does not contain `%s`, patching it to contain the `%s=%s` to be explicit for coniguration", security.ProtocolKey, security.ProtocolKey, protocol)
 
 	base64EncodedProtocol := make([]byte, base64.StdEncoding.EncodedLen(len(protocol)))
 	base64.StdEncoding.Encode(base64EncodedProtocol, []byte(protocol))
