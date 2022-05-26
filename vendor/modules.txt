@@ -19,7 +19,7 @@ contrib.go.opencensus.io/exporter/zipkin
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 github.com/PuerkitoBio/urlesc
-# github.com/Shopify/sarama v1.31.1
+# github.com/Shopify/sarama v1.33.0
 ## explicit
 github.com/Shopify/sarama
 # github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20211221011931-643d94fcab96
@@ -181,7 +181,7 @@ github.com/golang/protobuf/ptypes/timestamp
 github.com/golang/protobuf/ptypes/wrappers
 # github.com/golang/snappy v0.0.4
 github.com/golang/snappy
-# github.com/google/go-cmp v0.5.6
+# github.com/google/go-cmp v0.5.7
 ## explicit
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/cmpopts
@@ -221,11 +221,17 @@ github.com/googleapis/gnostic/openapiv2
 github.com/grpc-ecosystem/grpc-gateway/internal
 github.com/grpc-ecosystem/grpc-gateway/runtime
 github.com/grpc-ecosystem/grpc-gateway/utilities
+# github.com/hashicorp/errwrap v1.1.0
+## explicit
+github.com/hashicorp/errwrap
 # github.com/hashicorp/go-cleanhttp v0.5.1
 github.com/hashicorp/go-cleanhttp
+# github.com/hashicorp/go-multierror v1.1.1
+github.com/hashicorp/go-multierror
 # github.com/hashicorp/go-retryablehttp v0.6.7
 github.com/hashicorp/go-retryablehttp
-# github.com/hashicorp/go-uuid v1.0.2
+# github.com/hashicorp/go-uuid v1.0.3
+## explicit
 github.com/hashicorp/go-uuid
 # github.com/hashicorp/golang-lru v0.5.4
 github.com/hashicorp/golang-lru
@@ -282,10 +288,12 @@ github.com/json-iterator/go
 # github.com/kelseyhightower/envconfig v1.4.0
 ## explicit
 github.com/kelseyhightower/envconfig
-# github.com/klauspost/compress v1.14.2
+# github.com/klauspost/compress v1.15.4
+## explicit
 github.com/klauspost/compress
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
+github.com/klauspost/compress/internal/cpuinfo
 github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
@@ -362,10 +370,10 @@ github.com/tsenart/vegeta/v12/lib
 github.com/wavesoftware/go-ensure
 # github.com/xdg-go/pbkdf2 v1.0.0
 github.com/xdg-go/pbkdf2
-# github.com/xdg-go/scram v1.1.0
+# github.com/xdg-go/scram v1.1.1
 ## explicit
 github.com/xdg-go/scram
-# github.com/xdg-go/stringprep v1.0.2
+# github.com/xdg-go/stringprep v1.0.3
 github.com/xdg-go/stringprep
 # go.opencensus.io v0.23.0
 go.opencensus.io
@@ -415,7 +423,8 @@ go.uber.org/zap/internal/exit
 go.uber.org/zap/internal/ztest
 go.uber.org/zap/zapcore
 go.uber.org/zap/zaptest
-# golang.org/x/crypto v0.0.0-20220214200702-86341886e292
+# golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
+## explicit
 golang.org/x/crypto/cast5
 golang.org/x/crypto/md4
 golang.org/x/crypto/openpgp
@@ -429,7 +438,8 @@ golang.org/x/crypto/pbkdf2
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20220225172249-27dd8689420f
+# golang.org/x/net v0.0.0-20220524220425-1d687d428aca
+## explicit
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/http/httpguts

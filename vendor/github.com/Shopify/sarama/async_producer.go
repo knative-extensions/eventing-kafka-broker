@@ -2,7 +2,9 @@ package sarama
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -675,6 +677,7 @@ func (p *asyncProducer) newBrokerProducer(broker *Broker) *brokerProducer {
 	var (
 		input     = make(chan *ProducerMessage)
 		bridge    = make(chan *produceSet)
+		pending   = make(chan *brokerProducerResponse)
 		responses = make(chan *brokerProducerResponse)
 	)
 
@@ -684,7 +687,6 @@ func (p *asyncProducer) newBrokerProducer(broker *Broker) *brokerProducer {
 		input:          input,
 		output:         bridge,
 		responses:      responses,
-		stopchan:       make(chan struct{}),
 		buffer:         newProduceSet(p),
 		currentRetries: make(map[string]map[int32]error),
 	}
@@ -692,17 +694,24 @@ func (p *asyncProducer) newBrokerProducer(broker *Broker) *brokerProducer {
 
 	// minimal bridge to make the network response `select`able
 	go withRecover(func() {
+		// Use a wait group to know if we still have in flight requests
+		var wg sync.WaitGroup
+
 		for set := range bridge {
 			request := set.buildRequest()
 
+			// Count the in flight requests to know when we can close the pending channel safely
+			wg.Add(1)
 			// Capture the current set to forward in the callback
 			sendResponse := func(set *produceSet) ProduceCallback {
 				return func(response *ProduceResponse, err error) {
-					responses <- &brokerProducerResponse{
+					// Forward the response to make sure we do not block the responseReceiver
+					pending <- &brokerProducerResponse{
 						set: set,
 						err: err,
 						res: response,
 					}
+					wg.Done()
 				}
 			}(set)
 
@@ -721,7 +730,42 @@ func (p *asyncProducer) newBrokerProducer(broker *Broker) *brokerProducer {
 				sendResponse(nil, nil)
 			}
 		}
-		close(responses)
+		// Wait for all in flight requests to close the pending channel safely
+		wg.Wait()
+		close(pending)
+	})
+
+	// In order to avoid a deadlock when closing the broker on network or malformed response error
+	// we use an intermediate channel to buffer and send pending responses in order
+	// This is because the AsyncProduce callback inside the bridge is invoked from the broker
+	// responseReceiver goroutine and closing the broker requires such goroutine to be finished
+	go withRecover(func() {
+		buf := queue.New()
+		for {
+			if buf.Length() == 0 {
+				res, ok := <-pending
+				if !ok {
+					// We are done forwarding the last pending response
+					close(responses)
+					return
+				}
+				buf.Add(res)
+			}
+			// Send the head pending response or buffer another one
+			// so that we never block the callback
+			headRes := buf.Peek().(*brokerProducerResponse)
+			select {
+			case res, ok := <-pending:
+				if !ok {
+					continue
+				}
+				buf.Add(res)
+				continue
+			case responses <- headRes:
+				buf.Remove()
+				continue
+			}
+		}
 	})
 
 	if p.conf.Producer.Retry.Max <= 0 {
@@ -747,7 +791,6 @@ type brokerProducer struct {
 	output    chan<- *produceSet
 	responses <-chan *brokerProducerResponse
 	abandoned chan struct{}
-	stopchan  chan struct{}
 
 	buffer     *produceSet
 	timer      <-chan time.Time
@@ -798,6 +841,14 @@ func (bp *brokerProducer) run() {
 				continue
 			}
 
+			if msg.flags&fin == fin {
+				// New broker producer that was caught up by the retry loop
+				bp.parent.retryMessage(msg, ErrShuttingDown)
+				DebugLogger.Printf("producer/broker/%d state change to [dying-%d] on %s/%d\n",
+					bp.broker.ID(), msg.retries, msg.Topic, msg.Partition)
+				continue
+			}
+
 			if bp.buffer.wouldOverflow(msg) {
 				Logger.Printf("producer/broker/%d maximum request accumulated, waiting for space\n", bp.broker.ID())
 				if err := bp.waitForSpace(msg, false); err != nil {
@@ -830,10 +881,6 @@ func (bp *brokerProducer) run() {
 			if ok {
 				bp.handleResponse(response)
 			}
-		case <-bp.stopchan:
-			Logger.Printf(
-				"producer/broker/%d run loop asked to stop\n", bp.broker.ID())
-			return
 		}
 
 		if bp.timerFired || bp.buffer.readyToFlush() {
@@ -854,10 +901,11 @@ func (bp *brokerProducer) shutdown() {
 		}
 	}
 	close(bp.output)
+	// Drain responses from the bridge goroutine
 	for response := range bp.responses {
 		bp.handleResponse(response)
 	}
-	close(bp.stopchan)
+	// No more brokerProducer related goroutine should be running
 	Logger.Printf("producer/broker/%d shut down\n", bp.broker.ID())
 }
 
@@ -1017,15 +1065,16 @@ func (p *asyncProducer) retryBatch(topic string, partition int32, pSet *partitio
 	}
 	bp := p.getBrokerProducer(leader)
 	bp.output <- produceSet
+	p.unrefBrokerProducer(leader, bp)
 }
 
 func (bp *brokerProducer) handleError(sent *produceSet, err error) {
-	switch err.(type) {
-	case PacketEncodingError:
+	var target PacketEncodingError
+	if errors.As(err, &target) {
 		sent.eachPartition(func(topic string, partition int32, pSet *partitionSet) {
 			bp.parent.returnErrors(pSet.msgs, err)
 		})
-	default:
+	} else {
 		Logger.Printf("producer/broker/%d state change to [closing] because %s\n", bp.broker.ID(), err)
 		bp.parent.abandonBrokerConnection(bp.broker)
 		_ = bp.broker.Close()
@@ -1087,13 +1136,30 @@ func (p *asyncProducer) shutdown() {
 	close(p.successes)
 }
 
+func (p *asyncProducer) bumpIdempotentProducerEpoch() {
+	_, epoch := p.txnmgr.getProducerID()
+	if epoch == math.MaxInt16 {
+		Logger.Println("producer/txnmanager epoch exhausted, requesting new producer ID")
+		txnmgr, err := newTransactionManager(p.conf, p.client)
+		if err != nil {
+			Logger.Println(err)
+			return
+		}
+
+		p.txnmgr = txnmgr
+	} else {
+		p.txnmgr.bumpEpoch()
+	}
+}
+
 func (p *asyncProducer) returnError(msg *ProducerMessage, err error) {
 	// We need to reset the producer ID epoch if we set a sequence number on it, because the broker
 	// will never see a message with this number, so we can never continue the sequence.
 	if msg.hasSequence {
 		Logger.Printf("producer/txnmanager rolling over epoch due to publish failure on %s/%d", msg.Topic, msg.Partition)
-		p.txnmgr.bumpEpoch()
+		p.bumpIdempotentProducerEpoch()
 	}
+
 	msg.clear()
 	pErr := &ProducerError{Msg: msg, Err: err}
 	if p.conf.Producer.Return.Errors {
