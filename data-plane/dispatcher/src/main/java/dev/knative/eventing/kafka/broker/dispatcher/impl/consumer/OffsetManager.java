@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -52,6 +51,7 @@ public final class OffsetManager implements RecordDispatcherListener {
   private final Consumer<Integer> onCommit;
   private final long timerId;
   private final Vertx vertx;
+  private final PartitionRevokedHandler partitionRevokedHandler;
 
   /**
    * All args constructor.
@@ -72,31 +72,26 @@ public final class OffsetManager implements RecordDispatcherListener {
     this.timerId = vertx.setPeriodic(commitIntervalMs, l -> commitAll());
     this.vertx = vertx;
 
-    this.consumer.partitionsRevokedHandler(partitions -> {
+    partitionRevokedHandler = partitions -> {
       try {
         // Async commit offsets.
         final var commitFuture = commit(partitions);
         // Remove revoked partitions.
         partitions.forEach(offsetTrackers::remove);
-
-        // Wait for offsets to be actually committed.
-        commitFuture
-          .toCompletionStage()
-          .toCompletableFuture()
-          .get(1, TimeUnit.SECONDS);
-
+        return commitFuture;
       } catch (final Exception ex) {
         logger.warn("Failed to commit revoked partitions offsets {}", keyValue("partitions", partitions), ex);
+        return Future.failedFuture(ex);
       } finally {
         // Remove revoked partitions in any case.
         partitions.forEach(offsetTrackers::remove);
+        logPartitions("revoked", partitions);
       }
-      logPartitions("revoked", partitions);
-    });
+    };
+  }
 
-    this.consumer.partitionsAssignedHandler(partitions ->
-      logPartitions("assigned", partitions)
-    );
+  public PartitionRevokedHandler getPartitionRevokedHandler() {
+    return partitionRevokedHandler;
   }
 
   /**
