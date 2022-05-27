@@ -215,7 +215,6 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
          consumerVerticle.getPartitionsRevokedHandler(),
          offsetManager.getPartitionRevokedHandler()
        );
-
        consumer.partitionsRevokedHandler(handlePartitionsRevoked(egress.getConsumerGroup(), partitionRevokedHandlers));
 
        // Set all the built objects in the consumer verticle
