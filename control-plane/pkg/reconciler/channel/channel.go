@@ -147,8 +147,13 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		)
 	}
 
+	authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
+	if err != nil {
+		return statusConditionManager.FailedToResolveConfig(fmt.Errorf("failed to resolve auth context: %w", err))
+	}
+
 	// get security option for Sarama with secret info in it
-	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(secret)
+	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
 
 	if err := r.TrackSecret(secret, channel); err != nil {
 		return fmt.Errorf("failed to track secret: %w", err)
@@ -204,7 +209,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
 	// Get resource configuration
-	channelResource, err := r.getChannelContractResource(ctx, topic, channel, secret, topicConfig)
+	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -402,8 +407,13 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 		)
 	}
 
+	authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
+	if err != nil {
+		return fmt.Errorf("failed to resolve auth context: %w", err)
+	}
+
 	// get security option for Sarama with secret info in it
-	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(secret)
+	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
 
 	saramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
@@ -565,7 +575,7 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, cm *corev1.ConfigMap, chann
 	}, nil
 }
 
-func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
+func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, auth *security.NetSpecAuthContext, config *kafka.TopicConfig) (*contract.Resource, error) {
 	resource := &contract.Resource{
 		Uid:    string(channel.UID),
 		Topics: []string{topic},
@@ -580,14 +590,9 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		},
 	}
 
-	if secret != nil {
-		resource.Auth = &contract.Resource_AuthSecret{
-			AuthSecret: &contract.Reference{
-				Uuid:      string(secret.UID),
-				Namespace: secret.Namespace,
-				Name:      secret.Name,
-				Version:   secret.ResourceVersion,
-			},
+	if auth != nil && auth.MultiSecretReference != nil {
+		resource.Auth = &contract.Resource_MultiAuthSecret{
+			MultiAuthSecret: auth.MultiSecretReference,
 		}
 	}
 
