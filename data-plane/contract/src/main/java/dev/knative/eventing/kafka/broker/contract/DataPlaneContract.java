@@ -10508,6 +10508,33 @@ public final class DataPlaneContract {
      */
     int getVReplicas();
 
+    /**
+     * <pre>
+     * Egress feature flags.
+     * </pre>
+     *
+     * <code>.EgressFeatureFlags featureFlags = 14;</code>
+     * @return Whether the featureFlags field is set.
+     */
+    boolean hasFeatureFlags();
+    /**
+     * <pre>
+     * Egress feature flags.
+     * </pre>
+     *
+     * <code>.EgressFeatureFlags featureFlags = 14;</code>
+     * @return The featureFlags.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags getFeatureFlags();
+    /**
+     * <pre>
+     * Egress feature flags.
+     * </pre>
+     *
+     * <code>.EgressFeatureFlags featureFlags = 14;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlagsOrBuilder getFeatureFlagsOrBuilder();
+
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.ReplyStrategyCase getReplyStrategyCase();
   }
   /**
@@ -10677,6 +10704,19 @@ public final class DataPlaneContract {
             case 104: {
 
               vReplicas_ = input.readInt32();
+              break;
+            }
+            case 114: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.Builder subBuilder = null;
+              if (featureFlags_ != null) {
+                subBuilder = featureFlags_.toBuilder();
+              }
+              featureFlags_ = input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(featureFlags_);
+                featureFlags_ = subBuilder.buildPartial();
+              }
+
               break;
             }
             default: {
@@ -11304,6 +11344,44 @@ public final class DataPlaneContract {
       return vReplicas_;
     }
 
+    public static final int FEATUREFLAGS_FIELD_NUMBER = 14;
+    private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags featureFlags_;
+    /**
+     * <pre>
+     * Egress feature flags.
+     * </pre>
+     *
+     * <code>.EgressFeatureFlags featureFlags = 14;</code>
+     * @return Whether the featureFlags field is set.
+     */
+    @java.lang.Override
+    public boolean hasFeatureFlags() {
+      return featureFlags_ != null;
+    }
+    /**
+     * <pre>
+     * Egress feature flags.
+     * </pre>
+     *
+     * <code>.EgressFeatureFlags featureFlags = 14;</code>
+     * @return The featureFlags.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags getFeatureFlags() {
+      return featureFlags_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.getDefaultInstance() : featureFlags_;
+    }
+    /**
+     * <pre>
+     * Egress feature flags.
+     * </pre>
+     *
+     * <code>.EgressFeatureFlags featureFlags = 14;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlagsOrBuilder getFeatureFlagsOrBuilder() {
+      return getFeatureFlags();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -11356,6 +11434,9 @@ public final class DataPlaneContract {
       }
       if (vReplicas_ != 0) {
         output.writeInt32(13, vReplicas_);
+      }
+      if (featureFlags_ != null) {
+        output.writeMessage(14, getFeatureFlags());
       }
       unknownFields.writeTo(output);
     }
@@ -11414,6 +11495,10 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(13, vReplicas_);
       }
+      if (featureFlags_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(14, getFeatureFlags());
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -11456,6 +11541,11 @@ public final class DataPlaneContract {
           .equals(other.getDialectedFilterList())) return false;
       if (getVReplicas()
           != other.getVReplicas()) return false;
+      if (hasFeatureFlags() != other.hasFeatureFlags()) return false;
+      if (hasFeatureFlags()) {
+        if (!getFeatureFlags()
+            .equals(other.getFeatureFlags())) return false;
+      }
       if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
       switch (replyStrategyCase_) {
         case 3:
@@ -11512,6 +11602,10 @@ public final class DataPlaneContract {
       }
       hash = (37 * hash) + VREPLICAS_FIELD_NUMBER;
       hash = (53 * hash) + getVReplicas();
+      if (hasFeatureFlags()) {
+        hash = (37 * hash) + FEATUREFLAGS_FIELD_NUMBER;
+        hash = (53 * hash) + getFeatureFlags().hashCode();
+      }
       switch (replyStrategyCase_) {
         case 3:
           hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
@@ -11698,6 +11792,12 @@ public final class DataPlaneContract {
         }
         vReplicas_ = 0;
 
+        if (featureFlagsBuilder_ == null) {
+          featureFlags_ = null;
+        } else {
+          featureFlags_ = null;
+          featureFlagsBuilder_ = null;
+        }
         replyStrategyCase_ = 0;
         replyStrategy_ = null;
         return this;
@@ -11774,6 +11874,11 @@ public final class DataPlaneContract {
           result.dialectedFilter_ = dialectedFilterBuilder_.build();
         }
         result.vReplicas_ = vReplicas_;
+        if (featureFlagsBuilder_ == null) {
+          result.featureFlags_ = featureFlags_;
+        } else {
+          result.featureFlags_ = featureFlagsBuilder_.build();
+        }
         result.replyStrategyCase_ = replyStrategyCase_;
         onBuilt();
         return result;
@@ -11878,6 +11983,9 @@ public final class DataPlaneContract {
         }
         if (other.getVReplicas() != 0) {
           setVReplicas(other.getVReplicas());
+        }
+        if (other.hasFeatureFlags()) {
+          mergeFeatureFlags(other.getFeatureFlags());
         }
         switch (other.getReplyStrategyCase()) {
           case REPLYURL: {
@@ -13719,6 +13827,161 @@ public final class DataPlaneContract {
         onChanged();
         return this;
       }
+
+      private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags featureFlags_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlagsOrBuilder> featureFlagsBuilder_;
+      /**
+       * <pre>
+       * Egress feature flags.
+       * </pre>
+       *
+       * <code>.EgressFeatureFlags featureFlags = 14;</code>
+       * @return Whether the featureFlags field is set.
+       */
+      public boolean hasFeatureFlags() {
+        return featureFlagsBuilder_ != null || featureFlags_ != null;
+      }
+      /**
+       * <pre>
+       * Egress feature flags.
+       * </pre>
+       *
+       * <code>.EgressFeatureFlags featureFlags = 14;</code>
+       * @return The featureFlags.
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags getFeatureFlags() {
+        if (featureFlagsBuilder_ == null) {
+          return featureFlags_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.getDefaultInstance() : featureFlags_;
+        } else {
+          return featureFlagsBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Egress feature flags.
+       * </pre>
+       *
+       * <code>.EgressFeatureFlags featureFlags = 14;</code>
+       */
+      public Builder setFeatureFlags(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags value) {
+        if (featureFlagsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          featureFlags_ = value;
+          onChanged();
+        } else {
+          featureFlagsBuilder_.setMessage(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Egress feature flags.
+       * </pre>
+       *
+       * <code>.EgressFeatureFlags featureFlags = 14;</code>
+       */
+      public Builder setFeatureFlags(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.Builder builderForValue) {
+        if (featureFlagsBuilder_ == null) {
+          featureFlags_ = builderForValue.build();
+          onChanged();
+        } else {
+          featureFlagsBuilder_.setMessage(builderForValue.build());
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Egress feature flags.
+       * </pre>
+       *
+       * <code>.EgressFeatureFlags featureFlags = 14;</code>
+       */
+      public Builder mergeFeatureFlags(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags value) {
+        if (featureFlagsBuilder_ == null) {
+          if (featureFlags_ != null) {
+            featureFlags_ =
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.newBuilder(featureFlags_).mergeFrom(value).buildPartial();
+          } else {
+            featureFlags_ = value;
+          }
+          onChanged();
+        } else {
+          featureFlagsBuilder_.mergeFrom(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Egress feature flags.
+       * </pre>
+       *
+       * <code>.EgressFeatureFlags featureFlags = 14;</code>
+       */
+      public Builder clearFeatureFlags() {
+        if (featureFlagsBuilder_ == null) {
+          featureFlags_ = null;
+          onChanged();
+        } else {
+          featureFlags_ = null;
+          featureFlagsBuilder_ = null;
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * Egress feature flags.
+       * </pre>
+       *
+       * <code>.EgressFeatureFlags featureFlags = 14;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.Builder getFeatureFlagsBuilder() {
+        
+        onChanged();
+        return getFeatureFlagsFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Egress feature flags.
+       * </pre>
+       *
+       * <code>.EgressFeatureFlags featureFlags = 14;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlagsOrBuilder getFeatureFlagsOrBuilder() {
+        if (featureFlagsBuilder_ != null) {
+          return featureFlagsBuilder_.getMessageOrBuilder();
+        } else {
+          return featureFlags_ == null ?
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.getDefaultInstance() : featureFlags_;
+        }
+      }
+      /**
+       * <pre>
+       * Egress feature flags.
+       * </pre>
+       *
+       * <code>.EgressFeatureFlags featureFlags = 14;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlagsOrBuilder> 
+          getFeatureFlagsFieldBuilder() {
+        if (featureFlagsBuilder_ == null) {
+          featureFlagsBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlagsOrBuilder>(
+                  getFeatureFlags(),
+                  getParentForChildren(),
+                  isClean());
+          featureFlags_ = null;
+        }
+        return featureFlagsBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -13767,6 +14030,515 @@ public final class DataPlaneContract {
 
     @java.lang.Override
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface EgressFeatureFlagsOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:EgressFeatureFlags)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * Enable rateLimiter
+     * </pre>
+     *
+     * <code>bool enableRateLimiter = 1;</code>
+     * @return The enableRateLimiter.
+     */
+    boolean getEnableRateLimiter();
+  }
+  /**
+   * Protobuf type {@code EgressFeatureFlags}
+   */
+  public static final class EgressFeatureFlags extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:EgressFeatureFlags)
+      EgressFeatureFlagsOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use EgressFeatureFlags.newBuilder() to construct.
+    private EgressFeatureFlags(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private EgressFeatureFlags() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new EgressFeatureFlags();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private EgressFeatureFlags(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8: {
+
+              enableRateLimiter_ = input.readBool();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_EgressFeatureFlags_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_EgressFeatureFlags_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.Builder.class);
+    }
+
+    public static final int ENABLERATELIMITER_FIELD_NUMBER = 1;
+    private boolean enableRateLimiter_;
+    /**
+     * <pre>
+     * Enable rateLimiter
+     * </pre>
+     *
+     * <code>bool enableRateLimiter = 1;</code>
+     * @return The enableRateLimiter.
+     */
+    @java.lang.Override
+    public boolean getEnableRateLimiter() {
+      return enableRateLimiter_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (enableRateLimiter_ != false) {
+        output.writeBool(1, enableRateLimiter_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (enableRateLimiter_ != false) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(1, enableRateLimiter_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags) obj;
+
+      if (getEnableRateLimiter()
+          != other.getEnableRateLimiter()) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + ENABLERATELIMITER_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+          getEnableRateLimiter());
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code EgressFeatureFlags}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:EgressFeatureFlags)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlagsOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_EgressFeatureFlags_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_EgressFeatureFlags_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        enableRateLimiter_ = false;
+
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_EgressFeatureFlags_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags(this);
+        result.enableRateLimiter_ = enableRateLimiter_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.getDefaultInstance()) return this;
+        if (other.getEnableRateLimiter() != false) {
+          setEnableRateLimiter(other.getEnableRateLimiter());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private boolean enableRateLimiter_ ;
+      /**
+       * <pre>
+       * Enable rateLimiter
+       * </pre>
+       *
+       * <code>bool enableRateLimiter = 1;</code>
+       * @return The enableRateLimiter.
+       */
+      @java.lang.Override
+      public boolean getEnableRateLimiter() {
+        return enableRateLimiter_;
+      }
+      /**
+       * <pre>
+       * Enable rateLimiter
+       * </pre>
+       *
+       * <code>bool enableRateLimiter = 1;</code>
+       * @param value The enableRateLimiter to set.
+       * @return This builder for chaining.
+       */
+      public Builder setEnableRateLimiter(boolean value) {
+        
+        enableRateLimiter_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Enable rateLimiter
+       * </pre>
+       *
+       * <code>bool enableRateLimiter = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearEnableRateLimiter() {
+        
+        enableRateLimiter_ = false;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:EgressFeatureFlags)
+    }
+
+    // @@protoc_insertion_point(class_scope:EgressFeatureFlags)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<EgressFeatureFlags>
+        PARSER = new com.google.protobuf.AbstractParser<EgressFeatureFlags>() {
+      @java.lang.Override
+      public EgressFeatureFlags parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new EgressFeatureFlags(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<EgressFeatureFlags> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<EgressFeatureFlags> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -24598,6 +25370,11 @@ public final class DataPlaneContract {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Egress_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_EgressFeatureFlags_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_EgressFeatureFlags_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Ingress_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -24674,7 +25451,7 @@ public final class DataPlaneContract {
       "\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\r\n\005re" +
       "try\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.Backo" +
       "ffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\022\017\n\007timeou" +
-      "t\030\005 \001(\004\"\213\003\n\006Egress\022\025\n\rconsumerGroup\030\001 \001(" +
+      "t\030\005 \001(\004\"\266\003\n\006Egress\022\025\n\rconsumerGroup\030\001 \001(" +
       "\t\022\023\n\013destination\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\t" +
       "H\000\022&\n\024replyToOriginalTopic\030\004 \001(\0132\006.Empty" +
       "H\000\022\036\n\014discardReply\030\t \001(\0132\006.EmptyH\000\022\027\n\006fi" +
@@ -24683,43 +25460,46 @@ public final class DataPlaneContract {
       "yOrder\030\010 \001(\0162\016.DeliveryOrder\022\031\n\007keyType\030" +
       "\n \001(\0162\010.KeyType\022\035\n\treference\030\013 \001(\0132\n.Ref" +
       "erence\022)\n\017dialectedFilter\030\014 \003(\0132\020.Dialec" +
-      "tedFilter\022\021\n\tvReplicas\030\r \001(\005B\017\n\rreplyStr" +
-      "ategy\"H\n\007Ingress\022!\n\013contentMode\030\001 \001(\0162\014." +
-      "ContentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004host\030\003 \001(\t\"" +
-      "K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030" +
-      "\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"`\n\017" +
-      "SecretReference\022\035\n\treference\030\001 \001(\0132\n.Ref" +
-      "erence\022.\n\022keyFieldReferences\030\002 \003(\0132\022.Key" +
-      "FieldReference\"C\n\021KeyFieldReference\022\021\n\ts" +
-      "ecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.SecretFi" +
-      "eld\"Y\n\024MultiSecretReference\022\033\n\010protocol\030" +
-      "\001 \001(\0162\t.Protocol\022$\n\nreferences\030\002 \003(\0132\020.S" +
-      "ecretReference\"\202\001\n\023CloudEventOverrides\0228" +
-      "\n\nextensions\030\001 \003(\0132$.CloudEventOverrides" +
-      ".ExtensionsEntry\0321\n\017ExtensionsEntry\022\013\n\003k" +
-      "ey\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010Resource" +
-      "\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstr" +
-      "apServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingre" +
-      "ss\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig\022" +
-      "\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAuth" +
-      "\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n.R" +
-      "eferenceH\000\0220\n\017multiAuthSecret\030\t \001(\0132\025.Mu" +
-      "ltiSecretReferenceH\000\0221\n\023cloudEventOverri" +
-      "des\030\n \001(\0132\024.CloudEventOverrides\022\035\n\trefer" +
-      "ence\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"<\n\010Contra" +
-      "ct\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 \003(" +
-      "\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Exponen" +
-      "tial\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r\n\tU" +
-      "NORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006St" +
-      "ring\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tByteA" +
-      "rray\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTR" +
-      "UCTURED\020\001*a\n\013SecretField\022\022\n\016SASL_MECHANI" +
-      "SM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_K" +
-      "EY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol" +
-      "\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003S" +
-      "SL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.eventi" +
-      "ng.kafka.broker.contractB\021DataPlaneContr" +
-      "actZ\032control-plane/pkg/contractb\006proto3"
+      "tedFilter\022\021\n\tvReplicas\030\r \001(\005\022)\n\014featureF" +
+      "lags\030\016 \001(\0132\023.EgressFeatureFlagsB\017\n\rreply" +
+      "Strategy\"/\n\022EgressFeatureFlags\022\031\n\021enable" +
+      "RateLimiter\030\001 \001(\010\"H\n\007Ingress\022!\n\013contentM" +
+      "ode\030\001 \001(\0162\014.ContentMode\022\014\n\004path\030\002 \001(\t\022\014\n" +
+      "\004host\030\003 \001(\t\"K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021" +
+      "\n\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007versi" +
+      "on\030\004 \001(\t\"`\n\017SecretReference\022\035\n\treference" +
+      "\030\001 \001(\0132\n.Reference\022.\n\022keyFieldReferences" +
+      "\030\002 \003(\0132\022.KeyFieldReference\"C\n\021KeyFieldRe" +
+      "ference\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(" +
+      "\0162\014.SecretField\"Y\n\024MultiSecretReference\022" +
+      "\033\n\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nreferenc" +
+      "es\030\002 \003(\0132\020.SecretReference\"\202\001\n\023CloudEven" +
+      "tOverrides\0228\n\nextensions\030\001 \003(\0132$.CloudEv" +
+      "entOverrides.ExtensionsEntry\0321\n\017Extensio" +
+      "nsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"" +
+      "\350\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(" +
+      "\t\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004" +
+      " \001(\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.E" +
+      "gressConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034" +
+      "\n\nabsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecr" +
+      "et\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAuthSecre" +
+      "t\030\t \001(\0132\025.MultiSecretReferenceH\000\0221\n\023clou" +
+      "dEventOverrides\030\n \001(\0132\024.CloudEventOverri" +
+      "des\022\035\n\treference\030\013 \001(\0132\n.ReferenceB\006\n\004Au" +
+      "th\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tre" +
+      "sources\030\002 \003(\0132\t.Resource*,\n\rBackoffPolic" +
+      "y\022\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n\rDelive" +
+      "ryOrder\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007K" +
+      "eyType\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Doubl" +
+      "e\020\002\022\r\n\tByteArray\020\003*)\n\013ContentMode\022\n\n\006BIN" +
+      "ARY\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013SecretField\022\022\n\016" +
+      "SASL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT" +
+      "\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005" +
+      "*D\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAI" +
+      "NTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.kn" +
+      "ative.eventing.kafka.broker.contractB\021Da" +
+      "taPlaneContractZ\032control-plane/pkg/contr" +
+      "actb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -24820,39 +25600,45 @@ public final class DataPlaneContract {
     internal_static_Egress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Egress_descriptor,
-        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "KeyType", "Reference", "DialectedFilter", "VReplicas", "ReplyStrategy", });
-    internal_static_Ingress_descriptor =
+        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "KeyType", "Reference", "DialectedFilter", "VReplicas", "FeatureFlags", "ReplyStrategy", });
+    internal_static_EgressFeatureFlags_descriptor =
       getDescriptor().getMessageTypes().get(12);
+    internal_static_EgressFeatureFlags_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_EgressFeatureFlags_descriptor,
+        new java.lang.String[] { "EnableRateLimiter", });
+    internal_static_Ingress_descriptor =
+      getDescriptor().getMessageTypes().get(13);
     internal_static_Ingress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Ingress_descriptor,
         new java.lang.String[] { "ContentMode", "Path", "Host", });
     internal_static_Reference_descriptor =
-      getDescriptor().getMessageTypes().get(13);
+      getDescriptor().getMessageTypes().get(14);
     internal_static_Reference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Reference_descriptor,
         new java.lang.String[] { "Uuid", "Namespace", "Name", "Version", });
     internal_static_SecretReference_descriptor =
-      getDescriptor().getMessageTypes().get(14);
+      getDescriptor().getMessageTypes().get(15);
     internal_static_SecretReference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_SecretReference_descriptor,
         new java.lang.String[] { "Reference", "KeyFieldReferences", });
     internal_static_KeyFieldReference_descriptor =
-      getDescriptor().getMessageTypes().get(15);
+      getDescriptor().getMessageTypes().get(16);
     internal_static_KeyFieldReference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_KeyFieldReference_descriptor,
         new java.lang.String[] { "SecretKey", "Field", });
     internal_static_MultiSecretReference_descriptor =
-      getDescriptor().getMessageTypes().get(16);
+      getDescriptor().getMessageTypes().get(17);
     internal_static_MultiSecretReference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_MultiSecretReference_descriptor,
         new java.lang.String[] { "Protocol", "References", });
     internal_static_CloudEventOverrides_descriptor =
-      getDescriptor().getMessageTypes().get(17);
+      getDescriptor().getMessageTypes().get(18);
     internal_static_CloudEventOverrides_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_CloudEventOverrides_descriptor,
@@ -24864,13 +25650,13 @@ public final class DataPlaneContract {
         internal_static_CloudEventOverrides_ExtensionsEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
     internal_static_Resource_descriptor =
-      getDescriptor().getMessageTypes().get(18);
+      getDescriptor().getMessageTypes().get(19);
     internal_static_Resource_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Resource_descriptor,
         new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", "AbsentAuth", "AuthSecret", "MultiAuthSecret", "CloudEventOverrides", "Reference", "Auth", });
     internal_static_Contract_descriptor =
-      getDescriptor().getMessageTypes().get(19);
+      getDescriptor().getMessageTypes().get(20);
     internal_static_Contract_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Contract_descriptor,

@@ -151,6 +151,14 @@ message Egress {
 
   // Number of virtual replicas.
   int32 vReplicas = 13;
+
+  // Egress feature flags.
+  EgressFeatureFlags featureFlags = 14;
+}
+
+message EgressFeatureFlags {
+  // Enable rateLimiter
+  bool enableRateLimiter = 1;
 }
 
 // CloudEvent content mode

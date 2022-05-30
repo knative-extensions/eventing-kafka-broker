@@ -27,6 +27,7 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/resolver"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	creconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumer"
@@ -40,22 +41,30 @@ type ControllerConfig struct {
 
 func NewController(ctx context.Context) *controller.Impl {
 
-	config := &ControllerConfig{}
-	if err := envconfig.Process("CONSUMER", config); err != nil {
+	controllerConfig := &ControllerConfig{}
+	if err := envconfig.Process("CONSUMER", controllerConfig); err != nil {
 		panic(fmt.Errorf("failed to process env variables for consumer controller, prefix CONSUMER: %v", err))
 	}
 
 	consumerInformer := consumer.Get(ctx)
 
 	r := &Reconciler{
-		SerDe:               formatSerDeFromString(config.DataPlaneConfigFormat),
+		SerDe:               formatSerDeFromString(controllerConfig.DataPlaneConfigFormat),
 		ConsumerGroupLister: consumergroup.Get(ctx).Lister(),
 		SecretLister:        secretinformer.Get(ctx).Lister(),
 		PodLister:           podinformer.Get(ctx).Lister(),
 		KubeClient:          kubeclient.Get(ctx),
+		KafkaFeatureFlags:   config.DefaultFeaturesConfig(),
 	}
 
-	impl := creconciler.NewImpl(ctx, r)
+	impl := creconciler.NewImpl(ctx, r, func(impl *controller.Impl) controller.Options {
+		return controller.Options{
+			ConfigStore: config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
+				r.KafkaFeatureFlags.Reset(value)
+				impl.GlobalResync(consumerInformer.Informer())
+			}),
+		}
+	})
 
 	r.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
