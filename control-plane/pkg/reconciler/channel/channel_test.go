@@ -1062,7 +1062,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
-			Name: "Reconciled normal - with single fresh subscriber - with auth - PlainText",
+			Name: "Reconciled normal - with single fresh subscriber - with auth - SSL",
 			Objects: []runtime.Object{
 				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
 				NewService(),
@@ -1081,7 +1081,7 @@ func TestReconcileKind(t *testing.T) {
 					security.AuthSecretNamespaceKey:    "ns-1",
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
-				NewSSLSecret("ns-1", "secret-1"),
+				NewLegacySSLSecret("ns-1", "secret-1"),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -1093,12 +1093,213 @@ func TestReconcileKind(t *testing.T) {
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
-							Auth: &contract.Resource_AuthSecret{
-								AuthSecret: &contract.Reference{
-									Uuid:      SecretUUID,
-									Namespace: "ns-1",
-									Name:      "secret-1",
-									Version:   SecretResourceVersion,
+							Auth: &contract.Resource_MultiAuthSecret{
+								MultiAuthSecret: &contract.MultiSecretReference{
+									Protocol: contract.Protocol_SSL,
+									References: []*contract.SecretReference{{
+										Reference: &contract.Reference{
+											Uuid:      SecretUUID,
+											Namespace: "ns-1",
+											Name:      "secret-1",
+											Version:   SecretResourceVersion,
+										},
+										KeyFieldReferences: []*contract.KeyFieldReference{
+											{SecretKey: "user.key", Field: contract.SecretField_USER_KEY},
+											{SecretKey: "user.crt", Field: contract.SecretField_USER_CRT},
+											{SecretKey: "ca.crt", Field: contract.SecretField_CA_CRT},
+										},
+									}},
+								},
+							},
+							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
+							},
+							Egresses: []*contract.Egress{{
+								ConsumerGroup: "kafka." + ChannelNamespace + "." + ChannelName + "." + Subscription1UUID,
+								Destination:   "http://" + Subscription1URI,
+								Uid:           Subscription1UUID,
+								DeliveryOrder: contract.DeliveryOrder_ORDERED,
+								ReplyStrategy: &contract.Egress_ReplyUrl{ReplyUrl: "http://" + Subscription1ReplyURI},
+							}},
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(ChannelTopic()),
+						StatusDataPlaneAvailable,
+						ChannelAddressable(&env),
+						WithSubscribers(Subscriber1()),
+						StatusProbeSucceeded,
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		},
+		{
+			Name: "Reconciled normal - with single fresh subscriber - with auth - SASL SSL",
+			Objects: []runtime.Object{
+				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
+				NewService(),
+				NewPerChannelService(DefaultEnv),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+					security.AuthSecretNameKey:         "secret-1",
+					security.AuthSecretNamespaceKey:    "ns-1",
+				}),
+				NewConfigMapWithBinaryData(&env, nil),
+				NewLegacySASLSSLSecret("ns-1", "secret-1"),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Auth: &contract.Resource_MultiAuthSecret{
+								MultiAuthSecret: &contract.MultiSecretReference{
+									Protocol: contract.Protocol_SASL_SSL,
+									References: []*contract.SecretReference{{
+										Reference: &contract.Reference{
+											Uuid:      SecretUUID,
+											Namespace: "ns-1",
+											Name:      "secret-1",
+											Version:   SecretResourceVersion,
+										},
+										KeyFieldReferences: []*contract.KeyFieldReference{
+											{SecretKey: "user.key", Field: contract.SecretField_USER_KEY},
+											{SecretKey: "user.crt", Field: contract.SecretField_USER_CRT},
+											{SecretKey: "ca.crt", Field: contract.SecretField_CA_CRT},
+											{SecretKey: "password", Field: contract.SecretField_PASSWORD},
+											{SecretKey: "username", Field: contract.SecretField_USER},
+											{SecretKey: "saslType", Field: contract.SecretField_SASL_MECHANISM},
+										},
+									}},
+								},
+							},
+							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
+							},
+							Egresses: []*contract.Egress{{
+								ConsumerGroup: "kafka." + ChannelNamespace + "." + ChannelName + "." + Subscription1UUID,
+								Destination:   "http://" + Subscription1URI,
+								Uid:           Subscription1UUID,
+								DeliveryOrder: contract.DeliveryOrder_ORDERED,
+								ReplyStrategy: &contract.Egress_ReplyUrl{ReplyUrl: "http://" + Subscription1ReplyURI},
+							}},
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(ChannelTopic()),
+						StatusDataPlaneAvailable,
+						ChannelAddressable(&env),
+						WithSubscribers(Subscriber1()),
+						StatusProbeSucceeded,
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		},
+		{
+			Name: "Reconciled normal - with single fresh subscriber - with auth - SASL",
+			Objects: []runtime.Object{
+				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
+				NewService(),
+				NewPerChannelService(DefaultEnv),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+					security.AuthSecretNameKey:         "secret-1",
+					security.AuthSecretNamespaceKey:    "ns-1",
+				}),
+				NewConfigMapWithBinaryData(&env, nil),
+				NewLegacySASLSecret("ns-1", "secret-1"),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Auth: &contract.Resource_MultiAuthSecret{
+								MultiAuthSecret: &contract.MultiSecretReference{
+									Protocol: contract.Protocol_SASL_PLAINTEXT,
+									References: []*contract.SecretReference{{
+										Reference: &contract.Reference{
+											Uuid:      SecretUUID,
+											Namespace: "ns-1",
+											Name:      "secret-1",
+											Version:   SecretResourceVersion,
+										},
+										KeyFieldReferences: []*contract.KeyFieldReference{
+											{SecretKey: "password", Field: contract.SecretField_PASSWORD},
+											{SecretKey: "username", Field: contract.SecretField_USER},
+											{SecretKey: "saslType", Field: contract.SecretField_SASL_MECHANISM},
+										},
+									}},
 								},
 							},
 							Ingress: &contract.Ingress{
