@@ -44,9 +44,10 @@ import (
 )
 
 const (
-	BrokerUUID      = "e7185016-5d98-4b54-84e8-3b1cd4acc6b4"
-	BrokerNamespace = "test-namespace"
-	BrokerName      = "test-broker"
+	BrokerUUID        = "e7185016-5d98-4b54-84e8-3b1cd4acc6b4"
+	BrokerNamespace   = "test-namespace"
+	BrokerName        = "test-broker"
+	ExternalTopicName = "test-topic"
 
 	TriggerName      = "test-trigger"
 	TriggerNamespace = "test-namespace"
@@ -135,6 +136,17 @@ func WithBrokerConfig(reference *duckv1.KReference) func(*eventing.Broker) {
 	}
 }
 
+func WithExternalTopic(topic string) func(*eventing.Broker) {
+	return func(broker *eventing.Broker) {
+		annotations := broker.GetAnnotations()
+		if annotations == nil {
+			annotations = make(map[string]string, 1)
+		}
+		annotations[ExternalTopicAnnotation] = topic
+		broker.SetAnnotations(annotations)
+	}
+}
+
 type CMOption func(cm *corev1.ConfigMap)
 
 func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int, options ...CMOption) *corev1.ConfigMap {
@@ -204,6 +216,12 @@ func StatusBrokerTopicReady(broker *eventing.Broker) {
 	StatusTopicReadyWithName(kafka.BrokerTopic(TopicPrefix, broker))(broker)
 }
 
+func StatusExternalBrokerTopicReady(topic string) func(broker *eventing.Broker) {
+	return func(broker *eventing.Broker) {
+		StatusTopicReadyWithName(topic)(broker)
+	}
+}
+
 func StatusBrokerDataPlaneAvailable(broker *eventing.Broker) {
 	StatusDataPlaneAvailable(broker)
 }
@@ -259,9 +277,13 @@ func BrokerDLSResolved(uri string) func(broker *eventing.Broker) {
 }
 
 func StatusBrokerFailedToCreateTopic(broker *eventing.Broker) {
-
 	StatusFailedToCreateTopic(BrokerTopic())(broker)
+}
 
+func StatusExternalBrokerTopicNotPresentOrInvalid(topicname string) func(broker *eventing.Broker) {
+	return func(broker *eventing.Broker) {
+		StatusTopicNotPresentOrInvalid(topicname)(broker)
+	}
 }
 
 func BrokerDispatcherPod(namespace string, annotations map[string]string) runtime.Object {
