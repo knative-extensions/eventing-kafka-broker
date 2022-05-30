@@ -190,6 +190,64 @@ func NewSSLSecret(ns, name string) *corev1.Secret {
 	}
 }
 
+func NewLegacySSLSecret(ns, name string) *corev1.Secret {
+
+	ca, userKey, userCert := loadCerts()
+
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:       ns,
+			Name:            name,
+			ResourceVersion: SecretResourceVersion,
+			UID:             SecretUUID,
+		},
+		Data: map[string][]byte{
+			security.CaCertificateKey: ca,
+			security.UserKey:          userKey,
+			security.UserCertificate:  userCert,
+		},
+	}
+}
+
+func NewLegacySASLSSLSecret(ns, name string) *corev1.Secret {
+
+	ca, userKey, userCert := loadCerts()
+
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:       ns,
+			Name:            name,
+			ResourceVersion: SecretResourceVersion,
+			UID:             SecretUUID,
+		},
+		Data: map[string][]byte{
+			security.CaCertificateKey: ca,
+			security.UserKey:          userKey,
+			security.UserCertificate:  userCert,
+			"username":                []byte("user"),
+			security.SaslPasswordKey:  []byte("password"),
+			"saslType":                []byte("PLAIN"),
+		},
+	}
+}
+
+func NewLegacySASLSecret(ns, name string) *corev1.Secret {
+
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:       ns,
+			Name:            name,
+			ResourceVersion: SecretResourceVersion,
+			UID:             SecretUUID,
+		},
+		Data: map[string][]byte{
+			"username":               []byte("user"),
+			security.SaslPasswordKey: []byte("password"),
+			"saslType":               []byte("PLAIN"),
+		},
+	}
+}
+
 func NewSASLSSLSecret(ns, name string) *corev1.Secret {
 
 	ca, userKey, userCert := loadCerts()
