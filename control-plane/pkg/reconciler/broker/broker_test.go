@@ -65,6 +65,7 @@ const (
 	wantErrorOnDeleteTopic = "wantErrorOnDeleteTopic"
 	ExpectedTopicDetail    = "expectedTopicDetail"
 	testProber             = "testProber"
+	externalTopic          = "externalTopic"
 )
 
 const (
@@ -172,6 +173,112 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerConfigMapAnnotations(),
 					),
 				},
+			},
+		}, {
+			Name: "Reconciled normal - with external topic",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithExternalTopic(ExternalTopicName),
+				),
+				BrokerConfig(bootstrapServers, 20, 5),
+				NewConfigMapWithBinaryData(&env, nil),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{ExternalTopicName},
+							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        BrokerReference(),
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithExternalTopic(ExternalTopicName),
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerConfigMapUpdatedReady(&env),
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerConfigParsed,
+						StatusExternalBrokerTopicReady(ExternalTopicName),
+						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
+						BrokerConfigMapAnnotations(),
+					),
+				},
+			},
+
+			OtherTestData: map[string]interface{}{
+				externalTopic: ExternalTopicName,
+			},
+		},
+		{
+			Name: "external topic not present or invalid",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithExternalTopic("my-not-present-topic"),
+				),
+				BrokerConfig(bootstrapServers, 20, 5),
+				BrokerReceiverPod(env.SystemNamespace, nil),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+			},
+			Key:     testKey,
+			WantErr: true,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					"topics %v not present or invalid: invalid topic %s",
+					[]string{"my-not-present-topic"}, "my-not-present-topic",
+				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithExternalTopic("my-not-present-topic"),
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerConfigParsed,
+						StatusExternalBrokerTopicNotPresentOrInvalid("my-not-present-topic"),
+						BrokerConfigMapAnnotations(),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				externalTopic: "my-not-present-topic",
 			},
 		},
 		{
@@ -2085,6 +2192,18 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			expectedTopicDetail = td.(sarama.TopicDetail)
 		}
 
+		expectedTopicName := fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName)
+		if t, ok := row.OtherTestData[externalTopic]; ok {
+			expectedTopicName = t.(string)
+		}
+
+		var metadata []*sarama.TopicMetadata
+		metadata = append(metadata, &sarama.TopicMetadata{
+			Name:       ExternalTopicName,
+			IsInternal: false,
+			Partitions: []*sarama.PartitionMetadata{{}},
+		})
+
 		proberMock := probertesting.MockProber(prober.StatusReady)
 		if p, ok := row.OtherTestData[testProber]; ok {
 			proberMock = p.(prober.Prober)
@@ -2105,11 +2224,13 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			ConfigMapLister: listers.GetConfigMapLister(),
 			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
-					ExpectedTopicName:   fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName),
-					ExpectedTopicDetail: expectedTopicDetail,
-					ErrorOnCreateTopic:  onCreateTopicError,
-					ErrorOnDeleteTopic:  onDeleteTopicError,
-					T:                   t,
+					ExpectedTopicName:                      expectedTopicName,
+					ExpectedTopicDetail:                    expectedTopicDetail,
+					ErrorOnCreateTopic:                     onCreateTopicError,
+					ErrorOnDeleteTopic:                     onDeleteTopicError,
+					ExpectedTopics:                         []string{expectedTopicName},
+					ExpectedTopicsMetadataOnDescribeTopics: metadata,
+					T:                                      t,
 				}, nil
 			},
 			Env:         env,
