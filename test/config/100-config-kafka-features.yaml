@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-kafka-features
+  namespace: knative-eventing
+data:
+  dispatcher.rate-limiter: "enabled"

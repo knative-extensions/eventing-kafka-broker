@@ -33,6 +33,7 @@ import (
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumer"
@@ -51,6 +52,7 @@ type Reconciler struct {
 	SecretLister        corelisters.SecretLister
 	PodLister           corelisters.PodLister
 	KubeClient          kubernetes.Interface
+	KafkaFeatureFlags   *config.KafkaFeatureFlags
 }
 
 var (
@@ -159,6 +161,10 @@ func (r Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainterna
 		DeliveryOrder: reconcileDeliveryOrder(c),
 
 		KeyType: 0, // TODO handle key type
+
+		FeatureFlags: &contract.EgressFeatureFlags{
+			EnableRateLimiter: r.KafkaFeatureFlags.IsDispatcherRateLimiterEnabled(),
+		},
 	}
 
 	if err := r.reconcileReplyStrategy(ctx, c, egress); err != nil {

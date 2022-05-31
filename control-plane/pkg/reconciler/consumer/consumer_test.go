@@ -34,6 +34,7 @@ import (
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
 
+	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
@@ -50,6 +51,10 @@ var (
 		"FinalizerUpdate",
 		fmt.Sprintf(`Updated %q finalizers`, ConsumerName),
 	)
+
+	defaultContractFeatureFlags = &contract.EgressFeatureFlags{
+		EnableRateLimiter: false,
+	}
 )
 
 func TestReconcileKind(t *testing.T) {
@@ -121,6 +126,7 @@ func TestReconcileKind(t *testing.T) {
 									Namespace: ConsumerNamespace,
 									Name:      SourceName,
 								},
+								FeatureFlags: defaultContractFeatureFlags,
 							}},
 							Auth:                nil,
 							CloudEventOverrides: nil,
@@ -231,6 +237,7 @@ func TestReconcileKind(t *testing.T) {
 									Namespace: ConsumerNamespace,
 									Name:      SourceName,
 								},
+								FeatureFlags: defaultContractFeatureFlags,
 							}},
 							Auth:                nil,
 							CloudEventOverrides: nil,
@@ -356,6 +363,7 @@ func TestReconcileKind(t *testing.T) {
 									Namespace: ConsumerNamespace,
 									Name:      SourceName,
 								},
+								FeatureFlags: defaultContractFeatureFlags,
 							}},
 							Auth:                nil,
 							CloudEventOverrides: nil,
@@ -476,6 +484,7 @@ func TestReconcileKind(t *testing.T) {
 			SecretLister:        listers.GetSecretLister(),
 			PodLister:           listers.GetPodLister(),
 			KubeClient:          kubeclient.Get(ctx),
+			KafkaFeatureFlags:   configapis.DefaultFeaturesConfig(),
 		}
 
 		return creconciler.NewReconciler(
