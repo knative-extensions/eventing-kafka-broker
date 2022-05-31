@@ -51,6 +51,7 @@ public final class OffsetManager implements RecordDispatcherListener {
   private final Consumer<Integer> onCommit;
   private final long timerId;
   private final Vertx vertx;
+  private final PartitionRevokedHandler partitionRevokedHandler;
 
   /**
    * All args constructor.
@@ -71,14 +72,26 @@ public final class OffsetManager implements RecordDispatcherListener {
     this.timerId = vertx.setPeriodic(commitIntervalMs, l -> commitAll());
     this.vertx = vertx;
 
-    this.consumer.partitionsRevokedHandler(partitions -> {
-      logPartitions("revoked", partitions);
-      partitions.forEach(offsetTrackers::remove);
-    });
+    partitionRevokedHandler = partitions -> {
+      try {
+        // Async commit offsets.
+        final var commitFuture = commit(partitions);
+        // Remove revoked partitions.
+        partitions.forEach(offsetTrackers::remove);
+        return commitFuture;
+      } catch (final Exception ex) {
+        logger.warn("Failed to commit revoked partitions offsets {}", keyValue("partitions", partitions), ex);
+        return Future.failedFuture(ex);
+      } finally {
+        // Remove revoked partitions in any case.
+        partitions.forEach(offsetTrackers::remove);
+        logPartitions("revoked", partitions);
+      }
+    };
+  }
 
-    this.consumer.partitionsAssignedHandler(partitions ->
-      partitions.forEach(tp -> logPartitions("assigned", partitions))
-    );
+  public PartitionRevokedHandler getPartitionRevokedHandler() {
+    return partitionRevokedHandler;
   }
 
   /**
@@ -173,6 +186,22 @@ public final class OffsetManager implements RecordDispatcherListener {
     return CompositeFuture.all(
       this.offsetTrackers.entrySet()
         .stream()
+        .map(e -> commit(e.getKey(), e.getValue()))
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList())
+    ).mapEmpty();
+  }
+
+  /**
+   * Commit all tracked offsets by colling commit on every offsetTracker entry.
+   *
+   * @return succeeded or failed future.
+   */
+  private Future<Void> commit(final Set<TopicPartition> partitions) {
+    return CompositeFuture.all(
+      this.offsetTrackers.entrySet()
+        .stream()
+        .filter(kv -> partitions.contains(kv.getKey()))
         .map(e -> commit(e.getKey(), e.getValue()))
         .filter(Objects::nonNull)
         .collect(Collectors.toList())

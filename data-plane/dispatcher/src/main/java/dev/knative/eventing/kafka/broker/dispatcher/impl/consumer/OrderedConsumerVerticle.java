@@ -40,6 +40,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   private static final Duration POLLING_TIMEOUT = Duration.ofMillis(1000L);
 
   private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
+  private final PartitionRevokedHandler partitionRevokedHandler;
 
   private boolean closed;
   private long pollTimer;
@@ -50,6 +51,18 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     this.recordDispatcherExecutors = new HashMap<>();
     this.closed = false;
     this.isPollInFlight = false;
+
+    partitionRevokedHandler = partitions -> {
+      // Stop executors associated with revoked partitions.
+      for (final TopicPartition partition : partitions) {
+        final var executor = recordDispatcherExecutors.remove(partition);
+        if (executor != null) {
+          logger.info("Stopping executor {}", keyValue("topicPartition", partition));
+          executor.stop();
+        }
+      }
+      return Future.succeededFuture();
+    };
   }
 
   @Override
@@ -92,6 +105,11 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     this.recordDispatcherExecutors.values().forEach(OrderedAsyncExecutor::stop);
     // Stop the consumer
     super.stop(stopPromise);
+  }
+
+  @Override
+  public PartitionRevokedHandler getPartitionsRevokedHandler() {
+    return partitionRevokedHandler;
   }
 
   private void recordsHandler(KafkaConsumerRecords<Object, CloudEvent> records) {

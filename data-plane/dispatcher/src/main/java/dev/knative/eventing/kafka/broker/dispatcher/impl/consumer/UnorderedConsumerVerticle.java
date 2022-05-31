@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
 import io.cloudevents.CloudEvent;
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -134,5 +135,10 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
     this.closed = true;
     // Stop the consumer
     super.stop(stopPromise);
+  }
+
+  @Override
+  public PartitionRevokedHandler getPartitionsRevokedHandler() {
+    return partitions -> Future.succeededFuture();
   }
 }
