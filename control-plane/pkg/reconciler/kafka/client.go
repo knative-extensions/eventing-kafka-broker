@@ -18,7 +18,13 @@ package kafka
 
 import (
 	"github.com/Shopify/sarama"
+	"github.com/rcrowley/go-metrics"
 )
+
+func init() {
+	// Disable Sarama metrics
+	metrics.UseNilMetrics = true
+}
 
 type ConfigOption func(config *sarama.Config) error
 

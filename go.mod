@@ -10,6 +10,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/pierdipi/sacura v0.0.0-20210302185533-982357fc042b
+	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.7.0
 	github.com/xdg-go/scram v1.0.2
