@@ -144,6 +144,9 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 			Extensions: ks.Spec.CloudEventOverrides.Extensions,
 		}
 	}
+	if kt, ok := ks.Labels[sources.KafkaKeyTypeLabel]; ok && len(kt) > 0 {
+		expectedCg.Spec.Template.Spec.Configs.KeyType = &kt
+	}
 
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(ks.GetNamespace()).Get(string(ks.UID)) //Get by consumer group id
 	if err != nil && !apierrors.IsNotFound(err) {

@@ -21,6 +21,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/sets"
 	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
@@ -145,11 +146,30 @@ type DeliverySpec struct {
 	// TODO PT OPT
 }
 
+var (
+	allowedKeyTypes = sets.NewString(
+		"byte-array",
+		"string",
+		"int",
+		"byte-array",
+	)
+)
+
 // ConsumerConfigs are the Consumer configurations.
 // More info: https://kafka.apache.org/documentation/#consumerconfigs
 type ConsumerConfigs struct {
 	// +optional
 	Configs map[string]string `json:",inline,omitempty"`
+
+	// key-type label value
+	// Possible values:
+	// - "byte-array"
+	// - "string":
+	// - "int":
+	// - "float":
+	//
+	// Default value: string
+	KeyType *string `json:"keyType,omitempty"`
 }
 
 // ConsumerTemplateSpec describes the data a consumer should have when created from a template.

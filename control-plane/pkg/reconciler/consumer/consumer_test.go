@@ -174,6 +174,119 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
+			Name: "Reconciled normal, key type",
+			Objects: []runtime.Object{
+				NewService(),
+				NewConsumerGroup(ConsumerGroupOwnerRef(SourceAsOwnerReference())),
+				NewDispatcherPod("p1", PodRunning()),
+				NewConsumer(1,
+					ConsumerUID(ConsumerUUID),
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics...),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerKeyTypeConfig("int"),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: SystemNamespace}),
+					)),
+					ConsumerOwnerRef(ConsumerGroupAsOwnerRef()),
+				),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(&config.Env{
+					DataPlaneConfigFormat:       base.Json,
+					DataPlaneConfigMapNamespace: SystemNamespace,
+					DataPlaneConfigMapName:      "p1",
+				}, []byte(""),
+					DispatcherPodAsOwnerReference("p1"),
+				),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&config.Env{
+					DataPlaneConfigFormat:       base.Json,
+					DataPlaneConfigMapNamespace: SystemNamespace,
+					DataPlaneConfigMapName:      "p1",
+				}, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ConsumerUUID,
+							Topics:           SourceTopics,
+							BootstrapServers: SourceBootstrapServers,
+							Egresses: []*contract.Egress{{
+								ConsumerGroup: SourceConsumerGroup,
+								Destination:   ServiceURL,
+								ReplyStrategy: nil,
+								Filter:        nil,
+								Uid:           ConsumerUUID,
+								DeliveryOrder: contract.DeliveryOrder_UNORDERED,
+								KeyType:       contract.KeyType_Integer,
+								VReplicas:     1,
+								Reference: &contract.Reference{
+									Uuid:      SourceUUID,
+									Namespace: ConsumerNamespace,
+									Name:      SourceName,
+								},
+								FeatureFlags: defaultContractFeatureFlags,
+							}},
+							Auth:                nil,
+							CloudEventOverrides: nil,
+							Reference: &contract.Reference{
+								Uuid:      SourceUUID,
+								Namespace: ConsumerNamespace,
+								Name:      SourceName,
+							},
+						},
+					},
+				},
+					DispatcherPodAsOwnerReference("p1"),
+				),
+				{Object: NewDispatcherPod("p1",
+					PodRunning(),
+					PodAnnotations(map[string]string{
+						base.VolumeGenerationAnnotationKey: "1",
+					}),
+				)},
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						c := NewConsumer(1,
+							ConsumerUID(ConsumerUUID),
+							ConsumerSpec(NewConsumerSpec(
+								ConsumerTopics(SourceTopics...),
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(SourceBootstrapServers),
+									ConsumerGroupIdConfig(SourceConsumerGroup),
+									ConsumerKeyTypeConfig("int"),
+								),
+								ConsumerSubscriber(NewSourceSinkReference()),
+								ConsumerVReplicas(1),
+								ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: SystemNamespace}),
+							)),
+							ConsumerOwnerRef(ConsumerGroupAsOwnerRef()),
+						)
+						c.GetConditionSet().Manage(c.GetStatus()).InitializeConditions()
+						c.MarkReconcileContractSucceeded()
+						c.MarkBindSucceeded()
+						c.Status.SubscriberURI, _ = apis.ParseURL(ServiceURL)
+						return c
+					}(),
+				},
+			},
+		},
+		{
 			Name: "Reconciled normal - multiple replicas",
 			Objects: []runtime.Object{
 				NewService(),
