@@ -38,6 +38,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEv
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.PartitionRevokedHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AllFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AnyFilter;
@@ -53,17 +54,21 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.common.KafkaClientOptions;
+import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -72,6 +77,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -188,25 +194,34 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
          () -> new ResponseToHttpEndpointHandler(createConsumerRecordSender(vertx, egress.getReplyUrl(), egressConfig)));
        final var commitIntervalMs = Integer.parseInt(String.valueOf(consumerConfigs.get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG)));
 
-       final var recordDispatcher = new RecordDispatcherMutatorChain(
-         new RecordDispatcherImpl(
-           new ResourceContext(resource, egress),
-           filter,
-           egressSubscriberSender,
-           egressDeadLetterSender,
-           responseHandler,
-           new OffsetManager(vertx, consumer, eventsSentCounter::increment, commitIntervalMs),
-           ConsumerTracer.create(
-             ((VertxInternal) vertx).tracer(),
-             new KafkaClientOptions()
-               .setConfig(consumerConfigs)
-               // Make sure the policy is propagate for the manually instantiated consumer tracer
-               .setTracingPolicy(TracingPolicy.PROPAGATE)
-           ),
-           Metrics.getRegistry()
+       final var offsetManager = new OffsetManager(vertx, consumer, (v) -> {}, commitIntervalMs);
+       final var recordDispatcherImpl = new RecordDispatcherImpl(
+         new ResourceContext(resource, egress),
+         filter,
+         egressSubscriberSender,
+         egressDeadLetterSender,
+         responseHandler,
+         offsetManager,
+         ConsumerTracer.create(
+           ((VertxInternal) vertx).tracer(),
+           new KafkaClientOptions()
+             .setConfig(consumerConfigs)
+             // Make sure the policy is propagate for the manually instantiated consumer tracer
+             .setTracingPolicy(TracingPolicy.PROPAGATE)
          ),
+         Metrics.getRegistry()
+       );
+
+       final var recordDispatcher = new RecordDispatcherMutatorChain(
+         recordDispatcherImpl,
          new CloudEventOverridesMutator(resource.getCloudEventOverrides())
        );
+
+       final var partitionRevokedHandlers = List.of(
+         consumerVerticle.getPartitionsRevokedHandler(),
+         offsetManager.getPartitionRevokedHandler()
+       );
+       consumer.partitionsRevokedHandler(handlePartitionsRevoked(egress.getConsumerGroup(), partitionRevokedHandlers));
 
        // Set all the built objects in the consumer verticle
        consumerVerticle.setRecordDispatcher(recordDispatcher);
@@ -221,6 +236,39 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
       new HashSet<>(resource.getTopicsList()),
       consumerConfigs.get(ConsumerConfig.MAX_POLL_RECORDS_CONFIG)
     );
+  }
+
+  /**
+   * For each handler call partitionRevoked and wait for the future to complete.
+   *
+   * @param consumerGroup consumer group id
+   * @param partitionRevokedHandlers partition revoked handlers
+   * @return a single handler that dispatches the partition revoked event to the given handlers.
+   */
+  private Handler<Set<TopicPartition>> handlePartitionsRevoked(final String consumerGroup,
+                                                               final List<PartitionRevokedHandler> partitionRevokedHandlers) {
+    return partitions -> {
+
+      logger.info("Received revoke partitions for consumer group {} {}",
+        keyValue("group.id", consumerGroup),
+        keyValue("topicPartitions", partitions)
+      );
+
+      final var futures = new ArrayList<Future<Void>>(partitionRevokedHandlers.size());
+      for (PartitionRevokedHandler partitionRevokedHandler : partitionRevokedHandlers) {
+        futures.add(partitionRevokedHandler.partitionRevoked(partitions));
+      }
+
+      for (final var future : futures) {
+        try {
+          future
+            .toCompletionStage()
+            .toCompletableFuture()
+            .get(1, TimeUnit.SECONDS);
+        } catch (final Exception ignored) {
+        }
+      }
+    };
   }
 
   private Filter getFilter(DataPlaneContract.Egress egress) {

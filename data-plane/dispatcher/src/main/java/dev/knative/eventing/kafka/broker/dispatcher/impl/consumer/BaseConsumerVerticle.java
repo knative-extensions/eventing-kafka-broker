@@ -100,4 +100,6 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
       this.context.exceptionHandler().handle(cause);
     }
   }
+
+  public abstract PartitionRevokedHandler getPartitionsRevokedHandler();
 }
