@@ -213,6 +213,10 @@ type saramaClientMock struct {
 	closed            bool
 }
 
+func (s saramaClientMock) CreateACLs(acls []*sarama.ResourceAcls) error {
+	panic("implement me")
+}
+
 func (s saramaClientMock) DeleteConsumerGroupOffset(group string, topic string, partition int32) error {
 	panic("implement me")
 }

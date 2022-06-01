@@ -44,6 +44,7 @@ linters:
     - dogsled
     # - dupl
     - errcheck
+    - errorlint
     - funlen
     - gochecknoinits
     # - goconst
@@ -59,6 +60,7 @@ linters:
     - misspell
     # - nakedret
     - nilerr
+    # - paralleltest
     # - scopelint
     - staticcheck
     - structcheck
@@ -72,5 +74,10 @@ linters:
 issues:
   exclude:
     - "G404: Use of weak random number generator"
+  exclude-rules:
+    # exclude some linters from running on certains files.
+    - path: functional.*_test\.go
+      linters:
+        - paralleltest
   # maximum count of issues with the same text. set to 0 for unlimited. default is 3.
   max-same-issues: 0

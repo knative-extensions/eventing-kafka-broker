@@ -190,7 +190,7 @@ func (c *consumerGroup) Consume(ctx context.Context, topics []string, handler Co
 
 	// Init session
 	sess, err := c.newSession(ctx, topics, handler, c.config.Consumer.Group.Rebalance.Retry.Max)
-	if err == ErrClosedClient {
+	if errors.Is(err, ErrClosedClient) {
 		return ErrClosedConsumerGroup
 	} else if err != nil {
 		return err
@@ -282,7 +282,7 @@ func (c *consumerGroup) newSession(ctx context.Context, topics []string, handler
 		}
 		return nil, err
 	}
-	if join.Err != ErrNoError {
+	if !errors.Is(join.Err, ErrNoError) {
 		if consumerGroupJoinFailed != nil {
 			consumerGroupJoinFailed.Inc(1)
 		}
@@ -290,21 +290,16 @@ func (c *consumerGroup) newSession(ctx context.Context, topics []string, handler
 	switch join.Err {
 	case ErrNoError:
 		c.memberID = join.MemberId
-	case ErrUnknownMemberId, ErrIllegalGeneration: // reset member ID and retry immediately
+	case ErrUnknownMemberId, ErrIllegalGeneration:
+		// reset member ID and retry immediately
 		c.memberID = ""
 		return c.newSession(ctx, topics, handler, retries)
-	case ErrNotCoordinatorForConsumer: // retry after backoff with coordinator refresh
+	case ErrNotCoordinatorForConsumer, ErrRebalanceInProgress, ErrOffsetsLoadInProgress:
+		// retry after backoff
 		if retries <= 0 {
 			return nil, join.Err
 		}
-
 		return c.retryNewSession(ctx, topics, handler, retries, true)
-	case ErrRebalanceInProgress: // retry after backoff
-		if retries <= 0 {
-			return nil, join.Err
-		}
-
-		return c.retryNewSession(ctx, topics, handler, retries, false)
 	default:
 		return nil, join.Err
 	}
@@ -335,7 +330,7 @@ func (c *consumerGroup) newSession(ctx context.Context, topics []string, handler
 		}
 		return nil, err
 	}
-	if groupRequest.Err != ErrNoError {
+	if !errors.Is(groupRequest.Err, ErrNoError) {
 		if consumerGroupSyncFailed != nil {
 			consumerGroupSyncFailed.Inc(1)
 		}
@@ -343,21 +338,16 @@ func (c *consumerGroup) newSession(ctx context.Context, topics []string, handler
 
 	switch groupRequest.Err {
 	case ErrNoError:
-	case ErrUnknownMemberId, ErrIllegalGeneration: // reset member ID and retry immediately
+	case ErrUnknownMemberId, ErrIllegalGeneration:
+		// reset member ID and retry immediately
 		c.memberID = ""
 		return c.newSession(ctx, topics, handler, retries)
-	case ErrNotCoordinatorForConsumer: // retry after backoff with coordinator refresh
+	case ErrNotCoordinatorForConsumer, ErrRebalanceInProgress, ErrOffsetsLoadInProgress:
+		// retry after backoff
 		if retries <= 0 {
 			return nil, groupRequest.Err
 		}
-
 		return c.retryNewSession(ctx, topics, handler, retries, true)
-	case ErrRebalanceInProgress: // retry after backoff
-		if retries <= 0 {
-			return nil, groupRequest.Err
-		}
-
-		return c.retryNewSession(ctx, topics, handler, retries, false)
 	default:
 		return nil, groupRequest.Err
 	}
@@ -498,7 +488,8 @@ func (c *consumerGroup) leave() error {
 }
 
 func (c *consumerGroup) handleError(err error, topic string, partition int32) {
-	if _, ok := err.(*ConsumerError); !ok && topic != "" && partition > -1 {
+	var consumerError *ConsumerError
+	if ok := errors.As(err, &consumerError); !ok && topic != "" && partition > -1 {
 		err = &ConsumerError{
 			Topic:     topic,
 			Partition: partition,
@@ -563,8 +554,8 @@ func (c *consumerGroup) topicToPartitionNumbers(topics []string) (map[string]int
 	for _, topic := range topics {
 		if partitionNum, err := c.client.Partitions(topic); err != nil {
 			Logger.Printf(
-				"consumergroup/%s topic %s get partition number failed %v\n",
-				c.groupID, err)
+				"consumergroup/%s topic %s get partition number failed due to '%v'\n",
+				c.groupID, topic, err)
 			return nil, err
 		} else {
 			topicToPartitionNum[topic] = len(partitionNum)
@@ -939,7 +930,7 @@ type consumerGroupClaim struct {
 
 func newConsumerGroupClaim(sess *consumerGroupSession, topic string, partition int32, offset int64) (*consumerGroupClaim, error) {
 	pcm, err := sess.parent.consumer.ConsumePartition(topic, partition, offset)
-	if err == ErrOffsetOutOfRange {
+	if errors.Is(err, ErrOffsetOutOfRange) {
 		offset = sess.parent.config.Consumer.Offsets.Initial
 		pcm, err = sess.parent.consumer.ConsumePartition(topic, partition, offset)
 	}

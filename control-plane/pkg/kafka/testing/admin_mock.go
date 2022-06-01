@@ -48,6 +48,10 @@ type MockKafkaClusterAdmin struct {
 	T *testing.T
 }
 
+func (m *MockKafkaClusterAdmin) CreateACLs(acls []*sarama.ResourceAcls) error {
+	panic("implement me")
+}
+
 func (m *MockKafkaClusterAdmin) DeleteConsumerGroupOffset(group string, topic string, partition int32) error {
 	panic("implement me")
 }
