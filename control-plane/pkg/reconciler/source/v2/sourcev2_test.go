@@ -26,11 +26,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgotesting "k8s.io/client-go/testing"
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
+
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -124,6 +125,53 @@ func TestReconcileKind(t *testing.T) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
+						StatusSourceConsumerGroupUnknown(),
+						StatusSourceSinkResolved(""),
+						StatusSourceSelector(),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal, key type label",
+			Objects: []runtime.Object{
+				NewSource(WithKeyType("int")),
+			},
+			Key: testKey,
+			WantCreates: []runtime.Object{
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+							ConsumerKeyTypeConfig("int"),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT10S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(1),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						WithKeyType("int"),
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),

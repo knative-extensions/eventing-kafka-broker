@@ -166,6 +166,9 @@ func (r Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainterna
 			EnableRateLimiter: r.KafkaFeatureFlags.IsDispatcherRateLimiterEnabled(),
 		},
 	}
+	if c.Spec.Configs.KeyType != nil {
+		egress.KeyType = coreconfig.KeyTypeFromString(*c.Spec.Configs.KeyType)
+	}
 
 	if err := r.reconcileReplyStrategy(ctx, c, egress); err != nil {
 		return nil, fmt.Errorf("failed to reconcile reply strategy: %w", err)

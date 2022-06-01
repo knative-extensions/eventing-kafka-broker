@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"context"
+	"fmt"
 
 	"knative.dev/pkg/apis"
 )
@@ -67,6 +68,11 @@ func (cc *ConsumerConfigs) Validate(ctx context.Context) *apis.FieldError {
 			return apis.ErrMissingField(key)
 		}
 	}
+
+	if cc.KeyType != nil && !allowedKeyTypes.Has(*cc.KeyType) {
+		return apis.ErrInvalidValue(*cc.KeyType, "keyType", fmt.Sprintf("allowed values: %v", allowedKeyTypes.List()))
+	}
+
 	return nil
 }
 

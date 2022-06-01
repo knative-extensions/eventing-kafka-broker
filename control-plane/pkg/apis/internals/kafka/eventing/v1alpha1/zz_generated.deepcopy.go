@@ -121,6 +121,11 @@ func (in *ConsumerConfigs) DeepCopyInto(out *ConsumerConfigs) {
 			(*out)[key] = val
 		}
 	}
+	if in.KeyType != nil {
+		in, out := &in.KeyType, &out.KeyType
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 

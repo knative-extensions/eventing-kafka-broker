@@ -237,6 +237,12 @@ func ConsumerGroupIdConfig(s string) ConsumerConfigsOption {
 	}
 }
 
+func ConsumerKeyTypeConfig(s string) ConsumerConfigsOption {
+	return func(configs *kafkainternals.ConsumerConfigs) {
+		configs.KeyType = &s
+	}
+}
+
 func ConsumerVReplicas(vreplicas int32) ConsumerSpecOption {
 	return func(c *kafkainternals.ConsumerSpec) {
 		c.VReplicas = &vreplicas
