@@ -151,7 +151,7 @@ var (
 		"byte-array",
 		"string",
 		"int",
-		"byte-array",
+		"float",
 	)
 )
 
