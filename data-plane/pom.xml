@@ -47,6 +47,7 @@
     <opentelemetry.version>1.13.0</opentelemetry.version>
     <jackson.version>2.13.2.20220328</jackson.version>
     <protobuf.version>3.20.0</protobuf.version>
+    <bucket4j.version>7.4.0</bucket4j.version>
     <slf4j.version>1.7.36</slf4j.version>
     <ch.qos.logback.version>1.2.11</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>7.1.1</net.logstash.logback.encoder.version>
@@ -291,6 +292,13 @@
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java-util</artifactId>
         <version>${protobuf.version}</version>
+      </dependency>
+
+      <!-- Rate Limiter -->
+      <dependency>
+        <groupId>com.github.vladimir-bukhtoyarov</groupId>
+        <artifactId>bucket4j-core</artifactId>
+        <version>${bucket4j.version}</version>
       </dependency>
 
       <!-- Testing -->

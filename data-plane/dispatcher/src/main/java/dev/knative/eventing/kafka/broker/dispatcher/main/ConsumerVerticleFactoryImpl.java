@@ -225,6 +225,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
        .mapEmpty();
 
     return getConsumerVerticle(
+      egress,
       deliveryOrder,
       initializer,
       new HashSet<>(resource.getTopicsList()),
@@ -400,15 +401,15 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     return !(egressConfig == null || egressConfig.getDeadLetter().isEmpty());
   }
 
-  private static AbstractVerticle getConsumerVerticle(final DeliveryOrder type,
+  private static AbstractVerticle getConsumerVerticle(final DataPlaneContract.Egress egress,
+                                                      final DeliveryOrder type,
                                                       final BaseConsumerVerticle.Initializer initializer,
                                                       final Set<String> topics,
                                                       final Object maxPollRecords) {
+    final var maxRecords = maxPollRecords == null ? 0 : Integer.parseInt(maxPollRecords.toString());
     return switch (type) {
-      case ORDERED -> new OrderedConsumerVerticle(initializer, topics);
-      case UNORDERED -> new UnorderedConsumerVerticle(
-        initializer, topics, maxPollRecords == null ? 0 : Integer.parseInt(maxPollRecords.toString())
-      );
+      case ORDERED -> new OrderedConsumerVerticle(egress, initializer, topics, maxRecords);
+      case UNORDERED -> new UnorderedConsumerVerticle(initializer, topics, maxRecords);
     };
   }
 
