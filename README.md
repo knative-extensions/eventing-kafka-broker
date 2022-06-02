@@ -46,6 +46,7 @@
 <p align="center">
   <a href="https://knative.dev/docs/eventing/broker/kafka-broker/">Eventing Kafka Broker Docs</a> •
   <a href="https://knative.dev/docs/eventing/sink/kafka-sink/">Eventing Kafka Sink Docs</a> •
+  <a href="docs/channel/README.md">Eventing Kafka Channel Docs</a> •
   <a href="https://github.com/knative-sandbox/eventing-kafka-broker/blob/master/CONTRIBUTING.md">Contributing</a> •
   <a href="https://github.com/issues?q=is%3Aopen+is%3Aissue+archived%3Afalse+org%3Aknative-sandbox+repo%3Aeventing-kafka-broker+label%3A%22help+wanted%22+%22+">Help Wanted Issues</a>
 </p>
