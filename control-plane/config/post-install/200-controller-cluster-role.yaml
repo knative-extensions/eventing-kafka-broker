@@ -90,6 +90,7 @@ rules:
       - kafka-webhook
       - kafka-ch-controller
       - kafka-ch-dispatcher
+      - kafka-source-dispatcher
     verbs:
       - delete
 

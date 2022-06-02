@@ -26,7 +26,7 @@ function control_plane_setup() {
   ko resolve ${KO_FLAGS} -Rf "${CONTROL_PLANE_POST_INSTALL_CONFIG_DIR}" | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 }
 
-function control_plane_sourcev2_setup() {
+function control_plane_source_setup() {
   ko resolve ${KO_FLAGS} -Rf "${CONTROL_PLANE_POST_INSTALL_CONFIG_DIR}" | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
   ko resolve ${KO_FLAGS} -Rf "${CONTROL_PLANE_SOURCE_CONFIG_DIR}" | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || return $?
 }

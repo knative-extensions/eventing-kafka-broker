@@ -128,13 +128,13 @@ function build_source_components_from_source() {
   [ -f "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" ] && rm "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}"
 
-  header "Data plane sourcev2 setup"
-  data_plane_sourcev2_setup || fail_test "Failed to set up sourcev2 data plane dispatcher"
+  header "Data plane source setup"
+  data_plane_source_setup || fail_test "Failed to set up source data plane dispatcher"
 
-  header "Control plane sourcev2 setup"
-  control_plane_sourcev2_setup || fail_test "Failed to set up sourcev2 control plane components"
+  header "Control plane source setup"
+  control_plane_source_setup || fail_test "Failed to set up source control plane components"
 
-  header "Building sourcev2 Monitoring artifacts"
+  header "Building source Monitoring artifacts"
   build_monitoring_artifacts_source || fail_test "Failed to create monitoring artifacts"
 
   return $?
@@ -207,7 +207,7 @@ function test_setup() {
 
   setup_kafka_channel_auth || fail_test "Failed to apply channel auth configuration ${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO}"
 
-  kubectl rollout restart deployment -n knative-eventing kafka-source-dispatcher
+  kubectl rollout restart statefulset -n knative-eventing kafka-source-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
