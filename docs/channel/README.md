@@ -366,7 +366,147 @@ To migrate from the consolidated channel, apply `eventing-kafka-post-install.yam
 KafkaChannel artifacts (`eventing-kafka-controller.yaml`, `eventing-kafka-channel.yaml`, `eventing-kafka-channel-prometheus-operator.yaml`)
 or the whole Knative Kafka suite (`eventing-kafka.yaml`).
 
-TODO: console output
+### Auto migration - example run
+
+You may find an example run of the automated migration below.
+
+Please note that the commands are run on a cluster that has Knative eventing and consolidated KafkaChannel already installed.
+
+```sh
+
+❯ k get pods -n knative-eventing                                                                                                             ─╯
+NAME                                   READY   STATUS    RESTARTS   AGE
+eventing-controller-5ff747b589-7994j   1/1     Running   0          13m
+eventing-webhook-b9c6cb4f-hfm7p        1/1     Running   0          13m
+eventing-webhook-b9c6cb4f-thjk4        1/1     Running   0          13m
+eventing-webhook-b9c6cb4f-zgbh5        1/1     Running   0          13m
+kafka-ch-controller-77cb8cf758-pv5sn   1/1     Running   0          91s
+kafka-webhook-9c549589b-ghmkb          1/1     Running   0          91s
+```
+
+Create a channel, subscription, a logger pod (event-display) and an event source (ping-source):
+```sh
+# Create a channel
+❯ cat <<-EOF | kubectl apply -f -
+---
+apiVersion: messaging.knative.dev/v1beta1
+kind: KafkaChannel
+metadata:
+  name: kafka-channel
+spec: {}
+EOF
+
+# Create an event-display service, which will write the events it receives to its console
+❯ cat <<-EOF | kubectl apply -f -
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-display
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    run: event-display
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: event-display
+  name: event-display
+spec:
+  containers:
+  - image: gcr.io/knative-releases/knative.dev/eventing/cmd/event_display
+    name: event-display
+    ports:
+    - containerPort: 8080
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+EOF
+
+# Create a subscription for the channel
+❯ cat <<-EOF | kubectl apply -f -
+apiVersion: messaging.knative.dev/v1
+kind: Subscription
+metadata:
+  name: subscription
+spec:
+  channel:
+    apiVersion: messaging.knative.dev/v1beta1
+    kind: KafkaChannel
+    name: kafka-channel
+  subscriber:
+    ref:
+      apiVersion: v1
+      kind: Service
+      name: event-display
+EOF
+
+
+# Create an event source (ping source) that sends events to the channel
+❯ cat <<-EOF | kubectl apply -f -
+apiVersion: sources.knative.dev/v1
+kind: PingSource
+metadata:
+  name: test-ping-source
+spec:
+  schedule: "*/1 * * * *"
+  contentType: "application/json"
+  data: '{"message": "Hello world!"}'
+  sink:
+    ref:
+      apiVersion: messaging.knative.dev/v1beta1
+      kind: KafkaChannel
+      name: kafka-channel
+EOF
+
+# Watch the logs of the event-display pod
+❯ kubectl logs event-display --follow
+2022/06/03 09:30:48 Failed to read tracing config, using the no-op default: empty json tracing config
+☁️  cloudevents.Event
+Context Attributes,
+  specversion: 1.0
+  type: dev.knative.sources.ping
+  source: /apis/v1/namespaces/default/pingsources/test-ping-source
+  id: 2adc0860-c4dc-43ac-88b5-c15e1eaebb91
+  time: 2022-06-03T09:34:00.060054762Z
+  datacontenttype: application/json
+Data,
+  {
+    "message": "Hello world!"
+  }
+```
+
+Apply new channel manifest (applying the whole Knative Kafka suite with broker, sink, source and channel):
+```sh
+❯ kubectl apply -f https://github.com/knative-sandbox/eventing-kafka-broker/releases/download/knative-v1.4.2/eventing-kafka.yaml
+```
+
+Apply post-install manifest:
+```sh
+❯ kubectl apply -f https://github.com/knative-sandbox/eventing-kafka-broker/releases/download/knative-v1.4.2/eventing-kafka-post-install.yaml
+```
+
+Watch the logs of the post-install job:
+```sh
+❯ kubectl logs -n knative-eventing kafka-controller-post-install-5ds4v --follow
+{"severity":"INFO","timestamp":"2022-06-03T11:10:46.640412574Z","caller":"logging/config.go:116","message":"Successfully created the logger."}
+{"severity":"INFO","timestamp":"2022-06-03T11:10:46.640508022Z","caller":"logging/config.go:117","message":"Logging level set to: info"}
+{"severity":"INFO","timestamp":"2022-06-03T11:10:46.640548813Z","caller":"logging/config.go:79","message":"Fetch GitHub commit ID from kodata failed","error":"open /var/run/ko/HEAD: no such file or directory"}
+{"level":"info","ts":1654254646.771741,"logger":"fallback","caller":"post-install/kafka_channel_migrator.go:68","msg":"Waiting 10m0s for the new data plane to become ready before the migration."}
+{"level":"info","ts":1654254646.7808318,"logger":"fallback","caller":"post-install/kafka_channel_migrator.go:76","msg":"New data plane is ready, progressing with the migration"}
+{"level":"info","ts":1654254646.7809098,"logger":"fallback","caller":"post-install/kafka_channel_migrator.go:93","msg":"Starting migration of channel services to new dispatcher service: kafka-channel-ingress.knative-eventing.svc.cluster.local."}
+{"level":"info","ts":1654254646.7837079,"logger":"fallback","caller":"post-install/kafka_channel_migrator.go:138","msg":"Patching service default/kafka-channel-kn-channel with the patch: [{\"op\":\"replace\", \"path\": \"/spec/externalName\", \"value\": \"kafka-channel-ingress.knative-eventing.svc.cluster.local\"}]."}
+{"level":"info","ts":1654254646.7915254,"logger":"fallback","caller":"post-install/kafka_channel_migrator.go:193","msg":"Migrating configmap."}
+{"level":"info","ts":1654254646.794911,"logger":"fallback","caller":"post-install/kafka_channel_migrator.go:225","msg":"Patching configmap kafka-channel-config with patch [{\"op\":\"replace\", \"path\": \"/data/bootstrap.servers\", \"value\": \"my-cluster-kafka-bootstrap.kafka:9092\"} {\"op\":\"replace\", \"path\": \"/data/auth.secret.ref.namespace\", \"value\": \"\"} {\"op\":\"replace\", \"path\": \"/data/auth.secret.ref.name\", \"value\": \"\"}]"}
+{"level":"info","ts":1654254646.8132904,"logger":"fallback","caller":"post-install/kafka_channel_post_migration_deleter.go:54","msg":"Waiting 10m0s for the new control plane to become ready before the migration."}
+{"level":"info","ts":1654254646.859228,"logger":"fallback","caller":"post-install/kafka_channel_post_migration_deleter.go:62","msg":"New control plane is ready, waiting 10m0s before deleting old data plane"}
+{"level":"info","ts":1654255246.859558,"logger":"fallback","caller":"post-install/kafka_channel_post_migration_deleter.go:64","msg":"Done waiting 10m0s. Deleting old data plane..."}
+```
 
 
 ## Configuring dataplane
