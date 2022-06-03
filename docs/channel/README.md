@@ -36,12 +36,153 @@ implementations.
 
 ** Work in progress
 
+## Installation
+
+1. Setup
+   [Knative Eventing](https://knative.dev/docs/admin/install/eventing/install-eventing-with-yaml/)
+
+2. Install an Apache Kafka cluster, if you have not done so already.
+
+   For Kubernetes a simple installation is done using the
+   [Strimzi Kafka Operator](http://strimzi.io). Its installation
+   [guides](http://strimzi.io/quickstarts/) provide content for Kubernetes and
+   Openshift.
+
+   > Note: This `KafkaChannel` is not limited to Apache Kafka installations on
+   > Kubernetes. It is also possible to use an off-cluster Apache Kafka
+   > installation.
+
+3. Apply the channel manifests that are listed as assets in [releases](https://github.com/knative-sandbox/eventing-kafka-broker/releases):
+
+    ```sh
+    # The whole suite
+    kubectl apply -f eventing-kafka.yaml
+
+    # Or, only the KafkaChannel
+    kubectl apply -f eventing-kafka-controller.yaml
+    kubectl apply -f eventing-kafka-channel.yaml
+
+    # Then apply the post-install job (if available)
+    kubectl apply -f eventing-kafka-post-install.yaml
+    ```
+
+
+4. Configure the `bootstrap.servers` value in the `kafka-channel-config` ConfigMap in the
+   `knative-eventing` namespace.
+
+    ```yaml
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: kafka-channel-config
+      namespace: knative-eventing
+    data:
+      # Replace this with the URLs for your kafka cluster,
+      # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
+      bootstrap.servers: "REPLACE_WITH_CLUSTER_URL"
+    ```
+
+5. If you are going to use authentication or encryption, create your secret.
+
+    For using authentication, these values must exist in the secret:
+    - `sasl.mechanism`: Can be one of `PLAIN`, `SCRAM-SHA-256` or `SCRAM-SHA-512`. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
+    - `user`: Username to use in the authentication context. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
+    - `password`: Password to use in the authentication context. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
+
+    For using encryption, these values must exist in the secret:
+    - `ca.crt`: Certificate authority certificate. See Apache Kafka [SSL configuration documentation](https://kafka.apache.org/documentation/#security_ssl) for more information.
+    - `user.crt`: User certificate. See Apache Kafka [SSL configuration documentation](https://kafka.apache.org/documentation/#security_ssl) for more information.
+    - `user.key`: User certificate key. See Apache Kafka [SSL configuration documentation](https://kafka.apache.org/documentation/#security_ssl) for more information.
+
+    In any case, `protocol` value must be set explicitly to one of:
+    - `PLAINTEXT`: No authentication and encryption are used.
+    - `SSL`: Only encryption is used
+    - `SASL_PLAINTEXT`: Only authentication is used
+    - `SASL_SSL`: Both authentication and encryption are used
+
+   ```sh
+    ca_cert_secret="my-cluster-cluster-ca-cert"
+    tls_user="my-tls-user"
+    sasl_user="my-sasl-user"
+
+    STRIMZI_CRT=$(kubectl -n kafka get secret "${ca_cert_secret}" --template='{{index .data "ca.crt"}}' | base64 --decode )
+    SASL_PASSWD=$(kubectl -n kafka get secret "${sasl_user}" --template='{{index .data "password"}}' | base64 --decode )
+    TLSUSER_CRT=$(kubectl -n kafka get secret "${tls_user}" --template='{{index .data "user.crt"}}' | base64 --decode )
+    TLSUSER_KEY=$(kubectl -n kafka get secret "${tls_user}" --template='{{index .data "user.key"}}' | base64 --decode )
+
+    # SSL without SASL authentication
+    kubectl create secret --namespace knative-eventing generic strimzi-tls-secret \
+      --from-literal=ca.crt="$STRIMZI_CRT" \
+      --from-literal=user.crt="$TLSUSER_CRT" \
+      --from-literal=user.key="$TLSUSER_KEY" \
+      --from-literal=protocol="SSL" \
+      --dry-run=client -o yaml | kubectl apply -n knative-eventing -f -
+
+    # Or, SSL with SASL authentication
+    kubectl create secret --namespace knative-eventing generic strimzi-sasl-secret \
+      --from-literal=ca.crt="$STRIMZI_CRT" \
+      --from-literal=password="$SASL_PASSWD" \
+      --from-literal=user="my-sasl-user" \
+      --from-literal=protocol="SASL_SSL" \
+      --from-literal=sasl.mechanism="SCRAM-SHA-512" \
+      --dry-run=client -o yaml | kubectl apply -n knative-eventing -f -
+
+    # Or, no SSL with SASL authentication
+    kubectl create secret --namespace knative-eventing generic strimzi-sasl-plain-secret \
+      --from-literal=password="$SASL_PASSWD" \
+      --from-literal=user="my-sasl-user" \
+      --from-literal=protocol="SASL_PLAINTEXT" \
+      --from-literal=sasl.mechanism="SCRAM-SHA-512" \
+      --dry-run=client -o yaml | kubectl apply -n knative-eventing -f -
+   ```
+
+7. Configure `auth.secret.ref.name` and `auth.secret.ref.namespace` values in the `kafka-channel-config` ConfigMap in the
+   `knative-eventing` namespace.
+
+    ```yaml
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: kafka-channel-config
+      namespace: knative-eventing
+    data:
+      # Replace this with the URLs for your kafka cluster,
+      # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
+      bootstrap.servers: "REPLACE_WITH_CLUSTER_URL"
+      # Replace with secret name, such as strimzi-sasl-secret as created above
+      auth.secret.ref.name: REPLACE_WITH_SECRET_NAME
+      auth.secret.ref.namespace: knative-eventing
+    ```
+
+## Usage
+
+The API for the new KafkaChannel implementation is the same with the consolidated KafkaChannel. You can use your existing
+KafkaChannel custom objects as is, or you can create the `KafkaChannel` custom objects just like before:
+
+   ```yaml
+   apiVersion: messaging.knative.dev/v1beta1
+   kind: KafkaChannel
+   metadata:
+     name: my-kafka-channel
+   spec:
+     numPartitions: 1
+     replicationFactor: 1
+     retentionDuration: PT168H
+   ```
+
+You can configure the number of partitions with `numPartitions`, as well as
+the replication factor with `replicationFactor`, and the Kafka message
+retention with `retentionDuration`. If not set, these will be defaulted by
+the WebHook to `1`, `1`, and `PT168H` respectively.
+
 ## Migration
 
-Automated migration is possible for migrations from the consolidated channel implementation to the new implementation.
-Distributed channel users need to migrate manually.
-
 ### Breaking changes from consolidated channel
+
+There are a few breaking changes however automated migration is possible for migrations from the consolidated channel
+implementation to the new implementation.
+
+Distributed channel users need to migrate manually.
 
 #### Channel config
 
@@ -99,7 +240,7 @@ data:
         memoryRequest: 50Mi
 ```
 
-A sample config for the new channel is available below:
+However, new channel implementation's config looks like this:
 
 ```yaml
 apiVersion: v1
@@ -114,27 +255,43 @@ data:
 ```
 
 Most of the options are not available in the new channel implementation because we are not using Sarama in the new dataplane
-anymore. Other options are not available because they are set to sensible defaults at this moment.
+anymore. Some of the other options are not available because they are set to sensible defaults at this moment.
+
+Dataplane can be configured by adjusting the values in a different configmap called `config-kafka-channel-data-plane`.
+See [configuring dataplane](#configuring-dataplane) section for more details.
 
 #### Secret
 
-The new channel implementation requires a new key in the secret called `protocol`.
+The new channel implementation requires the secret to have
+- A new key in the secret called `protocol`
+- Key called `sasl.mechanism` instead of `saslType
+
+New channel implementation still supports the old secret format by inferring the `protocol` and `sasl.mechanism` from the values
+in the old secret. However, this fallback will be deprecated and it is advised that you manually adjust your secrets to have these
+new keys.
 
 In the consolidated channel implementation, `protocol` was inferred from the available information in the secret. However,
-in the new channel, we ask users to explicitly define the protocol.
+in the new channel, we will ask users to explicitly define the protocol.
 
-Using SASL without SSL look like this in the previous secret format:
+Also the key `saslType` is changed to `sasl.mechanism` with the same possible values.
+
+Using SASL authentication with SSL encryption looks like this in the previous secret format:
 ```yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: strimzi-tls-secret
+  name: strimzi-sasl-secret
   namespace: knative-eventing
 type: Opaque
 data:
+  # SSL encryption
   ca.crt: ...
   user.crt: ...
   user.key: ...
+  # SASL authentication
+  user: ...
+  password: ...
+  saslType: ...
 ```
 
 New implementation requires specifying the protocol explicitly:
@@ -142,19 +299,25 @@ New implementation requires specifying the protocol explicitly:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: strimzi-tls-secret
+  name: strimzi-sasl-secret
   namespace: knative-eventing
 type: Opaque
 data:
+  # SSL encryption
   ca.crt: ...
   user.crt: ...
   user.key: ...
+  # SASL authentication
+  user: ...
+  password: ...
+  sasl.mechanism: ...   # RENAMED from saslType
+  # Protocol
   protocol: ...   # NEW
 ```
 
 Possible values for the protocol are:
 
-- `PLAINTEXT`: No SASL and no SSL is used
+- `PLAINTEXT`: No SASL and SSL are used
 - `SSL`: Only SSL is used
 - `SASL_PLAINTEXT`: Only SASL is used
 - `SASL_SSL`: Both SASL and SSL are used
@@ -179,7 +342,8 @@ a nice and smooth transition to new controllers with a roll-out.
 
 ### Auto migration from consolidated channel
 
-In 1.15 version of the new channel implementation, there is an automated migration post-install job available for
+Starting with the [1.4 version](https://github.com/knative-sandbox/eventing-kafka-broker/releases/tag/knative-v1.4.2)
+of the new channel implementation, there is an automated migration post-install job available for
 the migration from the consolidated channel.
 
 This job:
@@ -197,6 +361,13 @@ All configuration options in the previous configmap are ignored, except these:
 
 Secret is not modified and the `protocol` information is inferred from what's available in the secret and the
 previous configmap. However, this inferring will be deprecated and removed soon.
+
+To migrate from the consolidated channel, apply `eventing-kafka-post-install.yaml` artifact after you apply
+KafkaChannel artifacts (`eventing-kafka-controller.yaml`, `eventing-kafka-channel.yaml`, `eventing-kafka-channel-prometheus-operator.yaml`)
+or the whole Knative Kafka suite (`eventing-kafka.yaml`).
+
+TODO: console output
+
 
 ## Configuring dataplane
 
