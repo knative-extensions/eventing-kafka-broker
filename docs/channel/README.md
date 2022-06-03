@@ -164,21 +164,30 @@ and it is advised to modify your secret.
 
 #### Services
 
-TBD
-TBD
-TBD
-TBD
-TBD
-TBD
-TBD
-TBD
-TBD
-TBD
-TBD
-TBD
-TBD
+Consolidated channel controller creates a service per channel resource. This channel service is used as the address
+of the channel itself, and it will forward the events to the dispatcher. As each channel resource has its own service,
+they will also have a separate host name and the dispatcher will be able to identify the channel by looking at its
+hostname.
+
+In the new KafkaChannel implementation, this is preserved. However, in the future versions, we will switch from host-based-routing
+to path-based-routing. We will use a single hostname for the channel ingress and identify channels by the URL paths.
+
+#### Controller leases
+
+The new channel implementation's controllers use the same lease name as the previous controllers. This provides
+a nice and smooth transition to new controllers with a roll-out.
 
 ### Auto migration from consolidated channel
+
+In 1.15 version of the new channel implementation, there is an automated migration post-install job available for
+the migration from the consolidated channel.
+
+This job:
+
+- Deletes unnecessary resources (old webhook, old hpa, old serviceAccount, old roles)
+- Copies over relevant parts of old configmap (`config-kafka`) to new configmap (`kafka-channel-config`)
+- Adjusts the channel services (the services that are created per channel instance) to use new channel ingress
+- Eventually, deletes the old configmap (`config-kafka`) and the old deployments
 
 All configuration options in the previous configmap are ignored, except these:
 
@@ -188,3 +197,28 @@ All configuration options in the previous configmap are ignored, except these:
 
 Secret is not modified and the `protocol` information is inferred from what's available in the secret and the
 previous configmap. However, this inferring will be deprecated and removed soon.
+
+## Configuring dataplane
+
+Configmap `config-kafka-channel-data-plane` contains 4 different keys to configure dataplane defaults.
+
+- `config-kafka-channel-producer.properties`: Passed to underlying [Vert.x Kafka Client](https://vertx.io/docs/vertx-kafka-client/java/) when creating a Kafka producer
+- `config-kafka-channel-consumer.properties`: Passed to underlying [Vert.x Kafka Client](https://vertx.io/docs/vertx-kafka-client/java/) when creating a Kafka consumer
+- `config-kafka-channel-webclient.properties`: Passed to underlying [Vert.x Web Client](https://vertx.io/docs/vertx-web-client/java/) when creating a web client that does the http requests to subscribers
+- `config-kafka-channel-httpserver.properties`: Passed to [Vert.x core](https://vertx.io/docs/vertx-core/java/#_writing_http_servers_and_clients) when creating an HTTP server for the ingress
+
+Values of these keys are in [.properties format](https://en.wikipedia.org/wiki/.properties#Format).
+
+You may find the default value of this configmap [in the repository](https://github.com/knative-sandbox/eventing-kafka-broker/blob/main/data-plane/config/channel/100-config-kafka-channel-data-plane.yaml).
+
+
+## Best practices
+
+If you are using [Knative `MTChannelBasedBroker` Broker](https://knative.dev/docs/eventing/configuration/broker-configuration/#channel-implementation-options)
+backed by a KafkaChannel, you might consider using [KafkaBroker](https://knative.dev/docs/eventing/broker/kafka-broker/) instead.
+This will save you additional HTTP hops, from channel to broker and broker to channel.
+
+## Discontinued features
+
+- [Namespace dispatchers](https://github.com/knative-sandbox/eventing-kafka/blob/main/pkg/channel/consolidated/README.md#namespace-dispatchers)
+  are not supported at the moment.
