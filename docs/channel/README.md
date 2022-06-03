@@ -1,17 +1,17 @@
-# Knative Eventing Kafka Channel
+# Knative Eventing KafkaChannel
 
 ## Motivation for the channel
 
 This repository contains another KafkaChannel implementation, which we believe is more flexible and scalable.
 
-There are already 2 other Kafka Channel implentations:
+There are already 2 other KafkaChannel implementations:
 the [consolidated KafkaChannel](https://github.com/knative-sandbox/eventing-kafka/blob/main/pkg/channel/consolidated/README.md)
 and
 the [distributed KafkaChannel](https://github.com/knative-sandbox/eventing-kafka/blob/main/pkg/channel/distributed/README.md)
 .
 
 While working on these 2 channel implementations, we realized we could reuse the dataplane for other Knative Kafka
-components, namely Kafka Broker and the Kafka Sink.
+components, namely Knative KafkaBroker and the Knative KafkaSink.
 
 The dataplane is designed in a way that it only communicates the control plane via a configmap and thus it is:
 * More loosely-coupled
@@ -386,7 +386,7 @@ You may find the default value of this configmap [in the repository](https://git
 ## Best practices
 
 If you are using [Knative `MTChannelBasedBroker` Broker](https://knative.dev/docs/eventing/configuration/broker-configuration/#channel-implementation-options)
-backed by a KafkaChannel, you might consider using [KafkaBroker](https://knative.dev/docs/eventing/broker/kafka-broker/) instead.
+backed by a KafkaChannel, it is strongly recommended to use [KafkaBroker](https://knative.dev/docs/eventing/broker/kafka-broker/) instead.
 This will save you additional HTTP hops, from channel to broker and broker to channel.
 
 ## Discontinued features
