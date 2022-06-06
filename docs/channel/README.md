@@ -264,7 +264,7 @@ See [configuring dataplane](#configuring-dataplane) section for more details.
 
 The new channel implementation requires the secret to have
 - A new key in the secret called `protocol`
-- Key called `sasl.mechanism` instead of `saslType
+- Key called `sasl.mechanism` instead of `saslType`
 
 New channel implementation still supports the old secret format by inferring the `protocol` and `sasl.mechanism` from the values
 in the old secret. However, this fallback will be deprecated and it is advised that you manually adjust your secrets to have these
