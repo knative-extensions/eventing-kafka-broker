@@ -74,8 +74,13 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
     logger.info("Stopping consumer");
 
     AsyncCloseable
-      .compose(this.recordDispatcher, this.closeable, this.consumer::close)
+      .compose(this.recordDispatcher, this.closeable)
       .close(stopPromise);
+
+    stopPromise.future()
+      .onComplete(v -> this.consumer.close()
+        .onFailure(cause -> logger.error("Failed to close consumer {}", keyValue("topics", topics), cause))
+      );
   }
 
   public void setConsumer(KafkaConsumer<Object, CloudEvent> consumer) {
