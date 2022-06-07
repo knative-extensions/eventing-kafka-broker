@@ -132,7 +132,7 @@ data:
     isolation.level=read_uncommitted
     max.poll.interval.ms=300000
     max.poll.records=500
-    # partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
+    partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
     receive.buffer.bytes=65536
     request.timeout.ms=2000
     # sasl.client.callback.handler.class=
