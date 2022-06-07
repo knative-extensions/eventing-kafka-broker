@@ -30,3 +30,7 @@ go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT
 go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/control-plane/config/eventing-kafka-broker/200-controller/100-config-logging.yaml
 go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/control-plane/config/eventing-kafka-broker/200-controller/100-config-kafka-leader-election.yaml
 go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/control-plane/config/eventing-kafka-broker/200-controller/100-config-kafka-features.yaml
+go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/data-plane/config/broker/100-config-kafka-broker-data-plane.yaml
+go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/data-plane/config/channel/100-config-kafka-channel-data-plane.yaml
+go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/data-plane/config/sink/100-config-kafka-sink-data-plane.yaml
+go run "${REPO_ROOT_DIR}/vendor/knative.dev/pkg/configmap/hash-gen" "${REPO_ROOT_DIR}"/data-plane/config/source/100-config-kafka-source-data-plane.yaml
