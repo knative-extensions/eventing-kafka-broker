@@ -1114,7 +1114,7 @@ func TestReconcileKind(t *testing.T) {
 								},
 							},
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
 								ConsumerGroup: "kafka." + ChannelNamespace + "." + ChannelName + "." + Subscription1UUID,
@@ -1211,7 +1211,7 @@ func TestReconcileKind(t *testing.T) {
 								},
 							},
 							Ingress: &contract.Ingress{
-								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
 								ConsumerGroup: "kafka." + ChannelNamespace + "." + ChannelName + "." + Subscription1UUID,
