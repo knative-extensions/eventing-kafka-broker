@@ -21,7 +21,6 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/util/sets"
 	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
@@ -145,15 +144,6 @@ type DeliverySpec struct {
 
 	// TODO PT OPT
 }
-
-var (
-	allowedKeyTypes = sets.NewString(
-		"byte-array",
-		"string",
-		"int",
-		"byte-array",
-	)
-)
 
 // ConsumerConfigs are the Consumer configurations.
 // More info: https://kafka.apache.org/documentation/#consumerconfigs

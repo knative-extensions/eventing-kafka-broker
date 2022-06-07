@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/apis"
 )
 
@@ -69,8 +70,17 @@ func (cc *ConsumerConfigs) Validate(ctx context.Context) *apis.FieldError {
 		}
 	}
 
-	if cc.KeyType != nil && !allowedKeyTypes.Has(*cc.KeyType) {
-		return apis.ErrInvalidValue(*cc.KeyType, "keyType", fmt.Sprintf("allowed values: %v", allowedKeyTypes.List()))
+	if cc.KeyType != nil {
+		found := false
+		for _, allowed := range v1beta1.KafkaKeyTypeAllowed {
+			if allowed == *cc.KeyType {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return apis.ErrInvalidValue(*cc.KeyType, "keyType", fmt.Sprintf("allowed values: %v", v1beta1.KafkaKeyTypeAllowed))
+		}
 	}
 
 	return nil
