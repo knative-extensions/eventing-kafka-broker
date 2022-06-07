@@ -20,13 +20,11 @@ import (
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
 	"knative.dev/eventing-kafka-broker/test/upgrade/continual"
-	eventingkafkacontinual "knative.dev/eventing-kafka/test/upgrade/continual"
 )
 
 // ContinualTests returns all continual tests.
 func ContinualTests() []pkgupgrade.BackgroundOperation {
 	c := BrokerContinualTests()
-	//	c = append(c, ChannelContinualTests()...)
 	c = append(c, SinkContinualTests()...)
 	return c
 }
@@ -37,16 +35,6 @@ func ContinualTests() []pkgupgrade.BackgroundOperation {
 func BrokerContinualTests() []pkgupgrade.BackgroundOperation {
 	return []pkgupgrade.BackgroundOperation{
 		continual.BrokerTest(continual.KafkaBrokerTestOptions{}),
-	}
-}
-
-// ChannelContinualTests returns background operations to test KafkaChannel
-// functionality in continual manner during the whole upgrade and downgrade
-// process asserting that all events are propagated.
-func ChannelContinualTests() []pkgupgrade.BackgroundOperation {
-	return []pkgupgrade.BackgroundOperation{
-		eventingkafkacontinual.ChannelTest(eventingkafkacontinual.ChannelTestOptions{}),
-		eventingkafkacontinual.BrokerBackedByChannelTest(eventingkafkacontinual.ChannelTestOptions{}),
 	}
 }
 
