@@ -20,6 +20,8 @@ import (
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources"
+	"knative.dev/pkg/network"
 )
 
 // PathFromObject returns an HTTP request path given a generic object.
@@ -30,4 +32,9 @@ func PathFromObject(obj metav1.Object) string {
 // Path returns an HTTP request path given namespace and name of an object.
 func Path(namespace, name string) string {
 	return fmt.Sprintf("/%s/%s", namespace, name)
+}
+
+// Host returns an HTTP host given namespace and name of an object.
+func Host(namespace, name string) string {
+	return fmt.Sprintf("%s.%s.svc.%s", resources.MakeChannelServiceName(name), namespace, network.GetClusterDomainName())
 }

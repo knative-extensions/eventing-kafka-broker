@@ -92,7 +92,13 @@ func probe(ctx context.Context, client httpClient, logger *zap.Logger, address s
 }
 
 func IPsListerFromService(svc types.NamespacedName) IPsLister {
-	return func() ([]string, error) {
+	return func(addressable Addressable) ([]string, error) {
 		return []string{fmt.Sprintf("%s.%s.svc", svc.Name, svc.Namespace)}, nil
+	}
+}
+
+func IdentityIPsLister() IPsLister {
+	return func(addressable Addressable) ([]string, error) {
+		return []string{addressable.Address.Host}, nil
 	}
 }
