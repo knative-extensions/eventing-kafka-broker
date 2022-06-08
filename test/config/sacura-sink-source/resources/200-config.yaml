@@ -27,5 +27,9 @@ data:
     receiver:
       port: 8080
       timeout: 5m
-    duration: 10m
-    timeout: 5m
+      maxDuplicatesPercentage: 0.2
+      fault:
+        minSleepDuration: 2s
+        maxSleepDuration: 5s
+    duration: 3m
+    timeout: 20m
