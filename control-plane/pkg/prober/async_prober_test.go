@@ -132,7 +132,7 @@ func TestAsyncProber(t *testing.T) {
 			u, _ := url.Parse(s.URL)
 
 			wantRequeueCountMin := atomic.NewInt64(int64(tc.wantRequeueCountMin))
-			var IPsLister IPsLister = func() ([]string, error) {
+			var IPsLister IPsLister = func(addressable Addressable) ([]string, error) {
 				pods, err := podinformer.Get(ctx).Lister().List(tc.podsLabelsSelector)
 				if err != nil {
 					return nil, err

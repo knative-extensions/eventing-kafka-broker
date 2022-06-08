@@ -60,7 +60,7 @@ func TestIPsListerFromService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := IPsListerFromService(tt.svc)()
+			got, err := IPsListerFromService(tt.svc)(Addressable{})
 			if tt.wantErr != (err != nil) {
 				t.Errorf("Got err %v, wantErr %v", err, tt.wantErr)
 			}

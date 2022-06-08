@@ -22,8 +22,8 @@ import (
 
 	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
+	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	"knative.dev/pkg/resolver"
 
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
@@ -69,13 +69,14 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 		Env:                        configs,
 		ConfigMapLister:            configmapInformer.Lister(),
+		ServiceLister:              serviceinformer.Get(ctx).Lister(),
 		ConsumerGroupLister:        consumerGroupInformer.Lister(),
 		InternalsClient:            consumergroupclient.Get(ctx),
 	}
 
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)
-	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: configs.SystemNamespace, Name: configs.IngressName})
-	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, configs.IngressPodPort, IPsLister, impl.EnqueueKey)
+	IPsLister := prober.IdentityIPsLister()
+	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, "", IPsLister, impl.EnqueueKey)
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
