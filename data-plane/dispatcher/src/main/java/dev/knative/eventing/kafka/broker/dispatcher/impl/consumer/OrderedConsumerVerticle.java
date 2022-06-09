@@ -196,7 +196,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     if (executor != null) {
       return executor;
     }
-    executor = new OrderedAsyncExecutor();
+    executor = new OrderedAsyncExecutor(topicPartition);
     this.recordDispatcherExecutors.put(topicPartition, executor);
     return executor;
   }

@@ -73,7 +73,7 @@ public class OrderedAsyncExecutorTest {
     CountDownLatch tasksLatch = new CountDownLatch(tasks);
     List<Integer> executed = new ArrayList<>(tasks);
 
-    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor();
+    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor(null);
 
     for (int i = 0; i < tasks; i++) {
       final var n = i;
@@ -109,7 +109,7 @@ public class OrderedAsyncExecutorTest {
     List<Integer> executed = new ArrayList<>(tasks);
 
     CountDownLatch tasksLatch = new CountDownLatch(tasks);
-    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor();
+    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor(null);
 
     for (int i = 0; i < tasks; i++) {
       Supplier<Future<?>> task = generateTask(vertx, random, 100, i, tasksLatch, executed);

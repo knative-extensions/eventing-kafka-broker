@@ -211,9 +211,6 @@ public class RecordDispatcherImpl implements RecordDispatcher {
         .record(recordContext.performLatency());
     }
 
-    // reset timer to start calculating the dispatch latency.
-    recordContext.resetTimer();
-
     if (pass) {
       onFilterMatching(recordContext, finalProm);
     } else {

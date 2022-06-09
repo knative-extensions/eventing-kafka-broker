@@ -2,8 +2,6 @@
 
 source $(dirname $0)/e2e-common.sh
 
-go_test_e2e -tags=e2e,cloudevents -timeout=1h ./test/e2e_new_channel/... || fail_test "E2E (new - KafkaChannel) suite failed"
-
 function app {
   local ns
   ns=$1
@@ -156,7 +154,7 @@ function wait_for_cloudevent {
 
       if [ $count -gt 60 ]; then
         echo "takes too long to receive events"
-        exit 1
+        failed=true
       fi
     fi
   done
@@ -172,3 +170,9 @@ while [ $i -lt 100 ]; do
   kubectl delete namespace foo$i
 
 done
+
+go_test_e2e -tags=e2e,cloudevents -timeout=1h ./test/e2e_new_channel/... || fail_test "E2E (new - KafkaChannel) suite failed"
+
+if ${failed}; then
+  exit 1
+fi

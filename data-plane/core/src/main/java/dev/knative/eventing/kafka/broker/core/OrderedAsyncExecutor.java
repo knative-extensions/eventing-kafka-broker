@@ -16,10 +16,16 @@
 package dev.knative.eventing.kafka.broker.core;
 
 import io.vertx.core.Future;
+import io.vertx.kafka.client.common.TopicPartition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Supplier;
+
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 /**
  * This executor performs an ordered execution of the enqueued tasks.
@@ -28,15 +34,19 @@ import java.util.function.Supplier;
  */
 public class OrderedAsyncExecutor {
 
+  private static final Logger logger = LoggerFactory.getLogger(OrderedAsyncExecutor.class);
+
   private final Queue<Supplier<Future<?>>> queue;
+  private final TopicPartition topicPartition;
 
   private boolean isStopped;
   private boolean inFlight;
 
-  public OrderedAsyncExecutor() {
-    this.queue = new ArrayDeque<>();
+  public OrderedAsyncExecutor(final TopicPartition topicPartition) {
+    this.queue = new ConcurrentLinkedDeque<>();
     this.isStopped = false;
     this.inFlight = false;
+    this.topicPartition = topicPartition;
   }
 
   /**
@@ -49,17 +59,20 @@ public class OrderedAsyncExecutor {
       // Executor is stopped, return without adding the task to the queue.
       return;
     }
-    boolean wasEmpty = this.queue.isEmpty();
     this.queue.offer(task);
-    if (wasEmpty) { // If no elements in the queue, then we need to start consuming it
-      consume();
-    }
+    consume();
   }
 
   private void consume() {
     if (queue.isEmpty() || this.inFlight || this.isStopped) {
       return;
     }
+
+    logger.debug("Consuming from queue {} {}",
+      keyValue("topicPartition", topicPartition),
+      keyValue("length", queue.size())
+    );
+
     this.inFlight = true;
     this.queue
       .remove()
