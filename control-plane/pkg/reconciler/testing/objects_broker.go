@@ -48,6 +48,8 @@ const (
 	BrokerName        = "test-broker"
 	ExternalTopicName = "test-topic"
 
+	SecretFinalizerName = BrokerNamespace + "/" + BrokerUUID
+
 	TriggerName      = "test-trigger"
 	TriggerNamespace = "test-namespace"
 )
@@ -75,6 +77,12 @@ func NewBroker(options ...reconcilertesting.BrokerOption) runtime.Object {
 			options...,
 		)...,
 	)
+}
+
+func BrokerSecretWithFinalizer(ns, name, finalizerName string) *corev1.Secret {
+	secret := NewSSLSecret(ns, name)
+	secret.Finalizers = append(secret.Finalizers, finalizerName)
+	return secret
 }
 
 func NewDeletedBroker(options ...reconcilertesting.BrokerOption) runtime.Object {
@@ -145,6 +153,7 @@ func WithExternalTopic(topic string) func(*eventing.Broker) {
 }
 
 type CMOption func(cm *corev1.ConfigMap)
+type SecretOption func(secret *corev1.Secret)
 
 func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int, options ...CMOption) *corev1.ConfigMap {
 	cm := &corev1.ConfigMap{
@@ -162,6 +171,12 @@ func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int,
 		opt(cm)
 	}
 	return cm
+}
+
+func BrokerSecretFinalizer(finalizerName string) SecretOption {
+	return func(secret *corev1.Secret) {
+		secret.Finalizers = append(secret.Finalizers, finalizerName)
+	}
 }
 
 func BrokerAuthConfig(name string) CMOption {
