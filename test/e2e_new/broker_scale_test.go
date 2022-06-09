@@ -39,6 +39,5 @@ func TestBrokerTrigger(t *testing.T) {
 		environment.Managed(t),
 	)
 
-	env.Test(ctx, t, scale.BrokerLimits())
 	env.Test(ctx, t, scale.BrokerTriggerLimits())
 }

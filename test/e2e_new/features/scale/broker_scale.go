@@ -33,7 +33,7 @@ func BrokerTriggerLimits() *feature.Feature {
 
 	timings := []time.Duration{20 * time.Second, 20 * time.Minute}
 
-	nBrokers := 100
+	nBrokers := 50
 	nTriggers := 5
 	exponential := eventingduck.BackoffPolicyExponential
 
@@ -58,28 +58,6 @@ func BrokerTriggerLimits() *feature.Feature {
 			f.Setup("Install trigger "+triggerName(b, i), trigger.Install(triggerName(b, i), brokerName(b), cfg...))
 			f.Assert("Trigger "+triggerName(b, i)+" is ready", trigger.IsReady(triggerName(b, i), timings...))
 		}
-	}
-
-	f.Teardown("Delete resources", f.DeleteResources)
-
-	return f
-}
-
-func BrokerLimits() *feature.Feature {
-	f := feature.NewFeatureNamed("Broker scale")
-
-	timings := []time.Duration{20 * time.Second, 20 * time.Minute}
-
-	nBrokers := 500
-	exponential := eventingduck.BackoffPolicyExponential
-
-	for i := 0; i < nBrokers; i++ {
-		cfg := broker.WithEnvConfig()
-		cfg = append(cfg, broker.WithRetry(10, &exponential, pointer.String("PT0.2S")))
-		cfg = append(cfg, broker.WithDeadLetterSink(nil, ""))
-
-		f.Setup("Install broker "+brokerName(i), broker.Install(brokerName(i), cfg...))
-		f.Assert(brokerName(i)+" is ready", broker.IsReady(brokerName(i), timings...))
 	}
 
 	f.Teardown("Delete resources", f.DeleteResources)
