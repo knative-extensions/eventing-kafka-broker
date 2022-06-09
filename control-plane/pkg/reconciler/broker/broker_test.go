@@ -22,6 +22,8 @@ import (
 	"net/url"
 	"testing"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	"k8s.io/utils/pointer"
 	"knative.dev/pkg/network"
 
@@ -1219,6 +1221,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
+				SecretFinalizerUpdate("secret-1", SecretFinalizerName),
 				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1876,6 +1879,18 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 	}
 
 	useTable(t, table, &env)
+}
+
+func SecretFinalizerUpdate(secretName, finalizerName string, opts ...SecretOption) clientgotesting.UpdateActionImpl {
+	return clientgotesting.NewUpdateAction(
+		schema.GroupVersionResource{
+			Group:    "*",
+			Version:  "v1",
+			Resource: "Secret",
+		},
+		ConfigMapNamespace,
+		BrokerSecretWithFinalizer(ConfigMapNamespace, secretName, finalizerName),
+	)
 }
 
 func TestBrokerFinalizer(t *testing.T) {

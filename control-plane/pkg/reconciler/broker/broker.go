@@ -116,6 +116,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 			zap.String("namespace", secret.Namespace),
 			zap.String("kind", secret.Kind),
 		)
+
+		if err := r.addFinalizerSecret(ctx, finalizerSecret(broker), secret); err != nil {
+			return err
+		}
 	}
 
 	// get security option for Sarama with secret info in it
@@ -332,19 +336,21 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return controller.NewRequeueAfter(5 * time.Second)
 	}
 
+	// bad, needed to move out of the context
+	topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
+	if err != nil {
+		return fmt.Errorf("failed to resolve broker config: %w", err)
+	}
+
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig, UseNamespaceInConfigmap: false}, r.SecretProviderFunc())
+	if err != nil {
+		return fmt.Errorf("failed to get secret: %w", err)
+	}
+
 	// External topics are not managed by the broker,
 	// therefore we do not delete them
 	_, externalTopic := isExternalTopic(broker)
 	if !externalTopic {
-		topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
-		if err != nil {
-			return fmt.Errorf("failed to resolve broker config: %w", err)
-		}
-
-		secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig, UseNamespaceInConfigmap: false}, r.SecretProviderFunc())
-		if err != nil {
-			return fmt.Errorf("failed to get secret: %w", err)
-		}
 		if secret != nil {
 			logger.Debug("Secret reference",
 				zap.String("apiVersion", secret.APIVersion),
@@ -359,7 +365,15 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		if err := r.finalizeNonExternalBrokerTopic(broker, securityOption, topicConfig, logger); err != nil {
 			return err
 		}
+
 	}
+
+	if secret != nil {
+		if err := r.removeFinalizerSecret(ctx, finalizerSecret(broker), secret); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -495,4 +509,50 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 func isExternalTopic(broker *eventing.Broker) (string, bool) {
 	topicAnnotationValue, ok := broker.Annotations[ExternalTopicAnnotation]
 	return topicAnnotationValue, ok
+}
+
+func (r *Reconciler) addFinalizerSecret(ctx context.Context, finalizer string, secret *corev1.Secret) error {
+	if !containsFinalizerSecret(secret, finalizer) {
+		secret := secret.DeepCopy() // Do not modify informer copy.
+		secret.Finalizers = append(secret.Finalizers, finalizer)
+		_, err := r.KubeClient.CoreV1().Secrets(secret.GetNamespace()).Update(ctx, secret, metav1.UpdateOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to add finalizer to Secret %s/%s: %w", secret.GetNamespace(), secret.GetName(), err)
+		}
+	}
+	return nil
+}
+
+func (r *Reconciler) removeFinalizerSecret(ctx context.Context, finalizer string, secret *corev1.Secret) error {
+	newFinalizers := make([]string, 0, len(secret.Finalizers))
+	for _, f := range secret.Finalizers {
+		if f != finalizer {
+			newFinalizers = append(newFinalizers, f)
+		}
+	}
+	if len(newFinalizers) != len(secret.Finalizers) {
+		secret := secret.DeepCopy() // Do not modify informer copy.
+		secret.Finalizers = newFinalizers
+		_, err := r.KubeClient.CoreV1().Secrets(secret.GetNamespace()).Update(ctx, secret, metav1.UpdateOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to remove finalizer %s from Secret %s/%s: %w", finalizer, secret.GetNamespace(), secret.GetName(), err)
+		}
+	}
+	return nil
+}
+
+func containsFinalizerSecret(secret *corev1.Secret, finalizer string) bool {
+	if secret == nil {
+		return false
+	}
+	for _, f := range secret.Finalizers {
+		if f == finalizer {
+			return true
+		}
+	}
+	return false
+}
+
+func finalizerSecret(object metav1.Object) string {
+	return fmt.Sprintf("%s/%s", object.GetNamespace(), object.GetUID())
 }
