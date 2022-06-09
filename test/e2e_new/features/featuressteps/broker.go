@@ -19,12 +19,18 @@ package featuressteps
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"strings"
+	"time"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
@@ -32,6 +38,7 @@ import (
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	"knative.dev/pkg/injection/clients/dynamicclient"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
@@ -134,5 +141,42 @@ func DeleteBroker(name string) feature.StepFn {
 			return false, nil
 		})
 		require.Nil(t, err)
+	}
+}
+
+func DeleteKnativeResources(f *feature.Feature) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		refs := f.References()
+		eg := errgroup.Group{}
+
+		for _, ref := range refs {
+			if strings.Contains(ref.APIVersion, "knative.dev") {
+				dc := dynamicclient.Get(ctx)
+				gvr, _ := meta.UnsafeGuessKindToResource(ref.GroupVersionKind())
+				if err := dc.Resource(gvr).Namespace(ref.Namespace).Delete(ctx, ref.Name, metav1.DeleteOptions{}); err != nil {
+					t.Errorf("failed to delete resource %+v: %v", ref, err)
+				}
+
+				eg.Go(func() error {
+					var lastState *unstructured.Unstructured
+					err := wait.Poll(time.Second, time.Minute, func() (done bool, err error) {
+						lastState, err = dc.Resource(gvr).Namespace(ref.Namespace).Get(ctx, ref.Name, metav1.GetOptions{})
+						if apierrors.IsNotFound(err) {
+							return true, nil
+						}
+						return false, nil
+					})
+					if err != nil {
+						b, _ := json.MarshalIndent(lastState.UnstructuredContent(), "", " ")
+						return fmt.Errorf("failed to wait for resource deletion %+v: %v, last state: \n%s\n", ref, err, string(b))
+					}
+					return nil
+				})
+			}
+		}
+
+		if err := eg.Wait(); err != nil {
+			t.Error(err)
+		}
 	}
 }

@@ -26,11 +26,23 @@ import (
 	"knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/manifest"
+
+	"knative.dev/eventing-kafka-broker/test/e2e_new/features/featuressteps"
 )
 
 func BrokerTriggerLimits() *feature.Feature {
 	f := feature.NewFeatureNamed("Broker and Trigger limits")
 
+	CreateResources(f.Setup)
+	f.Requirement("Remove brokers and triggers", featuressteps.DeleteKnativeResources(f))
+	CreateResources(f.Assert)
+
+	f.Teardown("Delete resources", f.DeleteResources)
+
+	return f
+}
+
+func CreateResources(phase func(name string, fn feature.StepFn)) {
 	timings := []time.Duration{20 * time.Second, 20 * time.Minute}
 
 	nBrokers := 50
@@ -42,8 +54,8 @@ func BrokerTriggerLimits() *feature.Feature {
 		cfg = append(cfg, broker.WithRetry(10, &exponential, pointer.String("PT0.2S")))
 		cfg = append(cfg, broker.WithDeadLetterSink(nil, "https://my-sink.com"))
 
-		f.Setup("Install broker "+brokerName(b), broker.Install(brokerName(b), cfg...))
-		f.Assert("Broker "+brokerName(b)+" is ready", broker.IsReady(brokerName(b), timings...))
+		phase("Install broker "+brokerName(b), broker.Install(brokerName(b), cfg...))
+		phase("Broker "+brokerName(b)+" is ready", broker.IsReady(brokerName(b), timings...))
 
 		for i := 0; i < nTriggers; i++ {
 			cfg := []manifest.CfgFn{
@@ -54,15 +66,12 @@ func BrokerTriggerLimits() *feature.Feature {
 				trigger.WithRetry(10, &exponential, pointer.String("PT0.2S")),
 				trigger.WithDeadLetterSink(nil, "https://example.com"),
 				trigger.WithSubscriber(nil, "https://example.com"),
+				trigger.WithAnnotation("kafka.eventing.knative.dev/delivery.order", "ordered"),
 			}
-			f.Setup("Install trigger "+triggerName(b, i), trigger.Install(triggerName(b, i), brokerName(b), cfg...))
-			f.Assert("Trigger "+triggerName(b, i)+" is ready", trigger.IsReady(triggerName(b, i), timings...))
+			phase("Install trigger "+triggerName(b, i), trigger.Install(triggerName(b, i), brokerName(b), cfg...))
+			phase("Trigger "+triggerName(b, i)+" is ready", trigger.IsReady(triggerName(b, i), timings...))
 		}
 	}
-
-	f.Teardown("Delete resources", f.DeleteResources)
-
-	return f
 }
 
 func brokerName(i int) string {
