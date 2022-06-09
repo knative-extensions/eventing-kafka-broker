@@ -210,7 +210,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     if (executor != null) {
       return executor;
     }
-    executor = new OrderedAsyncExecutor(topicPartition, meterRegistry, egress);
+    executor = new OrderedAsyncExecutor(topicPartition);
     this.recordDispatcherExecutors.put(topicPartition, executor);
     return executor;
   }
