@@ -21,10 +21,12 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -75,7 +77,7 @@ public class ConsumerDeployerVerticleTest {
       .watchEgress(consumerDeployer)
       .build();
 
-    reconciler.reconcile(resources)
+    reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(resources).build())
       .onSuccess(ignored -> context.verify(() -> {
         assertThat(vertx.deploymentIDs()).hasSize(numEgresses + NUM_SYSTEM_VERTICLES);
         checkpoints.flag();
@@ -112,7 +114,7 @@ public class ConsumerDeployerVerticleTest {
       .watchEgress(consumerDeployer)
       .build();
 
-    reconciler.reconcile(resources)
+    reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(resources).build())
       .onFailure(ignored -> context.verify(() -> {
         assertThat(vertx.deploymentIDs()).hasSize(NUM_SYSTEM_VERTICLES);
         checkpoint.flag();
@@ -161,7 +163,7 @@ public class ConsumerDeployerVerticleTest {
       .watchEgress(consumerDeployer)
       .build();
 
-    reconciler.reconcile(resourcesOld)
+    reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(resourcesOld).build())
       .onSuccess(ignored -> {
 
         context.verify(() -> {
@@ -169,7 +171,7 @@ public class ConsumerDeployerVerticleTest {
           checkpoints.flag();
         });
 
-        reconciler.reconcile(resourcesNew)
+        reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(resourcesNew).build())
           .onSuccess(ok -> context.verify(() -> {
             assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew + NUM_SYSTEM_VERTICLES);
             checkpoints.flag();
@@ -231,14 +233,14 @@ public class ConsumerDeployerVerticleTest {
       .watchEgress(consumerDeployer)
       .build();
 
-    reconciler.reconcile(resourcesOld)
+    reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(resourcesOld).build())
       .onSuccess(ignored -> {
         context.verify(() -> {
           assertThat(vertx.deploymentIDs()).hasSize(numEgressesOld + NUM_SYSTEM_VERTICLES);
           checkpoints.flag();
         });
 
-        reconciler.reconcile(resourcesNew)
+        reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(resourcesNew).build())
           .onSuccess(ok -> context.verify(() -> {
             assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew + NUM_SYSTEM_VERTICLES);
             checkpoints.flag();
@@ -313,7 +315,7 @@ public class ConsumerDeployerVerticleTest {
       .build();
 
     final var oldDeployments = vertx.deploymentIDs();
-    reconciler.reconcile(resourcesOld)
+    reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(resourcesOld).build())
       .onSuccess(ignored -> {
 
         context.verify(() -> {
@@ -321,7 +323,7 @@ public class ConsumerDeployerVerticleTest {
           checkpoints.flag();
         });
 
-        reconciler.reconcile(resourcesNew)
+        reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(resourcesNew).build())
           .onSuccess(ok -> {
             context.verify(() -> {
               assertThat(vertx.deploymentIDs()).hasSize(numEgressesNew + NUM_SYSTEM_VERTICLES);
@@ -329,7 +331,7 @@ public class ConsumerDeployerVerticleTest {
               checkpoints.flag();
             });
 
-            reconciler.reconcile(resourcesOld)
+            reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(resourcesOld).build())
               .onSuccess(ok2 -> context.verify(() -> {
                 assertThat(oldDeployments).hasSize(numEgressesOld + NUM_SYSTEM_VERTICLES);
                 checkpoints.flag();
@@ -385,7 +387,7 @@ public class ConsumerDeployerVerticleTest {
       .watchEgress(consumerDeployer)
       .build();
 
-    reconciler.reconcile(resources)
+    reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(resources).build())
       .onSuccess(ignored -> {
 
         final var deployments = vertx.deploymentIDs();
@@ -395,10 +397,11 @@ public class ConsumerDeployerVerticleTest {
           checkpoints.flag();
         });
 
-        reconciler.reconcile(resources).onSuccess(ok -> context.verify(() -> {
-          assertThat(vertx.deploymentIDs()).containsAll(deployments);
-          checkpoints.flag();
-        }));
+        reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(resources).build())
+          .onSuccess(ok -> context.verify(() -> {
+            assertThat(vertx.deploymentIDs()).containsAll(deployments);
+            checkpoints.flag();
+          }));
       })
       .onFailure(context::failNow);
   }

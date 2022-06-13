@@ -22,7 +22,6 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 
 import java.util.Objects;
@@ -71,7 +70,7 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
 
   @Override
   public void stop(Promise<Void> stopPromise) {
-    logger.info("Stopping consumer");
+    logger.info("Stopping consumer {}", keyValue("topics", topics));
 
     AsyncCloseable
       .compose(this.recordDispatcher, this.closeable)
@@ -98,7 +97,7 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
   void exceptionHandler(Throwable cause) {
     // TODO Add context (consumer group, resource id, etc)
     // TODO Send message on event bus
-    logger.error("Consumer exception", cause);
+    logger.error("Consumer exception {}", keyValue("topics", topics), cause);
 
     // Propagate exception to the verticle exception handler.
     if (context.exceptionHandler() != null) {

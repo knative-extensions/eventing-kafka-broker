@@ -70,7 +70,7 @@ public class Metrics {
   // bounded, so we keep the resource usage under control.
   // We might want to provide configs to make it bigger than a single thread but a single thread
   // to start with is good enough for now.
-  public static final ExecutorService meterBinderExecutor = Executors.newSingleThreadExecutor();
+  public static final ExecutorService meterBinderExecutor = Executors.newFixedThreadPool(2);
 
   static {
     Runtime.getRuntime().addShutdownHook(new Thread(meterBinderExecutor::shutdown));
@@ -223,8 +223,14 @@ public class Metrics {
         return () -> {
           final Promise<Void> p = Promise.promise();
           meterBinderExecutor.execute(() -> {
-            clientMetrics.close();
-            p.complete();
+
+            logger.debug("Closing metrics");
+            try {
+              clientMetrics.close();
+              p.complete();
+            } catch (final Exception ex) {
+              p.fail(ex);
+            }
           });
           return p.future();
         };

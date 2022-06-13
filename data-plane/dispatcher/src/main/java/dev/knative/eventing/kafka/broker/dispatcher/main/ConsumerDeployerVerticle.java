@@ -20,12 +20,15 @@ import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListene
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.MessageConsumer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +60,7 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
       throw new IllegalArgumentException("egressesInitialCapacity cannot be negative or 0");
     }
     this.consumerFactory = consumerFactory;
-    this.deployedDispatchers = new HashMap<>(egressesInitialCapacity);
+    this.deployedDispatchers = new ConcurrentHashMap<>(egressesInitialCapacity);
   }
 
   @Override
@@ -82,7 +85,11 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
 
     try {
       AbstractVerticle verticle = consumerFactory.get(resource, egress);
-      return vertx.deployVerticle(verticle)
+
+      final var deploymentOptions = new DeploymentOptions()
+        .setWorker(true);
+
+      return vertx.deployVerticle(verticle, deploymentOptions)
         .onSuccess(deploymentId -> {
           this.deployedDispatchers.put(egress.getUid(), deploymentId);
           logger.info("Verticle deployed {} {} {}",
