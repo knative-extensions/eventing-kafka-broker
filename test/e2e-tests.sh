@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+gcloud auth list
+
 source $(dirname $0)/e2e-common.sh
 
 if ! ${SKIP_INITIALIZE}; then
