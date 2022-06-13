@@ -33,6 +33,8 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
@@ -48,8 +50,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   private final Promise<Void> closePromise = Promise.promise();
   private final CircuitBreakerOptions circuitBreakerOptions;
 
-  private boolean closed;
-  private int inFlightRequests = 0;
+  private final AtomicBoolean closed = new AtomicBoolean(false);
+  private final AtomicInteger inFlightRequests = new AtomicInteger(0);
 
   /**
    * All args constructor.
@@ -87,9 +89,10 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
     TracingSpan.decorateCurrentWithEvent(event);
 
-    return circuitBreaker.execute(breaker -> {
-      if (closed) {
-        breaker.tryFail("Sender for target " + target + " closed");
+    final Future<HttpResponse<Buffer>> future = circuitBreaker.execute(breaker -> {
+      if (closed.get()) {
+        // Once sender is closed, return a successful future to avoid retrying.
+        breaker.tryComplete(null);
         return;
       }
 
@@ -102,17 +105,25 @@ public final class WebClientCloudEventSender implements CloudEventSender {
         breaker.tryFail(e);
       }
     });
+
+    // Handle closed return value.
+    return future.compose(r -> {
+      if (r == null) {
+       return Future.failedFuture("Sender closed for target="+target);
+      }
+      return Future.succeededFuture(r);
+    });
   }
 
   private void requestCompleted() {
-    inFlightRequests--;
-    if (closed && inFlightRequests == 0) {
+    inFlightRequests.decrementAndGet();
+    if (closed.get() && inFlightRequests.get() == 0) {
       closePromise.tryComplete(null);
     }
   }
 
   private void requestEmitted() {
-    inFlightRequests++;
+    inFlightRequests.incrementAndGet();
   }
 
   private Future<?> send(final CloudEvent event, final Promise<HttpResponse<Buffer>> breaker) {
@@ -173,14 +184,14 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
   @Override
   public Future<Void> close() {
-    this.closed = true;
+    this.closed.set(true);
 
     logger.info("Close {} {}",
       keyValue("target", target),
       keyValue("inFlightRequests", inFlightRequests)
     );
 
-    if (inFlightRequests == 0) {
+    if (inFlightRequests.get() == 0) {
       closePromise.tryComplete(null);
     }
 
