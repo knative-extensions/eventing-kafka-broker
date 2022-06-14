@@ -135,22 +135,18 @@ function wait_for_cloudevent {
 
   count=0
 
-  while true
-  do
+  while true; do
     podname=$(kubectl get pod -n $ns -o name -l app=event-display 2>/dev/null)
-    if [ -n $podname ]
-    then
+    if [ -n $podname ]; then
       kubectl logs -n $ns $podname 2>/dev/null | grep -q "☁️  cloudevents.Event" && break
     fi
     sleep 1
     count=$((count + 1))
 
-    if [ $count -gt 1 ]
-    then
+    if [ $count -gt 1 ]; then
       echo "Waiting for first events for $ns for ${count}s"
 
-      if [ $count -gt 60 ]
-      then
+      if [ $count -gt 60 ]; then
         echo "takes too long to receive events"
         exit 1
       fi
@@ -161,9 +157,16 @@ function wait_for_cloudevent {
 function run {
   i=$1
 
+  failed=false
   app foo$i | kubectl apply -f -
-  kubectl wait kafkachannel --timeout=60s -n foo$i channel --for=condition=Ready=True || exit 1
-  kubectl wait subscription --timeout=60s -n foo$i event-display --for=condition=Ready=True || exit 1
+  kubectl wait kafkachannel --timeout=60s -n foo$i channel --for=condition=Ready=True || failed=true
+  kubectl wait subscription --timeout=60s -n foo$i event-display --for=condition=Ready=True || failed=true
+
+  if $failed; then
+    kubectl describe kafkachannel -n foo$i channel
+    kubectl describe subscription -n foo$i event-display
+  fi
+
   wait_for_cloudevent foo$i
   kubectl delete namespace foo$i
 }
@@ -173,16 +176,14 @@ export -f app
 export -f wait_for_cloudevent
 
 if [[ ${PARALLEL:-""} != "" ]]; then
-  for i in {1..200}
-  do
+  for i in {1..200}; do
     timeout -k 60s 60s bash -c "run $i" &
     pids[${i}]=$!
   done
 
   wait "${pids[@]}" || exit $?
 else
-  for i in {1..200}
-  do
+  for i in {1..200}; do
     run "$i"
   done
 fi
