@@ -97,7 +97,7 @@ data:
     max.request.size=1048576
     partitioner.class=org.apache.kafka.clients.producer.internals.DefaultPartitioner
     receive.buffer.bytes=-1
-    request.timeout.ms=30000
+    request.timeout.ms=2000
     enable.idempotence=false
     max.in.flight.requests.per.connection=5
     metadata.max.age.ms=300000
@@ -126,7 +126,7 @@ data:
     auto.offset.reset=earliest
     client.dns.lookup=use_all_dns_ips
     connections.max.idle.ms=540000
-    default.api.timeout.ms=60000
+    default.api.timeout.ms=2000
     enable.auto.commit=false
     exclude.internal.topics=true
     fetch.max.bytes=52428800
@@ -135,7 +135,7 @@ data:
     max.poll.records=500
     # partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
     receive.buffer.bytes=65536
-    request.timeout.ms=30000
+    request.timeout.ms=2000
     # sasl.client.callback.handler.class=
     # sasl.jaas.config=
     # sasl.kerberos.service.name=
