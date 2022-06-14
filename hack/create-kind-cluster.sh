@@ -22,10 +22,24 @@ set -o pipefail
 CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}
 NODE_VERSION=${NODE_VERSION:-"v1.23.3"}
 NODE_SHA=${NODE_SHA:-"sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a"}
+REGISTRY_NAME=${REGISTRY_NAME:-"kind-registry"}
+REGISTRY_PORT=${REGISTRY_PORT:-"5001"}
+
+# create registry container unless it already exists
+if [ "$(docker inspect -f '{{.State.Running}}' "${REGISTRY_NAME}" 2>/dev/null || true)" != 'true' ]; then
+  docker run \
+    -d --restart=always -p "127.0.0.1:${REGISTRY_PORT}:5000" --name "${REGISTRY_NAME}" \
+    docker.io/registry:2
+fi
 
 cat <<EOF | kind create cluster --config=-
 apiVersion: kind.x-k8s.io/v1alpha4
 kind: Cluster
+
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:${REGISTRY_PORT}"]
+    endpoint = ["http://${REGISTRY_NAME}:5000"]
 
 # This is needed in order to support projected volumes with service account tokens.
 # See: https://kubernetes.slack.com/archives/CEKK1KTN2/p1600268272383600
@@ -48,3 +62,21 @@ nodes:
   image: kindest/node:${NODE_VERSION}@${NODE_SHA}
 EOF
 
+# connect the registry to the cluster network if not already connected
+if [ "$(docker inspect -f='{{json .NetworkSettings.Networks.kind}}' "${REGISTRY_NAME}")" = 'null' ]; then
+  docker network connect "kind" "${REGISTRY_NAME}"
+fi
+
+# Document the local registry
+# https://github.com/kubernetes/enhancements/tree/master/keps/sig-cluster-lifecycle/generic/1755-communicating-a-local-registry
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: local-registry-hosting
+  namespace: kube-public
+data:
+  localRegistryHosting.v1: |
+    host: "localhost:${REGISTRY_PORT}"
+    help: "https://kind.sigs.k8s.io/docs/user/local-registry/"
+EOF

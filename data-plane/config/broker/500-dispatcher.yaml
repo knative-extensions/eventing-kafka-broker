@@ -113,13 +113,8 @@ spec:
             # This should be set according to initial delay seconds
             - name: WAIT_STARTUP_SECONDS
               value: "8"
-          command:
-            - "java"
-          args:
-            - "-XX:+CrashOnOutOfMemoryError"
-            - "-Dlogback.configurationFile=/etc/logging/config.xml"
-            - "-jar"
-            - "/app/app.jar"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:+CrashOnOutOfMemoryError"
           # TODO set resources (limits and requests)
           livenessProbe:
             failureThreshold: 3

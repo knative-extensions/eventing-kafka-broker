@@ -58,6 +58,7 @@
     <fabric8.kubernetes.version>5.12.2</fabric8.kubernetes.version>
     <kafka.version>2.8.1</kafka.version>
     <debezium.version>1.9.1.Final</debezium.version>
+    <jib.version>3.2.0</jib.version>
   </properties>
 
   <modules>
@@ -388,6 +389,28 @@
   <build>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>com.google.cloud.tools</groupId>
+          <artifactId>jib-maven-plugin</artifactId>
+          <version>${jib.version}</version>
+          <configuration>
+            <!--  KinD e2e tests registry uses HTTP -->
+            <allowInsecureRegistries>true</allowInsecureRegistries>
+            <from>
+              <image>gcr.io/distroless/java17-debian11:nonroot</image>
+              <platforms>
+                <platform>
+                  <architecture>amd64</architecture>
+                  <os>linux</os>
+                </platform>
+                <platform>
+                  <architecture>arm64</architecture>
+                  <os>linux</os>
+                </platform>
+              </platforms>
+            </from>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>org.ec4j.maven</groupId>
           <artifactId>editorconfig-maven-plugin</artifactId>
