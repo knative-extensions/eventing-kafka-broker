@@ -152,9 +152,9 @@ func TestAsyncProber(t *testing.T) {
 				return status == tc.wantStatus
 			}
 
-			require.Eventuallyf(t, probeFunc, time.Second, 10*time.Millisecond, "")
-			require.GreaterOrEqual(t, int64(0), wantRequestCountMin.Load(), "")
-			require.GreaterOrEqual(t, int64(0), wantRequeueCountMin.Load(), "")
+			require.Eventuallyf(t, probeFunc, 5*time.Second, 100*time.Millisecond, "")
+			require.Eventuallyf(t, func() bool { return wantRequestCountMin.Load() == 0 }, 5*time.Second, 100*time.Millisecond, "got %d, want 0", wantRequestCountMin.Load())
+			require.Eventuallyf(t, func() bool { return wantRequeueCountMin.Load() == 0 }, 5*time.Second, 100*time.Millisecond, "got %d, want 0", wantRequeueCountMin.Load())
 		})
 	}
 }
