@@ -112,9 +112,13 @@ func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expect
 		enqueueOnce.Do(func() {
 			// Wait in a separate goroutine.
 			go func() {
+				// wait before requeue-ing, constant backoff strategy, so that we don't create a spinning
+				// loop.
+				time.Sleep(time.Second)
 				// Wait for all the prober request results and then requeue the
 				// resource.
 				wg.Wait()
+
 				a.enqueue(resourceKey)
 			}()
 		})
