@@ -176,14 +176,14 @@ export -f app
 export -f wait_for_cloudevent
 
 if [[ ${PARALLEL:-""} != "" ]]; then
-  for i in {1..200}; do
+  for i in {1..100}; do
     timeout -k 60s 60s bash -c "run $i" &
     pids[${i}]=$!
   done
 
   wait "${pids[@]}" || exit $?
 else
-  for i in {1..200}; do
+  for i in {1..100}; do
     run "$i"
   done
 fi
