@@ -88,7 +88,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
-	if !r.IsReceiverRunning(r.Env.SystemNamespace) || !r.IsDispatcherRunning(r.Env.SystemNamespace) {
+	if !r.IsReceiverRunning(r.Reconciler.SystemNamespace) || !r.IsDispatcherRunning(r.Reconciler.SystemNamespace) {
 		return statusConditionManager.DataPlaneNotAvailable()
 	}
 	statusConditionManager.DataPlaneAvailable()
@@ -186,7 +186,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	// the update even if here eventually means seconds or minutes after the actual update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Reconciler.SystemNamespace, logger, ct.Generation); err != nil {
 		logger.Error("Failed to update receiver pod annotation", zap.Error(
 			statusConditionManager.FailedToUpdateReceiverPodsAnnotation(err),
 		))
@@ -196,7 +196,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	logger.Debug("Updated receiver pod annotation")
 
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, r.Reconciler.SystemNamespace, logger, ct.Generation); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
 		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Broker
 		// ready. So, log out the error and move on to the next step.
@@ -303,11 +303,11 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Reconciler.SystemNamespace, logger, ct.Generation); err != nil {
 		return err
 	}
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, r.Reconciler.SystemNamespace, logger, ct.Generation); err != nil {
 		return err
 	}
 

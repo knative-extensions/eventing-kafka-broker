@@ -119,7 +119,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	// Get the channel configmap
-	channelConfigMap, err := r.channelConfigMap(r.Env.SystemNamespace)
+	channelConfigMap, err := r.channelConfigMap(r.Reconciler.SystemNamespace)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -257,7 +257,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	// the update even if here eventually means seconds or minutes after the actual update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Reconciler.SystemNamespace, logger, ct.Generation); err != nil {
 		logger.Error("Failed to update receiver pod annotation", zap.Error(
 			statusConditionManager.FailedToUpdateReceiverPodsAnnotation(err),
 		))
@@ -266,7 +266,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	logger.Debug("Updated receiver pod annotation")
 
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, r.Reconciler.SystemNamespace, logger, ct.Generation); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
 		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Channel
 		// ready. So, log out the error and move on to the next step.
@@ -280,7 +280,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
-	channelService, err := r.reconcileChannelService(ctx, r.Env.SystemNamespace, channel)
+	channelService, err := r.reconcileChannelService(ctx, r.Reconciler.SystemNamespace, channel)
 	if err != nil {
 		logger.Error("Error reconciling the backwards compatibility channel service.", zap.Error(err))
 		return err
@@ -379,11 +379,11 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Reconciler.SystemNamespace, logger, ct.Generation); err != nil {
 		return err
 	}
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, r.Reconciler.SystemNamespace, logger, ct.Generation); err != nil {
 		return err
 	}
 
@@ -407,7 +407,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 
 	// get the channel configmap
-	channelConfigMap, err := r.channelConfigMap(r.Env.SystemNamespace)
+	channelConfigMap, err := r.channelConfigMap(r.Reconciler.SystemNamespace)
 	if err != nil {
 		return err
 	}
