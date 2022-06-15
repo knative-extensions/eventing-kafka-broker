@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -43,9 +45,9 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
 
   private final int maxPollRecords;
 
-  private boolean closed;
-  private int inFlightRecords;
-  private boolean isPollInFlight;
+  private final AtomicBoolean closed;
+  private final AtomicInteger inFlightRecords;
+  private final AtomicBoolean isPollInFlight;
 
   public UnorderedConsumerVerticle(final Initializer initializer,
                                    final Set<String> topics,
@@ -56,9 +58,9 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
     } else {
       this.maxPollRecords = maxPollRecords;
     }
-    this.inFlightRecords = 0;
-    this.closed = false;
-    this.isPollInFlight = false;
+    this.inFlightRecords = new AtomicInteger(0);
+    this.closed = new AtomicBoolean(false);
+    this.isPollInFlight = new AtomicBoolean(false);
   }
 
   @Override
@@ -83,10 +85,10 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
    * control the memory consumption of the dispatcher.
    */
   private synchronized void poll() {
-    if (closed || isPollInFlight) {
+    if (closed.get() || isPollInFlight.get()) {
       return;
     }
-    if (inFlightRecords >= maxPollRecords) {
+    if (inFlightRecords.get() >= maxPollRecords) {
       logger.info(
         "In flight records exceeds " + ConsumerConfig.MAX_POLL_RECORDS_CONFIG +
           " waiting for response from subscriber before polling for new records {} {} {}",
@@ -96,34 +98,35 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
       );
       return;
     }
-    isPollInFlight = true;
-    this.consumer
-      .poll(POLL_TIMEOUT)
-      .onSuccess(this::handleRecords)
-      .onFailure(cause -> {
-        isPollInFlight = false;
-        logger.error("Failed to poll messages {}", keyValue("topics", topics), cause);
-        // Wait before retrying.
-        vertx.setTimer(BACKOFF_DELAY_MS, t -> poll());
-      });
+    if (this.isPollInFlight.compareAndSet(false, true)) {
+      this.consumer
+        .poll(POLL_TIMEOUT)
+        .onSuccess(this::handleRecords)
+        .onFailure(cause -> {
+          isPollInFlight.set(false);
+          logger.error("Failed to poll messages {}", keyValue("topics", topics), cause);
+          // Wait before retrying.
+          vertx.setTimer(BACKOFF_DELAY_MS, t -> poll());
+        });
+    }
   }
 
   private void handleRecords(final KafkaConsumerRecords<Object, CloudEvent> records) {
-    if (closed) {
-      isPollInFlight = false;
+    if (closed.get()) {
+      isPollInFlight.compareAndSet(true, false);
       return;
     }
 
     // We are not forcing the dispatcher to send less than `max.poll.records`
     // requests because we don't want to keep records in-memory by waiting
     // for responses.
-    this.inFlightRecords += records.size();
-    isPollInFlight = false;
+    this.inFlightRecords.addAndGet(records.size());
+    isPollInFlight.compareAndSet(true, false);
 
     for (int i = 0; i < records.size(); i++) {
       this.recordDispatcher.dispatch(records.recordAt(i))
         .onComplete(v -> {
-          this.inFlightRecords--;
+          this.inFlightRecords.decrementAndGet();
           poll();
         });
     }
@@ -132,7 +135,7 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
 
   @Override
   public void stop(Promise<Void> stopPromise) {
-    this.closed = true;
+    this.closed.set(true);
     // Stop the consumer
     super.stop(stopPromise);
   }

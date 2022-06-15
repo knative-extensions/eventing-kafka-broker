@@ -27,11 +27,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -60,21 +60,23 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     this.ingressReconcilerListener = ingressReconcilerListener;
     this.egressReconcilerListener = egressReconcilerListener;
 
-    this.cachedResources = new HashMap<>(CACHED_RESOURCES_INITIAL_CAPACITY);
-    this.cachedEgresses = new HashMap<>(egressReconcilerListener != null ? CACHED_RESOURCES_INITIAL_CAPACITY : 0);
+    this.cachedResources = new ConcurrentHashMap<>(CACHED_RESOURCES_INITIAL_CAPACITY);
+    this.cachedEgresses = new ConcurrentHashMap<>(egressReconcilerListener != null ? CACHED_RESOURCES_INITIAL_CAPACITY : 0);
   }
 
   @Override
-  public synchronized Future<Void> reconcile(final Collection<DataPlaneContract.Resource> newResources) {
+  public synchronized Future<Void> reconcile(final DataPlaneContract.Contract contract) {
     if (isReconcilingIngress()) {
-      return reconcileIngress(newResources);
+      return reconcileIngress(contract);
     }
-    return reconcileEgress(newResources);
+    return reconcileEgress(contract);
   }
 
-  private Future<Void> reconcileEgress(final Collection<DataPlaneContract.Resource> newResources) {
+  private Future<Void> reconcileEgress(final DataPlaneContract.Contract contract) {
 
-    final var egresses = newResources.stream()
+    final var generation = contract.getGeneration();
+
+    final var egresses = contract.getResourcesList().stream()
       .filter(r -> r.getEgressesCount() > 0)
       .flatMap(r -> r.getEgressesList()
         .stream()
@@ -85,7 +87,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     final List<Future> futures = new ArrayList<>(egresses.size() + this.cachedEgresses.size());
 
     final var diff = CollectionsUtils.diff(this.cachedEgresses.keySet(), egresses.keySet());
-    logger.info("Reconcile egress diff {}", diff);
+    logger.info("Reconcile egress diff {} {}", keyValue("diff", diff), keyValue("contractGeneration", generation));
 
     diff.getRemoved().forEach(uid -> {
       final var entry = this.cachedEgresses.get(uid);
@@ -97,7 +99,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
           // If we succeed to delete the egress we can remove it from the cache.
           .onSuccess(r -> egresses.remove(uid))
           .onSuccess(r -> this.cachedEgresses.remove(uid))
-          .onFailure(cause -> logFailure("Failed to reconcile [onDeleteEgress] egress", egress, cause))
+          .onFailure(cause -> logFailure("Failed to reconcile [onDeleteEgress] egress", egress, cause, generation))
       );
     });
 
@@ -111,7 +113,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
           // If we fail to create the egress we can't put it in the cache.
           .onFailure(r -> egresses.remove(uid))
           .onSuccess(r -> this.cachedEgresses.put(egress.getUid(), new SimpleImmutableEntry<>(egress, resource)))
-          .onFailure(cause -> logFailure("Failed to reconcile [onNewEgress] egress ", egress, cause))
+          .onFailure(cause -> logFailure("Failed to reconcile [onNewEgress] egress ", egress, cause, generation))
       );
     });
 
@@ -123,10 +125,11 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       final var oldResource = this.cachedResources.get(newResource.getUid());
 
       if (resourceEquals(newResource, oldResource) && egressEquals(newEgress, this.cachedEgresses.get(uid).getKey())) {
-        logger.info("Nothing changed for egress {} {} {}",
+        logger.info("Nothing changed for egress {} {} {} {}",
           keyValue("id", newEgress.getUid()),
           keyValue("consumerGroup", newEgress.getConsumerGroup()),
-          keyValue("destination", newEgress.getDestination())
+          keyValue("destination", newEgress.getDestination()),
+          keyValue("contractGeneration", generation)
         );
         return;
       }
@@ -136,7 +139,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
           // If we fail to update the egress we can't put it in the cache.
           .onFailure(r -> egresses.remove(uid))
           .onSuccess(r -> this.cachedEgresses.put(newEgress.getUid(), new SimpleImmutableEntry<>(newEgress, newResource)))
-          .onFailure(cause -> logFailure("Failed to reconcile [onUpdateEgress] egress ", newEgress, cause))
+          .onFailure(cause -> logFailure("Failed to reconcile [onUpdateEgress] egress ", newEgress, cause, generation))
       );
     });
 
@@ -153,10 +156,12 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       .mapEmpty();
   }
 
-  private Future<Void> reconcileIngress(Collection<DataPlaneContract.Resource> newResources) {
+  private Future<Void> reconcileIngress(DataPlaneContract.Contract contract) {
+
+    final var generation = contract.getGeneration();
 
     final Map<String, DataPlaneContract.Resource> newResourcesMap = new HashMap<>(
-      newResources
+     contract.getResourcesList()
         .stream()
         .collect(Collectors.toMap(DataPlaneContract.Resource::getUid, Function.identity()))
     );
@@ -164,14 +169,14 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     final List<Future> futures = new ArrayList<>(newResourcesMap.size() + this.cachedResources.size());
 
     final var diff = CollectionsUtils.diff(this.cachedResources.keySet(), newResourcesMap.keySet());
-    logger.info("Reconcile ingress diff {}", diff);
+    logger.info("Reconcile ingress diff {} {}", keyValue("diff", diff), keyValue("contractGeneration", generation));
 
     diff.getRemoved().stream()
       .map(this.cachedResources::get)
       .forEach(r -> futures.add(
         this.ingressReconcilerListener.onDeleteIngress(r, r.getIngress())
           .onSuccess(v -> this.cachedResources.remove(r.getUid()))
-          .onFailure(cause -> logFailure("Failed to reconcile [onDeleteIngress] ingress", r, cause))
+          .onFailure(cause -> logFailure("Failed to reconcile [onDeleteIngress] ingress", r, cause, generation))
       ));
 
     diff.getAdded().stream()
@@ -180,7 +185,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       .forEach(r -> futures.add(
         this.ingressReconcilerListener.onNewIngress(r, r.getIngress())
           .onSuccess(v -> this.cachedResources.put(r.getUid(), r))
-          .onFailure(cause -> logFailure("Failed to reconcile [onNewIngress] ingress", r, cause))
+          .onFailure(cause -> logFailure("Failed to reconcile [onNewIngress] ingress", r, cause, generation))
       ));
 
     diff.getIntersection().forEach(uid -> {
@@ -194,7 +199,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
         futures.add(
           this.ingressReconcilerListener.onDeleteIngress(oldResource, oldResource.getIngress())
             .onSuccess(r -> this.cachedResources.remove(uid))
-            .onFailure(cause -> logFailure("Failed to reconcile [onDeleteIngress] ingress", oldResource, cause))
+            .onFailure(cause -> logFailure("Failed to reconcile [onDeleteIngress] ingress", oldResource, cause, generation))
         );
         return;
       }
@@ -202,7 +207,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       futures.add(
         this.ingressReconcilerListener.onUpdateIngress(newResource, newResource.getIngress())
           .onSuccess(r -> this.cachedResources.put(uid, newResource))
-          .onFailure(cause -> logFailure("Failed to reconcile [onUpdateIngress] ingress", newResource, cause))
+          .onFailure(cause -> logFailure("Failed to reconcile [onUpdateIngress] ingress", newResource, cause, generation))
       );
     });
 
@@ -253,20 +258,22 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       && Objects.equals(e1.getDialectedFilterList(), e2.getDialectedFilterList());
   }
 
-  private static void logFailure(final String msg, final DataPlaneContract.Egress egress, final Throwable cause) {
+  private static void logFailure(final String msg, final DataPlaneContract.Egress egress, final Throwable cause, final long generation) {
     logger.error(msg + " {} {} {}",
       keyValue("id", egress.getUid()),
       keyValue("consumerGroup", egress.getConsumerGroup()),
       keyValue("destination", egress.getDestination()),
+      keyValue("contractGeneration", generation),
       cause);
   }
 
-  private static void logFailure(final String msg, final DataPlaneContract.Resource resource, final Throwable cause) {
+  private static void logFailure(final String msg, final DataPlaneContract.Resource resource, final Throwable cause, final long generation) {
     logger.error(msg + " {} {} {}",
       keyValue("id", resource.getUid()),
       keyValue("ingress.path", resource.getIngress().getPath()),
       keyValue("ingress.host", resource.getIngress().getHost()),
       keyValue("topics", resource.getTopicsList()),
+      keyValue("contractGeneration", generation),
       cause);
   }
 }

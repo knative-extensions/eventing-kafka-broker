@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -66,7 +67,7 @@ public final class OffsetManager implements RecordDispatcherListener {
     Objects.requireNonNull(consumer, "provide consumer");
 
     this.consumer = consumer;
-    this.offsetTrackers = new HashMap<>();
+    this.offsetTrackers = new ConcurrentHashMap<>();
     this.onCommit = onCommit;
 
     this.timerId = vertx.setPeriodic(commitIntervalMs, l -> commitAll());

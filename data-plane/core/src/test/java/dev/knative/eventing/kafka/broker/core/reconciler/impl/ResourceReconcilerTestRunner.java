@@ -141,7 +141,7 @@ public class ResourceReconcilerTestRunner {
 
     for (int i = 0; i < reconcileSteps.size(); i++) {
       final var step = reconcileSteps.get(i);
-      assertThat(reconciler.reconcile(step.resources).succeeded())
+      assertThat(reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(step.resources).build()).succeeded())
         .as("Step " + i)
         .isEqualTo(step.future.succeeded());
 

@@ -20,6 +20,8 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -76,7 +78,10 @@ public interface AsyncCloseable extends Closeable {
       close().
       compose(
         v -> compose(closeableIterator),
-        v -> compose(closeableIterator)
+        cause -> {
+          LoggerFactory.getLogger(AsyncCloseable.class).warn("Failed to close closeable", cause);
+          return compose(closeableIterator);
+        }
       );
   }
 }
