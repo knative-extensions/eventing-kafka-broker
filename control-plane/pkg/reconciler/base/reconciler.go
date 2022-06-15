@@ -111,6 +111,8 @@ type ConfigMapOption func(cm *corev1.ConfigMap)
 func (r *Reconciler) GetOrCreateDataPlaneConfigMap(ctx context.Context, namespace string, options ...ConfigMapOption) (*corev1.ConfigMap, error) {
 
 	cm, err := r.KubeClient.CoreV1().
+		// We want to have the contract configmap in broker's namespace.
+		// Use the same name for the configmap though.
 		ConfigMaps(namespace).
 		Get(ctx, r.DataPlaneConfigMapName, metav1.GetOptions{})
 
@@ -125,6 +127,8 @@ func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context, namespace str
 	cm := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
+			// We want to have the contract configmap in broker's namespace.
+			// Use the same name for the configmap though.
 			Name:      r.DataPlaneConfigMapName,
 			Namespace: namespace,
 		},
