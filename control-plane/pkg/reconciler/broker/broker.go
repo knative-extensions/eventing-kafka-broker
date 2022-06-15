@@ -88,7 +88,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
-	if !r.IsReceiverRunning() || !r.IsDispatcherRunning() {
+	if !r.IsReceiverRunning(r.Env.SystemNamespace) || !r.IsDispatcherRunning(r.Env.SystemNamespace) {
 		return statusConditionManager.DataPlaneNotAvailable()
 	}
 	statusConditionManager.DataPlaneAvailable()

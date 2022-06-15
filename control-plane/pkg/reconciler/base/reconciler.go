@@ -87,13 +87,13 @@ type Reconciler struct {
 	ReceiverLabel   string
 }
 
-func (r *Reconciler) IsReceiverRunning() bool {
-	pods, err := r.PodLister.List(r.ReceiverSelector())
+func (r *Reconciler) IsReceiverRunning(namespace string) bool {
+	pods, err := r.PodLister.Pods(namespace).List(r.ReceiverSelector())
 	return err == nil && len(pods) > 0 && isAtLeastOneRunning(pods)
 }
 
-func (r *Reconciler) IsDispatcherRunning() bool {
-	pods, err := r.PodLister.List(r.dispatcherSelector())
+func (r *Reconciler) IsDispatcherRunning(namespace string) bool {
+	pods, err := r.PodLister.Pods(namespace).List(r.dispatcherSelector())
 	return err == nil && len(pods) > 0 && isAtLeastOneRunning(pods)
 }
 

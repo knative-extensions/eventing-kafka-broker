@@ -77,7 +77,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
-	if !r.IsReceiverRunning() {
+	if !r.IsReceiverRunning(r.Env.SystemNamespace) {
 		return statusConditionManager.DataPlaneNotAvailable()
 	}
 	statusConditionManager.DataPlaneAvailable()

@@ -111,7 +111,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	// do not proceed, if data plane is not available
-	if !r.IsReceiverRunning() || !r.IsDispatcherRunning() {
+	if !r.IsReceiverRunning(r.Env.SystemNamespace) || !r.IsDispatcherRunning(r.Env.SystemNamespace) {
 		return statusConditionManager.DataPlaneNotAvailable()
 	}
 	statusConditionManager.DataPlaneAvailable()
