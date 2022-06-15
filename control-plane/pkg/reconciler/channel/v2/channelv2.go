@@ -121,7 +121,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	// Get the channel configmap
-	channelConfigMap, err := r.channelConfigMap()
+	channelConfigMap, err := r.channelConfigMap(r.Env.SystemNamespace)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -259,7 +259,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	// the update even if here eventually means seconds or minutes after the actual update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
 		logger.Error("Failed to update receiver pod annotation", zap.Error(
 			statusConditionManager.FailedToUpdateReceiverPodsAnnotation(err),
 		))
@@ -268,7 +268,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	logger.Debug("Updated receiver pod annotation")
 
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
 		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Channel
 		// ready. So, log out the error and move on to the next step.
@@ -282,7 +282,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
-	channelService, err := r.reconcileChannelService(ctx, channel)
+	channelService, err := r.reconcileChannelService(ctx, r.Env.SystemNamespace, channel)
 	if err != nil {
 		logger.Error("Error reconciling the backwards compatibility channel service.", zap.Error(err))
 		return err
@@ -308,8 +308,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	return nil
 }
 
-func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messagingv1beta1.KafkaChannel) (*corev1.Service, error) {
-	expected, err := resources.MakeK8sService(channel, resources.ExternalService(r.Env.SystemNamespace, channelreconciler.NewChannelIngressServiceName))
+func (r *Reconciler) reconcileChannelService(ctx context.Context, serviceNamespace string, channel *messagingv1beta1.KafkaChannel) (*corev1.Service, error) {
+	expected, err := resources.MakeK8sService(channel, resources.ExternalService(serviceNamespace, channelreconciler.NewChannelIngressServiceName))
 	if err != nil {
 		return expected, fmt.Errorf("failed to create the channel service object: %w", err)
 	}
@@ -381,11 +381,11 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
 		return err
 	}
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
 		return err
 	}
 
@@ -409,7 +409,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 
 	// get the channel configmap
-	channelConfigMap, err := r.channelConfigMap()
+	channelConfigMap, err := r.channelConfigMap(r.Env.SystemNamespace)
 	if err != nil {
 		return err
 	}
@@ -651,10 +651,7 @@ func consumerGroup(channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec)
 	return fmt.Sprintf("kafka.%s.%s.%s", channel.Namespace, channel.Name, string(s.UID))
 }
 
-func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
-	// TODO: do we want to support namespaced channels? they're not supported at the moment.
-
-	namespace := system.Namespace()
+func (r *Reconciler) channelConfigMap(namespace string) (*corev1.ConfigMap, error) {
 	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(r.Env.GeneralConfigMapName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, r.Env.GeneralConfigMapName, err)

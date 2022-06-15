@@ -221,18 +221,18 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *con
 	return nil
 }
 
-func (r *Reconciler) UpdateDispatcherPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
-	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(r.dispatcherSelector())
+func (r *Reconciler) UpdateDispatcherPodsAnnotation(ctx context.Context, namespace string, logger *zap.Logger, volumeGeneration uint64) error {
+	pods, errors := r.PodLister.Pods(namespace).List(r.dispatcherSelector())
 	if errors != nil {
-		return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
+		return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", namespace, errors)
 	}
 	return r.UpdatePodsAnnotation(ctx, logger, "dispatcher", volumeGeneration, pods)
 }
 
-func (r *Reconciler) UpdateReceiverPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
-	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(r.ReceiverSelector())
+func (r *Reconciler) UpdateReceiverPodsAnnotation(ctx context.Context, namespace string, logger *zap.Logger, volumeGeneration uint64) error {
+	pods, errors := r.PodLister.Pods(namespace).List(r.ReceiverSelector())
 	if errors != nil {
-		return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
+		return fmt.Errorf("failed to list receiver pods in namespace %s: %w", namespace, errors)
 	}
 	return r.UpdatePodsAnnotation(ctx, logger, "receiver", volumeGeneration, pods)
 }
