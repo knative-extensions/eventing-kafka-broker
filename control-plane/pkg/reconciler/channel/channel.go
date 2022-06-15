@@ -117,7 +117,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	statusConditionManager.DataPlaneAvailable()
 
 	// get the channel configmap
-	channelConfigMap, err := r.channelConfigMap()
+	channelConfigMap, err := r.channelConfigMap(r.Env.SystemNamespace)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -252,7 +252,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	// the update even if here eventually means seconds or minutes after the actual update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
 		logger.Error("Failed to update receiver pod annotation", zap.Error(
 			statusConditionManager.FailedToUpdateReceiverPodsAnnotation(err),
 		))
@@ -261,7 +261,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	logger.Debug("Updated receiver pod annotation")
 
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
 		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Channel
 		// ready. So, log out the error and move on to the next step.
@@ -280,7 +280,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return subscriptionError
 	}
 
-	channelService, err := r.reconcileChannelService(ctx, channel)
+	channelService, err := r.reconcileChannelService(ctx, r.Env.SystemNamespace, channel)
 	if err != nil {
 		logger.Error("Error reconciling the backwards compatibility channel service.", zap.Error(err))
 		return err
@@ -353,11 +353,11 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
 		return err
 	}
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
 		return err
 	}
 
@@ -381,7 +381,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 
 	// get the channel configmap
-	channelConfigMap, err := r.channelConfigMap()
+	channelConfigMap, err := r.channelConfigMap(r.Env.SystemNamespace)
 	if err != nil {
 		return err
 	}
@@ -544,8 +544,7 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 	return egress, nil
 }
 
-func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
-	namespace := system.Namespace()
+func (r *Reconciler) channelConfigMap(namespace string) (*corev1.ConfigMap, error) {
 	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(r.Env.GeneralConfigMapName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, r.Env.GeneralConfigMapName, err)
@@ -611,8 +610,8 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 	return resource, nil
 }
 
-func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messagingv1beta1.KafkaChannel) (*corev1.Service, error) {
-	expected, err := resources.MakeK8sService(channel, resources.ExternalService(system.Namespace(), NewChannelIngressServiceName))
+func (r *Reconciler) reconcileChannelService(ctx context.Context, serviceNamespace string, channel *messagingv1beta1.KafkaChannel) (*corev1.Service, error) {
+	expected, err := resources.MakeK8sService(channel, resources.ExternalService(serviceNamespace, NewChannelIngressServiceName))
 	if err != nil {
 		return expected, fmt.Errorf("failed to create the channel service object: %w", err)
 	}

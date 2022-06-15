@@ -222,7 +222,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	// receivers haven't got the Sink, so update failures to receiver pods is a hard failure.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
 		return err
 	}
 
@@ -286,7 +286,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsAnnotation(ctx, r.Env.SystemNamespace, logger, ct.Generation); err != nil {
 		return err
 	}
 
