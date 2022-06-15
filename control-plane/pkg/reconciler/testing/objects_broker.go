@@ -144,6 +144,17 @@ func WithExternalTopic(topic string) func(*eventing.Broker) {
 	}
 }
 
+func WithLegacyExternalTopic(topic string) func(*eventing.Broker) {
+	return func(broker *eventing.Broker) {
+		annotations := broker.GetAnnotations()
+		if annotations == nil {
+			annotations = make(map[string]string, 1)
+		}
+		annotations[LegacyExternalTopicAnnotation] = topic
+		broker.SetAnnotations(annotations)
+	}
+}
+
 type CMOption func(cm *corev1.ConfigMap)
 
 func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int, options ...CMOption) *corev1.ConfigMap {
