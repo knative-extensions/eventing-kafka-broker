@@ -23,14 +23,24 @@ import (
 )
 
 type Env struct {
+	// DataPlaneConfigMapNamespace is the namespace of the configmap that holds the contract between the control plane
+	// and the data plane. Might be ignored in some cases such as the configmap is expected to be in the resource
+	// namespace
 	DataPlaneConfigMapNamespace string `required:"true" split_words:"true"`
-	DataPlaneConfigMapName      string `required:"true" split_words:"true"`
-	GeneralConfigMapName        string `required:"true" split_words:"true"`
-	IngressName                 string `required:"true" split_words:"true"`
-	IngressPodPort              string `required:"false" split_words:"true"`
-	SystemNamespace             string `required:"true" split_words:"true"`
-	DataPlaneConfigFormat       string `required:"true" split_words:"true"`
-	DefaultBackoffDelayMs       uint64 `required:"false" split_words:"true"`
+
+	// DataPlaneConfigMapName is the name of the configmap that holds the contract between the control plane
+	// and the data plane.
+	DataPlaneConfigMapName string `required:"true" split_words:"true"` // example: kafka-broker-triggers
+
+	// GeneralConfigMapName is the name of the configmap that holds configuration that affects the control plane
+	// and the data plane. For example, Kafka bootstrap server information could be in here for broker configuration.
+	GeneralConfigMapName string `required:"true" split_words:"true"` // example: kafka-broker-config
+
+	IngressName           string `required:"true" split_words:"true"` // example: kafka-broker-ingress
+	IngressPodPort        string `required:"false" split_words:"true"`
+	SystemNamespace       string `required:"true" split_words:"true"`
+	DataPlaneConfigFormat string `required:"true" split_words:"true"`
+	DefaultBackoffDelayMs uint64 `required:"false" split_words:"true"`
 }
 
 // ValidationOption represents a function to validate the Env configurations.
