@@ -146,7 +146,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	logger.Debug("Topic created", zap.Any("topic", ks.Spec.Topic))
 
 	// Get contract config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.Reconciler.DataPlaneConfigMapNamespace)
 	if err != nil {
 		return statusConditionManager.FailedToGetConfigMap(err)
 	}
@@ -256,7 +256,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, ks)
 
 	// Get contract config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.Reconciler.DataPlaneConfigMapNamespace)
 	if err != nil {
 		return fmt.Errorf("failed to get contract config map %s: %w", r.DataPlaneConfigMapAsString(), err)
 	}

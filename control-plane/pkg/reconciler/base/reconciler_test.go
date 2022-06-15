@@ -99,7 +99,7 @@ func TestGetOrCreateDataPlaneConfigMap(t *testing.T) {
 		KubeClient: kubeclient.Get(ctx),
 	}
 
-	cm, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	cm, err := r.GetOrCreateDataPlaneConfigMap(ctx, "knative-eventing")
 	require.Nil(t, err)
 	require.NotNil(t, cm)
 }

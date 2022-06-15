@@ -195,7 +195,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	statusConditionManager.TopicReady(topic)
 
 	// Get data plane config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.Reconciler.DataPlaneConfigMapNamespace)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -314,7 +314,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, channel)
 
 	// Get contract config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.Reconciler.DataPlaneConfigMapNamespace)
 	if err != nil {
 		return fmt.Errorf("failed to get contract config map %s: %w", r.DataPlaneConfigMapAsString(), err)
 	}

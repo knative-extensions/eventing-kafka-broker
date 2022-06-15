@@ -338,7 +338,7 @@ func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkain
 
 	b := r.commonReconciler(p, cmName)
 
-	cm, err := b.GetOrCreateDataPlaneConfigMap(ctx, podOwnerReference(p))
+	cm, err := b.GetOrCreateDataPlaneConfigMap(ctx, b.DataPlaneConfigMapNamespace, podOwnerReference(p))
 	if err != nil {
 		return false, fmt.Errorf("failed to get or create data plane ConfigMap %s/%s: %w", p.GetNamespace(), cmName, err)
 	}

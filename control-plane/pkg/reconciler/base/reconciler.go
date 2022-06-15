@@ -108,25 +108,25 @@ func isAtLeastOneRunning(pods []*corev1.Pod) bool {
 
 type ConfigMapOption func(cm *corev1.ConfigMap)
 
-func (r *Reconciler) GetOrCreateDataPlaneConfigMap(ctx context.Context, options ...ConfigMapOption) (*corev1.ConfigMap, error) {
+func (r *Reconciler) GetOrCreateDataPlaneConfigMap(ctx context.Context, namespace string, options ...ConfigMapOption) (*corev1.ConfigMap, error) {
 
 	cm, err := r.KubeClient.CoreV1().
-		ConfigMaps(r.DataPlaneConfigMapNamespace).
+		ConfigMaps(namespace).
 		Get(ctx, r.DataPlaneConfigMapName, metav1.GetOptions{})
 
 	if apierrors.IsNotFound(err) {
-		cm, err = r.createDataPlaneConfigMap(ctx, options)
+		cm, err = r.createDataPlaneConfigMap(ctx, namespace, options)
 	}
 
 	return cm, err
 }
 
-func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context, options []ConfigMapOption) (*corev1.ConfigMap, error) {
+func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context, namespace string, options []ConfigMapOption) (*corev1.ConfigMap, error) {
 	cm := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      r.DataPlaneConfigMapName,
-			Namespace: r.DataPlaneConfigMapNamespace,
+			Namespace: namespace,
 		},
 		BinaryData: map[string][]byte{
 			ConfigMapDataKey: []byte(""),
@@ -137,7 +137,7 @@ func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context, options []Con
 		opt(cm)
 	}
 
-	return r.KubeClient.CoreV1().ConfigMaps(r.DataPlaneConfigMapNamespace).Create(ctx, cm, metav1.CreateOptions{})
+	return r.KubeClient.CoreV1().ConfigMaps(namespace).Create(ctx, cm, metav1.CreateOptions{})
 }
 
 // GetDataPlaneConfigMapData extracts contract from the given config map.

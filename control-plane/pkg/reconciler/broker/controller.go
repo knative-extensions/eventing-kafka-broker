@@ -76,7 +76,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 
 	logger := logging.FromContext(ctx)
 
-	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
+	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx, reconciler.Reconciler.DataPlaneConfigMapNamespace)
 	if err != nil {
 		logger.Fatal("Failed to get or create data plane config map",
 			zap.String("configmap", env.DataPlaneConfigMapAsString()),
@@ -105,7 +105,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 	}
 
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName),
+		FilterFunc: controller.FilterWithNameAndNamespace(reconciler.Reconciler.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName),
 		Handler: cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				globalResync(obj)
