@@ -309,6 +309,74 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			},
 		},
 		{
+			Name: "Reconciled normal - with external topic - both new and legacy annotation",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithExternalTopic(ExternalTopicName),
+					WithLegacyExternalTopic("should-not-be-used"),
+				),
+				BrokerConfig(bootstrapServers, 20, 5),
+				NewConfigMapWithBinaryData(&env, nil),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{ExternalTopicName},
+							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        BrokerReference(),
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithExternalTopic(ExternalTopicName),
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerConfigMapUpdatedReady(&env),
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerConfigParsed,
+						StatusExternalBrokerTopicReady(ExternalTopicName),
+						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
+						BrokerConfigMapAnnotations(),
+					),
+				},
+			},
+
+			OtherTestData: map[string]interface{}{
+				externalTopic: ExternalTopicName,
+			},
+		},
+		{
 			Name: "external topic not present or invalid",
 			Objects: []runtime.Object{
 				NewBroker(
