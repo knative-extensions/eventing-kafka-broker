@@ -42,6 +42,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
@@ -76,8 +78,8 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private final Tags noResponseResourceTags;
 
-  private boolean closed = false;
-  private int inFlightEvents = 0;
+  private final AtomicBoolean closed = new AtomicBoolean(false);
+  private final AtomicInteger inFlightEvents = new AtomicInteger(0);
   private final Promise<Void> closePromise = Promise.promise();
 
   /**
@@ -125,7 +127,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
    */
   @Override
   public Future<Void> dispatch(KafkaConsumerRecord<Object, CloudEvent> record) {
-    if (closed) {
+    if (closed.get()) {
       return Future.failedFuture("Dispatcher closed");
     }
 
@@ -417,21 +419,21 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private void recordHandlingCompleted(final ConsumerRecordContext recordContext) {
     logDebug("Record handling completed", recordContext.getRecord());
-    inFlightEvents--;
-    if (closed && inFlightEvents == 0) {
+    inFlightEvents.decrementAndGet();
+    if (closed.get() && inFlightEvents.get() == 0) {
       closePromise.tryComplete();
     }
   }
 
   private void recordReceived(final ConsumerRecordContext recordContext) {
     logDebug("Handling record", recordContext.getRecord());
-    inFlightEvents++;
+    inFlightEvents.incrementAndGet();
   }
 
   public Future<Void> close() {
-    this.closed = true;
+    this.closed.set(true);
 
-    if (inFlightEvents == 0) {
+    if (inFlightEvents.get() == 0) {
       closePromise.tryComplete();
     }
 
@@ -439,6 +441,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       .compose(
         v -> this.closeable.close(),
         v -> this.closeable.close()
-      );
+      )
+      .onComplete(r -> logger.info("Record dispatcher closed {}", keyValue("resource", resourceContext.getResource())));
   }
 }

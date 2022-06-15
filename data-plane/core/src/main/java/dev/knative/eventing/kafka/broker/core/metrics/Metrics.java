@@ -223,8 +223,14 @@ public class Metrics {
         return () -> {
           final Promise<Void> p = Promise.promise();
           meterBinderExecutor.execute(() -> {
-            clientMetrics.close();
-            p.complete();
+
+            logger.debug("Closing metrics");
+            try {
+              clientMetrics.close();
+              p.complete();
+            } catch (final Exception ex) {
+              p.fail(ex);
+            }
           });
           return p.future();
         };

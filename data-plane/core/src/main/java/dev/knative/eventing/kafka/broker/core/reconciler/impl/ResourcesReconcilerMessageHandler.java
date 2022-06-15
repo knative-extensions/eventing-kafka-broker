@@ -68,7 +68,7 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
 
       logger.info("Reconciling contract {}", keyValue("contractGeneration", contract.getGeneration()));
 
-      resourcesReconciler.reconcile(contract.getResourcesList())
+      resourcesReconciler.reconcile(contract)
         .onComplete(r -> {
           if (r.succeeded()) {
             logger.info(

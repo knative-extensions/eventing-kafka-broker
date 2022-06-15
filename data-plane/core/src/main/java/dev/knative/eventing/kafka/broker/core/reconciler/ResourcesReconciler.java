@@ -18,12 +18,11 @@ package dev.knative.eventing.kafka.broker.core.reconciler;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerBuilder;
 import io.vertx.core.Future;
-import java.util.Collection;
 
 @FunctionalInterface
 public interface ResourcesReconciler {
 
-  Future<Void> reconcile(Collection<DataPlaneContract.Resource> resources);
+  Future<Void> reconcile(DataPlaneContract.Contract resources);
 
   static ResourcesReconcilerBuilder builder() {
     return new ResourcesReconcilerBuilder();

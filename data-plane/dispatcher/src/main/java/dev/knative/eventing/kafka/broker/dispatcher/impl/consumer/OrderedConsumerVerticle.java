@@ -36,6 +36,9 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -51,9 +54,9 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   private final DataPlaneContract.Egress egress;
   private final Bucket bucket;
 
-  private boolean closed;
-  private long pollTimer;
-  private boolean isPollInFlight;
+  private final AtomicBoolean closed;
+  private final AtomicLong pollTimer;
+  private final AtomicBoolean isPollInFlight;
 
   public OrderedConsumerVerticle(final DataPlaneContract.Egress egress,
                                  final Initializer initializer,
@@ -74,9 +77,10 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     }
 
     this.egress = egress;
-    this.recordDispatcherExecutors = new HashMap<>();
-    this.closed = false;
-    this.isPollInFlight = false;
+    this.recordDispatcherExecutors = new ConcurrentHashMap<>();
+    this.closed = new AtomicBoolean(false);
+    this.isPollInFlight = new AtomicBoolean(false);
+    this.pollTimer = new AtomicLong(-1);
 
     partitionRevokedHandler = partitions -> {
       // Stop executors associated with revoked partitions.
@@ -97,25 +101,28 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     this.consumer.subscribe(this.topics)
       .onFailure(startPromise::fail)
       .onSuccess(v -> {
-        this.pollTimer = vertx.setPeriodic(POLLING_MS, x -> poll());
+        if (this.pollTimer.compareAndSet(-1, 0)) {
+          this.pollTimer.set(vertx.setPeriodic(POLLING_MS, x -> poll()));
+        }
         this.poll();
         startPromise.complete();
       });
   }
 
   private void poll() {
-    if (this.closed || this.isPollInFlight) {
-      logger.debug("Consumer closed or poll is in-flight");
+    if (this.closed.get() || this.isPollInFlight.get()) {
+      logger.debug("Consumer closed or poll is in-flight {}", keyValue("topics", topics));
       return;
     }
 
     // When we don't have tokens available, we just wait `POLLING_MS`
     // before trying to poll again.
     if (bucket != null && bucket.getAvailableTokens() <= 0) {
-      logger.info("Rate limiter, tokens unavailable {} {} {}",
+      logger.info("Rate limiter, tokens unavailable {} {} {} {}",
         keyValue("resource", egress.getReference()),
         keyValue(ConsumerConfig.GROUP_ID_CONFIG, egress.getConsumerGroup()),
-        keyValue("wait.ms", POLLING_MS)
+        keyValue("wait.ms", POLLING_MS),
+        keyValue("topics", topics)
       );
       return;
     }
@@ -123,34 +130,34 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     // Only poll new records when at-least one internal per-partition queue
     // needs more records.
     if (areAllExecutorsBusy()) {
-      logger.debug("all executors are busy");
+      logger.debug("all executors are busy {}", keyValue("topics", topics));
       return;
     }
 
-    this.isPollInFlight = true;
+    if (this.isPollInFlight.compareAndSet(false, true)) {
+      logger.debug("Polling for records {} {}",
+        keyValue("topics", topics),
+        keyValue("resource", egress.getReference())
+      );
 
-    logger.debug("Polling for records {} {}",
-      keyValue("topics", topics),
-      keyValue("resource", egress.getReference())
-    );
-
-    this.consumer.poll(POLLING_TIMEOUT)
-      .onSuccess(this::recordsHandler)
-      .onFailure(t -> {
-        if (this.closed) {
-          // The failure might have been caused by stopping the consumer, so we just ignore it
-          return;
-        }
-        isPollInFlight = false;
-        exceptionHandler(t);
-      });
+      this.consumer.poll(POLLING_TIMEOUT)
+        .onSuccess(this::recordsHandler)
+        .onFailure(t -> {
+          if (this.closed.get()) {
+            // The failure might have been caused by stopping the consumer, so we just ignore it
+            return;
+          }
+          isPollInFlight.set(false);
+          exceptionHandler(t);
+        });
+    }
   }
 
   @Override
   public void stop(Promise<Void> stopPromise) {
     // Stop the executors
-    this.closed = true;
-    this.vertx.cancelTimer(this.pollTimer);
+    this.closed.set(true);
+    this.vertx.cancelTimer(this.pollTimer.get());
     this.recordDispatcherExecutors.values().forEach(OrderedAsyncExecutor::stop);
     // Stop the consumer
     super.stop(stopPromise);
@@ -162,10 +169,10 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   }
 
   private void recordsHandler(KafkaConsumerRecords<Object, CloudEvent> records) {
-    if (this.closed) {
+    if (this.closed.get()) {
       return;
     }
-    isPollInFlight = false;
+    isPollInFlight.set(false);
 
     if (records == null || records.size() == 0) {
       return;
@@ -185,7 +192,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   }
 
   private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record) {
-    if (this.closed) {
+    if (this.closed.get()) {
       return Future.failedFuture("Consumer verticle closed topics=" + topics + " resource=" + egress.getReference());
     }
     return this.recordDispatcher.dispatch(record);
