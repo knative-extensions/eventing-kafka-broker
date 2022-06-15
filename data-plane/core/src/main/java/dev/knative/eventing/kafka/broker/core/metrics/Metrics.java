@@ -70,7 +70,7 @@ public class Metrics {
   // bounded, so we keep the resource usage under control.
   // We might want to provide configs to make it bigger than a single thread but a single thread
   // to start with is good enough for now.
-  public static final ExecutorService meterBinderExecutor = Executors.newFixedThreadPool(2);
+  public static final ExecutorService meterBinderExecutor = Executors.newSingleThreadExecutor();
 
   static {
     Runtime.getRuntime().addShutdownHook(new Thread(meterBinderExecutor::shutdown));
