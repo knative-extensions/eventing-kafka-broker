@@ -52,7 +52,7 @@ func TestIsReceiverRunning(t *testing.T) {
 		ReceiverLabel: base.BrokerReceiverLabel,
 	}
 
-	require.True(t, r.IsReceiverRunning())
+	require.True(t, r.IsReceiverRunning("ns"))
 }
 
 func TestIsReceiverNotRunning(t *testing.T) {
@@ -63,7 +63,7 @@ func TestIsReceiverNotRunning(t *testing.T) {
 		ReceiverLabel: base.BrokerReceiverLabel,
 	}
 
-	require.False(t, r.IsReceiverRunning())
+	require.False(t, r.IsReceiverRunning("ns"))
 }
 
 func TestIsDispatcherRunning(t *testing.T) {
@@ -78,7 +78,7 @@ func TestIsDispatcherRunning(t *testing.T) {
 		DispatcherLabel: label,
 	}
 
-	require.True(t, r.IsDispatcherRunning())
+	require.True(t, r.IsDispatcherRunning("ns"))
 }
 
 func TestIsDispatcherNotRunning(t *testing.T) {
@@ -89,7 +89,7 @@ func TestIsDispatcherNotRunning(t *testing.T) {
 		DispatcherLabel: base.BrokerDispatcherLabel,
 	}
 
-	require.False(t, r.IsDispatcherRunning())
+	require.False(t, r.IsDispatcherRunning("ns"))
 }
 
 func TestGetOrCreateDataPlaneConfigMap(t *testing.T) {
