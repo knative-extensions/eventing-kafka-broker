@@ -108,7 +108,7 @@ func isAtLeastOneRunning(pods []*corev1.Pod) bool {
 
 type ConfigMapOption func(cm *corev1.ConfigMap)
 
-func (r *Reconciler) GetOrCreateDataPlaneConfigMap(ctx context.Context, namespace string, options ...ConfigMapOption) (*corev1.ConfigMap, error) {
+func (r *Reconciler) GetOrCreateContractConfigMap(ctx context.Context, namespace string, options ...ConfigMapOption) (*corev1.ConfigMap, error) {
 
 	cm, err := r.KubeClient.CoreV1().
 		// We want to have the contract configmap in broker's namespace.
@@ -117,13 +117,13 @@ func (r *Reconciler) GetOrCreateDataPlaneConfigMap(ctx context.Context, namespac
 		Get(ctx, r.DataPlaneConfigMapName, metav1.GetOptions{})
 
 	if apierrors.IsNotFound(err) {
-		cm, err = r.createDataPlaneConfigMap(ctx, namespace, options)
+		cm, err = r.createContractConfigMap(ctx, namespace, options)
 	}
 
 	return cm, err
 }
 
-func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context, namespace string, options []ConfigMapOption) (*corev1.ConfigMap, error) {
+func (r *Reconciler) createContractConfigMap(ctx context.Context, namespace string, options []ConfigMapOption) (*corev1.ConfigMap, error) {
 	cm := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
@@ -144,12 +144,12 @@ func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context, namespace str
 	return r.KubeClient.CoreV1().ConfigMaps(namespace).Create(ctx, cm, metav1.CreateOptions{})
 }
 
-// GetDataPlaneConfigMapData extracts contract from the given config map.
-func (r *Reconciler) GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.ConfigMap) (*contract.Contract, error) {
-	return GetDataPlaneConfigMapData(logger, dataPlaneConfigMap, r.DataPlaneConfigFormat)
+// GetContractConfigMapData extracts contract from the given config map.
+func (r *Reconciler) GetContractConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.ConfigMap) (*contract.Contract, error) {
+	return GetContractConfigMapData(logger, dataPlaneConfigMap, r.DataPlaneConfigFormat)
 }
 
-func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.ConfigMap, format string) (*contract.Contract, error) {
+func GetContractConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.ConfigMap, format string) (*contract.Contract, error) {
 
 	dataPlaneDataRaw, hasData := dataPlaneConfigMap.BinaryData[ConfigMapDataKey]
 	if !hasData || dataPlaneDataRaw == nil {

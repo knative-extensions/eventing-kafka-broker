@@ -80,7 +80,7 @@ type diffLogger struct {
 
 func (d *diffLogger) logDiff(cm *corev1.ConfigMap) {
 
-	ct, err := base.GetDataPlaneConfigMapData(d.logger, cm, d.format)
+	ct, err := base.GetContractConfigMapData(d.logger, cm, d.format)
 	if err != nil {
 		d.logger.Error(
 			"failed to get data plane config map data",

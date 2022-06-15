@@ -195,14 +195,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	statusConditionManager.TopicReady(topic)
 
 	// Get data plane config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.Reconciler.DataPlaneConfigMapNamespace)
+	contractConfigMap, err := r.GetOrCreateContractConfigMap(ctx, r.Reconciler.DataPlaneConfigMapNamespace)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 	logger.Debug("Got contract config map")
 
 	// Get data plane config data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
+	ct, err := r.GetContractConfigMapData(logger, contractConfigMap)
 	if err != nil || ct == nil {
 		return statusConditionManager.FailedToGetDataFromConfigMap(err)
 	}
@@ -314,14 +314,14 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, channel)
 
 	// Get contract config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.Reconciler.DataPlaneConfigMapNamespace)
+	contractConfigMap, err := r.GetOrCreateContractConfigMap(ctx, r.Reconciler.DataPlaneConfigMapNamespace)
 	if err != nil {
 		return fmt.Errorf("failed to get contract config map %s: %w", r.DataPlaneConfigMapAsString(), err)
 	}
 	logger.Debug("Got contract config map")
 
 	// Get contract data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
+	ct, err := r.GetContractConfigMapData(logger, contractConfigMap)
 	if err != nil && ct == nil {
 		return fmt.Errorf("failed to get contract: %w", err)
 	}

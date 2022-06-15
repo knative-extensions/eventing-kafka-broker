@@ -92,19 +92,19 @@ func TestIsDispatcherNotRunning(t *testing.T) {
 	require.False(t, r.IsDispatcherRunning("ns"))
 }
 
-func TestGetOrCreateDataPlaneConfigMap(t *testing.T) {
+func TestGetOrCreateContractConfigMap(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
 	r := &base.Reconciler{
 		KubeClient: kubeclient.Get(ctx),
 	}
 
-	cm, err := r.GetOrCreateDataPlaneConfigMap(ctx, "knative-eventing")
+	cm, err := r.GetOrCreateContractConfigMap(ctx, "knative-eventing")
 	require.Nil(t, err)
 	require.NotNil(t, cm)
 }
 
-func TestGetDataPlaneConfigMapDataEmptyConfigMap(t *testing.T) {
+func TestGetContractConfigMapDataEmptyConfigMap(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
 	r := &base.Reconciler{
@@ -113,14 +113,14 @@ func TestGetDataPlaneConfigMapDataEmptyConfigMap(t *testing.T) {
 
 	cm := &corev1.ConfigMap{}
 
-	ct, err := r.GetDataPlaneConfigMapData(logging.FromContext(ctx).Desugar(), cm)
+	ct, err := r.GetContractConfigMapData(logging.FromContext(ctx).Desugar(), cm)
 	require.Nil(t, err)
 	require.NotNil(t, ct)
 	require.Equal(t, uint64(0), ct.Generation)
 	require.Len(t, ct.Resources, 0)
 }
 
-func TestGetDataPlaneConfigMapData(t *testing.T) {
+func TestGetContractConfigMapData(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
 	r := &base.Reconciler{
@@ -140,7 +140,7 @@ func TestGetDataPlaneConfigMapData(t *testing.T) {
 		},
 	}
 
-	got, err := r.GetDataPlaneConfigMapData(logging.FromContext(ctx).Desugar(), cm)
+	got, err := r.GetContractConfigMapData(logging.FromContext(ctx).Desugar(), cm)
 	require.Nil(t, err)
 	require.NotNil(t, got)
 	require.Len(t, got.Resources, len(ct.Resources))
@@ -181,7 +181,7 @@ func TestUpdateDataPlaneConfigMap(t *testing.T) {
 	require.Nil(t, err)
 }
 
-func TestGetDataPlaneConfigMapDataCorrupted(t *testing.T) {
+func TestGetContractConfigMapDataCorrupted(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
 	r := &base.Reconciler{
@@ -195,7 +195,7 @@ func TestGetDataPlaneConfigMapDataCorrupted(t *testing.T) {
 		},
 	}
 
-	got, err := r.GetDataPlaneConfigMapData(logging.FromContext(ctx).Desugar(), cm)
+	got, err := r.GetContractConfigMapData(logging.FromContext(ctx).Desugar(), cm)
 	require.NotNil(t, err)
 	require.Equal(t, uint64(0), got.Generation)
 }

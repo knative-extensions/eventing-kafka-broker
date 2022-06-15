@@ -131,7 +131,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 
 	// Get contract config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.Reconciler.DataPlaneConfigMapNamespace)
+	contractConfigMap, err := r.GetOrCreateContractConfigMap(ctx, r.Reconciler.DataPlaneConfigMapNamespace)
 	if err != nil {
 		return statusConditionManager.FailedToGetConfigMap(err)
 	}
@@ -139,7 +139,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	logger.Debug("Got contract config map")
 
 	// Get contract data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
+	ct, err := r.GetContractConfigMapData(logger, contractConfigMap)
 	if err != nil && ct == nil {
 		return statusConditionManager.FailedToGetDataFromConfigMap(err)
 	}
@@ -147,7 +147,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
 	// Get resource configuration.
-	brokerResource, err := r.reconcilerBrokerResource(ctx, topic, broker, secret, topicConfig)
+	brokerResource, err := r.getBrokerContractResource(ctx, topic, broker, secret, topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -278,7 +278,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, broker)
 
 	// Get contract config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.Reconciler.DataPlaneConfigMapNamespace)
+	contractConfigMap, err := r.GetOrCreateContractConfigMap(ctx, r.Reconciler.DataPlaneConfigMapNamespace)
 	if err != nil {
 		return fmt.Errorf("failed to get contract config map %s: %w", r.DataPlaneConfigMapAsString(), err)
 	}
@@ -286,7 +286,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	logger.Debug("Got contract config map")
 
 	// Get contract data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
+	ct, err := r.GetContractConfigMapData(logger, contractConfigMap)
 	if err != nil {
 		return fmt.Errorf("failed to get contract: %w", err)
 	}
@@ -457,7 +457,7 @@ func rebuildCMFromAnnotations(br *eventing.Broker) *corev1.ConfigMap {
 	return cm
 }
 
-func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
+func (r *Reconciler) getBrokerContractResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
 	resource := &contract.Resource{
 		Uid:    string(broker.UID),
 		Topics: []string{topic},
