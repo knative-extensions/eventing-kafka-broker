@@ -139,7 +139,7 @@
             </paths>
           </extraDirectories>
           <container>
-            <user>nonroot</user>
+            <user>1002</user>
           </container>
         </configuration>
       </plugin>
