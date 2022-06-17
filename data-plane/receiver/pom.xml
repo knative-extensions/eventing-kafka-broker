@@ -113,6 +113,14 @@
           <to>
             <image>${env.KO_DOCKER_REPO}/knative-kafka-broker-receiver:${env.TAG}</image>
           </to>
+          <extraDirectories>
+            <paths>
+              <path>src/main/jib</path>
+            </paths>
+          </extraDirectories>
+          <container>
+            <user>1002</user>
+          </container>
         </configuration>
       </plugin>
       <plugin>
