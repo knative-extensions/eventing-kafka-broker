@@ -397,7 +397,7 @@
             <!--  KinD e2e tests registry uses HTTP -->
             <allowInsecureRegistries>true</allowInsecureRegistries>
             <from>
-              <image>gcr.io/distroless/java17-debian11:nonroot</image>
+              <image>eclipse-temurin:17-jre-focal</image>
               <platforms>
                 <platform>
                   <architecture>amd64</architecture>
