@@ -115,6 +115,11 @@
           </to>
           <!-- Build a non-root image leveraging this feature: -->
           <!-- https://github.com/GoogleContainerTools/jib/blob/master/jib-maven-plugin/README.md#adding-arbitrary-files-to-the-image -->
+          <extraDirectories>
+            <paths>
+              <path>src/main/jib</path>
+            </paths>
+          </extraDirectories>
           <container>
             <user>nonroot</user>
           </container>
