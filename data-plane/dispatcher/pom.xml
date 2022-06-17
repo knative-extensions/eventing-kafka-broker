@@ -131,13 +131,10 @@
           <to>
             <image>${env.KO_DOCKER_REPO}/knative-kafka-broker-dispatcher:${env.TAG}</image>
           </to>
-          <extraDirectories>
-            <paths>
-              <path>src/main/jib</path>
-            </paths>
-          </extraDirectories>
+          <!-- Build a non-root image leveraging this feature: -->
+          <!-- https://github.com/GoogleContainerTools/jib/blob/master/jib-maven-plugin/README.md#adding-arbitrary-files-to-the-image -->
           <container>
-            <user>1002</user>
+            <user>nonroot</user>
           </container>
         </configuration>
       </plugin>
