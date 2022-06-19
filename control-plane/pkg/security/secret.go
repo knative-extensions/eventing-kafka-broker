@@ -139,6 +139,8 @@ func saslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 	}
 }
 
+// sslConfig returns the Kafka client configuration for TLS related features,
+// and should be used for SSL and SASL_SSL protocols.
 func sslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 	return func(config *sarama.Config) error {
 
@@ -155,40 +157,46 @@ func sslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 		}
 
 		var tlsCerts []tls.Certificate
-		if protocol == ProtocolSSL {
 
-			// When protocol=SSL we might have 2 options:
-			//	- client auth is required on the broker side (mTLS)
-			//	- client auth is not required on the broker side
+		// SSL might me configured not only for encryption, but as an
+		// authentication mechanism on the broker side (mTLS)
 
-			skipClientAuth, err := skipClientAuthCheck(data)
+		skipClientAuth, err := skipClientAuthCheck(data)
+		if err != nil {
+			return fmt.Errorf("[protocol %s] %w", protocol, err)
+		}
+
+		// SASLSSL with mTLS support was added at version xx, which means there might be
+		// object specs that do not include skipClientAuth parameter for SASLSSL authentication,
+		// and do not inform mTLS parameters. In such case we need to consider skipClientAuth as
+		// enabled to be backwards compatible with existing objects.
+		userKeyCert, keyInformed := data[UserKey]
+		userCert, certInformed := data[UserCertificate]
+		if protocol == ProtocolSASLSSL && (!keyInformed || !certInformed) {
+			skipClientAuth = true
+		}
+
+		if !skipClientAuth {
+
+			if !keyInformed {
+				return fmt.Errorf(
+					`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
+					protocol, UserKey, UserSkip,
+				)
+			}
+
+			if !certInformed {
+				return fmt.Errorf(
+					`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
+					protocol, UserCertificate, UserSkip,
+				)
+			}
+
+			tlsCert, err := tls.X509KeyPair(userCert, userKeyCert)
 			if err != nil {
-				return fmt.Errorf("[protocol %s] %w", protocol, err)
+				return fmt.Errorf("[protocol %s] failed to load x.509 key pair: %w", protocol, err)
 			}
-
-			if !skipClientAuth {
-				userKeyCert, ok := data[UserKey]
-				if !ok {
-					return fmt.Errorf(
-						`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
-						protocol, UserKey, UserSkip,
-					)
-				}
-
-				userCert, ok := data[UserCertificate]
-				if !ok {
-					return fmt.Errorf(
-						`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
-						protocol, UserCertificate, UserSkip,
-					)
-				}
-
-				tlsCert, err := tls.X509KeyPair(userCert, userKeyCert)
-				if err != nil {
-					return fmt.Errorf("[protocol %s] failed to load x.509 key pair: %w", protocol, err)
-				}
-				tlsCerts = []tls.Certificate{tlsCert}
-			}
+			tlsCerts = []tls.Certificate{tlsCert}
 		}
 
 		config.Net.TLS.Enable = true

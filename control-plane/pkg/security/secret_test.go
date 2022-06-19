@@ -275,12 +275,11 @@ func TestSSLNoClientAuthInvalidFlag(t *testing.T) {
 }
 
 func TestSASLPLainSSL(t *testing.T) {
-	ca, userKey, userCert := loadCerts(t)
+	ca, _, userCert := loadCerts(t)
 
 	secret := map[string][]byte{
 		"protocol":       []byte("SASL_SSL"),
 		"sasl.mechanism": []byte("PLAIN"),
-		"user.key":       userKey,
 		"user.crt":       userCert,
 		"ca.crt":         ca,
 		"user":           []byte("my-user-name"),
@@ -292,6 +291,7 @@ func TestSASLPLainSSL(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
+	assert.Nil(t, config.Net.TLS.Config.Certificates)
 	assert.Equal(t, len(config.Net.TLS.Config.Certificates), 0)
 	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
 	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
@@ -308,6 +308,7 @@ func TestSASLSCRAM256SSL(t *testing.T) {
 	secret := map[string][]byte{
 		"protocol":       []byte("SASL_SSL"),
 		"sasl.mechanism": []byte("SCRAM-SHA-256"),
+		"user.skip":      []byte("true"),
 		"ca.crt":         ca,
 		"user.crt":       userCert,
 		"user.key":       userKey,
@@ -320,7 +321,7 @@ func TestSASLSCRAM256SSL(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
-	assert.Equal(t, len(config.Net.TLS.Config.Certificates), 0)
+	assert.Equal(t, 0, len(config.Net.TLS.Config.Certificates))
 	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
 	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
 	assert.True(t, config.Net.SASL.Enable)
@@ -336,6 +337,7 @@ func TestSASLSCRAM512SSL(t *testing.T) {
 	secret := map[string][]byte{
 		"protocol":       []byte("SASL_SSL"),
 		"sasl.mechanism": []byte("SCRAM-SHA-512"),
+		"user.skip":      []byte("true"),
 		"ca.crt":         ca,
 		"user.crt":       userCert,
 		"user.key":       userKey,
@@ -348,7 +350,7 @@ func TestSASLSCRAM512SSL(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
-	assert.Equal(t, len(config.Net.TLS.Config.Certificates), 0)
+	assert.Equal(t, 0, len(config.Net.TLS.Config.Certificates))
 	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
 	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
 	assert.True(t, config.Net.SASL.Enable)
@@ -377,6 +379,34 @@ func TestSASLSCRAM512SSLInvalidCaCert(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestSASLPLainMutualTLS(t *testing.T) {
+	ca, userKey, userCert := loadCerts(t)
+
+	secret := map[string][]byte{
+		"protocol":       []byte("SASL_SSL"),
+		"sasl.mechanism": []byte("PLAIN"),
+		"ca.crt":         ca,
+		"user.crt":       userCert,
+		"user.key":       userKey,
+		"user":           []byte("my-user-name"),
+		"password":       []byte("my-user-password"),
+	}
+	config := sarama.NewConfig()
+
+	err := kafka.Options(config, secretData(secret))
+
+	assert.Nil(t, err)
+	assert.True(t, config.Net.TLS.Enable)
+	assert.Equal(t, 1, len(config.Net.TLS.Config.Certificates))
+	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
+	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
+	assert.True(t, config.Net.SASL.Enable)
+	assert.True(t, config.Net.SASL.Handshake)
+	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypePlaintext), config.Net.SASL.Mechanism)
+	assert.Equal(t, "my-user-name", config.Net.SASL.User)
+	assert.Equal(t, "my-user-password", config.Net.SASL.Password)
+}
+
 func loadCerts(t *testing.T) (ca, userKey, userCert []byte) {
 	ca, err := ioutil.ReadFile("testdata/ca.crt")
 	assert.Nil(t, err)
@@ -388,4 +418,84 @@ func loadCerts(t *testing.T) (ca, userKey, userCert []byte) {
 	assert.Nil(t, err)
 
 	return ca, userKey, userCert
+}
+
+func TestSASLSCRAM256SSLmTLS(t *testing.T) {
+	ca, userKey, userCert := loadCerts(t)
+
+	secret := map[string][]byte{
+		"protocol":       []byte("SASL_SSL"),
+		"sasl.mechanism": []byte("SCRAM-SHA-256"),
+		"ca.crt":         ca,
+		"user.crt":       userCert,
+		"user.key":       userKey,
+		"user":           []byte("my-user-name"),
+		"password":       []byte("my-user-password"),
+	}
+	config := sarama.NewConfig()
+
+	err := kafka.Options(config, secretData(secret))
+
+	assert.Nil(t, err)
+	assert.True(t, config.Net.TLS.Enable)
+	assert.Equal(t, len(config.Net.TLS.Config.Certificates), 1)
+	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
+	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
+	assert.True(t, config.Net.SASL.Enable)
+	assert.True(t, config.Net.SASL.Handshake)
+	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeSCRAMSHA256), config.Net.SASL.Mechanism)
+	assert.Equal(t, "my-user-name", config.Net.SASL.User)
+	assert.Equal(t, "my-user-password", config.Net.SASL.Password)
+}
+
+func TestSASLSCRAM256SSLIntrinsicSkipUser(t *testing.T) {
+	ca, userKey, userCert := loadCerts(t)
+
+	// When SASL + SSL is configured but no user certificate and key
+	// are informed, the skipUser is automatically set.
+
+	secretCases := map[string]map[string][]byte{
+		"Key and certificate not informed": {
+			"protocol":       []byte("SASL_SSL"),
+			"sasl.mechanism": []byte("SCRAM-SHA-256"),
+			"ca.crt":         ca,
+			"user":           []byte("my-user-name"),
+			"password":       []byte("my-user-password"),
+		},
+		"Key informed, certificate missing": {
+			"protocol":       []byte("SASL_SSL"),
+			"sasl.mechanism": []byte("SCRAM-SHA-256"),
+			"ca.crt":         ca,
+			"user.key":       userKey,
+			"user":           []byte("my-user-name"),
+			"password":       []byte("my-user-password"),
+		},
+		"Key missing, certificate informed": {
+			"protocol":       []byte("SASL_SSL"),
+			"sasl.mechanism": []byte("SCRAM-SHA-256"),
+			"ca.crt":         ca,
+			"user.crt":       userCert,
+			"user":           []byte("my-user-name"),
+			"password":       []byte("my-user-password"),
+		},
+	}
+
+	for name, secret := range secretCases {
+		t.Run(name, func(t *testing.T) {
+			config := sarama.NewConfig()
+
+			err := kafka.Options(config, secretData(secret))
+
+			assert.Nil(t, err)
+			assert.True(t, config.Net.TLS.Enable)
+			assert.Equal(t, len(config.Net.TLS.Config.Certificates), 0)
+			assert.NotNil(t, config.Net.TLS.Config.RootCAs)
+			assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
+			assert.True(t, config.Net.SASL.Enable)
+			assert.True(t, config.Net.SASL.Handshake)
+			assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeSCRAMSHA256), config.Net.SASL.Mechanism)
+			assert.Equal(t, "my-user-name", config.Net.SASL.User)
+			assert.Equal(t, "my-user-password", config.Net.SASL.Password)
+		})
+	}
 }

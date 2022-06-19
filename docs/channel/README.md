@@ -98,7 +98,7 @@ implementations.
     - `PLAINTEXT`: No authentication and encryption are used.
     - `SSL`: Only encryption is used
     - `SASL_PLAINTEXT`: Only authentication is used
-    - `SASL_SSL`: Both authentication and encryption are used
+    - `SASL_SSL`: Both authentication and encryption are used. If user certificate and key are informed SASL and mutual TLS authentication methods are used.
 
    ```sh
     ca_cert_secret="my-cluster-cluster-ca-cert"
@@ -132,6 +132,18 @@ implementations.
       --from-literal=password="$SASL_PASSWD" \
       --from-literal=user="my-sasl-user" \
       --from-literal=protocol="SASL_PLAINTEXT" \
+      --from-literal=sasl.mechanism="SCRAM-SHA-512" \
+      --dry-run=client -o yaml | kubectl apply -n knative-eventing -f -
+
+    # Or, SSL with SASL and mTLS authentication
+    # (note: although this example is provided, Strimzi does not support SASL + mTLS authentication)
+    kubectl create secret --namespace knative-eventing generic sasl-mtls-secret \
+      --from-literal=ca.crt="$STRIMZI_CRT" \
+      --from-literal=user.crt="$TLSUSER_CRT" \
+      --from-literal=user.key="$TLSUSER_KEY" \
+      --from-literal=password="$SASL_PASSWD" \
+      --from-literal=user="my-sasl-user" \
+      --from-literal=protocol="SASL_SSL" \
       --from-literal=sasl.mechanism="SCRAM-SHA-512" \
       --dry-run=client -o yaml | kubectl apply -n knative-eventing -f -
    ```
