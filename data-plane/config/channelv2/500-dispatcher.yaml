@@ -138,8 +138,10 @@ spec:
             timeoutSeconds: 1
           readinessProbe:
             failureThreshold: 3
-            tcpSocket:
+            httpGet:
               port: 9090
+              path: /metrics
+              scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 3
             successThreshold: 1
