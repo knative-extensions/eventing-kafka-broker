@@ -350,7 +350,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
       .closeHandler(r -> logger.info("Circuit breaker closed {}", keyValue("target", target)));
 
     return new WebClientCloudEventSender(
-      WebClient.create(vertx, this.webClientOptions), circuitBreaker, circuitBreakerOptions, target
+      vertx, WebClient.create(vertx, this.webClientOptions), circuitBreaker, circuitBreakerOptions, target, egress
     );
   }
 
@@ -386,7 +386,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
   }
 
   /* package visibility for test */
-  static Function<Integer, Long> computeRetryPolicy(final EgressConfig egress) {
+  public static Function<Integer, Long> computeRetryPolicy(final EgressConfig egress) {
     if (egress != null && egress.getBackoffDelay() > 0) {
       final var delay = egress.getBackoffDelay();
       return switch (egress.getBackoffPolicy()) {
