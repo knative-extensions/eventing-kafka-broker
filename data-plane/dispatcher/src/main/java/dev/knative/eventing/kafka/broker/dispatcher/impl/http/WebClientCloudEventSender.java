@@ -23,8 +23,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactory
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.rw.CloudEventRWException;
-import io.vertx.circuitbreaker.CircuitBreaker;
-import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -46,15 +44,15 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
   private static final Logger logger = LoggerFactory.getLogger(WebClientCloudEventSender.class);
 
+  private static final long DEFAULT_TIMEOUT_MS = 600_000L;
+
   private final WebClient client;
-  private final CircuitBreaker circuitBreaker;
   private final String target;
 
   private final Promise<Void> closePromise = Promise.promise();
   private final Function<Integer, Long> retryPolicyFunc;
   private final DataPlaneContract.EgressConfig egress;
   private final Vertx vertx;
-  private final CircuitBreakerOptions circuitBreakerOptions;
 
   private final AtomicBoolean closed = new AtomicBoolean(false);
   private final AtomicInteger inFlightRequests = new AtomicInteger(0);
@@ -62,34 +60,27 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   /**
    * All args constructor.
    *
-   * @param vertx
-   * @param client                http client.
-   * @param circuitBreaker        circuit breaker
-   * @param circuitBreakerOptions circuit breaker options.
-   * @param target                subscriber URI
-   * @param egress                egress configuration
+   * @param vertx  Vertx context instance
+   * @param client http client.
+   * @param target subscriber URI
+   * @param egress egress configuration
    */
   public WebClientCloudEventSender(final Vertx vertx,
                                    final WebClient client,
-                                   final CircuitBreaker circuitBreaker,
-                                   final CircuitBreakerOptions circuitBreakerOptions,
                                    final String target,
                                    final DataPlaneContract.EgressConfig egress) {
-    this.vertx = vertx;
-    this.circuitBreakerOptions = circuitBreakerOptions;
-    Objects.requireNonNull(client, "provide client");
     Objects.requireNonNull(vertx);
+    Objects.requireNonNull(client, "provide client");
     if (target == null || target.equals("")) {
       throw new IllegalArgumentException("provide a target");
     }
     if (!URI.create(target).isAbsolute()) {
       throw new IllegalArgumentException("provide a valid target, provided target: " + target);
     }
-    Objects.requireNonNull(circuitBreaker, "provide circuitBreaker");
 
+    this.vertx = vertx;
     this.client = client;
     this.target = target;
-    this.circuitBreaker = circuitBreaker;
     this.egress = egress;
     this.retryPolicyFunc = ConsumerVerticleFactoryImpl.computeRetryPolicy(egress);
   }
@@ -132,7 +123,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
       },
       // Retry and failures
       cause -> {
-        if (retryCounter+1 > egress.getRetry()) {
+        if (retryCounter + 1 > egress.getRetry()) {
           return Future.failedFuture(cause);
         }
 
@@ -158,7 +149,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   private Future<?> send(final CloudEvent event, final Promise<HttpResponse<Buffer>> breaker) {
     return VertxMessageFactory
       .createWriter(client.postAbs(target)
-        .timeout(this.circuitBreakerOptions.getTimeout())
+        .timeout(this.egress.getTimeout() <= 0 ? DEFAULT_TIMEOUT_MS : this.egress.getTimeout())
         .putHeader("Prefer", "reply"))
       .writeBinary(event)
       .onFailure(ex -> {
@@ -225,7 +216,6 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     }
 
     final Function<Void, Future<Void>> closeF = v -> {
-      this.circuitBreaker.close();
       this.client.close();
       return Future.succeededFuture();
     };
