@@ -337,18 +337,6 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     return new WebClientCloudEventSender(vertx, WebClient.create(vertx, this.webClientOptions), target, egress);
   }
 
-  /* package visibility for test */
-  public static Function<Integer, Long> computeRetryPolicy(final EgressConfig egress) {
-    if (egress != null && egress.getBackoffDelay() > 0) {
-      final var delay = egress.getBackoffDelay();
-      return switch (egress.getBackoffPolicy()) {
-        case Linear -> retryCount -> delay * retryCount;
-        case Exponential, UNRECOGNIZED -> retryCount -> delay * Math.round(Math.pow(2, retryCount));
-      };
-    }
-    return retry -> 0L; // Default Vert.x retry policy, it means don't retry
-  }
-
   private static boolean hasDeadLetterSink(final EgressConfig egressConfig) {
     return !(egressConfig == null || egressConfig.getDeadLetter().isEmpty());
   }
@@ -370,7 +358,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
   }
 
   private static long maxProcessingTimeMs(final EgressConfig egressConfig) {
-    final var retryPolicy = computeRetryPolicy(egressConfig);
+    final var retryPolicy = WebClientCloudEventSender.computeRetryPolicy(egressConfig);
     final var retry = egressConfig.getRetry();
     final var timeout = egressConfig.getTimeout();
 

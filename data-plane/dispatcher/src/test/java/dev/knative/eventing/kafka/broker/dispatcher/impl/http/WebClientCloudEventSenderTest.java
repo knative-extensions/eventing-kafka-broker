@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
@@ -35,6 +36,7 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender.computeRetryPolicy;
 import static dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender.isRetryableStatusCode;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -212,4 +214,57 @@ public class WebClientCloudEventSenderTest {
       IntStream.of(404, 408, 409, 429).boxed()
     );
   }
+
+  @Test
+  public void linearBackoffPolicy() {
+
+    final var policy = computeRetryPolicy(DataPlaneContract.EgressConfig.newBuilder()
+      .setRetry(10)
+      .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+      .setBackoffDelay(100)
+      .build());
+
+    final var delay = policy.apply(5);
+
+    assertThat(delay).isEqualTo(100 * 5);
+  }
+
+  @Test
+  public void exponentialBackoffPolicy() {
+
+    final var policy = computeRetryPolicy(DataPlaneContract.EgressConfig.newBuilder()
+      .setRetry(10)
+      .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Exponential)
+      .setBackoffDelay(100)
+      .build());
+
+    final var delay = policy.apply(5);
+
+    assertThat(delay).isEqualTo((long) (100 * Math.pow(2, 5)));
+  }
+
+  @Test
+  public void exponentialBackoffPolicyByDefault() {
+
+    final var policy = computeRetryPolicy(DataPlaneContract.EgressConfig.newBuilder()
+      .setRetry(10)
+      .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Exponential)
+      .setBackoffDelay(100)
+      .build());
+
+    final var delay = policy.apply(5);
+
+    assertThat(delay).isEqualTo((long) (100 * Math.pow(2, 5)));
+  }
+
+  @Test
+  public void noRetry() {
+
+    final var policy = computeRetryPolicy(null);
+
+    final var delay = policy.apply(Double.valueOf(Math.random()).intValue());
+
+    assertThat(delay).isEqualTo(0);
+  }
+
 }

@@ -82,7 +82,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     this.client = client;
     this.target = target;
     this.egress = egress;
-    this.retryPolicyFunc = ConsumerVerticleFactoryImpl.computeRetryPolicy(egress);
+    this.retryPolicyFunc = computeRetryPolicy(egress);
   }
 
   public Future<HttpResponse<Buffer>> send(final CloudEvent event) {
@@ -235,4 +235,16 @@ public final class WebClientCloudEventSender implements CloudEventSender {
       statusCode == 409 || // Conflict / Processing in progress
       statusCode == 429;   // Too Many Requests / Overloaded
   }
+
+  public static Function<Integer, Long> computeRetryPolicy(final DataPlaneContract.EgressConfig egress) {
+    if (egress != null && egress.getBackoffDelay() > 0) {
+      final var delay = egress.getBackoffDelay();
+      return switch (egress.getBackoffPolicy()) {
+        case Linear -> retryCount -> delay * retryCount;
+        case Exponential, UNRECOGNIZED -> retryCount -> delay * Math.round(Math.pow(2, retryCount));
+      };
+    }
+    return retry -> 0L; // Default Vert.x retry policy, it means don't retry
+  }
+
 }
