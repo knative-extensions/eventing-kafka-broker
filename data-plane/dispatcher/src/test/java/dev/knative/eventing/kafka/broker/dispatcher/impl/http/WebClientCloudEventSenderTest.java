@@ -17,8 +17,6 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.cloudevents.core.builder.CloudEventBuilder;
-import io.vertx.circuitbreaker.CircuitBreaker;
-import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
@@ -46,28 +44,22 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class WebClientCloudEventSenderTest {
 
   @Test
-  public void shouldCloseCircuitBreakerAndWebClient(final Vertx vertx, final VertxTestContext context) {
-
-    final var circuitBreaker = mock(CircuitBreaker.class);
-    when(circuitBreaker.close()).thenReturn(circuitBreaker);
-
+  public void shouldWebClient(final Vertx vertx, final VertxTestContext context) {
     final var webClient = mock(WebClient.class);
     doNothing().when(webClient).close();
 
     final var consumerRecordSender = new WebClientCloudEventSender(
-      vertx, webClient, circuitBreaker, new CircuitBreakerOptions(), "http://localhost:12345",
+      vertx, webClient, "http://localhost:12345",
       DataPlaneContract.EgressConfig.getDefaultInstance());
 
     consumerRecordSender.close()
       .onFailure(context::failNow)
       .onSuccess(r -> context.verify(() -> {
-        verify(circuitBreaker, times(1)).close();
         verify(webClient, times(1)).close();
         context.completeNow();
       }));
@@ -106,11 +98,10 @@ public class WebClientCloudEventSenderTest {
     final var sender = new WebClientCloudEventSender(
       vertx,
       WebClient.create(vertx),
-      CircuitBreaker.create("localhost" + port, vertx),
-      new CircuitBreakerOptions().setTimeout(1000L),
       "http://localhost:" + port,
       DataPlaneContract.EgressConfig.newBuilder()
         .setBackoffDelay(100L)
+        .setTimeout(1000L)
         .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
         .setRetry(retry)
         .build()
@@ -165,11 +156,10 @@ public class WebClientCloudEventSenderTest {
     final var sender = new WebClientCloudEventSender(
       vertx,
       WebClient.create(vertx),
-      CircuitBreaker.create("localhost" + port, vertx),
-      new CircuitBreakerOptions().setTimeout(1000L),
       "http://localhost:" + port,
       DataPlaneContract.EgressConfig.newBuilder()
         .setBackoffDelay(100L)
+        .setTimeout(100L)
         .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
         .setRetry(retry)
         .build()

@@ -49,8 +49,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.circuitbreaker.CircuitBreaker;
-import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -89,8 +87,6 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
   private static final Logger logger = LoggerFactory.getLogger(ConsumerVerticleFactoryImpl.class);
-
-  private static final long DEFAULT_TIMEOUT_MS = 600_000L;
 
   private final static CloudEventSender NO_DEAD_LETTER_SINK_SENDER = CloudEventSender.noop("No dead letter sink set");
 
@@ -336,53 +332,10 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     );
   }
 
-  private CloudEventSender createConsumerRecordSender(
-    final Vertx vertx,
-    final String target,
-    final EgressConfig egress) {
-
-    final var circuitBreakerOptions = createCircuitBreakerOptions(egress);
-    final var circuitBreaker = CircuitBreaker
-      .create(target, vertx, circuitBreakerOptions)
-      .retryPolicy(computeRetryPolicy(egress))
-      .openHandler(r -> logger.info("Circuit breaker opened {}", keyValue("target", target)))
-      .halfOpenHandler(r -> logger.info("Circuit breaker half-opened {}", keyValue("target", target)))
-      .closeHandler(r -> logger.info("Circuit breaker closed {}", keyValue("target", target)));
-
-    return new WebClientCloudEventSender(
-      vertx, WebClient.create(vertx, this.webClientOptions), circuitBreaker, circuitBreakerOptions, target, egress
-    );
-  }
-
-  private static CircuitBreakerOptions createCircuitBreakerOptions(final DataPlaneContract.EgressConfig egressConfig) {
-    CircuitBreakerOptions options = new CircuitBreakerOptions();
-
-    // This disables circuit breaker notifications on the event bus
-    options.setNotificationAddress(null);
-
-    if (egressConfig != null) {
-      // Single request timeout
-      options.setTimeout(
-        egressConfig.getTimeout() > 0 ?
-          egressConfig.getTimeout() :
-          DEFAULT_TIMEOUT_MS
-      );
-
-      // Retry options
-      if (egressConfig.getRetry() > 0) {
-        options
-          // TODO reset timeout should be configurable or, at least, set by the control plane
-          .setResetTimeout(
-            egressConfig.getBackoffDelay() > 0 ?
-              egressConfig.getBackoffDelay() :
-              CircuitBreakerOptions.DEFAULT_RESET_TIMEOUT
-          )
-          // TODO max failures should be configurable or, at least, set by the control plane
-          .setMaxFailures(egressConfig.getRetry() * 2)
-          .setMaxRetries(egressConfig.getRetry());
-      }
-    }
-    return options;
+  private CloudEventSender createConsumerRecordSender(final Vertx vertx,
+                                                      final String target,
+                                                      final EgressConfig egress) {
+    return new WebClientCloudEventSender(vertx, WebClient.create(vertx, this.webClientOptions), target, egress);
   }
 
   /* package visibility for test */
