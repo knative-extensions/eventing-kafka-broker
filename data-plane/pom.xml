@@ -407,6 +407,10 @@
                   <architecture>arm64</architecture>
                   <os>linux</os>
                 </platform>
+                <platform>
+                  <architecture>s390x</architecture>
+                  <os>linux</os>
+                </platform>
               </platforms>
             </from>
           </configuration>
