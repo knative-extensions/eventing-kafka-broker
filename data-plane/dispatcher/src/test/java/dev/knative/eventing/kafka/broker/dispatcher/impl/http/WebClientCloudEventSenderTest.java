@@ -183,6 +183,65 @@ public class WebClientCloudEventSenderTest {
     sender.close().onSuccess(v -> context.completeNow());
   }
 
+  @Test
+  @Timeout(value = 20000)
+  public void shouldTimeoutAndFail(final Vertx vertx, final VertxTestContext context) throws ExecutionException, InterruptedException {
+
+    final var port = 12345;
+    final var retry = 5;
+    final var timeout = 200L;
+    final var event = CloudEventBuilder.v1()
+      .withId(UUID.randomUUID().toString())
+      .withSource(URI.create("/api/v1/orders"))
+      .withType("dev.knative.eventing.created")
+      .build();
+
+    final var counter = new LongAdder();
+
+    vertx.createHttpServer()
+      .requestHandler(r -> {
+        if (r.getHeader("Ce-Id").equalsIgnoreCase(event.getId())) {
+          counter.increment();
+        }
+        if (counter.intValue() > retry+1) {
+          r.response().setStatusCode(200).end();
+        } else {
+          vertx.setTimer(timeout+500, v -> r.response().setStatusCode(200).end());
+        }
+      })
+      .listen(port, "localhost")
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get();
+
+    final var sender = new WebClientCloudEventSender(
+      vertx,
+      WebClient.create(vertx),
+      "http://localhost:" + port,
+      DataPlaneContract.EgressConfig.newBuilder()
+        .setBackoffDelay(100L)
+        .setTimeout(100L)
+        .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+        .setRetry(retry)
+        .build()
+    );
+
+    final var success = new AtomicBoolean(true);
+
+    sender.send(event)
+      .onFailure(v -> success.set(false))
+      .onSuccess(v -> success.set(true));
+
+    await().untilFalse(success);
+    await().untilAdder(counter, is(equalTo(6L)));
+
+    // Verify that after some time counter is still equal to 6.
+    Thread.sleep(10000L);
+    await().untilAdder(counter, is(equalTo(6L)));
+
+    sender.close().onSuccess(v -> context.completeNow());
+  }
+
   @ParameterizedTest
   @MethodSource("retryableStatusCodes")
   public void shouldRetryRetryableStatusCodes(final Integer statusCode) {
