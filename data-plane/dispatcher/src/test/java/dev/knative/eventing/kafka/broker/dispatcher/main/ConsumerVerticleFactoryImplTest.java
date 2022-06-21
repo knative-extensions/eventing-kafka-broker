@@ -181,58 +181,6 @@ public class ConsumerVerticleFactoryImplTest {
   }
 
   @Test
-  public void linearBackoffPolicy() {
-
-    final var policy = ConsumerVerticleFactoryImpl.computeRetryPolicy(EgressConfig.newBuilder()
-      .setRetry(10)
-      .setBackoffPolicy(BackoffPolicy.Linear)
-      .setBackoffDelay(100)
-      .build());
-
-    final var delay = policy.apply(5);
-
-    assertThat(delay).isEqualTo(100 * 5);
-  }
-
-  @Test
-  public void exponentialBackoffPolicy() {
-
-    final var policy = ConsumerVerticleFactoryImpl.computeRetryPolicy(EgressConfig.newBuilder()
-      .setRetry(10)
-      .setBackoffPolicy(BackoffPolicy.Exponential)
-      .setBackoffDelay(100)
-      .build());
-
-    final var delay = policy.apply(5);
-
-    assertThat(delay).isEqualTo((long) (100 * Math.pow(2, 5)));
-  }
-
-  @Test
-  public void exponentialBackoffPolicyByDefault() {
-
-    final var policy = ConsumerVerticleFactoryImpl.computeRetryPolicy(EgressConfig.newBuilder()
-      .setRetry(10)
-      .setBackoffPolicy(BackoffPolicy.Exponential)
-      .setBackoffDelay(100)
-      .build());
-
-    final var delay = policy.apply(5);
-
-    assertThat(delay).isEqualTo((long) (100 * Math.pow(2, 5)));
-  }
-
-  @Test
-  public void noRetry() {
-
-    final var policy = ConsumerVerticleFactoryImpl.computeRetryPolicy(null);
-
-    final var delay = policy.apply(Double.valueOf(Math.random()).intValue());
-
-    assertThat(delay).isEqualTo(0);
-  }
-
-  @Test
   public void getNoopResponseHandler() {
     final var kafkaCounter = new AtomicInteger(0);
     final var httpCounter = new AtomicInteger(0);
