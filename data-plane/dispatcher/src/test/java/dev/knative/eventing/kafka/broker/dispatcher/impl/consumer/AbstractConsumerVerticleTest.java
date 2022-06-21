@@ -48,6 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -138,11 +139,11 @@ public abstract class AbstractConsumerVerticleTest {
       .onFailure(context::failNow);
 
     undeployPromise.future()
-      .onSuccess(ignored -> {
-        assertThat(consumer.closed()).isTrue();
-        context.completeNow();
-      })
+      .onSuccess(ignored -> {})
       .onFailure(context::failNow);
+
+    await().untilAsserted(() -> assertThat(consumer.closed()).isTrue());
+    context.completeNow();
   }
 
   @Test
@@ -150,6 +151,8 @@ public abstract class AbstractConsumerVerticleTest {
   public void shouldCloseEverything(final Vertx vertx, final VertxTestContext context) {
     final var topics = new String[]{"a"};
     final KafkaConsumer<Object, CloudEvent> consumer = mock(KafkaConsumer.class);
+
+    final var checkpoints = context.checkpoint(2);
 
     when(consumer.close()).thenReturn(Future.succeededFuture());
     when(consumer.subscribe((Set<String>) any(), any())).then(answer -> {
@@ -226,11 +229,13 @@ public abstract class AbstractConsumerVerticleTest {
           assertThat(consumerRecordSenderClosed.get()).isTrue();
           assertThat(sinkClosed.get()).isTrue();
           assertThat(dlsSenderClosed.get()).isTrue();
-          verify(consumer, times(1)).close();
-
-          context.completeNow();
+          checkpoints.flag();
         }))
       );
+
+
+    await().untilAsserted(() -> verify(consumer, times(1)).close());
+    checkpoints.flag();
   }
 
   abstract BaseConsumerVerticle createConsumerVerticle(BaseConsumerVerticle.Initializer initializer,
