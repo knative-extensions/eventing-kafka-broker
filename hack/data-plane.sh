@@ -52,8 +52,6 @@ function receiver_build_push() {
   header "Building receiver ..."
 
   local receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver}"
-  export TAG
-  TAG="$(git rev-parse HEAD)"
   export KNATIVE_KAFKA_RECEIVER_IMAGE="${receiver}:${TAG}"
 
   ./mvnw package jib:build -pl ${RECEIVER_DIRECTORY} -DskipTests || return $?
@@ -63,8 +61,6 @@ function dispatcher_build_push() {
   header "Building dispatcher ..."
 
   local dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher}"
-  export TAG
-  TAG="$(git rev-parse HEAD)"
   export KNATIVE_KAFKA_DISPATCHER_IMAGE="${dispatcher}:${TAG}"
 
   ./mvnw package jib:build -pl "${DISPATCHER_DIRECTORY}" -DskipTests || return $?

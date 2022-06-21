@@ -15,6 +15,6 @@
 # limitations under the License.
 
 # Update release labels
-export TAG=${TAG:-"devel"}
+export TAG=${TAG:-$(git rev-parse HEAD)}
 echo "Updating release labels to kafka.eventing.knative.dev/release: \"${TAG}\""
 export LABEL_YAML_CMD=(sed -e "s|kafka.eventing.knative.dev/release: devel|kafka.eventing.knative.dev/release: \"${TAG}\"|")
