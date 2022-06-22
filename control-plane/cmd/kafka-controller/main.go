@@ -29,6 +29,7 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/brokeryolo"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
@@ -73,6 +74,14 @@ func main() {
 			Name: "trigger-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 				return trigger.NewController(ctx, watcher, brokerEnv)
+			},
+		},
+
+		// Broker yolo controller
+		injection.NamedControllerConstructor{
+			Name: "broker-yolo-controller",
+			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
+				return brokeryolo.NewController(ctx, watcher, brokerEnv)
 			},
 		},
 
