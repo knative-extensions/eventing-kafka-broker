@@ -1,0 +1,188 @@
+---
+
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-broker-receiver
+  namespace: knative-eventing
+  labels:
+    app: kafka-broker-receiver
+    kafka.eventing.knative.dev/release: devel
+spec:
+  selector:
+    matchLabels:
+      app: kafka-broker-receiver
+  template:
+    metadata:
+      name: kafka-broker-receiver
+      labels:
+        app: kafka-broker-receiver
+        kafka.eventing.knative.dev/release: devel
+    spec:
+      # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
+      topologySpreadConstraints:
+        - maxSkew: 2
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: kafka-broker-receiver
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: kafka-broker-receiver
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+      serviceAccountName: knative-kafka-broker-data-plane
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: kafka-broker-receiver
+          image: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /etc/config
+              name: config-kafka-broker-data-plane
+              readOnly: true
+            - mountPath: /etc/brokers-triggers
+              name: kafka-broker-brokers-triggers
+              readOnly: true
+            - mountPath: /tmp
+              name: cache
+            - mountPath: /etc/logging
+              name: kafka-broker-config-logging
+              readOnly: true
+            - mountPath: /etc/tracing
+              name: config-tracing
+              readOnly: true
+          ports:
+            - containerPort: 9090
+              name: http-metrics
+              protocol: TCP
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          env:
+            - name: SERVICE_NAME
+              value: "kafka-broker-receiver"
+            - name: SERVICE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: INGRESS_PORT
+              value: "8080"
+            - name: PRODUCER_CONFIG_FILE_PATH
+              value: /etc/config/config-kafka-broker-producer.properties
+            - name: HTTPSERVER_CONFIG_FILE_PATH
+              value: /etc/config/config-kafka-broker-httpserver.properties
+            - name: DATA_PLANE_CONFIG_FILE_PATH
+              value: /etc/brokers-triggers/data
+            - name: LIVENESS_PROBE_PATH
+              value: /healthz
+            - name: READINESS_PROBE_PATH
+              value: /readyz
+            - name: METRICS_PATH
+              value: /metrics
+            - name: METRICS_PORT
+              value: "9090"
+            - name: METRICS_PUBLISH_QUANTILES
+              value: "false"
+            - name: METRICS_JVM_ENABLED
+              value: "false"
+            - name: CONFIG_TRACING_PATH
+              value: "/etc/tracing"
+            # https://github.com/fabric8io/kubernetes-client/issues/2212
+            - name: HTTP2_DISABLE
+              value: "true"
+            # This should be set according to initial delay seconds
+            - name: WAIT_STARTUP_SECONDS
+              value: "8"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:+CrashOnOutOfMemoryError"
+          # TODO set resources (limits and requests)
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              port: 8080
+              path: /healthz
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              port: 8080
+              path: /readyz
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+          terminationMessagePolicy: FallbackToLogsOnError
+          terminationMessagePath: /dev/temination-log
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+      volumes:
+        - name: kafka-broker-brokers-triggers
+          configMap:
+            name: kafka-broker-brokers-triggers
+        - name: config-kafka-broker-data-plane
+          configMap:
+            name: config-kafka-broker-data-plane
+        - name: cache
+          emptyDir: { }
+        - name: kafka-broker-config-logging
+          configMap:
+            name: kafka-config-logging
+        - name: config-tracing
+          configMap:
+            name: config-tracing
+      restartPolicy: Always
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-broker-ingress
+  namespace: knative-eventing
+  labels:
+    app: kafka-broker-receiver
+    kafka.eventing.knative.dev/release: devel
+spec:
+  selector:
+    app: kafka-broker-receiver
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+    - name: http-container
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: http-metrics
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
+---
