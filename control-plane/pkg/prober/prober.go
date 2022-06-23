@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sync"
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/types"
@@ -93,8 +94,60 @@ func probe(ctx context.Context, client httpClient, logger *zap.Logger, address s
 
 func IPsListerFromService(svc types.NamespacedName) IPsLister {
 	return func(addressable Addressable) ([]string, error) {
-		return []string{fmt.Sprintf("%s.%s.svc", svc.Name, svc.Namespace)}, nil
+		return []string{GetIPForService(svc)}, nil
 	}
+}
+
+func GetIPForService(svc types.NamespacedName) string {
+	return fmt.Sprintf("%s.%s.svc", svc.Name, svc.Namespace)
+}
+
+type IPListerWithMapping interface {
+	Register(svc types.NamespacedName, ip string)
+	Unregister(svc types.NamespacedName)
+	List(addressable Addressable) ([]string, error)
+}
+
+type ipListerWithMapping struct {
+	mx      sync.RWMutex
+	mapping map[string]string
+}
+
+func NewIPListerWithMapping() *ipListerWithMapping {
+	return &ipListerWithMapping{
+		mapping: map[string]string{},
+	}
+}
+
+func (m *ipListerWithMapping) Register(svc types.NamespacedName, ip string) {
+	a := svc.String()
+
+	m.mx.Lock()
+	defer m.mx.Unlock()
+
+	m.mapping[a] = ip
+}
+
+func (m *ipListerWithMapping) Unregister(svc types.NamespacedName) {
+	a := svc.String()
+
+	m.mx.Lock()
+	defer m.mx.Unlock()
+
+	delete(m.mapping, a)
+}
+
+func (m *ipListerWithMapping) List(addressable Addressable) ([]string, error) {
+	a := addressable.ResourceKey.String()
+
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
+	if ip, exists := m.mapping[a]; exists {
+		return []string{ip}, nil
+	}
+	// TODO: shall we return an error?
+	return nil, nil
 }
 
 func IdentityIPsLister() IPsLister {

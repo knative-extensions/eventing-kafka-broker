@@ -25,6 +25,7 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
@@ -32,6 +33,7 @@ import (
 	"knative.dev/pkg/injection"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
+	"net/http"
 	"os"
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
@@ -85,9 +87,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		return controller.Options{PromoteFilterFunc: kafka.BrokerYoloClassFilter()}
 	})
 
+	// TODO: do we still need this?
 	reconciler.Enqueue = impl.EnqueueKey
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
+	reconciler.IPsLister = prober.NewIPListerWithMapping()
+	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, env.IngressPodPort, reconciler.IPsLister.List, impl.EnqueueKey)
 
 	brokerInformer := brokerinformer.Get(ctx)
 

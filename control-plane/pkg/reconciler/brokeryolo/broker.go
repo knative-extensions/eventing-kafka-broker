@@ -36,10 +36,8 @@ import (
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/logging"
-	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
-	"net/http"
 	"os"
 
 	mf "github.com/manifestival/manifestival"
@@ -66,6 +64,10 @@ type Reconciler struct {
 
 	// BaseDataPlaneManifest is a Manifestival manifest that has the resources that need to be created in the user namespace.
 	BaseDataPlaneManifest mf.Manifest
+
+	Prober prober.Prober
+
+	IPsLister prober.IPListerWithMapping
 }
 
 func setOwnerRef(broker *eventing.Broker) base.ConfigMapOption {
@@ -87,6 +89,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 }
 
 func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
+	r.IPsLister.Register(
+		types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name},
+		prober.GetIPForService(types.NamespacedName{Namespace: broker.Namespace, Name: r.Env.IngressName}),
+	)
+
 	br := r.createReconcilerForBrokerInstance(ctx, broker)
 
 	// TODO: would setting ownerRef result in duplicate reconciliation events?
@@ -185,13 +192,14 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	//}
 
 	br := r.createReconcilerForBrokerInstance(ctx, broker)
-	return br.FinalizeKind(ctx, broker)
+	result := br.FinalizeKind(ctx, broker)
+
+	r.IPsLister.Unregister(types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name})
+
+	return result
 }
 
 func (r *Reconciler) createReconcilerForBrokerInstance(ctx context.Context, broker *eventing.Broker) *brokerreconciler.Reconciler {
-	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: broker.Namespace, Name: r.Env.IngressName})
-	p := prober.NewAsync(ctx, http.DefaultClient, r.Env.IngressPodPort, IPsLister, r.Enqueue)
-	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.Env.SystemNamespace)
 
 	//p = FakeProber{}
 
@@ -222,10 +230,7 @@ func (r *Reconciler) createReconcilerForBrokerInstance(ctx context.Context, brok
 		ConfigMapLister:            r.ConfigMapLister,
 		NewKafkaClusterAdminClient: r.NewKafkaClusterAdminClient,
 		BootstrapServers:           r.BootstrapServers,
-
-		// override
-		Prober:      p,
-		IngressHost: ingressHost,
+		Prober:                     r.Prober,
 	}
 }
 
