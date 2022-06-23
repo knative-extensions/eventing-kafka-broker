@@ -152,9 +152,11 @@ spec:
         - name: kafka-broker-config-logging
           configMap:
             name: kafka-config-logging
+            optional: true
         - name: config-tracing
           configMap:
             name: config-tracing
+            optional: true
       restartPolicy: Always
       dnsConfig:
         options:
