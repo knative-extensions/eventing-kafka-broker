@@ -24,6 +24,9 @@ readonly CONTROL_PLANE_SOURCE_CONFIG_DIR=control-plane/config/eventing-kafka-sou
 function control_plane_setup() {
   ko resolve ${KO_FLAGS} -Rf "${CONTROL_PLANE_CONFIG_DIR}" | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
   ko resolve ${KO_FLAGS} -Rf "${CONTROL_PLANE_POST_INSTALL_CONFIG_DIR}" | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
+
+  # Replace the references to dispatcher and receiver images in controller env vars
+  replace_images "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
 }
 
 function control_plane_source_setup() {
