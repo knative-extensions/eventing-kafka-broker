@@ -23,8 +23,6 @@ import (
 	"testing"
 
 	"k8s.io/utils/pointer"
-	"knative.dev/pkg/network"
-
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
@@ -2233,9 +2231,8 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 					T:                                      t,
 				}, nil
 			},
-			Env:         env,
-			Prober:      proberMock,
-			IngressHost: network.GetServiceHostname(env.IngressName, env.SystemNamespace),
+			Env:    env,
+			Prober: proberMock,
 		}
 
 		reconciler.ConfigMapTracker = &FakeTracker{}
