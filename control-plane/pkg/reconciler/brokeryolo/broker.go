@@ -19,11 +19,13 @@ package brokeryolo
 import (
 	"context"
 	"fmt"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes/scheme"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
 	"k8s.io/utils/pointer"
@@ -38,9 +40,13 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 	"net/http"
+	"os"
 
 	mf "github.com/manifestival/manifestival"
 )
+
+// TODO: read config-kafka-broker-data-plane in user namespace first, fallback to the one in knative-eventing
+// TODO
 
 type Reconciler struct {
 	*base.Reconciler
@@ -95,6 +101,23 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 
 	manifest, err = manifest.Transform(appendNewOwnerRefsForBroker(manifest.Client, broker))
+	if err != nil {
+		return err
+	}
+
+	dispatcherImg, ok := os.LookupEnv("KNATIVE_KAFKA_DISPATCHER_IMAGE")
+	if !ok {
+		return fmt.Errorf("unable to find 'KNATIVE_KAFKA_DISPATCHER_IMAGE' env var in controller")
+	}
+	receiverImg, ok := os.LookupEnv("KNATIVE_KAFKA_RECEIVER_IMAGE")
+	if !ok {
+		return fmt.Errorf("unable to find 'KNATIVE_KAFKA_RECEIVER_IMAGE' env var in controller")
+	}
+
+	manifest, err = manifest.Transform(setImagesForDeployments(map[string]string{
+		"${KNATIVE_KAFKA_DISPATCHER_IMAGE}": dispatcherImg,
+		"${KNATIVE_KAFKA_RECEIVER_IMAGE}":   receiverImg,
+	}))
 	if err != nil {
 		return err
 	}
@@ -253,6 +276,28 @@ func appendNewOwnerRefsForBroker(client mf.Client, broker *eventing.Broker) mf.T
 
 		resource.SetOwnerReferences(existingRefs)
 		return nil
+	}
+}
+
+func setImagesForDeployments(imageMap map[string]string) mf.Transformer {
+	return func(resource *unstructured.Unstructured) error {
+		if resource.GetKind() != "Deployment" {
+			return nil
+		}
+
+		var deployment = &appsv1.Deployment{}
+		if err := scheme.Scheme.Convert(resource, deployment, nil); err != nil {
+			return err
+		}
+
+		for i := range deployment.Spec.Template.Spec.Containers {
+			if img, exists := imageMap[deployment.Spec.Template.Spec.Containers[i].Image]; exists {
+				deployment.Spec.Template.Spec.Containers[i].Image = img
+				continue
+			}
+		}
+
+		return scheme.Scheme.Convert(deployment, resource, nil)
 	}
 }
 
