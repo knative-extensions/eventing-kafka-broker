@@ -19,6 +19,8 @@ package brokeryolo
 import (
 	"context"
 	"fmt"
+	"os"
+
 	mf "github.com/manifestival/manifestival"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -40,11 +42,25 @@ import (
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
-	"os"
 )
 
-// TODO: read config-kafka-broker-data-plane in user namespace first, fallback to the one in knative-eventing
-// TODO
+// TODO: 1.
+// TODO: Read config-kafka-broker-data-plane in user namespace first, fallback to the one in knative-eventing.
+// TODO: Though, this would mean that we need to mount the configmap from knative-eventing to the pod in user namespace.
+// TODO: This is not supported by Kubernetes. If we want this, we need to read the configmap content dynamically, with
+// TODO: necessary RBAC.
+
+// TODO: 2.
+// TODO: config-kafka-broker-data-plane is created by the reconciler dynamically.
+// TODO: This means, the contents can be changed after a broker is created.
+// TODO: Also, reconciler will reconcile it when it is changed.
+
+// TODO: 3.
+// TODO: config-tracing and config-logging has the same mounting issues. We need to read these manually.
+
+// TODO: 4.
+// TODO: Do we reconcile everything when one of the configmaps change?
+// TODO: Specifically, contract configmap, etc.
 
 type Reconciler struct {
 	*base.Reconciler
@@ -59,8 +75,6 @@ type Reconciler struct {
 	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
 
 	BootstrapServers string
-
-	Enqueue prober.EnqueueFunc
 
 	// BaseDataPlaneManifest is a Manifestival manifest that has the resources that need to be created in the user namespace.
 	BaseDataPlaneManifest mf.Manifest
@@ -155,33 +169,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		return fmt.Errorf("unable to apply dataplane manifest. namespace: %s, owner: %v, error: %v", broker.Namespace, broker, err)
 	}
 
-	// Not necessary as we are creating this with owner ref
-	//configmapInformer := configmapinformer.Get(ctx)
-	//configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-	//	FilterFunc: controller.FilterWithNameAndNamespace(broker.Namespace, r.Env.DataPlaneConfigMapName),
-	//	Handler: cache.ResourceEventHandlerFuncs{
-	//		AddFunc: func(obj interface{}) {
-	//			globalResync(obj)
-	//		},
-	//		DeleteFunc: func(obj interface{}) {
-	//			globalResync(obj)
-	//		},
-	//	},
-	//})
-
-	//// 1. Create "data plane" based on broker.Namespace
-	//if !r.IsReceiverRunning() || !r.IsDispatcherRunning() {
-	//
-	//	// TODO
-	//	// return statusConditionManager.DataPlaneNotAvailable()
-	//}
-
-	// 2. Create broker.Reconciler pointing to the just created data plane
 	// TODO: double RetryOnConflict
-	if 1 == 1 {
-		return br.ReconcileKind(ctx, broker)
-	}
-	return nil
+	return br.ReconcileKind(ctx, broker)
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -194,24 +183,6 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	logging.FromContext(ctx).Infof("YOLO finalizeKind")
 
-	//// TODO remove ownerRef
-	//// TODO: when ownerRef is removed, does the GC kick in?
-	//
-	//manifest, err := r.getManifestForNamespace(broker.Namespace)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//manifest, err = r.removeOwnerRefsForBroker(manifest, broker)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//err = manifest.Delete()
-	//if err != nil {
-	//	return err
-	//}
-
 	br := r.createReconcilerForBrokerInstance(ctx, broker)
 	result := br.FinalizeKind(ctx, broker)
 
@@ -221,8 +192,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 }
 
 func (r *Reconciler) createReconcilerForBrokerInstance(ctx context.Context, broker *eventing.Broker) *brokerreconciler.Reconciler {
-
-	//p = FakeProber{}
 
 	return &brokerreconciler.Reconciler{
 		Reconciler: &base.Reconciler{
@@ -236,14 +205,7 @@ func (r *Reconciler) createReconcilerForBrokerInstance(ctx context.Context, brok
 			DispatcherLabel:        r.Reconciler.DispatcherLabel,
 			ReceiverLabel:          r.Reconciler.ReceiverLabel,
 
-			// override
-			// TODO: if we want to fall back to the global config for the general config in case it doesn't exist
-			// in the user namespace, we will need a separate key for that
-			SystemNamespace: broker.Namespace,
-
-			// override
-			// TODO: if we want to fall back to the global config for the dataplane configmap in case it doesn't exist
-			// in the user namespace, we will need a separate key for that
+			SystemNamespace:             broker.Namespace,
 			DataPlaneConfigMapNamespace: broker.Namespace,
 		},
 		Env:                        r.Env,
@@ -262,9 +224,6 @@ func (r *Reconciler) getManifestForNamespace(namespace string) (mf.Manifest, err
 	if err != nil {
 		return mf.Manifest{}, fmt.Errorf("unable to transform base dataplane manifest with namespace injection. namespace: %s, error: %v", namespace, err)
 	}
-
-	// TODO: move somewhere else
-	// TODO: KNATIVE_KAFKA_RECEIVER_IMAGE crap!
 
 	return manifest, nil
 }
@@ -330,36 +289,6 @@ func setImagesForDeployments(imageMap map[string]string) mf.Transformer {
 	}
 }
 
-//func (r *Reconciler) removeOwnerRefsForBroker(manifest mf.Manifest, broker *eventing.Broker) (mf.Manifest, error) {
-//	var resources []unstructured.Unstructured
-//	for _, res := range manifest.Resources() {
-//		existingRefs, err := getExistingOwnerRefs(manifest.Client, res)
-//		if err != nil {
-//			//TODO: return proper error - with multierr
-//			return mf.Manifest{}, err
-//		}
-//
-//		var refs []metav1.OwnerReference
-//
-//		for _, ref := range existingRefs {
-//			if ref.UID == broker.UID {
-//				continue
-//			}
-//			refs = append(refs, ref)
-//		}
-//
-//		res.SetOwnerReferences(refs)
-//
-//		resources = append(resources, res)
-//	}
-//
-//	manifest, err := mf.ManifestFrom(manifestSource(resources), mf.UseClient(r.BaseDataPlaneManifest.Client))
-//	if err != nil {
-//		return mf.Manifest{}, fmt.Errorf("unable to transform base dataplane manifest with owner injection. owner: %v, error: %v", broker, err)
-//	}
-//	return manifest, nil
-//}
-
 func getExistingOwnerRefs(mfc mf.Client, res *unstructured.Unstructured) ([]metav1.OwnerReference, error) {
 	retrieved, err := getResource(mfc, res)
 	if err != nil {
@@ -370,25 +299,6 @@ func getExistingOwnerRefs(mfc mf.Client, res *unstructured.Unstructured) ([]meta
 	}
 	existingRefs := retrieved.GetOwnerReferences()
 	return existingRefs, nil
-}
-
-type ResourceArrayManifestSource struct {
-	resources []unstructured.Unstructured
-}
-
-func (r *ResourceArrayManifestSource) Parse() ([]unstructured.Unstructured, error) {
-	return r.resources, nil
-}
-
-func manifestSource(resources []unstructured.Unstructured) mf.Source {
-	return &ResourceArrayManifestSource{resources: resources}
-}
-
-type FakeProber struct {
-}
-
-func (p FakeProber) Probe(ctx context.Context, addressable prober.Addressable, expected prober.Status) prober.Status {
-	return prober.StatusReady
 }
 
 // get collects a full resource body (or `nil`) from a partial
@@ -427,7 +337,7 @@ func (r *Reconciler) ReconcileDataPlaneConfigMap(ctx context.Context, broker *ev
 	// found, update
 	setOwnerRef(broker)(cm)
 
-	// TODO: check if already like this and do not update if so
+	// TODO: check if already has the owner ref and do not update if so
 
 	_, err = r.KubeClient.CoreV1().ConfigMaps(broker.Namespace).Update(ctx, cm, metav1.UpdateOptions{})
 	return err

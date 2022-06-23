@@ -19,6 +19,9 @@ package brokeryolo
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+
 	"github.com/Shopify/sarama"
 	mfclient "github.com/manifestival/client-go-client"
 	mf "github.com/manifestival/manifestival"
@@ -33,8 +36,6 @@ import (
 	"knative.dev/pkg/injection"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
-	"net/http"
-	"os"
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
@@ -87,9 +88,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		return controller.Options{PromoteFilterFunc: kafka.BrokerYoloClassFilter()}
 	})
 
-	// TODO: do we still need this?
-	reconciler.Enqueue = impl.EnqueueKey
-
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 	reconciler.IPsLister = prober.NewIPListerWithMapping()
 	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, env.IngressPodPort, reconciler.IPsLister.List, impl.EnqueueKey)
@@ -100,10 +98,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		FilterFunc: kafka.BrokerYoloClassFilter(),
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
-
-	//globalResync := func(_ interface{}) {
-	//	impl.GlobalResync(brokerInformer.Informer())
-	//}
 
 	reconciler.SecretTracker = impl.Tracker
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
