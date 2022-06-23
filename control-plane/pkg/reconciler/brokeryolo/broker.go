@@ -19,9 +19,11 @@ package brokeryolo
 import (
 	"context"
 	"fmt"
+	mf "github.com/manifestival/manifestival"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
@@ -39,8 +41,6 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 	"os"
-
-	mf "github.com/manifestival/manifestival"
 )
 
 // TODO: read config-kafka-broker-data-plane in user namespace first, fallback to the one in knative-eventing
@@ -72,12 +72,34 @@ type Reconciler struct {
 
 func setOwnerRef(broker *eventing.Broker) base.ConfigMapOption {
 	return func(cm *corev1.ConfigMap) {
-		// TODO: need to set controller=true?
-		ownerRef := metav1.NewControllerRef(broker, broker.GetGroupVersionKind())
-		// TODO: check for dupes!
-		// TODO: this is done somewhere else already
-		// TODO: see cm.SetOwnerReferences() or something mf.InjectOwner
-		cm.OwnerReferences = append(cm.OwnerReferences, *ownerRef)
+		existingRefs := cm.GetOwnerReferences()
+		newRef := *metav1.NewControllerRef(broker, broker.GetGroupVersionKind())
+		newRef.Controller = pointer.Bool(false)
+
+		found := false
+		for _, ref := range existingRefs {
+			if ref.UID == newRef.UID {
+				found = true
+
+				// TODO: we can just replace it with the newRef!
+
+				// API version can be changed with resource API version upgrade.
+				// So, let's set that again... and, others as well
+				ref.APIVersion = newRef.APIVersion
+				ref.Kind = newRef.Kind
+				ref.Name = newRef.Name
+				ref.Controller = pointer.Bool(false)
+				ref.BlockOwnerDeletion = pointer.Bool(true)
+
+				break
+			}
+		}
+
+		if !found {
+			existingRefs = append(existingRefs, newRef)
+		}
+
+		cm.SetOwnerReferences(existingRefs)
 	}
 }
 
@@ -96,10 +118,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	br := r.createReconcilerForBrokerInstance(ctx, broker)
 
-	// TODO: would setting ownerRef result in duplicate reconciliation events?
-	_, err := br.GetOrCreateDataPlaneConfigMap(ctx, setOwnerRef(broker))
+	err := r.ReconcileDataPlaneConfigMap(ctx, broker)
 	if err != nil {
-		return fmt.Errorf("failed to get or create data plane config map: %s, error: %v", br.Env.DataPlaneConfigMapAsString(), err)
+		return fmt.Errorf("failed to create/update data plane config map: %s, error: %v", fmt.Sprintf("%s/%s", broker.Namespace, r.Env.DataPlaneConfigMapName), err)
 	}
 
 	manifest, err := r.getManifestForNamespace(broker.Namespace)
@@ -249,6 +270,7 @@ func (r *Reconciler) getManifestForNamespace(namespace string) (mf.Manifest, err
 }
 
 func appendNewOwnerRefsForBroker(client mf.Client, broker *eventing.Broker) mf.Transformer {
+	// TODO: copy paste!
 	return func(resource *unstructured.Unstructured) error {
 		existingRefs, err := getExistingOwnerRefs(client, resource)
 		if err != nil {
@@ -262,6 +284,8 @@ func appendNewOwnerRefsForBroker(client mf.Client, broker *eventing.Broker) mf.T
 		for _, ref := range existingRefs {
 			if ref.UID == newRef.UID {
 				found = true
+
+				// TODO: we can just replace it with the newRef!
 
 				// API version can be changed with resource API version upgrade.
 				// So, let's set that again... and, others as well
@@ -382,4 +406,49 @@ func getResource(mfc mf.Client, spec *unstructured.Unstructured) (*unstructured.
 		}
 	}
 	return result, err
+}
+
+// TODO: copy paste!
+func (r *Reconciler) ReconcileDataPlaneConfigMap(ctx context.Context, broker *eventing.Broker) error {
+	cm, err := r.KubeClient.CoreV1().
+		ConfigMaps(broker.Namespace).
+		Get(ctx, r.Env.DataPlaneConfigMapName, metav1.GetOptions{})
+
+	if err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+
+	if apierrors.IsNotFound(err) {
+		// not found, create
+		_, err = r.createDataPlaneConfigMap(ctx, broker.Namespace, setOwnerRef(broker))
+		return err
+	}
+
+	// found, update
+	setOwnerRef(broker)(cm)
+
+	// TODO: check if already like this and do not update if so
+
+	_, err = r.KubeClient.CoreV1().ConfigMaps(broker.Namespace).Update(ctx, cm, metav1.UpdateOptions{})
+	return err
+}
+
+// TODO: copy paste!
+func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context, namespace string, options ...base.ConfigMapOption) (*corev1.ConfigMap, error) {
+	cm := &corev1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      r.Env.DataPlaneConfigMapName,
+			Namespace: namespace,
+		},
+		BinaryData: map[string][]byte{
+			base.ConfigMapDataKey: []byte(""),
+		},
+	}
+
+	for _, opt := range options {
+		opt(cm)
+	}
+
+	return r.KubeClient.CoreV1().ConfigMaps(namespace).Create(ctx, cm, metav1.CreateOptions{})
 }
