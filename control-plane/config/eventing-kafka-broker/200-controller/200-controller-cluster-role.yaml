@@ -80,6 +80,38 @@ rules:
       - get
       - watch
 
+  # for YOLO brokers, we need to be able to manage additional resources within the user namespaces
+  - apiGroups:
+    - "rbac.authorization.k8s.io"
+    resources:
+      - rolebindings
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - create
+  - apiGroups:
+    - "*"
+    resources:
+      - serviceaccounts
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - create
+  - apiGroups:
+      - "apps"
+    resources:
+      - deployments
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - create
+
   # Scheduler permissions
   - apiGroups:
       - "*"

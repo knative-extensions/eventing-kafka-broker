@@ -15,7 +15,7 @@
 # limitations under the License.
 
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: knative-kafka-broker-data-plane
   labels:
@@ -23,7 +23,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-broker-data-plane
-    namespace: knative-eventing
+    # namespace: knative-eventing           # TODO: do we need something?
 roleRef:
   kind: ClusterRole
   name: knative-kafka-broker-data-plane

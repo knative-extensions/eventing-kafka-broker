@@ -67,10 +67,10 @@ spec:
             - mountPath: /tmp
               name: cache
             - mountPath: /etc/logging
-              name: kafka-broker-config-logging
+              name: kafka-broker-config-logging   # TODO
               readOnly: true
             - mountPath: /etc/tracing
-              name: config-tracing
+              name: config-tracing                # TODO
               readOnly: true
           ports:
             - containerPort: 9090
