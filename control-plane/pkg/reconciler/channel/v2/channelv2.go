@@ -654,7 +654,7 @@ func consumerGroup(channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec)
 func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
 	// TODO: do we want to support namespaced channels? they're not supported at the moment.
 
-	namespace := system.Namespace()
+	namespace := r.DataPlaneNamespace
 	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(r.Env.GeneralConfigMapName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, r.Env.GeneralConfigMapName, err)
