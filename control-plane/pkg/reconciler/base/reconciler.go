@@ -81,7 +81,7 @@ type Reconciler struct {
 	DataPlaneConfigMapNamespace string
 	DataPlaneConfigMapName      string
 	DataPlaneConfigFormat       string
-	SystemNamespace             string
+	DataPlaneNamespace          string
 
 	DispatcherLabel string
 	ReceiverLabel   string
@@ -222,17 +222,17 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *con
 }
 
 func (r *Reconciler) UpdateDispatcherPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
-	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(r.dispatcherSelector())
+	pods, errors := r.PodLister.Pods(r.DataPlaneNamespace).List(r.dispatcherSelector())
 	if errors != nil {
-		return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
+		return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.DataPlaneNamespace, errors)
 	}
 	return r.UpdatePodsAnnotation(ctx, logger, "dispatcher", volumeGeneration, pods)
 }
 
 func (r *Reconciler) UpdateReceiverPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
-	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(r.ReceiverSelector())
+	pods, errors := r.PodLister.Pods(r.DataPlaneNamespace).List(r.ReceiverSelector())
 	if errors != nil {
-		return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
+		return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.DataPlaneNamespace, errors)
 	}
 	return r.UpdatePodsAnnotation(ctx, logger, "receiver", volumeGeneration, pods)
 }

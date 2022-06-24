@@ -65,7 +65,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 			DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
 			DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
 			DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
-			SystemNamespace:             env.SystemNamespace,
+			DataPlaneNamespace:          env.SystemNamespace,
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
