@@ -168,24 +168,7 @@ func (r *Reconciler) getManifest(broker *eventing.Broker) (mf.Manifest, error) {
 		return mf.Manifest{}, fmt.Errorf("unable to transform base dataplane manifest with namespace injection. namespace: %s, error: %v", broker.Namespace, err)
 	}
 
-	manifest, err = manifest.Transform(appendNewOwnerRefsToPersisted(manifest.Client, broker))
-	if err != nil {
-		return mf.Manifest{}, err
-	}
-
-	if r.Env.DispatcherImage == "" {
-		return mf.Manifest{}, fmt.Errorf("unable to find DispatcherImage env var specified with 'BROKER_DISPATCHER_IMAGE'")
-	}
-	if r.Env.ReceiverImage == "" {
-		return mf.Manifest{}, fmt.Errorf("unable to find DispatcherImage env var specified with 'BROKER_RECEIVER_IMAGE'")
-	}
-
-	// replace the ${KNATIVE_KAFKA_DISPATCHER_IMAGE} string in dataplane manifest YAML
-	// with the value of KAFKA_DISPATCHER_IMAGE
-	return manifest.Transform(setImagesForDeployments(map[string]string{
-		"${KNATIVE_KAFKA_DISPATCHER_IMAGE}": r.Env.DispatcherImage,
-		"${KNATIVE_KAFKA_RECEIVER_IMAGE}":   r.Env.ReceiverImage,
-	}))
+	return manifest.Transform(appendNewOwnerRefsToPersisted(manifest.Client, broker))
 }
 
 func appendNewOwnerRefsToPersisted(client mf.Client, broker *eventing.Broker) mf.Transformer {

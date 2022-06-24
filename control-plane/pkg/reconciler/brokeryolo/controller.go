@@ -48,6 +48,8 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
+const DataPlaneManifestDirectoryPath = "/dataplane/config/broker"
+
 func NewController(ctx context.Context, watcher configmap.Watcher, env *config.Env) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
@@ -61,7 +63,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		logger.Fatal("unable to create Manifestival client-go client", zap.Error(err))
 	}
 
-	manifest, err := getBaseDataPlaneManifest(mfc)
+	manifest, err := getBaseDataPlaneManifest(mfc, env)
 	if err != nil {
 		logger.Fatal("unable to load base dataplane manifest", zap.Error(err))
 	}
@@ -123,17 +125,29 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 	return impl
 }
 
-func getBaseDataPlaneManifest(client mf.Client) (mf.Manifest, error) {
+func getBaseDataPlaneManifest(client mf.Client, env *config.Env) (mf.Manifest, error) {
 	kodatapath := os.Getenv("KO_DATA_PATH")
 	if kodatapath == "" {
 		return mf.Manifest{}, fmt.Errorf("KO_DATA_PATH is empty")
 	}
-	// TODO: create constant!
-	dataplaneManifestPath := kodatapath + "/dataplane/config/broker"
+
+	dataplaneManifestPath := kodatapath + DataPlaneManifestDirectoryPath
 	manifest, err := mf.ManifestFrom(mf.Path(dataplaneManifestPath), mf.UseClient(client))
 	if err != nil {
 		return mf.Manifest{}, fmt.Errorf("unable to load dataplane manifest from path '%s': %v", dataplaneManifestPath, err)
 	}
 
-	return manifest, nil
+	if env.DispatcherImage == "" {
+		return mf.Manifest{}, fmt.Errorf("unable to find DispatcherImage env var specified with 'BROKER_DISPATCHER_IMAGE'")
+	}
+	if env.ReceiverImage == "" {
+		return mf.Manifest{}, fmt.Errorf("unable to find DispatcherImage env var specified with 'BROKER_RECEIVER_IMAGE'")
+	}
+
+	// replace the ${KNATIVE_KAFKA_DISPATCHER_IMAGE} string in dataplane manifest YAML
+	// with the value of KAFKA_DISPATCHER_IMAGE
+	return manifest.Transform(setImagesForDeployments(map[string]string{
+		"${KNATIVE_KAFKA_DISPATCHER_IMAGE}": env.DispatcherImage,
+		"${KNATIVE_KAFKA_RECEIVER_IMAGE}":   env.ReceiverImage,
+	}))
 }
