@@ -107,8 +107,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		return fmt.Errorf("unable to transform dataplane manifest. namespace: %s, broker: %v, error: %v", broker.Namespace, broker, err)
 	}
 
-	err = manifest.Apply()
-	if err != nil {
+	if err = manifest.Apply(); err != nil {
 		return fmt.Errorf("unable to apply dataplane manifest. namespace: %s, broker: %v, error: %v", broker.Namespace, broker, err)
 	}
 
@@ -196,10 +195,11 @@ func appendNewOwnerRefsToPersisted(client mf.Client, broker *eventing.Broker) mf
 			return err
 		}
 
-		if refs, appended := appendOwnerRef(existingRefs, broker); appended {
-			resource.SetOwnerReferences(refs)
-		}
-
+		refs, _ := appendOwnerRef(existingRefs, broker)
+		// We need to set this even when we don't append any ownerRef.
+		// That is because the resource is in a pristine state that's read from the YAML, and we need to set the
+		// existing owners to that in memory resource.
+		resource.SetOwnerReferences(refs)
 		return nil
 	}
 }
@@ -241,9 +241,7 @@ func appendOwnerRef(refs []metav1.OwnerReference, broker *eventing.Broker) ([]me
 	newRef.Controller = pointer.Bool(false)
 	newRef.BlockOwnerDeletion = pointer.Bool(true)
 
-	refs = append(refs, newRef)
-
-	return refs, true
+	return append(refs, newRef), true
 }
 
 func setImagesForDeployments(imageMap map[string]string) mf.Transformer {
