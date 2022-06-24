@@ -42,3 +42,4 @@ spec:
           args:
             - "kafkasources.sources.knative.dev"
             - "kafkachannels.messaging.knative.dev"
+            - "kafkasinks.eventing.knative.dev"
