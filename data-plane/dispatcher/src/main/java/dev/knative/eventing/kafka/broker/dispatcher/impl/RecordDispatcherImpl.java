@@ -41,6 +41,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+
+import java.util.ArrayDeque;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -126,7 +128,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
    * @param record record to handle.
    */
   @Override
-  public Future<Void> dispatch(KafkaConsumerRecord<Object, CloudEvent> record) {
+  public Future<Void> dispatch(KafkaConsumerRecord<Object, CloudEvent> record, ConsumerRecordContext recordContext) {
     if (closed.get()) {
       return Future.failedFuture("Dispatcher closed");
     }
@@ -152,7 +154,9 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       |        |                       +-------------+----------> end
       +->end<--+
      */
-    final var recordContext = new ConsumerRecordContext(record);
+    if (recordContext == null) {
+      recordContext = new ConsumerRecordContext(record);
+    }
 
     if (record.record().value() instanceof InvalidCloudEvent) {
       incrementDiscardedRecord(recordContext);

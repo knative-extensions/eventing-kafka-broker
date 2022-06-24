@@ -225,7 +225,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
       deliveryOrder,
       initializer,
       new HashSet<>(resource.getTopicsList()),
-      consumerConfigs.get(ConsumerConfig.MAX_POLL_RECORDS_CONFIG)
+      consumerConfigs.get(ConsumerConfig.MAX_POLL_RECORDS_CONFIG),
+      Metrics.getRegistry()
     );
   }
 
@@ -346,10 +347,11 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
                                                       final DeliveryOrder type,
                                                       final BaseConsumerVerticle.Initializer initializer,
                                                       final Set<String> topics,
-                                                      final Object maxPollRecords) {
+                                                      final Object maxPollRecords,
+                                                      final MeterRegistry meterRegistry) {
     final var maxRecords = maxPollRecords == null ? 0 : Integer.parseInt(maxPollRecords.toString());
     return switch (type) {
-      case ORDERED -> new OrderedConsumerVerticle(egress, initializer, topics, maxRecords);
+      case ORDERED -> new OrderedConsumerVerticle(egress, initializer, topics, maxRecords, meterRegistry);
       case UNORDERED -> new UnorderedConsumerVerticle(initializer, topics, maxRecords);
     };
   }

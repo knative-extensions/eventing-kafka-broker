@@ -18,29 +18,29 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl;
 import io.cloudevents.CloudEvent;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-class ConsumerRecordContext {
+public class ConsumerRecordContext {
 
   private KafkaConsumerRecord<Object, CloudEvent> record;
   private long receivedAtMs;
 
-  ConsumerRecordContext(KafkaConsumerRecord<Object, CloudEvent> record) {
+  public ConsumerRecordContext(KafkaConsumerRecord<Object, CloudEvent> record) {
     this.record = record;
     this.resetTimer();
   }
 
-  void resetTimer() {
+  public void resetTimer() {
     this.receivedAtMs = System.currentTimeMillis();
   }
 
-  long performLatency() {
+  public long performLatency() {
     return System.currentTimeMillis() - receivedAtMs;
   }
 
-  KafkaConsumerRecord<Object, CloudEvent> getRecord() {
+  public KafkaConsumerRecord<Object, CloudEvent> getRecord() {
     return record;
   }
 
-  void setRecord(final KafkaConsumerRecord<Object, CloudEvent> record) {
+  public void setRecord(final KafkaConsumerRecord<Object, CloudEvent> record) {
     this.record = record;
   }
 }

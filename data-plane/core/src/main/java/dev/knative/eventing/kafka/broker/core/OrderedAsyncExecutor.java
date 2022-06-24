@@ -83,4 +83,8 @@ public class OrderedAsyncExecutor {
     this.isStopped = true;
     this.queue.clear();
   }
+
+  public Queue<Supplier<Future<?>>> getQueue(){
+    return this.queue;
+  }
 }

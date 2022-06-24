@@ -17,14 +17,20 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.OrderedAsyncExecutor;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.ConsumerRecordContext;
 import io.cloudevents.CloudEvent;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
@@ -33,12 +39,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -58,10 +67,13 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   private final AtomicLong pollTimer;
   private final AtomicBoolean isPollInFlight;
 
+  private final MeterRegistry meterRegistry;
+
   public OrderedConsumerVerticle(final DataPlaneContract.Egress egress,
                                  final Initializer initializer,
                                  final Set<String> topics,
-                                 final int maxPollRecords) {
+                                 final int maxPollRecords,
+                                 final MeterRegistry meterRegistry) {
     super(initializer, topics);
 
     final var vReplicas = Math.max(1, egress.getVReplicas());
@@ -81,6 +93,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     this.closed = new AtomicBoolean(false);
     this.isPollInFlight = new AtomicBoolean(false);
     this.pollTimer = new AtomicLong(-1);
+    this.meterRegistry = meterRegistry;
 
     partitionRevokedHandler = partitions -> {
       // Stop executors associated with revoked partitions.
@@ -186,16 +199,24 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     // Put records in internal per-partition queues.
     for (int i = 0; i < records.size(); i++) {
       final var record = records.recordAt(i);
-      final var executor = executorFor(new TopicPartition(record.topic(), record.partition()));
-      executor.offer(() -> dispatch(record));
+      final var recordContext = new ConsumerRecordContext(record); // resets timer to start calculating the executor queue latency
+
+      TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
+      final var executor = executorFor(topicPartition);
+      executor.offer(() -> dispatch(record, recordContext));
+
+      setValueQueueLength(topicPartition, executor.getQueue());
     }
   }
 
-  private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record) {
+  private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record, ConsumerRecordContext recordContext) {
     if (this.closed.get()) {
       return Future.failedFuture("Consumer verticle closed topics=" + topics + " resource=" + egress.getReference());
     }
-    return this.recordDispatcher.dispatch(record);
+
+    recordExecutorQueueLatency(recordContext); //executor has dispatched
+
+    return this.recordDispatcher.dispatch(record, recordContext);
   }
 
   private synchronized OrderedAsyncExecutor executorFor(final TopicPartition topicPartition) {
@@ -205,6 +226,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     }
     executor = new OrderedAsyncExecutor();
     this.recordDispatcherExecutors.put(topicPartition, executor);
+
     return executor;
   }
 
@@ -222,5 +244,43 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
     // All executors are busy
     return true;
+  }
+
+  private void recordExecutorQueueLatency(final ConsumerRecordContext recordContext) {
+    final var latency = recordContext.performLatency();
+    logger.debug("Executor queue latency {}", keyValue("latency", latency));
+
+    if (meterRegistry != null) {
+      Metrics
+      .executorQueueLatency(getTags(recordContext))
+      .register(meterRegistry)
+      .record(latency);
+    }
+  }
+
+  private void setValueQueueLength(final TopicPartition topicPartition, Queue<Supplier<Future<?>>> executor) {
+    if (meterRegistry != null) {
+      Metrics
+        .queueLength(getTags(topicPartition), executor)
+        .register(meterRegistry)
+        .value();
+    }
+  }
+
+  private Tags getTags(ConsumerRecordContext recordContext) {
+    if (recordContext.getRecord().record().value() instanceof InvalidCloudEvent) {
+      return Tags.of(
+        Tag.of(Metrics.Tags.EVENT_TYPE, "InvalidCloudEvent")
+      );
+    }
+    return Tags.of(
+      Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType())
+    );
+  }
+
+  private Tags getTags(final TopicPartition topicPartition) {
+    return Tags.of(
+      Tag.of(Metrics.Tags.PARTITION_ID, "" + topicPartition.getPartition())
+    );
   }
 }

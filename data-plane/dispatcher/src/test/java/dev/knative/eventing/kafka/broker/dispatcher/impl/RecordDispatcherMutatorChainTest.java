@@ -51,7 +51,7 @@ public class RecordDispatcherMutatorChainTest {
       next,
       in -> expected
     );
-    when(next.dispatch(any())).thenReturn(Future.succeededFuture());
+    when(next.dispatch(any(), any())).thenReturn(Future.succeededFuture());
 
     final var givenRecord = new KafkaConsumerRecordImpl<>(
       new ConsumerRecord<>(
@@ -64,10 +64,11 @@ public class RecordDispatcherMutatorChainTest {
           .build())
     );
 
-    final var succeeded = chain.dispatch(givenRecord);
+    final var recordContext = new ConsumerRecordContext(givenRecord);
+    final var succeeded = chain.dispatch(givenRecord, recordContext);
 
     assertThat(succeeded.succeeded()).isTrue();
-    verify(next, times(1)).dispatch(argThat(record -> record.value().equals(expected)));
+    verify(next, times(1)).dispatch(argThat(record -> record.value().equals(expected)), recordContext);
   }
 
   @Test
