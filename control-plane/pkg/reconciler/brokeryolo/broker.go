@@ -19,8 +19,6 @@ package brokeryolo
 import (
 	"context"
 	"fmt"
-	"os"
-
 	mf "github.com/manifestival/manifestival"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -114,18 +112,16 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		return err
 	}
 
-	dispatcherImg, ok := os.LookupEnv("KNATIVE_KAFKA_DISPATCHER_IMAGE")
-	if !ok {
-		return fmt.Errorf("unable to find 'KNATIVE_KAFKA_DISPATCHER_IMAGE' env var in controller")
+	if r.Env.DispatcherImage == "" {
+		return fmt.Errorf("unable to find DispatcherImage env var specified with 'BROKER_DISPATCHER_IMAGE'")
 	}
-	receiverImg, ok := os.LookupEnv("KNATIVE_KAFKA_RECEIVER_IMAGE")
-	if !ok {
-		return fmt.Errorf("unable to find 'KNATIVE_KAFKA_RECEIVER_IMAGE' env var in controller")
+	if r.Env.ReceiverImage == "" {
+		return fmt.Errorf("unable to find DispatcherImage env var specified with 'BROKER_RECEIVER_IMAGE'")
 	}
 
 	manifest, err = manifest.Transform(setImagesForDeployments(map[string]string{
-		"${KNATIVE_KAFKA_DISPATCHER_IMAGE}": dispatcherImg,
-		"${KNATIVE_KAFKA_RECEIVER_IMAGE}":   receiverImg,
+		"${KNATIVE_KAFKA_DISPATCHER_IMAGE}": r.Env.DispatcherImage,
+		"${KNATIVE_KAFKA_RECEIVER_IMAGE}":   r.Env.ReceiverImage,
 	}))
 	if err != nil {
 		return err

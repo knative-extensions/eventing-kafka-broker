@@ -165,9 +165,9 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
 
-            - name: KNATIVE_KAFKA_RECEIVER_IMAGE
+            - name: BROKER_RECEIVER_IMAGE
               value: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
-            - name: KNATIVE_KAFKA_DISPATCHER_IMAGE
+            - name: BROKER_DISPATCHER_IMAGE
               value: ${KNATIVE_KAFKA_DISPATCHER_IMAGE}
           ports:
             - containerPort: 9090
