@@ -115,18 +115,18 @@ func (r *Reconciler) GetOrCreateDataPlaneConfigMap(ctx context.Context, options 
 		Get(ctx, r.DataPlaneConfigMapName, metav1.GetOptions{})
 
 	if apierrors.IsNotFound(err) {
-		cm, err = r.createDataPlaneConfigMap(ctx, options)
+		cm, err = CreateDataPlaneConfigMap(ctx, r.KubeClient, r.DataPlaneConfigMapNamespace, r.DataPlaneConfigMapName, options...)
 	}
 
 	return cm, err
 }
 
-func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context, options []ConfigMapOption) (*corev1.ConfigMap, error) {
+func CreateDataPlaneConfigMap(ctx context.Context, kubeClient kubernetes.Interface, namespace string, name string, options ...ConfigMapOption) (*corev1.ConfigMap, error) {
 	cm := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.DataPlaneConfigMapName,
-			Namespace: r.DataPlaneConfigMapNamespace,
+			Name:      name,
+			Namespace: namespace,
 		},
 		BinaryData: map[string][]byte{
 			ConfigMapDataKey: []byte(""),
@@ -137,7 +137,7 @@ func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context, options []Con
 		opt(cm)
 	}
 
-	return r.KubeClient.CoreV1().ConfigMaps(r.DataPlaneConfigMapNamespace).Create(ctx, cm, metav1.CreateOptions{})
+	return kubeClient.CoreV1().ConfigMaps(namespace).Create(ctx, cm, metav1.CreateOptions{})
 }
 
 // GetDataPlaneConfigMapData extracts contract from the given config map.

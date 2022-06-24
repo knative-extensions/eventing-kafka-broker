@@ -268,7 +268,6 @@ func setImagesForDeployments(imageMap map[string]string) mf.Transformer {
 	}
 }
 
-// TODO: copy paste!
 func (r *Reconciler) ReconcileDataPlaneConfigMap(ctx context.Context, broker *eventing.Broker) error {
 	cm, err := r.KubeClient.CoreV1().
 		ConfigMaps(broker.Namespace).
@@ -280,7 +279,7 @@ func (r *Reconciler) ReconcileDataPlaneConfigMap(ctx context.Context, broker *ev
 
 	if apierrors.IsNotFound(err) {
 		// not found, create
-		_, err = r.createDataPlaneConfigMap(ctx, broker.Namespace, appendBrokerAsOwnerRef(broker))
+		_, err = base.CreateDataPlaneConfigMap(ctx, r.KubeClient, broker.Namespace, r.Reconciler.DataPlaneConfigMapName, appendBrokerAsOwnerRef(broker))
 		return err
 	}
 
@@ -294,24 +293,4 @@ func (r *Reconciler) ReconcileDataPlaneConfigMap(ctx context.Context, broker *ev
 	}
 
 	return nil
-}
-
-// TODO: copy paste!
-func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context, namespace string, options ...base.ConfigMapOption) (*corev1.ConfigMap, error) {
-	cm := &corev1.ConfigMap{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.Env.DataPlaneConfigMapName,
-			Namespace: namespace,
-		},
-		BinaryData: map[string][]byte{
-			base.ConfigMapDataKey: []byte(""),
-		},
-	}
-
-	for _, opt := range options {
-		opt(cm)
-	}
-
-	return r.KubeClient.CoreV1().ConfigMaps(namespace).Create(ctx, cm, metav1.CreateOptions{})
 }
