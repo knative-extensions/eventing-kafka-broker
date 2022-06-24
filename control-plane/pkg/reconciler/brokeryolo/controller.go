@@ -135,9 +135,5 @@ func getBaseDataPlaneManifest(client mf.Client) (mf.Manifest, error) {
 		return mf.Manifest{}, fmt.Errorf("unable to load dataplane manifest from path '%s': %v", dataplaneManifestPath, err)
 	}
 
-	// TODO: need to find a better way!
-	// exclude the cluster scoped resources
-	manifest = manifest.Filter(mf.Not(mf.Any(mf.ByKind("ClusterRole"), mf.ByKind("ClusterRoleBinding"))))
-
 	return manifest, nil
 }
