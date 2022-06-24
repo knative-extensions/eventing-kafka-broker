@@ -2215,7 +2215,7 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
 				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
 				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
-				SystemNamespace:             env.SystemNamespace,
+				DataPlaneNamespace:          env.SystemNamespace,
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,
 			},

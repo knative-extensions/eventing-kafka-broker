@@ -210,7 +210,7 @@ func (r *Reconciler) DoReconcileKind(ctx context.Context, broker *eventing.Broke
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
-	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.Reconciler.SystemNamespace)
+	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.DataPlaneNamespace)
 	address := receiver.Address(ingressHost, broker)
 	proberAddressable := prober.Addressable{
 		Address: address,
@@ -314,7 +314,7 @@ func (r *Reconciler) DoFinalizeKind(ctx context.Context, broker *eventing.Broker
 
 	broker.Status.Address.URL = nil
 
-	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.Reconciler.SystemNamespace)
+	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.Reconciler.DataPlaneNamespace)
 
 	//  Rationale: after deleting a topic closing a producer ends up blocking and requesting metadata for max.block.ms
 	//  because topic metadata aren't available anymore.

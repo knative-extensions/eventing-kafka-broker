@@ -146,7 +146,7 @@ func (r *Reconciler) createReconcilerForBrokerInstance(broker *eventing.Broker) 
 			DispatcherLabel:        r.Reconciler.DispatcherLabel,
 			ReceiverLabel:          r.Reconciler.ReceiverLabel,
 
-			SystemNamespace:             broker.Namespace,
+			DataPlaneNamespace:          broker.Namespace,
 			DataPlaneConfigMapNamespace: broker.Namespace,
 		},
 		Env:                        r.Env,

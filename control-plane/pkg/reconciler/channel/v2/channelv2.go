@@ -309,7 +309,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 }
 
 func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messagingv1beta1.KafkaChannel) (*corev1.Service, error) {
-	expected, err := resources.MakeK8sService(channel, resources.ExternalService(r.Env.SystemNamespace, channelreconciler.NewChannelIngressServiceName))
+	expected, err := resources.MakeK8sService(channel, resources.ExternalService(r.DataPlaneNamespace, channelreconciler.NewChannelIngressServiceName))
 	if err != nil {
 		return expected, fmt.Errorf("failed to create the channel service object: %w", err)
 	}

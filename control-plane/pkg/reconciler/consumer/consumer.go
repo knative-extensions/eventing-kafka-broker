@@ -379,7 +379,7 @@ func (r Reconciler) commonReconciler(p *corev1.Pod, cmName string) base.Reconcil
 		DataPlaneConfigMapNamespace: p.GetNamespace(),
 		DataPlaneConfigMapName:      cmName,
 		DataPlaneConfigFormat:       string(r.SerDe.Format),
-		SystemNamespace:             p.GetNamespace(),
+		DataPlaneNamespace:          p.GetNamespace(),
 		DispatcherLabel:             "",
 		ReceiverLabel:               "",
 	}

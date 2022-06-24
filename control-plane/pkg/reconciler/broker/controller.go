@@ -64,7 +64,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 			DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
 			DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
 			DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
-			SystemNamespace:             env.SystemNamespace,
+			DataPlaneNamespace:          env.SystemNamespace,
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
@@ -88,7 +88,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 	})
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
-	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: env.SystemNamespace, Name: env.IngressName})
+	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: reconciler.DataPlaneNamespace, Name: env.IngressName})
 	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, env.IngressPodPort, IPsLister, impl.EnqueueKey)
 
 	brokerInformer := brokerinformer.Get(ctx)

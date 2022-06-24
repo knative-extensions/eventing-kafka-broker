@@ -59,7 +59,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
 			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
-			SystemNamespace:             configs.SystemNamespace,
+			DataPlaneNamespace:          configs.SystemNamespace,
 			ReceiverLabel:               base.SinkReceiverLabel,
 		},
 		ConfigMapLister:            configmapInformer.Lister(),
@@ -76,9 +76,9 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 	}
 
 	impl := sinkreconciler.NewImpl(ctx, reconciler)
-	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: configs.SystemNamespace, Name: configs.IngressName})
+	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: reconciler.DataPlaneNamespace, Name: reconciler.IngressName})
 	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, configs.IngressPodPort, IPsLister, impl.EnqueueKey)
-	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
+	reconciler.IngressHost = network.GetServiceHostname(reconciler.IngressName, reconciler.DataPlaneNamespace)
 
 	sinkInformer := sinkinformer.Get(ctx)
 
