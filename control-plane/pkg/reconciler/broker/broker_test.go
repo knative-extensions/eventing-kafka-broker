@@ -1127,7 +1127,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			Objects: []runtime.Object{
 				NewBroker(
 					WithBrokerConfig(
-						KReference(BrokerConfig(bootstrapServers, 20, 5)),
+						KReferenceConfigMap(BrokerConfig(bootstrapServers, 20, 5)),
 					),
 				),
 				BrokerConfig(bootstrapServers, 20, 5),
@@ -1175,7 +1175,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				{
 					Object: NewBroker(
 						WithBrokerConfig(
-							KReference(BrokerConfig(bootstrapServers, 20, 5)),
+							KReferenceConfigMap(BrokerConfig(bootstrapServers, 20, 5)),
 						),
 						reconcilertesting.WithInitBrokerConditions,
 						StatusBrokerConfigMapUpdatedReady(&env),
@@ -1199,7 +1199,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - with auth config",
 			Objects: []runtime.Object{
 				NewBroker(
-					WithBrokerConfig(KReference(BrokerConfig(bootstrapServers, 20, 5,
+					WithBrokerConfig(KReferenceConfigMap(BrokerConfig(bootstrapServers, 20, 5,
 						BrokerAuthConfig("secret-1"),
 					))),
 				),
@@ -1254,7 +1254,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewBroker(
-						WithBrokerConfig(KReference(BrokerConfig(bootstrapServers, 20, 5,
+						WithBrokerConfig(KReferenceConfigMap(BrokerConfig(bootstrapServers, 20, 5,
 							BrokerAuthConfig("secret-1"),
 						))),
 						reconcilertesting.WithInitBrokerConditions,
@@ -1281,7 +1281,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			Objects: []runtime.Object{
 				NewBroker(
 					WithBrokerConfig(
-						KReference(BrokerConfig(bootstrapServers, 20, 5)),
+						KReferenceConfigMap(BrokerConfig(bootstrapServers, 20, 5)),
 					),
 				),
 				BrokerReceiverPod(env.SystemNamespace, nil),
@@ -1304,7 +1304,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				{
 					Object: NewBroker(
 						WithBrokerConfig(
-							KReference(BrokerConfig(bootstrapServers, 20, 5)),
+							KReferenceConfigMap(BrokerConfig(bootstrapServers, 20, 5)),
 						),
 						reconcilertesting.WithInitBrokerConditions,
 						StatusBrokerDataPlaneAvailable,

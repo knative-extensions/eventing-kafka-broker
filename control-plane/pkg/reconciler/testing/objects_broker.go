@@ -66,7 +66,7 @@ func NewBroker(options ...reconcilertesting.BrokerOption) runtime.Object {
 			[]reconcilertesting.BrokerOption{
 				reconcilertesting.WithBrokerClass(kafka.BrokerClass),
 				WithBrokerConfig(
-					KReference(BrokerConfig("", 20, 5)),
+					KReferenceConfigMap(BrokerConfig("", 20, 5)),
 				),
 				func(broker *eventing.Broker) {
 					broker.UID = BrokerUUID
@@ -173,7 +173,7 @@ func BrokerAuthConfig(name string) CMOption {
 	}
 }
 
-func KReference(configMap *corev1.ConfigMap) *duckv1.KReference {
+func KReferenceConfigMap(configMap *corev1.ConfigMap) *duckv1.KReference {
 	return &duckv1.KReference{
 		Kind:       "ConfigMap",
 		Namespace:  configMap.Namespace,
