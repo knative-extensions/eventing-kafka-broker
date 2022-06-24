@@ -60,6 +60,10 @@ import (
 // TODO: Do we reconcile everything when one of the configmaps change?
 // TODO: Specifically, contract configmap, etc.
 
+// TODO: 5.
+// TODO: IPListerWithMapping struct can leak resources in case of a leader change
+// TODO: We might need to create a TTL mechanism
+
 type Reconciler struct {
 	*base.Reconciler
 	*config.Env
