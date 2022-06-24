@@ -233,22 +233,13 @@ func appendBrokerAsOwnerRef(broker *eventing.Broker) base.ConfigMapOption {
 func appendOwnerRef(obj metav1.Object, existingRefs []metav1.OwnerReference, broker *eventing.Broker) {
 	newRef := *metav1.NewControllerRef(broker, broker.GetGroupVersionKind())
 	newRef.Controller = pointer.Bool(false)
+	newRef.BlockOwnerDeletion = pointer.Bool(true)
 
 	found := false
-	for _, ref := range existingRefs {
-		if ref.UID == newRef.UID {
+	for i := range existingRefs {
+		if existingRefs[i].UID == newRef.UID {
 			found = true
-
-			// TODO: we can just replace it with the newRef!
-
-			// API version can be changed with resource API version upgrade.
-			// So, let's set that again... and, others as well
-			ref.APIVersion = newRef.APIVersion
-			ref.Kind = newRef.Kind
-			ref.Name = newRef.Name
-			ref.Controller = pointer.Bool(false)
-			ref.BlockOwnerDeletion = pointer.Bool(true)
-
+			existingRefs[i] = newRef
 			break
 		}
 	}
