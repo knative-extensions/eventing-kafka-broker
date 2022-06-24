@@ -50,7 +50,7 @@ import (
 
 // TODO: 2.
 // TODO: config-kafka-broker-data-plane is created by the reconciler dynamically.
-// TODO: This means, the contents can be changed after a broker is created.
+// TODO: This means, the contents can ONLY be changed by users after a broker is created.
 // TODO: Also, reconciler will reconcile it when it is changed.
 
 // TODO: 3.
