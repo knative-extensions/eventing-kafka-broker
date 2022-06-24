@@ -201,7 +201,9 @@ func appendNewOwnerRefsToPersisted(client mf.Client, broker *eventing.Broker) mf
 			return err
 		}
 
-		appendOwnerRef(resource, existingRefs, broker)
+		if refs, appended := appendOwnerRef(existingRefs, broker); appended {
+			resource.SetOwnerReferences(refs)
+		}
 
 		return nil
 	}
@@ -226,29 +228,27 @@ func getPersistedOwnerRefs(mfc mf.Client, res *unstructured.Unstructured) ([]met
 func appendBrokerAsOwnerRef(broker *eventing.Broker) base.ConfigMapOption {
 	return func(cm *corev1.ConfigMap) {
 		existingRefs := cm.GetOwnerReferences()
-		appendOwnerRef(cm, existingRefs, broker)
+		if refs, appended := appendOwnerRef(existingRefs, broker); appended {
+			cm.SetOwnerReferences(refs)
+		}
 	}
 }
 
-func appendOwnerRef(obj metav1.Object, existingRefs []metav1.OwnerReference, broker *eventing.Broker) {
+// appendOwnerRef appends the ownerRef for the given broker to the ownerRefs slice, if it doesn't exist already
+func appendOwnerRef(refs []metav1.OwnerReference, broker *eventing.Broker) ([]metav1.OwnerReference, bool) {
+	for i := range refs {
+		if refs[i].UID == broker.UID {
+			return refs, false
+		}
+	}
+
 	newRef := *metav1.NewControllerRef(broker, broker.GetGroupVersionKind())
 	newRef.Controller = pointer.Bool(false)
 	newRef.BlockOwnerDeletion = pointer.Bool(true)
 
-	found := false
-	for i := range existingRefs {
-		if existingRefs[i].UID == newRef.UID {
-			found = true
-			existingRefs[i] = newRef
-			break
-		}
-	}
+	refs = append(refs, newRef)
 
-	if !found {
-		existingRefs = append(existingRefs, newRef)
-	}
-
-	obj.SetOwnerReferences(existingRefs)
+	return refs, true
 }
 
 func setImagesForDeployments(imageMap map[string]string) mf.Transformer {
@@ -290,12 +290,15 @@ func (r *Reconciler) ReconcileDataPlaneConfigMap(ctx context.Context, broker *ev
 	}
 
 	// found, update
-	appendBrokerAsOwnerRef(broker)(cm)
 
-	// TODO: check if already has the owner ref and do not update if so
+	if refs, appended := appendOwnerRef(cm.GetOwnerReferences(), broker); appended {
+		cm.SetOwnerReferences(refs)
+		// only update if we actually appended an ownerRef
+		_, err = r.KubeClient.CoreV1().ConfigMaps(broker.Namespace).Update(ctx, cm, metav1.UpdateOptions{})
+		return err
+	}
 
-	_, err = r.KubeClient.CoreV1().ConfigMaps(broker.Namespace).Update(ctx, cm, metav1.UpdateOptions{})
-	return err
+	return nil
 }
 
 // TODO: copy paste!
