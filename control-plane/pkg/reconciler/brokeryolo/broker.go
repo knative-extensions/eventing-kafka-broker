@@ -84,39 +84,6 @@ type Reconciler struct {
 	IPsLister prober.IPListerWithMapping
 }
 
-func setOwnerRef(broker *eventing.Broker) base.ConfigMapOption {
-	return func(cm *corev1.ConfigMap) {
-		existingRefs := cm.GetOwnerReferences()
-		newRef := *metav1.NewControllerRef(broker, broker.GetGroupVersionKind())
-		newRef.Controller = pointer.Bool(false)
-
-		found := false
-		for _, ref := range existingRefs {
-			if ref.UID == newRef.UID {
-				found = true
-
-				// TODO: we can just replace it with the newRef!
-
-				// API version can be changed with resource API version upgrade.
-				// So, let's set that again... and, others as well
-				ref.APIVersion = newRef.APIVersion
-				ref.Kind = newRef.Kind
-				ref.Name = newRef.Name
-				ref.Controller = pointer.Bool(false)
-				ref.BlockOwnerDeletion = pointer.Bool(true)
-
-				break
-			}
-		}
-
-		if !found {
-			existingRefs = append(existingRefs, newRef)
-		}
-
-		cm.SetOwnerReferences(existingRefs)
-	}
-}
-
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	logging.FromContext(ctx).Infof("YOLO ReconcileKind (wrapper)")
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
@@ -142,7 +109,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		return err
 	}
 
-	manifest, err = manifest.Transform(appendNewOwnerRefsForBroker(manifest.Client, broker))
+	manifest, err = manifest.Transform(appendNewOwnerRefsToPersisted(manifest.Client, broker))
 	if err != nil {
 		return err
 	}
@@ -227,43 +194,70 @@ func (r *Reconciler) getManifestForNamespace(namespace string) (mf.Manifest, err
 	return manifest, nil
 }
 
-func appendNewOwnerRefsForBroker(client mf.Client, broker *eventing.Broker) mf.Transformer {
-	// TODO: copy paste!
+func appendNewOwnerRefsToPersisted(client mf.Client, broker *eventing.Broker) mf.Transformer {
 	return func(resource *unstructured.Unstructured) error {
-		existingRefs, err := getExistingOwnerRefs(client, resource)
+		existingRefs, err := getPersistedOwnerRefs(client, resource)
 		if err != nil {
 			return err
 		}
 
-		newRef := *metav1.NewControllerRef(broker, broker.GetGroupVersionKind())
-		newRef.Controller = pointer.Bool(false)
+		appendOwnerRef(resource, existingRefs, broker)
 
-		found := false
-		for _, ref := range existingRefs {
-			if ref.UID == newRef.UID {
-				found = true
-
-				// TODO: we can just replace it with the newRef!
-
-				// API version can be changed with resource API version upgrade.
-				// So, let's set that again... and, others as well
-				ref.APIVersion = newRef.APIVersion
-				ref.Kind = newRef.Kind
-				ref.Name = newRef.Name
-				ref.Controller = pointer.Bool(false)
-				ref.BlockOwnerDeletion = pointer.Bool(true)
-
-				break
-			}
-		}
-
-		if !found {
-			existingRefs = append(existingRefs, newRef)
-		}
-
-		resource.SetOwnerReferences(existingRefs)
 		return nil
 	}
+}
+
+func getPersistedOwnerRefs(mfc mf.Client, res *unstructured.Unstructured) ([]metav1.OwnerReference, error) {
+	retrieved, err := mfc.Get(res)
+	if err != nil && !errors.IsNotFound(err) {
+		// actual problem
+		return nil, err
+	}
+
+	if errors.IsNotFound(err) {
+		// not found, return empty slice
+		return []metav1.OwnerReference{}, nil
+	}
+
+	// found, return existing ownerRefs
+	return retrieved.GetOwnerReferences(), nil
+}
+
+func appendBrokerAsOwnerRef(broker *eventing.Broker) base.ConfigMapOption {
+	return func(cm *corev1.ConfigMap) {
+		existingRefs := cm.GetOwnerReferences()
+		appendOwnerRef(cm, existingRefs, broker)
+	}
+}
+
+func appendOwnerRef(obj metav1.Object, existingRefs []metav1.OwnerReference, broker *eventing.Broker) {
+	newRef := *metav1.NewControllerRef(broker, broker.GetGroupVersionKind())
+	newRef.Controller = pointer.Bool(false)
+
+	found := false
+	for _, ref := range existingRefs {
+		if ref.UID == newRef.UID {
+			found = true
+
+			// TODO: we can just replace it with the newRef!
+
+			// API version can be changed with resource API version upgrade.
+			// So, let's set that again... and, others as well
+			ref.APIVersion = newRef.APIVersion
+			ref.Kind = newRef.Kind
+			ref.Name = newRef.Name
+			ref.Controller = pointer.Bool(false)
+			ref.BlockOwnerDeletion = pointer.Bool(true)
+
+			break
+		}
+	}
+
+	if !found {
+		existingRefs = append(existingRefs, newRef)
+	}
+
+	obj.SetOwnerReferences(existingRefs)
 }
 
 func setImagesForDeployments(imageMap map[string]string) mf.Transformer {
@@ -288,35 +282,6 @@ func setImagesForDeployments(imageMap map[string]string) mf.Transformer {
 	}
 }
 
-func getExistingOwnerRefs(mfc mf.Client, res *unstructured.Unstructured) ([]metav1.OwnerReference, error) {
-	retrieved, err := getResource(mfc, res)
-	if err != nil {
-		return nil, err
-	}
-	if retrieved == nil {
-		return []metav1.OwnerReference{}, nil
-	}
-	existingRefs := retrieved.GetOwnerReferences()
-	return existingRefs, nil
-}
-
-// get collects a full resource body (or `nil`) from a partial
-// resource supplied in `spec`
-func getResource(mfc mf.Client, spec *unstructured.Unstructured) (*unstructured.Unstructured, error) {
-	if spec.GetName() == "" && spec.GetGenerateName() != "" {
-		// expected to be created; never fetched
-		return nil, nil
-	}
-	result, err := mfc.Get(spec)
-	if err != nil {
-		result = nil
-		if errors.IsNotFound(err) {
-			err = nil
-		}
-	}
-	return result, err
-}
-
 // TODO: copy paste!
 func (r *Reconciler) ReconcileDataPlaneConfigMap(ctx context.Context, broker *eventing.Broker) error {
 	cm, err := r.KubeClient.CoreV1().
@@ -329,12 +294,12 @@ func (r *Reconciler) ReconcileDataPlaneConfigMap(ctx context.Context, broker *ev
 
 	if apierrors.IsNotFound(err) {
 		// not found, create
-		_, err = r.createDataPlaneConfigMap(ctx, broker.Namespace, setOwnerRef(broker))
+		_, err = r.createDataPlaneConfigMap(ctx, broker.Namespace, appendBrokerAsOwnerRef(broker))
 		return err
 	}
 
 	// found, update
-	setOwnerRef(broker)(cm)
+	appendBrokerAsOwnerRef(broker)(cm)
 
 	// TODO: check if already has the owner ref and do not update if so
 
