@@ -38,12 +38,10 @@ import (
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
 
+	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
-	"knative.dev/pkg/system"
-
-	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	"knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources"
@@ -545,7 +543,7 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 }
 
 func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
-	namespace := system.Namespace()
+	namespace := r.DataPlaneNamespace
 	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(r.Env.GeneralConfigMapName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, r.Env.GeneralConfigMapName, err)
@@ -612,7 +610,7 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 }
 
 func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messagingv1beta1.KafkaChannel) (*corev1.Service, error) {
-	expected, err := resources.MakeK8sService(channel, resources.ExternalService(system.Namespace(), NewChannelIngressServiceName))
+	expected, err := resources.MakeK8sService(channel, resources.ExternalService(r.DataPlaneNamespace, NewChannelIngressServiceName))
 	if err != nil {
 		return expected, fmt.Errorf("failed to create the channel service object: %w", err)
 	}
