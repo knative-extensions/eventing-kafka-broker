@@ -58,7 +58,7 @@
     <fabric8.kubernetes.version>5.12.2</fabric8.kubernetes.version>
     <kafka.version>2.8.1</kafka.version>
     <debezium.version>1.9.4.Final</debezium.version>
-    <jib.version>3.2.0</jib.version>
+    <jib.version>3.2.1</jib.version>
   </properties>
 
   <modules>
