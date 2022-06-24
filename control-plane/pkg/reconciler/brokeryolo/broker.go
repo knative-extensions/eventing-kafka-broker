@@ -95,41 +95,21 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		prober.GetIPForService(types.NamespacedName{Namespace: broker.Namespace, Name: r.Env.IngressName}),
 	)
 
-	br := r.createReconcilerForBrokerInstance(ctx, broker)
+	br := r.createReconcilerForBrokerInstance(broker)
 
 	err := r.ReconcileDataPlaneConfigMap(ctx, broker)
 	if err != nil {
 		return fmt.Errorf("failed to create/update data plane config map: %s, error: %v", fmt.Sprintf("%s/%s", broker.Namespace, r.Env.DataPlaneConfigMapName), err)
 	}
 
-	manifest, err := r.getManifestForNamespace(broker.Namespace)
+	manifest, err := r.getManifest(broker)
 	if err != nil {
-		return err
-	}
-
-	manifest, err = manifest.Transform(appendNewOwnerRefsToPersisted(manifest.Client, broker))
-	if err != nil {
-		return err
-	}
-
-	if r.Env.DispatcherImage == "" {
-		return fmt.Errorf("unable to find DispatcherImage env var specified with 'BROKER_DISPATCHER_IMAGE'")
-	}
-	if r.Env.ReceiverImage == "" {
-		return fmt.Errorf("unable to find DispatcherImage env var specified with 'BROKER_RECEIVER_IMAGE'")
-	}
-
-	manifest, err = manifest.Transform(setImagesForDeployments(map[string]string{
-		"${KNATIVE_KAFKA_DISPATCHER_IMAGE}": r.Env.DispatcherImage,
-		"${KNATIVE_KAFKA_RECEIVER_IMAGE}":   r.Env.ReceiverImage,
-	}))
-	if err != nil {
-		return err
+		return fmt.Errorf("unable to transform dataplane manifest. namespace: %s, broker: %v, error: %v", broker.Namespace, broker, err)
 	}
 
 	err = manifest.Apply()
 	if err != nil {
-		return fmt.Errorf("unable to apply dataplane manifest. namespace: %s, owner: %v, error: %v", broker.Namespace, broker, err)
+		return fmt.Errorf("unable to apply dataplane manifest. namespace: %s, broker: %v, error: %v", broker.Namespace, broker, err)
 	}
 
 	return br.DoReconcileKind(ctx, broker)
@@ -145,7 +125,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	logging.FromContext(ctx).Infof("YOLO finalizeKind")
 
-	br := r.createReconcilerForBrokerInstance(ctx, broker)
+	br := r.createReconcilerForBrokerInstance(broker)
 	result := br.DoFinalizeKind(ctx, broker)
 
 	r.IPsLister.Unregister(types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name})
@@ -153,7 +133,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	return result
 }
 
-func (r *Reconciler) createReconcilerForBrokerInstance(ctx context.Context, broker *eventing.Broker) *brokerreconciler.Reconciler {
+func (r *Reconciler) createReconcilerForBrokerInstance(broker *eventing.Broker) *brokerreconciler.Reconciler {
 
 	return &brokerreconciler.Reconciler{
 		Reconciler: &base.Reconciler{
@@ -179,15 +159,34 @@ func (r *Reconciler) createReconcilerForBrokerInstance(ctx context.Context, brok
 	}
 }
 
-func (r *Reconciler) getManifestForNamespace(namespace string) (mf.Manifest, error) {
+// getManifest returns the manifest that is transformed from the BaseDataPlaneManifest with the changes
+// for the given broker
+func (r *Reconciler) getManifest(broker *eventing.Broker) (mf.Manifest, error) {
 	manifest := r.BaseDataPlaneManifest
 
-	manifest, err := manifest.Transform(mf.InjectNamespace(namespace))
+	manifest, err := manifest.Transform(mf.InjectNamespace(broker.Namespace))
 	if err != nil {
-		return mf.Manifest{}, fmt.Errorf("unable to transform base dataplane manifest with namespace injection. namespace: %s, error: %v", namespace, err)
+		return mf.Manifest{}, fmt.Errorf("unable to transform base dataplane manifest with namespace injection. namespace: %s, error: %v", broker.Namespace, err)
 	}
 
-	return manifest, nil
+	manifest, err = manifest.Transform(appendNewOwnerRefsToPersisted(manifest.Client, broker))
+	if err != nil {
+		return mf.Manifest{}, err
+	}
+
+	if r.Env.DispatcherImage == "" {
+		return mf.Manifest{}, fmt.Errorf("unable to find DispatcherImage env var specified with 'BROKER_DISPATCHER_IMAGE'")
+	}
+	if r.Env.ReceiverImage == "" {
+		return mf.Manifest{}, fmt.Errorf("unable to find DispatcherImage env var specified with 'BROKER_RECEIVER_IMAGE'")
+	}
+
+	// replace the ${KNATIVE_KAFKA_DISPATCHER_IMAGE} string in dataplane manifest YAML
+	// with the value of KAFKA_DISPATCHER_IMAGE
+	return manifest.Transform(setImagesForDeployments(map[string]string{
+		"${KNATIVE_KAFKA_DISPATCHER_IMAGE}": r.Env.DispatcherImage,
+		"${KNATIVE_KAFKA_RECEIVER_IMAGE}":   r.Env.ReceiverImage,
+	}))
 }
 
 func appendNewOwnerRefsToPersisted(client mf.Client, broker *eventing.Broker) mf.Transformer {
