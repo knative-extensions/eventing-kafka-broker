@@ -1340,7 +1340,7 @@ func TestReconcileKind(t *testing.T) {
 				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
 				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
 				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
-				SystemNamespace:             env.SystemNamespace,
+				DataPlaneNamespace:          env.SystemNamespace,
 				DispatcherLabel:             base.ChannelDispatcherLabel,
 				ReceiverLabel:               base.ChannelReceiverLabel,
 			},

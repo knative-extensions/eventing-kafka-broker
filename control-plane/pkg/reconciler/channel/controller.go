@@ -61,7 +61,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
 			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
-			SystemNamespace:             configs.SystemNamespace,
+			DataPlaneNamespace:          configs.SystemNamespace,
 			DispatcherLabel:             base.ChannelDispatcherLabel,
 			ReceiverLabel:               base.ChannelReceiverLabel,
 		},

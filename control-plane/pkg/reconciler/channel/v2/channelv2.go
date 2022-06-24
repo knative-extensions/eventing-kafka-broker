@@ -39,16 +39,14 @@ import (
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 
+	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
+	"knative.dev/eventing-kafka/pkg/common/constants"
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/reconciler"
-	"knative.dev/pkg/system"
-
-	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
-	"knative.dev/eventing-kafka/pkg/common/constants"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -309,7 +307,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 }
 
 func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messagingv1beta1.KafkaChannel) (*corev1.Service, error) {
-	expected, err := resources.MakeK8sService(channel, resources.ExternalService(r.Env.SystemNamespace, channelreconciler.NewChannelIngressServiceName))
+	expected, err := resources.MakeK8sService(channel, resources.ExternalService(r.DataPlaneNamespace, channelreconciler.NewChannelIngressServiceName))
 	if err != nil {
 		return expected, fmt.Errorf("failed to create the channel service object: %w", err)
 	}
@@ -654,7 +652,7 @@ func consumerGroup(channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec)
 func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
 	// TODO: do we want to support namespaced channels? they're not supported at the moment.
 
-	namespace := system.Namespace()
+	namespace := r.DataPlaneNamespace
 	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(r.Env.GeneralConfigMapName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, r.Env.GeneralConfigMapName, err)

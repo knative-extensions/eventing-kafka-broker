@@ -59,7 +59,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
 			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
 			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
-			SystemNamespace:             configs.SystemNamespace,
+			DataPlaneNamespace:          configs.SystemNamespace,
 			ReceiverLabel:               base.SinkReceiverLabel,
 		},
 		ConfigMapLister:            configmapInformer.Lister(),
