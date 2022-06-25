@@ -48,6 +48,7 @@ import (
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -2769,6 +2770,7 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 			Resolver:       nil,
 			Env:            env,
 			Flags:          flags,
+			BrokerClass:    kafka.BrokerClass,
 		}
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))

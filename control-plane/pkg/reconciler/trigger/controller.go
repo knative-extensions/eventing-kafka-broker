@@ -76,6 +76,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		EventingClient: eventingclient.Get(ctx),
 		Env:            configs,
 		Flags:          feature.Flags{},
+		BrokerClass:    kafka.BrokerClass,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -83,7 +84,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			FinalizerName:     FinalizerName,
 			AgentName:         ControllerAgentName,
 			SkipStatusUpdates: false,
-			PromoteFilterFunc: filterTriggers(reconciler.BrokerLister),
+			PromoteFilterFunc: filterTriggers(reconciler.BrokerLister, kafka.BrokerClass),
 		}
 	})
 
@@ -106,7 +107,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
 	triggerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: filterTriggers(reconciler.BrokerLister),
+		FilterFunc: filterTriggers(reconciler.BrokerLister, kafka.BrokerClass),
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 
@@ -131,7 +132,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	return impl
 }
 
-func filterTriggers(lister eventinglisters.BrokerLister) func(interface{}) bool {
+func filterTriggers(lister eventinglisters.BrokerLister, brokerClass string) func(interface{}) bool {
 	return func(obj interface{}) bool {
 		trigger, ok := obj.(*eventing.Trigger)
 		if !ok {
@@ -148,7 +149,7 @@ func filterTriggers(lister eventinglisters.BrokerLister) func(interface{}) bool 
 		}
 
 		value, ok := broker.GetAnnotations()[apiseventing.BrokerClassKey]
-		return ok && value == kafka.BrokerClass
+		return ok && value == brokerClass
 	}
 }
 
