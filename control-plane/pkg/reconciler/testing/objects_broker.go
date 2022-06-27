@@ -48,7 +48,7 @@ const (
 	BrokerName        = "test-broker"
 	ExternalTopicName = "test-topic"
 
-	SecretFinalizerName = BrokerNamespace + "/" + BrokerUUID
+	SecretFinalizerName = BrokerUUID
 
 	TriggerName      = "test-trigger"
 	TriggerNamespace = "test-namespace"
