@@ -96,7 +96,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 
 	// Ignore Triggers that are associated with a Broker we don't own.
-	if isKnativeKafkaBroker, brokerClass := r.hasRelevantBrokerClass(broker); !isKnativeKafkaBroker {
+	if hasRelevantBroker, brokerClass := r.hasRelevantBrokerClass(broker); !hasRelevantBroker {
 		logger.Debug("Ignoring Trigger", zap.String(eventing.BrokerClassAnnotationKey, brokerClass))
 		return nil
 	}
