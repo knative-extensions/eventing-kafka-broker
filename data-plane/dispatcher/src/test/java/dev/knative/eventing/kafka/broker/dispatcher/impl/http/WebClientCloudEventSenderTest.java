@@ -203,10 +203,10 @@ public class WebClientCloudEventSenderTest {
         if (r.getHeader("Ce-Id").equalsIgnoreCase(event.getId())) {
           counter.increment();
         }
-        if (counter.intValue() > retry+1) {
+        if (counter.intValue() > retry + 1) {
           r.response().setStatusCode(200).end();
         } else {
-          vertx.setTimer(timeout+500, v -> r.response().setStatusCode(200).end());
+          vertx.setTimer(timeout + 500, v -> r.response().setStatusCode(200).end());
         }
       })
       .listen(port, "localhost")

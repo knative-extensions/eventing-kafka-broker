@@ -90,9 +90,10 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   }
 
   private Future<HttpResponse<Buffer>> send(final CloudEvent event, final int retryCounter) {
-    logger.debug("Sending event {} {}",
+    logger.debug("Sending event {} {} {}",
       keyValue("id", event.getId()),
-      keyValue("subscriberURI", target)
+      keyValue("subscriberURI", target),
+      keyValue("retry", retryCounter)
     );
 
 
