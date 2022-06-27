@@ -84,6 +84,14 @@ func main() {
 			},
 		},
 
+		// Namespaced trigger controller
+		injection.NamedControllerConstructor{
+			Name: "trigger-namespaced-controller",
+			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
+				return trigger.NewNamespacedController(ctx, watcher, brokerEnv)
+			},
+		},
+
 		// Channel controller
 		injection.NamedControllerConstructor{
 			Name: "channel-controller",
