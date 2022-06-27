@@ -29,14 +29,12 @@ import (
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	. "knative.dev/pkg/reconciler/testing"
-	"knative.dev/pkg/system"
-
-	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -110,7 +108,7 @@ func TestReconcileKind(t *testing.T) {
 				NewChannel(
 					WithInitKafkaChannelConditions,
 					WithDeletedTimeStamp),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
@@ -126,7 +124,7 @@ func TestReconcileKind(t *testing.T) {
 				NewChannel(
 					WithInitKafkaChannelConditions,
 					WithDeletedTimeStamp),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
@@ -143,7 +141,7 @@ func TestReconcileKind(t *testing.T) {
 				NewChannel(
 					WithInitKafkaChannelConditions,
 					WithDeletedTimeStamp),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapFromContract(&contract.Contract{
@@ -174,7 +172,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Reconciled normal - no subscription (no cons group) - no auth",
 			Objects: []runtime.Object{
 				NewChannel(),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				ChannelReceiverPod(env.SystemNamespace, map[string]string{
@@ -245,7 +243,7 @@ func TestReconcileKind(t *testing.T) {
 						Retry:          pointer.Int32(5),
 					}),
 				),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				ChannelReceiverPod(env.SystemNamespace, map[string]string{
@@ -320,7 +318,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Reconciled failed - no subscription (no cons group) - probe " + prober.StatusNotReady.String(),
 			Objects: []runtime.Object{
 				NewChannel(),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 			},
@@ -372,7 +370,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Reconciled failed - no subscription (no cons group) - probe " + prober.StatusUnknown.String(),
 			Objects: []runtime.Object{
 				NewChannel(),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 			},
@@ -424,7 +422,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Reconciled normal - with single fresh subscriber - cg unknown - no auth",
 			Objects: []runtime.Object{
 				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
@@ -491,7 +489,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Reconciled normal - with single unready subscriber - cg unknown - no auth",
 			Objects: []runtime.Object{
 				NewChannel(WithSubscribers(Subscriber1(WithUnreadySubscriber))),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
@@ -558,7 +556,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Reconciled normal - with single ready subscriber - cg unknown - no auth",
 			Objects: []runtime.Object{
 				NewChannel(WithSubscribers(Subscriber1())),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
@@ -625,7 +623,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Reconciled normal - with single fresh subscriber - existing ready cg with update - no auth",
 			Objects: []runtime.Object{
 				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
@@ -701,7 +699,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Reconciled normal - with single fresh subscriber - existing cg but failed - no auth",
 			Objects: []runtime.Object{
 				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
@@ -771,7 +769,7 @@ func TestReconcileKind(t *testing.T) {
 					WithSubscribers(Subscriber1(WithFreshSubscriber)),
 					WithSubscribers(Subscriber2(WithFreshSubscriber)),
 				),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
@@ -856,7 +854,7 @@ func TestReconcileKind(t *testing.T) {
 				NewChannel(
 					WithSubscribers(Subscriber1(WithFreshSubscriber)),
 				),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
@@ -960,7 +958,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: NewChannel(
 						WithInitKafkaChannelConditions,
-						StatusConfigNotParsed(fmt.Sprintf(`failed to get configmap %s/%s: configmap %q not found`, system.Namespace(), DefaultEnv.GeneralConfigMapName, DefaultEnv.GeneralConfigMapName)),
+						StatusConfigNotParsed(fmt.Sprintf(`failed to get configmap %s/%s: configmap %q not found`, env.SystemNamespace, DefaultEnv.GeneralConfigMapName, DefaultEnv.GeneralConfigMapName)),
 					),
 				},
 			},
@@ -972,7 +970,7 @@ func TestReconcileKind(t *testing.T) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					fmt.Sprintf(`failed to get contract configuration: failed to get configmap %s/%s: configmap %q not found`, system.Namespace(), DefaultEnv.GeneralConfigMapName, DefaultEnv.GeneralConfigMapName),
+					fmt.Sprintf(`failed to get contract configuration: failed to get configmap %s/%s: configmap %q not found`, env.SystemNamespace, DefaultEnv.GeneralConfigMapName, DefaultEnv.GeneralConfigMapName),
 				),
 			},
 		},
@@ -980,7 +978,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "channel configmap does not have bootstrap servers",
 			Objects: []runtime.Object{
 				NewChannel(),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					"foo": "bar",
 				}),
 			},
@@ -1010,7 +1008,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "channel configmap has blank bootstrap servers",
 			Objects: []runtime.Object{
 				NewChannel(),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: "",
 				}),
 			},
@@ -1045,7 +1043,7 @@ func TestReconcileKind(t *testing.T) {
 					WithReplicationFactor(4),
 					WithRetentionDuration("1000"),
 				),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 			},
@@ -1102,7 +1100,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Reconciled normal - with single fresh subscriber - with auth - PlainText",
 			Objects: []runtime.Object{
 				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 					security.AuthSecretNameKey:         "secret-1",
 					security.AuthSecretNamespaceKey:    "ns-1",
@@ -1181,7 +1179,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Create contract configmap when it does not exist",
 			Objects: []runtime.Object{
 				NewChannel(),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 			},
@@ -1231,7 +1229,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Do not create contract configmap when it exists",
 			Objects: []runtime.Object{
 				NewChannel(),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, nil),
@@ -1280,7 +1278,7 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Corrupt contract in configmap",
 			Objects: []runtime.Object{
 				NewChannel(),
-				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(&env, []byte("corrupt")),
