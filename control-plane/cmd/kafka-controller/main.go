@@ -76,7 +76,7 @@ func main() {
 			},
 		},
 
-		// Broker yolo controller
+		// Namespaced broker controller
 		injection.NamedControllerConstructor{
 			Name: "broker-namespaced-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {

@@ -81,7 +81,7 @@ rules:
       - update
       - watch
 
-  # for YOLO brokers, we need to be able to manage additional resources within the user namespaces
+  # for namespaced brokers, we need to be able to manage additional resources within the user namespaces
   - apiGroups:
     - "rbac.authorization.k8s.io"
     resources:

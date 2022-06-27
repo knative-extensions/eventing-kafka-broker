@@ -86,8 +86,8 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		BaseDataPlaneManifest:      manifest,
 	}
 
-	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClassYolo, func(impl *controller.Impl) controller.Options {
-		return controller.Options{PromoteFilterFunc: kafka.BrokerYoloClassFilter()}
+	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.NamespacedBrokerClass, func(impl *controller.Impl) controller.Options {
+		return controller.Options{PromoteFilterFunc: kafka.NamespacedBrokerClassFilter()}
 	})
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
@@ -97,7 +97,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 	brokerInformer := brokerinformer.Get(ctx)
 
 	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: kafka.BrokerYoloClassFilter(),
+		FilterFunc: kafka.NamespacedBrokerClassFilter(),
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 
@@ -116,7 +116,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 	))
 
 	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: kafka.BrokerYoloClassFilter(),
+		FilterFunc: kafka.NamespacedBrokerClassFilter(),
 		Handler: cache.ResourceEventHandlerFuncs{
 			DeleteFunc: reconciler.OnDeleteObserver,
 		},
