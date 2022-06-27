@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright 2022 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,8 @@ package trigger
 import (
 	"context"
 
-	"go.uber.org/zap"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
-	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
@@ -31,36 +28,34 @@ import (
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
-	apiseventing "knative.dev/eventing/pkg/apis/eventing"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing/pkg/apis/feature"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
+
+// TODO: COPY & PASTE for now
 
 const (
-	ControllerAgentName = "kafka-trigger-controller"
+	NamespacedControllerAgentName = "kafka-namespaced-trigger-controller"
 
-	FinalizerName = "kafka.triggers.eventing.knative.dev"
+	NamespacedFinalizerName = "kafka.namespaced.triggers.eventing.knative.dev"
 )
 
-func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
+func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
 
 	logger := logging.FromContext(ctx).Desugar()
 
-	configmapInformer := configmapinformer.Get(ctx)
+	//configmapInformer := configmapinformer.Get(ctx)
 	brokerInformer := brokerinformer.Get(ctx)
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
 
-	reconciler := &Reconciler{
+	reconciler := &NamespacedReconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
 			PodLister:                   podinformer.Get(ctx).Lister(),
@@ -76,15 +71,14 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		EventingClient: eventingclient.Get(ctx),
 		Env:            configs,
 		Flags:          feature.Flags{},
-		BrokerClass:    kafka.BrokerClass,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
 		return controller.Options{
-			FinalizerName:     FinalizerName,
-			AgentName:         ControllerAgentName,
+			FinalizerName:     NamespacedFinalizerName,
+			AgentName:         NamespacedControllerAgentName,
 			SkipStatusUpdates: false,
-			PromoteFilterFunc: filterTriggers(reconciler.BrokerLister, kafka.BrokerClass, FinalizerName),
+			PromoteFilterFunc: filterTriggers(reconciler.BrokerLister, kafka.NamespacedBrokerClass, NamespacedFinalizerName),
 		}
 	})
 
@@ -107,80 +101,29 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
 	triggerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: filterTriggers(reconciler.BrokerLister, kafka.BrokerClass, FinalizerName),
+		FilterFunc: filterTriggers(reconciler.BrokerLister, kafka.NamespacedBrokerClass, NamespacedFinalizerName),
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 
 	// Filter Brokers and enqueue associated Triggers
 	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: kafka.BrokerClassFilter(),
+		FilterFunc: kafka.NamespacedBrokerClassFilter(),
 		Handler:    enqueueTriggers(logger, triggerLister, impl.Enqueue),
 	})
 
-	globalResync := func(_ interface{}) {
-		impl.GlobalResync(triggerInformer.Informer())
-	}
+	//globalResync := func(_ interface{}) {
+	//	impl.GlobalResync(triggerInformer.Informer())
+	//}
 
-	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
-		Handler: cache.ResourceEventHandlerFuncs{
-			AddFunc:    globalResync,
-			DeleteFunc: globalResync,
-		},
-	})
+	// TODO: we cannot have this watch since we don't know the trigger namespace yet.
+	// TODO: Solution: we need to set this watch more generically by adding a label to the contract configmap
+	//configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+	//	FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
+	//	Handler: cache.ResourceEventHandlerFuncs{
+	//		AddFunc:    globalResync,
+	//		DeleteFunc: globalResync,
+	//	},
+	//})
 
 	return impl
-}
-
-func filterTriggers(lister eventinglisters.BrokerLister, brokerClass string, finalizer string) func(interface{}) bool {
-	return func(obj interface{}) bool {
-		trigger, ok := obj.(*eventing.Trigger)
-		if !ok {
-			return false
-		}
-
-		if hasKafkaBrokerTriggerFinalizer(trigger.Finalizers, finalizer) {
-			return true
-		}
-
-		broker, err := lister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
-		if err != nil {
-			return false
-		}
-
-		value, ok := broker.GetAnnotations()[apiseventing.BrokerClassKey]
-		return ok && value == brokerClass
-	}
-}
-
-func hasKafkaBrokerTriggerFinalizer(finalizers []string, finalizerName string) bool {
-	for _, f := range finalizers {
-		if f == finalizerName {
-			return true
-		}
-	}
-	return false
-}
-
-func enqueueTriggers(
-	logger *zap.Logger,
-	lister eventinglisters.TriggerLister,
-	enqueue func(obj interface{})) cache.ResourceEventHandler {
-
-	return controller.HandleAll(func(obj interface{}) {
-
-		if broker, ok := obj.(*eventing.Broker); ok {
-
-			selector := labels.SelectorFromSet(map[string]string{apiseventing.BrokerLabelKey: broker.Name})
-			triggers, err := lister.Triggers(broker.Namespace).List(selector)
-			if err != nil {
-				logger.Warn("Failed to list triggers", zap.Any("broker", broker), zap.Error(err))
-				return
-			}
-
-			for _, trigger := range triggers {
-				enqueue(trigger)
-			}
-		}
-	})
 }

@@ -63,11 +63,11 @@ type Reconciler struct {
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.reconcileKind(ctx, trigger)
+		return r.DoReconcileKind(ctx, trigger)
 	})
 }
 
-func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
+func (r *Reconciler) DoReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
 
 	statusConditionManager := statusConditionManager{
@@ -117,6 +117,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 
 	// Get data plane config map.
+	// TODO: this won't work in namespaced broker as we need to create the dataplane differently.
+	// TODO: do we need to create if it is missing?
+	// TODO: IMO, we should create it in the broker reconciler and only read it here
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return statusConditionManager.failedToGetDataPlaneConfigMap(err)
@@ -185,11 +188,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.finalizeKind(ctx, trigger)
+		return r.DoFinalizeKind(ctx, trigger)
 	})
 }
 
-func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
+func (r *Reconciler) DoFinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, trigger)
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
