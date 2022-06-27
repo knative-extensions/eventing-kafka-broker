@@ -39,7 +39,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
@@ -58,6 +57,8 @@ type Reconciler struct {
 	Env       *config.Env
 	Flags     feature.Flags
 	FlagsLock sync.RWMutex
+
+	BrokerClass string
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -95,7 +96,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 
 	// Ignore Triggers that are associated with a Broker we don't own.
-	if isKnativeKafkaBroker, brokerClass := isKnativeKafkaBroker(broker); !isKnativeKafkaBroker {
+	if hasRelevantBroker, brokerClass := r.hasRelevantBrokerClass(broker); !hasRelevantBroker {
 		logger.Debug("Ignoring Trigger", zap.String(eventing.BrokerClassAnnotationKey, brokerClass))
 		return nil
 	}
@@ -340,9 +341,9 @@ func deleteTrigger(egresses []*contract.Egress, index int) []*contract.Egress {
 	return egresses[:len(egresses)-1]
 }
 
-func isKnativeKafkaBroker(broker *eventing.Broker) (bool, string) {
+func (r *Reconciler) hasRelevantBrokerClass(broker *eventing.Broker) (bool, string) {
 	brokerClass := broker.GetAnnotations()[eventing.BrokerClassAnnotationKey]
-	return brokerClass == kafka.BrokerClass, brokerClass
+	return brokerClass == r.BrokerClass, brokerClass
 }
 
 func deliveryOrderFromString(val string) (contract.DeliveryOrder, error) {

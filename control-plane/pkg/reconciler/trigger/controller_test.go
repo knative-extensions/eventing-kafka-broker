@@ -170,7 +170,7 @@ func TestFilterTriggers(t *testing.T) {
 			for _, obj := range tc.brokers {
 				_ = brokerInformer.Informer().GetStore().Add(obj)
 			}
-			filter := filterTriggers(brokerInformer.Lister())
+			filter := filterTriggers(brokerInformer.Lister(), kafka.BrokerClass)
 			pass := filter(tc.trigger)
 			assert.Equal(t, tc.pass, pass)
 		})
