@@ -59,6 +59,19 @@ rules:
       - "patch"
       - "watch"
   - apiGroups:
+      - "eventing.knative.dev"
+    resources:
+      - "kafkasinks"
+      - "kafkasinks/finalizers"
+      - "kafkasinks/status"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "watch"
+  - apiGroups:
       - ""
     resources:
       - "namespaces"
