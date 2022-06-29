@@ -152,9 +152,12 @@ function wait_for_cloudevent {
       fi
     fi
   done
+
+  echo "Waiting period ended successfully."
 }
 
 function run {
+  echo "Starting test run $i ..."
   i=$1
 
   failed=false
@@ -163,12 +166,17 @@ function run {
   kubectl wait subscription --timeout=60s -n foo$i event-display --for=condition=Ready=True || failed=true
 
   if $failed; then
+    echo "Failure in test run $i ..."
     kubectl describe kafkachannel -n foo$i channel
     kubectl describe subscription -n foo$i event-display
   fi
 
   wait_for_cloudevent foo$i
+
+  echo "Deleting namespace for test run $i ..."
   kubectl delete namespace foo$i
+
+  echo "Ending test run $i ."
 }
 
 export -f run
