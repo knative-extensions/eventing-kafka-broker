@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+export SCALE_CHAOSDUCK_TO_ZERO=1
+
 source $(dirname $0)/e2e-common.sh
 
 $(dirname $0)/scripts/first-event-delay.sh || fail_test "Failed"
