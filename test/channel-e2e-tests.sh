@@ -5,7 +5,7 @@ export SCALE_CHAOSDUCK_TO_ZERO=1
 source $(dirname $0)/e2e-common.sh
 
 if ! ${LOCAL_DEVELOPMENT}; then
-  scale_chaosduck
+  scale_chaos
 fi
 
 $(dirname $0)/scripts/first-event-delay.sh || fail_test "Failed"
