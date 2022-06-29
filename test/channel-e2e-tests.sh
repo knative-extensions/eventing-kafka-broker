@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -x
+
 source $(dirname $0)/e2e-common.sh
 
 header "Running first-event-delay.sh script ..."
