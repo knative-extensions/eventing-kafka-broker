@@ -28,13 +28,17 @@ if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
   success
 fi
 
+header "Running e2e go tests ..."
 go_test_e2e -timeout=1h ./test/e2e/... || fail_test "E2E suite failed"
 
+header "Running e2e_channel go tests ..."
 go_test_e2e -timeout=1h ./test/e2e_channel/... -channels=messaging.knative.dev/v1beta1:KafkaChannel || fail_test "E2E suite (KafkaChannel) failed"
 
+header "Running e2e (deletecm) go tests ..."
 go_test_e2e -tags=deletecm ./test/e2e/... || fail_test "E2E (deletecm) suite failed"
 
 if ! ${LOCAL_DEVELOPMENT}; then
+  header "Running e2e (sacura) go tests ..."
   go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E (sacura) suite failed"
 fi
 
