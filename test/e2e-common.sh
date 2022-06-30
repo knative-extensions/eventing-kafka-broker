@@ -16,7 +16,6 @@
 
 readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
 readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
-readonly SCALE_CHAOSDUCK_TO_ZERO=${SCALE_CHAOSDUCK_TO_ZERO:-0}
 export REPLICAS=${REPLICAS:-3}
 export KO_FLAGS="${KO_FLAGS:-}"
 
@@ -252,12 +251,6 @@ function scale_controlplane() {
 
 function apply_chaos() {
   ko apply ${KO_FLAGS} -f ./test/config/chaos || return $?
-}
-
-function scale_chaos() {
-  if (( SCALE_CHAOSDUCK_TO_ZERO )); then
-    kubectl -n knative-eventing scale deployment chaosduck --replicas=0 || fail_test "Failed to scale down to 0 chaosduck"
-  fi
 }
 
 function delete_chaos() {

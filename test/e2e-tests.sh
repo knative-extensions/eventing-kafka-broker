@@ -11,7 +11,6 @@ if ! ${LOCAL_DEVELOPMENT}; then
   scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
   apply_sacura || fail_test "Failed to apply Sacura"
   apply_chaos || fail_test "Failed to apply chaos"
-  scale_chaos
 fi
 
 header "Waiting Knative eventing to come up"
