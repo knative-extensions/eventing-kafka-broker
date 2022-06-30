@@ -174,7 +174,8 @@ function run {
   wait_for_cloudevent foo$i
 
   echo "Force-deleting namespace for test run $i ..."
-  kubectl delete namespace foo$i --grace-period=0 --force
+  kubectl get namespace foo$i -o yaml
+  kubectl delete namespace foo$i --wait=false
 
   echo "Ending test run $i ."
 }
