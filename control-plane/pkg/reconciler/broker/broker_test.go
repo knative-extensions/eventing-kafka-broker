@@ -1893,6 +1893,18 @@ func SecretFinalizerUpdate(secretName, finalizerName string) clientgotesting.Upd
 	)
 }
 
+func SecretFinalizerUpdateRemove(secretName string) clientgotesting.UpdateActionImpl {
+	return clientgotesting.NewUpdateAction(
+		schema.GroupVersionResource{
+			Group:    "*",
+			Version:  "v1",
+			Resource: "Secret",
+		},
+		ConfigMapNamespace,
+		NewSSLSecret(ConfigMapNamespace, secretName),
+	)
+}
+
 func TestBrokerFinalizer(t *testing.T) {
 	t.Parallel()
 
@@ -2030,7 +2042,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					))),
 					BrokerConfigMapSecretAnnotation("secret-1"),
 				),
-				NewSSLSecret(ConfigMapNamespace, "secret-1"),
+				BrokerSecretWithFinalizer(ConfigMapNamespace, "secret-1", SecretFinalizerName),
 				BrokerConfig(bootstrapServers, 20, 5, BrokerAuthConfig("secret-1")),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -2064,6 +2076,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					base.VolumeGenerationAnnotationKey: "2",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
+				SecretFinalizerUpdateRemove("secret-1"),
 			},
 			OtherTestData: map[string]interface{}{
 				testProber: probertesting.MockProber(prober.StatusNotReady),
