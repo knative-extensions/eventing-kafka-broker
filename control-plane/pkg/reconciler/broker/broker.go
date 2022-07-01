@@ -578,5 +578,5 @@ func containsFinalizerSecret(secret *corev1.Secret, finalizer string) bool {
 }
 
 func finalizerSecret(object metav1.Object) string {
-	return fmt.Sprintf("%s/%s", "kafka.brokers.eventing.knative.dev", object.GetUID())
+	return fmt.Sprintf("%s/%s", "kafka.eventing", object.GetUID())
 }

@@ -48,7 +48,7 @@ const (
 	BrokerName        = "test-broker"
 	ExternalTopicName = "test-topic"
 
-	SecretFinalizerName = "kafka.brokers.eventing.knative.dev/" + BrokerUUID
+	SecretFinalizerName = "kafka.eventing/" + BrokerUUID
 
 	TriggerName      = "test-trigger"
 	TriggerNamespace = "test-namespace"
