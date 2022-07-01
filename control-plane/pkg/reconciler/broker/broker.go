@@ -116,6 +116,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 			zap.String("namespace", secret.Namespace),
 			zap.String("kind", secret.Kind),
 		)
+
+		if err := r.addFinalizerSecret(ctx, finalizerSecret(broker), secret); err != nil {
+			return err
+		}
 	}
 
 	// get security option for Sarama with secret info in it
@@ -332,19 +336,28 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return controller.NewRequeueAfter(5 * time.Second)
 	}
 
+	_, brokerConfig, err := r.brokerConfigMap(logger, broker)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig, UseNamespaceInConfigmap: false}, r.SecretProviderFunc())
+	if err != nil {
+		return fmt.Errorf("failed to get secret: %w", err)
+	}
+
 	// External topics are not managed by the broker,
 	// therefore we do not delete them
 	_, externalTopic := isExternalTopic(broker)
 	if !externalTopic {
-		topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
+
+		// I do not like the use of `_`
+		// TODO: refactor
+		topicConfig, _, err := r.topicConfig(logger, broker)
 		if err != nil {
 			return fmt.Errorf("failed to resolve broker config: %w", err)
 		}
 
-		secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig, UseNamespaceInConfigmap: false}, r.SecretProviderFunc())
-		if err != nil {
-			return fmt.Errorf("failed to get secret: %w", err)
-		}
 		if secret != nil {
 			logger.Debug("Secret reference",
 				zap.String("apiVersion", secret.APIVersion),
@@ -359,7 +372,13 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		if err := r.finalizeNonExternalBrokerTopic(broker, securityOption, topicConfig, logger); err != nil {
 			return err
 		}
+
 	}
+
+	if err := r.removeFinalizerSecret(ctx, finalizerSecret(broker), secret); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -388,19 +407,23 @@ func (r *Reconciler) finalizeNonExternalBrokerTopic(broker *eventing.Broker, sec
 	return nil
 }
 
-func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, *corev1.ConfigMap, error) {
-
-	logger.Debug("broker config", zap.Any("broker.spec.config", broker.Spec.Config))
-
-	if strings.ToLower(broker.Spec.Config.Kind) != "configmap" { // TODO: is there any constant?
-		return nil, nil, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind)
-	}
-
+func (r *Reconciler) brokerNamespace(broker *eventing.Broker) string {
 	namespace := broker.Spec.Config.Namespace
 	if namespace == "" {
 		// Namespace not specified, use broker namespace.
 		namespace = broker.Namespace
 	}
+	return namespace
+}
+
+func (r *Reconciler) brokerConfigMap(logger *zap.Logger, broker *eventing.Broker) (bool, *corev1.ConfigMap, error) {
+	logger.Debug("broker config", zap.Any("broker.spec.config", broker.Spec.Config))
+
+	if strings.ToLower(broker.Spec.Config.Kind) != "configmap" { // TODO: is there any constant?
+		return false, nil, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind)
+	}
+
+	namespace := r.brokerNamespace(broker)
 
 	// There might be cases where the ConfigMap is deleted before the Broker.
 	// In these cases, we rebuild the ConfigMap from broker status annotations.
@@ -414,17 +437,30 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*
 	isRebuilt := false
 	cm, getCmError := r.ConfigMapLister.ConfigMaps(namespace).Get(broker.Spec.Config.Name)
 	if getCmError != nil && !apierrors.IsNotFound(getCmError) {
-		return nil, nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, getCmError)
+		return isRebuilt, cm, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, getCmError)
 	}
 	if apierrors.IsNotFound(getCmError) {
 		cm = rebuildCMFromAnnotations(broker)
 		isRebuilt = true
 	}
 
+	return isRebuilt, cm, getCmError
+}
+
+// TODO: pass the configmap to this function
+func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, *corev1.ConfigMap, error) {
+
+	isRebuilt, cm, getCmError := r.brokerConfigMap(logger, broker)
+	// For generic errors, we return the error, when the ConfigMap wasn't found we try to get topic information from
+	// the rebuilt ConfigMap, if it's still not possible we return the `getCmError` down below.
+	if getCmError != nil && !apierrors.IsNotFound(getCmError) {
+		return nil, nil, getCmError
+	}
+
 	topicConfig, err := kafka.TopicConfigFromConfigMap(logger, cm)
 	if err != nil {
 		if isRebuilt {
-			return nil, cm, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, getCmError)
+			return nil, cm, fmt.Errorf("failed to get configmap %s/%s: %w", r.brokerNamespace(broker), broker.Spec.Config.Name, getCmError)
 		}
 		return nil, cm, fmt.Errorf("unable to build topic config from configmap: %w - ConfigMap data: %v", err, cm.Data)
 	}
@@ -495,4 +531,52 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 func isExternalTopic(broker *eventing.Broker) (string, bool) {
 	topicAnnotationValue, ok := broker.Annotations[ExternalTopicAnnotation]
 	return topicAnnotationValue, ok
+}
+
+func (r *Reconciler) addFinalizerSecret(ctx context.Context, finalizer string, secret *corev1.Secret) error {
+	if !containsFinalizerSecret(secret, finalizer) {
+		secret := secret.DeepCopy() // Do not modify informer copy.
+		secret.Finalizers = append(secret.Finalizers, finalizer)
+		_, err := r.KubeClient.CoreV1().Secrets(secret.GetNamespace()).Update(ctx, secret, metav1.UpdateOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to add finalizer to Secret %s/%s: %w", secret.GetNamespace(), secret.GetName(), err)
+		}
+	}
+	return nil
+}
+
+func (r *Reconciler) removeFinalizerSecret(ctx context.Context, finalizer string, secret *corev1.Secret) error {
+	if secret != nil {
+		newFinalizers := make([]string, 0, len(secret.Finalizers))
+		for _, f := range secret.Finalizers {
+			if f != finalizer {
+				newFinalizers = append(newFinalizers, f)
+			}
+		}
+		if len(newFinalizers) != len(secret.Finalizers) {
+			secret := secret.DeepCopy() // Do not modify informer copy.
+			secret.Finalizers = newFinalizers
+			_, err := r.KubeClient.CoreV1().Secrets(secret.GetNamespace()).Update(ctx, secret, metav1.UpdateOptions{})
+			if err != nil && !apierrors.IsNotFound(err) {
+				return fmt.Errorf("failed to remove finalizer %s from Secret %s/%s: %w", finalizer, secret.GetNamespace(), secret.GetName(), err)
+			}
+		}
+	}
+	return nil
+}
+
+func containsFinalizerSecret(secret *corev1.Secret, finalizer string) bool {
+	if secret == nil {
+		return false
+	}
+	for _, f := range secret.Finalizers {
+		if f == finalizer {
+			return true
+		}
+	}
+	return false
+}
+
+func finalizerSecret(object metav1.Object) string {
+	return fmt.Sprintf("%s/%s", "kafka.eventing", object.GetUID())
 }
