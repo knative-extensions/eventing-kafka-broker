@@ -16019,10 +16019,10 @@ spec:
           resources:
             limits:
               cpu: 1000m
-              memory: 384Mi
+              memory: 1024Mi
             requests:
               cpu: 200m
-              memory: 384Mi
+              memory: 512Mi
   strategy:
     type: Recreate
 
