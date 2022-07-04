@@ -10,6 +10,7 @@ git clone https://github.com/strimzi/strimzi-kafka-operator.git
 cd strimzi-kafka-operator
 git checkout release-0.29.x # checkout the release branch that you're interested in
 cd install/cluster-operator
+rm -f $HOME/strimzi-cluster-operator.yaml
 for i in $(ls | grep ".yaml"); do echo "---" >> $HOME/strimzi-cluster-operator.yaml && cat $i >> $HOME/strimzi-cluster-operator.yaml; done
 sed -i "s/myproject/kafka/g" $HOME/strimzi-cluster-operator.yaml
 ```
