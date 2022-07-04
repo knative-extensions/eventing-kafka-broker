@@ -40,6 +40,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -65,6 +67,11 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   // Invalid cloud event records that are discarded by dispatch may not have a record type. So we set Tag as below.
   private static final Tag INVALID_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "InvalidCloudEvent");
+
+  private static final String KN_ERROR_DEST_EXT_NAME = "knativeerrordest";
+  private static final String KN_ERROR_CODE_EXT_NAME = "knativeerrorcode";
+  private static final String KN_ERROR_DATA_EXT_NAME = "knativeerrordata";
+  private static final int KN_ERROR_DATA_MAX_BYTES = 1024;
 
   private final Filter filter;
   private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> subscriberSender;
@@ -256,6 +263,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     incrementEventCount(response, recordContext);
     recordDispatchLatency(response, recordContext);
 
+    // enhance event with extension attributes prior to forwarding to the dead letter sink
     ConsumerRecordContext transformedRecordContext = errorTransform(recordContext, response);
 
     dlsSender.apply(transformedRecordContext.getRecord())
@@ -264,24 +272,33 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   }
 
   private ConsumerRecordContext errorTransform(final ConsumerRecordContext recordContext, @Nullable final HttpResponse<?> response) {
+    String destination = resourceContext.getEgress().getDestination();
     if (response == null) {
-      return recordContext;
+      // if response is null we still want to add destination
+      return addExtensions(recordContext, Map.of(KN_ERROR_DEST_EXT_NAME, destination));
     }
 
-    String url = resourceContext.getEgress().getDestination();
-    int code = response.statusCode();
+    Map<String, String> extensions = new HashMap<>();
+    extensions.put(KN_ERROR_DEST_EXT_NAME, destination);
+    extensions.put(KN_ERROR_CODE_EXT_NAME, String.valueOf(response.statusCode()));
     String data = response.bodyAsString();
-    if (data.length() > 1024) {
-      data = data.substring(0, 1024);
+    if (data != null) {
+      if (data.length() > KN_ERROR_DATA_MAX_BYTES) {
+        data = data.substring(0, KN_ERROR_DATA_MAX_BYTES);
+      }
+      extensions.put(KN_ERROR_DATA_EXT_NAME, data);
     }
 
+    return addExtensions(recordContext, extensions);
+  }
+
+  // creates a new instance of ConsumerRecordContext with added extension attributes for underlying CloudEvent
+  private ConsumerRecordContext addExtensions(final ConsumerRecordContext recordContext, final Map<String, String> extensions) {
     CloudEvent cloudEvent = recordContext.getRecord().value();
 
-    CloudEvent transformedCloudEvent = CloudEventBuilder.v1(cloudEvent)
-      .withExtension("knativeerrordest", url)
-      .withExtension("knativeerrorcode", code)
-      .withExtension("knativeerrordata", data)
-      .build();
+    CloudEventBuilder builder = CloudEventBuilder.v1(cloudEvent);
+    extensions.forEach(builder::withExtension);
+    CloudEvent transformedCloudEvent = builder.build();
 
     ConsumerRecord<Object, CloudEvent> cr = new ConsumerRecord<>(
       recordContext.getRecord().record().topic(),
