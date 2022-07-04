@@ -16,4 +16,4 @@ sed -i "s/myproject/kafka/g" $HOME/strimzi-cluster-operator.yaml
 
 Once the new file `$HOME/strimzi-cluster-operator.yaml` has been created you can copy it to your local clone of the knative/eventing-kafka-broker git repository and make it part of your Strimzi Kafka update PR, following the project's contribution guidelines.
 
-Depending on the actual Strimzi Kafka operator version you're upgrading to chances are that you need to modify the file `kafka-ephemeral.yaml` in this directory as well as it contains references to Kafka versions and Kafka-specific configuration settings.
+Depending on the actual Strimzi Kafka operator version you're upgrading to chances are that you need to modify the file `kafka-ephemeral.yaml` in this directory as well as it contains references to specific Kafka versions and configuration settings.
