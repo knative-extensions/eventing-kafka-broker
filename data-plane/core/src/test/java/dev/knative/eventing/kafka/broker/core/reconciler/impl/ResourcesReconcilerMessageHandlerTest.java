@@ -60,14 +60,14 @@ public class ResourcesReconcilerMessageHandlerTest {
 
   @SuppressWarnings("unchecked")
   @Test
-  public void shouldReconcileOnConcurrentEnqueue() {
+  public void shouldReconcileOnConcurrentEnqueue(final Vertx vertx) {
 
     final var reconcileCallsCounter = new AtomicInteger();
 
     final var duringReconcileLatch = new CountDownLatch(1);
     final var newContractSetLatch = new CountDownLatch(1);
 
-    final var handler = new ResourcesReconcilerMessageHandler(resources -> {
+    final var handler = new ResourcesReconcilerMessageHandler(vertx, resources -> {
       reconcileCallsCounter.incrementAndGet();
       try {
         duringReconcileLatch.countDown();
