@@ -153,7 +153,6 @@ func WithExternalTopic(topic string) func(*eventing.Broker) {
 }
 
 type CMOption func(cm *corev1.ConfigMap)
-type SecretOption func(secret *corev1.Secret)
 
 func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int, options ...CMOption) *corev1.ConfigMap {
 	cm := &corev1.ConfigMap{
@@ -171,12 +170,6 @@ func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int,
 		opt(cm)
 	}
 	return cm
-}
-
-func BrokerSecretFinalizer(finalizerName string) SecretOption {
-	return func(secret *corev1.Secret) {
-		secret.Finalizers = append(secret.Finalizers, finalizerName)
-	}
 }
 
 func BrokerAuthConfig(name string) CMOption {
