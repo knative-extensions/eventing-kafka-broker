@@ -31,6 +31,7 @@ import (
 	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -68,8 +69,6 @@ type Reconciler struct {
 	BootstrapServers string
 
 	Prober prober.Prober
-
-	IngressHost string
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -214,7 +213,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
-	address := receiver.Address(r.IngressHost, broker)
+	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.DataPlaneNamespace)
+	address := receiver.Address(ingressHost, broker)
 	proberAddressable := prober.Addressable{
 		Address: address,
 		ResourceKey: types.NamespacedName{
@@ -317,12 +317,14 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 	broker.Status.Address.URL = nil
 
+	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.Reconciler.DataPlaneNamespace)
+
 	//  Rationale: after deleting a topic closing a producer ends up blocking and requesting metadata for max.block.ms
 	//  because topic metadata aren't available anymore.
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
-	address := receiver.Address(r.IngressHost, broker)
+	address := receiver.Address(ingressHost, broker)
 	proberAddressable := prober.Addressable{
 		Address: address,
 		ResourceKey: types.NamespacedName{
