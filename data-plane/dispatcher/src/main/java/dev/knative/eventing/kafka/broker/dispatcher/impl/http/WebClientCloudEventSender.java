@@ -124,14 +124,14 @@ public final class WebClientCloudEventSender implements CloudEventSender {
       },
       // Retry and failures
       cause -> {
-        if (retryCounter + 1 > egress.getRetry()) {
-          return Future.failedFuture(cause);
+        if (retryCounter < egress.getRetry()) {
+          Promise<HttpResponse<Buffer>> r = Promise.promise();
+          final var delay = retryPolicyFunc.apply(retryCounter + 1);
+          vertx.setTimer(delay, v -> send(event, retryCounter + 1).onComplete(r));
+          return r.future();
         }
 
-        Promise<HttpResponse<Buffer>> r = Promise.promise();
-        final var delay = retryPolicyFunc.apply(retryCounter + 1);
-        vertx.setTimer(delay, v -> send(event, retryCounter + 1).onComplete(r));
-        return r.future();
+        return Future.failedFuture(cause);
       }
     );
   }
