@@ -174,7 +174,7 @@ function run {
   wait_for_cloudevent foo$i
 
   echo "Force-deleting namespace for test run $i ..."
-  kubectl delete namespace foo$i --grace-period=0 --force --wait=false
+  kubectl delete namespace foo$i --wait=false
 
   echo "Ending test run $i ."
 }
@@ -183,15 +183,21 @@ export -f run
 export -f app
 export -f wait_for_cloudevent
 
+if [[ -z "$1" ]]; then
+  TEST_RUNS=100
+else
+  TEST_RUNS=$1
+fi
+
 if [[ ${PARALLEL:-""} != "" ]]; then
-  for i in {1..100}; do
+  for ((i=1; i <= TEST_RUNS; i++)); do
     timeout -k 60s 60s bash -c "run $i" &
     pids[${i}]=$!
   done
 
   wait "${pids[@]}" || exit $?
 else
-  for i in {1..100}; do
+  for ((i=1; i <= TEST_RUNS; i++)); do
     run "$i"
   done
 fi
