@@ -126,7 +126,7 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
 
     for (int i = 0; i < records.size(); i++) {
       final var record = records.recordAt(i);
-      this.recordDispatcher.dispatch(record, new ConsumerRecordContext(record) )
+      this.recordDispatcher.dispatch(new ConsumerRecordContext(record) )
         .onComplete(v -> {
           this.inFlightRecords.decrementAndGet();
           poll();

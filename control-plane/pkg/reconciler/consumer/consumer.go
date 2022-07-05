@@ -164,6 +164,7 @@ func (r Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainterna
 
 		FeatureFlags: &contract.EgressFeatureFlags{
 			EnableRateLimiter: r.KafkaFeatureFlags.IsDispatcherRateLimiterEnabled(),
+			EnableNewMetrics:  r.KafkaFeatureFlags.IsDispatcherNewMetricsEnabled(),
 		},
 	}
 	if c.Spec.Configs.KeyType != nil {

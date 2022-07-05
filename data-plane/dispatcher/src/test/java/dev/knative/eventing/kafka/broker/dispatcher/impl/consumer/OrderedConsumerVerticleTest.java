@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.ConsumerRecordContext;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -97,9 +98,9 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
     CountDownLatch latch = new CountDownLatch(tasks);
     final Map<TopicPartition, List<Long>> receivedRecords = new HashMap<>(partitions);
     final var recordDispatcher = mock(RecordDispatcherImpl.class);
-    when(recordDispatcher.dispatch(any(), any())).then(invocation -> {
-      final KafkaConsumerRecord<String, CloudEvent> record = invocation.getArgument(0);
-      return recordDispatcherLogicMock(vertx, random, delay, latch, record, receivedRecords);
+    when(recordDispatcher.dispatch(any())).then(invocation -> {
+      final ConsumerRecordContext recordContext = invocation.getArgument(0);
+      return recordDispatcherLogicMock(vertx, random, delay, latch, recordContext.getRecord(), receivedRecords);
     });
     when(recordDispatcher.close()).thenReturn(Future.succeededFuture());
 
@@ -208,7 +209,7 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
     Random random,
     long millis,
     CountDownLatch latch,
-    KafkaConsumerRecord<String, CloudEvent> record,
+    KafkaConsumerRecord<Object, CloudEvent> record,
     Map<TopicPartition, List<Long>> receivedRecords) {
     if (millis == 0) {
       receivedRecords

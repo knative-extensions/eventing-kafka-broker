@@ -14048,6 +14048,16 @@ public final class DataPlaneContract {
      * @return The enableRateLimiter.
      */
     boolean getEnableRateLimiter();
+
+    /**
+     * <pre>
+     * Enable newMetrics
+     * </pre>
+     *
+     * <code>bool enableNewMetrics = 2;</code>
+     * @return The enableNewMetrics.
+     */
+    boolean getEnableNewMetrics();
   }
   /**
    * Protobuf type {@code EgressFeatureFlags}
@@ -14099,6 +14109,11 @@ public final class DataPlaneContract {
               enableRateLimiter_ = input.readBool();
               break;
             }
+            case 16: {
+
+              enableNewMetrics_ = input.readBool();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -14146,6 +14161,21 @@ public final class DataPlaneContract {
       return enableRateLimiter_;
     }
 
+    public static final int ENABLENEWMETRICS_FIELD_NUMBER = 2;
+    private boolean enableNewMetrics_;
+    /**
+     * <pre>
+     * Enable newMetrics
+     * </pre>
+     *
+     * <code>bool enableNewMetrics = 2;</code>
+     * @return The enableNewMetrics.
+     */
+    @java.lang.Override
+    public boolean getEnableNewMetrics() {
+      return enableNewMetrics_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -14163,6 +14193,9 @@ public final class DataPlaneContract {
       if (enableRateLimiter_ != false) {
         output.writeBool(1, enableRateLimiter_);
       }
+      if (enableNewMetrics_ != false) {
+        output.writeBool(2, enableNewMetrics_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -14175,6 +14208,10 @@ public final class DataPlaneContract {
       if (enableRateLimiter_ != false) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(1, enableRateLimiter_);
+      }
+      if (enableNewMetrics_ != false) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(2, enableNewMetrics_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -14193,6 +14230,8 @@ public final class DataPlaneContract {
 
       if (getEnableRateLimiter()
           != other.getEnableRateLimiter()) return false;
+      if (getEnableNewMetrics()
+          != other.getEnableNewMetrics()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -14207,6 +14246,9 @@ public final class DataPlaneContract {
       hash = (37 * hash) + ENABLERATELIMITER_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
           getEnableRateLimiter());
+      hash = (37 * hash) + ENABLENEWMETRICS_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+          getEnableNewMetrics());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -14342,6 +14384,8 @@ public final class DataPlaneContract {
         super.clear();
         enableRateLimiter_ = false;
 
+        enableNewMetrics_ = false;
+
         return this;
       }
 
@@ -14369,6 +14413,7 @@ public final class DataPlaneContract {
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags buildPartial() {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags(this);
         result.enableRateLimiter_ = enableRateLimiter_;
+        result.enableNewMetrics_ = enableNewMetrics_;
         onBuilt();
         return result;
       }
@@ -14419,6 +14464,9 @@ public final class DataPlaneContract {
         if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.getDefaultInstance()) return this;
         if (other.getEnableRateLimiter() != false) {
           setEnableRateLimiter(other.getEnableRateLimiter());
+        }
+        if (other.getEnableNewMetrics() != false) {
+          setEnableNewMetrics(other.getEnableNewMetrics());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -14488,6 +14536,49 @@ public final class DataPlaneContract {
       public Builder clearEnableRateLimiter() {
         
         enableRateLimiter_ = false;
+        onChanged();
+        return this;
+      }
+
+      private boolean enableNewMetrics_ ;
+      /**
+       * <pre>
+       * Enable newMetrics
+       * </pre>
+       *
+       * <code>bool enableNewMetrics = 2;</code>
+       * @return The enableNewMetrics.
+       */
+      @java.lang.Override
+      public boolean getEnableNewMetrics() {
+        return enableNewMetrics_;
+      }
+      /**
+       * <pre>
+       * Enable newMetrics
+       * </pre>
+       *
+       * <code>bool enableNewMetrics = 2;</code>
+       * @param value The enableNewMetrics to set.
+       * @return This builder for chaining.
+       */
+      public Builder setEnableNewMetrics(boolean value) {
+        
+        enableNewMetrics_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Enable newMetrics
+       * </pre>
+       *
+       * <code>bool enableNewMetrics = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearEnableNewMetrics() {
+        
+        enableNewMetrics_ = false;
         onChanged();
         return this;
       }
@@ -25462,44 +25553,44 @@ public final class DataPlaneContract {
       "erence\022)\n\017dialectedFilter\030\014 \003(\0132\020.Dialec" +
       "tedFilter\022\021\n\tvReplicas\030\r \001(\005\022)\n\014featureF" +
       "lags\030\016 \001(\0132\023.EgressFeatureFlagsB\017\n\rreply" +
-      "Strategy\"/\n\022EgressFeatureFlags\022\031\n\021enable" +
-      "RateLimiter\030\001 \001(\010\"H\n\007Ingress\022!\n\013contentM" +
-      "ode\030\001 \001(\0162\014.ContentMode\022\014\n\004path\030\002 \001(\t\022\014\n" +
-      "\004host\030\003 \001(\t\"K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021" +
-      "\n\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007versi" +
-      "on\030\004 \001(\t\"`\n\017SecretReference\022\035\n\treference" +
-      "\030\001 \001(\0132\n.Reference\022.\n\022keyFieldReferences" +
-      "\030\002 \003(\0132\022.KeyFieldReference\"C\n\021KeyFieldRe" +
-      "ference\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(" +
-      "\0162\014.SecretField\"Y\n\024MultiSecretReference\022" +
-      "\033\n\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nreferenc" +
-      "es\030\002 \003(\0132\020.SecretReference\"\202\001\n\023CloudEven" +
-      "tOverrides\0228\n\nextensions\030\001 \003(\0132$.CloudEv" +
-      "entOverrides.ExtensionsEntry\0321\n\017Extensio" +
-      "nsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"" +
-      "\350\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(" +
-      "\t\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004" +
-      " \001(\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.E" +
-      "gressConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034" +
-      "\n\nabsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecr" +
-      "et\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAuthSecre" +
-      "t\030\t \001(\0132\025.MultiSecretReferenceH\000\0221\n\023clou" +
-      "dEventOverrides\030\n \001(\0132\024.CloudEventOverri" +
-      "des\022\035\n\treference\030\013 \001(\0132\n.ReferenceB\006\n\004Au" +
-      "th\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tre" +
-      "sources\030\002 \003(\0132\t.Resource*,\n\rBackoffPolic" +
-      "y\022\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n\rDelive" +
-      "ryOrder\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007K" +
-      "eyType\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Doubl" +
-      "e\020\002\022\r\n\tByteArray\020\003*)\n\013ContentMode\022\n\n\006BIN" +
-      "ARY\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013SecretField\022\022\n\016" +
-      "SASL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT" +
-      "\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005" +
-      "*D\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAI" +
-      "NTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.kn" +
-      "ative.eventing.kafka.broker.contractB\021Da" +
-      "taPlaneContractZ\032control-plane/pkg/contr" +
-      "actb\006proto3"
+      "Strategy\"I\n\022EgressFeatureFlags\022\031\n\021enable" +
+      "RateLimiter\030\001 \001(\010\022\030\n\020enableNewMetrics\030\002 " +
+      "\001(\010\"H\n\007Ingress\022!\n\013contentMode\030\001 \001(\0162\014.Co" +
+      "ntentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004host\030\003 \001(\t\"K\n" +
+      "\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 " +
+      "\001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"`\n\017Se" +
+      "cretReference\022\035\n\treference\030\001 \001(\0132\n.Refer" +
+      "ence\022.\n\022keyFieldReferences\030\002 \003(\0132\022.KeyFi" +
+      "eldReference\"C\n\021KeyFieldReference\022\021\n\tsec" +
+      "retKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.SecretFiel" +
+      "d\"Y\n\024MultiSecretReference\022\033\n\010protocol\030\001 " +
+      "\001(\0162\t.Protocol\022$\n\nreferences\030\002 \003(\0132\020.Sec" +
+      "retReference\"\202\001\n\023CloudEventOverrides\0228\n\n" +
+      "extensions\030\001 \003(\0132$.CloudEventOverrides.E" +
+      "xtensionsEntry\0321\n\017ExtensionsEntry\022\013\n\003key" +
+      "\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010Resource\022\013" +
+      "\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrap" +
+      "Servers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress" +
+      "\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig\022\031\n" +
+      "\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAuth\030\007" +
+      " \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n.Ref" +
+      "erenceH\000\0220\n\017multiAuthSecret\030\t \001(\0132\025.Mult" +
+      "iSecretReferenceH\000\0221\n\023cloudEventOverride" +
+      "s\030\n \001(\0132\024.CloudEventOverrides\022\035\n\treferen" +
+      "ce\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"<\n\010Contract" +
+      "\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132" +
+      "\t.Resource*,\n\rBackoffPolicy\022\017\n\013Exponenti" +
+      "al\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r\n\tUNO" +
+      "RDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006Stri" +
+      "ng\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tByteArr" +
+      "ay\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUC" +
+      "TURED\020\001*a\n\013SecretField\022\022\n\016SASL_MECHANISM" +
+      "\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY" +
+      "\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol\022\r" +
+      "\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL" +
+      "\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.eventing" +
+      ".kafka.broker.contractB\021DataPlaneContrac" +
+      "tZ\032control-plane/pkg/contractb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -25606,7 +25697,7 @@ public final class DataPlaneContract {
     internal_static_EgressFeatureFlags_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_EgressFeatureFlags_descriptor,
-        new java.lang.String[] { "EnableRateLimiter", });
+        new java.lang.String[] { "EnableRateLimiter", "EnableNewMetrics", });
     internal_static_Ingress_descriptor =
       getDescriptor().getMessageTypes().get(13);
     internal_static_Ingress_fieldAccessorTable = new

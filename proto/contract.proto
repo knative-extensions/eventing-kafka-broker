@@ -159,6 +159,8 @@ message Egress {
 message EgressFeatureFlags {
   // Enable rateLimiter
   bool enableRateLimiter = 1;
+  // Enable newMetrics
+  bool enableNewMetrics = 2;
 }
 
 // CloudEvent content mode

@@ -203,20 +203,24 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
       TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
       final var executor = executorFor(topicPartition);
-      executor.offer(() -> dispatch(record, recordContext));
+      executor.offer(() -> dispatch(recordContext));
 
-      setValueQueueLength(topicPartition, executor.getQueue());
+      if (egress.getFeatureFlags().getEnableNewMetrics()) {
+        setValueQueueLength(topicPartition, () -> executor.getQueueSize());
+      }
     }
   }
 
-  private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record, ConsumerRecordContext recordContext) {
+  private Future<Void> dispatch(final ConsumerRecordContext recordContext) {
     if (this.closed.get()) {
       return Future.failedFuture("Consumer verticle closed topics=" + topics + " resource=" + egress.getReference());
     }
 
-    recordExecutorQueueLatency(recordContext); //executor has dispatched
+    if (egress.getFeatureFlags().getEnableNewMetrics()) {
+      recordExecutorQueueLatency(recordContext); //executor has dispatched
+    }
 
-    return this.recordDispatcher.dispatch(record, recordContext);
+    return this.recordDispatcher.dispatch(recordContext);
   }
 
   private synchronized OrderedAsyncExecutor executorFor(final TopicPartition topicPartition) {
@@ -258,10 +262,10 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     }
   }
 
-  private void setValueQueueLength(final TopicPartition topicPartition, Queue<Supplier<Future<?>>> executor) {
+  private void setValueQueueLength(final TopicPartition topicPartition, Supplier<Number> queueSize) {
     if (meterRegistry != null) {
       Metrics
-        .queueLength(getTags(topicPartition), executor)
+        .queueLength(getTags(topicPartition), queueSize)
         .register(meterRegistry)
         .value();
     }
@@ -274,13 +278,18 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       );
     }
     return Tags.of(
-      Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType())
+      Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType()),
+      Tag.of(Metrics.Tags.CONSUMER_NAME, egress.getReference().getName()),
+      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, egress.getReference().getNamespace())
     );
   }
 
   private Tags getTags(final TopicPartition topicPartition) {
     return Tags.of(
-      Tag.of(Metrics.Tags.PARTITION_ID, "" + topicPartition.getPartition())
+      Tag.of(Metrics.Tags.PARTITION_ID, "" + topicPartition.getPartition()),
+      Tag.of(Metrics.Tags.TOPIC_ID, "" + topicPartition.getTopic()),
+      Tag.of(Metrics.Tags.CONSUMER_NAME, egress.getReference().getName()),
+      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, egress.getReference().getNamespace())
     );
   }
 }

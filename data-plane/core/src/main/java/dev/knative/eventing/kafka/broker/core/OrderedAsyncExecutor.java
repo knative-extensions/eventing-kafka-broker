@@ -84,7 +84,7 @@ public class OrderedAsyncExecutor {
     this.queue.clear();
   }
 
-  public Queue<Supplier<Future<?>>> getQueue(){
-    return this.queue;
+  public int getQueueSize(){
+    return this.queue.size();
   }
 }

@@ -128,7 +128,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
    * @param record record to handle.
    */
   @Override
-  public Future<Void> dispatch(KafkaConsumerRecord<Object, CloudEvent> record, ConsumerRecordContext recordContext) {
+  public Future<Void> dispatch(ConsumerRecordContext recordContext) {
     if (closed.get()) {
       return Future.failedFuture("Dispatcher closed");
     }
@@ -154,9 +154,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       |        |                       +-------------+----------> end
       +->end<--+
      */
-    if (recordContext == null) {
-      recordContext = new ConsumerRecordContext(record);
-    }
+    KafkaConsumerRecord<Object, CloudEvent> record = recordContext.getRecord();
 
     if (record.record().value() instanceof InvalidCloudEvent) {
       incrementDiscardedRecord(recordContext);

@@ -144,7 +144,8 @@ public class Metrics {
     public static final String RESOURCE_NAMESPACE = "namespace_name";
     public static final String CONSUMER_NAME = "consumer_name";
 
-    public static final String PARTITION_ID = "partition_id";
+    public static final String PARTITION_ID = "partition";
+    public static final String TOPIC_ID = "topic";
   }
 
   /**
@@ -327,9 +328,9 @@ public class Metrics {
   }
 
 
-  public static Gauge.Builder queueLength(final io.micrometer.core.instrument.Tags tags, Queue<Supplier<Future<?>>> queue) {
+  public static Gauge.Builder queueLength(final io.micrometer.core.instrument.Tags tags, Supplier<Number> queueSize) {
     return Gauge
-      .builder(QUEUE_LENGTH, queue, Queue::size)
+      .builder(QUEUE_LENGTH, queueSize)
       .description("Number of events in executor queue per partition")
       .tags(tags)
       .baseUnit(Metrics.Units.DIMENSIONLESS);
