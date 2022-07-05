@@ -233,11 +233,11 @@ public class WebClientCloudEventSenderTest {
       .onSuccess(v -> success.set(true));
 
     await().untilFalse(success);
-    await().untilAdder(counter, is(equalTo(6L)));
+    await().untilAdder(counter, is(equalTo(retry+1)));
 
     // Verify that after some time counter is still equal to 6.
     Thread.sleep(10000L);
-    await().untilAdder(counter, is(equalTo(6L)));
+    await().untilAdder(counter, is(equalTo(retry+1)));
 
     sender.close().onSuccess(v -> context.completeNow());
   }
