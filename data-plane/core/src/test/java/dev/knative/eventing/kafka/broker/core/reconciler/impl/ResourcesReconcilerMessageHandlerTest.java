@@ -48,7 +48,7 @@ public class ResourcesReconcilerMessageHandlerTest {
     ResourcesReconcilerMessageHandler.start(vertx, contract -> {
       testContext.verify(() ->
         assertThat(contract)
-          .isEqualTo(expected.getResourcesList())
+          .isEqualTo(expected)
       );
       testContext.completeNow();
       return Future.succeededFuture();

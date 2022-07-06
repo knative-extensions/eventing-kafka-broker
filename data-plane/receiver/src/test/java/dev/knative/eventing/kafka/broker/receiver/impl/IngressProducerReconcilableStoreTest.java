@@ -305,7 +305,7 @@ public class IngressProducerReconcilableStoreTest {
     vertx.runOnContext(v -> {
       Future<Void> fut = Future.succeededFuture();
       for (Map.Entry<List<DataPlaneContract.Resource>, BiConsumer<Integer, IngressProducerReconcilableStore>> entry : invocations) {
-        fut = fut.compose(v1 -> reconciler.reconcile(entry.getKey()))
+        fut = fut.compose(v1 -> reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(entry.getKey()).build()))
           .onSuccess(i -> context.verify(() -> {
             entry.getValue().accept(producerFactoryInvocations.get(), store);
             checkpoint.flag();
@@ -391,7 +391,7 @@ public class IngressProducerReconcilableStoreTest {
 
     vertx.runOnContext(v -> {
       Future.succeededFuture()
-        .compose(v1 -> reconciler.reconcile(List.of(resource1, resource2, resource3, resource4)))
+        .compose(v1 -> reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(List.of(resource1, resource2, resource3, resource4)).build()))
         .onSuccess(event -> {
           // match by path
           assertThat(store.resolve("", "/hello1").getKafkaProducer()).isSameAs(producer1);
@@ -450,7 +450,7 @@ public class IngressProducerReconcilableStoreTest {
 
     vertx.runOnContext(v -> {
       Future.succeededFuture()
-        .compose(v1 -> reconciler.reconcile(List.of(resource)))
+        .compose(v1 -> reconciler.reconcile(DataPlaneContract.Contract.newBuilder().addAllResources(List.of(resource)).build()))
         .onSuccess(event -> context.failNow("Reconcile should've failed"))
         .onFailure(event -> context.completeNow());
     });

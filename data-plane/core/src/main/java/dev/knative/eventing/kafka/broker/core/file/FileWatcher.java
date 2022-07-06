@@ -184,8 +184,9 @@ public class FileWatcher implements AutoCloseable {
       final var previousLastContract = this.lastContract;
       this.lastContract = contract.getGeneration();
       if (contract.getGeneration() == previousLastContract) {
-        logger.debug("Contract unchanged {}",
-          keyValue("generation", contract.getGeneration())
+        logger.debug("Contract unchanged {} {}",
+          keyValue("generation", contract.getGeneration()),
+          keyValue("lastGeneration", previousLastContract)
         );
         return;
       }
