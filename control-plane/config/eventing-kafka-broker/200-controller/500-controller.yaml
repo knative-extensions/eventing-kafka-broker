@@ -133,6 +133,8 @@ spec:
 
             - name: BROKER_DEFAULT_BACKOFF_DELAY_MS
               value: "1000" # 1 second
+            - name: CHANNEL_DEFAULT_BACKOFF_DELAY_MS
+              value: "1000" # 1 second
             - name: SYSTEM_NAMESPACE
               valueFrom:
                 fieldRef:
