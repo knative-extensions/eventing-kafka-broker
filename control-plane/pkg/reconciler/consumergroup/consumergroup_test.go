@@ -1438,6 +1438,7 @@ func TestFinalizeKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewSASLSSLSecret(ConsumerGroupNamespace, SecretName),
 				NewDeletedConsumeGroup(
+					ConsumerGroupReplicas(2),
 					ConsumerGroupOwnerRef(SourceAsOwnerReference()),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerConfigs(
@@ -1506,6 +1507,7 @@ func TestFinalizeKind(t *testing.T) {
 					)),
 				),
 				NewDeletedConsumeGroup(
+					ConsumerGroupReplicas(1),
 					ConsumerGroupOwnerRef(SourceAsOwnerReference()),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerConfigs(
@@ -1546,6 +1548,52 @@ func TestFinalizeKind(t *testing.T) {
 								},
 							},
 						}),
+					)),
+				),
+			},
+			Key: testKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return nil, nil
+				}),
+			},
+			WantDeletes: []clientgotesting.DeleteActionImpl{
+				{
+					ActionImpl: clientgotesting.ActionImpl{
+						Namespace: ConsumerGroupNamespace,
+						Resource: schema.GroupVersionResource{
+							Group:    kafkainternals.SchemeGroupVersion.Group,
+							Version:  kafkainternals.SchemeGroupVersion.Version,
+							Resource: "consumers",
+						},
+					},
+					Name: fmt.Sprintf("%s-%d", ConsumerNamePrefix, 1),
+				},
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
+		},
+		{
+			Name: "Finalize normal - with consumers and existing placements",
+			Objects: []runtime.Object{
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+						ConsumerSubscriber(NewSourceSinkReference()),
+					)),
+				),
+				NewDeletedConsumeGroup(
+					ConsumerGroupOwnerRef(SourceAsOwnerReference()),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
 					)),
 				),
 			},
