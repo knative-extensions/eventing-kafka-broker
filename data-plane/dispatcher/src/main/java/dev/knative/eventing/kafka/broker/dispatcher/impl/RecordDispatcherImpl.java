@@ -268,7 +268,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     recordDispatchLatency(response, recordContext);
 
     // enhance event with extension attributes prior to forwarding to the dead letter sink
-    ConsumerRecordContext transformedRecordContext = errorTransform(recordContext, response);
+    final var transformedRecordContext = errorTransform(recordContext, response);
 
     dlsSender.apply(transformedRecordContext.getRecord())
       .onSuccess(v -> onDeadLetterSinkSuccess(transformedRecordContext, finalProm))
@@ -276,16 +276,16 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   }
 
   private ConsumerRecordContext errorTransform(final ConsumerRecordContext recordContext, @Nullable final HttpResponse<?> response) {
-    String destination = resourceContext.getEgress().getDestination();
+    final var destination = resourceContext.getEgress().getDestination();
     if (response == null) {
       // if response is null we still want to add destination
       return addExtensions(recordContext, Map.of(KN_ERROR_DEST_EXT_NAME, destination));
     }
 
-    Map<String, String> extensions = new HashMap<>();
+    final var extensions = new HashMap<String, String>();
     extensions.put(KN_ERROR_DEST_EXT_NAME, destination);
     extensions.put(KN_ERROR_CODE_EXT_NAME, String.valueOf(response.statusCode()));
-    String data = response.bodyAsString();
+    var data = response.bodyAsString();
     if (data != null) {
       if (data.length() > KN_ERROR_DATA_MAX_BYTES) {
         data = data.substring(0, KN_ERROR_DATA_MAX_BYTES);
@@ -298,13 +298,13 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   // creates a new instance of ConsumerRecordContext with added extension attributes for underlying CloudEvent
   private ConsumerRecordContext addExtensions(final ConsumerRecordContext recordContext, final Map<String, String> extensions) {
-    CloudEvent cloudEvent = recordContext.getRecord().value();
+    final var cloudEvent = recordContext.getRecord().value();
 
-    CloudEventBuilder builder = CloudEventBuilder.v1(cloudEvent);
+    final var builder = CloudEventBuilder.v1(cloudEvent);
     extensions.forEach(builder::withExtension);
-    CloudEvent transformedCloudEvent = builder.build();
+    final var transformedCloudEvent = builder.build();
 
-    ConsumerRecord<Object, CloudEvent> cr = new ConsumerRecord<>(
+    final var cr = new ConsumerRecord<>(
       recordContext.getRecord().record().topic(),
       recordContext.getRecord().record().partition(),
       recordContext.getRecord().record().offset(),
@@ -319,7 +319,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       recordContext.getRecord().record().leaderEpoch()
     );
 
-    KafkaConsumerRecordImpl<Object, CloudEvent> kcr = new KafkaConsumerRecordImpl<>(cr);
+    final var kcr = new KafkaConsumerRecordImpl<>(cr);
 
     return new ConsumerRecordContext(kcr);
   }
