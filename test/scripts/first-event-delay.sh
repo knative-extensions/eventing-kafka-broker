@@ -72,7 +72,7 @@ spec:
     spec:
       containers:
       - name: event-display
-        image: quay.io/openshift-knative/knative-eventing-sources-event-display:v0.13.2
+        image: quay.io/openshift-knative/knative-eventing-sources-event-display:v0.18.0
 ---
 apiVersion: sources.knative.dev/v1
 kind: SinkBinding
@@ -114,7 +114,7 @@ spec:
     spec:
       containers:
       - name: single-heartbeat
-        image: quay.io/openshift-knative/knative-eventing-sources-heartbeats:v0.13.2
+        image: quay.io/openshift-knative/knative-eventing-sources-heartbeats:v0.18.0
         args:
         - --period=1
         env:
@@ -168,7 +168,7 @@ function run {
   fi
 
   wait_for_cloudevent foo$i
-  kubectl delete namespace foo$i
+  kubectl delete namespace foo$i --wait=false
 }
 
 export -f run
@@ -176,14 +176,14 @@ export -f app
 export -f wait_for_cloudevent
 
 if [[ ${PARALLEL:-""} != "" ]]; then
-  for i in {1..100}; do
+  for i in {1..10}; do
     timeout -k 60s 60s bash -c "run $i" &
     pids[${i}]=$!
   done
 
   wait "${pids[@]}" || exit $?
 else
-  for i in {1..100}; do
+  for i in {1..10}; do
     run "$i"
   done
 fi
