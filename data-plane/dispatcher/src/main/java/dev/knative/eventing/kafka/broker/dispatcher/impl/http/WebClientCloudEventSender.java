@@ -15,16 +15,17 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseFailureException;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.rw.CloudEventRWException;
-import io.vertx.circuitbreaker.CircuitBreaker;
-import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
@@ -43,12 +44,15 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
   private static final Logger logger = LoggerFactory.getLogger(WebClientCloudEventSender.class);
 
+  private static final long DEFAULT_TIMEOUT_MS = 600_000L;
+
   private final WebClient client;
-  private final CircuitBreaker circuitBreaker;
   private final String target;
 
   private final Promise<Void> closePromise = Promise.promise();
-  private final CircuitBreakerOptions circuitBreakerOptions;
+  private final Function<Integer, Long> retryPolicyFunc;
+  private final DataPlaneContract.EgressConfig egress;
+  private final Vertx vertx;
 
   private final AtomicBoolean closed = new AtomicBoolean(false);
   private final AtomicInteger inFlightRequests = new AtomicInteger(0);
@@ -56,16 +60,16 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   /**
    * All args constructor.
    *
-   * @param client                http client.
-   * @param circuitBreaker        circuit breaker
-   * @param circuitBreakerOptions circuit breaker options.
-   * @param target                subscriber URI
+   * @param vertx  Vertx context instance
+   * @param client http client.
+   * @param target subscriber URI
+   * @param egress egress configuration
    */
-  public WebClientCloudEventSender(final WebClient client,
-                                   final CircuitBreaker circuitBreaker,
-                                   final CircuitBreakerOptions circuitBreakerOptions,
-                                   final String target) {
-    this.circuitBreakerOptions = circuitBreakerOptions;
+  public WebClientCloudEventSender(final Vertx vertx,
+                                   final WebClient client,
+                                   final String target,
+                                   final DataPlaneContract.EgressConfig egress) {
+    Objects.requireNonNull(vertx);
     Objects.requireNonNull(client, "provide client");
     if (target == null || target.equals("")) {
       throw new IllegalArgumentException("provide a target");
@@ -73,46 +77,63 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     if (!URI.create(target).isAbsolute()) {
       throw new IllegalArgumentException("provide a valid target, provided target: " + target);
     }
-    Objects.requireNonNull(circuitBreaker, "provide circuitBreaker");
 
+    this.vertx = vertx;
     this.client = client;
     this.target = target;
-    this.circuitBreaker = circuitBreaker;
+    this.egress = egress;
+    this.retryPolicyFunc = computeRetryPolicy(egress);
   }
 
-  @Override
-  public Future<HttpResponse<Buffer>> send(CloudEvent event) {
-    logger.debug("Sending event {} {}",
+  public Future<HttpResponse<Buffer>> send(final CloudEvent event) {
+    return send(event, 0);
+  }
+
+  private Future<HttpResponse<Buffer>> send(final CloudEvent event, final int retryCounter) {
+    logger.debug("Sending event {} {} {}",
       keyValue("id", event.getId()),
-      keyValue("subscriberURI", target)
+      keyValue("subscriberURI", target),
+      keyValue("retry", retryCounter)
     );
 
-    TracingSpan.decorateCurrentWithEvent(event);
 
-    final Future<HttpResponse<Buffer>> future = circuitBreaker.execute(breaker -> {
-      if (closed.get()) {
-        // Once sender is closed, return a successful future to avoid retrying.
-        breaker.tryComplete(null);
-        return;
-      }
+    final Promise<HttpResponse<Buffer>> promise = Promise.promise();
 
+    if (closed.get()) {
+      // Once sender is closed, return a successful future to avoid retrying.
+      promise.tryComplete(null);
+    } else {
       try {
+        TracingSpan.decorateCurrentWithEvent(event);
         requestEmitted();
-        send(event, breaker).
+        send(event, promise).
           onComplete(v -> requestCompleted());
       } catch (CloudEventRWException e) {
         logger.error("failed to write event to the request {}", keyValue("subscriberURI", target), e);
-        breaker.tryFail(e);
+        promise.tryFail(e);
       }
-    });
+    }
 
     // Handle closed return value.
-    return future.compose(r -> {
-      if (r == null) {
-       return Future.failedFuture("Sender closed for target="+target);
+    return promise.future().compose(
+      r -> {
+        if (r == null) {
+          return Future.failedFuture("Sender closed for target=" + target);
+        }
+        return Future.succeededFuture(r);
+      },
+      // Retry and failures
+      cause -> {
+        if (retryCounter < egress.getRetry()) {
+          Promise<HttpResponse<Buffer>> r = Promise.promise();
+          final var delay = retryPolicyFunc.apply(retryCounter + 1);
+          vertx.setTimer(delay, v -> send(event, retryCounter + 1).onComplete(r));
+          return r.future();
+        }
+
+        return Future.failedFuture(cause);
       }
-      return Future.succeededFuture(r);
-    });
+    );
   }
 
   private void requestCompleted() {
@@ -129,7 +150,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   private Future<?> send(final CloudEvent event, final Promise<HttpResponse<Buffer>> breaker) {
     return VertxMessageFactory
       .createWriter(client.postAbs(target)
-        .timeout(this.circuitBreakerOptions.getTimeout())
+        .timeout(this.egress.getTimeout() <= 0 ? DEFAULT_TIMEOUT_MS : this.egress.getTimeout())
         .putHeader("Prefer", "reply"))
       .writeBinary(event)
       .onFailure(ex -> {
@@ -196,7 +217,6 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     }
 
     final Function<Void, Future<Void>> closeF = v -> {
-      this.circuitBreaker.close();
       this.client.close();
       return Future.succeededFuture();
     };
@@ -216,4 +236,16 @@ public final class WebClientCloudEventSender implements CloudEventSender {
       statusCode == 409 || // Conflict / Processing in progress
       statusCode == 429;   // Too Many Requests / Overloaded
   }
+
+  public static Function<Integer, Long> computeRetryPolicy(final DataPlaneContract.EgressConfig egress) {
+    if (egress != null && egress.getBackoffDelay() > 0) {
+      final var delay = egress.getBackoffDelay();
+      return switch (egress.getBackoffPolicy()) {
+        case Linear -> retryCount -> delay * retryCount;
+        case Exponential, UNRECOGNIZED -> retryCount -> delay * Math.round(Math.pow(2, retryCount));
+      };
+    }
+    return retry -> 0L; // Default Vert.x retry policy, it means don't retry
+  }
+
 }
