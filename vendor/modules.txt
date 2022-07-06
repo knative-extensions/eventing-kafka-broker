@@ -1371,11 +1371,11 @@ knative.dev/eventing-kafka/test/rekt/resources/resetoffset
 knative.dev/eventing-kafka/test/upgrade
 knative.dev/eventing-kafka/test/upgrade/continual
 knative.dev/eventing-kafka/test/upgrade/installation
-# knative.dev/hack v0.0.0-20220610014127-dc6c287516dc
+# knative.dev/hack v0.0.0-20220701014203-65c463ac8c98
 ## explicit
 knative.dev/hack
 knative.dev/hack/shell
-# knative.dev/pkg v0.0.0-20220621173822-9c5a7317fa9d
+# knative.dev/pkg v0.0.0-20220705130606-e60d250dc637
 ## explicit
 knative.dev/pkg/apiextensions/storageversion
 knative.dev/pkg/apiextensions/storageversion/cmd/migrate
@@ -1415,6 +1415,7 @@ knative.dev/pkg/codegen/cmd/injection-gen/generators
 knative.dev/pkg/configmap
 knative.dev/pkg/configmap/hash-gen
 knative.dev/pkg/configmap/informer
+knative.dev/pkg/configmap/testing
 knative.dev/pkg/controller
 knative.dev/pkg/environment
 knative.dev/pkg/hack

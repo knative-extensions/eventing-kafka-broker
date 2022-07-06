@@ -31,8 +31,8 @@ require (
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
 	knative.dev/eventing v0.32.1-0.20220622112123-0866e62ec48e
 	knative.dev/eventing-kafka v0.32.1-0.20220610014424-689d5055201c
-	knative.dev/hack v0.0.0-20220610014127-dc6c287516dc
-	knative.dev/pkg v0.0.0-20220621173822-9c5a7317fa9d
+	knative.dev/hack v0.0.0-20220701014203-65c463ac8c98
+	knative.dev/pkg v0.0.0-20220705130606-e60d250dc637
 	knative.dev/reconciler-test v0.0.0-20220622130523-57e43ca43bda
 	sigs.k8s.io/yaml v1.3.0
 )
