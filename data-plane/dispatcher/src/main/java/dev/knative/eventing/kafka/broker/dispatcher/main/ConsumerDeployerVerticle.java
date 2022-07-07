@@ -130,31 +130,35 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
       return Future.succeededFuture();
     }
 
-    return vertx.undeploy(this.deployedDispatchers.get(egress.getUid()))
-      .compose(
-        v -> {
-          this.deployedDispatchers.remove(egress.getUid());
-          logger.info(
-            "Removed egress {} {}",
-            keyValue("egress.uid", egress.getUid()),
-            keyValue("resource.uid", resource.getUid())
-          );
-          return Future.succeededFuture();
-        },
-        cause -> {
-          // IllegalStateException is thrown when a verticle is already un-deployed.
-          if (cause instanceof IllegalStateException) {
+    try {
+      return vertx.undeploy(this.deployedDispatchers.get(egress.getUid()))
+        .compose(
+          v -> {
             this.deployedDispatchers.remove(egress.getUid());
+            logger.info(
+              "Removed egress {} {}",
+              keyValue("egress.uid", egress.getUid()),
+              keyValue("resource.uid", resource.getUid())
+            );
             return Future.succeededFuture();
+          },
+          cause -> {
+            // IllegalStateException is thrown when a verticle is already un-deployed.
+            if (cause instanceof IllegalStateException) {
+              this.deployedDispatchers.remove(egress.getUid());
+              return Future.succeededFuture();
+            }
+            logger.error(
+              "Failed to un-deploy verticle {} {}",
+              keyValue("egress.uid", egress.getUid()),
+              keyValue("resource.uid", resource.getUid()),
+              cause
+            );
+            return Future.failedFuture(cause);
           }
-          logger.error(
-            "Failed to un-deploy verticle {} {}",
-            keyValue("egress.uid", egress.getUid()),
-            keyValue("resource.uid", resource.getUid()),
-            cause
-          );
-          return Future.failedFuture(cause);
-        }
-      );
+        );
+    } catch (final Exception ex) {
+      return Future.failedFuture(ex);
+    }
   }
 }
