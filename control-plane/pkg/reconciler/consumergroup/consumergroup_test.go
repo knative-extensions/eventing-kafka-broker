@@ -1438,68 +1438,8 @@ func TestFinalizeKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewSASLSSLSecret(ConsumerGroupNamespace, SecretName),
 				NewDeletedConsumeGroup(
-					ConsumerGroupConsumerSpec(NewConsumerSpec(
-						ConsumerConfigs(
-							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
-						),
-						ConsumerAuth(&kafkainternals.Auth{
-							NetSpec: &bindings.KafkaNetSpec{
-								SASL: bindings.KafkaSASLSpec{
-									Enable: true,
-									User: bindings.SecretValueFromSource{
-										SecretKeyRef: &corev1.SecretKeySelector{
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: SecretName,
-											},
-											Key: "user",
-										},
-									},
-									Password: bindings.SecretValueFromSource{
-										SecretKeyRef: &corev1.SecretKeySelector{
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: SecretName,
-											},
-											Key: "password",
-										},
-									},
-									Type: bindings.SecretValueFromSource{
-										SecretKeyRef: &corev1.SecretKeySelector{
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: SecretName,
-											},
-											Key: "type",
-										},
-									},
-								},
-								TLS: bindings.KafkaTLSSpec{
-									Enable: true,
-								},
-							},
-						}),
-					)),
-				),
-			},
-			Key:                     testKey,
-			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
-		},
-		{
-			Name: "Finalize normal - with consumers",
-			Objects: []runtime.Object{
-				NewSASLSSLSecret(ConsumerGroupNamespace, SecretName),
-				NewConsumer(1,
-					ConsumerSpec(NewConsumerSpec(
-						ConsumerTopics("t1", "t2"),
-						ConsumerConfigs(
-							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
-						),
-						ConsumerVReplicas(1),
-						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
-						ConsumerSubscriber(NewSourceSinkReference()),
-					)),
-				),
-				NewDeletedConsumeGroup(
+					ConsumerGroupReplicas(2),
+					ConsumerGroupOwnerRef(SourceAsOwnerReference()),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
@@ -1543,6 +1483,126 @@ func TestFinalizeKind(t *testing.T) {
 				),
 			},
 			Key: testKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return nil, nil
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
+		},
+		{
+			Name: "Finalize normal - with consumers",
+			Objects: []runtime.Object{
+				NewSASLSSLSecret(ConsumerGroupNamespace, SecretName),
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+						ConsumerSubscriber(NewSourceSinkReference()),
+					)),
+				),
+				NewDeletedConsumeGroup(
+					ConsumerGroupReplicas(1),
+					ConsumerGroupOwnerRef(SourceAsOwnerReference()),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerAuth(&kafkainternals.Auth{
+							NetSpec: &bindings.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "password",
+										},
+									},
+									Type: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "type",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						}),
+					)),
+				),
+			},
+			Key: testKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return nil, nil
+				}),
+			},
+			WantDeletes: []clientgotesting.DeleteActionImpl{
+				{
+					ActionImpl: clientgotesting.ActionImpl{
+						Namespace: ConsumerGroupNamespace,
+						Resource: schema.GroupVersionResource{
+							Group:    kafkainternals.SchemeGroupVersion.Group,
+							Version:  kafkainternals.SchemeGroupVersion.Version,
+							Resource: "consumers",
+						},
+					},
+					Name: fmt.Sprintf("%s-%d", ConsumerNamePrefix, 1),
+				},
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
+		},
+		{
+			Name: "Finalize normal - with consumers and existing placements",
+			Objects: []runtime.Object{
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+						ConsumerSubscriber(NewSourceSinkReference()),
+					)),
+				),
+				NewDeletedConsumeGroup(
+					ConsumerGroupOwnerRef(SourceAsOwnerReference()),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+					)),
+				),
+			},
+			Key: testKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return nil, nil
+				}),
+			},
 			WantDeletes: []clientgotesting.DeleteActionImpl{
 				{
 					ActionImpl: clientgotesting.ActionImpl{
@@ -1564,6 +1624,9 @@ func TestFinalizeKind(t *testing.T) {
 	table.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		r := &Reconciler{
+			SchedulerFunc: func(s string) scheduler.Scheduler {
+				return row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
+			},
 			ConsumerLister:  listers.GetConsumerLister(),
 			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
 			SecretLister:    listers.GetSecretLister(),
