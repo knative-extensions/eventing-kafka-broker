@@ -211,13 +211,6 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 		eventshub.SendMultipleEvents(1, 0),
 	))
 
-	address, err := svc.Address(context.Background(), deadLetterSinkName)
-	f.Assert("deadLetterSinkName is addressable", func(ctx context.Context, t feature.T) {
-		if err != nil || address == nil {
-			t.Fail()
-		}
-	})
-
 	f.Assert("knativeerrordest, knativeerrorcode, knativeerrordata added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
 		func(ctx context.Context) cetest.EventMatcher {
@@ -282,13 +275,6 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 		eventshub.AddSequence,
 		eventshub.SendMultipleEvents(1, 0),
 	))
-
-	address, err := svc.Address(context.Background(), deadLetterSinkName)
-	f.Assert("deadLetterSinkName is addressable", func(ctx context.Context, t feature.T) {
-		if err != nil || address == nil {
-			t.Fail()
-		}
-	})
 
 	f.Assert("knativeerrordest, knativeerrorcode, truncated knativeerrordata added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
