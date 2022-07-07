@@ -29,6 +29,7 @@ import (
 func TestFlags_IsDispatcherRateLimiterEnabled(t *testing.T) {
 	nc := DefaultFeaturesConfig()
 	require.False(t, nc.features.DispatcherRateLimiter == feature.Enabled)
+	require.False(t, nc.features.DispatcherNewMetrics == feature.Enabled)
 }
 
 func TestFlags_IsEnabled_ContainingFlag(t *testing.T) {
@@ -36,9 +37,11 @@ func TestFlags_IsEnabled_ContainingFlag(t *testing.T) {
 	nc.Reset(&KafkaFeatureFlags{
 		features: features{
 			DispatcherRateLimiter: feature.Enabled,
+			DispatcherNewMetrics:  feature.Enabled,
 		},
 	})
 	require.True(t, nc.features.DispatcherRateLimiter == feature.Enabled)
+	require.True(t, nc.features.DispatcherNewMetrics == feature.Enabled)
 }
 
 func TestGetFlags(t *testing.T) {
@@ -47,7 +50,7 @@ func TestGetFlags(t *testing.T) {
 	require.NoError(t, err)
 
 	require.True(t, flags.IsDispatcherRateLimiterEnabled())
-
+	require.True(t, flags.IsDispatcherNewMetricsEnabled())
 }
 
 func TestStoreLoadWithConfigMap(t *testing.T) {
@@ -60,10 +63,12 @@ func TestStoreLoadWithConfigMap(t *testing.T) {
 	expected, _ := newFeaturesConfigFromMap(exampleConfig)
 
 	require.Equal(t, expected.IsDispatcherRateLimiterEnabled(), have.IsDispatcherRateLimiterEnabled())
+	require.Equal(t, expected.IsDispatcherNewMetricsEnabled(), have.IsDispatcherNewMetricsEnabled())
 }
 
 func TestStoreLoadWithContext(t *testing.T) {
 	have := FromContext(context.Background())
 
 	require.False(t, have.IsDispatcherRateLimiterEnabled())
+	require.False(t, have.IsDispatcherNewMetricsEnabled())
 }
