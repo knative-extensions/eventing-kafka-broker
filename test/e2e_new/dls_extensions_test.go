@@ -218,7 +218,7 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 		}
 	})
 
-	f.Assert("knativeerrordest & knativeerrorcode added", assertEnhancedWithKnativeErrorExtensions(
+	f.Assert("knativeerrordest, knativeerrorcode, knativeerrordata added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
 		func(ctx context.Context) cetest.EventMatcher {
 			dlsAddress, _ := svc.Address(ctx, deadLetterSinkName)
@@ -290,7 +290,7 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 		}
 	})
 
-	f.Assert("knativeerrordest & knativeerrorcode added", assertEnhancedWithKnativeErrorExtensions(
+	f.Assert("knativeerrordest, knativeerrorcode, truncated knativeerrordata added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
 		func(ctx context.Context) cetest.EventMatcher {
 			dlsAddress, _ := svc.Address(ctx, deadLetterSinkName)
