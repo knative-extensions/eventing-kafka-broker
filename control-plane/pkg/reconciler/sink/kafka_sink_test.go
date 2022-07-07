@@ -131,7 +131,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:              SinkUUID,
 							Topics:           []string{SinkTopic()},
-							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, Path: receiver.Path(SinkNamespace, SinkName)},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
 						},
@@ -188,7 +188,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							Topics:           []string{SinkTopic()},
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
-							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, Path: receiver.Path(SinkNamespace, SinkName)},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
 							Auth: &contract.Resource_AuthSecret{
 								AuthSecret: &contract.Reference{
 									Uuid:      SecretUUID,
@@ -256,7 +256,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
 							Ingress: &contract.Ingress{
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 								Path:        receiver.Path(SinkNamespace, SinkName),
 							},
 						},
@@ -369,7 +369,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:              SinkUUID,
 							Topics:           []string{"my-topic-1"},
-							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, Path: receiver.Path(SinkNamespace, SinkName)},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
 							BootstrapServers: "kafka-broker:10000",
 							Reference:        SinkReference(),
 						},
@@ -476,7 +476,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:              SinkUUID,
 							Topics:           []string{SinkTopic()},
-							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, Path: receiver.Path(SinkNamespace, SinkName)},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
 						},
@@ -526,7 +526,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:              SinkUUID,
 							Topics:           []string{SinkTopic()},
-							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, Path: receiver.Path(SinkNamespace, SinkName)},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
 						},
@@ -599,7 +599,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:              SinkUUID,
 							Topics:           []string{SinkTopic()},
-							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, Path: receiver.Path(SinkNamespace, SinkName)},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
 						},
@@ -648,7 +648,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							Topics:           []string{SinkTopic()},
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
-							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY},
 						},
 					},
 				}, &env),
@@ -671,7 +671,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:              SinkUUID,
 							Topics:           []string{SinkTopic()},
-							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, Path: receiver.Path(SinkNamespace, SinkName)},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
 						},
@@ -749,7 +749,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:              SinkUUID,
 							Topics:           []string{SinkTopic()},
-							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, Path: receiver.Path(SinkNamespace, SinkName)},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
 						},
@@ -804,7 +804,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:              SinkUUID,
 							Topics:           []string{SinkTopic()},
-							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, Path: receiver.Path(SinkNamespace, SinkName)},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
 						},
@@ -864,7 +864,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:              SinkUUID,
 							Topics:           []string{SinkTopic()},
-							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, Path: receiver.Path(SinkNamespace, SinkName)},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
 						},
@@ -918,7 +918,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:              SinkUUID,
 							Topics:           []string{SinkTopic()},
-							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, Path: receiver.Path(SinkNamespace, SinkName)},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
 						},
@@ -991,7 +991,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1000,7 +1000,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1017,7 +1017,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1042,7 +1042,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1051,7 +1051,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic-2"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1068,7 +1068,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1093,7 +1093,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1102,7 +1102,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic-2"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1119,7 +1119,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1144,7 +1144,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1153,7 +1153,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic-2"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1170,7 +1170,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1200,7 +1200,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1209,7 +1209,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic-2"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
@@ -1235,7 +1235,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 							Topics: []string{"topic"},
 							Ingress: &contract.Ingress{
 								Path:        "path",
-								ContentMode: contract.ContentMode_STRUCTURED,
+								ContentMode: contract.ContentMode_BINARY,
 							},
 							BootstrapServers: bootstrapServers,
 						},
