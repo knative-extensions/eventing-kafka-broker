@@ -42,6 +42,7 @@
 
     <!-- dependencies version -->
     <vertx.version>4.2.5</vertx.version>
+    <vertx.kafka.clients.version>4.3.0</vertx.kafka.clients.version>
     <cloudevents.sdk.version>2.3.0</cloudevents.sdk.version>
     <micrometer.version>1.8.5</micrometer.version>
     <opentelemetry.version>1.13.0</opentelemetry.version>
@@ -56,7 +57,7 @@
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
     <mokito.junit.jupiter.version>4.6.0</mokito.junit.jupiter.version>
     <fabric8.kubernetes.version>5.12.2</fabric8.kubernetes.version>
-    <kafka.version>2.8.1</kafka.version>
+    <kafka.version>3.2.0</kafka.version>
     <debezium.version>1.9.4.Final</debezium.version>
     <jib.version>3.2.0</jib.version>
   </properties>
@@ -122,11 +123,15 @@
       <dependency>
         <groupId>io.vertx</groupId>
         <artifactId>vertx-kafka-client</artifactId>
-        <version>${vertx.version}</version>
+        <version>${vertx.kafka.clients.version}</version>
         <exclusions>
           <exclusion>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-core</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
