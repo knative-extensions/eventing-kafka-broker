@@ -94,8 +94,7 @@ public class RecordDispatcherTest {
     );
 
     final var record = record();
-    final var recordContext = new ConsumerRecordContext(record);
-    dispatcherHandler.dispatch(recordContext);
+    dispatcherHandler.dispatch(record);
 
     verify(receiver, times(1)).recordReceived(record);
     verify(receiver, times(1)).recordDiscarded(record);
@@ -137,8 +136,7 @@ public class RecordDispatcherTest {
       registry
     );
     final var record = record();
-    final var recordContext = new ConsumerRecordContext(record);
-    dispatcherHandler.dispatch(recordContext);
+    dispatcherHandler.dispatch(record);
 
     assertTrue(sendCalled.get());
     verify(receiver, times(1)).recordReceived(record);
@@ -181,8 +179,7 @@ public class RecordDispatcherTest {
       registry
     );
     final var record = record();
-    final var recordContext = new ConsumerRecordContext(record);
-    dispatcherHandler.dispatch(recordContext);
+    dispatcherHandler.dispatch(record);
 
     assertTrue(subscriberSenderSendCalled.get());
     assertTrue(dlsSenderSendCalled.get());
@@ -226,8 +223,7 @@ public class RecordDispatcherTest {
       registry
     );
     final var record = record();
-    final var recordContext = new ConsumerRecordContext(record);
-    dispatcherHandler.dispatch(recordContext);
+    dispatcherHandler.dispatch(record);
 
     assertTrue(subscriberSenderSendCalled.get());
     assertTrue(dlsSenderSendCalled.get());
@@ -265,8 +261,7 @@ public class RecordDispatcherTest {
       registry
     );
     final var record = record();
-    final var recordContext = new ConsumerRecordContext(record);
-    dispatcherHandler.dispatch(recordContext);
+    dispatcherHandler.dispatch(record);
 
     assertTrue(subscriberSenderSendCalled.get());
     verify(receiver, times(1)).recordReceived(record);
@@ -330,8 +325,7 @@ public class RecordDispatcherTest {
     );
 
     final var record = invalidRecord();
-    final var recordContext = new ConsumerRecordContext(record);
-    dispatcherHandler.dispatch(recordContext);
+    dispatcherHandler.dispatch(record);
 
     verify(receiver, times(1)).recordReceived(record);
     verify(receiver, times(1)).recordDiscarded(record);

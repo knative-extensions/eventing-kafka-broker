@@ -42,6 +42,7 @@ public class OrderedAsyncExecutor {
   private final MeterRegistry meterRegistry;
   private final DistributionSummary executorLatency;
   private final Gauge executorQueueLength;
+  private final DataPlaneContract.Egress egress;
 
   public OrderedAsyncExecutor(final TopicPartition topicPartition,
                               final MeterRegistry meterRegistry,
@@ -50,8 +51,9 @@ public class OrderedAsyncExecutor {
     this.queue = new ArrayDeque<>();
     this.isStopped = false;
     this.inFlight = false;
+    this.egress = egress;
 
-    if (meterRegistry != null) {
+    if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableNewMetrics()) {
       final var tags = Tags.of(
         Metrics.Tags.PARTITION_ID, topicPartition.getPartition() + "",
         Metrics.Tags.TOPIC_ID, topicPartition.getTopic(),
@@ -82,7 +84,9 @@ public class OrderedAsyncExecutor {
     }
     boolean wasEmpty = this.queue.isEmpty();
     this.queue.offer(new Task(task));
-    this.executorQueueLength.value();
+    if (egress != null && egress.getFeatureFlags().getEnableNewMetrics()) {
+      this.executorQueueLength.value();
+    }
     if (wasEmpty) { // If no elements in the queue, then we need to start consuming it
       consume();
     }
@@ -99,7 +103,7 @@ public class OrderedAsyncExecutor {
       .get()
       .onComplete(ar -> {
         this.inFlight = false;
-        if (!this.isStopped) {
+        if (egress != null && egress.getFeatureFlags().getEnableNewMetrics() && !this.isStopped) {
           this.executorLatency.record(System.currentTimeMillis() - task.queueTimestamp);
           this.executorQueueLength.value();
         }
@@ -119,7 +123,7 @@ public class OrderedAsyncExecutor {
   public void stop() {
     this.isStopped = true;
     this.queue.clear();
-    if (meterRegistry != null) {
+    if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableNewMetrics()) {
       this.meterRegistry.remove(executorLatency);
       this.meterRegistry.remove(executorQueueLength);
     }

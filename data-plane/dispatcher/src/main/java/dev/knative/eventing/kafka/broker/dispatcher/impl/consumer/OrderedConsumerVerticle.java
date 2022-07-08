@@ -17,8 +17,6 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.OrderedAsyncExecutor;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.ConsumerRecordContext;
 import io.cloudevents.CloudEvent;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
@@ -26,11 +24,8 @@ import io.github.bucket4j.Refill;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
-import io.micrometer.core.instrument.Tags;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
@@ -39,15 +34,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.ArrayDeque;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Supplier;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -199,20 +190,17 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     // Put records in internal per-partition queues.
     for (int i = 0; i < records.size(); i++) {
       final var record = records.recordAt(i);
-      final var recordContext = new ConsumerRecordContext(record); // resets timer to start calculating the executor queue latency
-
-      TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
-      final var executor = executorFor(topicPartition);
-      executor.offer(() -> dispatch(recordContext));
+      final var executor = executorFor(new TopicPartition(record.topic(), record.partition()));
+      executor.offer(() -> dispatch(record));
     }
   }
 
-  private Future<Void> dispatch(final ConsumerRecordContext recordContext) {
+  private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record) {
     if (this.closed.get()) {
       return Future.failedFuture("Consumer verticle closed topics=" + topics + " resource=" + egress.getReference());
     }
 
-    return this.recordDispatcher.dispatch(recordContext);
+    return this.recordDispatcher.dispatch(record);
   }
 
   private synchronized OrderedAsyncExecutor executorFor(final TopicPartition topicPartition) {

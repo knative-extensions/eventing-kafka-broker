@@ -17,7 +17,6 @@ package dev.knative.eventing.kafka.broker.core.metrics;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
-import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Gauge;
@@ -32,7 +31,6 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.metrics.MetricsOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.tracing.TracingPolicy;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.micrometer.MetricsDomain;
 import io.vertx.micrometer.MetricsNaming;
 import io.vertx.micrometer.MicrometerMetricsOptions;
@@ -43,14 +41,9 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 public class Metrics {

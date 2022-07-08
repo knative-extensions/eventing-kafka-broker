@@ -16,7 +16,6 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.ConsumerRecordContext;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -125,8 +124,7 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
     isPollInFlight.compareAndSet(true, false);
 
     for (int i = 0; i < records.size(); i++) {
-      final var record = records.recordAt(i);
-      this.recordDispatcher.dispatch(new ConsumerRecordContext(record) )
+      this.recordDispatcher.dispatch(records.recordAt(i))
         .onComplete(v -> {
           this.inFlightRecords.decrementAndGet();
           poll();

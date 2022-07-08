@@ -64,11 +64,10 @@ public class RecordDispatcherMutatorChainTest {
           .build())
     );
 
-    final var recordContext = new ConsumerRecordContext(givenRecord);
-    final var succeeded = chain.dispatch(recordContext);
+    final var succeeded = chain.dispatch(givenRecord);
 
     assertThat(succeeded.succeeded()).isTrue();
-    verify(next, times(1)).dispatch(argThat(record -> record.getRecord().value().equals(expected)));
+    verify(next, times(1)).dispatch(argThat(record -> record.value().equals(expected)));
   }
 
   @Test

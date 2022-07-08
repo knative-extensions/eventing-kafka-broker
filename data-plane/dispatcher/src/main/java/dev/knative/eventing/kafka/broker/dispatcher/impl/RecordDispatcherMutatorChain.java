@@ -39,8 +39,8 @@ public class RecordDispatcherMutatorChain implements RecordDispatcher {
   }
 
   @Override
-  public Future<Void> dispatch(ConsumerRecordContext recordContext) {
-    final var record = recordContext.getRecord().record();
+  public Future<Void> dispatch(KafkaConsumerRecord<Object, CloudEvent> kafkaRecord) {
+    final var record = kafkaRecord.record();
     final var newRecord = new ConsumerRecord<>(
       record.topic(),
       record.partition(),
@@ -54,7 +54,7 @@ public class RecordDispatcherMutatorChain implements RecordDispatcher {
       record.headers(),
       record.leaderEpoch()
     );
-    return next.dispatch(new ConsumerRecordContext(new KafkaConsumerRecordImpl<>(newRecord)));
+    return next.dispatch(new KafkaConsumerRecordImpl<>(newRecord));
   }
 
   @Override

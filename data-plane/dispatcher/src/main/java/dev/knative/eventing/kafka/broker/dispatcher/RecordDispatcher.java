@@ -16,8 +16,9 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.ConsumerRecordContext;
+import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
 /**
  * This interface performs the dispatch of consumed records.
@@ -31,6 +32,6 @@ public interface RecordDispatcher extends AsyncCloseable {
    * @param record record to handle.
    * @return the completion future.
    */
-  Future<Void> dispatch(ConsumerRecordContext recordContext);
+  Future<Void> dispatch(KafkaConsumerRecord<Object, CloudEvent> record);
 
 }
