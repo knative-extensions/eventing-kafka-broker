@@ -76,8 +76,8 @@ public class OrderedAsyncExecutorTest {
     CountDownLatch tasksLatch = new CountDownLatch(tasks);
     List<Integer> executed = new ArrayList<>(tasks);
 
-    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor(new TopicPartition("t1", 0), 
-                                                              null, 
+    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor(new TopicPartition("t1", 0),
+                                                              null,
                                                               DataPlaneContract.Egress.newBuilder()
                                                                   .setFeatureFlags(DataPlaneContract.EgressFeatureFlags.newBuilder()
                                                                     .setEnableNewMetrics(false)
@@ -119,13 +119,13 @@ public class OrderedAsyncExecutorTest {
     List<Integer> executed = new ArrayList<>(tasks);
 
     CountDownLatch tasksLatch = new CountDownLatch(tasks);
-    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor(new TopicPartition("t1", 0), 
-                                          null, 
+    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor(new TopicPartition("t1", 0),
+                                          null,
                                           DataPlaneContract.Egress.newBuilder()
                                           .setFeatureFlags(DataPlaneContract.EgressFeatureFlags.newBuilder()
                                             .setEnableNewMetrics(false)
                                             .build())
-                                          .build()  
+                                          .build()
     );
 
     for (int i = 0; i < tasks; i++) {
