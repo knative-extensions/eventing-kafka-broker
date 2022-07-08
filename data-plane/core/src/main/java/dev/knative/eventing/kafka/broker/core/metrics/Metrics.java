@@ -328,7 +328,8 @@ public class Metrics {
   }
 
 
-  public static Gauge.Builder queueLength(final io.micrometer.core.instrument.Tags tags, Supplier<Number> queueSize) {
+  public static Gauge.Builder<Supplier<Number>> queueLength(final io.micrometer.core.instrument.Tags tags,
+                                                            final Supplier<Number> queueSize) {
     return Gauge
       .builder(QUEUE_LENGTH, queueSize)
       .description("Number of events in executor queue per partition")

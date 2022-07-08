@@ -204,20 +204,12 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
       final var executor = executorFor(topicPartition);
       executor.offer(() -> dispatch(recordContext));
-
-      if (egress.getFeatureFlags().getEnableNewMetrics()) {
-        setValueQueueLength(topicPartition, () -> executor.getQueueSize());
-      }
     }
   }
 
   private Future<Void> dispatch(final ConsumerRecordContext recordContext) {
     if (this.closed.get()) {
       return Future.failedFuture("Consumer verticle closed topics=" + topics + " resource=" + egress.getReference());
-    }
-
-    if (egress.getFeatureFlags().getEnableNewMetrics()) {
-      recordExecutorQueueLatency(recordContext); //executor has dispatched
     }
 
     return this.recordDispatcher.dispatch(recordContext);
@@ -228,9 +220,8 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     if (executor != null) {
       return executor;
     }
-    executor = new OrderedAsyncExecutor();
+    executor = new OrderedAsyncExecutor(topicPartition, meterRegistry, egress);
     this.recordDispatcherExecutors.put(topicPartition, executor);
-
     return executor;
   }
 
@@ -248,48 +239,5 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
     // All executors are busy
     return true;
-  }
-
-  private void recordExecutorQueueLatency(final ConsumerRecordContext recordContext) {
-    final var latency = recordContext.performLatency();
-    logger.debug("Executor queue latency {}", keyValue("latency", latency));
-
-    if (meterRegistry != null) {
-      Metrics
-      .executorQueueLatency(getTags(recordContext))
-      .register(meterRegistry)
-      .record(latency);
-    }
-  }
-
-  private void setValueQueueLength(final TopicPartition topicPartition, Supplier<Number> queueSize) {
-    if (meterRegistry != null) {
-      Metrics
-        .queueLength(getTags(topicPartition), queueSize)
-        .register(meterRegistry)
-        .value();
-    }
-  }
-
-  private Tags getTags(ConsumerRecordContext recordContext) {
-    if (recordContext.getRecord().record().value() instanceof InvalidCloudEvent) {
-      return Tags.of(
-        Tag.of(Metrics.Tags.EVENT_TYPE, "InvalidCloudEvent")
-      );
-    }
-    return Tags.of(
-      Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType()),
-      Tag.of(Metrics.Tags.CONSUMER_NAME, egress.getReference().getName()),
-      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, egress.getReference().getNamespace())
-    );
-  }
-
-  private Tags getTags(final TopicPartition topicPartition) {
-    return Tags.of(
-      Tag.of(Metrics.Tags.PARTITION_ID, "" + topicPartition.getPartition()),
-      Tag.of(Metrics.Tags.TOPIC_ID, "" + topicPartition.getTopic()),
-      Tag.of(Metrics.Tags.CONSUMER_NAME, egress.getReference().getName()),
-      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, egress.getReference().getNamespace())
-    );
   }
 }

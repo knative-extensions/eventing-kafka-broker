@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import io.vertx.kafka.client.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -73,7 +74,7 @@ public class OrderedAsyncExecutorTest {
     CountDownLatch tasksLatch = new CountDownLatch(tasks);
     List<Integer> executed = new ArrayList<>(tasks);
 
-    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor();
+    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor(new TopicPartition("t1", 0), null, null);
 
     for (int i = 0; i < tasks; i++) {
       final var n = i;
@@ -109,7 +110,7 @@ public class OrderedAsyncExecutorTest {
     List<Integer> executed = new ArrayList<>(tasks);
 
     CountDownLatch tasksLatch = new CountDownLatch(tasks);
-    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor();
+    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor(new TopicPartition("t1", 0), null, null);
 
     for (int i = 0; i < tasks; i++) {
       Supplier<Future<?>> task = generateTask(vertx, random, 100, i, tasksLatch, executed);
