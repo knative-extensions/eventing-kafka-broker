@@ -25,7 +25,7 @@ import (
 
 func TestKafkaSinkSpecSetDefaults(t *testing.T) {
 
-	defaultMode := ModeStructured
+	defaultMode := ModeBinary
 
 	tests := []struct {
 		name string
@@ -33,7 +33,7 @@ func TestKafkaSinkSpecSetDefaults(t *testing.T) {
 		want *KafkaSinkSpec
 	}{
 		{
-			name: "structured content mode by default",
+			name: "binary content mode by default",
 			spec: &KafkaSinkSpec{},
 			want: &KafkaSinkSpec{
 				ContentMode: &defaultMode,

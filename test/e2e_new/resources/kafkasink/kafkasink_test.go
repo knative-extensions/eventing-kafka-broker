@@ -67,7 +67,7 @@ func Example_full() {
 		"topic":            "my-topic",
 		"bootstrapServers": []string{"my-bootstrap-server:8082"},
 	}
-	kafkasink.WithContentMode(eventingv1alpha1.ModeBinary)(cfg)
+	kafkasink.WithContentMode(eventingv1alpha1.ModeStructured)(cfg)
 	kafkasink.WithReplicationFactor(3)(cfg)
 	kafkasink.WithNumPartitions(10)(cfg)
 	kafkasink.WithAuthSecretName("abc")(cfg)
@@ -88,7 +88,7 @@ func Example_full() {
 	//   topic: "my-topic"
 	//   bootstrapServers:
 	//     - "my-bootstrap-server:8082"
-	//   contentMode: binary
+	//   contentMode: structured
 	//   numPartitions: 10
 	//   replicationFactor: 3
 	//   auth:

@@ -73,15 +73,15 @@ spec:
                 contentMode:
                   description: |
                     CloudEvent content mode of Kafka messages sent to the topic.
-                    Possible values: [structured, binary] (default: structured)
+                    Possible values: [binary, structured] (default: binary)
                     - https://github.com/cloudevents/spec/blob/v1.0/spec.md#message
-                      - https://github.com/cloudevents/spec/blob/v1.0/kafka-protocol-binding.md#33-structured-content-mode
                       - https://github.com/cloudevents/spec/blob/v1.0/kafka-protocol-binding.md#32-binary-content-mode
+                      - https://github.com/cloudevents/spec/blob/v1.0/kafka-protocol-binding.md#33-structured-content-mode
                   type: string
                   enum:
-                    - structured
                     - binary
-                  default: structured
+                    - structured
+                  default: binary
                 auth:
                   description: 'Auth configurations'
                   type: object
