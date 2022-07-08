@@ -92,7 +92,7 @@ func SubscriberUnreachable() *feature.Feature {
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
-		eventshub.SendMultipleEvents(1, 0),
+		eventshub.SendMultipleEvents(1, 100*time.Millisecond),
 	))
 
 	f.Assert("knativeerrordest added", assertEnhancedWithKnativeErrorExtensions(
@@ -147,7 +147,7 @@ func SubscriberReturnedErrorNoData() *feature.Feature {
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
-		eventshub.SendMultipleEvents(1, 0),
+		eventshub.SendMultipleEvents(1, 100*time.Millisecond),
 	))
 
 	f.Assert("knativeerrordest & knativeerrorcode added", assertEnhancedWithKnativeErrorExtensions(
@@ -208,7 +208,7 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
-		eventshub.SendMultipleEvents(1, 0),
+		eventshub.SendMultipleEvents(1, 100*time.Millisecond),
 	))
 
 	f.Assert("knativeerrordest, knativeerrorcode, knativeerrordata added", assertEnhancedWithKnativeErrorExtensions(
@@ -273,7 +273,7 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
-		eventshub.SendMultipleEvents(1, 0),
+		eventshub.SendMultipleEvents(1, 100*time.Millisecond),
 	))
 
 	f.Assert("knativeerrordest, knativeerrorcode, truncated knativeerrordata added", assertEnhancedWithKnativeErrorExtensions(
