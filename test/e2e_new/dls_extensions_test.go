@@ -37,6 +37,7 @@ import (
 	"knative.dev/reconciler-test/resources/svc"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestDeadLetterSinkExtensions(t *testing.T) {
