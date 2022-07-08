@@ -87,7 +87,7 @@ func SubscriberUnreachable() *feature.Feature {
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Setup("install source", eventshub.Install(
+	f.Requirement("install source", eventshub.Install(
 		sourceName,
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
@@ -142,7 +142,7 @@ func SubscriberReturnedErrorNoData() *feature.Feature {
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Setup("install source", eventshub.Install(
+	f.Requirement("install source", eventshub.Install(
 		sourceName,
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
@@ -203,7 +203,7 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Setup("install source", eventshub.Install(
+	f.Requirement("install source", eventshub.Install(
 		sourceName,
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
@@ -268,7 +268,7 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Setup("install source", eventshub.Install(
+	f.Requirement("install source", eventshub.Install(
 		sourceName,
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
