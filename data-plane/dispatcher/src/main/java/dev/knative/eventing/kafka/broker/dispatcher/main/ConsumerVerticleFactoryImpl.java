@@ -167,6 +167,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
        consumerConfigs.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxProcessingTimeMs(egressConfig));
 
+       webClientOptions.setMaxPoolSize(egress.getVReplicas());
+       
        final var egressSubscriberSender = createConsumerRecordSender(
          vertx,
          egress.getDestination(),
