@@ -337,7 +337,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
                                                       final EgressConfig egressConfig,
                                                       final DataPlaneContract.Egress egress) {
     var webClientOptions = this.webClientOptions;
-    if (egress.getVReplicas() > 0 ) {
+    if (egress.getVReplicas() > 0) {
       webClientOptions = new WebClientOptions(this.webClientOptions);
       webClientOptions.setMaxPoolSize(egress.getVReplicas());
     }
