@@ -76,7 +76,14 @@ public class OrderedAsyncExecutorTest {
     CountDownLatch tasksLatch = new CountDownLatch(tasks);
     List<Integer> executed = new ArrayList<>(tasks);
 
-    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor(null);
+    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor(new TopicPartition("t1", 0),
+                                                              null,
+                                                              DataPlaneContract.Egress.newBuilder()
+                                                                  .setFeatureFlags(DataPlaneContract.EgressFeatureFlags.newBuilder()
+                                                                    .setEnableOrderedExecutorMetrics(false)
+                                                                    .build())
+                                                                  .build()
+        );
 
     for (int i = 0; i < tasks; i++) {
       final var n = i;
@@ -112,7 +119,14 @@ public class OrderedAsyncExecutorTest {
     List<Integer> executed = new ArrayList<>(tasks);
 
     CountDownLatch tasksLatch = new CountDownLatch(tasks);
-    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor(null);
+    OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor(new TopicPartition("t1", 0),
+                                          null,
+                                          DataPlaneContract.Egress.newBuilder()
+                                          .setFeatureFlags(DataPlaneContract.EgressFeatureFlags.newBuilder()
+                                            .setEnableOrderedExecutorMetrics(false)
+                                            .build())
+                                          .build()
+    );
 
     for (int i = 0; i < tasks; i++) {
       Supplier<Future<?>> task = generateTask(vertx, random, 100, i, tasksLatch, executed);

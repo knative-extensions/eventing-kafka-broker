@@ -23,15 +23,10 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.common.TopicPartition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Supplier;
-
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 /**
  * This executor performs an ordered execution of the enqueued tasks.
@@ -40,10 +35,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
  */
 public class OrderedAsyncExecutor {
 
-  private static final Logger logger = LoggerFactory.getLogger(OrderedAsyncExecutor.class);
-
-  private final Queue<Supplier<Future<?>>> queue;
-  private final TopicPartition topicPartition;
+  private final Queue<Task> queue;
 
   private boolean isStopped;
   private boolean inFlight;
@@ -52,11 +44,32 @@ public class OrderedAsyncExecutor {
   private final Gauge executorQueueLength;
   private final DataPlaneContract.Egress egress;
 
-  public OrderedAsyncExecutor(final TopicPartition topicPartition) {
-    this.queue = new ConcurrentLinkedDeque<>();
+  public OrderedAsyncExecutor(final TopicPartition topicPartition,
+                              final MeterRegistry meterRegistry,
+                              final DataPlaneContract.Egress egress) {
+    this.meterRegistry = meterRegistry;
+    this.queue = new ArrayDeque<>();
     this.isStopped = false;
     this.inFlight = false;
-    this.topicPartition = topicPartition;
+    this.egress = egress;
+
+    if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
+      final var tags = Tags.of(
+        Metrics.Tags.PARTITION_ID, topicPartition.getPartition() + "",
+        Metrics.Tags.TOPIC_ID, topicPartition.getTopic(),
+        Metrics.Tags.CONSUMER_NAME, egress.getReference().getName(),
+        Metrics.Tags.RESOURCE_NAMESPACE, egress.getReference().getNamespace()
+      );
+      this.executorLatency = Metrics
+        .executorQueueLatency(tags)
+        .register(meterRegistry);
+      this.executorQueueLength = Metrics
+        .queueLength(tags, this.queue::size)
+        .register(meterRegistry);
+    } else {
+      this.executorLatency = null;
+      this.executorQueueLength = null;
+    }
   }
 
   /**
@@ -69,20 +82,20 @@ public class OrderedAsyncExecutor {
       // Executor is stopped, return without adding the task to the queue.
       return;
     }
-    this.queue.offer(task);
-    consume();
+    boolean wasEmpty = this.queue.isEmpty();
+    this.queue.offer(new Task(task));
+    if (egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
+      this.executorQueueLength.value();
+    }
+    if (wasEmpty) { // If no elements in the queue, then we need to start consuming it
+      consume();
+    }
   }
 
   private void consume() {
     if (queue.isEmpty() || this.inFlight || this.isStopped) {
       return;
     }
-
-    logger.debug("Consuming from queue {} {}",
-      keyValue("topicPartition", topicPartition),
-      keyValue("length", queue.size())
-    );
-
     this.inFlight = true;
 
     final var task = this.queue.remove();
