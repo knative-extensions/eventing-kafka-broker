@@ -4,7 +4,7 @@ metadata:
   name: config-kafka-features
   namespace: knative-eventing
   annotations:
-    knative.dev/example-checksum: "f203e503"
+    knative.dev/example-checksum: "a4fb44fb"
 data:
   _example: |-
     ################################
