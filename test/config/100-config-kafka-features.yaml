@@ -5,3 +5,4 @@ metadata:
   namespace: knative-eventing
 data:
   dispatcher.rate-limiter: "enabled"
+  dispatcher.ordered-executor-metrics: "enabled"

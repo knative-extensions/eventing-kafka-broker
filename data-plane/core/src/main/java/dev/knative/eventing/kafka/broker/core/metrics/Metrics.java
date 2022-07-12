@@ -19,6 +19,7 @@ import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.BaseUnits;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
@@ -40,7 +41,6 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -115,6 +115,18 @@ public class Metrics {
 
   /**
    * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
+   * @see Metrics#executorQueueLatency(io.micrometer.core.instrument.Tags)
+   */
+  public static final String EXECUTOR_QUEUE_LATENCY = "executor_queue_latencies";
+
+  /**
+   * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
+   * @see Metrics#queueLength(io.micrometer.core.instrument.Tags)
+   */
+  public static final String QUEUE_LENGTH = "queue_length";
+
+  /**
+   * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
    */
   public static class Tags {
     public static final String RESPONSE_CODE = "response_code";
@@ -124,6 +136,9 @@ public class Metrics {
     public static final String RESOURCE_NAME = "name";
     public static final String RESOURCE_NAMESPACE = "namespace_name";
     public static final String CONSUMER_NAME = "consumer_name";
+
+    public static final String PARTITION_ID = "partition";
+    public static final String TOPIC_ID = "topic";
   }
 
   /**
@@ -292,6 +307,25 @@ public class Metrics {
     return Counter
       .builder(DISCARDED_EVENTS_COUNT)
       .description("Number of invalid events discarded")
+      .tags(tags)
+      .baseUnit(Metrics.Units.DIMENSIONLESS);
+  }
+
+  public static DistributionSummary.Builder executorQueueLatency(final io.micrometer.core.instrument.Tags tags) {
+    return DistributionSummary
+      .builder(EXECUTOR_QUEUE_LATENCY)
+      .description("The time an event spends in an executor queue")
+      .tags(tags)
+      .baseUnit(BaseUnits.MILLISECONDS)
+      .serviceLevelObjectives(LATENCY_SLOs);
+  }
+
+
+  public static Gauge.Builder<Supplier<Number>> queueLength(final io.micrometer.core.instrument.Tags tags,
+                                                            final Supplier<Number> queueSize) {
+    return Gauge
+      .builder(QUEUE_LENGTH, queueSize)
+      .description("Number of events in executor queue per partition")
       .tags(tags)
       .baseUnit(Metrics.Units.DIMENSIONLESS);
   }

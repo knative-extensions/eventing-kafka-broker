@@ -23,6 +23,7 @@ import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.common.TopicPartition;
@@ -33,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,10 +58,13 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   private final AtomicLong pollTimer;
   private final AtomicBoolean isPollInFlight;
 
+  private final MeterRegistry meterRegistry;
+
   public OrderedConsumerVerticle(final DataPlaneContract.Egress egress,
                                  final Initializer initializer,
                                  final Set<String> topics,
-                                 final int maxPollRecords) {
+                                 final int maxPollRecords,
+                                 final MeterRegistry meterRegistry) {
     super(initializer, topics);
 
     final var vReplicas = Math.max(1, egress.getVReplicas());
@@ -81,6 +84,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     this.closed = new AtomicBoolean(false);
     this.isPollInFlight = new AtomicBoolean(false);
     this.pollTimer = new AtomicLong(-1);
+    this.meterRegistry = meterRegistry;
 
     partitionRevokedHandler = partitions -> {
       // Stop executors associated with revoked partitions.
@@ -195,6 +199,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     if (this.closed.get()) {
       return Future.failedFuture("Consumer verticle closed topics=" + topics + " resource=" + egress.getReference());
     }
+
     return this.recordDispatcher.dispatch(record);
   }
 
@@ -203,7 +208,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     if (executor != null) {
       return executor;
     }
-    executor = new OrderedAsyncExecutor();
+    executor = new OrderedAsyncExecutor(topicPartition, meterRegistry, egress);
     this.recordDispatcherExecutors.put(topicPartition, executor);
     return executor;
   }

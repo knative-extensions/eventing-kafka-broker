@@ -4,7 +4,7 @@ metadata:
   name: config-kafka-features
   namespace: knative-eventing
   annotations:
-    knative.dev/example-checksum: "e914c9f1"
+    knative.dev/example-checksum: "a4fb44fb"
 data:
   _example: |-
     ################################
@@ -25,4 +25,9 @@ data:
     # 1. Enabled: The rate limiter is applied.
     # 2. Disabled: The rate limiter is not applied.
     dispatcher.rate-limiter: "disabled"
+    # Controls whether the dispatcher should record additional metrics.
+    # 1. Enabled: The metrics are recorded.
+    # 2. Disabled: The metrics are not recorded.
+    dispatcher.ordered-executor-metrics: "disabled"
   dispatcher.rate-limiter: "disabled"
+  dispatcher.ordered-executor-metrics: "disabled"

@@ -163,7 +163,8 @@ func (r Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainterna
 		KeyType: 0, // TODO handle key type
 
 		FeatureFlags: &contract.EgressFeatureFlags{
-			EnableRateLimiter: r.KafkaFeatureFlags.IsDispatcherRateLimiterEnabled(),
+			EnableRateLimiter:            r.KafkaFeatureFlags.IsDispatcherRateLimiterEnabled(),
+			EnableOrderedExecutorMetrics: r.KafkaFeatureFlags.IsDispatcherOrderedExecutorMetricsEnabled(),
 		},
 	}
 	if c.Spec.Configs.KeyType != nil {

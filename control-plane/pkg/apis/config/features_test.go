@@ -29,16 +29,19 @@ import (
 func TestFlags_IsDispatcherRateLimiterEnabled(t *testing.T) {
 	nc := DefaultFeaturesConfig()
 	require.False(t, nc.features.DispatcherRateLimiter == feature.Enabled)
+	require.False(t, nc.features.DispatcherOrderedExecutorMetrics == feature.Enabled)
 }
 
 func TestFlags_IsEnabled_ContainingFlag(t *testing.T) {
 	nc := DefaultFeaturesConfig()
 	nc.Reset(&KafkaFeatureFlags{
 		features: features{
-			DispatcherRateLimiter: feature.Enabled,
+			DispatcherRateLimiter:            feature.Enabled,
+			DispatcherOrderedExecutorMetrics: feature.Enabled,
 		},
 	})
 	require.True(t, nc.features.DispatcherRateLimiter == feature.Enabled)
+	require.True(t, nc.features.DispatcherOrderedExecutorMetrics == feature.Enabled)
 }
 
 func TestGetFlags(t *testing.T) {
@@ -47,7 +50,7 @@ func TestGetFlags(t *testing.T) {
 	require.NoError(t, err)
 
 	require.True(t, flags.IsDispatcherRateLimiterEnabled())
-
+	require.True(t, flags.IsDispatcherOrderedExecutorMetricsEnabled())
 }
 
 func TestStoreLoadWithConfigMap(t *testing.T) {
@@ -60,10 +63,12 @@ func TestStoreLoadWithConfigMap(t *testing.T) {
 	expected, _ := newFeaturesConfigFromMap(exampleConfig)
 
 	require.Equal(t, expected.IsDispatcherRateLimiterEnabled(), have.IsDispatcherRateLimiterEnabled())
+	require.Equal(t, expected.IsDispatcherOrderedExecutorMetricsEnabled(), have.IsDispatcherOrderedExecutorMetricsEnabled())
 }
 
 func TestStoreLoadWithContext(t *testing.T) {
 	have := FromContext(context.Background())
 
 	require.False(t, have.IsDispatcherRateLimiterEnabled())
+	require.False(t, have.IsDispatcherOrderedExecutorMetricsEnabled())
 }
