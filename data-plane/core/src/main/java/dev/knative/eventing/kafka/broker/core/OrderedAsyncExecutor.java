@@ -53,7 +53,7 @@ public class OrderedAsyncExecutor {
     this.inFlight = false;
     this.egress = egress;
 
-    if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableNewMetrics()) {
+    if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
       final var tags = Tags.of(
         Metrics.Tags.PARTITION_ID, topicPartition.getPartition() + "",
         Metrics.Tags.TOPIC_ID, topicPartition.getTopic(),
@@ -84,7 +84,7 @@ public class OrderedAsyncExecutor {
     }
     boolean wasEmpty = this.queue.isEmpty();
     this.queue.offer(new Task(task));
-    if (egress != null && egress.getFeatureFlags().getEnableNewMetrics()) {
+    if (egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
       this.executorQueueLength.value();
     }
     if (wasEmpty) { // If no elements in the queue, then we need to start consuming it
@@ -103,7 +103,7 @@ public class OrderedAsyncExecutor {
       .get()
       .onComplete(ar -> {
         this.inFlight = false;
-        if (egress != null && egress.getFeatureFlags().getEnableNewMetrics() && !this.isStopped) {
+        if (egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics() && !this.isStopped) {
           this.executorLatency.record(System.currentTimeMillis() - task.queueTimestamp);
           this.executorQueueLength.value();
         }
@@ -123,7 +123,7 @@ public class OrderedAsyncExecutor {
   public void stop() {
     this.isStopped = true;
     this.queue.clear();
-    if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableNewMetrics()) {
+    if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
       this.meterRegistry.remove(executorLatency);
       this.meterRegistry.remove(executorQueueLength);
     }

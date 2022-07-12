@@ -160,7 +160,7 @@ message EgressFeatureFlags {
   // Enable rateLimiter
   bool enableRateLimiter = 1;
   // Enable newMetrics
-  bool enableNewMetrics = 2;
+  bool enableOrderedExecutorMetrics = 2;
 }
 
 // CloudEvent content mode

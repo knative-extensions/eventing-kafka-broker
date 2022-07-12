@@ -80,7 +80,7 @@ public class OrderedAsyncExecutorTest {
                                                               null,
                                                               DataPlaneContract.Egress.newBuilder()
                                                                   .setFeatureFlags(DataPlaneContract.EgressFeatureFlags.newBuilder()
-                                                                    .setEnableNewMetrics(false)
+                                                                    .setEnableOrderedExecutorMetrics(false)
                                                                     .build())
                                                                   .build()
         );
@@ -123,7 +123,7 @@ public class OrderedAsyncExecutorTest {
                                           null,
                                           DataPlaneContract.Egress.newBuilder()
                                           .setFeatureFlags(DataPlaneContract.EgressFeatureFlags.newBuilder()
-                                            .setEnableNewMetrics(false)
+                                            .setEnableOrderedExecutorMetrics(false)
                                             .build())
                                           .build()
     );

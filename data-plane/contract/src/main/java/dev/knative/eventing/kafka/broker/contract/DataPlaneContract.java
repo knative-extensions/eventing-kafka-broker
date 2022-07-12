@@ -14054,10 +14054,10 @@ public final class DataPlaneContract {
      * Enable newMetrics
      * </pre>
      *
-     * <code>bool enableNewMetrics = 2;</code>
-     * @return The enableNewMetrics.
+     * <code>bool enableOrderedExecutorMetrics = 2;</code>
+     * @return The enableOrderedExecutorMetrics.
      */
-    boolean getEnableNewMetrics();
+    boolean getEnableOrderedExecutorMetrics();
   }
   /**
    * Protobuf type {@code EgressFeatureFlags}
@@ -14111,7 +14111,7 @@ public final class DataPlaneContract {
             }
             case 16: {
 
-              enableNewMetrics_ = input.readBool();
+              enableOrderedExecutorMetrics_ = input.readBool();
               break;
             }
             default: {
@@ -14161,19 +14161,19 @@ public final class DataPlaneContract {
       return enableRateLimiter_;
     }
 
-    public static final int ENABLENEWMETRICS_FIELD_NUMBER = 2;
-    private boolean enableNewMetrics_;
+    public static final int ENABLEORDEREDEXECUTORMETRICS_FIELD_NUMBER = 2;
+    private boolean enableOrderedExecutorMetrics_;
     /**
      * <pre>
      * Enable newMetrics
      * </pre>
      *
-     * <code>bool enableNewMetrics = 2;</code>
-     * @return The enableNewMetrics.
+     * <code>bool enableOrderedExecutorMetrics = 2;</code>
+     * @return The enableOrderedExecutorMetrics.
      */
     @java.lang.Override
-    public boolean getEnableNewMetrics() {
-      return enableNewMetrics_;
+    public boolean getEnableOrderedExecutorMetrics() {
+      return enableOrderedExecutorMetrics_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -14193,8 +14193,8 @@ public final class DataPlaneContract {
       if (enableRateLimiter_ != false) {
         output.writeBool(1, enableRateLimiter_);
       }
-      if (enableNewMetrics_ != false) {
-        output.writeBool(2, enableNewMetrics_);
+      if (enableOrderedExecutorMetrics_ != false) {
+        output.writeBool(2, enableOrderedExecutorMetrics_);
       }
       unknownFields.writeTo(output);
     }
@@ -14209,9 +14209,9 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(1, enableRateLimiter_);
       }
-      if (enableNewMetrics_ != false) {
+      if (enableOrderedExecutorMetrics_ != false) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(2, enableNewMetrics_);
+          .computeBoolSize(2, enableOrderedExecutorMetrics_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -14230,8 +14230,8 @@ public final class DataPlaneContract {
 
       if (getEnableRateLimiter()
           != other.getEnableRateLimiter()) return false;
-      if (getEnableNewMetrics()
-          != other.getEnableNewMetrics()) return false;
+      if (getEnableOrderedExecutorMetrics()
+          != other.getEnableOrderedExecutorMetrics()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -14246,9 +14246,9 @@ public final class DataPlaneContract {
       hash = (37 * hash) + ENABLERATELIMITER_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
           getEnableRateLimiter());
-      hash = (37 * hash) + ENABLENEWMETRICS_FIELD_NUMBER;
+      hash = (37 * hash) + ENABLEORDEREDEXECUTORMETRICS_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-          getEnableNewMetrics());
+          getEnableOrderedExecutorMetrics());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -14384,7 +14384,7 @@ public final class DataPlaneContract {
         super.clear();
         enableRateLimiter_ = false;
 
-        enableNewMetrics_ = false;
+        enableOrderedExecutorMetrics_ = false;
 
         return this;
       }
@@ -14413,7 +14413,7 @@ public final class DataPlaneContract {
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags buildPartial() {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags(this);
         result.enableRateLimiter_ = enableRateLimiter_;
-        result.enableNewMetrics_ = enableNewMetrics_;
+        result.enableOrderedExecutorMetrics_ = enableOrderedExecutorMetrics_;
         onBuilt();
         return result;
       }
@@ -14465,8 +14465,8 @@ public final class DataPlaneContract {
         if (other.getEnableRateLimiter() != false) {
           setEnableRateLimiter(other.getEnableRateLimiter());
         }
-        if (other.getEnableNewMetrics() != false) {
-          setEnableNewMetrics(other.getEnableNewMetrics());
+        if (other.getEnableOrderedExecutorMetrics() != false) {
+          setEnableOrderedExecutorMetrics(other.getEnableOrderedExecutorMetrics());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -14540,31 +14540,31 @@ public final class DataPlaneContract {
         return this;
       }
 
-      private boolean enableNewMetrics_ ;
+      private boolean enableOrderedExecutorMetrics_ ;
       /**
        * <pre>
        * Enable newMetrics
        * </pre>
        *
-       * <code>bool enableNewMetrics = 2;</code>
-       * @return The enableNewMetrics.
+       * <code>bool enableOrderedExecutorMetrics = 2;</code>
+       * @return The enableOrderedExecutorMetrics.
        */
       @java.lang.Override
-      public boolean getEnableNewMetrics() {
-        return enableNewMetrics_;
+      public boolean getEnableOrderedExecutorMetrics() {
+        return enableOrderedExecutorMetrics_;
       }
       /**
        * <pre>
        * Enable newMetrics
        * </pre>
        *
-       * <code>bool enableNewMetrics = 2;</code>
-       * @param value The enableNewMetrics to set.
+       * <code>bool enableOrderedExecutorMetrics = 2;</code>
+       * @param value The enableOrderedExecutorMetrics to set.
        * @return This builder for chaining.
        */
-      public Builder setEnableNewMetrics(boolean value) {
+      public Builder setEnableOrderedExecutorMetrics(boolean value) {
         
-        enableNewMetrics_ = value;
+        enableOrderedExecutorMetrics_ = value;
         onChanged();
         return this;
       }
@@ -14573,12 +14573,12 @@ public final class DataPlaneContract {
        * Enable newMetrics
        * </pre>
        *
-       * <code>bool enableNewMetrics = 2;</code>
+       * <code>bool enableOrderedExecutorMetrics = 2;</code>
        * @return This builder for chaining.
        */
-      public Builder clearEnableNewMetrics() {
+      public Builder clearEnableOrderedExecutorMetrics() {
         
-        enableNewMetrics_ = false;
+        enableOrderedExecutorMetrics_ = false;
         onChanged();
         return this;
       }
@@ -25553,44 +25553,45 @@ public final class DataPlaneContract {
       "erence\022)\n\017dialectedFilter\030\014 \003(\0132\020.Dialec" +
       "tedFilter\022\021\n\tvReplicas\030\r \001(\005\022)\n\014featureF" +
       "lags\030\016 \001(\0132\023.EgressFeatureFlagsB\017\n\rreply" +
-      "Strategy\"I\n\022EgressFeatureFlags\022\031\n\021enable" +
-      "RateLimiter\030\001 \001(\010\022\030\n\020enableNewMetrics\030\002 " +
-      "\001(\010\"H\n\007Ingress\022!\n\013contentMode\030\001 \001(\0162\014.Co" +
-      "ntentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004host\030\003 \001(\t\"K\n" +
-      "\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 " +
-      "\001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"`\n\017Se" +
-      "cretReference\022\035\n\treference\030\001 \001(\0132\n.Refer" +
-      "ence\022.\n\022keyFieldReferences\030\002 \003(\0132\022.KeyFi" +
-      "eldReference\"C\n\021KeyFieldReference\022\021\n\tsec" +
-      "retKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.SecretFiel" +
-      "d\"Y\n\024MultiSecretReference\022\033\n\010protocol\030\001 " +
-      "\001(\0162\t.Protocol\022$\n\nreferences\030\002 \003(\0132\020.Sec" +
-      "retReference\"\202\001\n\023CloudEventOverrides\0228\n\n" +
-      "extensions\030\001 \003(\0132$.CloudEventOverrides.E" +
-      "xtensionsEntry\0321\n\017ExtensionsEntry\022\013\n\003key" +
-      "\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010Resource\022\013" +
-      "\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrap" +
-      "Servers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress" +
-      "\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig\022\031\n" +
-      "\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAuth\030\007" +
-      " \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n.Ref" +
-      "erenceH\000\0220\n\017multiAuthSecret\030\t \001(\0132\025.Mult" +
-      "iSecretReferenceH\000\0221\n\023cloudEventOverride" +
-      "s\030\n \001(\0132\024.CloudEventOverrides\022\035\n\treferen" +
-      "ce\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"<\n\010Contract" +
-      "\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132" +
-      "\t.Resource*,\n\rBackoffPolicy\022\017\n\013Exponenti" +
-      "al\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r\n\tUNO" +
-      "RDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006Stri" +
-      "ng\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tByteArr" +
-      "ay\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUC" +
-      "TURED\020\001*a\n\013SecretField\022\022\n\016SASL_MECHANISM" +
-      "\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY" +
-      "\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol\022\r" +
-      "\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL" +
-      "\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.eventing" +
-      ".kafka.broker.contractB\021DataPlaneContrac" +
-      "tZ\032control-plane/pkg/contractb\006proto3"
+      "Strategy\"U\n\022EgressFeatureFlags\022\031\n\021enable" +
+      "RateLimiter\030\001 \001(\010\022$\n\034enableOrderedExecut" +
+      "orMetrics\030\002 \001(\010\"H\n\007Ingress\022!\n\013contentMod" +
+      "e\030\001 \001(\0162\014.ContentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004h" +
+      "ost\030\003 \001(\t\"K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\t" +
+      "namespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version" +
+      "\030\004 \001(\t\"`\n\017SecretReference\022\035\n\treference\030\001" +
+      " \001(\0132\n.Reference\022.\n\022keyFieldReferences\030\002" +
+      " \003(\0132\022.KeyFieldReference\"C\n\021KeyFieldRefe" +
+      "rence\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162" +
+      "\014.SecretField\"Y\n\024MultiSecretReference\022\033\n" +
+      "\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nreferences" +
+      "\030\002 \003(\0132\020.SecretReference\"\202\001\n\023CloudEventO" +
+      "verrides\0228\n\nextensions\030\001 \003(\0132$.CloudEven" +
+      "tOverrides.ExtensionsEntry\0321\n\017Extensions" +
+      "Entry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002" +
+      "\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022" +
+      "\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001" +
+      "(\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.Egr" +
+      "essConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\n" +
+      "absentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret" +
+      "\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAuthSecret\030" +
+      "\t \001(\0132\025.MultiSecretReferenceH\000\0221\n\023cloudE" +
+      "ventOverrides\030\n \001(\0132\024.CloudEventOverride" +
+      "s\022\035\n\treference\030\013 \001(\0132\n.ReferenceB\006\n\004Auth" +
+      "\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\treso" +
+      "urces\030\002 \003(\0132\t.Resource*,\n\rBackoffPolicy\022" +
+      "\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n\rDelivery" +
+      "Order\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007Key" +
+      "Type\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020" +
+      "\002\022\r\n\tByteArray\020\003*)\n\013ContentMode\022\n\n\006BINAR" +
+      "Y\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013SecretField\022\022\n\016SA" +
+      "SL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002" +
+      "\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D" +
+      "\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINT" +
+      "EXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knat" +
+      "ive.eventing.kafka.broker.contractB\021Data" +
+      "PlaneContractZ\032control-plane/pkg/contrac" +
+      "tb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -25697,7 +25698,7 @@ public final class DataPlaneContract {
     internal_static_EgressFeatureFlags_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_EgressFeatureFlags_descriptor,
-        new java.lang.String[] { "EnableRateLimiter", "EnableNewMetrics", });
+        new java.lang.String[] { "EnableRateLimiter", "EnableOrderedExecutorMetrics", });
     internal_static_Ingress_descriptor =
       getDescriptor().getMessageTypes().get(13);
     internal_static_Ingress_fieldAccessorTable = new

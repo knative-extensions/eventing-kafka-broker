@@ -28,6 +28,6 @@ data:
     # Controls whether the dispatcher should record additional metrics.
     # 1. Enabled: The metrics are recorded.
     # 2. Disabled: The metrics are not recorded.
-    dispatcher.new-metrics: "disabled"
+    dispatcher.ordered-executor-metrics: "disabled"
   dispatcher.rate-limiter: "disabled"
-  dispatcher.new-metrics: "disabled"
+  dispatcher.ordered-executor-metrics: "disabled"

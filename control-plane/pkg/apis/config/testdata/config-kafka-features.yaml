@@ -6,4 +6,4 @@ metadata:
 data:
   _example: |
     dispatcher.rate-limiter: "enabled"
-    dispatcher.new-metrics: "enabled"
+    dispatcher.ordered-executor-metrics: "enabled"
