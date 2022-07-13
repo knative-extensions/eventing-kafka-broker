@@ -60,8 +60,8 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     this.ingressReconcilerListener = ingressReconcilerListener;
     this.egressReconcilerListener = egressReconcilerListener;
 
-    this.cachedResources = new ConcurrentHashMap<>(CACHED_RESOURCES_INITIAL_CAPACITY);
-    this.cachedEgresses = new ConcurrentHashMap<>(egressReconcilerListener != null ? CACHED_RESOURCES_INITIAL_CAPACITY : 0);
+    this.cachedResources = ingressReconcilerListener == null ? null : new ConcurrentHashMap<>(CACHED_RESOURCES_INITIAL_CAPACITY);
+    this.cachedEgresses = egressReconcilerListener == null ? null : new ConcurrentHashMap<>(CACHED_RESOURCES_INITIAL_CAPACITY);
   }
 
   @Override
@@ -97,7 +97,6 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       futures.add(
         this.egressReconcilerListener.onDeleteEgress(resource, egress)
           // If we succeed to delete the egress we can remove it from the cache.
-          .onSuccess(r -> egresses.remove(uid))
           .onSuccess(r -> this.cachedEgresses.remove(uid))
           .onFailure(cause -> logFailure("Failed to reconcile [onDeleteEgress] egress", egress, cause, generation))
       );
@@ -111,7 +110,6 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       futures.add(
         this.egressReconcilerListener.onNewEgress(resource, egress)
           // If we fail to create the egress we can't put it in the cache.
-          .onFailure(r -> egresses.remove(uid))
           .onSuccess(r -> this.cachedEgresses.put(egress.getUid(), new SimpleImmutableEntry<>(egress, resource)))
           .onFailure(cause -> logFailure("Failed to reconcile [onNewEgress] egress ", egress, cause, generation))
       );
@@ -122,9 +120,11 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       final var newEgress = entry.getKey();
       final var newResource = entry.getValue();
 
-      final var oldResource = this.cachedResources.get(newResource.getUid());
+      final var cachedEgress = this.cachedEgresses.get(uid);
+      final var oldResource = cachedEgress.getValue();
+      final var oldEgress = cachedEgress.getKey();
 
-      if (resourceEquals(newResource, oldResource) && egressEquals(newEgress, this.cachedEgresses.get(uid).getKey())) {
+      if (resourceEquals(newResource, oldResource) && egressEquals(newEgress, oldEgress)) {
         logger.info("Nothing changed for egress {} {} {} {}",
           keyValue("id", newEgress.getUid()),
           keyValue("consumerGroup", newEgress.getConsumerGroup()),
@@ -137,23 +137,13 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       futures.add(
         this.egressReconcilerListener.onUpdateEgress(newResource, newEgress)
           // If we fail to update the egress we can't put it in the cache.
-          .onFailure(r -> egresses.remove(uid))
           .onSuccess(r -> this.cachedEgresses.put(newEgress.getUid(), new SimpleImmutableEntry<>(newEgress, newResource)))
           .onFailure(cause -> logFailure("Failed to reconcile [onUpdateEgress] egress ", newEgress, cause, generation))
       );
     });
 
     // We want to complete the future, once all futures are complete, so use join.
-    return CompositeFuture.join(futures)
-      .onComplete(r -> {
-        this.cachedResources.clear();
-        egresses.values()
-          .forEach(entry -> {
-            final var resource = entry.getValue();
-            this.cachedResources.put(resource.getUid(), resource);
-          });
-      })
-      .mapEmpty();
+    return CompositeFuture.join(futures).mapEmpty();
   }
 
   private Future<Void> reconcileIngress(DataPlaneContract.Contract contract) {
@@ -161,7 +151,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     final var generation = contract.getGeneration();
 
     final Map<String, DataPlaneContract.Resource> newResourcesMap = new HashMap<>(
-     contract.getResourcesList()
+      contract.getResourcesList()
         .stream()
         .collect(Collectors.toMap(DataPlaneContract.Resource::getUid, Function.identity()))
     );

@@ -53,7 +53,8 @@ var (
 	)
 
 	defaultContractFeatureFlags = &contract.EgressFeatureFlags{
-		EnableRateLimiter: false,
+		EnableRateLimiter:            false,
+		EnableOrderedExecutorMetrics: false,
 	}
 )
 

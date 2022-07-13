@@ -31,7 +31,6 @@ public final class KafkaConsumerRecordUtils {
       record.offset(),
       record.timestamp(),
       record.timestampType(),
-      record.checksum(),
       record.serializedKeySize(),
       record.serializedValueSize(),
       record.key(),

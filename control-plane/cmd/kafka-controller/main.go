@@ -112,7 +112,7 @@ func main() {
 		injection.NamedControllerConstructor{
 			Name: "consumer-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				return consumer.NewController(ctx)
+				return consumer.NewController(ctx, watcher)
 			},
 		},
 	)

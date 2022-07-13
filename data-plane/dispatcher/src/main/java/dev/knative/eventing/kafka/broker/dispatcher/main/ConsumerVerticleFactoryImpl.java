@@ -170,18 +170,19 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
        final var egressSubscriberSender = createConsumerRecordSender(
          vertx,
          egress.getDestination(),
-         egressConfig
+         egressConfig,
+         egress
        );
 
        final var egressDeadLetterSender = hasDeadLetterSink(egressConfig)
-         ? createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), egressConfig)
+         ? createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), egressConfig, egress)
          : NO_DEAD_LETTER_SINK_SENDER;
 
        final var filter = getFilter(egress);
 
        final var responseHandler = getResponseHandler(egress,
          () -> getResponseToKafkaTopicHandler(vertx, producerConfigs, resource),
-         () -> new ResponseToHttpEndpointHandler(createConsumerRecordSender(vertx, egress.getReplyUrl(), egressConfig)));
+         () -> new ResponseToHttpEndpointHandler(createConsumerRecordSender(vertx, egress.getReplyUrl(), egressConfig, egress)));
        final var commitIntervalMs = Integer.parseInt(String.valueOf(consumerConfigs.get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG)));
 
        final var offsetManager = new OffsetManager(vertx, consumer, (v) -> {}, commitIntervalMs);
@@ -225,7 +226,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
       deliveryOrder,
       initializer,
       new HashSet<>(resource.getTopicsList()),
-      consumerConfigs.get(ConsumerConfig.MAX_POLL_RECORDS_CONFIG)
+      consumerConfigs.get(ConsumerConfig.MAX_POLL_RECORDS_CONFIG),
+      Metrics.getRegistry()
     );
   }
 
@@ -334,8 +336,14 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
   private CloudEventSender createConsumerRecordSender(final Vertx vertx,
                                                       final String target,
-                                                      final EgressConfig egress) {
-    return new WebClientCloudEventSender(vertx, WebClient.create(vertx, this.webClientOptions), target, egress);
+                                                      final EgressConfig egressConfig,
+                                                      final DataPlaneContract.Egress egress) {
+    var webClientOptions = this.webClientOptions;
+    if (egress.getVReplicas() > 0) {
+      webClientOptions = new WebClientOptions(this.webClientOptions);
+      webClientOptions.setMaxPoolSize(egress.getVReplicas());
+    }
+    return new WebClientCloudEventSender(vertx, WebClient.create(vertx, webClientOptions), target, egressConfig);
   }
 
   private static boolean hasDeadLetterSink(final EgressConfig egressConfig) {
@@ -346,10 +354,11 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
                                                       final DeliveryOrder type,
                                                       final BaseConsumerVerticle.Initializer initializer,
                                                       final Set<String> topics,
-                                                      final Object maxPollRecords) {
+                                                      final Object maxPollRecords,
+                                                      final MeterRegistry meterRegistry) {
     final var maxRecords = maxPollRecords == null ? 0 : Integer.parseInt(maxPollRecords.toString());
     return switch (type) {
-      case ORDERED -> new OrderedConsumerVerticle(egress, initializer, topics, maxRecords);
+      case ORDERED -> new OrderedConsumerVerticle(egress, initializer, topics, maxRecords, meterRegistry);
       case UNORDERED -> new UnorderedConsumerVerticle(initializer, topics, maxRecords);
     };
   }

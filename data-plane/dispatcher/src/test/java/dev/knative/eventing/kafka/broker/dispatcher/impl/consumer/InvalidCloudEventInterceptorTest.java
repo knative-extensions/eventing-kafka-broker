@@ -206,7 +206,6 @@ public class InvalidCloudEventInterceptorTest {
           i.offset(),
           i.timestamp(),
           i.timestampType(),
-          i.checksum(),
           i.serializedKeySize(),
           i.serializedValueSize(),
           i.key(),
@@ -294,7 +293,7 @@ public class InvalidCloudEventInterceptorTest {
       ),
       new TopicPartition("t1", 1),
       List.of(new ConsumerRecord<>(
-        "t1", 1, 0, 1L, TimestampType.CREATE_TIME, 2L, 1, 2, "a",
+        "t1", 1, 0, 1L, TimestampType.CREATE_TIME, null, 1, 2, "a",
         new InvalidCloudEvent(new byte[]{1}), new RecordHeaders().add(new RecordHeader("hello", "world".getBytes()))
       ))
     ));

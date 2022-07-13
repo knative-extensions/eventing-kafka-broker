@@ -24,6 +24,7 @@ import (
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
+	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/resolver"
 
@@ -39,7 +40,7 @@ type ControllerConfig struct {
 	DataPlaneConfigFormat string `required:"true" split_words:"true"`
 }
 
-func NewController(ctx context.Context) *controller.Impl {
+func NewController(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 
 	controllerConfig := &ControllerConfig{}
 	if err := envconfig.Process("CONSUMER", controllerConfig); err != nil {
@@ -57,14 +58,13 @@ func NewController(ctx context.Context) *controller.Impl {
 		KafkaFeatureFlags:   config.DefaultFeaturesConfig(),
 	}
 
-	impl := creconciler.NewImpl(ctx, r, func(impl *controller.Impl) controller.Options {
-		return controller.Options{
-			ConfigStore: config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
-				r.KafkaFeatureFlags.Reset(value)
-				impl.GlobalResync(consumerInformer.Informer())
-			}),
-		}
+	impl := creconciler.NewImpl(ctx, r)
+
+	configStore := config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
+		r.KafkaFeatureFlags.Reset(value)
+		impl.GlobalResync(consumerInformer.Informer())
 	})
+	configStore.WatchConfigs(watcher)
 
 	r.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 

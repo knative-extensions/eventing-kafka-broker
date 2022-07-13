@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import io.cloudevents.CloudEvent;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -114,7 +115,8 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
         consumerVerticle.setCloser(Future::succeededFuture);
 
         return Future.succeededFuture();
-      }, Set.of(topic)
+      }, Set.of(topic),
+      null
     );
 
     // Deploy the verticle
@@ -181,13 +183,14 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
   @Override
   BaseConsumerVerticle createConsumerVerticle(final BaseConsumerVerticle.Initializer initializer,
                                               final Set<String> topics) {
-    return createConsumerVerticle(DataPlaneContract.Egress.newBuilder().build(), initializer, topics);
+    return createConsumerVerticle(DataPlaneContract.Egress.newBuilder().build(), initializer, topics, null);
   }
 
   BaseConsumerVerticle createConsumerVerticle(final DataPlaneContract.Egress egress,
                                               final BaseConsumerVerticle.Initializer initializer,
-                                              final Set<String> topics) {
-    return new OrderedConsumerVerticle(egress, initializer, topics, 2);
+                                              final Set<String> topics,
+                                              final MeterRegistry meterRegistry) {
+    return new OrderedConsumerVerticle(egress, initializer, topics, 2, meterRegistry);
   }
 
   protected static ConsumerRecord<Object, CloudEvent> record(String topic, int partition, long offset) {

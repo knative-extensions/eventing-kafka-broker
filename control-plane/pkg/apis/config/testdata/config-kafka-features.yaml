@@ -4,5 +4,6 @@ metadata:
   name: config-kafka-features
   namespace: knative-eventing
 data:
-  dispatcher.rate-limiter: "enabled"
-  dispatcher.ordered-executor-metrics: "enabled"
+  _example: |
+    dispatcher.rate-limiter: "enabled"
+    dispatcher.ordered-executor-metrics: "enabled"

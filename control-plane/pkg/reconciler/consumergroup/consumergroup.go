@@ -112,6 +112,16 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 
 func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
 
+	cg.Spec.Replicas = pointer.Int32Ptr(0)
+	err := r.schedule(cg) //de-schedule placements
+
+	if err != nil {
+		cg.Status.Placements = nil
+
+		// return an error to 1. update the status. 2. not clear the finalizer
+		return errors.New("placement list was not empty")
+	}
+
 	// Get consumers associated with the ConsumerGroup.
 	existingConsumers, err := r.ConsumerLister.Consumers(cg.GetNamespace()).List(labels.SelectorFromSet(cg.Spec.Selector))
 	if err != nil {

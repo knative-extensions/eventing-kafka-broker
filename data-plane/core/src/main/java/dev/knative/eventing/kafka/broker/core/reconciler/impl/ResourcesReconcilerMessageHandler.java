@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -35,12 +36,15 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
   private static final Logger logger = LoggerFactory.getLogger(ResourcesReconcilerMessageHandler.class);
 
   public final static String ADDRESS = "resourcesreconciler.core";
+  public static final int RECONCILE_TIMEOUT = 10000;
 
+  private final Vertx vertx;
   private final ResourcesReconciler resourcesReconciler;
   private final AtomicBoolean reconciling;
   private final AtomicReference<DataPlaneContract.Contract> last;
 
-  public ResourcesReconcilerMessageHandler(final ResourcesReconciler resourcesReconciler) {
+  public ResourcesReconcilerMessageHandler(final Vertx vertx, final ResourcesReconciler resourcesReconciler) {
+    this.vertx = vertx;
     this.resourcesReconciler = resourcesReconciler;
     reconciling = new AtomicBoolean();
     last = new AtomicReference<>();
@@ -68,7 +72,22 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
 
       logger.info("Reconciling contract {}", keyValue("contractGeneration", contract.getGeneration()));
 
-      resourcesReconciler.reconcile(contract)
+      final Promise<Void> p = Promise.promise();
+
+      // This is a safety timeout to the `reconcile` phase, there have been multiple times when libraries or our
+      // components will cause the `Future` returned by `reconcile` to never complete (fail or succeed), in those
+      // cases we stop reconciling resources completely.
+      vertx.setTimer(RECONCILE_TIMEOUT, v -> p.tryFail(v + "ms timeout reached"));
+
+      try {
+        resourcesReconciler.reconcile(contract)
+          .onSuccess(p::tryComplete)
+          .onFailure(p::tryFail);
+      } catch (final Exception ex) {
+        p.tryFail(ex);
+      }
+
+      p.future()
         .onComplete(r -> {
           if (r.succeeded()) {
             logger.info(
@@ -96,6 +115,6 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
   }
 
   public static MessageConsumer<Object> start(final Vertx vertx, final ResourcesReconciler reconciler) {
-    return vertx.eventBus().localConsumer(ADDRESS, new ResourcesReconcilerMessageHandler(reconciler));
+    return vertx.eventBus().localConsumer(ADDRESS, new ResourcesReconcilerMessageHandler(vertx, reconciler));
   }
 }

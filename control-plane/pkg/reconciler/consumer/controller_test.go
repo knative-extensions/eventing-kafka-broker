@@ -20,7 +20,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"knative.dev/pkg/configmap"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
@@ -49,7 +52,11 @@ func TestNewController(t *testing.T) {
 
 	t.Setenv("CONSUMER_DATA_PLANE_CONFIG_FORMAT", "json")
 
-	controller := NewController(ctx)
+	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "config-kafka-features",
+		},
+	}))
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
 	}
