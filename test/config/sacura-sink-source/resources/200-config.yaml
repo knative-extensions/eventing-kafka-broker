@@ -32,4 +32,4 @@ data:
         minSleepDuration: 2s
         maxSleepDuration: 5s
     duration: 3m
-    timeout: 20m
+    timeout: 30m
