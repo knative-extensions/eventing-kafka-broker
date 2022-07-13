@@ -114,7 +114,7 @@ func (c *Client) WaitForAllTestResourcesReady(ctx context.Context) error {
 	}
 	// FIXME(chizhg): This hacky sleep is added to try mitigating the test flakiness.
 	// Will delete it after we find the root cause and fix.
-	time.Sleep(60 * time.Second)
+	time.Sleep(10 * time.Second)
 	return nil
 }
 
