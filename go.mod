@@ -28,16 +28,23 @@ require (
 	golang.org/x/net v0.0.0-20220524220425-1d687d428aca // indirect
 	gonum.org/v1/gonum v0.0.0-20190331200053-3d26580ed485 // indirect
 	google.golang.org/protobuf v1.27.1
-	k8s.io/api v0.23.8
-	k8s.io/apiextensions-apiserver v0.23.8
-	k8s.io/apimachinery v0.23.8
-	k8s.io/apiserver v0.23.8
-	k8s.io/client-go v0.23.8
+	k8s.io/api v0.23.9
+	k8s.io/apiextensions-apiserver v0.23.9
+	k8s.io/apimachinery v0.23.9
+	k8s.io/apiserver v0.23.9
+	k8s.io/client-go v0.23.9
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
-	knative.dev/eventing v0.33.0
-	knative.dev/eventing-kafka v0.33.1-0.20220721151820-bbc5949bc8ab
-	knative.dev/hack v0.0.0-20220701014203-65c463ac8c98
-	knative.dev/pkg v0.0.0-20220705130606-e60d250dc637
-	knative.dev/reconciler-test v0.0.0-20220705155206-f05db88effbe
+	knative.dev/eventing v0.33.1-0.20220809080920-c884e27795f7
+	knative.dev/eventing-kafka v0.33.1-0.20220805134425-be98ac8a581d
+	knative.dev/hack v0.0.0-20220728013938-9dabf7cf62e3
+	knative.dev/pkg v0.0.0-20220805012121-7b8b06028e4f
+	knative.dev/reconciler-test v0.0.0-20220805132123-091fb1ad9e9d
 	sigs.k8s.io/yaml v1.3.0
+)
+
+replace (
+	// FIXME: remove this pin when knative/eventing#6451 is merged
+	knative.dev/eventing => github.com/cardil/knative-eventing v0.11.1-0.20220718191420-28d8469b82bf
+	// FIXME: remove this pin when knative-sandbox/reconciler-test#294 is merged
+	knative.dev/reconciler-test => github.com/cardil/knative-reconciler-test v0.0.0-20220715181934-169264f8ba23
 )

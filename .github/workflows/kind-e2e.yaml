@@ -7,7 +7,6 @@ on:
 defaults:
   run:
     shell: bash
-    working-directory: ./src/knative.dev/eventing-kafka-broker
 
 jobs:
 
@@ -51,7 +50,6 @@ jobs:
             extra-test-flags: -channels=messaging.knative.dev/v1beta1:KafkaChannel
 
     env:
-      GOPATH: ${{ github.workspace }}
       KO_DOCKER_REPO: localhost:5001
       REGISTRY_PORT: 5001
       REPLICAS: 1
@@ -84,8 +82,6 @@ jobs:
 
       - name: Check out code onto GOPATH
         uses: actions/checkout@v2
-        with:
-          path: ./src/knative.dev/eventing-kafka-broker
 
       - name: Setup java
         uses: actions/setup-java@v2
