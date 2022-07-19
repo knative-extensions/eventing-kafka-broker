@@ -92,6 +92,7 @@ func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *event
 		Resolver:       r.Resolver,
 
 		// override
-		BrokerClass: kafka.NamespacedBrokerClass,
+		BrokerClass:               kafka.NamespacedBrokerClass,
+		DataPlaneConfigMapLabeler: kafka.NamespacedDataplaneLabelConfigmapOption,
 	}
 }

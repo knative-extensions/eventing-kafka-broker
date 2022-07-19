@@ -59,6 +59,8 @@ type Reconciler struct {
 	FlagsLock sync.RWMutex
 
 	BrokerClass string
+
+	DataPlaneConfigMapLabeler base.ConfigMapOption
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -117,10 +119,7 @@ func (r *Reconciler) DoReconcileKind(ctx context.Context, trigger *eventing.Trig
 	}
 
 	// Get data plane config map.
-	// TODO: this won't work in namespaced broker as we need to create the dataplane differently.
-	// TODO: do we need to create if it is missing?
-	// TODO: IMO, we should create it in the broker reconciler and only read it here
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.DataPlaneConfigMapLabeler)
 	if err != nil {
 		return statusConditionManager.failedToGetDataPlaneConfigMap(err)
 	}
@@ -206,7 +205,7 @@ func (r *Reconciler) DoFinalizeKind(ctx context.Context, trigger *eventing.Trigg
 	}
 
 	// Get data plane config map.
-	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.DataPlaneConfigMapLabeler)
 	if err != nil {
 		return fmt.Errorf("failed to get data plane config map %s: %w", r.Env.DataPlaneConfigMapAsString(), err)
 	}

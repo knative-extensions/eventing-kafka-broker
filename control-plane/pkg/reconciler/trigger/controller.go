@@ -72,11 +72,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
-		BrokerLister:   brokerInformer.Lister(),
-		EventingClient: eventingclient.Get(ctx),
-		Env:            configs,
-		Flags:          feature.Flags{},
-		BrokerClass:    kafka.BrokerClass,
+		BrokerLister:              brokerInformer.Lister(),
+		EventingClient:            eventingclient.Get(ctx),
+		Env:                       configs,
+		Flags:                     feature.Flags{},
+		BrokerClass:               kafka.BrokerClass,
+		DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {

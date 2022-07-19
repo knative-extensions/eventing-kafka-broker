@@ -2309,8 +2309,9 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 					T:                                      t,
 				}, nil
 			},
-			Env:    env,
-			Prober: proberMock,
+			Env:                       env,
+			Prober:                    proberMock,
+			DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
 		}
 
 		reconciler.ConfigMapTracker = &FakeTracker{}

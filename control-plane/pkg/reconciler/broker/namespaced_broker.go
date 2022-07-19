@@ -153,6 +153,8 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 		NewKafkaClusterAdminClient: r.NewKafkaClusterAdminClient,
 		BootstrapServers:           r.BootstrapServers,
 		Prober:                     r.Prober,
+
+		DataPlaneConfigMapLabeler: kafka.NamespacedDataplaneLabelConfigmapOption,
 	}
 }
 
@@ -258,7 +260,7 @@ func (r *NamespacedReconciler) reconcileDataPlaneConfigMap(ctx context.Context, 
 
 	if apierrors.IsNotFound(err) {
 		// not found, create
-		_, err = base.CreateDataPlaneConfigMap(ctx, r.KubeClient, broker.Namespace, r.Reconciler.DataPlaneConfigMapName, appendBrokerAsOwnerRef(broker))
+		_, err = base.CreateDataPlaneConfigMap(ctx, r.KubeClient, broker.Namespace, r.Reconciler.DataPlaneConfigMapName, appendBrokerAsOwnerRef(broker), kafka.NamespacedDataplaneLabelConfigmapOption)
 		return err
 	}
 

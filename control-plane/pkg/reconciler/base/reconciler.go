@@ -108,6 +108,8 @@ func isAtLeastOneRunning(pods []*corev1.Pod) bool {
 
 type ConfigMapOption func(cm *corev1.ConfigMap)
 
+func NoopConfigmapOption(cm *corev1.ConfigMap) {}
+
 func (r *Reconciler) GetOrCreateDataPlaneConfigMap(ctx context.Context, options ...ConfigMapOption) (*corev1.ConfigMap, error) {
 
 	cm, err := r.KubeClient.CoreV1().

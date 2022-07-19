@@ -2765,12 +2765,13 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,
 			},
-			BrokerLister:   listers.GetBrokerLister(),
-			EventingClient: eventingclient.Get(ctx),
-			Resolver:       nil,
-			Env:            env,
-			Flags:          flags,
-			BrokerClass:    kafka.BrokerClass,
+			BrokerLister:              listers.GetBrokerLister(),
+			EventingClient:            eventingclient.Get(ctx),
+			Resolver:                  nil,
+			Env:                       env,
+			Flags:                     flags,
+			BrokerClass:               kafka.BrokerClass,
+			DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
 		}
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))

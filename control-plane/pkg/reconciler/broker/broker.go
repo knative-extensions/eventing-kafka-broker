@@ -69,6 +69,8 @@ type Reconciler struct {
 	BootstrapServers string
 
 	Prober prober.Prober
+
+	DataPlaneConfigMapLabeler base.ConfigMapOption
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -134,7 +136,7 @@ func (r *Reconciler) DoReconcileKind(ctx context.Context, broker *eventing.Broke
 	}
 
 	// Get contract config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.DataPlaneConfigMapLabeler)
 	if err != nil {
 		return statusConditionManager.FailedToGetConfigMap(err)
 	}
@@ -282,7 +284,7 @@ func (r *Reconciler) DoFinalizeKind(ctx context.Context, broker *eventing.Broker
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, broker)
 
 	// Get contract config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.DataPlaneConfigMapLabeler)
 	if err != nil {
 		return fmt.Errorf("failed to get contract config map %s: %w", r.DataPlaneConfigMapAsString(), err)
 	}
