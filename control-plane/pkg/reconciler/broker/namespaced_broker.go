@@ -36,7 +36,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 )
@@ -133,8 +132,6 @@ func (r *NamespacedReconciler) finalizeKind(ctx context.Context, broker *eventin
 
 func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventing.Broker) *Reconciler {
 
-	ingressHost := network.GetServiceHostname(r.IngressName, broker.Namespace)
-
 	return &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:             r.Reconciler.KubeClient,
@@ -156,8 +153,6 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 		NewKafkaClusterAdminClient: r.NewKafkaClusterAdminClient,
 		BootstrapServers:           r.BootstrapServers,
 		Prober:                     r.Prober,
-
-		IngressHost: ingressHost,
 	}
 }
 
