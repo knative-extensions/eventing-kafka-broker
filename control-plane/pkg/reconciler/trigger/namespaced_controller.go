@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
@@ -50,7 +51,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 
 	logger := logging.FromContext(ctx).Desugar()
 
-	//configmapInformer := configmapinformer.Get(ctx)
+	configmapInformer := configmapinformer.Get(ctx)
 	brokerInformer := brokerinformer.Get(ctx)
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
@@ -111,19 +112,21 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 		Handler:    enqueueTriggers(logger, triggerLister, impl.Enqueue),
 	})
 
-	//globalResync := func(_ interface{}) {
-	//	impl.GlobalResync(triggerInformer.Informer())
-	//}
+	globalResync := func(_ interface{}) {
+		impl.GlobalResync(brokerInformer.Informer())
+	}
 
-	// TODO: we cannot have this watch since we don't know the trigger namespace yet.
-	// TODO: Solution: we need to set this watch more generically by adding a label to the contract configmap
-	//configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-	//	FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
-	//	Handler: cache.ResourceEventHandlerFuncs{
-	//		AddFunc:    globalResync,
-	//		DeleteFunc: globalResync,
-	//	},
-	//})
+	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: kafka.FilterWithNamespacedDataplaneLabel,
+		Handler: cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				globalResync(obj)
+			},
+			DeleteFunc: func(obj interface{}) {
+				globalResync(obj)
+			},
+		},
+	})
 
 	return impl
 }

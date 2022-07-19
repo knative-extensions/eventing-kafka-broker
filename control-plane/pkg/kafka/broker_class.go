@@ -17,7 +17,6 @@
 package kafka
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	pkgreconciler "knative.dev/pkg/reconciler"
 
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
@@ -27,9 +26,6 @@ const (
 	// Kafka broker class annotation value.
 	BrokerClass           = "Kafka"
 	NamespacedBrokerClass = "KafkaNamespaced"
-
-	NamespacedBrokerDataplaneLabelKey   = "eventing.knative.dev/namespaced"
-	NamespacedBrokerDataplaneLabelValue = "true"
 )
 
 func BrokerClassFilter() func(interface{}) bool {
@@ -46,11 +42,4 @@ func NamespacedBrokerClassFilter() func(interface{}) bool {
 		NamespacedBrokerClass,
 		false, // allowUnset
 	)
-}
-
-func NamespacedDataplaneLabelConfigmapOption(cm *corev1.ConfigMap) {
-	if len(cm.Labels) == 0 {
-		cm.Labels = make(map[string]string, 1)
-	}
-	cm.Labels[NamespacedBrokerDataplaneLabelKey] = NamespacedBrokerDataplaneLabelValue
 }
