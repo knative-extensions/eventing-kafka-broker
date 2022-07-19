@@ -89,6 +89,7 @@ func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *event
 		EventingClient: r.EventingClient,
 		Env:            r.Env,
 		Flags:          r.Flags,
+		Resolver:       r.Resolver,
 
 		// override
 		BrokerClass: kafka.NamespacedBrokerClass,
