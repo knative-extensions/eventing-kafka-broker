@@ -18,6 +18,7 @@ package multiple_partition_config
 
 import (
 	"context"
+	"embed"
 
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/manifest"
@@ -25,8 +26,11 @@ import (
 
 const ConfigMapName = "multiple-partition-kafka-broker-config"
 
+//go:embed *.yaml
+var yamls embed.FS
+
 func Install(ctx context.Context, t feature.T) {
-	if _, err := manifest.InstallLocalYaml(ctx, map[string]interface{}{
+	if _, err := manifest.InstallYamlFS(ctx, yamls, map[string]interface{}{
 		"name": ConfigMapName,
 	}); err != nil {
 		t.Fatal(err)

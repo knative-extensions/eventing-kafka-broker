@@ -37,7 +37,6 @@ func InitOffsets(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClien
 	if err != nil {
 		return -1, err
 	}
-	defer offsetManager.Close()
 
 	totalPartitions, topicPartitions, err := retrieveAllPartitions(topics, kafkaClient)
 	if err != nil {

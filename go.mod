@@ -45,6 +45,8 @@ require (
 replace (
 	// FIXME: remove this pin when knative/eventing#6451 is merged
 	knative.dev/eventing => github.com/cardil/knative-eventing v0.11.1-0.20220718191420-28d8469b82bf
+	// FIXME: remove this pin when knative-sandbox/eventing-kafka#1213 is merged
+	knative.dev/eventing-kafka => github.com/cardil/knative-eventing-kafka v0.21.1-0.20220720215349-15a03aadf676
 	// FIXME: remove this pin when knative-sandbox/reconciler-test#294 is merged
-	knative.dev/reconciler-test => github.com/cardil/knative-reconciler-test v0.0.0-20220715181934-169264f8ba23
+	knative.dev/reconciler-test => github.com/cardil/knative-reconciler-test v0.0.0-20220720101506-5051d7685fba
 )
