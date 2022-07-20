@@ -72,7 +72,7 @@ spec:
     spec:
       containers:
       - name: event-display
-        image: quay.io/openshift-knative/knative-eventing-sources-event-display:v0.13.2
+        image: ko://knative.dev/eventing-kafka-broker/test/test_images/event-display
 ---
 apiVersion: sources.knative.dev/v1
 kind: SinkBinding
@@ -114,7 +114,7 @@ spec:
     spec:
       containers:
       - name: single-heartbeat
-        image: quay.io/openshift-knative/knative-eventing-sources-heartbeats:v0.13.2
+        image: ko://knative.dev/eventing/test/test_images/heartbeats
         args:
         - --period=1
         env:
@@ -158,7 +158,7 @@ function run {
   i=$1
 
   failed=false
-  app foo$i | kubectl apply -f -
+  app foo$i | ko resolve ${KO_FLAGS} ${tag_option} -f - | kubectl apply -f -
   kubectl wait kafkachannel --timeout=60s -n foo$i channel --for=condition=Ready=True || failed=true
   kubectl wait subscription --timeout=60s -n foo$i event-display --for=condition=Ready=True || failed=true
 
