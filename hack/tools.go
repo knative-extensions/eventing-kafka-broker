@@ -49,4 +49,7 @@ import (
 
 	// eventshub is a cloudevents sender/receiver utility for e2e testing.
 	_ "knative.dev/reconciler-test/cmd/eventshub"
+
+	// Event log utility for e2e channel testing
+	_ "knative.dev/eventing/cmd/event_display"
 )

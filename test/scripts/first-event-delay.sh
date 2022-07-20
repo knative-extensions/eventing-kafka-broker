@@ -72,7 +72,7 @@ spec:
     spec:
       containers:
       - name: event-display
-        image: ko://knative.dev/eventing-kafka-broker/test/test_images/event-display
+        image: ko://knative.dev/eventing/cmd/event_display
 ---
 apiVersion: sources.knative.dev/v1
 kind: SinkBinding
@@ -158,7 +158,7 @@ function run {
   i=$1
 
   failed=false
-  app foo$i | ko resolve ${KO_FLAGS} ${tag_option} -f - | kubectl apply -f -
+  app foo$i | ko resolve ${KO_FLAGS} -Bf - | kubectl apply -f -
   kubectl wait kafkachannel --timeout=60s -n foo$i channel --for=condition=Ready=True || failed=true
   kubectl wait subscription --timeout=60s -n foo$i event-display --for=condition=Ready=True || failed=true
 
