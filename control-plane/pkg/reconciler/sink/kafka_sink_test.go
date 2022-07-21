@@ -116,7 +116,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				NewSink(
 					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 				),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
@@ -126,7 +126,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -170,7 +170,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 					SinkAuthSecretRef("secret-1"),
 				),
 				NewSSLSecret(SinkNamespace, "secret-1"),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -181,7 +181,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -237,7 +237,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						s.Spec.NumPartitions = nil
 					},
 				),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -248,7 +248,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -303,7 +303,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						s.Spec.NumPartitions = nil
 					},
 				),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -353,7 +353,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						s.Spec.BootstrapServers = []string{"kafka-broker:10000"}
 					},
 				),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
@@ -364,7 +364,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -468,10 +468,10 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -513,7 +513,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
-				NewConfigMapWithBinaryData(&env, []byte(`{"hello": "world"}`)),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, []byte(`{"hello": "world"}`)),
 				SinkReceiverPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -521,7 +521,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -575,7 +575,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							Topics: []string{"my-existing-topic-b"},
 						},
 					},
-				}, &env),
+				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
@@ -585,7 +585,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
@@ -651,7 +651,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY},
 						},
 					},
-				}, &env),
+				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "5",
 				}),
@@ -661,7 +661,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:          "5384faa4-6bdf-428d-b6c2-d6f89ce1d44b",
@@ -755,7 +755,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						},
 					},
 					Generation: 1,
-				}, &env),
+				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
@@ -810,7 +810,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						},
 					},
 					Generation: 1,
-				}, &env),
+				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
 				}),
@@ -849,7 +849,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				NewSink(
 					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 				),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
@@ -859,7 +859,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -903,7 +903,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				NewSink(
 					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 				),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
@@ -913,7 +913,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
@@ -1006,11 +1006,11 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 						},
 					},
 					Generation: 1,
-				}, &env),
+				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:    SinkUUID + "a",
@@ -1057,11 +1057,11 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 						},
 					},
 					Generation: 1,
-				}, &env),
+				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:    SinkUUID + "a",
@@ -1108,11 +1108,11 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 						},
 					},
 					Generation: 1,
-				}, &env),
+				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:    SinkUUID + "a",
@@ -1159,11 +1159,11 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 						},
 					},
 					Generation: 1,
-				}, &env),
+				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:    SinkUUID + "a",
@@ -1215,7 +1215,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 						},
 					},
 					Generation: 1,
-				}, &env),
+				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
 			},
 			Key:     testKey,
 			WantErr: true,
@@ -1228,7 +1228,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:    SinkUUID + "a",

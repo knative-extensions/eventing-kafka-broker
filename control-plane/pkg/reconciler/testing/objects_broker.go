@@ -61,12 +61,21 @@ func BrokerTopic() string {
 
 // NewBroker creates a new Broker with broker class equals to kafka.BrokerClass.
 func NewBroker(options ...reconcilertesting.BrokerOption) runtime.Object {
+	return doNewBroker(kafka.BrokerClass, options...)
+}
+
+// NewNamespacedBroker creates a new Broker with broker class equals to kafka.NamespacedBrokerClass.
+func NewNamespacedBroker(options ...reconcilertesting.BrokerOption) runtime.Object {
+	return doNewBroker(kafka.NamespacedBrokerClass, options...)
+}
+
+func doNewBroker(class string, options ...reconcilertesting.BrokerOption) runtime.Object {
 	return reconcilertesting.NewBroker(
 		BrokerName,
 		BrokerNamespace,
 		append(
 			[]reconcilertesting.BrokerOption{
-				reconcilertesting.WithBrokerClass(kafka.BrokerClass),
+				reconcilertesting.WithBrokerClass(class),
 				WithBrokerConfig(
 					KReference(BrokerConfig("", 20, 5)),
 				),

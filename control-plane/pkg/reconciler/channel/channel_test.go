@@ -113,7 +113,7 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			OtherTestData: map[string]interface{}{
 				testProber: probertesting.MockProber(prober.StatusNotReady),
@@ -129,7 +129,7 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			WantErr: true,
 			OtherTestData: map[string]interface{}{
@@ -155,7 +155,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -180,7 +180,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 				NewPerChannelService(DefaultEnv),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -228,7 +228,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -257,7 +257,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -303,7 +303,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -328,7 +328,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 				NewPerChannelService(&env),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -372,7 +372,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -397,7 +397,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 				NewPerChannelService(&env),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -438,11 +438,11 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -509,11 +509,11 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -582,11 +582,11 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -655,11 +655,11 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -731,11 +731,11 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -1013,7 +1013,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -1038,7 +1038,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -1082,12 +1082,12 @@ func TestReconcileKind(t *testing.T) {
 					security.AuthSecretNameKey:         "secret-1",
 					security.AuthSecretNamespaceKey:    "ns-1",
 				}),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 				NewLegacySSLSecret("ns-1", "secret-1"),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -1176,12 +1176,12 @@ func TestReconcileKind(t *testing.T) {
 					security.AuthSecretNameKey:         "secret-1",
 					security.AuthSecretNamespaceKey:    "ns-1",
 				}),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 				NewLegacySASLSSLSecret("ns-1", "secret-1"),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -1273,12 +1273,12 @@ func TestReconcileKind(t *testing.T) {
 					security.AuthSecretNameKey:         "secret-1",
 					security.AuthSecretNamespaceKey:    "ns-1",
 				}),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 				NewLegacySASLSecret("ns-1", "secret-1"),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -1368,7 +1368,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -1393,7 +1393,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -1432,11 +1432,11 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
-				NewConfigMapWithBinaryData(&env, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -1496,7 +1496,7 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
-				NewConfigMapWithBinaryData(&env, []byte("corrupt")),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, []byte("corrupt")),
 			},
 			Key:                     testKey,
 			WantErr:                 true,
@@ -1559,7 +1559,7 @@ func TestFinalizeKind(t *testing.T) {
 							},
 						},
 					},
-				}, &env),
+				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
@@ -1574,7 +1574,7 @@ func TestFinalizeKind(t *testing.T) {
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&env, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
 					Generation: 2,
 					Resources:  []*contract.Resource{},
 				}),

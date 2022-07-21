@@ -19,6 +19,10 @@ package testing
 import (
 	"fmt"
 	"io/ioutil"
+	appsv1 "k8s.io/api/apps/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/types"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"time"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -117,10 +121,44 @@ func ServiceURLDestination(ns, name string) *duckv1.Destination {
 	return &duckv1.Destination{URI: uri}
 }
 
-func NewConfigMapWithBinaryData(env *config.Env, data []byte, options ...reconcilertesting.ConfigMapOption) runtime.Object {
+func NewServiceAccount(namespace string, name string, mutations ...func(account *corev1.ServiceAccount)) *corev1.ServiceAccount {
+	s := &corev1.ServiceAccount{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ServiceAccount",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+	for _, mut := range mutations {
+		mut(s)
+	}
+	return s
+}
+
+func NewRoleBinding(namespace string, name string, mutations ...func(account *rbacv1.RoleBinding)) *rbacv1.RoleBinding {
+	s := &rbacv1.RoleBinding{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "RoleBinding",
+			APIVersion: rbacv1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+	for _, mut := range mutations {
+		mut(s)
+	}
+	return s
+}
+
+func NewConfigMapWithBinaryData(namespace string, name string, data []byte, options ...reconcilertesting.ConfigMapOption) runtime.Object {
 	return reconcilertesting.NewConfigMap(
-		env.DataPlaneConfigMapName,
-		env.DataPlaneConfigMapNamespace,
+		name,
+		namespace,
 		append(options, func(configMap *corev1.ConfigMap) {
 			if configMap.BinaryData == nil {
 				configMap.BinaryData = make(map[string][]byte, 1)
@@ -133,20 +171,23 @@ func NewConfigMapWithBinaryData(env *config.Env, data []byte, options ...reconci
 	)
 }
 
-func NewConfigMapWithTextData(namespace, name string, data map[string]string) runtime.Object {
-	return reconcilertesting.NewConfigMap(
-		name,
-		namespace,
+func NewConfigMapWithTextData(namespace, name string, data map[string]string, options ...reconcilertesting.ConfigMapOption) runtime.Object {
+	options = append(options,
 		func(configMap *corev1.ConfigMap) {
 			configMap.Data = data
 		},
 	)
+	return reconcilertesting.NewConfigMap(
+		name,
+		namespace,
+		options...,
+	)
 }
 
-func NewConfigMapFromContract(contract *contract.Contract, env *config.Env, options ...reconcilertesting.ConfigMapOption) runtime.Object {
+func NewConfigMapFromContract(contract *contract.Contract, namespace string, name string, format string, options ...reconcilertesting.ConfigMapOption) runtime.Object {
 	var data []byte
 	var err error
-	if env.DataPlaneConfigFormat == base.Protobuf {
+	if format == base.Protobuf {
 		data, err = proto.Marshal(contract)
 	} else {
 		data, err = protojson.Marshal(contract)
@@ -155,18 +196,18 @@ func NewConfigMapFromContract(contract *contract.Contract, env *config.Env, opti
 		panic(err)
 	}
 
-	return NewConfigMapWithBinaryData(env, data, options...)
+	return NewConfigMapWithBinaryData(namespace, name, data, options...)
 }
 
-func ConfigMapUpdate(env *config.Env, contract *contract.Contract, options ...reconcilertesting.ConfigMapOption) clientgotesting.UpdateActionImpl {
+func ConfigMapUpdate(namespace string, name string, format string, contract *contract.Contract, options ...reconcilertesting.ConfigMapOption) clientgotesting.UpdateActionImpl {
 	return clientgotesting.NewUpdateAction(
 		schema.GroupVersionResource{
 			Group:    "*",
 			Version:  "v1",
 			Resource: "ConfigMap",
 		},
-		env.DataPlaneConfigMapNamespace,
-		NewConfigMapFromContract(contract, env, options...),
+		namespace,
+		NewConfigMapFromContract(contract, namespace, name, format, options...),
 	)
 }
 
@@ -467,6 +508,50 @@ func DispatcherPodAsOwnerReference(name string) reconcilertesting.ConfigMapOptio
 			BlockOwnerDeletion: pointer.Bool(true),
 		})
 	}
+}
+
+func ConfigmapOwnerReferenceBroker(uid types.UID, name string, controller bool) reconcilertesting.ConfigMapOption {
+	return func(configMap *corev1.ConfigMap) {
+		appendBrokerOwnerRef(&configMap.ObjectMeta, uid, name, controller)
+	}
+}
+
+func ServiceAccountOwnerReferenceBroker(uid types.UID, name string, controller bool) func(account *corev1.ServiceAccount) {
+	return func(account *corev1.ServiceAccount) {
+		appendBrokerOwnerRef(&account.ObjectMeta, uid, name, controller)
+	}
+}
+
+func RoleBindingOwnerReferenceBroker(uid types.UID, name string, controller bool) func(rb *rbacv1.RoleBinding) {
+	return func(rb *rbacv1.RoleBinding) {
+		appendBrokerOwnerRef(&rb.ObjectMeta, uid, name, controller)
+	}
+}
+
+func DeploymentOwnerReferenceBroker(uid types.UID, name string, controller bool) func(d *appsv1.Deployment) {
+	return func(d *appsv1.Deployment) {
+		appendBrokerOwnerRef(&d.ObjectMeta, uid, name, controller)
+	}
+}
+
+func ServiceOwnerReferenceBroker(uid types.UID, name string, controller bool) func(d *corev1.Service) {
+	return func(d *corev1.Service) {
+		appendBrokerOwnerRef(&d.ObjectMeta, uid, name, controller)
+	}
+}
+
+func appendBrokerOwnerRef(obj *metav1.ObjectMeta, uid types.UID, name string, controller bool) {
+	references := obj.GetOwnerReferences()
+	obj.SetOwnerReferences(
+		append(references, metav1.OwnerReference{
+			APIVersion:         eventing.SchemeGroupVersion.String(),
+			Kind:               "Broker",
+			Name:               name,
+			UID:                uid,
+			Controller:         pointer.Bool(controller),
+			BlockOwnerDeletion: pointer.Bool(true),
+		}),
+	)
 }
 
 func PodRunning() PodOption {
