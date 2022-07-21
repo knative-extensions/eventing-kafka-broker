@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2020 The Knative Authors
+# Copyright 2020, 2022 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,13 @@
 # DNS suffix.
 # `cluster.local` will be replaced to the generated one on GitHub Actions.
 
-strimzi_version=$(curl https://github.com/strimzi/strimzi-kafka-operator/releases/latest | awk -F 'tag/' '{print $2}' | awk -F '"' '{print $1}' 2>/dev/null)
+# sanity check - we need exactly one argument which denotes the Strimzi version we want to update to
+if [[ "$#" -ne 1 ]]; then
+  echo "Usage: $0 <strimzi_version>"
+  exit 1
+fi
+
+strimzi_version=$1
 
 echo "Using Strimzi Version: ${strimzi_version}"
 
