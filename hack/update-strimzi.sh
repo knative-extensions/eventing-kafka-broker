@@ -21,7 +21,7 @@
 # DNS suffix.
 # `cluster.local` will be replaced to the generated one on GitHub Actions.
 
-# sanity check - we need exactly one argument which denotes the Strimzi version we want to update to
+# quick check - we need exactly one argument which denotes the Strimzi version we want to update to
 if [[ "$#" -ne 1 ]]; then
   echo "Usage: $0 <strimzi_version>"
   exit 1
