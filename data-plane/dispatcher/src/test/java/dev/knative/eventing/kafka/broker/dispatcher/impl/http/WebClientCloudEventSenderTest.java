@@ -16,7 +16,6 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
@@ -24,6 +23,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -48,6 +48,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(VertxExtension.class)
+@DisabledIfEnvironmentVariable(named = "SKIP_SLOW_TESTS", matches = "true")
 public class WebClientCloudEventSenderTest {
 
   @Test

@@ -21,14 +21,14 @@ import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
-
-import java.util.List;
-
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+
+import java.util.List;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -36,6 +36,7 @@ import static org.mockito.Mockito.verify;
 
 @Execution(value = ExecutionMode.CONCURRENT)
 @ExtendWith(VertxExtension.class)
+@DisabledIfEnvironmentVariable(named = "SKIP_SLOW_TESTS", matches = "true")
 public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
   @Override
