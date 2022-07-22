@@ -168,7 +168,7 @@ function run {
   fi
 
   wait_for_cloudevent foo$i
-  kubectl delete namespace foo$i
+  kubectl delete namespace foo$i --wait=false
 }
 
 export -f run

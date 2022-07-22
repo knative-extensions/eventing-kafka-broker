@@ -28,31 +28,45 @@ spec:
       - resource:
           type: topic
           name: "*"
+          patternType: literal
         operation: Read
         host: "*"
       - resource:
           type: topic
           name: "*"
+          patternType: literal
         operation: Describe
         host: "*"
       - resource:
           type: group
           name: "*"
+          patternType: literal
         operation: Read
         host: "*"
       # Example ACL rules for producing to topic knative-messaging-kafka
       - resource:
           type: topic
           name: "*"
+          patternType: literal
         operation: Write
         host: "*"
       - resource:
           type: topic
           name: "*"
+          patternType: literal
         operation: Create
         host: "*"
       - resource:
           type: topic
           name: "*"
+          patternType: literal
         operation: Describe
+        host: "*"
+      # Required ACL rule to be able to delete topics
+      # (Note: this is needed to be able to successfully delete KafkaChannel resources)
+      - resource:
+          type: topic
+          name: "*"
+          patternType: literal
+        operation: Delete
         host: "*"
