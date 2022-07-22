@@ -58,6 +58,8 @@ kubeadmConfigPatches:
 nodes:
 - role: control-plane
   image: kindest/node:${NODE_VERSION}@${NODE_SHA}
+- role: worker
+  image: kindest/node:${NODE_VERSION}@${NODE_SHA}
 EOF
 
 # connect the registry to the cluster network if not already connected
