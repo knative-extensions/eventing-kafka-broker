@@ -19,11 +19,12 @@ package testing
 import (
 	"fmt"
 	"io/ioutil"
+	"time"
+
 	appsv1 "k8s.io/api/apps/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/types"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	"time"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"

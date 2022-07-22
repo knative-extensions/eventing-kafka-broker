@@ -18,7 +18,6 @@ package trigger
 
 import (
 	"context"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"sync"
 
 	"k8s.io/client-go/util/retry"
@@ -31,6 +30,7 @@ import (
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 

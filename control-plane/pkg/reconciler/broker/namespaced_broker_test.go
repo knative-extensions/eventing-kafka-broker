@@ -19,6 +19,8 @@ package broker_test // different package name due to import cycles. (broker -> t
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	mfclient "github.com/manifestival/client-go-client"
@@ -27,7 +29,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
-	"testing"
 
 	"k8s.io/client-go/kubernetes/scheme"
 

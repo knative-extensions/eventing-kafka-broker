@@ -19,6 +19,8 @@ package trigger
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
@@ -28,7 +30,6 @@ import (
 	. "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
-	"testing"
 
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
