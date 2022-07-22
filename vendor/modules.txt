@@ -1160,6 +1160,7 @@ k8s.io/utils/pointer
 k8s.io/utils/trace
 # knative.dev/eventing v0.33.0
 ## explicit
+knative.dev/eventing/cmd/event_display
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck
 knative.dev/eventing/pkg/apis/duck/v1
