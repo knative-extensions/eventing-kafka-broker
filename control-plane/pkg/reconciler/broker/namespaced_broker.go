@@ -30,7 +30,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"k8s.io/client-go/util/retry"
 	"k8s.io/utils/pointer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -86,12 +85,6 @@ type NamespacedReconciler struct {
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.reconcileKind(ctx, broker)
-	})
-}
-
-func (r *NamespacedReconciler) reconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	r.IPsLister.Register(
 		types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name},
 		prober.GetIPForService(types.NamespacedName{Namespace: broker.Namespace, Name: r.Env.IngressName}),
@@ -117,12 +110,6 @@ func (r *NamespacedReconciler) reconcileKind(ctx context.Context, broker *eventi
 }
 
 func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.finalizeKind(ctx, broker)
-	})
-}
-
-func (r *NamespacedReconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	br := r.createReconcilerForBrokerInstance(broker)
 	result := br.DoFinalizeKind(ctx, broker)
 

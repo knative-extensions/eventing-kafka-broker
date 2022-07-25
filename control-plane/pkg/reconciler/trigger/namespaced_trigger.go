@@ -18,7 +18,6 @@ package trigger
 
 import (
 	"context"
-	"k8s.io/client-go/util/retry"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -43,24 +42,12 @@ type NamespacedReconciler struct {
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.reconcileKind(ctx, trigger)
-	})
-}
-
-func (r *NamespacedReconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	br := r.createReconcilerForTriggerInstance(trigger)
 
 	return br.ReconcileKind(ctx, trigger)
 }
 
 func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.finalizeKind(ctx, trigger)
-	})
-}
-
-func (r *NamespacedReconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	br := r.createReconcilerForTriggerInstance(trigger)
 
 	return br.FinalizeKind(ctx, trigger)
