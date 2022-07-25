@@ -47,16 +47,20 @@ const (
 	deliveryOrderAnnotation = "kafka.eventing.knative.dev/delivery.order"
 )
 
+type FlagsHolder struct {
+	Flags     feature.Flags
+	FlagsLock sync.RWMutex
+}
+
 type Reconciler struct {
 	*base.Reconciler
+	*FlagsHolder
 
 	BrokerLister   eventinglisters.BrokerLister
 	EventingClient eventingclientset.Interface
 	Resolver       *resolver.URIResolver
 
-	Env       *config.Env
-	Flags     feature.Flags
-	FlagsLock sync.RWMutex
+	Env *config.Env
 
 	BrokerClass string
 

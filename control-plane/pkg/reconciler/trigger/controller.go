@@ -18,10 +18,10 @@ package trigger
 
 import (
 	"context"
-
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	v1 "knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
@@ -72,10 +72,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
+		FlagsHolder: &FlagsHolder{
+			Flags: feature.Flags{},
+		},
 		BrokerLister:              brokerInformer.Lister(),
 		EventingClient:            eventingclient.Get(ctx),
 		Env:                       configs,
-		Flags:                     feature.Flags{},
 		BrokerClass:               kafka.BrokerClass,
 		DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
 	}
@@ -89,21 +91,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		}
 	})
 
-	featureStore := feature.NewStore(
-		logging.FromContext(ctx).Named("feature-config-eventing-store"),
-		func(name string, value interface{}) {
-			flags, ok := value.(feature.Flags)
-			if !ok {
-				logger.Warn("Features ConfigMap " + name + " updated but we didn't get expected flags. Skipping updating cached features")
-			}
-			logger.Debug("Features ConfigMap " + name + " updated. Updating cached features.")
-			reconciler.FlagsLock.Lock()
-			defer reconciler.FlagsLock.Unlock()
-			reconciler.Flags = flags
-			impl.GlobalResync(triggerInformer.Informer())
-		},
-	)
-	featureStore.WatchConfigs(watcher)
+	setupFeatureStore(ctx, watcher, reconciler.FlagsHolder, impl, triggerInformer)
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
@@ -184,4 +172,23 @@ func enqueueTriggers(
 			}
 		}
 	})
+}
+
+func setupFeatureStore(ctx context.Context, watcher configmap.Watcher, flagsHolder *FlagsHolder, impl *controller.Impl, triggerInformer v1.TriggerInformer) {
+	featureStore := feature.NewStore(
+		logging.FromContext(ctx).Named("feature-config-eventing-store"),
+		func(name string, value interface{}) {
+			logger := logging.FromContext(ctx).Desugar()
+			flags, ok := value.(feature.Flags)
+			if !ok {
+				logger.Warn("Features ConfigMap " + name + " updated but we didn't get expected flags. Skipping updating cached features")
+			}
+			logger.Debug("Features ConfigMap " + name + " updated. Updating cached features.")
+			flagsHolder.FlagsLock.Lock()
+			defer flagsHolder.FlagsLock.Unlock()
+			flagsHolder.Flags = flags
+			impl.GlobalResync(triggerInformer.Informer())
+		},
+	)
+	featureStore.WatchConfigs(watcher)
 }

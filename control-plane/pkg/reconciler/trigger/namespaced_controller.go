@@ -18,7 +18,6 @@ package trigger
 
 import (
 	"context"
-
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
@@ -38,8 +37,6 @@ import (
 	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 )
-
-// TODO: COPY & PASTE for now
 
 const (
 	NamespacedControllerAgentName = "kafka-namespaced-trigger-controller"
@@ -68,10 +65,12 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
+		FlagsHolder: &FlagsHolder{
+			Flags: feature.Flags{},
+		},
 		BrokerLister:   brokerInformer.Lister(),
 		EventingClient: eventingclient.Get(ctx),
 		Env:            configs,
-		Flags:          feature.Flags{},
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -83,21 +82,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 		}
 	})
 
-	featureStore := feature.NewStore(
-		logging.FromContext(ctx).Named("feature-config-eventing-store"),
-		func(name string, value interface{}) {
-			flags, ok := value.(feature.Flags)
-			if !ok {
-				logger.Warn("Features ConfigMap " + name + " updated but we didn't get expected flags. Skipping updating cached features")
-			}
-			logger.Debug("Features ConfigMap " + name + " updated. Updating cached features.")
-			reconciler.FlagsLock.Lock()
-			defer reconciler.FlagsLock.Unlock()
-			reconciler.Flags = flags
-			impl.GlobalResync(triggerInformer.Informer())
-		},
-	)
-	featureStore.WatchConfigs(watcher)
+	setupFeatureStore(ctx, watcher, reconciler.FlagsHolder, impl, triggerInformer)
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 

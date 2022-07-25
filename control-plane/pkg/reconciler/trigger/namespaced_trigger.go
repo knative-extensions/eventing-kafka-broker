@@ -18,14 +18,11 @@ package trigger
 
 import (
 	"context"
-	"sync"
-
 	"k8s.io/client-go/util/retry"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	"knative.dev/eventing/pkg/apis/feature"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
@@ -36,14 +33,13 @@ import (
 
 type NamespacedReconciler struct {
 	*base.Reconciler
+	*FlagsHolder
 
 	BrokerLister   eventinglisters.BrokerLister
 	EventingClient eventingclientset.Interface
 	Resolver       *resolver.URIResolver
 
-	Env       *config.Env
-	Flags     feature.Flags
-	FlagsLock sync.RWMutex
+	Env *config.Env
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -85,10 +81,12 @@ func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *event
 			DataPlaneNamespace:          trigger.Namespace,
 			DataPlaneConfigMapNamespace: trigger.Namespace,
 		},
+		FlagsHolder: &FlagsHolder{
+			Flags: r.Flags,
+		},
 		BrokerLister:   r.BrokerLister,
 		EventingClient: r.EventingClient,
 		Env:            r.Env,
-		Flags:          r.Flags,
 		Resolver:       r.Resolver,
 
 		// override

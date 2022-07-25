@@ -2765,11 +2765,13 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,
 			},
+			FlagsHolder: &FlagsHolder{
+				Flags: flags,
+			},
 			BrokerLister:              listers.GetBrokerLister(),
 			EventingClient:            eventingclient.Get(ctx),
 			Resolver:                  nil,
 			Env:                       env,
-			Flags:                     flags,
 			BrokerClass:               kafka.BrokerClass,
 			DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
 		}
