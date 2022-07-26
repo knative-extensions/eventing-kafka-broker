@@ -69,11 +69,11 @@ type Reconciler struct {
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.DoReconcileKind(ctx, trigger)
+		return r.reconcileKind(ctx, trigger)
 	})
 }
 
-func (r *Reconciler) DoReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
+func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
 
 	statusConditionManager := statusConditionManager{
@@ -191,11 +191,11 @@ func (r *Reconciler) DoReconcileKind(ctx context.Context, trigger *eventing.Trig
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.DoFinalizeKind(ctx, trigger)
+		return r.finalizeKind(ctx, trigger)
 	})
 }
 
-func (r *Reconciler) DoFinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
+func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, trigger)
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)

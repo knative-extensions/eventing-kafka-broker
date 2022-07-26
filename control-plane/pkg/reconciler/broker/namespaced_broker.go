@@ -101,12 +101,12 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 		return fmt.Errorf("unable to apply dataplane manifest. namespace: %s, broker: %v, error: %v", broker.Namespace, broker, err)
 	}
 
-	return br.DoReconcileKind(ctx, broker)
+	return br.ReconcileKind(ctx, broker)
 }
 
 func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	br := r.createReconcilerForBrokerInstance(broker)
-	result := br.DoFinalizeKind(ctx, broker)
+	result := br.FinalizeKind(ctx, broker)
 
 	r.IPsLister.Unregister(types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name})
 

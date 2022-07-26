@@ -73,11 +73,11 @@ type Reconciler struct {
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.DoReconcileKind(ctx, broker)
+		return r.reconcileKind(ctx, broker)
 	})
 }
 
-func (r *Reconciler) DoReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
+func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, broker)
 
 	statusConditionManager := base.StatusConditionManager{
@@ -274,11 +274,11 @@ func (r *Reconciler) reconcileBrokerTopic(broker *eventing.Broker, securityOptio
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.DoFinalizeKind(ctx, broker)
+		return r.finalizeKind(ctx, broker)
 	})
 }
 
-func (r *Reconciler) DoFinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
+func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, broker)
 
 	// Get contract config map.
