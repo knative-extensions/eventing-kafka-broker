@@ -26,7 +26,6 @@ import (
 	mfclient "github.com/manifestival/client-go-client"
 	mf "github.com/manifestival/manifestival"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 
@@ -145,15 +144,6 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 					reconcilertesting.NewService("kafka-broker-ingress", BrokerNamespace,
 						ServiceOwnerReferenceBroker(BrokerUUID, BrokerName, false),
 					),
-				),
-				NewConfigMapWithBinaryData(BrokerNamespace, "kafka-broker-brokers-triggers",
-					nil,
-					ConfigmapOwnerReferenceBroker(BrokerUUID, BrokerName, false),
-					reconcilertesting.WithConfigMapLabels(metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"eventing.knative.dev/namespaced": "true",
-						},
-					}),
 				),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{

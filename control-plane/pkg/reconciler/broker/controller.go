@@ -71,7 +71,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 		ConfigMapLister:            configmapInformer.Lister(),
 		Env:                        env,
-		DataPlaneConfigMapLabeler:  base.NoopConfigmapOption,
 	}
 
 	logger := logging.FromContext(ctx)

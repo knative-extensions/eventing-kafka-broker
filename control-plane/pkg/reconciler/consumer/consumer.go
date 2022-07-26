@@ -19,7 +19,6 @@ package consumer
 import (
 	"context"
 	"fmt"
-
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -339,7 +338,7 @@ func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkain
 
 	b := r.commonReconciler(p, cmName)
 
-	cm, err := b.GetOrCreateDataPlaneConfigMap(ctx, podOwnerReference(p))
+	cm, err := b.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return false, fmt.Errorf("failed to get or create data plane ConfigMap %s/%s: %w", p.GetNamespace(), cmName, err)
 	}
@@ -372,17 +371,18 @@ func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkain
 
 func (r Reconciler) commonReconciler(p *corev1.Pod, cmName string) base.Reconciler {
 	return base.Reconciler{
-		KubeClient:                  r.KubeClient,
-		PodLister:                   r.PodLister,
-		SecretLister:                r.SecretLister,
-		SecretTracker:               r.Tracker,
-		ConfigMapTracker:            r.Tracker,
-		DataPlaneConfigMapNamespace: p.GetNamespace(),
-		DataPlaneConfigMapName:      cmName,
-		DataPlaneConfigFormat:       string(r.SerDe.Format),
-		DataPlaneNamespace:          p.GetNamespace(),
-		DispatcherLabel:             "",
-		ReceiverLabel:               "",
+		KubeClient:                    r.KubeClient,
+		PodLister:                     r.PodLister,
+		SecretLister:                  r.SecretLister,
+		SecretTracker:                 r.Tracker,
+		ConfigMapTracker:              r.Tracker,
+		DataPlaneConfigMapNamespace:   p.GetNamespace(),
+		DataPlaneConfigMapName:        cmName,
+		DataPlaneConfigFormat:         string(r.SerDe.Format),
+		DataPlaneNamespace:            p.GetNamespace(),
+		DispatcherLabel:               "",
+		ReceiverLabel:                 "",
+		DataPlaneConfigMapTransformer: podOwnerReference(p),
 	}
 }
 

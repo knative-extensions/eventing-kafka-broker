@@ -123,7 +123,7 @@ func (r *Reconciler) DoReconcileKind(ctx context.Context, trigger *eventing.Trig
 	}
 
 	// Get data plane config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.DataPlaneConfigMapLabeler)
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return statusConditionManager.failedToGetDataPlaneConfigMap(err)
 	}
@@ -209,7 +209,7 @@ func (r *Reconciler) DoFinalizeKind(ctx context.Context, trigger *eventing.Trigg
 	}
 
 	// Get data plane config map.
-	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx, r.DataPlaneConfigMapLabeler)
+	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get data plane config map %s: %w", r.Env.DataPlaneConfigMapAsString(), err)
 	}

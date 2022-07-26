@@ -24,20 +24,20 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/utils/pointer"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/pkg/reconciler"
+	"knative.dev/pkg/resolver"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	"knative.dev/pkg/reconciler"
-	"knative.dev/pkg/resolver"
 )
 
 // TODO: 1.
@@ -92,11 +92,6 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 
 	br := r.createReconcilerForBrokerInstance(broker)
 
-	err := r.reconcileDataPlaneConfigMap(ctx, broker)
-	if err != nil {
-		return fmt.Errorf("failed to create/update data plane config map: %s, error: %v", fmt.Sprintf("%s/%s", broker.Namespace, r.Env.DataPlaneConfigMapName), err)
-	}
-
 	manifest, err := r.getManifest(broker)
 	if err != nil {
 		return fmt.Errorf("unable to transform dataplane manifest. namespace: %s, broker: %v, error: %v", broker.Namespace, broker, err)
@@ -134,6 +129,11 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 
 			DataPlaneNamespace:          broker.Namespace,
 			DataPlaneConfigMapNamespace: broker.Namespace,
+
+			DataPlaneConfigMapTransformer: func(cm *corev1.ConfigMap) {
+				kafka.NamespacedDataplaneLabelConfigmapOption(cm)
+				appendBrokerAsOwnerRef(broker)(cm)
+			},
 		},
 		Env:                        r.Env,
 		Resolver:                   r.Resolver,
@@ -141,8 +141,6 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 		NewKafkaClusterAdminClient: r.NewKafkaClusterAdminClient,
 		BootstrapServers:           r.BootstrapServers,
 		Prober:                     r.Prober,
-
-		DataPlaneConfigMapLabeler: kafka.NamespacedDataplaneLabelConfigmapOption,
 	}
 }
 
@@ -235,31 +233,4 @@ func setImagesForDeployments(imageMap map[string]string) mf.Transformer {
 
 		return scheme.Scheme.Convert(deployment, resource, nil)
 	}
-}
-
-func (r *NamespacedReconciler) reconcileDataPlaneConfigMap(ctx context.Context, broker *eventing.Broker) error {
-	cm, err := r.KubeClient.CoreV1().
-		ConfigMaps(broker.Namespace).
-		Get(ctx, r.Env.DataPlaneConfigMapName, metav1.GetOptions{})
-
-	if err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
-
-	if apierrors.IsNotFound(err) {
-		// not found, create
-		_, err = base.CreateDataPlaneConfigMap(ctx, r.KubeClient, broker.Namespace, r.Reconciler.DataPlaneConfigMapName, appendBrokerAsOwnerRef(broker), kafka.NamespacedDataplaneLabelConfigmapOption)
-		return err
-	}
-
-	// found, update
-
-	if refs, appended := appendOwnerRef(cm.GetOwnerReferences(), broker); appended {
-		cm.SetOwnerReferences(refs)
-		// only update if we actually appended an ownerRef
-		_, err = r.KubeClient.CoreV1().ConfigMaps(broker.Namespace).Update(ctx, cm, metav1.UpdateOptions{})
-		return err
-	}
-
-	return nil
 }
