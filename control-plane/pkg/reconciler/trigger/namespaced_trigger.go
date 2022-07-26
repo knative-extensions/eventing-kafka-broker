@@ -18,6 +18,7 @@ package trigger
 
 import (
 	"context"
+
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
