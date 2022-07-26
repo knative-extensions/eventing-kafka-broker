@@ -177,7 +177,7 @@ func getPersistedOwnerRefs(mfc mf.Client, res *unstructured.Unstructured) ([]met
 	retrieved, err := mfc.Get(res)
 	if err != nil && !errors.IsNotFound(err) {
 		// actual problem
-		return nil, err
+		return nil, fmt.Errorf("failed to get resource %s/%s: %w", res.GetNamespace(), res.GetName(), err)
 	}
 
 	if errors.IsNotFound(err) {
