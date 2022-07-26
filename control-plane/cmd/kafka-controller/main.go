@@ -76,21 +76,22 @@ func main() {
 			},
 		},
 
-		// Namespaced broker controller
-		injection.NamedControllerConstructor{
-			Name: "broker-namespaced-controller",
-			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				return broker.NewNamespacedController(ctx, watcher, brokerEnv)
-			},
-		},
-
-		// Namespaced trigger controller
-		injection.NamedControllerConstructor{
-			Name: "trigger-namespaced-controller",
-			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				return trigger.NewNamespacedController(ctx, watcher, brokerEnv)
-			},
-		},
+		// TODO: enable later
+		//// Namespaced broker controller
+		//injection.NamedControllerConstructor{
+		//	Name: "broker-namespaced-controller",
+		//	ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
+		//		return broker.NewNamespacedController(ctx, watcher, brokerEnv)
+		//	},
+		//},
+		//
+		//// Namespaced trigger controller
+		//injection.NamedControllerConstructor{
+		//	Name: "trigger-namespaced-controller",
+		//	ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
+		//		return trigger.NewNamespacedController(ctx, watcher, brokerEnv)
+		//	},
+		//},
 
 		// Channel controller
 		injection.NamedControllerConstructor{
