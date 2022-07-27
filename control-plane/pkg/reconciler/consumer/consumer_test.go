@@ -93,20 +93,10 @@ func TestReconcileKind(t *testing.T) {
 				patchFinalizers(),
 			},
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&config.Env{
-					DataPlaneConfigFormat:       base.Json,
-					DataPlaneConfigMapNamespace: SystemNamespace,
-					DataPlaneConfigMapName:      "p1",
-				}, []byte(""),
-					DispatcherPodAsOwnerReference("p1"),
-				),
+				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte("")),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&config.Env{
-					DataPlaneConfigFormat:       base.Json,
-					DataPlaneConfigMapNamespace: SystemNamespace,
-					DataPlaneConfigMapName:      "p1",
-				}, &contract.Contract{
+				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -205,20 +195,10 @@ func TestReconcileKind(t *testing.T) {
 				patchFinalizers(),
 			},
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&config.Env{
-					DataPlaneConfigFormat:       base.Json,
-					DataPlaneConfigMapNamespace: SystemNamespace,
-					DataPlaneConfigMapName:      "p1",
-				}, []byte(""),
-					DispatcherPodAsOwnerReference("p1"),
-				),
+				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte("")),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&config.Env{
-					DataPlaneConfigFormat:       base.Json,
-					DataPlaneConfigMapNamespace: SystemNamespace,
-					DataPlaneConfigMapName:      "p1",
-				}, &contract.Contract{
+				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -317,20 +297,10 @@ func TestReconcileKind(t *testing.T) {
 				patchFinalizers(),
 			},
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&config.Env{
-					DataPlaneConfigFormat:       base.Json,
-					DataPlaneConfigMapNamespace: SystemNamespace,
-					DataPlaneConfigMapName:      "p1",
-				}, []byte(""),
-					DispatcherPodAsOwnerReference("p1"),
-				),
+				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte("")),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&config.Env{
-					DataPlaneConfigFormat:       base.Json,
-					DataPlaneConfigMapNamespace: SystemNamespace,
-					DataPlaneConfigMapName:      "p1",
-				}, &contract.Contract{
+				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -435,21 +405,10 @@ func TestReconcileKind(t *testing.T) {
 				patchFinalizers(),
 			},
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(&config.Env{
-					DataPlaneConfigFormat:       base.Json,
-					DataPlaneConfigMapNamespace: SystemNamespace,
-					DataPlaneConfigMapName:      "p1",
-				},
-					[]byte(""),
-					DispatcherPodAsOwnerReference("p1"),
-				),
+				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte("")),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&config.Env{
-					DataPlaneConfigFormat:       base.Json,
-					DataPlaneConfigMapNamespace: SystemNamespace,
-					DataPlaneConfigMapName:      "p1",
-				}, &contract.Contract{
+				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{

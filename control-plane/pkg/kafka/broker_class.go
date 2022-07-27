@@ -24,13 +24,22 @@ import (
 
 const (
 	// Kafka broker class annotation value.
-	BrokerClass = "Kafka"
+	BrokerClass           = "Kafka"
+	NamespacedBrokerClass = "KafkaNamespaced"
 )
 
 func BrokerClassFilter() func(interface{}) bool {
 	return pkgreconciler.AnnotationFilterFunc(
 		brokerreconciler.ClassAnnotationKey,
 		BrokerClass,
+		false, // allowUnset
+	)
+}
+
+func NamespacedBrokerClassFilter() func(interface{}) bool {
+	return pkgreconciler.AnnotationFilterFunc(
+		brokerreconciler.ClassAnnotationKey,
+		NamespacedBrokerClass,
 		false, // allowUnset
 	)
 }

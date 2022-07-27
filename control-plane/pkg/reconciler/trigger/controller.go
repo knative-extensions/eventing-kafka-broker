@@ -22,6 +22,7 @@ import (
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	v1 "knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
@@ -72,11 +73,14 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
-		BrokerLister:   brokerInformer.Lister(),
-		EventingClient: eventingclient.Get(ctx),
-		Env:            configs,
-		Flags:          feature.Flags{},
-		BrokerClass:    kafka.BrokerClass,
+		FlagsHolder: &FlagsHolder{
+			Flags: feature.Flags{},
+		},
+		BrokerLister:              brokerInformer.Lister(),
+		EventingClient:            eventingclient.Get(ctx),
+		Env:                       configs,
+		BrokerClass:               kafka.BrokerClass,
+		DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -84,30 +88,16 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			FinalizerName:     FinalizerName,
 			AgentName:         ControllerAgentName,
 			SkipStatusUpdates: false,
-			PromoteFilterFunc: filterTriggers(reconciler.BrokerLister, kafka.BrokerClass),
+			PromoteFilterFunc: filterTriggers(reconciler.BrokerLister, kafka.BrokerClass, FinalizerName),
 		}
 	})
 
-	featureStore := feature.NewStore(
-		logging.FromContext(ctx).Named("feature-config-eventing-store"),
-		func(name string, value interface{}) {
-			flags, ok := value.(feature.Flags)
-			if !ok {
-				logger.Warn("Features ConfigMap " + name + " updated but we didn't get expected flags. Skipping updating cached features")
-			}
-			logger.Debug("Features ConfigMap " + name + " updated. Updating cached features.")
-			reconciler.FlagsLock.Lock()
-			defer reconciler.FlagsLock.Unlock()
-			reconciler.Flags = flags
-			impl.GlobalResync(triggerInformer.Informer())
-		},
-	)
-	featureStore.WatchConfigs(watcher)
+	setupFeatureStore(ctx, watcher, reconciler.FlagsHolder, impl, triggerInformer)
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
 	triggerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: filterTriggers(reconciler.BrokerLister, kafka.BrokerClass),
+		FilterFunc: filterTriggers(reconciler.BrokerLister, kafka.BrokerClass, FinalizerName),
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 
@@ -132,14 +122,14 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	return impl
 }
 
-func filterTriggers(lister eventinglisters.BrokerLister, brokerClass string) func(interface{}) bool {
+func filterTriggers(lister eventinglisters.BrokerLister, brokerClass string, finalizer string) func(interface{}) bool {
 	return func(obj interface{}) bool {
 		trigger, ok := obj.(*eventing.Trigger)
 		if !ok {
 			return false
 		}
 
-		if hasKafkaBrokerTriggerFinalizer(trigger.Finalizers, FinalizerName) {
+		if hasKafkaBrokerTriggerFinalizer(trigger.Finalizers, finalizer) {
 			return true
 		}
 
@@ -183,4 +173,23 @@ func enqueueTriggers(
 			}
 		}
 	})
+}
+
+func setupFeatureStore(ctx context.Context, watcher configmap.Watcher, flagsHolder *FlagsHolder, impl *controller.Impl, triggerInformer v1.TriggerInformer) {
+	featureStore := feature.NewStore(
+		logging.FromContext(ctx).Named("feature-config-eventing-store"),
+		func(name string, value interface{}) {
+			logger := logging.FromContext(ctx).Desugar()
+			flags, ok := value.(feature.Flags)
+			if !ok {
+				logger.Warn("Features ConfigMap " + name + " updated but we didn't get expected flags. Skipping updating cached features")
+			}
+			logger.Debug("Features ConfigMap " + name + " updated. Updating cached features.")
+			flagsHolder.FlagsLock.Lock()
+			defer flagsHolder.FlagsLock.Unlock()
+			flagsHolder.Flags = flags
+			impl.GlobalResync(triggerInformer.Informer())
+		},
+	)
+	featureStore.WatchConfigs(watcher)
 }

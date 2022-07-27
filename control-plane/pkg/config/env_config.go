@@ -41,6 +41,12 @@ type Env struct {
 	SystemNamespace       string `required:"true" split_words:"true"`
 	DataPlaneConfigFormat string `required:"true" split_words:"true"`
 	DefaultBackoffDelayMs uint64 `required:"false" split_words:"true"`
+
+	// DispatcherImage is the dispatcher image that is used when the data plane is created dynamically
+	DispatcherImage string `required:"false" split_words:"true"`
+
+	// ReceiverImage is the receiver image that is used when the data plane is created dynamically
+	ReceiverImage string `required:"false" split_words:"true"`
 }
 
 // ValidationOption represents a function to validate the Env configurations.
