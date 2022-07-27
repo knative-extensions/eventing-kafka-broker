@@ -169,7 +169,7 @@ func getKafkaSourceConsumerGroup(ctx context.Context, c dynamic.Interface, ns st
 		gvr := schema.GroupVersionResource{
 			Group:    sources.SchemeGroupVersion.Group,
 			Version:  sources.SchemeGroupVersion.Version,
-			Resource: "KafkaSource",
+			Resource: "kafkasource",
 		}
 		ksUnstr, err := c.Resource(gvr).Namespace(ns).Get(ctx, sacuraSourceName, metav1.GetOptions{})
 		require.Nil(t, err)
@@ -188,7 +188,7 @@ func getKafkaSubscriptionConsumerGroup(ctx context.Context, c dynamic.Interface,
 		gvr := schema.GroupVersionResource{
 			Group:    messaging.SchemeGroupVersion.Group,
 			Version:  messaging.SchemeGroupVersion.Version,
-			Resource: "Subscription",
+			Resource: "subscription",
 		}
 		subUnstr, err := c.Resource(gvr).Namespace(ns).Get(ctx, sacuraSubscriptionName, metav1.GetOptions{})
 		require.Nil(t, err)
