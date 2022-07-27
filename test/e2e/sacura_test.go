@@ -55,7 +55,7 @@ const (
 	sacuraSubscriptionName = "subscription"
 	sacuraSourceName       = "source"
 
-	pollTimeout  = 30 * time.Minute
+	pollTimeout  = 40 * time.Minute
 	pollInterval = 10 * time.Second
 )
 
