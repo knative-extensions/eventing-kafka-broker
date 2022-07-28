@@ -35,5 +35,5 @@ data:
                     "Weight": 2},
                     {"Name": "EvenPodSpread",
                     "Weight": 2,
-                    "Args": "{\"MaxSkew\": 50}"}
+                    "Args": "{\"MaxSkew\": 2}"}
                   ]
