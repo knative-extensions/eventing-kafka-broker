@@ -30,17 +30,24 @@ import (
 	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
-func brokerCreator(client *testlib.Client, name string) {
+func brokerCreator(class string) func(client *testlib.Client, name string) {
+	return func(client *testlib.Client, name string) {
+		broker := client.CreateBrokerOrFail(name,
+			resources.WithBrokerClassForBroker(class),
+		)
 
-	broker := client.CreateBrokerOrFail(name,
-		resources.WithBrokerClassForBroker(kafka.BrokerClass),
-	)
-
-	client.WaitForResourceReadyOrFail(broker.Name, testlib.BrokerTypeMeta)
+		client.WaitForResourceReadyOrFail(broker.Name, testlib.BrokerTypeMeta)
+	}
 }
 
 func TestBrokerControlPlane(t *testing.T) {
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
-		conformance.BrokerV1ControlPlaneTest(t, brokerCreator)
+		conformance.BrokerV1ControlPlaneTest(t, brokerCreator(kafka.BrokerClass))
+	})
+}
+
+func TestNamespacedBrokerControlPlane(t *testing.T) {
+	pkgtesting.RunMultiple(t, func(t *testing.T) {
+		conformance.BrokerV1ControlPlaneTest(t, brokerCreator(kafka.NamespacedBrokerClass))
 	})
 }
