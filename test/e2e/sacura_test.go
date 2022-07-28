@@ -172,7 +172,7 @@ func getKafkaSourceConsumerGroup(ctx context.Context, c dynamic.Interface, ns st
 			Resource: "kafkasource",
 		}
 		ksUnstr, err := c.Resource(gvr).Namespace(ns).Get(ctx, sacuraSourceName, metav1.GetOptions{})
-		require.Nil(t, err)
+		require.Nilf(t, err, "%+v %s/%s", gvr, ns, sacuraSourceName)
 
 		ks := sources.KafkaSource{}
 		err = runtime.DefaultUnstructuredConverter.FromUnstructured(ksUnstr.UnstructuredContent(), &ks)
