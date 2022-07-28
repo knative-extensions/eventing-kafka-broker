@@ -40,7 +40,7 @@ echo "Profiling event ${EVENT}"
 
 PROJECT_ROOT_DIR=$(dirname $0)/..
 RESOURCES_DIR="$(dirname $0)"/resources
-ASYNC_PROFILER_URL="https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.6/async-profiler-2.6-linux-x64.tar.gz"
+ASYNC_PROFILER_URL="https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.8.3/async-profiler-2.8.3-linux-x64.tar.gz"
 KAFKA_URL="https://archive.apache.org/dist/kafka/2.6.0/kafka_2.13-2.6.0.tgz"
 LOG_DIR=${LOG_DIR:-"/tmp/eventing-kafka-broker-logs/profiler"}
 
@@ -101,7 +101,7 @@ export WAIT_STARTUP_SECONDS="8"
 export SERVICE_NAME="kafka-broker-receiver"
 export SERVICE_NAMESPACE="knative-eventing"
 export INGRESS_PORT="8080"
-export METRICS_PORT="9090"
+export METRICS_PORT="9098"
 export INSTANCE_ID="receiver"
 
 # Run receiver.
@@ -116,7 +116,7 @@ receiver_pid=$!
 export SERVICE_NAME="kafka-broker-dispatcher"
 export SERVICE_NAMESPACE="knative-eventing"
 export INGRESS_PORT="8080"
-export METRICS_PORT="9089"
+export METRICS_PORT="9099"
 export INSTANCE_ID="dispatcher"
 
 # Run dispatcher.
