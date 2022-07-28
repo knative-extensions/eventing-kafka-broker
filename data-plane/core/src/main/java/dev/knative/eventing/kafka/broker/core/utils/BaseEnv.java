@@ -39,6 +39,12 @@ public class BaseEnv {
   public static final String METRICS_JVM_ENABLED = "METRICS_JVM_ENABLED";
   private final boolean metricsJvmEnabled;
 
+  public static final String METRICS_HTTP_CLIENT_ENABLED = "METRICS_HTTP_CLIENT_ENABLED";
+  private final boolean metricsHTTPClientEnabled;
+
+  public static final String METRICS_HTTP_SERVER_ENABLED = "METRICS_HTTP_SERVER_ENABLED";
+  private final boolean metricsHTTPServerEnabled;
+
   public static final String CONFIG_TRACING_PATH = "CONFIG_TRACING_PATH";
   private final String configTracingPath;
 
@@ -50,6 +56,8 @@ public class BaseEnv {
     this.metricsPort = Integer.parseInt(requireNonNull(envProvider.apply(METRICS_PORT)));
     this.metricsPublishQuantiles = Boolean.parseBoolean(envProvider.apply(METRICS_PUBLISH_QUANTILES));
     this.metricsJvmEnabled = Boolean.parseBoolean(envProvider.apply(METRICS_JVM_ENABLED));
+    this.metricsHTTPClientEnabled = Boolean.parseBoolean(envProvider.apply(METRICS_HTTP_CLIENT_ENABLED));
+    this.metricsHTTPServerEnabled = Boolean.parseBoolean(envProvider.apply(METRICS_HTTP_SERVER_ENABLED));
     this.producerConfigFilePath = requireNonNull(envProvider.apply(PRODUCER_CONFIG_FILE_PATH));
     this.dataPlaneConfigFilePath = requireNonNull(envProvider.apply(DATA_PLANE_CONFIG_FILE_PATH));
     this.configTracingPath = requireNonNull(envProvider.apply(CONFIG_TRACING_PATH));
@@ -78,6 +86,14 @@ public class BaseEnv {
 
   public boolean isMetricsJvmEnabled() {
     return metricsJvmEnabled;
+  }
+
+  public boolean isMetricsHTTPClientEnabled() {
+    return metricsHTTPClientEnabled;
+  }
+
+  public boolean isMetricsHTTPServerEnabled() {
+    return metricsHTTPServerEnabled;
   }
 
   public String getConfigTracingPath() {

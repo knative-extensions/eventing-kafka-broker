@@ -48,7 +48,7 @@ class ReceiverEnvTest {
         case BaseEnv.CONFIG_TRACING_PATH -> TRACING_CONFIG_PATH;
         case BaseEnv.METRICS_JVM_ENABLED -> METRICS_JVM_ENABLED;
         case BaseEnv.WAIT_STARTUP_SECONDS -> Integer.valueOf(WAIT_STARTUP_SECONDS).toString();
-        default -> throw new IllegalArgumentException(key);
+        default -> null;
       }
     );
 
