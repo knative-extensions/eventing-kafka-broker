@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e
+package e2e_broker
 
 import (
 	"context"
@@ -26,10 +26,22 @@ import (
 	"knative.dev/eventing/test/e2e/helpers"
 
 	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
+	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
-func TestBrokerWithManyTriggers(t *testing.T) {
-	t.Skip("Pass more events than necessary (related? https://knative.slack.com/archives/C9JP909F0/p1595244377489600)")
+func TestEventTransformationForTriggerV1BrokerV1(t *testing.T) {
+	runTest(t, "v1", "v1")
+}
 
-	helpers.TestBrokerWithManyTriggers(context.Background(), t, testbroker.Creator, false)
+func runTest(t *testing.T, brokerVersion string, triggerVersion string) {
+	pkgtesting.RunMultiple(t, func(t *testing.T) {
+
+		helpers.EventTransformationForTriggerTestHelper(
+			context.Background(),
+			t,
+			brokerVersion,
+			triggerVersion,
+			testbroker.Creator,
+		)
+	})
 }

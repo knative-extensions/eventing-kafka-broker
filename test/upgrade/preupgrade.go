@@ -20,8 +20,7 @@ import (
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
-	"knative.dev/eventing-kafka-broker/test/e2e"
-
+	"knative.dev/eventing-kafka-broker/test/e2e_sink"
 	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade"
 )
 
@@ -40,6 +39,6 @@ func ChannelPreUpgradeTest() pkgupgrade.Operation {
 // SinkPreUpgradeTest tests sink basic operations pre upgrade.
 func SinkPreUpgradeTest() pkgupgrade.Operation {
 	return pkgupgrade.NewOperation("SinkPreUpgradeTest", func(c pkgupgrade.Context) {
-		e2e.RunTestKafkaSink(c.T, eventing.ModeBinary, nil)
+		e2e_sink.RunTestKafkaSink(c.T, eventing.ModeBinary, nil)
 	})
 }

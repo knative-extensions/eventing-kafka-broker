@@ -31,7 +31,7 @@ import (
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
-	"knative.dev/eventing-kafka-broker/test/e2e"
+	"knative.dev/eventing-kafka-broker/test/e2e_sink"
 	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade"
 )
 
@@ -61,7 +61,7 @@ func SinkPostUpgradeTest() pkgupgrade.Operation {
 			verifyPostInstall(t)
 		})
 		c.T.Run("tests", func(t *testing.T) {
-			e2e.RunTestKafkaSink(t, eventing.ModeBinary, nil)
+			e2e_sink.RunTestKafkaSink(t, eventing.ModeBinary, nil)
 		})
 	})
 }
