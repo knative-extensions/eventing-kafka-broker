@@ -31,7 +31,7 @@ public class BaseEnvTest {
     case "CONFIG_TRACING_PATH" -> "/etc/tracing";
     case "METRICS_JVM_ENABLED" -> "false";
     case "WAIT_STARTUP_SECONDS" -> "1";
-    default -> throw new IllegalArgumentException("unknown " + s);
+    default -> null;
   };
 
   @Test
@@ -72,5 +72,17 @@ public class BaseEnvTest {
   public void shouldGetJvmMetricsEnabled() {
     final var metricsConfigs = new BaseEnv(provider);
     assertThat(metricsConfigs.isMetricsJvmEnabled()).isFalse();
+  }
+
+  @Test
+  public void shouldGetHttpClientMetricsDisabled() {
+    final var metricsConfigs = new BaseEnv(provider);
+    assertThat(metricsConfigs.isMetricsHTTPClientEnabled()).isFalse();
+  }
+
+  @Test
+  public void shouldGetHttpServerMetricsDisabled() {
+    final var metricsConfigs = new BaseEnv(provider);
+    assertThat(metricsConfigs.isMetricsHTTPServerEnabled()).isFalse();
   }
 }
