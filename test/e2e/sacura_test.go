@@ -31,7 +31,6 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apiserver/pkg/storage/names"
@@ -78,15 +77,15 @@ type SacuraTestConfig struct {
 
 func TestSacuraSinkSourceJob(t *testing.T) {
 	runSacuraTest(t, SacuraTestConfig{
-		Namespace:    "sacura-sink-source",
-		SourceTopic:  pointer.StringPtr("sacura-sink-source-topic"),
+		Namespace:   "sacura-sink-source",
+		SourceTopic: pointer.StringPtr("sacura-sink-source-topic"),
 	})
 }
 
 func TestSacuraBrokerJob(t *testing.T) {
 	runSacuraTest(t, SacuraTestConfig{
-		Namespace:    "sacura",
-		BrokerTopic:  pointer.StringPtr("knative-broker-sacura-sink-source-broker"),
+		Namespace:   "sacura",
+		BrokerTopic: pointer.StringPtr("knative-broker-sacura-sink-source-broker"),
 	})
 }
 
@@ -166,11 +165,7 @@ func getKafkaTriggerConsumerGroup(ctx context.Context, c *eventingclientset.Clie
 
 func getKafkaSourceConsumerGroup(ctx context.Context, c dynamic.Interface, ns string) func(t *testing.T) string {
 	return func(t *testing.T) string {
-		gvr := schema.GroupVersionResource{
-			Group:    sources.SchemeGroupVersion.Group,
-			Version:  sources.SchemeGroupVersion.Version,
-			Resource: "kafkasource",
-		}
+		gvr := sources.SchemeGroupVersion.WithResource("kafkasources")
 		ksUnstr, err := c.Resource(gvr).Namespace(ns).Get(ctx, sacuraSourceName, metav1.GetOptions{})
 		require.Nilf(t, err, "%+v %s/%s", gvr, ns, sacuraSourceName)
 
@@ -185,11 +180,7 @@ func getKafkaSourceConsumerGroup(ctx context.Context, c dynamic.Interface, ns st
 
 func getKafkaSubscriptionConsumerGroup(ctx context.Context, c dynamic.Interface, ns string) func(t *testing.T) string {
 	return func(t *testing.T) string {
-		gvr := schema.GroupVersionResource{
-			Group:    messaging.SchemeGroupVersion.Group,
-			Version:  messaging.SchemeGroupVersion.Version,
-			Resource: "subscription",
-		}
+		gvr := messaging.SchemeGroupVersion.WithResource("subscriptions")
 		subUnstr, err := c.Resource(gvr).Namespace(ns).Get(ctx, sacuraSubscriptionName, metav1.GetOptions{})
 		require.Nil(t, err)
 
