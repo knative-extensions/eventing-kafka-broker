@@ -21,6 +21,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.BaseUnits;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 import io.micrometer.prometheus.PrometheusConfig;
@@ -121,7 +122,7 @@ public class Metrics {
 
   /**
    * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
-   * @see Metrics#queueLength(io.micrometer.core.instrument.Tags)
+   * @see Metrics#queueLength(io.micrometer.core.instrument.Tags, Supplier)
    */
   public static final String QUEUE_LENGTH = "queue_length";
 
@@ -159,13 +160,9 @@ public class Metrics {
    */
   public static MetricsOptions getOptions(final BaseEnv metricsConfigs) {
     final var registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
-    return new MicrometerMetricsOptions()
+    final var options = new MicrometerMetricsOptions()
       .setEnabled(true)
-      .addDisabledMetricsCategory(MetricsDomain.HTTP_CLIENT)
-      .addDisabledMetricsCategory(MetricsDomain.HTTP_SERVER)
       .addDisabledMetricsCategory(MetricsDomain.VERTICLES)
-      .addDisabledMetricsCategory(MetricsDomain.NET_CLIENT)
-      .addDisabledMetricsCategory(MetricsDomain.NET_SERVER)
       .addDisabledMetricsCategory(MetricsDomain.EVENT_BUS)
       .addDisabledMetricsCategory(MetricsDomain.DATAGRAM_SOCKET)
       // NAMED_POOL allocates a lot, so disable it.
@@ -188,6 +185,17 @@ public class Metrics {
         .setStartEmbeddedServer(true)
         .setEnabled(true)
       );
+
+    if (!metricsConfigs.isMetricsHTTPClientEnabled()) {
+      options.addDisabledMetricsCategory(MetricsDomain.HTTP_CLIENT);
+      options.addDisabledMetricsCategory(MetricsDomain.NET_CLIENT);
+    }
+    if (!metricsConfigs.isMetricsHTTPServerEnabled()) {
+      options.addDisabledMetricsCategory(MetricsDomain.HTTP_SERVER);
+      options.addDisabledMetricsCategory(MetricsDomain.NET_SERVER);
+    }
+
+    return options;
   }
 
   /**
