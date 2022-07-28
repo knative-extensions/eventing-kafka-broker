@@ -28,11 +28,11 @@ if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
 fi
 
 go_test_e2e -timeout=1h ./test/e2e/...        || fail_test "E2E suite failed (directory: ./e2e/...)"
-go_test_e2e -timeout=1h ./test/e2e/broker/... || fail_test "E2E suite failed (directory: ./e2e/broker/...)"
-go_test_e2e -timeout=1h ./test/e2e/sink/...   || fail_test "E2E suite failed (directory: ./e2e/sink/...)"
-go_test_e2e -timeout=1h ./test/e2e/source/... || fail_test "E2E suite failed (directory: ./e2e/source/...)"
+go_test_e2e -timeout=1h ./test/e2e_broker/... || fail_test "E2E suite failed (directory: ./e2e_broker/...)"
+go_test_e2e -timeout=1h ./test/e2e_sink/...   || fail_test "E2E suite failed (directory: ./e2e_sink/...)"
+go_test_e2e -timeout=1h ./test/e2e_source/... || fail_test "E2E suite failed (directory: ./e2e_source/...)"
 
-go_test_e2e -timeout=1h ./test/e2e_channel/... -channels=messaging.knative.dev/v1beta1:KafkaChannel || fail_test "E2E suite (KafkaChannel) failed"
+go_test_e2e -timeout=1h ./test/e2e_channel/... -channels=messaging.knative.dev/v1beta1:KafkaChannel || fail_test "E2E suite (KafkaChannel) failed (directory: ./e2e_channel/...)"
 
 go_test_e2e -tags=deletecm ./test/e2e/... || fail_test "E2E (deletecm) suite failed (directory: ./e2e/...)"
 
