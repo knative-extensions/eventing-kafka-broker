@@ -34,6 +34,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -219,13 +221,26 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       return false;
     }
 
-    for (OrderedAsyncExecutor executor: recordDispatcherExecutors.values()) {
-      if (executor.isWaitingForTasks()) {
-        return false;
+    var res = true;
+    final var toResume = new HashSet<TopicPartition>();
+    final var toPause = new HashSet<TopicPartition>();
+
+    for (var executor : recordDispatcherExecutors.entrySet()) {
+      if (executor.getValue().isWaitingForTasks()) {
+        toResume.add(executor.getKey());
+        res = false;
+      } else {
+        toPause.add(executor.getKey());
       }
     }
 
-    // All executors are busy
-    return true;
+    if (!toPause.isEmpty()) {
+      this.consumer.pause(toPause);
+    }
+    if (!toResume.isEmpty()) {
+      this.consumer.resume(toResume);
+    }
+
+    return res;
   }
 }
