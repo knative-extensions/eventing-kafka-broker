@@ -28,9 +28,8 @@ jobs:
           - Kafka
 
         test-suite:
-          - ./test/e2e
+          - ./test/e2e_broker
           - ./test/e2e_new
-          - ./test/experimental
 
         # Map between K8s and KinD versions.
         # This is attempting to make it a bit clearer what's being tested.
@@ -60,7 +59,6 @@ jobs:
       NODE_VERSION: ${{ matrix.k8s-version }}
       NODE_SHA: ${{ matrix.kind-image-sha }}
 
-      EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO: ${{ matrix.channel-auth-scenario }}
       BROKER_CLASS: ${{ matrix.broker-class }}
 
     steps:

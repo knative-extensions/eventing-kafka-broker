@@ -24,13 +24,18 @@ jobs:
         eventing-config:
           - "./third_party/eventing-latest/"
 
+        channel-auth-scenario:
+          - ""
+          - "SSL"
+          - "SASL_SSL"
+          - "SASL_PLAIN"
+
         broker-class:
           - Kafka
 
         test-suite:
-          - ./test/e2e
-          - ./test/e2e_new
-          - ./test/experimental
+          - ./test/e2e_channel
+          - ./test/e2e_new_channel
 
         # Map between K8s and KinD versions.
         # This is attempting to make it a bit clearer what's being tested.
