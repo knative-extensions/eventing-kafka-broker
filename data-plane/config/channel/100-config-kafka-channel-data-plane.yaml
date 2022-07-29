@@ -174,5 +174,6 @@ data:
     # ssl.trustmanager.algorithm
   config-kafka-channel-webclient.properties: |
     idleTimeout=10000
+    maxPoolSize=100
   config-kafka-channel-httpserver.properties: |
     idleTimeout=0
