@@ -18,7 +18,7 @@ metadata:
   name: source
   namespace: sacura-sink-source
 spec:
-  consumers: 5
+  consumers: 50
   topics:
     - sacura-sink-source-topic
   bootstrapServers:
