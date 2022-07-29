@@ -38,11 +38,16 @@ import (
 	"knative.dev/eventing/test/lib/sender"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/test/pkg/broker"
 	. "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func brokerAuth(t *testing.T, secretProvider SecretProvider, configProvider ConfigProvider) {
+
+	class, err := broker.GetKafkaClassFromEnv()
+	if err != nil {
+		t.Fatalf("error getting KafkaBroker class from env '%v'", err)
+	}
 
 	RunMultiple(t, func(t *testing.T) {
 
@@ -72,7 +77,7 @@ func brokerAuth(t *testing.T, secretProvider SecretProvider, configProvider Conf
 
 		client.CreateBrokerOrFail(
 			brokerName,
-			resources.WithBrokerClassForBroker(kafka.BrokerClass),
+			resources.WithBrokerClassForBroker(class),
 			resources.WithConfigForBroker(&duckv1.KReference{
 				APIVersion: "v1",
 				Kind:       "ConfigMap",
