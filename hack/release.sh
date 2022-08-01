@@ -38,24 +38,25 @@ function build_release() {
   [ -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" ] && rm "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}"
   [ -f "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
 
-  control_plane_setup
-  if [[ $? -ne 0 ]]; then
-    fail "failed to setup control plane artifact"
-  fi
 
   data_plane_setup
   if [[ $? -ne 0 ]]; then
     fail "failed to create data plane artifact"
   fi
 
-  control_plane_source_setup
+  control_plane_setup
   if [[ $? -ne 0 ]]; then
-    fail "failed to setup control plane source bundle artifact"
+    fail "failed to setup control plane artifact"
   fi
 
   data_plane_source_setup
   if [[ $? -ne 0 ]]; then
     fail "failed to create data plane source bundle artifact"
+  fi
+
+  control_plane_source_setup
+  if [[ $? -ne 0 ]]; then
+    fail "failed to setup control plane source bundle artifact"
   fi
 
   {
