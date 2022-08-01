@@ -9,11 +9,17 @@ require (
 	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/pierdipi/sacura v0.0.0-20210302185533-982357fc042b
+	github.com/klauspost/compress v1.15.4 // indirect
+	github.com/manifestival/client-go-client v0.5.0
+	github.com/manifestival/manifestival v0.7.1
+	github.com/openzipkin/zipkin-go v0.3.0
+  github.com/pierdipi/sacura v0.0.0-20210302185533-982357fc042b
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.7.0
 	github.com/xdg-go/scram v1.1.0
+	go.opentelemetry.io/otel v0.20.0
+	go.opentelemetry.io/otel/trace v0.20.0
 	go.uber.org/atomic v1.9.0
 	go.uber.org/multierr v1.6.0
 	go.uber.org/zap v1.19.1

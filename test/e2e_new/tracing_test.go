@@ -20,11 +20,14 @@
 package e2e_new
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
+	"github.com/openzipkin/zipkin-go/model"
+	tracinghelper "knative.dev/eventing/test/conformance/helpers/tracing"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/pkg/system"
@@ -38,6 +41,7 @@ import (
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/test/pkg/tracing"
 )
 
 func TestTracingHeaders(t *testing.T) {
@@ -48,15 +52,16 @@ func TestTracingHeaders(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		tracing.WithZipkin,
 		environment.Managed(t),
 	)
 
-	env.Test(ctx, t, TracingHeadersUsingOrderedDelivery())
+	env.Test(ctx, t, TracingHeadersUsingOrderedDeliveryWithTraceExported())
 	env.Test(ctx, t, TracingHeadersUsingUnorderedDelivery())
 	env.Test(ctx, t, TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers())
 }
 
-func TracingHeadersUsingOrderedDelivery() *feature.Feature {
+func TracingHeadersUsingOrderedDeliveryWithTraceExported() *feature.Feature {
 	f := feature.NewFeature()
 
 	sourceName := feature.MakeRandomK8sName("source")
@@ -66,6 +71,7 @@ func TracingHeadersUsingOrderedDelivery() *feature.Feature {
 
 	ev := cetest.FullEvent()
 	ev.SetID("full-event-ordered")
+	ev.SetSource(sourceName)
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
@@ -91,15 +97,100 @@ func TracingHeadersUsingOrderedDelivery() *feature.Feature {
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),
 		eventshub.AddTracing,
+		// Send at least two events to workaround https://github.com/knative/pkg/issues/2475.
+		// There's some time needed for exporting the trace to Zipkin. Sending two events with
+		// some delay gives the exporter time to export the trace for the first event. The sender
+		// is shutdown immediately after sending the last event so the trace for the last
+		// event will probably not be exported.
+		eventshub.SendMultipleEvents(2, 3*time.Second),
 	))
 
 	f.Assert("received event has traceparent header",
 		OnStore(sinkName).
 			Match(MatchKind(EventReceived), hasTraceparentHeader).
-			Exact(1),
+			AtLeast(1),
 	)
 
+	f.Assert("event trace exported", brokerHasMatchingTraceTree(sourceName, sinkName, brokerName, ev.ID()))
+
 	return f
+}
+
+func brokerHasMatchingTraceTree(sourceName, sinkName, brokerName, eventID string) func(ctx context.Context, t feature.T) {
+	return func(ctx context.Context, t feature.T) {
+		testNS := environment.FromContext(ctx).Namespace()
+		systemNS := knative.KnativeNamespaceFromContext(ctx)
+		expectedTree := tracinghelper.TestSpanTree{
+			Note: "1. Sender pod sends event to the Broker Ingress",
+			Span: tracinghelper.MatchHTTPSpanNoReply(
+				model.Client,
+				tracinghelper.WithHTTPURL(
+					fmt.Sprintf("kafka-broker-ingress.%s.svc", systemNS),
+					fmt.Sprintf("/%s/%s", testNS, brokerName),
+				),
+				tracinghelper.WithLocalEndpointServiceName(sourceName),
+			),
+			Children: []tracinghelper.TestSpanTree{
+				{
+					Note: "2. Kafka Broker Receiver getting the message",
+					Span: tracinghelper.MatchHTTPSpanNoReply(
+						model.Server,
+						tracinghelper.WithLocalEndpointServiceName("kafka-broker-receiver"),
+						tracing.WithMessageIDSource(eventID, sourceName),
+					),
+					Children: []tracinghelper.TestSpanTree{
+						{
+							Note: "3. Kafka Broker Receiver storing message to Kafka",
+							Span: tracinghelper.MatchSpan(
+								model.Producer,
+								tracinghelper.WithLocalEndpointServiceName("kafka-broker-receiver"),
+							),
+							Children: []tracinghelper.TestSpanTree{
+								{
+									Note: "4. Kafka Broker Dispatcher reading message from Kafka",
+									Span: tracinghelper.MatchSpan(
+										model.Consumer,
+										tracinghelper.WithLocalEndpointServiceName("kafka-broker-dispatcher"),
+										tracing.WithMessageIDSource(eventID, sourceName),
+									),
+									Children: []tracinghelper.TestSpanTree{
+										{
+											Note: "5. Kafka Broker Dispatcher sending message to sink",
+											Span: tracinghelper.MatchHTTPSpanNoReply(
+												model.Client,
+												tracinghelper.WithHTTPURL(
+													fmt.Sprintf("%s.%s.svc", sinkName, testNS),
+													"/",
+												),
+												tracinghelper.WithLocalEndpointServiceName("kafka-broker-dispatcher"),
+											),
+											Children: []tracinghelper.TestSpanTree{
+												{
+													Note: "6. The target Pod receiving message",
+													Span: tracinghelper.MatchHTTPSpanNoReply(
+														model.Server,
+														tracinghelper.WithHTTPHostAndPath(
+															fmt.Sprintf("%s.%s.svc", sinkName, testNS),
+															"/",
+														),
+														tracinghelper.WithLocalEndpointServiceName(sinkName),
+													),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		eventshub.StoreFromContext(ctx, sinkName).AssertAtLeast(t, 1,
+			MatchKind(EventReceived),
+			tracing.TraceTreeMatches(sourceName, eventID, expectedTree),
+		)
+	}
 }
 
 func TracingHeadersUsingUnorderedDelivery() *feature.Feature {
