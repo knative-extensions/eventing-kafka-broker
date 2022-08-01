@@ -21,6 +21,7 @@ package e2e_new
 
 import (
 	"flag"
+	"log"
 	"os"
 	"testing"
 
@@ -29,6 +30,7 @@ import (
 
 	"knative.dev/pkg/injection"
 	_ "knative.dev/pkg/system/testing"
+	"knative.dev/pkg/test/zipkin"
 
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/reconciler-test/pkg/environment"
@@ -67,5 +69,11 @@ func TestMain(m *testing.M) {
 	global = environment.NewGlobalEnvironment(ctx)
 
 	// Run the tests.
-	os.Exit(m.Run())
+	os.Exit(func() int {
+		// Any tests may SetupZipkinTracing, it will only actually be done once. This should be the ONLY
+		// place that cleans it up. If an individual test calls this instead, then it will break other
+		// tests that need the tracing in place.
+		defer zipkin.CleanupZipkinTracingSetup(log.Printf)
+		return m.Run()
+	}())
 }
