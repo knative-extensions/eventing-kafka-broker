@@ -33,18 +33,18 @@ import (
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
-const KafkaClassEnvVarKey = "EVENTING_KAFKA_BROKER_CLASS"
+const BrokerClassEnvVarKey = "BROKER_CLASS"
 
 func GetKafkaClassFromEnv() (string, error) {
 	val := ""
 	exists := false
 
-	if val, exists = os.LookupEnv(KafkaClassEnvVarKey); !exists {
-		return "", fmt.Errorf("unable to determine KafkaBroker class. Specify '%s' env var", KafkaClassEnvVarKey)
+	if val, exists = os.LookupEnv(BrokerClassEnvVarKey); !exists {
+		return "", fmt.Errorf("unable to determine KafkaBroker class. Specify '%s' env var", BrokerClassEnvVarKey)
 	}
 
 	if val != kafka.BrokerClass && val != kafka.NamespacedBrokerClass {
-		return "", fmt.Errorf("KafkaBroker class '%s' is unknown. Specify '%s' env var", val, KafkaClassEnvVarKey)
+		return "", fmt.Errorf("KafkaBroker class '%s' is unknown. Specify '%s' env var", val, BrokerClassEnvVarKey)
 	}
 
 	return val, nil

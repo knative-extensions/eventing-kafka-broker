@@ -116,7 +116,7 @@ jobs:
       NODE_SHA: ${{ matrix.kind-image-sha }}
 
       EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO: ${{ matrix.channel-auth-scenario }}
-      EVENTING_KAFKA_BROKER_CLASS: ${{ matrix.broker-class }}
+      BROKER_CLASS: ${{ matrix.broker-class }}
 
     steps:
       - name: Install Dependencies

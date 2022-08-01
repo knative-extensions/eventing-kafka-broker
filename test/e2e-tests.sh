@@ -27,7 +27,7 @@ if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
   success
 fi
 
-export EVENTING_KAFKA_BROKER_CLASS="Kafka"
+export BROKER_CLASS="Kafka"
 
 go_test_e2e -timeout=1h ./test/e2e/...        || fail_test "E2E suite failed (directory: ./e2e/...)"
 go_test_e2e -timeout=1h ./test/e2e_broker/... || fail_test "E2E suite failed (directory: ./e2e_broker/...)"
