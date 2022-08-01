@@ -32,6 +32,9 @@ jobs:
 
         test-suite:
           - ./test/e2e
+          - ./test/e2e_broker
+          - ./test/e2e_sink
+          - ./test/e2e_source
           - ./test/e2e_new
           - ./test/e2e_channel
           - ./test/e2e_new_channel
@@ -58,12 +61,35 @@ jobs:
             channel-auth-scenario: "SASL_SSL"
           - test-suite: ./test/e2e
             channel-auth-scenario: "SASL_PLAIN"
+
+          - test-suite: ./test/e2e_broker
+            channel-auth-scenario: "SSL"
+          - test-suite: ./test/e2e_broker
+            channel-auth-scenario: "SASL_SSL"
+          - test-suite: ./test/e2e_broker
+            channel-auth-scenario: "SASL_PLAIN"
+
+          - test-suite: ./test/e2e_sink
+            channel-auth-scenario: "SSL"
+          - test-suite: ./test/e2e_sink
+            channel-auth-scenario: "SASL_SSL"
+          - test-suite: ./test/e2e_sink
+            channel-auth-scenario: "SASL_PLAIN"
+
+          - test-suite: ./test/e2e_source
+            channel-auth-scenario: "SSL"
+          - test-suite: ./test/e2e_source
+            channel-auth-scenario: "SASL_SSL"
+          - test-suite: ./test/e2e_source
+            channel-auth-scenario: "SASL_PLAIN"
+
           - test-suite: ./test/e2e_new
             channel-auth-scenario: "SSL"
           - test-suite: ./test/e2e_new
             channel-auth-scenario: "SASL_SSL"
           - test-suite: ./test/e2e_new
             channel-auth-scenario: "SASL_PLAIN"
+
           - test-suite: ./test/experimental
             channel-auth-scenario: "SSL"
           - test-suite: ./test/experimental

@@ -2,7 +2,7 @@
 // +build e2e
 
 /*
- * Copyright 2021 The Knative Authors
+ * Copyright 2020 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,22 +17,19 @@
  * limitations under the License.
  */
 
-package e2e
+package e2e_broker
 
 import (
+	"context"
 	"testing"
 
-	eventingkafkahelpers "knative.dev/eventing-kafka/test/e2e/helpers"
+	"knative.dev/eventing/test/e2e/helpers"
 
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
 )
 
-func TestKafkaSourceUpdate(t *testing.T) {
-	testingpkg.RunMultiple(t, eventingkafkahelpers.TestKafkaSourceUpdate)
-}
+func TestBrokerWithManyTriggers(t *testing.T) {
+	t.Skip("Pass more events than necessary (related? https://knative.slack.com/archives/C9JP909F0/p1595244377489600)")
 
-func TestKafkaSourceAssureIsOperational(t *testing.T) {
-	testingpkg.RunMultiple(t, func(t *testing.T) {
-		eventingkafkahelpers.AssureKafkaSourceIsOperational(t, func(auth, testCase, version string) bool { return true })
-	})
+	helpers.TestBrokerWithManyTriggers(context.Background(), t, testbroker.Creator, false)
 }

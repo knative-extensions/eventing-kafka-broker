@@ -17,31 +17,20 @@
  * limitations under the License.
  */
 
-package e2e
+package e2e_sink
 
 import (
-	"context"
+	"os"
 	"testing"
 
-	"knative.dev/eventing/test/e2e/helpers"
-
-	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
-	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/pkg/system"
 )
 
-func TestEventTransformationForTriggerV1BrokerV1(t *testing.T) {
-	runTest(t, "v1", "v1")
-}
+func TestMain(m *testing.M) {
+	os.Exit(func() int {
+		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
 
-func runTest(t *testing.T, brokerVersion string, triggerVersion string) {
-	pkgtesting.RunMultiple(t, func(t *testing.T) {
-
-		helpers.EventTransformationForTriggerTestHelper(
-			context.Background(),
-			t,
-			brokerVersion,
-			triggerVersion,
-			testbroker.Creator,
-		)
-	})
+		return m.Run()
+	}())
 }
