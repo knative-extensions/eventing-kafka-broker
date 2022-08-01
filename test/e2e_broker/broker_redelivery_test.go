@@ -29,7 +29,7 @@ import (
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/test/pkg/broker"
 	kafkatesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
@@ -38,6 +38,10 @@ const (
 )
 
 func TestBrokerRedeliveryBrokerV1BackoffLinear(t *testing.T) {
+	class, err := broker.GetKafkaClassFromEnv()
+	if err != nil {
+		t.Fatalf("error getting KafkaBroker class from env '%v'", err)
+	}
 
 	kafkatesting.RunMultiple(t, func(t *testing.T) {
 
@@ -46,7 +50,7 @@ func TestBrokerRedeliveryBrokerV1BackoffLinear(t *testing.T) {
 			backoff := eventingduck.BackoffPolicyLinear
 
 			client.CreateBrokerOrFail(brokerName,
-				resources.WithBrokerClassForBroker(kafka.BrokerClass),
+				resources.WithBrokerClassForBroker(class),
 				resources.WithDeliveryForBroker(&eventingduck.DeliverySpec{
 					Retry:         &numRetries,
 					BackoffPolicy: &backoff,
@@ -60,6 +64,10 @@ func TestBrokerRedeliveryBrokerV1BackoffLinear(t *testing.T) {
 }
 
 func TestBrokerRedeliveryBrokerV1BackoffExponential(t *testing.T) {
+	class, err := broker.GetKafkaClassFromEnv()
+	if err != nil {
+		t.Fatalf("error getting KafkaBroker class from env '%v'", err)
+	}
 
 	kafkatesting.RunMultiple(t, func(t *testing.T) {
 
@@ -68,7 +76,7 @@ func TestBrokerRedeliveryBrokerV1BackoffExponential(t *testing.T) {
 			backoff := eventingduck.BackoffPolicyExponential
 
 			client.CreateBrokerOrFail(brokerName,
-				resources.WithBrokerClassForBroker(kafka.BrokerClass),
+				resources.WithBrokerClassForBroker(class),
 				resources.WithDeliveryForBroker(&eventingduck.DeliverySpec{
 					Retry:         &numRetries,
 					BackoffPolicy: &backoff,

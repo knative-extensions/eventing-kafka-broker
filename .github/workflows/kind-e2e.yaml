@@ -30,6 +30,9 @@ jobs:
           - "SASL_SSL"
           - "SASL_PLAIN"
 
+        broker-class:
+          - Kafka
+
         test-suite:
           - ./test/e2e
           - ./test/e2e_broker
@@ -113,6 +116,7 @@ jobs:
       NODE_SHA: ${{ matrix.kind-image-sha }}
 
       EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO: ${{ matrix.channel-auth-scenario }}
+      BROKER_CLASS: ${{ matrix.broker-class }}
 
     steps:
       - name: Install Dependencies

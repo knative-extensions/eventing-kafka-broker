@@ -34,8 +34,8 @@ import (
 
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	eventingv1alpha1clientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/pkg/addressable"
+	"knative.dev/eventing-kafka-broker/test/pkg/broker"
 	"knative.dev/eventing-kafka-broker/test/pkg/sink"
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
@@ -50,6 +50,11 @@ import (
                 +--------+
 */
 func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
+	class, err := broker.GetKafkaClassFromEnv()
+	if err != nil {
+		t.Fatalf("error getting KafkaBroker class from env '%v'", err)
+	}
+
 	testingpkg.RunMultipleN(t, 10, func(t *testing.T) {
 
 		ctx := context.Background()
@@ -81,7 +86,7 @@ func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
 		// Create a Kafka Broker
 		br := client.CreateBrokerOrFail(
 			"broker",
-			resources.WithBrokerClassForBroker(kafka.BrokerClass),
+			resources.WithBrokerClassForBroker(class),
 		)
 
 		// Create 2 Triggers with the same subscriber

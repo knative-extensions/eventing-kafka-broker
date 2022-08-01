@@ -380,6 +380,7 @@ func TestBrokerConsumer(t *testing.T) {
 
 func createBroker(client *testlib.Client) *eventing.Broker {
 
+	// We don't care about the namespaced broker in this dataplane conformance tests
 	broker := client.CreateBrokerOrFail("broker",
 		resources.WithBrokerClassForBroker(kafka.BrokerClass),
 	)

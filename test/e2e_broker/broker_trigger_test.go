@@ -36,11 +36,17 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	brokertest "knative.dev/eventing-kafka-broker/test/pkg/broker"
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func TestBrokerTrigger(t *testing.T) {
+	class, err := brokertest.GetKafkaClassFromEnv()
+	if err != nil {
+		t.Fatalf("error getting KafkaBroker class from env '%v'", err)
+	}
+
 	testingpkg.RunMultiple(t, func(t *testing.T) {
 
 		ctx := context.Background()
@@ -69,7 +75,7 @@ func TestBrokerTrigger(t *testing.T) {
 
 		br := client.CreateBrokerOrFail(
 			brokerName,
-			resources.WithBrokerClassForBroker(kafka.BrokerClass),
+			resources.WithBrokerClassForBroker(class),
 		)
 
 		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber)
@@ -159,6 +165,11 @@ func TestBrokerTrigger(t *testing.T) {
 }
 
 func TestBrokerWithConfig(t *testing.T) {
+	class, err := brokertest.GetKafkaClassFromEnv()
+	if err != nil {
+		t.Fatalf("error getting KafkaBroker class from env '%v'", err)
+	}
+
 	testingpkg.RunMultiple(t, func(t *testing.T) {
 
 		ctx := context.Background()
@@ -193,7 +204,7 @@ func TestBrokerWithConfig(t *testing.T) {
 
 		br := client.CreateBrokerOrFail(
 			brokerName,
-			resources.WithBrokerClassForBroker(kafka.BrokerClass),
+			resources.WithBrokerClassForBroker(class),
 			resources.WithConfigForBroker(&duckv1.KReference{
 				Kind:       "ConfigMap",
 				Namespace:  cm.Namespace,

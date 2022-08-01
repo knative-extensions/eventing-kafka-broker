@@ -19,6 +19,7 @@ package broker
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -32,7 +33,29 @@ import (
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
+const BrokerClassEnvVarKey = "BROKER_CLASS"
+
+func GetKafkaClassFromEnv() (string, error) {
+	val := ""
+	exists := false
+
+	if val, exists = os.LookupEnv(BrokerClassEnvVarKey); !exists {
+		return "", fmt.Errorf("unable to determine KafkaBroker class. Specify '%s' env var", BrokerClassEnvVarKey)
+	}
+
+	if val != kafka.BrokerClass && val != kafka.NamespacedBrokerClass {
+		return "", fmt.Errorf("KafkaBroker class '%s' is unknown. Specify '%s' env var", val, BrokerClassEnvVarKey)
+	}
+
+	return val, nil
+}
+
 func Creator(client *eventingtestlib.Client, version string) string {
+	class, err := GetKafkaClassFromEnv()
+	if err != nil {
+		panic(fmt.Sprintf("error getting KafkaBroker class from env '%v'", err))
+	}
+
 	name := "broker"
 
 	version = strings.ToLower(version)
@@ -59,7 +82,7 @@ func Creator(client *eventingtestlib.Client, version string) string {
 		}
 		client.CreateBrokerOrFail(
 			name,
-			resources.WithBrokerClassForBroker(kafka.BrokerClass),
+			resources.WithBrokerClassForBroker(class),
 			resources.WithConfigForBroker(&duckv1.KReference{
 				Kind:       "ConfigMap",
 				Namespace:  namespace,
