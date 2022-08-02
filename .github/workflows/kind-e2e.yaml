@@ -24,12 +24,23 @@ jobs:
         eventing-config:
           - "./third_party/eventing-latest/"
 
+        channel-auth-scenario:
+          - ""
+          - "SSL"
+          - "SASL_SSL"
+          - "SASL_PLAIN"
+
         broker-class:
           - Kafka
 
         test-suite:
           - ./test/e2e
+          - ./test/e2e_broker
+          - ./test/e2e_sink
+          - ./test/e2e_source
           - ./test/e2e_new
+          - ./test/e2e_channel
+          - ./test/e2e_new_channel
           - ./test/experimental
 
         # Map between K8s and KinD versions.
@@ -44,6 +55,50 @@ jobs:
             kind-image-sha: sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a
           - test-suite: ./test/e2e_channel
             extra-test-flags: -channels=messaging.knative.dev/v1beta1:KafkaChannel
+
+        # don't run e2e for tests other than KafkaChannel when channel-auth-scenario is set
+        exclude:
+          - test-suite: ./test/e2e
+            channel-auth-scenario: "SSL"
+          - test-suite: ./test/e2e
+            channel-auth-scenario: "SASL_SSL"
+          - test-suite: ./test/e2e
+            channel-auth-scenario: "SASL_PLAIN"
+
+          - test-suite: ./test/e2e_broker
+            channel-auth-scenario: "SSL"
+          - test-suite: ./test/e2e_broker
+            channel-auth-scenario: "SASL_SSL"
+          - test-suite: ./test/e2e_broker
+            channel-auth-scenario: "SASL_PLAIN"
+
+          - test-suite: ./test/e2e_sink
+            channel-auth-scenario: "SSL"
+          - test-suite: ./test/e2e_sink
+            channel-auth-scenario: "SASL_SSL"
+          - test-suite: ./test/e2e_sink
+            channel-auth-scenario: "SASL_PLAIN"
+
+          - test-suite: ./test/e2e_source
+            channel-auth-scenario: "SSL"
+          - test-suite: ./test/e2e_source
+            channel-auth-scenario: "SASL_SSL"
+          - test-suite: ./test/e2e_source
+            channel-auth-scenario: "SASL_PLAIN"
+
+          - test-suite: ./test/e2e_new
+            channel-auth-scenario: "SSL"
+          - test-suite: ./test/e2e_new
+            channel-auth-scenario: "SASL_SSL"
+          - test-suite: ./test/e2e_new
+            channel-auth-scenario: "SASL_PLAIN"
+
+          - test-suite: ./test/experimental
+            channel-auth-scenario: "SSL"
+          - test-suite: ./test/experimental
+            channel-auth-scenario: "SASL_SSL"
+          - test-suite: ./test/experimental
+            channel-auth-scenario: "SASL_PLAIN"
 
     env:
       GOPATH: ${{ github.workspace }}
