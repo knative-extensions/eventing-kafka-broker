@@ -154,74 +154,73 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
     final BaseConsumerVerticle.Initializer initializer = (vertx, consumerVerticle) ->
       authProvider.getCredentials(resource).onSuccess(credentials -> {
-          KafkaClientsAuth.attachCredentials(consumerConfigs, credentials);
-          KafkaClientsAuth.attachCredentials(producerConfigs, credentials);
+       KafkaClientsAuth.attachCredentials(consumerConfigs, credentials);
+       KafkaClientsAuth.attachCredentials(producerConfigs, credentials);
 
-          final KafkaConsumer<Object, CloudEvent> consumer = createConsumer(vertx, consumerConfigs);
-          final var metricsCloser = Metrics.register(consumer.unwrap());
+       final KafkaConsumer<Object, CloudEvent> consumer = createConsumer(vertx, consumerConfigs);
+       final var metricsCloser = Metrics.register(consumer.unwrap());
 
-          final var egressConfig =
-            egress.hasEgressConfig() ?
-              egress.getEgressConfig() :
-              resource.getEgressConfig();
+       final var egressConfig =
+         egress.hasEgressConfig() ?
+           egress.getEgressConfig() :
+           resource.getEgressConfig();
 
-          final var maxProcessingTime = maxProcessingTimeMs(consumerConfigs, egressConfig);
-          consumerConfigs.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxProcessingTime);
+       final var maxProcessingTime = maxProcessingTimeMs(consumerConfigs, egressConfig);
+       consumerConfigs.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxProcessingTime);
 
-          final var egressSubscriberSender = createConsumerRecordSender(
-            vertx,
-            egress.getDestination(),
-            egressConfig,
-            egress
-          );
+       final var egressSubscriberSender = createConsumerRecordSender(
+         vertx,
+         egress.getDestination(),
+         egressConfig,
+         egress
+       );
 
-          final var egressDeadLetterSender = hasDeadLetterSink(egressConfig)
-            ? createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), egressConfig, egress)
-            : NO_DEAD_LETTER_SINK_SENDER;
+       final var egressDeadLetterSender = hasDeadLetterSink(egressConfig)
+         ? createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), egressConfig, egress)
+         : NO_DEAD_LETTER_SINK_SENDER;
 
-          final var filter = getFilter(egress);
+       final var filter = getFilter(egress);
 
-          final var responseHandler = getResponseHandler(egress,
-            () -> getResponseToKafkaTopicHandler(vertx, producerConfigs, resource),
-            () -> new ResponseToHttpEndpointHandler(createConsumerRecordSender(vertx, egress.getReplyUrl(), egressConfig, egress)));
-          final var commitIntervalMs = Integer.parseInt(String.valueOf(consumerConfigs.get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG)));
+       final var responseHandler = getResponseHandler(egress,
+         () -> getResponseToKafkaTopicHandler(vertx, producerConfigs, resource),
+         () -> new ResponseToHttpEndpointHandler(createConsumerRecordSender(vertx, egress.getReplyUrl(), egressConfig, egress)));
+       final var commitIntervalMs = Integer.parseInt(String.valueOf(consumerConfigs.get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG)));
 
-          final var offsetManager = new OffsetManager(vertx, consumer, (v) -> {
-          }, commitIntervalMs);
-          final var recordDispatcherImpl = new RecordDispatcherImpl(
-            new ResourceContext(resource, egress),
-            filter,
-            egressSubscriberSender,
-            egressDeadLetterSender,
-            responseHandler,
-            offsetManager,
-            ConsumerTracer.create(
-              ((VertxInternal) vertx).tracer(),
-              new KafkaClientOptions()
-                .setConfig(consumerConfigs)
-                // Make sure the policy is propagate for the manually instantiated consumer tracer
-                .setTracingPolicy(TracingPolicy.PROPAGATE)
-            ),
-            Metrics.getRegistry()
-          );
+       final var offsetManager = new OffsetManager(vertx, consumer, (v) -> {}, commitIntervalMs);
+       final var recordDispatcherImpl = new RecordDispatcherImpl(
+         new ResourceContext(resource, egress),
+         filter,
+         egressSubscriberSender,
+         egressDeadLetterSender,
+         responseHandler,
+         offsetManager,
+         ConsumerTracer.create(
+           ((VertxInternal) vertx).tracer(),
+           new KafkaClientOptions()
+             .setConfig(consumerConfigs)
+             // Make sure the policy is propagate for the manually instantiated consumer tracer
+             .setTracingPolicy(TracingPolicy.PROPAGATE)
+         ),
+         Metrics.getRegistry()
+       );
 
-          final var recordDispatcher = new RecordDispatcherMutatorChain(
-            recordDispatcherImpl,
-            new CloudEventOverridesMutator(resource.getCloudEventOverrides())
-          );
+       final var recordDispatcher = new RecordDispatcherMutatorChain(
+         recordDispatcherImpl,
+         new CloudEventOverridesMutator(resource.getCloudEventOverrides())
+       );
 
-          final var partitionRevokedHandlers = List.of(
-            consumerVerticle.getPartitionsRevokedHandler(),
-            offsetManager.getPartitionRevokedHandler()
-          );
-          consumer.partitionsRevokedHandler(handlePartitionsRevoked(egress.getConsumerGroup(), partitionRevokedHandlers));
+       final var partitionRevokedHandlers = List.of(
+         consumerVerticle.getPartitionsRevokedHandler(),
+         offsetManager.getPartitionRevokedHandler()
+       );
+       consumer.partitionsRevokedHandler(handlePartitionsRevoked(egress.getConsumerGroup(), partitionRevokedHandlers));
 
-          // Set all the built objects in the consumer verticle
-          consumerVerticle.setRecordDispatcher(recordDispatcher);
-          consumerVerticle.setConsumer(consumer);
-          consumerVerticle.setCloser(metricsCloser);
-        })
-        .mapEmpty();
+       // Set all the built objects in the consumer verticle
+       consumerVerticle.setRecordDispatcher(recordDispatcher);
+       consumerVerticle.setConsumer(consumer);
+       consumerVerticle.setCloser(metricsCloser);
+     })
+       .mapEmpty();
 
     return getConsumerVerticle(
       egress,
@@ -236,7 +235,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
   /**
    * For each handler call partitionRevoked and wait for the future to complete.
    *
-   * @param consumerGroup            consumer group id
+   * @param consumerGroup consumer group id
    * @param partitionRevokedHandlers partition revoked handlers
    * @return a single handler that dispatches the partition revoked event to the given handlers.
    */
