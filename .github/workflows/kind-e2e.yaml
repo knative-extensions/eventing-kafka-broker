@@ -24,12 +24,6 @@ jobs:
         eventing-config:
           - "./third_party/eventing-latest/"
 
-        channel-auth-scenario:
-          - ""
-          - "SSL"
-          - "SASL_SSL"
-          - "SASL_PLAIN"
-
         broker-class:
           - Kafka
 
@@ -56,50 +50,6 @@ jobs:
           - test-suite: ./test/e2e_channel
             extra-test-flags: -channels=messaging.knative.dev/v1beta1:KafkaChannel
 
-        # don't run e2e for tests other than KafkaChannel when channel-auth-scenario is set
-        exclude:
-          - test-suite: ./test/e2e
-            channel-auth-scenario: "SSL"
-          - test-suite: ./test/e2e
-            channel-auth-scenario: "SASL_SSL"
-          - test-suite: ./test/e2e
-            channel-auth-scenario: "SASL_PLAIN"
-
-          - test-suite: ./test/e2e_broker
-            channel-auth-scenario: "SSL"
-          - test-suite: ./test/e2e_broker
-            channel-auth-scenario: "SASL_SSL"
-          - test-suite: ./test/e2e_broker
-            channel-auth-scenario: "SASL_PLAIN"
-
-          - test-suite: ./test/e2e_sink
-            channel-auth-scenario: "SSL"
-          - test-suite: ./test/e2e_sink
-            channel-auth-scenario: "SASL_SSL"
-          - test-suite: ./test/e2e_sink
-            channel-auth-scenario: "SASL_PLAIN"
-
-          - test-suite: ./test/e2e_source
-            channel-auth-scenario: "SSL"
-          - test-suite: ./test/e2e_source
-            channel-auth-scenario: "SASL_SSL"
-          - test-suite: ./test/e2e_source
-            channel-auth-scenario: "SASL_PLAIN"
-
-          - test-suite: ./test/e2e_new
-            channel-auth-scenario: "SSL"
-          - test-suite: ./test/e2e_new
-            channel-auth-scenario: "SASL_SSL"
-          - test-suite: ./test/e2e_new
-            channel-auth-scenario: "SASL_PLAIN"
-
-          - test-suite: ./test/experimental
-            channel-auth-scenario: "SSL"
-          - test-suite: ./test/experimental
-            channel-auth-scenario: "SASL_SSL"
-          - test-suite: ./test/experimental
-            channel-auth-scenario: "SASL_PLAIN"
-
     env:
       GOPATH: ${{ github.workspace }}
       KO_DOCKER_REPO: localhost:5001
@@ -115,7 +65,6 @@ jobs:
       NODE_VERSION: ${{ matrix.k8s-version }}
       NODE_SHA: ${{ matrix.kind-image-sha }}
 
-      EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO: ${{ matrix.channel-auth-scenario }}
       BROKER_CLASS: ${{ matrix.broker-class }}
 
     steps:
