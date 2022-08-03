@@ -33,8 +33,6 @@ import (
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )
 
 func TestBrokerConformance(t *testing.T) {
@@ -47,7 +45,7 @@ func TestBrokerConformance(t *testing.T) {
 	)
 
 	// Install and wait for a Ready Broker.
-	env.Prerequisite(ctx, t, brokerfeatures.GoesReady("default", broker.WithBrokerClass(kafka.BrokerClass)))
+	env.Prerequisite(ctx, t, brokerfeatures.GoesReady("default", broker.WithBrokerClass(broker.EnvCfg.BrokerClass)))
 
 	env.TestSet(ctx, t, brokerfeatures.ControlPlaneConformance("default"))
 	env.TestSet(ctx, t, brokerfeatures.DataPlaneConformance("default"))

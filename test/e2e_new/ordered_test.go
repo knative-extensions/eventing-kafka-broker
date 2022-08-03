@@ -40,7 +40,6 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/resources/svc"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/multiple_partition_config"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 
@@ -77,7 +76,7 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 	f.Setup("install one partition configuration", single_partition_config.Install)
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 		broker.WithConfig(single_partition_config.ConfigMapName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
@@ -133,7 +132,7 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 	f.Setup("install multiple partition configuration", multiple_partition_config.Install)
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 		broker.WithConfig(multiple_partition_config.ConfigMapName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))

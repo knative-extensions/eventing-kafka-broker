@@ -29,7 +29,6 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
 )
 
@@ -63,7 +62,7 @@ func BrokerNotReadyAfterBeingReady() *feature.Feature {
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 		broker.WithConfig(configName),
 	))
 
