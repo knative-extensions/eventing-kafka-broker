@@ -29,7 +29,7 @@ if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
 fi
 
 # TODO: going to be reverted once we have the Prow changes in https://github.com/knative/test-infra
-export BROKER_CLASS="Kafka"
+export BROKER_CLASS="KafkaNamespaced"
 
 if [[ -z "${BROKER_CLASS}" ]]; then
   fail_test "Broker class is not defined. Specify it with 'BROKER_CLASS' env var."
