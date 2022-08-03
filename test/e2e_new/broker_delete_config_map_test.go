@@ -34,7 +34,6 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/resources/svc"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap"
 )
 
@@ -65,7 +64,7 @@ func BrokerDeleteContractConfigMap() *feature.Feature {
 	// Create the broker
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))

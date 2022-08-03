@@ -35,8 +35,6 @@ import (
 	"knative.dev/reconciler-test/resources/svc"
 
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )
 
 func TestDeadLetterSink(t *testing.T) {
@@ -67,7 +65,7 @@ func SendsEventWithRetries() *feature.Feature {
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 	))
 
 	f.Setup("broker is ready", broker.IsReady(brokerName))
@@ -127,7 +125,7 @@ func SendsEventNoRetries() *feature.Feature {
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 	))
 
 	f.Setup("broker is ready", broker.IsReady(brokerName))

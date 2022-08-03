@@ -21,6 +21,7 @@ package e2e_new
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -48,7 +49,9 @@ func init() {
 	environment.InitFlags(flag.CommandLine)
 
 	// Force the broker class to be configured properly
-	broker.EnvCfg.BrokerClass = kafka.BrokerClass
+	if broker.EnvCfg.BrokerClass != kafka.BrokerClass && broker.EnvCfg.BrokerClass != kafka.NamespacedBrokerClass {
+		panic(fmt.Errorf("KafkaBroker class '%s' is unknown. Specify 'BROKER_CLASS' env var", broker.EnvCfg.BrokerClass))
+	}
 }
 
 // TestMain is the first entry point for `go test`.

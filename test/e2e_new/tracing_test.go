@@ -40,7 +40,6 @@ import (
 
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/pkg/tracing"
 )
 
@@ -75,7 +74,7 @@ func TracingHeadersUsingOrderedDeliveryWithTraceExported() *feature.Feature {
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
@@ -206,7 +205,7 @@ func TracingHeadersUsingUnorderedDelivery() *feature.Feature {
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
@@ -252,7 +251,7 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
