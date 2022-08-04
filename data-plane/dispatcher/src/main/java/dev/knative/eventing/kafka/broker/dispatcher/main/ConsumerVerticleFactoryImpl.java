@@ -340,10 +340,11 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
                                                       final EgressConfig egressConfig,
                                                       final DataPlaneContract.Egress egress) {
     var webClientOptions = this.webClientOptions;
-    if (egress.getVReplicas() > 0) {
-      webClientOptions = new WebClientOptions(this.webClientOptions);
-      webClientOptions.setMaxPoolSize(egress.getVReplicas());
-    }
+    // TODO use numPartitions for ordered delivery or max.poll.records for unordered delivery
+    // if (egress.getVReplicas() > 0) {
+    //   webClientOptions = new WebClientOptions(this.webClientOptions);
+    //   webClientOptions.setMaxPoolSize(egress.getVReplicas());
+    // }
     return new WebClientCloudEventSender(vertx, WebClient.create(vertx, webClientOptions), target, egressConfig);
   }
 
