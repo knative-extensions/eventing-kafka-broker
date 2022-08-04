@@ -166,3 +166,10 @@ func SinkReceiverPodUpdate(namespace string, annotations map[string]string) clie
 		SinkReceiverPod(namespace, annotations),
 	)
 }
+
+func SinkContentMode(cm string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*eventing.KafkaSink)
+		ks.Spec.ContentMode = &cm
+	}
+}
