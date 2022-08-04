@@ -169,7 +169,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
 					SinkContentMode(v1alpha1.ModeStructured),
 				),
-				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
@@ -179,7 +179,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:              SinkUUID,
