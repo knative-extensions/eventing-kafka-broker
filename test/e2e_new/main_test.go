@@ -48,6 +48,8 @@ func init() {
 	// environment.InitFlags registers state and level filter flags.
 	environment.InitFlags(flag.CommandLine)
 
+	// TESTING_THE_BUILD
+
 	// Force the broker class to be configured properly
 	if broker.EnvCfg.BrokerClass != kafka.BrokerClass && broker.EnvCfg.BrokerClass != kafka.NamespacedBrokerClass {
 		panic(fmt.Errorf("KafkaBroker class '%s' is unknown. Specify 'BROKER_CLASS' env var", broker.EnvCfg.BrokerClass))
