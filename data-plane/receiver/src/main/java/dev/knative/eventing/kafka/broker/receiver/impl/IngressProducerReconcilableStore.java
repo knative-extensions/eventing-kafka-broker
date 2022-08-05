@@ -89,7 +89,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     // That means, we support these modes:
     // - Request coming to "/path" --> path is used for matching
     // - Request coming to "/" --> hostname is used for matching
-    final var p = pathMapper.get(path);
+    final var p = pathMapper.get(removeTrailingSlash(path));
     if (p != null) {
       return p;
     }
@@ -111,6 +111,13 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     // the old implementations.
 
     return hostMapper.get(host);
+  }
+
+  private String removeTrailingSlash(final String path) {
+    if (path.endsWith("/")) {
+      return path.substring(0, path.length() - 1);
+    }
+    return path;
   }
 
   @Override
