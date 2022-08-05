@@ -163,6 +163,60 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			},
 		},
 		{
+			Name: "Reconciled normal - content mode structured",
+			Objects: []runtime.Object{
+				NewSink(
+					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					SinkContentMode(v1alpha1.ModeStructured),
+				),
+				NewConfigMapWithBinaryData(&env, nil),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              SinkUUID,
+							Topics:           []string{SinkTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_STRUCTURED, Path: receiver.Path(SinkNamespace, SinkName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        SinkReference(),
+						},
+					},
+					Generation: 1,
+				}),
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						SinkContentMode(v1alpha1.ModeStructured),
+						InitSinkConditions,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
+						BootstrapServers(bootstrapServersArr),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						SinkAddressable(&env),
+						StatusProbeSucceeded,
+					),
+				},
+			},
+		},
+		{
 			Name: "Reconciled normal - with auth config",
 			Objects: []runtime.Object{
 				NewSink(
