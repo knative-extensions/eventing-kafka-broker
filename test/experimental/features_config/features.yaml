@@ -24,6 +24,6 @@ metadata:
 data:
   kreference-group: "disabled"
   delivery-retryafter: "disabled"
-  delivery-timeout: "disabled"
+  delivery-timeout: "enabled"
   strict-subscriber: "disabled"
   new-trigger-filters: "enabled"
