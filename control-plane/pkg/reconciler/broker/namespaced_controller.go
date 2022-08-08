@@ -18,13 +18,8 @@ package broker
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"os"
-
 	"github.com/Shopify/sarama"
 	mfclient "github.com/manifestival/client-go-client"
-	mf "github.com/manifestival/manifestival"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
@@ -36,6 +31,7 @@ import (
 	"knative.dev/pkg/injection"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
+	"net/http"
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
@@ -48,8 +44,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
-const DataPlaneManifestDirectoryPath = "/dataplane/config/broker"
-
 func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env *config.Env) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
@@ -61,11 +55,6 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 	mfc, err := mfclient.NewClient(cfg)
 	if err != nil {
 		logger.Fatal("unable to create Manifestival client-go client", zap.Error(err))
-	}
-
-	manifest, err := getBaseDataPlaneManifest(mfc, env)
-	if err != nil {
-		logger.Fatal("unable to load base dataplane manifest", zap.Error(err))
 	}
 
 	reconciler := &NamespacedReconciler{
@@ -83,7 +72,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 		ConfigMapLister:            configmapInformer.Lister(),
 		Env:                        env,
-		BaseDataPlaneManifest:      manifest,
+		ManifestivalClient:         mfc,
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.NamespacedBrokerClass, func(impl *controller.Impl) controller.Options {
@@ -139,31 +128,4 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 	})
 
 	return impl
-}
-
-func getBaseDataPlaneManifest(client mf.Client, env *config.Env) (mf.Manifest, error) {
-	kodatapath := os.Getenv("KO_DATA_PATH")
-	if kodatapath == "" {
-		return mf.Manifest{}, fmt.Errorf("KO_DATA_PATH is empty")
-	}
-
-	dataplaneManifestPath := kodatapath + DataPlaneManifestDirectoryPath
-	manifest, err := mf.ManifestFrom(mf.Path(dataplaneManifestPath), mf.UseClient(client))
-	if err != nil {
-		return mf.Manifest{}, fmt.Errorf("unable to load dataplane manifest from path '%s': %v", dataplaneManifestPath, err)
-	}
-
-	if env.DispatcherImage == "" {
-		return mf.Manifest{}, fmt.Errorf("unable to find DispatcherImage env var specified with 'BROKER_DISPATCHER_IMAGE'")
-	}
-	if env.ReceiverImage == "" {
-		return mf.Manifest{}, fmt.Errorf("unable to find DispatcherImage env var specified with 'BROKER_RECEIVER_IMAGE'")
-	}
-
-	// replace the ${KNATIVE_KAFKA_DISPATCHER_IMAGE} string in dataplane manifest YAML
-	// with the value of KAFKA_DISPATCHER_IMAGE
-	return manifest.Transform(setImagesForDeployments(map[string]string{
-		"${KNATIVE_KAFKA_DISPATCHER_IMAGE}": env.DispatcherImage,
-		"${KNATIVE_KAFKA_RECEIVER_IMAGE}":   env.ReceiverImage,
-	}))
 }
