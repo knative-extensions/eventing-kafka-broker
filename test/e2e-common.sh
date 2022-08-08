@@ -258,23 +258,26 @@ function delete_chaos() {
 }
 
 function apply_sacura() {
-  ko apply ${KO_FLAGS} -f ./test/config/sacura/0-namespace.yaml || return $?
-  ko apply ${KO_FLAGS} -f ./test/config/sacura/100-broker-config.yaml || return $?
-  ko apply ${KO_FLAGS} -f ./test/config/sacura/101-broker.yaml || return $?
+  ko apply ${KO_FLAGS} -Rf ./test/config/sacura/resources || return $?
 
-  kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || {
-    local ret=$?
-    kubectl get -n sacura broker/broker -oyaml
-    return ${ret}
-  }
+  kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || return $?
+  kubectl wait --for=condition=ready --timeout=3m -n sacura trigger/trigger || return $?
 
-  ko apply ${KO_FLAGS} -f ./test/config/sacura || return $?
+  ko apply ${KO_FLAGS} -Rf ./test/config/sacura || return $?
+}
+
+function apply_sacura_sink_source() {
+  ko apply ${KO_FLAGS} -Rf ./test/config/sacura-sink-source/resources || return $?
+
+  kubectl wait --for=condition=ready --timeout=3m -n sacura-sink-source kafkasink/sink || return $?
+  kubectl wait --for=condition=ready --timeout=3m -n sacura-sink-source kafkasource/source || return $?
+
+  ko apply ${KO_FLAGS} -Rf ./test/config/sacura-sink-source || return $?
 }
 
 function delete_sacura() {
-  kubectl delete --ignore-not-found -f ./test/config/sacura/101-broker.yaml || return $?
-  kubectl delete --ignore-not-found -f ./test/config/sacura/100-broker-config.yaml || return $?
-  kubectl delete --ignore-not-found -f ./test/config/sacura/0-namespace.yaml || return $?
+  kubectl delete --ignore-not-found ns sacura || return $?
+  kubectl delete --ignore-not-found ns sacura-sink-source || return $?
 }
 
 function export_logs_continuously() {

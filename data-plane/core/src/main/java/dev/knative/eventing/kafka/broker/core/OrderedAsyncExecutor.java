@@ -26,6 +26,7 @@ import io.vertx.kafka.client.common.TopicPartition;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 /**
@@ -37,8 +38,8 @@ public class OrderedAsyncExecutor {
 
   private final Queue<Task> queue;
 
-  private boolean isStopped;
-  private boolean inFlight;
+  private final AtomicBoolean isStopped;
+  private final AtomicBoolean inFlight;
   private final MeterRegistry meterRegistry;
   private final DistributionSummary executorLatency;
   private final Gauge executorQueueLength;
@@ -49,8 +50,8 @@ public class OrderedAsyncExecutor {
                               final DataPlaneContract.Egress egress) {
     this.meterRegistry = meterRegistry;
     this.queue = new ArrayDeque<>();
-    this.isStopped = false;
-    this.inFlight = false;
+    this.isStopped = new AtomicBoolean(false);
+    this.inFlight = new AtomicBoolean(false);
     this.egress = egress;
 
     if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
@@ -78,7 +79,7 @@ public class OrderedAsyncExecutor {
    * @param task the task to offer
    */
   public void offer(Supplier<Future<?>> task) {
-    if (this.isStopped) {
+    if (this.isStopped.get()) {
       // Executor is stopped, return without adding the task to the queue.
       return;
     }
@@ -93,22 +94,23 @@ public class OrderedAsyncExecutor {
   }
 
   private void consume() {
-    if (queue.isEmpty() || this.inFlight || this.isStopped) {
+    if (queue.isEmpty() || this.inFlight.get() || this.isStopped.get()) {
       return;
     }
-    this.inFlight = true;
+    if (this.inFlight.compareAndSet(false, true)) {
+      final var task = this.queue.remove();
+      task.task
+        .get()
+        .onComplete(ar -> {
+          this.inFlight.set(false);
+          if (egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics() && !this.isStopped.get()) {
+            this.executorLatency.record(System.currentTimeMillis() - task.queueTimestamp);
+            this.executorQueueLength.value();
+          }
+          consume();
+        });
+    }
 
-    final var task = this.queue.remove();
-    task.task
-      .get()
-      .onComplete(ar -> {
-        this.inFlight = false;
-        if (egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics() && !this.isStopped) {
-          this.executorLatency.record(System.currentTimeMillis() - task.queueTimestamp);
-          this.executorQueueLength.value();
-        }
-        consume();
-      });
   }
 
   public boolean isWaitingForTasks() {
@@ -121,7 +123,7 @@ public class OrderedAsyncExecutor {
    * Stop the executor. This won't stop the actual in-flight task, but it will prevent queued tasks to be executed.
    */
   public void stop() {
-    this.isStopped = true;
+    this.isStopped.set(true);
     this.queue.clear();
     if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
       this.meterRegistry.remove(executorLatency);

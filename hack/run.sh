@@ -64,7 +64,9 @@ elif [[ "${action}" == "unit-test-control-plane" || "${action}" == "unit-tests-c
 elif [[ "${action}" == "build-test" || "${action}" == "build-tests" ]]; then
   "${ROOT_DIR}"/test/presubmit-tests.sh --build-tests
 elif [[ "${action}" == "deploy-sacura" ]]; then
-  source "${ROOT_DIR}"/test/e2e-common.sh && apply_sacura
+  source "${ROOT_DIR}"/test/e2e-common.sh &&
+    apply_sacura &&
+    apply_sacura_sink_source
 elif [[ "${action}" == "sacura-test" || "${action}" == "sacura-tests" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && go_test_e2e -tags=sacura -timeout=40m ./test/e2e/...
 elif [[ "${action}" == "teardown-sacura" ]]; then

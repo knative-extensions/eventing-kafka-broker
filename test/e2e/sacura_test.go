@@ -30,8 +30,15 @@ import (
 	"github.com/stretchr/testify/require"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apiserver/pkg/storage/names"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/utils/pointer"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
+	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	testlib "knative.dev/eventing/test/lib"
 
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
@@ -40,16 +47,49 @@ import (
 
 const (
 	app                            = "sacura"
-	namespace                      = "sacura"
 	sacuraVerifyCommittedOffsetJob = "verify-committed-offset"
-	sacuraTriggerName              = "trigger"
-	sacuraTopic                    = "knative-broker-sacura-sacura"
 
-	pollTimeout  = 30 * time.Minute
+	sacuraChannelName      = "channel"
+	sacuraTriggerName      = "trigger"
+	sacuraSubscriptionName = "subscription"
+	sacuraSourceName       = "source"
+
+	pollTimeout  = 40 * time.Minute
 	pollInterval = 10 * time.Second
 )
 
-func TestSacuraJob(t *testing.T) {
+type SacuraTestConfig struct {
+	// Namespace is the test namespace.
+	Namespace string
+
+	// BrokerTopic is the expected Broker topic.
+	// It's used to verify the committed offset.
+	BrokerTopic *string
+
+	// ChannelTopic is the expected Channel topic.
+	// It's used to verify the committed offset.
+	ChannelTopic *string
+
+	// SourceTopic is the Source topic.
+	// It's used to verify the committed offset.
+	SourceTopic *string
+}
+
+func TestSacuraSinkSourceJob(t *testing.T) {
+	runSacuraTest(t, SacuraTestConfig{
+		Namespace:   "sacura-sink-source",
+		SourceTopic: pointer.StringPtr("sacura-sink-source-topic"),
+	})
+}
+
+func TestSacuraBrokerJob(t *testing.T) {
+	runSacuraTest(t, SacuraTestConfig{
+		Namespace:   "sacura",
+		BrokerTopic: pointer.StringPtr("knative-broker-sacura-sink-source-broker"),
+	})
+}
+
+func runSacuraTest(t *testing.T, config SacuraTestConfig) {
 
 	c := testlib.Setup(t, false)
 	defer testlib.TearDown(c)
@@ -57,40 +97,53 @@ func TestSacuraJob(t *testing.T) {
 	ctx := context.Background()
 
 	jobPollError := wait.Poll(pollInterval, pollTimeout, func() (done bool, err error) {
-		job, err := c.Kube.BatchV1().Jobs(namespace).Get(ctx, app, metav1.GetOptions{})
+		job, err := c.Kube.BatchV1().Jobs(config.Namespace).Get(ctx, app, metav1.GetOptions{})
 		assert.Nil(t, err)
 
 		return isJobSucceeded(job)
 	})
 
-	pkgtesting.LogJobOutput(t, ctx, c.Kube, namespace, app)
+	pkgtesting.LogJobOutput(t, ctx, c.Kube, config.Namespace, app)
 
 	if jobPollError != nil {
 		t.Fatal(jobPollError)
 	}
 
-	t.Log(strings.Repeat("-", 30))
-	t.Log("Verify committed offset")
-	t.Log(strings.Repeat("-", 30))
-
-	trigger, err := c.Eventing.EventingV1().Triggers(namespace).Get(ctx, sacuraTriggerName, metav1.GetOptions{})
-	require.Nil(t, err, "Failed to get trigger %s/%s: %v", namespace, sacuraTriggerName)
+	topics := map[*string]func(t *testing.T) string{
+		config.BrokerTopic:  getKafkaTriggerConsumerGroup(ctx, c.Eventing, config.Namespace),
+		config.ChannelTopic: getKafkaSubscriptionConsumerGroup(ctx, c.Dynamic, config.Namespace),
+		config.SourceTopic:  getKafkaSourceConsumerGroup(ctx, c.Dynamic, config.Namespace),
+	}
 
 	t.Run("verify committed offset", func(t *testing.T) {
-		err = kafkatest.VerifyCommittedOffset(
-			c.Kube,
-			c.Tracker,
-			types.NamespacedName{
-				Namespace: namespace,
-				Name:      sacuraVerifyCommittedOffsetJob,
-			},
-			&kafkatest.AdminConfig{
-				BootstrapServers: pkgtesting.BootstrapServersPlaintext,
-				Topic:            sacuraTopic,
-				Group:            string(trigger.UID),
-			},
-		)
-		require.Nil(t, err, "Failed to verify committed offset")
+		for topic, groupFunc := range topics {
+			if topic == nil {
+				continue
+			}
+
+			t.Run(*topic, func(t *testing.T) {
+				t.Log(strings.Repeat("-", 30))
+				t.Log("Verify committed offset")
+				t.Log(strings.Repeat("-", 30))
+
+				consumerGroup := groupFunc(t)
+
+				err := kafkatest.VerifyCommittedOffset(
+					c.Kube,
+					c.Tracker,
+					types.NamespacedName{
+						Namespace: config.Namespace,
+						Name:      names.SimpleNameGenerator.GenerateName(sacuraVerifyCommittedOffsetJob + "-" + *topic),
+					},
+					&kafkatest.AdminConfig{
+						BootstrapServers: pkgtesting.BootstrapServersPlaintext,
+						Topic:            *topic,
+						Group:            consumerGroup,
+					},
+				)
+				require.Nil(t, err, "Failed to verify committed offset")
+			})
+		}
 	})
 }
 
@@ -100,4 +153,41 @@ func isJobSucceeded(job *batchv1.Job) (bool, error) {
 	}
 
 	return job.Status.Succeeded > 0, nil
+}
+
+func getKafkaTriggerConsumerGroup(ctx context.Context, c *eventingclientset.Clientset, ns string) func(t *testing.T) string {
+	return func(t *testing.T) string {
+		trigger, err := c.EventingV1().Triggers(ns).Get(ctx, sacuraTriggerName, metav1.GetOptions{})
+		require.Nil(t, err, "Failed to get trigger %s/%s: %v", ns, sacuraTriggerName)
+		return string(trigger.UID)
+	}
+}
+
+func getKafkaSourceConsumerGroup(ctx context.Context, c dynamic.Interface, ns string) func(t *testing.T) string {
+	return func(t *testing.T) string {
+		gvr := sources.SchemeGroupVersion.WithResource("kafkasources")
+		ksUnstr, err := c.Resource(gvr).Namespace(ns).Get(ctx, sacuraSourceName, metav1.GetOptions{})
+		require.Nilf(t, err, "%+v %s/%s", gvr, ns, sacuraSourceName)
+
+		ks := sources.KafkaSource{}
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(ksUnstr.UnstructuredContent(), &ks)
+		require.Nil(t, err)
+		require.NotEmpty(t, ks.Spec.ConsumerGroup)
+
+		return ks.Spec.ConsumerGroup
+	}
+}
+
+func getKafkaSubscriptionConsumerGroup(ctx context.Context, c dynamic.Interface, ns string) func(t *testing.T) string {
+	return func(t *testing.T) string {
+		gvr := messaging.SchemeGroupVersion.WithResource("subscriptions")
+		subUnstr, err := c.Resource(gvr).Namespace(ns).Get(ctx, sacuraSubscriptionName, metav1.GetOptions{})
+		require.Nil(t, err)
+
+		sub := messaging.Subscription{}
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(subUnstr.UnstructuredContent(), &sub)
+		require.Nil(t, err)
+
+		return fmt.Sprintf("kafka.%s.%s.%s", c, sacuraChannelName, string(sub.UID))
+	}
 }
