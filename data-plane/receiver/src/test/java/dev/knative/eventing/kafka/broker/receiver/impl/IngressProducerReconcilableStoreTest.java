@@ -406,6 +406,7 @@ public class IngressProducerReconcilableStoreTest {
 
           // only use path when the path is registered
           assertThat(store.resolve("http://host1", "/hello1").getKafkaProducer()).isSameAs(producer1);
+          assertThat(store.resolve("http://host1", "/hello1/").getKafkaProducer()).isSameAs(producer1);
           assertThat(store.resolve("http://host2", "/hello1").getKafkaProducer()).isSameAs(producer1);
           assertThat(store.resolve("http://host1", "/hello3").getKafkaProducer()).isSameAs(producer3);
           assertThat(store.resolve("http://host2", "/hello3").getKafkaProducer()).isSameAs(producer3);
