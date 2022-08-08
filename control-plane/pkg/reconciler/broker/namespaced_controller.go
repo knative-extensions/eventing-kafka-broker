@@ -18,6 +18,8 @@ package broker
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/Shopify/sarama"
 	mfclient "github.com/manifestival/client-go-client"
 	"go.uber.org/zap"
@@ -31,7 +33,6 @@ import (
 	"knative.dev/pkg/injection"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
-	"net/http"
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
