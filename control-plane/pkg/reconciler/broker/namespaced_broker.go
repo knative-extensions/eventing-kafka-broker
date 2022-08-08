@@ -189,12 +189,12 @@ func (r *NamespacedReconciler) getManifest(broker *eventing.Broker) (mf.Manifest
 }
 
 func (r *NamespacedReconciler) deploymentsFromSystemNamespace(broker *eventing.Broker) ([]unstructured.Unstructured, error) {
-	configMaps := []string{
+	deployments := []string{
 		"kafka-broker-receiver",
 		"kafka-broker-dispatcher",
 	}
-	var resources []unstructured.Unstructured
-	for _, name := range configMaps {
+	resources := make([]unstructured.Unstructured, len(deployments))
+	for _, name := range deployments {
 		resource, err := r.createManifestFromSystemDeployment(broker, name)
 		if err != nil {
 			return nil, err
@@ -210,7 +210,7 @@ func (r *NamespacedReconciler) configMapsFromSystemNamespace(broker *eventing.Br
 		"config-tracing",
 		"kafka-config-logging",
 	}
-	var resources []unstructured.Unstructured
+	resources := make([]unstructured.Unstructured, len(configMaps))
 	for _, name := range configMaps {
 		resource, err := r.createResourceFromSystemConfigMap(broker, name)
 		if err != nil {
@@ -265,7 +265,7 @@ func (r *NamespacedReconciler) serviceAccountsFromSystemNamespace(broker *eventi
 	serviceAccounts := []string{
 		"knative-kafka-broker-data-plane",
 	}
-	var resources []unstructured.Unstructured
+	resources := make([]unstructured.Unstructured, len(serviceAccounts))
 	for _, name := range serviceAccounts {
 		resource, err := r.createManifestFromSystemServiceAccount(broker, name)
 		if err != nil {
@@ -301,7 +301,7 @@ func (r *NamespacedReconciler) roleBindingsFromSystemNamespace(broker *eventing.
 	clusterRoleBindings := []string{
 		"knative-kafka-broker-data-plane",
 	}
-	var resources []unstructured.Unstructured
+	resources := make([]unstructured.Unstructured, len(clusterRoleBindings))
 	for _, name := range clusterRoleBindings {
 		resource, err := r.createManifestFromClusterRoleBinding(broker, name)
 		if err != nil {
