@@ -154,11 +154,16 @@ function wait_for_cloudevent {
   done
 }
 
+function create {
+  app foo$i | ko resolve ${KO_FLAGS} -Bf - | kubectl apply -f -
+}
+
 function run {
   i=$1
 
+  # Retry 3 times, workaround for https://github.com/knative/pkg/issues/1509
+  create "$i" || create "$i" || create "$i" || return $?
   failed=false
-  app foo$i | ko resolve ${KO_FLAGS} -Bf - | kubectl apply -f -
   kubectl wait kafkachannel --timeout=60s -n foo$i channel --for=condition=Ready=True || failed=true
   kubectl wait subscription --timeout=60s -n foo$i event-display --for=condition=Ready=True || failed=true
 
