@@ -103,7 +103,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 	}
 
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: kafka.FilterWithNamespacedDataplaneLabel,
+		FilterFunc: kafka.FilterWithLabel(kafka.NamespacedBrokerDataplaneLabelKey, kafka.NamespacedBrokerDataplaneLabelValue),
 		Handler: cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				globalResync(obj)
