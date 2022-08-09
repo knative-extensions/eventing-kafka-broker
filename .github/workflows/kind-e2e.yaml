@@ -26,7 +26,6 @@ jobs:
 
         broker-class:
           - Kafka
-          - KafkaNamespaced
 
         test-suite:
           - ./test/e2e
@@ -50,20 +49,6 @@ jobs:
             kind-image-sha: sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a
           - test-suite: ./test/e2e_channel
             extra-test-flags: -channels=messaging.knative.dev/v1beta1:KafkaChannel
-
-        exclude:
-          - test-suite: ./test/e2e
-            broker-class: KafkaNamespaced
-          - test-suite: ./test/e2e_sink
-            broker-class: KafkaNamespaced
-          - test-suite: ./test/e2e_source
-            broker-class: KafkaNamespaced
-          - test-suite: ./test/e2e_channel
-            broker-class: KafkaNamespaced
-          - test-suite: ./test/e2e_new_channel
-            broker-class: KafkaNamespaced
-          - test-suite: ./test/experimental
-            broker-class: KafkaNamespaced
 
     env:
       GOPATH: ${{ github.workspace }}
