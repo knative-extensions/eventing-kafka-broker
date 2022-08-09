@@ -41,9 +41,9 @@ import (
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	testlib "knative.dev/eventing/test/lib"
 
+	pkgtest "knative.dev/eventing-kafka-broker/test/pkg"
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
 	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
-	pkgtest "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 const (
