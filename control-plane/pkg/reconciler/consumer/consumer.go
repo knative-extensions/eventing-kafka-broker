@@ -179,10 +179,14 @@ func (r Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainterna
 }
 
 func (r Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consumer, resource *contract.Resource) error {
-
 	if c.Spec.Auth == nil {
 		return nil
 	}
+
+	if err := r.trackAuthContext(c, c.Spec.Auth); err != nil {
+		return err
+	}
+
 	if c.Spec.Auth.NetSpec != nil {
 		authContext, err := security.ResolveAuthContextFromNetSpec(r.SecretLister, c.GetNamespace(), *c.Spec.Auth.NetSpec)
 		if err != nil {
@@ -191,6 +195,7 @@ func (r Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consume
 		resource.Auth = &contract.Resource_MultiAuthSecret{MultiAuthSecret: authContext.MultiSecretReference}
 		return nil
 	}
+
 	if c.Spec.Auth.AuthSpec != nil {
 		secret, err := security.Secret(ctx, &SecretLocator{Consumer: c}, r.SecretProviderFunc())
 		if err != nil {
@@ -203,15 +208,6 @@ func (r Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consume
 				Name:      secret.Name,
 				Version:   secret.ResourceVersion,
 			},
-		}
-		ref := tracker.Reference{
-			APIVersion: c.APIVersion,
-			Kind:       c.Kind,
-			Namespace:  c.GetNamespace(),
-			Name:       c.GetName(),
-		}
-		if err := r.Tracker.TrackReference(ref, c); err != nil {
-			return fmt.Errorf("failed to track reference %v: %w", ref, err)
 		}
 		return nil
 	}
@@ -412,4 +408,25 @@ func podOwnerReference(p *corev1.Pod) base.ConfigMapOption {
 			BlockOwnerDeletion: pointer.Bool(true),
 		})
 	}
+}
+
+func (r *Reconciler) trackAuthContext(c *kafkainternals.Consumer, auth *kafkainternals.Auth) error {
+	if auth == nil {
+		return nil
+	}
+
+	if auth.AuthSpec.HasAuth() {
+		ref := tracker.Reference{
+			APIVersion: "v1",
+			Kind:       "Secret",
+			Namespace:  c.GetNamespace(),
+			Name:       auth.AuthSpec.Secret.Ref.Name,
+		}
+		if err := r.Tracker.TrackReference(ref, c); err != nil {
+			return fmt.Errorf("failed to track secret for rotation %s/%s: %w", ref.Namespace, ref.Name, err)
+		}
+		return nil
+	}
+
+	return security.TrackNetSpecSecrets(r.Tracker, auth.NetSpec, c)
 }

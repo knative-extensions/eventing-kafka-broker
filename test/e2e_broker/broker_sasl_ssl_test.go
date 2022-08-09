@@ -38,6 +38,7 @@ import (
 	"knative.dev/eventing/test/lib/sender"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	. "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/pkg/broker"
 	. "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )

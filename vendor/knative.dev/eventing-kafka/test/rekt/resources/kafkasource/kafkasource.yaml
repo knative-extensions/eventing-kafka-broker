@@ -1,0 +1,108 @@
+# Copyright 2021 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: sources.knative.dev/{{ .version }}
+kind: KafkaSource
+metadata:
+  name: {{ .name }}
+  namespace: {{ .namespace }}
+  {{ if .annotations }}
+  annotations:
+    {{ range $key, $value := .annotations }}
+    {{ $key }}: "{{ $value }}"
+    {{ end }}
+  {{ end }}
+spec:
+  {{ if .bootstrapServers }}
+  bootstrapServers:
+    {{ range $value := .bootstrapServers }}
+    - "{{ $value }}"
+    {{ end }}
+  {{ end }}
+  {{ if .consumerGroup }}
+  consumerGroup: {{ .consumerGroup }}
+  {{ end }}
+  {{ if .topics }}
+  topics:
+    {{ range $value := .topics }}
+    - "{{ $value }}"
+    {{ end }}
+  {{ end }}
+  {{ if or .tls .sasl }}
+  net:
+    {{ if .tls }}
+    tls:
+      enable: true
+      {{ if .tls.cert }}
+      cert:
+        secretKeyRef:
+          name: "{{ .tls.cert.name }}"
+          key: "{{ .tls.cert.key }}"
+      {{ end }}
+      {{ if .tls.key }}
+      key:
+        secretKeyRef:
+          name: "{{ .tls.key.name }}"
+          key: "{{ .tls.key.key }}"
+      {{ end }}
+      {{ if .tls.caCert }}
+      caCert:
+        secretKeyRef:
+          name: "{{ .tls.caCert.name }}"
+          key: "{{ .tls.caCert.key }}"
+      {{ end }}
+    {{ end }}
+    {{ if .sasl }}
+    sasl:
+      enable: true
+      {{ if .sasl.user }}
+      user:
+        secretKeyRef:
+          name: "{{ .sasl.user.name }}"
+          key: "{{ .sasl.user.key }}"
+      {{ end }}
+      {{ if .sasl.password }}
+      password:
+        secretKeyRef:
+          name: "{{ .sasl.password.name }}"
+          key: "{{ .sasl.password.key }}"
+      {{ end }}
+      {{ if .sasl.type }}
+      type:
+        secretKeyRef:
+          name: "{{ .sasl.type.name }}"
+          key: "{{ .sasl.type.key }}"
+      {{ end }}
+    {{ end }}
+  {{ end }}
+  {{ if .extensions }}
+  ceOverrides:
+    extensions:
+      {{ range $key, $value := .extensions }}
+      {{ $key }}: "{{ $value }}"
+      {{ end }}
+  {{ end }}
+  {{ if .sink }}
+  sink:
+    {{ if .sink.ref }}
+    ref:
+      kind: {{ .sink.ref.kind }}
+      namespace: {{ .namespace }}
+      name: {{ .sink.ref.name }}
+      apiVersion: {{ .sink.ref.apiVersion }}
+    {{ end }}
+    {{ if .sink.uri }}
+    uri: {{ .sink.uri }}
+    {{ end }}
+  {{ end }}

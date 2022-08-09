@@ -2,7 +2,7 @@
 // +build e2e
 
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright 2022 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,31 +17,30 @@
  * limitations under the License.
  */
 
-package e2e_broker
+package e2e_new
 
 import (
-	"context"
 	"testing"
 
-	"knative.dev/eventing/test/e2e/helpers"
+	"knative.dev/pkg/system"
+	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/k8s"
+	"knative.dev/reconciler-test/pkg/knative"
 
-	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg"
-	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/features"
 )
 
-func TestEventTransformationForTriggerV1BrokerV1(t *testing.T) {
-	runTest(t, "v1", "v1")
-}
+func TestKafkaSourceCreateSecretsAfterKafkaSource(t *testing.T) {
 
-func runTest(t *testing.T, brokerVersion string, triggerVersion string) {
-	pkgtesting.RunMultiple(t, func(t *testing.T) {
+	t.Parallel()
 
-		helpers.EventTransformationForTriggerTestHelper(
-			context.Background(),
-			t,
-			brokerVersion,
-			triggerVersion,
-			testbroker.Creator,
-		)
-	})
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.CreateSecretsAfterKafkaSource())
 }

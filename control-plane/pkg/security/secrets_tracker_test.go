@@ -131,7 +131,7 @@ func TestTrackNetSpecSecrets(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := TrackNetSpecSecrets(tt.secretsTracker, tt.netSpec, tt.parent); (err != nil) != tt.wantErr {
+			if err := TrackNetSpecSecrets(tt.secretsTracker, &tt.netSpec, tt.parent); (err != nil) != tt.wantErr {
 				t.Errorf("TrackNetSpecSecrets() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if tt.secretsTracker.trackReferenceCalls != tt.expectedTrackReferenceCalls {
