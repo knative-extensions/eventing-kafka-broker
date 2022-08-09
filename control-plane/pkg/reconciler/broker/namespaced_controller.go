@@ -25,17 +25,21 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
+	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
@@ -108,6 +112,14 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 				globalResync(obj)
 			},
 		},
+	})
+
+	deploymentinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: kafka.FilterAny(
+			kafka.FilterWithLabel("app", "kafka-broker-dispatcher"),
+			kafka.FilterWithLabel("app", "kafka-broker-receiver"),
+		),
+		Handler: controller.HandleAll(globalResync),
 	})
 
 	reconciler.ConfigMapTracker = impl.Tracker
