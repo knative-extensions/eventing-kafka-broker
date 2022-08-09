@@ -90,12 +90,12 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) IsReceiverRunning() bool {
-	pods, err := r.PodLister.List(r.ReceiverSelector())
+	pods, err := r.PodLister.Pods(r.DataPlaneNamespace).List(r.ReceiverSelector())
 	return err == nil && len(pods) > 0 && isAtLeastOneRunning(pods)
 }
 
 func (r *Reconciler) IsDispatcherRunning() bool {
-	pods, err := r.PodLister.List(r.dispatcherSelector())
+	pods, err := r.PodLister.Pods(r.DataPlaneNamespace).List(r.dispatcherSelector())
 	return err == nil && len(pods) > 0 && isAtLeastOneRunning(pods)
 }
 
