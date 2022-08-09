@@ -30,7 +30,7 @@ import (
 	"knative.dev/eventing/test/lib/resources"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	kafkatesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	kafkatesting "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 const (

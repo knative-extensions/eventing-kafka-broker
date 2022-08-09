@@ -25,6 +25,7 @@ import (
 	"k8s.io/utils/pointer"
 
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	. "knative.dev/eventing-kafka-broker/test/pkg"
 	. "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 

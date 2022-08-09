@@ -35,7 +35,7 @@ import (
 	pkgtest "knative.dev/pkg/test"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 func TestBrokerIngress(t *testing.T) {
