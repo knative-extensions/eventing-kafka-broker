@@ -179,9 +179,13 @@ func Start(ctx context.Context, logs *eventshub.EventLogs, clientOpts ...Option)
 			return err
 		}
 
+		eventString := "unknown"
+		if event != nil {
+			eventString = event.String()
+		}
 		span.AddAttributes(
 			trace.StringAttribute("namespace", env.SystemNamespace),
-			trace.StringAttribute("event", event.String()),
+			trace.StringAttribute("event", eventString),
 		)
 
 		res, err := httpClient.Do(req)

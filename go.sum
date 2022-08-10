@@ -1572,8 +1572,8 @@ k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 h1:HNSDgDCrr/6Ly3WEGKZftiE7IY19V
 k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 knative.dev/control-protocol v0.0.0-20220728062837-75cf857da76a/go.mod h1:+5+qcOXiZN0gs7a8a4NaTJd5sAMNipzD41MNzxRKrQs=
 knative.dev/eventing v0.33.1-0.20220728144837-15dd7ca8c811/go.mod h1:rxOHyuk8ssl+ymaSpeA1ZsRJcG6gSlgje2+di6LoFmg=
-knative.dev/eventing v0.33.1-0.20220809080920-c884e27795f7 h1:jg9UrgsupzJnIFZOjgAS9FMD09ej213zcznYUH6s/IQ=
-knative.dev/eventing v0.33.1-0.20220809080920-c884e27795f7/go.mod h1:Un3zodfDFZVyXc64I4IVQtcpW7AIBvEspf9LixGqO3E=
+knative.dev/eventing v0.33.1-0.20220810093734-37cb0e9ee17a h1:Y4WESlkquF16Oy3141xm1dS5y+UVk+S+hqpvEZgfYK0=
+knative.dev/eventing v0.33.1-0.20220810093734-37cb0e9ee17a/go.mod h1:Un3zodfDFZVyXc64I4IVQtcpW7AIBvEspf9LixGqO3E=
 knative.dev/eventing-kafka v0.33.1-0.20220805134425-be98ac8a581d h1:yCLgI1lJWeD1sAT0OAsvLmZGwwhkH2twxrVIXvCqFL4=
 knative.dev/eventing-kafka v0.33.1-0.20220805134425-be98ac8a581d/go.mod h1:TuF7LsYUU/YzZmdGEITGJLPd/2L/mxHY6LbrqRbUMIA=
 knative.dev/hack v0.0.0-20220701014203-65c463ac8c98/go.mod h1:PHt8x8yX5Z9pPquBEfIj0X66f8iWkWfR0S/sarACJrI=
@@ -1589,8 +1589,8 @@ knative.dev/pkg v0.0.0-20220805012121-7b8b06028e4f/go.mod h1:nBMKMJvyoaJdkpUrjwL
 knative.dev/reconciler-test v0.0.0-20220722111920-0cfde63b455a/go.mod h1:Awq+u0SA8Cr6JAqef7JxGH1AQk73bllmugV83a60r+E=
 knative.dev/reconciler-test v0.0.0-20220728013938-124ae0741d42/go.mod h1:Awq+u0SA8Cr6JAqef7JxGH1AQk73bllmugV83a60r+E=
 knative.dev/reconciler-test v0.0.0-20220803140519-da2ce0e66cb9/go.mod h1:/RUSXB2r9cUregJDlSTxKxqDMoeKPi93zq2AoAvUjqo=
-knative.dev/reconciler-test v0.0.0-20220805132123-091fb1ad9e9d h1:0SO8UpaDGr1pis/WMGBxhx4RyonUVn92frmzZjXdW1s=
-knative.dev/reconciler-test v0.0.0-20220805132123-091fb1ad9e9d/go.mod h1:/RUSXB2r9cUregJDlSTxKxqDMoeKPi93zq2AoAvUjqo=
+knative.dev/reconciler-test v0.0.0-20220810085034-80f0d4dc7d6e h1:tNKXBY0A3Rui4cWlfpksi7+6T/iVu9+frOo+zT52sv4=
+knative.dev/reconciler-test v0.0.0-20220810085034-80f0d4dc7d6e/go.mod h1:/RUSXB2r9cUregJDlSTxKxqDMoeKPi93zq2AoAvUjqo=
 pgregory.net/rapid v0.3.3 h1:jCjBsY4ln4Atz78QoBWxUEvAHaFyNDQg9+WU62aCn1U=
 pgregory.net/rapid v0.3.3/go.mod h1:UYpPVyjFHzYBGHIxLFoupi8vwk6rXNzRY9OMvVxFIOU=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
