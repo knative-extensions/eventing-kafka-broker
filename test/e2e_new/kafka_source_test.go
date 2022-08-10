@@ -2,7 +2,7 @@
 // +build e2e
 
 /*
- * Copyright 2021 The Knative Authors
+ * Copyright 2022 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,22 +17,30 @@
  * limitations under the License.
  */
 
-package e2e
+package e2e_new
 
 import (
 	"testing"
 
-	eventingkafkahelpers "knative.dev/eventing-kafka/test/e2e/helpers"
+	"knative.dev/pkg/system"
+	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/k8s"
+	"knative.dev/reconciler-test/pkg/knative"
 
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/features"
 )
 
-func TestKafkaSourceUpdate(t *testing.T) {
-	testingpkg.RunMultiple(t, eventingkafkahelpers.TestKafkaSourceUpdate)
-}
+func TestKafkaSourceCreateSecretsAfterKafkaSource(t *testing.T) {
 
-func TestKafkaSourceAssureIsOperational(t *testing.T) {
-	testingpkg.RunMultiple(t, func(t *testing.T) {
-		eventingkafkahelpers.AssureKafkaSourceIsOperational(t, func(auth, testCase, version string) bool { return true })
-	})
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.CreateSecretsAfterKafkaSource())
 }

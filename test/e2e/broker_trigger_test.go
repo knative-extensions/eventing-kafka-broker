@@ -36,8 +36,8 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func TestBrokerTrigger(t *testing.T) {

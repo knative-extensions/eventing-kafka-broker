@@ -24,7 +24,11 @@ import (
 
 // TrackNetSpecSecrets tracks all secrets referenced by a provided bindings.KafkaNetSpec.
 // parent is the object that is tracking changes to those secrets.
-func TrackNetSpecSecrets(secretsTracker tracker.Interface, netSpec bindings.KafkaNetSpec, parent metav1.Object) error {
+func TrackNetSpecSecrets(secretsTracker tracker.Interface, netSpec *bindings.KafkaNetSpec, parent metav1.Object) error {
+	if netSpec == nil {
+		return nil
+	}
+
 	secrets := []bindings.SecretValueFromSource{
 		netSpec.TLS.Key,
 		netSpec.TLS.Cert,

@@ -29,7 +29,7 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 func Creator(client *eventingtestlib.Client, version string) string {

@@ -35,8 +35,8 @@ import (
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	eventingv1alpha1clientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/pkg/sink"
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 const (
