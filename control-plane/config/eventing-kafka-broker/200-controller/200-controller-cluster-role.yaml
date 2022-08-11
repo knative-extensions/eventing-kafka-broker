@@ -92,6 +92,15 @@ rules:
       - watch
       - update
       - create
+      - delete
+  - apiGroups:
+      - "rbac.authorization.k8s.io"
+    resources:
+      - clusterrolebindings
+    verbs:
+      - get
+      - list
+      - watch
   - apiGroups:
     - "*"
     resources:
@@ -102,6 +111,7 @@ rules:
       - watch
       - update
       - create
+      - delete
   - apiGroups:
       - "apps"
     resources:
@@ -112,6 +122,7 @@ rules:
       - watch
       - update
       - create
+      - delete
 
   # Scheduler permissions
   - apiGroups:

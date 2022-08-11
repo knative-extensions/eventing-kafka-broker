@@ -19,6 +19,7 @@ package broker
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	mf "github.com/manifestival/manifestival"
 	"go.uber.org/zap"
@@ -83,24 +84,13 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 
 	br := r.createReconcilerForBrokerInstance(broker)
 
-	manifest, err := r.getManifest(broker)
+	manifest, err := r.getManifest(ctx, broker)
 	if err != nil {
-		return fmt.Errorf("unable to transform dataplane manifest. namespace: %s, broker: %v, error: %v", broker.Namespace, broker, err)
+		return propagateErrorCondition(broker, fmt.Errorf("unable to transform dataplane manifest: %w", err))
 	}
 
 	if err = manifest.Apply(); err != nil {
-		return fmt.Errorf("unable to apply dataplane manifest. namespace: %s, broker: %v, error: %w", broker.Namespace, broker, err)
-	}
-
-	logger := logging.FromContext(ctx).Desugar()
-	logger.Debug("Data plane reconciled")
-
-	for _, res := range manifest.Resources() {
-		logger.Debug("Resource reconciled",
-			zap.String("gvk", res.GroupVersionKind().String()),
-			zap.String("resource.name", res.GetName()),
-			zap.String("resource.namespace", res.GetNamespace()),
-		)
+		return propagateErrorCondition(broker, fmt.Errorf("unable to apply dataplane manifest: %w", err))
 	}
 
 	return br.ReconcileKind(ctx, broker)
@@ -148,7 +138,7 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 
 // getManifest returns the manifest that is transformed from the BaseDataPlaneManifest with the changes
 // for the given broker
-func (r *NamespacedReconciler) getManifest(broker *eventing.Broker) (mf.Manifest, error) {
+func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing.Broker) (mf.Manifest, error) {
 	var resources []unstructured.Unstructured
 
 	additionalConfigMaps, err := r.configMapsFromSystemNamespace(broker)
@@ -185,7 +175,27 @@ func (r *NamespacedReconciler) getManifest(broker *eventing.Broker) (mf.Manifest
 		return mf.Manifest{}, fmt.Errorf("unable to transform base dataplane manifest with namespace injection. namespace: %s, error: %v", broker.Namespace, err)
 	}
 
-	return manifest.Transform(appendNewOwnerRefsToPersisted(manifest.Client, broker))
+	manifest, err = manifest.Transform(appendNewOwnerRefsToPersisted(manifest.Client, broker))
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("unable to append owner ref: %w", err)
+	}
+
+	manifest, err = manifest.Transform(filterMetadata())
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("unable to filter metadata: %w", err)
+	}
+
+	logger := logging.FromContext(ctx).Desugar()
+
+	for _, res := range manifest.Resources() {
+		logger.Debug("Resource",
+			zap.String("gvk", res.GroupVersionKind().String()),
+			zap.String("resource.name", res.GetName()),
+			zap.String("resource.namespace", res.GetNamespace()),
+		)
+	}
+
+	return manifest, nil
 }
 
 func (r *NamespacedReconciler) deploymentsFromSystemNamespace(broker *eventing.Broker) ([]unstructured.Unstructured, error) {
@@ -193,7 +203,7 @@ func (r *NamespacedReconciler) deploymentsFromSystemNamespace(broker *eventing.B
 		"kafka-broker-receiver",
 		"kafka-broker-dispatcher",
 	}
-	resources := make([]unstructured.Unstructured, len(deployments))
+	resources := make([]unstructured.Unstructured, 0, len(deployments))
 	for _, name := range deployments {
 		resource, err := r.createManifestFromSystemDeployment(broker, name)
 		if err != nil {
@@ -210,7 +220,7 @@ func (r *NamespacedReconciler) configMapsFromSystemNamespace(broker *eventing.Br
 		"config-tracing",
 		"kafka-config-logging",
 	}
-	resources := make([]unstructured.Unstructured, len(configMaps))
+	resources := make([]unstructured.Unstructured, 0, len(configMaps))
 	for _, name := range configMaps {
 		resource, err := r.createResourceFromSystemConfigMap(broker, name)
 		if err != nil {
@@ -265,7 +275,7 @@ func (r *NamespacedReconciler) serviceAccountsFromSystemNamespace(broker *eventi
 	serviceAccounts := []string{
 		"knative-kafka-broker-data-plane",
 	}
-	resources := make([]unstructured.Unstructured, len(serviceAccounts))
+	resources := make([]unstructured.Unstructured, 0, len(serviceAccounts))
 	for _, name := range serviceAccounts {
 		resource, err := r.createManifestFromSystemServiceAccount(broker, name)
 		if err != nil {
@@ -301,7 +311,7 @@ func (r *NamespacedReconciler) roleBindingsFromSystemNamespace(broker *eventing.
 	clusterRoleBindings := []string{
 		"knative-kafka-broker-data-plane",
 	}
-	resources := make([]unstructured.Unstructured, len(clusterRoleBindings))
+	resources := make([]unstructured.Unstructured, 0, len(clusterRoleBindings))
 	for _, name := range clusterRoleBindings {
 		resource, err := r.createManifestFromClusterRoleBinding(broker, name)
 		if err != nil {
@@ -394,4 +404,27 @@ func appendOwnerRef(refs []metav1.OwnerReference, broker *eventing.Broker) ([]me
 	newRef.BlockOwnerDeletion = pointer.Bool(true)
 
 	return append(refs, newRef), true
+}
+
+func filterMetadata() mf.Transformer {
+	return func(u *unstructured.Unstructured) error {
+		u.SetLabels(filterMetadataMap(u.GetLabels()))
+		u.SetAnnotations(filterMetadataMap(u.GetAnnotations()))
+		return nil
+	}
+}
+
+func filterMetadataMap(metadata map[string]string) map[string]string {
+	r := make(map[string]string, len(metadata))
+	for k, v := range metadata {
+		if strings.Contains(k, "knative") || k == "app" {
+			r[k] = v
+		}
+	}
+	return r
+}
+
+func propagateErrorCondition(broker *eventing.Broker, err error) error {
+	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(base.ConditionDataPlaneAvailable, "CreateDataPlane", err.Error())
+	return err
 }

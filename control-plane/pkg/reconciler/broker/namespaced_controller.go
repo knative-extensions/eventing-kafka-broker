@@ -23,17 +23,20 @@ import (
 	"github.com/Shopify/sarama"
 	mfclient "github.com/manifestival/client-go-client"
 	"go.uber.org/zap"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/client-go/tools/cache"
 
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 
@@ -43,6 +46,8 @@ import (
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
+	serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount"
+	clusterrolebindinginformer "knative.dev/pkg/client/injection/kube/informers/rbac/v1/clusterrolebinding"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -76,6 +81,9 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		},
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 		ConfigMapLister:            configmapInformer.Lister(),
+		ServiceAccountLister:       serviceaccountinformer.Get(ctx).Lister(),
+		ClusterRoleBindingLister:   clusterrolebindinginformer.Get(ctx).Lister(),
+		DeploymentLister:           deploymentinformer.Get(ctx).Lister(),
 		Env:                        env,
 		ManifestivalClient:         mfc,
 	}
@@ -96,7 +104,10 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 	})
 
 	reconciler.SecretTracker = impl.Tracker
-	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(controller.EnsureTypeMeta(
+		reconciler.SecretTracker.OnChanged,
+		corev1.SchemeGroupVersion.WithKind("Secret"),
+	)))
 
 	globalResync := func(_ interface{}) {
 		impl.GlobalResync(brokerInformer.Informer())
@@ -119,7 +130,31 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 			kafka.FilterWithLabel("app", "kafka-broker-dispatcher"),
 			kafka.FilterWithLabel("app", "kafka-broker-receiver"),
 		),
-		Handler: controller.HandleAll(globalResync),
+		Handler: controller.HandleAll(controller.EnsureTypeMeta(
+			globalResync,
+			appsv1.SchemeGroupVersion.WithKind("Deployment"),
+		)),
+	})
+
+	filterFunc := func(obj interface{}) bool {
+		// TODO filtering
+		return true
+	}
+
+	clusterrolebindinginformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: filterFunc,
+		Handler: controller.HandleAll(controller.EnsureTypeMeta(
+			globalResync,
+			rbacv1.SchemeGroupVersion.WithKind("ClusterRoleBinding"),
+		)),
+	})
+
+	serviceaccountinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: filterFunc,
+		Handler: controller.HandleAll(controller.EnsureTypeMeta(
+			globalResync,
+			corev1.SchemeGroupVersion.WithKind("ServiceAccount"),
+		)),
 	})
 
 	reconciler.ConfigMapTracker = impl.Tracker
