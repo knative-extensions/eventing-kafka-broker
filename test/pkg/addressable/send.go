@@ -47,34 +47,30 @@ func SendN(t *testing.T, n int, addressable Addressable, mutators ...EventMutato
 		wg.Add(n)
 
 		for i := 0; i < n; i++ {
+			// Client isn't thread safe so we need to create one per Goroutine.
+			go func(i int) {
+				client, err := testlib.NewClient(
+					addressable.Namespace,
+					t,
+				)
+				assert.Nil(t, err, fmt.Sprintf("event #%d", i))
 
-			t.Run(fmt.Sprintf("send event %d", i), func(t *testing.T) {
-				// Client isn't thread safe so we need to create one per Goroutine.
-				go func(i int) {
+				event := cetest.FullEvent()
+				id := uuid.New().String()
+				event.SetID(id)
 
-					client, err := testlib.NewClient(
-						addressable.Namespace,
-						t,
-					)
-					assert.Nil(t, err)
+				for _, mutator := range mutators {
+					mutator(&event)
+				}
 
-					event := cetest.FullEvent()
-					id := uuid.New().String()
-					event.SetID(id)
+				client.Namespace = addressable.Namespace
 
-					for _, mutator := range mutators {
-						mutator(&event)
-					}
+				name := names.SimpleNameGenerator.GenerateName(fmt.Sprintf("%s-%d", addressable.Name, i))
+				client.SendEventToAddressable(ctx, name, addressable.Name, &addressable.TypeMeta, event)
 
-					client.Namespace = addressable.Namespace
-
-					name := names.SimpleNameGenerator.GenerateName(fmt.Sprintf("%s-%d", addressable.Name, i))
-					client.SendEventToAddressable(ctx, name, addressable.Name, &addressable.TypeMeta, event)
-
-					idsChan <- event.ID()
-					wg.Done()
-				}(i)
-			})
+				idsChan <- event.ID()
+				wg.Done()
+			}(i)
 		}
 
 		wg.Wait()
