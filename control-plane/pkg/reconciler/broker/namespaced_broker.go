@@ -198,6 +198,11 @@ func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing
 		return mf.Manifest{}, fmt.Errorf("unable to filter metadata: %w", err)
 	}
 
+	manifest, err = manifest.Transform(setLabel())
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("unable to set label: %w", err)
+	}
+
 	logger := logging.FromContext(ctx).Desugar()
 
 	for _, res := range manifest.Resources() {
@@ -462,6 +467,15 @@ func filterMetadata() mf.Transformer {
 	return func(u *unstructured.Unstructured) error {
 		u.SetLabels(filterMetadataMap(u.GetLabels()))
 		u.SetAnnotations(filterMetadataMap(u.GetAnnotations()))
+		return nil
+	}
+}
+
+func setLabel() mf.Transformer {
+	return func(u *unstructured.Unstructured) error {
+		labels := u.GetLabels()
+		labels[kafka.NamespacedBrokerDataplaneLabelKey] = kafka.NamespacedBrokerDataplaneLabelValue
+		u.SetLabels(labels)
 		return nil
 	}
 }

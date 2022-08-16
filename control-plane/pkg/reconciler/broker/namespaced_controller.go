@@ -34,6 +34,7 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection"
 	"knative.dev/pkg/logging"
+	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
@@ -138,11 +139,12 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		)),
 	})
 
-	filterFunc := func(obj interface{}) bool {
-		// TODO filtering
-		// TODO: we need to set a label for each resource we create and filter things based on that
-		return true
-	}
+	// we set a label for each resource we create and filter things based on that
+	filterFunc := pkgreconciler.LabelFilterFunc(
+		kafka.NamespacedBrokerDataplaneLabelKey,
+		kafka.NamespacedBrokerDataplaneLabelValue,
+		false, // allowUnset
+	)
 
 	clusterrolebindinginformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: filterFunc,
