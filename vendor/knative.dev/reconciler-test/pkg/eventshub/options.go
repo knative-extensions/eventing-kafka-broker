@@ -120,6 +120,11 @@ func DropEventsResponseCode(code int) EventsHubOption {
 	)
 }
 
+// DropEventsResponseBody will cause the receiver to reply with the specific body to the dropped events
+func DropEventsResponseBody(body string) EventsHubOption {
+	return envOption("SKIP_RESPONSE_BODY", body)
+}
+
 // DropEventsResponseHeaders will cause the receiver to reply with the specific headers to the dropped events
 func DropEventsResponseHeaders(headers map[string]string) EventsHubOption {
 	headerEnvConfigString := ""
@@ -201,6 +206,7 @@ func InputMethod(method string) EventsHubOption {
 }
 
 // AddTracing adds tracing headers when sending events.
+// Deprecated: Exporting traces from the client/sender is enabled by default.
 var AddTracing = envOption("ADD_TRACING", "true")
 
 // AddSequence adds an extension named 'sequence' which contains the incremental number of sent events

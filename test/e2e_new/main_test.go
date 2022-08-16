@@ -20,7 +20,6 @@
 package e2e_new
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -29,7 +28,6 @@ import (
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
-	"knative.dev/pkg/injection"
 	_ "knative.dev/pkg/system/testing"
 	"knative.dev/pkg/test/zipkin"
 
@@ -44,32 +42,14 @@ import (
 // config as well as the parsing level and state flags.
 var global environment.GlobalEnvironment
 
-func init() {
-	// environment.InitFlags registers state and level filter flags.
-	environment.InitFlags(flag.CommandLine)
-
+// TestMain is the first entry point for `go test`.
+func TestMain(m *testing.M) {
 	// Force the broker class to be configured properly
 	if broker.EnvCfg.BrokerClass != kafka.BrokerClass && broker.EnvCfg.BrokerClass != kafka.NamespacedBrokerClass {
 		panic(fmt.Errorf("KafkaBroker class '%s' is unknown. Specify 'BROKER_CLASS' env var", broker.EnvCfg.BrokerClass))
 	}
-}
 
-// TestMain is the first entry point for `go test`.
-func TestMain(m *testing.M) {
-	// We get a chance to parse flags to include the framework flags for the
-	// framework as well as any additional flags included in the integration.
-	flag.Parse()
-
-	// EnableInjectionOrDie will enable client injection, this is used by the
-	// testing framework for namespace management, and could be leveraged by
-	// features to pull Kubernetes clients or the test environment out of the
-	// context passed in the features.
-	ctx, startInformers := injection.EnableInjectionOrDie(nil, nil) //nolint
-	startInformers()
-
-	// global is used to make instances of Environments, NewGlobalEnvironment
-	// is passing and saving the client injection enabled context for use later.
-	global = environment.NewGlobalEnvironment(ctx)
+	global = environment.NewStandardGlobalEnvironment()
 
 	// Run the tests.
 	os.Exit(func() int {

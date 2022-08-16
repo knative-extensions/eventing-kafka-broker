@@ -107,13 +107,25 @@ function k8s() {
 }
 
 function data_plane_unit_tests() {
+  local optsstate mvn_output
   pushd ${DATA_PLANE_DIR} || return $?
-  ./mvnw clean verify -Dmaven.wagon.http.retryHandler.count=6 --no-transfer-progress
+  # store state of Bash options.
+  optsstate="$(set +o)"
+  set +eE
+  ./mvnw clean verify \
+    -Dmaven.wagon.http.retryHandler.count=6 \
+    --no-transfer-progress
   mvn_output=$?
+  # restore state of Bash options.
+  set +vx; eval "$optsstate"
 
-  echo "Copy test reports in ${ARTIFACTS}"
+  echo "Copy test reports to ${ARTIFACTS}"
   # shellcheck disable=SC2038
-  find . -type f -regextype posix-extended -regex ".*/TEST-.*.xml$" | xargs -I '{}' cp {} "${ARTIFACTS}/junit_"{}
+  local report_filepath report_file
+  while read -r report_filepath; do
+    report_file="junit_$(basename "${report_filepath}")"
+    cp "${report_filepath}" "${ARTIFACTS}/${report_file}"
+  done < <(find . -type f -regextype posix-extended -regex ".*/TEST-.*.xml$")
 
   popd || return $?
 

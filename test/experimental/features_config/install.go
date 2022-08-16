@@ -18,13 +18,17 @@ package features_config
 
 import (
 	"context"
+	"embed"
 
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/manifest"
 )
 
+//go:embed *.yaml
+var yamls embed.FS
+
 func Install(ctx context.Context, t feature.T) {
-	if _, err := manifest.InstallLocalYaml(ctx, map[string]interface{}{}); err != nil {
+	if _, err := manifest.InstallYamlFS(ctx, yamls, nil); err != nil {
 		t.Fatal(err)
 	}
 }

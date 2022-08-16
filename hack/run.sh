@@ -58,9 +58,11 @@ elif [[ "${action}" == "teardown-source" ]]; then
 elif [[ "${action}" == "unit-test" || "${action}" == "unit-tests" ]]; then
   "${ROOT_DIR}"/test/presubmit-tests.sh --unit-tests
 elif [[ "${action}" == "unit-test-data-plane" || "${action}" == "unit-tests-data-plane" ]]; then
-  cd "${ROOT_DIR}"/data-plane && ./mvnw verify -B -U && cd -
+  source "${ROOT_DIR}"/test/e2e-common.sh && data_plane_unit_tests
 elif [[ "${action}" == "unit-test-control-plane" || "${action}" == "unit-tests-control-plane" ]]; then
-  go test -race ./...
+  source "${ROOT_DIR}"/test/e2e-common.sh \
+  && source "${ROOT_DIR}/vendor/knative.dev/hack/presubmit-tests.sh" \
+  && default_unit_test_runner
 elif [[ "${action}" == "build-test" || "${action}" == "build-tests" ]]; then
   "${ROOT_DIR}"/test/presubmit-tests.sh --build-tests
 elif [[ "${action}" == "deploy-sacura" ]]; then
