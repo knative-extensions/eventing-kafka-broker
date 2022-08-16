@@ -61,6 +61,7 @@ type NamespacedReconciler struct {
 
 	ConfigMapLister          corelisters.ConfigMapLister
 	ServiceAccountLister     corelisters.ServiceAccountLister
+	ServiceLister            corelisters.ServiceLister
 	ClusterRoleBindingLister rbaclisters.ClusterRoleBindingLister
 	DeploymentLister         appslisters.DeploymentLister
 
@@ -81,6 +82,12 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 		types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name},
 		prober.GetIPForService(types.NamespacedName{Namespace: broker.Namespace, Name: r.Env.IngressName}),
 	)
+
+	// Init contract config map in advance otherwise the volume mounts for the dataplane pods fail
+	_, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		return propagateErrorCondition(broker, fmt.Errorf("unable to get or create contract configmap: %w", err))
+	}
 
 	br := r.createReconcilerForBrokerInstance(broker)
 
@@ -158,6 +165,12 @@ func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing
 		return mf.Manifest{}, err
 	}
 	resources = append(resources, additionalServiceAccounts...)
+
+	additionalServices, err := r.servicesFromSystemNamespace(broker)
+	if err != nil {
+		return mf.Manifest{}, err
+	}
+	resources = append(resources, additionalServices...)
 
 	additionalRoleBindings, err := r.roleBindingsFromSystemNamespace(broker)
 	if err != nil {
@@ -305,6 +318,45 @@ func (r *NamespacedReconciler) createManifestFromSystemServiceAccount(broker *ev
 		AutomountServiceAccountToken: sysServiceAccount.AutomountServiceAccountToken,
 	}
 	return unstructuredFromObject(cm)
+}
+
+func (r *NamespacedReconciler) servicesFromSystemNamespace(broker *eventing.Broker) ([]unstructured.Unstructured, error) {
+	services := []string{
+		"kafka-broker-ingress",
+	}
+	resources := make([]unstructured.Unstructured, 0, len(services))
+	for _, name := range services {
+		resource, err := r.createManifestFromSystemService(broker, name)
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, resource)
+	}
+	return resources, nil
+}
+
+func (r *NamespacedReconciler) createManifestFromSystemService(broker *eventing.Broker, name string) (unstructured.Unstructured, error) {
+	sysService, err := r.ServiceLister.Services(r.SystemNamespace).Get(name)
+	if err != nil {
+		return unstructured.Unstructured{}, fmt.Errorf("failed to get Service %s/%s: %w", r.SystemNamespace, name, err)
+	}
+
+	o := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{Kind: "Service", APIVersion: corev1.SchemeGroupVersion.String()},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:   broker.GetNamespace(),
+			Name:        sysService.Name,
+			Labels:      sysService.Labels,
+			Annotations: sysService.Annotations,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports:    sysService.Spec.Ports,
+			Selector: sysService.Spec.Selector,
+			// leave other fields empty on purpose
+		},
+	}
+
+	return unstructuredFromObject(o)
 }
 
 func (r *NamespacedReconciler) roleBindingsFromSystemNamespace(broker *eventing.Broker) ([]unstructured.Unstructured, error) {

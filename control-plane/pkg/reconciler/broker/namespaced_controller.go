@@ -46,6 +46,7 @@ import (
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
+	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount"
 	clusterrolebindinginformer "knative.dev/pkg/client/injection/kube/informers/rbac/v1/clusterrolebinding"
 
@@ -82,6 +83,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 		ConfigMapLister:            configmapInformer.Lister(),
 		ServiceAccountLister:       serviceaccountinformer.Get(ctx).Lister(),
+		ServiceLister:              serviceinformer.Get(ctx).Lister(),
 		ClusterRoleBindingLister:   clusterrolebindinginformer.Get(ctx).Lister(),
 		DeploymentLister:           deploymentinformer.Get(ctx).Lister(),
 		Env:                        env,
@@ -138,6 +140,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 
 	filterFunc := func(obj interface{}) bool {
 		// TODO filtering
+		// TODO: we need to set a label for each resource we create and filter things based on that
 		return true
 	}
 
@@ -154,6 +157,14 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		Handler: controller.HandleAll(controller.EnsureTypeMeta(
 			globalResync,
 			corev1.SchemeGroupVersion.WithKind("ServiceAccount"),
+		)),
+	})
+
+	serviceinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: filterFunc,
+		Handler: controller.HandleAll(controller.EnsureTypeMeta(
+			globalResync,
+			corev1.SchemeGroupVersion.WithKind("Service"),
 		)),
 	})
 
