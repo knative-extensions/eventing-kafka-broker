@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package testing
+package pkg
 
 import (
 	"fmt"

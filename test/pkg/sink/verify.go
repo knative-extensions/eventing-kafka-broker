@@ -25,8 +25,8 @@ import (
 	"k8s.io/apiserver/pkg/storage/names"
 	testlib "knative.dev/eventing/test/lib"
 
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func Verify(t *testing.T, client *testlib.Client, mode, topic string, ids []string) {

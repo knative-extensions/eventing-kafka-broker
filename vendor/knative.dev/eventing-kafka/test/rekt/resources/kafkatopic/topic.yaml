@@ -1,6 +1,4 @@
----
-
-# Copyright 2020 The Knative Authors
+# Copyright 2021 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,16 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
 metadata:
-  name: knative-kafka-broker-data-plane
+  name: {{ .name }}
+  namespace: {{ .clusterNamespace }}
   labels:
-    kafka.eventing.knative.dev/release: devel
-subjects:
-  - kind: ServiceAccount
-    name: knative-kafka-broker-data-plane
-roleRef:
-  kind: ClusterRole
-  name: knative-kafka-broker-data-plane
-  apiGroup: rbac.authorization.k8s.io
+    strimzi.io/cluster: {{ .clusterName }}
+spec:
+  partitions: {{ .partitions }}
+  replicas: 1

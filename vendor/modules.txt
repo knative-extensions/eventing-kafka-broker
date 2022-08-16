@@ -1496,6 +1496,8 @@ knative.dev/eventing-kafka/test/lib
 knative.dev/eventing-kafka/test/lib/resources
 knative.dev/eventing-kafka/test/rekt/features/kafkachannel
 knative.dev/eventing-kafka/test/rekt/resources/kafkachannel
+knative.dev/eventing-kafka/test/rekt/resources/kafkasource
+knative.dev/eventing-kafka/test/rekt/resources/kafkatopic
 knative.dev/eventing-kafka/test/rekt/resources/resetoffset
 knative.dev/eventing-kafka/test/upgrade
 knative.dev/eventing-kafka/test/upgrade/continual
@@ -1524,6 +1526,7 @@ knative.dev/pkg/client/injection/kube/client
 knative.dev/pkg/client/injection/kube/client/fake
 knative.dev/pkg/client/injection/kube/informers/admissionregistration/v1/mutatingwebhookconfiguration
 knative.dev/pkg/client/injection/kube/informers/admissionregistration/v1/validatingwebhookconfiguration
+knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment
 knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset
 knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset/fake
 knative.dev/pkg/client/injection/kube/informers/core/v1/configmap

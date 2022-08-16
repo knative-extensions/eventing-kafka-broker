@@ -18,6 +18,7 @@ package kafka
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -32,17 +33,28 @@ func NamespacedDataplaneLabelConfigmapOption(cm *corev1.ConfigMap) {
 	cm.Labels[NamespacedBrokerDataplaneLabelKey] = NamespacedBrokerDataplaneLabelValue
 }
 
-func FilterWithNamespacedDataplaneLabel(obj interface{}) bool {
-	if object, ok := obj.(corev1.ConfigMap); ok {
-		if len(object.Labels) == 0 {
-			return false
+func FilterAny(funcs ...func(obj interface{}) bool) func(obj interface{}) bool {
+	return func(obj interface{}) bool {
+		for _, f := range funcs {
+			if ok := f(obj); ok {
+				return true
+			}
 		}
-		var v string
-		var exists bool
-		if v, exists = object.Labels[NamespacedBrokerClass]; !exists {
-			return false
-		}
-		return v == NamespacedBrokerDataplaneLabelValue
+		return false
 	}
-	return false
+}
+
+func FilterWithLabel(key, value string) func(obj interface{}) bool {
+	return func(obj interface{}) bool {
+		if object, ok := obj.(metav1.Object); ok {
+			labels := object.GetLabels()
+			v, exists := labels[key]
+			if !exists {
+				return false
+			}
+			return v == value
+		}
+		return false
+
+	}
 }

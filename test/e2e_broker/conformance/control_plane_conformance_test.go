@@ -27,8 +27,8 @@ import (
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
 
+	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/pkg/broker"
-	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 func brokerCreator(client *testlib.Client, name string) {

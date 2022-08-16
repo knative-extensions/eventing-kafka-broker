@@ -41,6 +41,7 @@ import (
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	testlib "knative.dev/eventing/test/lib"
 
+	pkgtest "knative.dev/eventing-kafka-broker/test/pkg"
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
 	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
@@ -136,7 +137,7 @@ func runSacuraTest(t *testing.T, config SacuraTestConfig) {
 						Name:      names.SimpleNameGenerator.GenerateName(sacuraVerifyCommittedOffsetJob + "-" + *topic),
 					},
 					&kafkatest.AdminConfig{
-						BootstrapServers: pkgtesting.BootstrapServersPlaintext,
+						BootstrapServers: pkgtest.BootstrapServersPlaintext,
 						Topic:            *topic,
 						Group:            consumerGroup,
 					},

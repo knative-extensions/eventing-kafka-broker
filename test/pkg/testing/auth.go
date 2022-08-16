@@ -23,6 +23,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testlib "knative.dev/eventing/test/lib"
+
+	"knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 type SecretProvider func(t *testing.T, client *testlib.Client) map[string][]byte
@@ -34,10 +36,10 @@ func Plaintext(t *testing.T, _ *testlib.Client) map[string][]byte {
 }
 
 func Ssl(t *testing.T, client *testlib.Client) map[string][]byte {
-	caSecret, err := client.Kube.CoreV1().Secrets(KafkaClusterNamespace).Get(context.Background(), CaSecretName, metav1.GetOptions{})
+	caSecret, err := client.Kube.CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(context.Background(), pkg.CaSecretName, metav1.GetOptions{})
 	assert.Nil(t, err)
 
-	tlsUserSecret, err := client.Kube.CoreV1().Secrets(KafkaClusterNamespace).Get(context.Background(), TlsUserSecretName, metav1.GetOptions{})
+	tlsUserSecret, err := client.Kube.CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(context.Background(), pkg.TlsUserSecretName, metav1.GetOptions{})
 	assert.Nil(t, err)
 
 	return map[string][]byte{
@@ -50,29 +52,29 @@ func Ssl(t *testing.T, client *testlib.Client) map[string][]byte {
 
 func SaslPlaintextScram512(t *testing.T, client *testlib.Client) map[string][]byte {
 
-	saslUserSecret, err := client.Kube.CoreV1().Secrets(KafkaClusterNamespace).Get(context.Background(), SaslUserSecretName, metav1.GetOptions{})
+	saslUserSecret, err := client.Kube.CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(context.Background(), pkg.SaslUserSecretName, metav1.GetOptions{})
 	assert.Nil(t, err)
 
 	return map[string][]byte{
 		"protocol":       []byte("SASL_PLAINTEXT"),
 		"sasl.mechanism": []byte("SCRAM-SHA-512"),
-		"user":           []byte(SaslUserSecretName),
+		"user":           []byte(pkg.SaslUserSecretName),
 		"password":       saslUserSecret.Data["password"],
 	}
 }
 
 func SslSaslScram512(t *testing.T, client *testlib.Client) map[string][]byte {
-	caSecret, err := client.Kube.CoreV1().Secrets(KafkaClusterNamespace).Get(context.Background(), CaSecretName, metav1.GetOptions{})
+	caSecret, err := client.Kube.CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(context.Background(), pkg.CaSecretName, metav1.GetOptions{})
 	assert.Nil(t, err)
 
-	saslUserSecret, err := client.Kube.CoreV1().Secrets(KafkaClusterNamespace).Get(context.Background(), SaslUserSecretName, metav1.GetOptions{})
+	saslUserSecret, err := client.Kube.CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(context.Background(), pkg.SaslUserSecretName, metav1.GetOptions{})
 	assert.Nil(t, err)
 
 	return map[string][]byte{
 		"protocol":       []byte("SASL_SSL"),
 		"sasl.mechanism": []byte("SCRAM-SHA-512"),
 		"ca.crt":         caSecret.Data["ca.crt"],
-		"user":           []byte(SaslUserSecretName),
+		"user":           []byte(pkg.SaslUserSecretName),
 		"password":       saslUserSecret.Data["password"],
 	}
 }
