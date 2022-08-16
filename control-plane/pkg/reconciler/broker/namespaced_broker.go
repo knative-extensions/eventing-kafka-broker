@@ -83,13 +83,13 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 		prober.GetIPForService(types.NamespacedName{Namespace: broker.Namespace, Name: r.Env.IngressName}),
 	)
 
+	br := r.createReconcilerForBrokerInstance(broker)
+
 	// Init contract config map in advance otherwise the volume mounts for the dataplane pods fail
-	_, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	_, err := br.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return propagateErrorCondition(broker, fmt.Errorf("unable to get or create contract configmap: %w", err))
 	}
-
-	br := r.createReconcilerForBrokerInstance(broker)
 
 	manifest, err := r.getManifest(ctx, broker)
 	if err != nil {
