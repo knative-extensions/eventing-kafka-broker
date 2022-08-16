@@ -25,6 +25,12 @@ rules:
       - "*"
     resources:
       - configmaps
+    verbs:
+      - delete
+  - apiGroups:
+      - "*"
+    resources:
+      - configmaps
       - services
     verbs:
       - get
