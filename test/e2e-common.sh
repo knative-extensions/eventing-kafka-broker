@@ -54,6 +54,10 @@ export EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT_PATH="${MONITORING_AR
 # The number of control plane replicas to run.
 readonly REPLICAS=${REPLICAS:-1}
 
+# Whether to turn chaosduck off (via deployment scaling).
+# This is mainly used by the test automation via prow.
+readonly SCALE_CHAOSDUCK_TO_ZERO="${SCALE_CHAOSDUCK_TO_ZERO:-0}"
+
 export SYSTEM_NAMESPACE="knative-eventing"
 export CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}
 
@@ -251,6 +255,10 @@ function scale_controlplane() {
 
 function apply_chaos() {
   ko apply ${KO_FLAGS} -f ./test/config/chaos || return $?
+  if (( SCALE_CHAOSDUCK_TO_ZERO )); then
+    echo "Scaling chaosduck replicas down to zero"
+    kubectl -n knative-eventing scale deployment/chaosduck --replicas=0
+  fi
 }
 
 function delete_chaos() {
