@@ -22,7 +22,6 @@ import (
 	"net/http"
 
 	"github.com/Shopify/sarama"
-	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
@@ -30,7 +29,6 @@ import (
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
@@ -71,16 +69,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 		ConfigMapLister:            configmapInformer.Lister(),
 		Env:                        env,
-	}
-
-	logger := logging.FromContext(ctx)
-
-	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
-	if err != nil {
-		logger.Fatal("Failed to get or create data plane config map",
-			zap.String("configmap", env.DataPlaneConfigMapAsString()),
-			zap.Error(err),
-		)
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass, func(impl *controller.Impl) controller.Options {
