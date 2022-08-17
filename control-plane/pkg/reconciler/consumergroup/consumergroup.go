@@ -35,6 +35,7 @@ import (
 	"k8s.io/utils/pointer"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 
@@ -92,8 +93,12 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 		return err
 	}
 
-	if err := r.propagateStatus(cg); err != nil {
+	errCondition, err := r.propagateStatus(cg)
+	if err != nil {
 		return cg.MarkReconcileConsumersFailed("PropagateConsumerStatus", err)
+	}
+	if errCondition != nil {
+		return cg.MarkReconcileConsumersFailedCondition(errCondition)
 	}
 
 	if cg.Status.SubscriberURI == nil {
@@ -346,12 +351,15 @@ func (r Reconciler) joinConsumersByPlacement(placements []eventingduckv1alpha1.P
 	return placementConsumers
 }
 
-func (r Reconciler) propagateStatus(cg *kafkainternals.ConsumerGroup) error {
+func (r Reconciler) propagateStatus(cg *kafkainternals.ConsumerGroup) (*apis.Condition, error) {
 	consumers, err := r.ConsumerLister.Consumers(cg.GetNamespace()).List(labels.SelectorFromSet(cg.Spec.Selector))
 	if err != nil {
-		return fmt.Errorf("failed to list consumers for selector %+v: %w", cg.Spec.Selector, err)
+		return nil, fmt.Errorf("failed to list consumers for selector %+v: %w", cg.Spec.Selector, err)
 	}
 	count := int32(0)
+	cg.Status.Replicas = pointer.Int32(count)
+	var condition *apis.Condition
+
 	for _, c := range consumers {
 		if c.IsReady() {
 			if c.Spec.VReplicas != nil {
@@ -363,11 +371,16 @@ func (r Reconciler) propagateStatus(cg *kafkainternals.ConsumerGroup) error {
 			if c.Status.DeliveryStatus.DeadLetterSinkURI != nil {
 				cg.Status.DeliveryStatus.DeadLetterSinkURI = c.Status.DeadLetterSinkURI
 			}
+		} else if condition == nil { // Propagate only a single false condition
+			cond := c.GetConditionSet().Manage(c.GetStatus()).GetTopLevelCondition()
+			if cond.IsFalse() {
+				condition = cond
+			}
 		}
 	}
 	cg.Status.Replicas = pointer.Int32(count)
 
-	return nil
+	return condition, nil
 }
 
 func (r Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {

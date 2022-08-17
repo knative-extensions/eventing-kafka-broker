@@ -31,6 +31,7 @@ import (
 	"k8s.io/utils/pointer"
 	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	"knative.dev/pkg/apis"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 
 	"knative.dev/pkg/controller"
@@ -240,6 +241,122 @@ func TestReconcileKind(t *testing.T) {
 						return cg
 					}(),
 				},
+			},
+		},
+		{
+			Name: "Consumers in multiple pods, propagate consumer not ready condition",
+			Objects: []runtime.Object{
+				NewSSLSecret(ConsumerGroupNamespace, SecretName),
+				NewConsumer(2,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerAuth(&kafkainternals.Auth{
+							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
+								Name: SecretName,
+							}}},
+						}),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{
+							PodName:      "p2",
+							PodNamespace: systemNamespace,
+						}),
+					)),
+					ConsumerNotReady(),
+				),
+				NewConsumerGroup(
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerAuth(&kafkainternals.Auth{
+							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
+								Name: SecretName,
+							}}},
+						}),
+					)),
+					ConsumerForTrigger(),
+					ConsumerGroupReplicas(2),
+				),
+			},
+			Key: ConsumerGroupTestKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return []eventingduckv1alpha1.Placement{
+						{PodName: "p1", VReplicas: 1},
+						{PodName: "p2", VReplicas: 1},
+					}, nil
+				}),
+			},
+			WantErr: true,
+			WantCreates: []runtime.Object{
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerAuth(&kafkainternals.Auth{
+							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
+								Name: SecretName,
+							}}},
+						}),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+					)),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						cg := NewConsumerGroup(
+							ConsumerGroupConsumerSpec(NewConsumerSpec(
+								ConsumerTopics("t1", "t2"),
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+									ConsumerGroupIdConfig("my.group.id"),
+								),
+								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+								ConsumerAuth(&kafkainternals.Auth{
+									AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
+										Name: SecretName,
+									}}},
+								}),
+							)),
+							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusReplicas(0),
+							ConsumerForTrigger(),
+						)
+						cg.Status.Placements = []eventingduckv1alpha1.Placement{
+							{PodName: "p1", VReplicas: 1},
+							{PodName: "p2", VReplicas: 1},
+						}
+						cg.MarkReconcileConsumersFailedCondition(&apis.Condition{
+							Type:    kafkainternals.ConsumerConditionBind,
+							Status:  corev1.ConditionFalse,
+							Reason:  "ConsumerBinding",
+							Message: "failed to bind resource to pod: EOF",
+						})
+						cg.MarkScheduleSucceeded()
+						return cg
+					}(),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				"Warning InternalError consumers aren't ready, ConsumerBinding: failed to bind resource to pod: EOF",
 			},
 		},
 		{

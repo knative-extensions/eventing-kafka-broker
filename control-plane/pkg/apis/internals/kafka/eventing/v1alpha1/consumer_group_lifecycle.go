@@ -52,6 +52,16 @@ func (cg *ConsumerGroup) MarkReconcileConsumersFailed(reason string, err error) 
 	return err
 }
 
+func (cg *ConsumerGroup) MarkReconcileConsumersFailedCondition(condition *apis.Condition) error {
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(
+		ConditionConsumerGroupConsumers,
+		condition.GetReason(),
+		condition.GetMessage(),
+	)
+
+	return fmt.Errorf("consumers aren't ready, %v: %v", condition.GetReason(), condition.GetMessage())
+}
+
 func (cg *ConsumerGroup) MarkReconcileConsumersSucceeded() {
 	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionConsumerGroupConsumers)
 }

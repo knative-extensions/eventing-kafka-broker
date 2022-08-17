@@ -19,6 +19,7 @@ package testing
 import (
 	"context"
 	"fmt"
+	"io"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -293,6 +294,18 @@ func ConsumerForTrigger() ConsumerGroupOption {
 func ConsumerReady() ConsumerOption {
 	return func(c *kafkainternals.Consumer) {
 		c.MarkBindSucceeded()
+		c.MarkReconcileContractSucceeded()
+		c.Status.SubscriberURI = ConsumerSubscriberURI
+
+		if c.HasDeadLetterSink() {
+			c.Status.DeadLetterSinkURI = ConsumerDeadLetterSinkURI
+		}
+	}
+}
+
+func ConsumerNotReady() ConsumerOption {
+	return func(c *kafkainternals.Consumer) {
+		_ = c.MarkBindFailed(io.EOF)
 		c.MarkReconcileContractSucceeded()
 		c.Status.SubscriberURI = ConsumerSubscriberURI
 
