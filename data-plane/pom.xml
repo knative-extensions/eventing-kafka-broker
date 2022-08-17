@@ -44,7 +44,7 @@
     <vertx.version>4.2.5</vertx.version>
     <vertx.kafka.clients.version>4.3.2</vertx.kafka.clients.version>
     <cloudevents.sdk.version>2.3.0</cloudevents.sdk.version>
-    <micrometer.version>1.8.5</micrometer.version>
+    <micrometer.version>1.9.3</micrometer.version>
     <opentelemetry.version>1.15.0</opentelemetry.version>
     <jackson.version>2.13.2.20220328</jackson.version>
     <protobuf.version>3.20.0</protobuf.version>
@@ -59,7 +59,7 @@
     <fabric8.kubernetes.version>5.12.2</fabric8.kubernetes.version>
     <kafka.version>3.2.0</kafka.version>
     <debezium.version>1.9.4.Final</debezium.version>
-    <jib.version>3.2.0</jib.version>
+    <jib.version>3.2.1</jib.version>
   </properties>
 
   <modules>
