@@ -48,8 +48,9 @@ func TestDeadLetterSink(t *testing.T) {
 		environment.Managed(t),
 	)
 
-	env.Test(ctx, t, SendsEventWithRetries())
-	env.Test(ctx, t, SendsEventNoRetries())
+	env.Test(ctx, t, SendsEventErrorWithoutRetries())
+	//env.Test(ctx, t, SendsEventWithRetries())
+	//env.Test(ctx, t, SendsEventNoRetries())
 }
 
 func SendsEventWithRetries() *feature.Feature {
@@ -76,6 +77,67 @@ func SendsEventWithRetries() *feature.Feature {
 		eventshub.StartReceiver,
 		eventshub.DropFirstN(1),
 		eventshub.DropEventsResponseCode(429), // retry error
+	))
+
+	f.Setup("install dead letter sink", eventshub.Install(
+		deadLetterSinkName,
+		eventshub.StartReceiver,
+	))
+
+	f.Setup("install trigger", trigger.Install(
+		triggerName,
+		brokerName,
+		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
+		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+	))
+	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+
+	f.Setup("install source", eventshub.Install(
+		sourceName,
+		eventshub.StartSenderToResource(broker.GVR(), brokerName),
+		eventshub.InputEvent(ev),
+	))
+
+	f.Assert("receive event on sink",
+		OnStore(sinkName).
+			MatchEvent(cetest.HasId(ev.ID())).
+			Exact(1),
+	)
+
+	f.Assert("receive event on dead letter sink",
+		OnStore(deadLetterSinkName).
+			MatchEvent(cetest.HasId(ev.ID())).
+			Exact(1),
+	)
+
+	return f
+}
+
+func SendsEventErrorWithoutRetries() *feature.Feature {
+	f := feature.NewFeature()
+
+	sourceName := feature.MakeRandomK8sName("source")
+	sinkName := feature.MakeRandomK8sName("sink")
+	deadLetterSinkName := feature.MakeRandomK8sName("dls")
+	triggerName := feature.MakeRandomK8sName("trigger")
+	brokerName := feature.MakeRandomK8sName("broker")
+
+	ev := cetest.FullEvent()
+
+	f.Setup("install broker", broker.Install(
+		brokerName,
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
+	))
+
+	f.Setup("broker is ready", broker.IsReady(brokerName))
+	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+
+	f.Setup("install sink", eventshub.Install(
+		sinkName,
+		eventshub.StartReceiver,
+		eventshub.DropFirstN(1),
+		eventshub.DropEventsResponseBody("bad response"),
+		eventshub.DropEventsResponseCode(422), // non-retry error
 	))
 
 	f.Setup("install dead letter sink", eventshub.Install(
