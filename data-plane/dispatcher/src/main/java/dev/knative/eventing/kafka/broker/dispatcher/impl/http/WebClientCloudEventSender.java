@@ -19,7 +19,6 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseFailureException;
-import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.rw.CloudEventRWException;
@@ -124,16 +123,27 @@ public final class WebClientCloudEventSender implements CloudEventSender {
       },
       // Retry and failures
       cause -> {
+        if (cause instanceof ResponseFailureException) {
+          final var response = ((ResponseFailureException) cause).getResponse();
+          if (isRetryableStatusCode(response.statusCode()) && retryCounter < egress.getRetry()) {
+            return retry(retryCounter, event);
+          }
+        }
+
         if (retryCounter < egress.getRetry()) {
-          Promise<HttpResponse<Buffer>> r = Promise.promise();
-          final var delay = retryPolicyFunc.apply(retryCounter + 1);
-          vertx.setTimer(delay, v -> send(event, retryCounter + 1).onComplete(r));
-          return r.future();
+          return retry(retryCounter, event);
         }
 
         return Future.failedFuture(cause);
       }
     );
+  }
+
+  private Future<HttpResponse<Buffer>> retry(int retryCounter, CloudEvent event) {
+    Promise<HttpResponse<Buffer>> r = Promise.promise();
+    final var delay = retryPolicyFunc.apply(retryCounter + 1);
+    vertx.setTimer(delay, v -> send(event, retryCounter + 1).onComplete(r));
+    return r.future();
   }
 
   private void requestCompleted() {
@@ -159,17 +169,13 @@ public final class WebClientCloudEventSender implements CloudEventSender {
       })
       .onSuccess(response -> {
 
-        if (isRetryableStatusCode(response.statusCode())) {
-          logError(event, response);
+        if (response.statusCode() >= 300) {
+          logError("Received a non-retryable status code that is not 2xx.", event, response);
           breaker.tryFail(new ResponseFailureException(
             response,
             "Received failure response, status code: " + response.statusCode())
           );
           return;
-        }
-
-        if (response.statusCode() >= 300) {
-          logError("Received a non-retryable status code that is not 2xx.", event, response);
         }
 
         breaker.tryComplete(response);
