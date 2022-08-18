@@ -57,7 +57,7 @@
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
     <mokito.junit.jupiter.version>4.6.0</mokito.junit.jupiter.version>
     <fabric8.kubernetes.version>6.0.0</fabric8.kubernetes.version>
-    <kafka.version>3.2.0</kafka.version>
+    <kafka.version>3.2.1</kafka.version>
     <debezium.version>1.9.4.Final</debezium.version>
     <jib.version>3.2.1</jib.version>
   </properties>
