@@ -12,10 +12,13 @@ require (
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/klauspost/compress v1.15.4 // indirect
+	github.com/openzipkin/zipkin-go v0.3.0
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.7.0
 	github.com/xdg-go/scram v1.1.1
+	go.opentelemetry.io/otel v0.20.0
+	go.opentelemetry.io/otel/trace v0.20.0
 	go.uber.org/atomic v1.9.0
 	go.uber.org/multierr v1.8.0
 	go.uber.org/zap v1.21.0
@@ -30,7 +33,7 @@ require (
 	k8s.io/client-go v0.23.8
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
 	knative.dev/eventing v0.33.0
-	knative.dev/eventing-kafka v0.33.1-0.20220721151820-bbc5949bc8ab
+	knative.dev/eventing-kafka v0.33.1
 	knative.dev/hack v0.0.0-20220701014203-65c463ac8c98
 	knative.dev/pkg v0.0.0-20220705130606-e60d250dc637
 	knative.dev/reconciler-test v0.0.0-20220705155206-f05db88effbe
