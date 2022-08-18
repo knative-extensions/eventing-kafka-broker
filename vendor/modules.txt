@@ -1284,7 +1284,7 @@ k8s.io/utils/internal/third_party/forked/golang/net
 k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.33.1-0.20220815185049-ab981d6bba92
+# knative.dev/eventing v0.33.1-0.20220817092547-cb3901fa91f2
 ## explicit; go 1.18
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/pkg/apis/config
@@ -1435,7 +1435,7 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/eventing-kafka v0.33.1-0.20220816150448-80ff5c63ad07
+# knative.dev/eventing-kafka v0.33.1-0.20220817023247-6b51416d16cb
 ## explicit; go 1.16
 knative.dev/eventing-kafka/pkg/apis/bindings
 knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
@@ -1506,7 +1506,7 @@ knative.dev/eventing-kafka/test/upgrade/installation
 ## explicit; go 1.17
 knative.dev/hack
 knative.dev/hack/shell
-# knative.dev/pkg v0.0.0-20220816153547-f78a00694307
+# knative.dev/pkg v0.0.0-20220818004048-4a03844c0b15
 ## explicit; go 1.18
 knative.dev/pkg/apiextensions/storageversion
 knative.dev/pkg/apiextensions/storageversion/cmd/migrate
