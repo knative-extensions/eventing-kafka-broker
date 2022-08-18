@@ -29,10 +29,10 @@ require (
 	k8s.io/apiserver v0.23.9
 	k8s.io/client-go v0.23.9
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
-	knative.dev/eventing v0.33.1-0.20220815185049-ab981d6bba92
-	knative.dev/eventing-kafka v0.33.1-0.20220816150448-80ff5c63ad07
+	knative.dev/eventing v0.33.1-0.20220817092547-cb3901fa91f2
+	knative.dev/eventing-kafka v0.33.1-0.20220817023247-6b51416d16cb
 	knative.dev/hack v0.0.0-20220815132133-e9a8475f4329
-	knative.dev/pkg v0.0.0-20220816153547-f78a00694307
+	knative.dev/pkg v0.0.0-20220818004048-4a03844c0b15
 	knative.dev/reconciler-test v0.0.0-20220816163747-93a10831a971
 	sigs.k8s.io/yaml v1.3.0
 )
