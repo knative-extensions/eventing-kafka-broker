@@ -185,6 +185,58 @@ public class WebClientCloudEventSenderTest {
 
   @Test
   @Timeout(value = 20000)
+  public void shouldNotRetryAndFail(final Vertx vertx, final VertxTestContext context) throws ExecutionException, InterruptedException {
+
+    final var port = 12345;
+    final var retry = 5;
+    final var event = CloudEventBuilder.v1()
+      .withId(UUID.randomUUID().toString())
+      .withSource(URI.create("/api/v1/orders"))
+      .withType("dev.knative.eventing.created")
+      .build();
+
+    final var counter = new LongAdder();
+
+    vertx.createHttpServer()
+      .requestHandler(r -> {
+        // non-retry status code
+        r.response().setStatusCode(422).end();
+      })
+      .listen(port, "localhost")
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get();
+
+    final var sender = new WebClientCloudEventSender(
+      vertx,
+      WebClient.create(vertx),
+      "http://localhost:" + port,
+      DataPlaneContract.EgressConfig.newBuilder()
+        .setBackoffDelay(100L)
+        .setTimeout(100L)
+        .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+        .setRetry(retry)
+        .build()
+    );
+
+    final var success = new AtomicBoolean(true);
+
+    sender.send(event)
+      .onFailure(v -> success.set(false))
+      .onSuccess(v -> success.set(true));
+
+    await().untilFalse(success);
+    await().untilAdder(counter, is(equalTo(0L)));
+
+    // Verify that after some time counter is still equal to 0.
+    Thread.sleep(10000L);
+    await().untilAdder(counter, is(equalTo(0L)));
+
+    sender.close().onSuccess(v -> context.completeNow());
+  }
+
+  @Test
+  @Timeout(value = 20000)
   public void shouldTimeoutAndFail(final Vertx vertx, final VertxTestContext context) throws ExecutionException, InterruptedException {
 
     final var port = 12345;
