@@ -263,9 +263,13 @@ public class RecordDispatcherImpl implements RecordDispatcher {
                                    final ConsumerRecordContext recordContext,
                                    final Promise<Void> finalProm) {
 
-    final var response = getResponse(failure);
+    var response = getResponse(failure);
     incrementEventCount(response, recordContext);
     recordDispatchLatency(response, recordContext);
+
+    if (response == null && failure instanceof ResponseFailureException) {
+      response = ((ResponseFailureException) failure).getResponse();
+    }
 
     // enhance event with extension attributes prior to forwarding to the dead letter sink
     final var transformedRecordContext = errorTransform(recordContext, response);
@@ -285,6 +289,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     final var extensions = new HashMap<String, String>();
     extensions.put(KN_ERROR_DEST_EXT_NAME, destination);
     extensions.put(KN_ERROR_CODE_EXT_NAME, String.valueOf(response.statusCode()));
+
     var data = response.bodyAsString();
     if (data != null) {
       if (data.length() > KN_ERROR_DATA_MAX_BYTES) {
