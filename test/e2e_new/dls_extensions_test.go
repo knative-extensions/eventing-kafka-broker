@@ -21,6 +21,10 @@ package e2e_new
 
 import (
 	"context"
+	"strings"
+	"testing"
+	"time"
+
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -35,9 +39,6 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/resources/svc"
-	"strings"
-	"testing"
-	"time"
 )
 
 func TestDeadLetterSinkExtensions(t *testing.T) {
