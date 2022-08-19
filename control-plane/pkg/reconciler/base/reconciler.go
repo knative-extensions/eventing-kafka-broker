@@ -99,7 +99,16 @@ func (r *Reconciler) IsDispatcherRunning() bool {
 
 func isAtLeastOneRunning(pods []*corev1.Pod) bool {
 	for _, pod := range pods {
-		if pod.Status.Phase == corev1.PodRunning {
+		if isReady(pod) {
+			return true
+		}
+	}
+	return false
+}
+
+func isReady(pod *corev1.Pod) bool {
+	for _, c := range pod.Status.Conditions {
+		if c.Type == corev1.PodReady && c.Status == corev1.ConditionTrue {
 			return true
 		}
 	}
