@@ -262,10 +262,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					[]string{"my-not-present-topic"}, "my-not-present-topic",
 				),
 			},
-			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
-			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
-			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
 			},
@@ -545,10 +541,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					"failed to create topic: %s: %v",
 					BrokerTopic(), createTopicError,
 				),
-			},
-			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
-			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -1306,10 +1298,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					fmt.Sprintf(`failed to get contract configuration: failed to get configmap %s/%s: configmap %q not found`, ConfigMapNamespace, ConfigMapName, ConfigMapName),
 				),
 			},
-			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
-			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
-			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
 			},
@@ -1359,10 +1347,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					"InternalError",
 					"failed to get contract configuration: supported config Kind: ConfigMap - got Pod",
 				),
-			},
-			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
-			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -1511,10 +1495,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					"InternalError",
 					fmt.Sprintf("%s: %s", base.ReasonDataPlaneNotAvailable, base.MessageDataPlaneNotAvailable),
 				),
-			},
-			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
-			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
