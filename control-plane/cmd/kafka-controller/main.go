@@ -92,6 +92,8 @@ func main() {
 			},
 		},
 
+		//TEST
+
 		// Channel controller
 		injection.NamedControllerConstructor{
 			Name: "channel-controller",
