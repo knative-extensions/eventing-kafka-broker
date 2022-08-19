@@ -85,6 +85,12 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 
 	br := r.createReconcilerForBrokerInstance(broker)
 
+	// Init contract config map in advance otherwise the volume mounts for the dataplane pods fail
+	_, err := br.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		return propagateErrorCondition(broker, fmt.Errorf("unable to get or create contract configmap: %w", err))
+	}
+
 	manifest, err := r.getManifest(ctx, broker)
 	if err != nil {
 		return propagateErrorCondition(broker, fmt.Errorf("unable to transform dataplane manifest: %w", err))

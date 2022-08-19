@@ -87,16 +87,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
-	// Get contract config map. Do this in advance, otherwise
-	// the dataplane pods that need volume mounts to the contract configmap
-	// will get stuck and will never be ready.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
-	if err != nil {
-		return statusConditionManager.FailedToGetConfigMap(err)
-	}
-
-	logger.Debug("Got contract config map")
-
 	if !r.IsReceiverRunning() || !r.IsDispatcherRunning() {
 		return statusConditionManager.DataPlaneNotAvailable()
 	}
@@ -142,6 +132,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	if err != nil {
 		return err
 	}
+
+	// Get contract config map.
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		return statusConditionManager.FailedToGetConfigMap(err)
+	}
+
+	logger.Debug("Got contract config map")
 
 	// Get contract data.
 	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
