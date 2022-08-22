@@ -87,7 +87,6 @@ func eventWithTraceExported() *feature.Feature {
 		sourceName,
 		eventshub.StartSenderToResource(channel_impl.GVR(), channelName),
 		eventshub.InputEvent(ev),
-		eventshub.AddTracing,
 		// Send at least two events to workaround https://github.com/knative/pkg/issues/2475.
 		// There's some time needed for exporting the trace to Zipkin. Sending two events with
 		// some delay gives the exporter time to export the trace for the first event. The sender

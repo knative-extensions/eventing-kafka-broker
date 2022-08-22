@@ -78,7 +78,6 @@ func BrokerSmokeTest(brokerName, triggerName string) feature.StepFn {
 			feature.MakeRandomK8sName("source"),
 			eventshub.StartSenderToResource(broker.GVR(), brokerName),
 			eventshub.AddSequence,
-			eventshub.AddTracing,
 			eventshub.InputEvent(event),
 		),
 		assert.OnStore(sink).MatchEvent(eventMatchers...).Exact(1),
