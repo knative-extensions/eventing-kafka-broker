@@ -49,6 +49,7 @@ var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 	eventingv1alpha1.SchemeGroupVersion.WithKind("KafkaSink"):    &eventingv1alpha1.KafkaSink{},
 	sourcesv1beta1.SchemeGroupVersion.WithKind("KafkaSource"):    &sourcesv1beta1.KafkaSource{},
 	messagingv1beta1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1beta1.KafkaChannel{},
+	eventingcorev1beta1.SchemeGroupVersion.WithKind("Broker"):    &eventingcorev1beta1.Broker{},
 }
 
 var validationCallbacks = map[schema.GroupVersionKind]validation.Callback{
