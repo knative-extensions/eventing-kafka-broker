@@ -23,7 +23,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/openzipkin/zipkin-go/model"
@@ -87,12 +86,6 @@ func eventWithTraceExported() *feature.Feature {
 		sourceName,
 		eventshub.StartSenderToResource(channel_impl.GVR(), channelName),
 		eventshub.InputEvent(ev),
-		// Send at least two events to workaround https://github.com/knative/pkg/issues/2475.
-		// There's some time needed for exporting the trace to Zipkin. Sending two events with
-		// some delay gives the exporter time to export the trace for the first event. The sender
-		// is shutdown immediately after sending the last event so the trace for the last
-		// event will probably not be exported.
-		eventshub.SendMultipleEvents(2, 3*time.Second),
 	))
 
 	f.Assert("event trace exported", channelHasMatchingTraceTree(sourceName, sinkName, channelName, ev.ID()))
@@ -169,7 +162,7 @@ func channelHasMatchingTraceTree(sourceName, sinkName, channelName, eventID stri
 				},
 			},
 		}
-		eventshub.StoreFromContext(ctx, sinkName).AssertAtLeast(t, 1,
+		eventshub.StoreFromContext(ctx, sinkName).AssertExact(t, 1,
 			MatchKind(EventReceived),
 			tracing.TraceTreeMatches(sourceName, eventID, expectedTree),
 		)
