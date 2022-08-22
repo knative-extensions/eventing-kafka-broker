@@ -49,8 +49,8 @@ func TestDeadLetterSink(t *testing.T) {
 	)
 
 	env.Test(ctx, t, SendsEventErrorWithoutRetries())
-	//env.Test(ctx, t, SendsEventWithRetries())
-	//env.Test(ctx, t, SendsEventNoRetries())
+	env.Test(ctx, t, SendsEventWithRetries())
+	env.Test(ctx, t, SendsEventNoRetries())
 }
 
 func SendsEventWithRetries() *feature.Feature {
