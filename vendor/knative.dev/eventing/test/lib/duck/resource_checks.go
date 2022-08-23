@@ -34,8 +34,8 @@ import (
 )
 
 const (
-	interval = 2 * time.Second
-	timeout  = 4 * time.Minute
+	interval = 4 * time.Second
+	timeout  = 500 * time.Second
 )
 
 // WaitForResourceReady polls the status of the MetaResource from client
