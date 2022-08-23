@@ -284,7 +284,10 @@ func addRunningPod(store cache.Store, kc kubernetes.Interface, label string) {
 			Namespace: "ns",
 			Labels:    map[string]string{"app": label},
 		},
-		Status: corev1.PodStatus{Phase: corev1.PodRunning},
+		Status: corev1.PodStatus{
+			Phase:      corev1.PodRunning,
+			Conditions: []corev1.PodCondition{{Type: corev1.PodReady, Status: corev1.ConditionTrue}},
+		},
 	}
 
 	if err := store.Add(pod); err != nil {

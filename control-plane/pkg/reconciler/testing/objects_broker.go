@@ -303,7 +303,8 @@ func BrokerDispatcherPod(namespace string, annotations map[string]string) runtim
 			},
 		},
 		Status: corev1.PodStatus{
-			Phase: corev1.PodRunning,
+			Phase:      corev1.PodRunning,
+			Conditions: []corev1.PodCondition{{Type: corev1.PodReady, Status: corev1.ConditionTrue}},
 		},
 	}
 }
@@ -323,7 +324,8 @@ func BrokerReceiverPod(namespace string, annotations map[string]string) runtime.
 			},
 		},
 		Status: corev1.PodStatus{
-			Phase: corev1.PodRunning,
+			Phase:      corev1.PodRunning,
+			Conditions: []corev1.PodCondition{{Type: corev1.PodReady, Status: corev1.ConditionTrue}},
 		},
 	}
 }
