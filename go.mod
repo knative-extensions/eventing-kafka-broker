@@ -36,6 +36,6 @@ require (
 	knative.dev/eventing-kafka v0.33.1
 	knative.dev/hack v0.0.0-20220701014203-65c463ac8c98
 	knative.dev/pkg v0.0.0-20220705130606-e60d250dc637
-	knative.dev/reconciler-test v0.0.0-20220705155206-f05db88effbe
+	knative.dev/reconciler-test v0.0.0-20220823124117-c6092b4acbf3
 	sigs.k8s.io/yaml v1.3.0
 )
