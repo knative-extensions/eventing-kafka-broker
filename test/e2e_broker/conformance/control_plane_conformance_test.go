@@ -19,34 +19,34 @@
 
 package conformance
 
-import (
-	"fmt"
-	"testing"
-
-	conformance "knative.dev/eventing/test/conformance/helpers"
-	testlib "knative.dev/eventing/test/lib"
-	"knative.dev/eventing/test/lib/resources"
-
-	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg"
-	"knative.dev/eventing-kafka-broker/test/pkg/broker"
-)
-
-func brokerCreator(client *testlib.Client, name string) {
-
-	class, err := broker.GetKafkaClassFromEnv()
-	if err != nil {
-		panic(fmt.Sprintf("error getting KafkaBroker class from env '%v'", err))
-	}
-
-	b := client.CreateBrokerOrFail(name,
-		resources.WithBrokerClassForBroker(class),
-	)
-
-	client.WaitForResourceReadyOrFail(b.Name, testlib.BrokerTypeMeta)
-}
-
-func TestBrokerControlPlane(t *testing.T) {
-	pkgtesting.RunMultiple(t, func(t *testing.T) {
-		conformance.BrokerV1ControlPlaneTest(t, brokerCreator)
-	})
-}
+//import (
+//	"fmt"
+//	"testing"
+//
+//	conformance "knative.dev/eventing/test/conformance/helpers"
+//	testlib "knative.dev/eventing/test/lib"
+//	"knative.dev/eventing/test/lib/resources"
+//
+//	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg"
+//	"knative.dev/eventing-kafka-broker/test/pkg/broker"
+//)
+//
+//func brokerCreator(client *testlib.Client, name string) {
+//
+//	class, err := broker.GetKafkaClassFromEnv()
+//	if err != nil {
+//		panic(fmt.Sprintf("error getting KafkaBroker class from env '%v'", err))
+//	}
+//
+//	b := client.CreateBrokerOrFail(name,
+//		resources.WithBrokerClassForBroker(class),
+//	)
+//
+//	client.WaitForResourceReadyOrFail(b.Name, testlib.BrokerTypeMeta)
+//}
+//
+//func TestBrokerControlPlane(t *testing.T) {
+//	pkgtesting.RunMultiple(t, func(t *testing.T) {
+//		conformance.BrokerV1ControlPlaneTest(t, brokerCreator)
+//	})
+//}

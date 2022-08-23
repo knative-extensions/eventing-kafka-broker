@@ -19,72 +19,72 @@
 
 package e2e_broker
 
-import (
-	"context"
-	"testing"
-
-	"k8s.io/utils/pointer"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
-	"knative.dev/eventing/test/e2e/helpers"
-	testlib "knative.dev/eventing/test/lib"
-	"knative.dev/eventing/test/lib/resources"
-
-	kafkatesting "knative.dev/eventing-kafka-broker/test/pkg"
-	"knative.dev/eventing-kafka-broker/test/pkg/broker"
-)
-
-const (
-	brokerName = "broker"
-)
-
-func TestBrokerRedeliveryBrokerV1BackoffLinear(t *testing.T) {
-	class, err := broker.GetKafkaClassFromEnv()
-	if err != nil {
-		t.Fatalf("error getting KafkaBroker class from env '%v'", err)
-	}
-
-	kafkatesting.RunMultiple(t, func(t *testing.T) {
-
-		helpers.BrokerRedelivery(context.Background(), t, func(client *testlib.Client, numRetries int32) string {
-
-			backoff := eventingduck.BackoffPolicyLinear
-
-			client.CreateBrokerOrFail(brokerName,
-				resources.WithBrokerClassForBroker(class),
-				resources.WithDeliveryForBroker(&eventingduck.DeliverySpec{
-					Retry:         &numRetries,
-					BackoffPolicy: &backoff,
-					BackoffDelay:  pointer.StringPtr("PT0.2S"),
-				}),
-			)
-
-			return brokerName
-		})
-	})
-}
-
-func TestBrokerRedeliveryBrokerV1BackoffExponential(t *testing.T) {
-	class, err := broker.GetKafkaClassFromEnv()
-	if err != nil {
-		t.Fatalf("error getting KafkaBroker class from env '%v'", err)
-	}
-
-	kafkatesting.RunMultiple(t, func(t *testing.T) {
-
-		helpers.BrokerRedelivery(context.Background(), t, func(client *testlib.Client, numRetries int32) string {
-
-			backoff := eventingduck.BackoffPolicyExponential
-
-			client.CreateBrokerOrFail(brokerName,
-				resources.WithBrokerClassForBroker(class),
-				resources.WithDeliveryForBroker(&eventingduck.DeliverySpec{
-					Retry:         &numRetries,
-					BackoffPolicy: &backoff,
-					BackoffDelay:  pointer.StringPtr("PT0.2S"),
-				}),
-			)
-
-			return brokerName
-		})
-	})
-}
+//import (
+//	"context"
+//	"testing"
+//
+//	"k8s.io/utils/pointer"
+//	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+//	"knative.dev/eventing/test/e2e/helpers"
+//	testlib "knative.dev/eventing/test/lib"
+//	"knative.dev/eventing/test/lib/resources"
+//
+//	kafkatesting "knative.dev/eventing-kafka-broker/test/pkg"
+//	"knative.dev/eventing-kafka-broker/test/pkg/broker"
+//)
+//
+//const (
+//	brokerName = "broker"
+//)
+//
+//func TestBrokerRedeliveryBrokerV1BackoffLinear(t *testing.T) {
+//	class, err := broker.GetKafkaClassFromEnv()
+//	if err != nil {
+//		t.Fatalf("error getting KafkaBroker class from env '%v'", err)
+//	}
+//
+//	kafkatesting.RunMultiple(t, func(t *testing.T) {
+//
+//		helpers.BrokerRedelivery(context.Background(), t, func(client *testlib.Client, numRetries int32) string {
+//
+//			backoff := eventingduck.BackoffPolicyLinear
+//
+//			client.CreateBrokerOrFail(brokerName,
+//				resources.WithBrokerClassForBroker(class),
+//				resources.WithDeliveryForBroker(&eventingduck.DeliverySpec{
+//					Retry:         &numRetries,
+//					BackoffPolicy: &backoff,
+//					BackoffDelay:  pointer.StringPtr("PT0.2S"),
+//				}),
+//			)
+//
+//			return brokerName
+//		})
+//	})
+//}
+//
+//func TestBrokerRedeliveryBrokerV1BackoffExponential(t *testing.T) {
+//	class, err := broker.GetKafkaClassFromEnv()
+//	if err != nil {
+//		t.Fatalf("error getting KafkaBroker class from env '%v'", err)
+//	}
+//
+//	kafkatesting.RunMultiple(t, func(t *testing.T) {
+//
+//		helpers.BrokerRedelivery(context.Background(), t, func(client *testlib.Client, numRetries int32) string {
+//
+//			backoff := eventingduck.BackoffPolicyExponential
+//
+//			client.CreateBrokerOrFail(brokerName,
+//				resources.WithBrokerClassForBroker(class),
+//				resources.WithDeliveryForBroker(&eventingduck.DeliverySpec{
+//					Retry:         &numRetries,
+//					BackoffPolicy: &backoff,
+//					BackoffDelay:  pointer.StringPtr("PT0.2S"),
+//				}),
+//			)
+//
+//			return brokerName
+//		})
+//	})
+//}

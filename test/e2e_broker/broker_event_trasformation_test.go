@@ -18,30 +18,30 @@
  */
 
 package e2e_broker
-
-import (
-	"context"
-	"testing"
-
-	"knative.dev/eventing/test/e2e/helpers"
-
-	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg"
-	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
-)
-
-func TestEventTransformationForTriggerV1BrokerV1(t *testing.T) {
-	runTest(t, "v1", "v1")
-}
-
-func runTest(t *testing.T, brokerVersion string, triggerVersion string) {
-	pkgtesting.RunMultiple(t, func(t *testing.T) {
-
-		helpers.EventTransformationForTriggerTestHelper(
-			context.Background(),
-			t,
-			brokerVersion,
-			triggerVersion,
-			testbroker.Creator,
-		)
-	})
-}
+//
+//import (
+//	"context"
+//	"testing"
+//
+//	"knative.dev/eventing/test/e2e/helpers"
+//
+//	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg"
+//	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
+//)
+//
+//func TestEventTransformationForTriggerV1BrokerV1(t *testing.T) {
+//	runTest(t, "v1", "v1")
+//}
+//
+//func runTest(t *testing.T, brokerVersion string, triggerVersion string) {
+//	pkgtesting.RunMultiple(t, func(t *testing.T) {
+//
+//		helpers.EventTransformationForTriggerTestHelper(
+//			context.Background(),
+//			t,
+//			brokerVersion,
+//			triggerVersion,
+//			testbroker.Creator,
+//		)
+//	})
+//}

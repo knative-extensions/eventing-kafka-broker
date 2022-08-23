@@ -19,17 +19,17 @@
 
 package e2e_broker
 
-import (
-	"context"
-	"testing"
-
-	"knative.dev/eventing/test/e2e/helpers"
-
-	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
-)
-
-func TestBrokerWithManyTriggers(t *testing.T) {
-	t.Skip("Pass more events than necessary (related? https://knative.slack.com/archives/C9JP909F0/p1595244377489600)")
-
-	helpers.TestBrokerWithManyTriggers(context.Background(), t, testbroker.Creator, false)
-}
+//import (
+//	"context"
+//	"testing"
+//
+//	"knative.dev/eventing/test/e2e/helpers"
+//
+//	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
+//)
+//
+//func TestBrokerWithManyTriggers(t *testing.T) {
+//	t.Skip("Pass more events than necessary (related? https://knative.slack.com/archives/C9JP909F0/p1595244377489600)")
+//
+//	helpers.TestBrokerWithManyTriggers(context.Background(), t, testbroker.Creator, false)
+//}
