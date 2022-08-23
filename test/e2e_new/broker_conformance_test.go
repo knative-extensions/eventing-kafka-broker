@@ -21,6 +21,7 @@ package e2e_new
 
 import (
 	"testing"
+	"time"
 
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -41,6 +42,7 @@ func TestBrokerConformance(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(4*time.Second, 120*time.Second),
 		environment.Managed(t),
 	)
 
