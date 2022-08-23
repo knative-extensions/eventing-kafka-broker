@@ -52,7 +52,7 @@ func TestTracingHeaders(t *testing.T) {
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
 		tracing.WithZipkin,
-		environment.WithPollTimings(4*time.Second, 120*time.Second),
+		environment.WithPollTimings(4*time.Second, 240*time.Second),
 		environment.Managed(t),
 	)
 
