@@ -33,10 +33,10 @@ package e2e_broker
 //	"knative.dev/eventing-kafka-broker/test/pkg/broker"
 //)
 //
-//const (
-//	brokerName = "broker"
-//)
-//
+const (
+	brokerName = "broker"
+)
+
 //func TestBrokerRedeliveryBrokerV1BackoffLinear(t *testing.T) {
 //	class, err := broker.GetKafkaClassFromEnv()
 //	if err != nil {
