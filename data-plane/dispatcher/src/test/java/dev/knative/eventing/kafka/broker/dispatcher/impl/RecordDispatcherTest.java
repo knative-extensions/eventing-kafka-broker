@@ -31,6 +31,10 @@ import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpVersion;
+import io.vertx.ext.web.client.impl.HttpResponseImpl;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
@@ -41,27 +45,23 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(VertxExtension.class)
 public class RecordDispatcherTest {
 
   private static final ResourceContext resourceContext = new ResourceContext(
     DataPlaneContract.Resource.newBuilder().build(),
-    DataPlaneContract.Egress.newBuilder().build()
+    DataPlaneContract.Egress.newBuilder().setDestination("testdest").build()
   );
 
   static {
@@ -184,7 +184,7 @@ public class RecordDispatcherTest {
     assertTrue(subscriberSenderSendCalled.get());
     assertTrue(dlsSenderSendCalled.get());
     verify(receiver, times(1)).recordReceived(record);
-    verify(receiver, times(1)).successfullySentToDeadLetterSink(record);
+    verify(receiver, times(1)).successfullySentToDeadLetterSink(any());
     verify(receiver, never()).successfullySentToSubscriber(any());
     verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
     verify(receiver, never()).recordDiscarded(any());
@@ -228,7 +228,7 @@ public class RecordDispatcherTest {
     assertTrue(subscriberSenderSendCalled.get());
     assertTrue(dlsSenderSendCalled.get());
     verify(receiver, times(1)).recordReceived(record);
-    verify(receiver, times(1)).failedToSendToDeadLetterSink(eq(record), any());
+    verify(receiver, times(1)).failedToSendToDeadLetterSink(any(), any());
     verify(receiver, never()).successfullySentToDeadLetterSink(any());
     verify(receiver, never()).successfullySentToSubscriber(any());
     verify(receiver, never()).recordDiscarded(any());
@@ -237,6 +237,140 @@ public class RecordDispatcherTest {
     assertEventProcessingLatency();
     assertEventCount();
     assertNoDiscardedEventCount();
+  }
+
+  @Test
+  public void failedEventsShouldBeEnhancedWithErrorExtensionsPriorToSendingToDls() {
+
+    final var subscriberSenderSendCalled = new AtomicBoolean(false);
+    final var dlsSenderSendCalled = new AtomicBoolean(false);
+    final RecordDispatcherListener receiver = offsetManagerMock();
+
+    int errorCode = 422;
+    String errorBody = "{ \"message\": \"bad bad things happened\" }";
+
+    final var dispatcherHandler = new RecordDispatcherImpl(
+      resourceContext,
+      value -> true,
+      new CloudEventSenderMock(
+        record -> {
+          subscriberSenderSendCalled.set(true);
+          return Future.failedFuture(new ResponseFailureException(makeHttpResponse(errorCode, errorBody), ""));
+        }
+      ),
+      new CloudEventSenderMock(
+        record -> {
+          dlsSenderSendCalled.set(true);
+          return Future.succeededFuture();
+        }
+      ), new ResponseHandlerMock(),
+      receiver,
+      null,
+      registry
+    );
+    final var record = record();
+    dispatcherHandler.dispatch(record);
+
+    ArgumentCaptor<KafkaConsumerRecord<Object, CloudEvent>> captor = ArgumentCaptor.forClass(KafkaConsumerRecord.class);
+
+    assertTrue(subscriberSenderSendCalled.get());
+    assertTrue(dlsSenderSendCalled.get());
+    verify(receiver, times(1)).recordReceived(record);
+    verify(receiver, times(1)).successfullySentToDeadLetterSink(captor.capture());
+    verify(receiver, never()).successfullySentToSubscriber(any());
+    verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
+    verify(receiver, never()).recordDiscarded(any());
+
+    KafkaConsumerRecord<Object, CloudEvent> failedRecord = captor.getValue();
+    assertEquals(record.topic(), failedRecord.topic());
+    assertEquals(record.partition(), failedRecord.partition());
+    assertEquals(record.offset(), failedRecord.offset());
+    assertEquals(record.key(), failedRecord.key());
+    assertEquals(record.value().getId(), failedRecord.value().getId());
+    assertEquals(record.value().getAttributeNames(), failedRecord.value().getAttributeNames());
+    assertEquals(record.value().getData(), failedRecord.value().getData());
+    assertEquals("testdest", failedRecord.value().getExtension("knativeerrordest"));
+    assertEquals(String.valueOf(errorCode), failedRecord.value().getExtension("knativeerrorcode"));
+    assertEquals(errorBody, failedRecord.value().getExtension("knativeerrordata"));
+
+    assertEventDispatchLatency();
+    assertEventProcessingLatency();
+    assertEventCount();
+    assertNoDiscardedEventCount();
+  }
+
+  @Test
+  public void failedEventsShouldBeEnhancedWithErrorExtensionsPriorToSendingToDlsBodyTooLarge() {
+
+    final var subscriberSenderSendCalled = new AtomicBoolean(false);
+    final var dlsSenderSendCalled = new AtomicBoolean(false);
+    final RecordDispatcherListener receiver = offsetManagerMock();
+
+    int errorCode = 422;
+    String errorBody = "A".repeat(1024);
+    String errorBodyTooLarge = errorBody + "QWERTY";
+
+    final var dispatcherHandler = new RecordDispatcherImpl(
+      resourceContext,
+      value -> true,
+      new CloudEventSenderMock(
+        record -> {
+          subscriberSenderSendCalled.set(true);
+          return Future.failedFuture(new ResponseFailureException(makeHttpResponse(errorCode, errorBodyTooLarge), ""));
+        }
+      ),
+      new CloudEventSenderMock(
+        record -> {
+          dlsSenderSendCalled.set(true);
+          return Future.succeededFuture();
+        }
+      ), new ResponseHandlerMock(),
+      receiver,
+      null,
+      registry
+    );
+    final var record = record();
+    dispatcherHandler.dispatch(record);
+
+    ArgumentCaptor<KafkaConsumerRecord<Object, CloudEvent>> captor = ArgumentCaptor.forClass(KafkaConsumerRecord.class);
+
+    assertTrue(subscriberSenderSendCalled.get());
+    assertTrue(dlsSenderSendCalled.get());
+    verify(receiver, times(1)).recordReceived(record);
+    verify(receiver, times(1)).successfullySentToDeadLetterSink(captor.capture());
+    verify(receiver, never()).successfullySentToSubscriber(any());
+    verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
+    verify(receiver, never()).recordDiscarded(any());
+
+    KafkaConsumerRecord<Object, CloudEvent> failedRecord = captor.getValue();
+    assertEquals(record.topic(), failedRecord.topic());
+    assertEquals(record.partition(), failedRecord.partition());
+    assertEquals(record.offset(), failedRecord.offset());
+    assertEquals(record.key(), failedRecord.key());
+    assertEquals(record.value().getId(), failedRecord.value().getId());
+    assertEquals(record.value().getAttributeNames(), failedRecord.value().getAttributeNames());
+    assertEquals(record.value().getData(), failedRecord.value().getData());
+    assertEquals("testdest", failedRecord.value().getExtension("knativeerrordest"));
+    assertEquals(String.valueOf(errorCode), failedRecord.value().getExtension("knativeerrorcode"));
+    assertEquals(errorBody, failedRecord.value().getExtension("knativeerrordata"));
+
+    assertEventDispatchLatency();
+    assertEventProcessingLatency();
+    assertEventCount();
+    assertNoDiscardedEventCount();
+  }
+
+  private HttpResponseImpl<Buffer> makeHttpResponse(int statusCode, String body) {
+    return new HttpResponseImpl<Buffer>(
+      HttpVersion.HTTP_2,
+      statusCode,
+      "",
+      MultiMap.caseInsensitiveMultiMap(),
+      MultiMap.caseInsensitiveMultiMap(),
+      Collections.emptyList(),
+      Buffer.buffer(body, "UTF-8"),
+      Collections.emptyList()
+    );
   }
 
   @Test
@@ -265,7 +399,7 @@ public class RecordDispatcherTest {
 
     assertTrue(subscriberSenderSendCalled.get());
     verify(receiver, times(1)).recordReceived(record);
-    verify(receiver, times(1)).failedToSendToDeadLetterSink(eq(record), any());
+    verify(receiver, times(1)).failedToSendToDeadLetterSink(any(), any());
     verify(receiver, never()).successfullySentToDeadLetterSink(any());
     verify(receiver, never()).successfullySentToSubscriber(any());
     verify(receiver, never()).recordDiscarded(any());
