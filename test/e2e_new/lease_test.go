@@ -21,6 +21,7 @@ package e2e_new
 
 import (
 	"testing"
+	"time"
 
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
@@ -38,6 +39,7 @@ func TestLeaseAcquired(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(4*time.Second, 120*time.Second),
 		environment.Managed(t),
 	)
 

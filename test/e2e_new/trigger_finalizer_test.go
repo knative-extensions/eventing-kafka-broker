@@ -47,6 +47,7 @@ func TestTriggerNoFinalizer(t *testing.T) {
 			knative.WithLoggingConfig,
 			knative.WithTracingConfig,
 			k8s.WithEventListener,
+			environment.WithPollTimings(4*time.Second, 120*time.Second),
 			environment.Managed(t),
 		)
 
