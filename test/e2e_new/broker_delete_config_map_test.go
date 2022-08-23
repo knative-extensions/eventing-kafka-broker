@@ -21,6 +21,7 @@ package e2e_new
 
 import (
 	"testing"
+	"time"
 
 	. "github.com/cloudevents/sdk-go/v2/test"
 	"knative.dev/eventing/test/rekt/resources/broker"
