@@ -26,6 +26,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDese
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEvent;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KafkaConsumerRecordUtils;
 import io.cloudevents.CloudEvent;
+import io.cloudevents.core.builder.CloudEventBuilder;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
@@ -37,11 +38,14 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -67,6 +71,11 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   // Invalid cloud event records that are discarded by dispatch may not have a record type. So we set Tag as below.
   private static final Tag INVALID_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "InvalidCloudEvent");
+
+  private static final String KN_ERROR_DEST_EXT_NAME = "knativeerrordest";
+  private static final String KN_ERROR_CODE_EXT_NAME = "knativeerrorcode";
+  private static final String KN_ERROR_DATA_EXT_NAME = "knativeerrordata";
+  private static final int KN_ERROR_DATA_MAX_BYTES = 1024;
 
   private final Filter filter;
   private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> subscriberSender;
@@ -254,13 +263,70 @@ public class RecordDispatcherImpl implements RecordDispatcher {
                                    final ConsumerRecordContext recordContext,
                                    final Promise<Void> finalProm) {
 
-    final var response = getResponse(failure);
+    var response = getResponse(failure);
     incrementEventCount(response, recordContext);
     recordDispatchLatency(response, recordContext);
 
-    dlsSender.apply(recordContext.getRecord())
-      .onSuccess(v -> onDeadLetterSinkSuccess(recordContext, finalProm))
-      .onFailure(ex -> onDeadLetterSinkFailure(recordContext, ex, finalProm));
+    if (response == null && failure instanceof ResponseFailureException) {
+      response = ((ResponseFailureException) failure).getResponse();
+    }
+
+    // enhance event with extension attributes prior to forwarding to the dead letter sink
+    final var transformedRecordContext = errorTransform(recordContext, response);
+
+    dlsSender.apply(transformedRecordContext.getRecord())
+      .onSuccess(v -> onDeadLetterSinkSuccess(transformedRecordContext, finalProm))
+      .onFailure(ex -> onDeadLetterSinkFailure(transformedRecordContext, ex, finalProm));
+  }
+
+  private ConsumerRecordContext errorTransform(final ConsumerRecordContext recordContext, @Nullable final HttpResponse<?> response) {
+    final var destination = resourceContext.getEgress().getDestination();
+    if (response == null) {
+      // if response is null we still want to add destination
+      return addExtensions(recordContext, Map.of(KN_ERROR_DEST_EXT_NAME, destination));
+    }
+
+    final var extensions = new HashMap<String, String>();
+    extensions.put(KN_ERROR_DEST_EXT_NAME, destination);
+    extensions.put(KN_ERROR_CODE_EXT_NAME, String.valueOf(response.statusCode()));
+
+    var data = response.bodyAsString();
+    if (data != null) {
+      if (data.length() > KN_ERROR_DATA_MAX_BYTES) {
+        data = data.substring(0, KN_ERROR_DATA_MAX_BYTES);
+      }
+      extensions.put(KN_ERROR_DATA_EXT_NAME, data);
+    }
+
+    return addExtensions(recordContext, extensions);
+  }
+
+  // creates a new instance of ConsumerRecordContext with added extension attributes for underlying CloudEvent
+  private ConsumerRecordContext addExtensions(final ConsumerRecordContext recordContext, final Map<String, String> extensions) {
+    final var cloudEvent = recordContext.getRecord().value();
+
+    final var builder = CloudEventBuilder.v1(cloudEvent);
+    extensions.forEach(builder::withExtension);
+    final var transformedCloudEvent = builder.build();
+
+    final var cr = new ConsumerRecord<>(
+      recordContext.getRecord().record().topic(),
+      recordContext.getRecord().record().partition(),
+      recordContext.getRecord().record().offset(),
+      recordContext.getRecord().record().timestamp(),
+      recordContext.getRecord().record().timestampType(),
+      null,
+      recordContext.getRecord().record().serializedKeySize(),
+      recordContext.getRecord().record().serializedValueSize(),
+      recordContext.getRecord().record().key(),
+      transformedCloudEvent,
+      recordContext.getRecord().record().headers(),
+      recordContext.getRecord().record().leaderEpoch()
+    );
+
+    final var kcr = new KafkaConsumerRecordImpl<>(cr);
+
+    return new ConsumerRecordContext(kcr);
   }
 
   private void onDeadLetterSinkSuccess(final ConsumerRecordContext recordContext,
