@@ -47,13 +47,18 @@ type BrokerPartialSpec struct {
 	Config *duckv1.KReference `json:"config,omitempty"`
 }
 
-func (b BrokerPartialSpec) Validate(context.Context) error {
-	if b.Config == nil {
+func (b BrokerPartial) Validate(context.Context) error {
+	if b.Spec.Config == nil {
 		return apis.ErrMissingField("config").ViaField("spec")
 	}
-	if strings.ToLower(b.Config.Kind) != "configmap" {
-		return apis.ErrInvalidValue(b.Config.Kind, "kind", "Expected ConfigMap").ViaField("config").ViaField("spec")
+	if strings.ToLower(b.Spec.Config.Kind) != "configmap" {
+		return apis.ErrInvalidValue(b.Spec.Config.Kind, "kind", "Expected ConfigMap").ViaField("config").ViaField("spec")
 	}
+
+	if b.Annotations[eventing.BrokerClassAnnotationKey] == kafka.NamespacedBrokerClass && b.Spec.Config.Namespace != b.Namespace {
+		return apis.ErrInvalidValue(b.Spec.Config.Kind, "kind", "Expected ConfigMap in same namespace with broker resource").ViaField("config").ViaField("spec")
+	}
+
 	return nil
 }
 
@@ -62,10 +67,10 @@ func validateBrokerFromUnstructured(ctx context.Context, unstructured *unstructu
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured.UnstructuredContent(), &broker); err != nil {
 		return err
 	}
-	if class, ok := broker.Annotations[eventing.BrokerClassAnnotationKey]; !ok || class != kafka.BrokerClass {
+	if class, ok := broker.Annotations[eventing.BrokerClassAnnotationKey]; !ok || (class != kafka.BrokerClass && class != kafka.NamespacedBrokerClass) {
 		return nil
 	}
-	return broker.Spec.Validate(ctx)
+	return broker.Validate(ctx)
 }
 
 func BrokerValidationCallback() validation.Callback {
