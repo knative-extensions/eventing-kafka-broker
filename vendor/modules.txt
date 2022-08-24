@@ -1284,7 +1284,7 @@ k8s.io/utils/internal/third_party/forked/golang/net
 k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.33.1-0.20220822135655-5ee615866b28
+# knative.dev/eventing v0.34.1
 ## explicit; go 1.18
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/pkg/apis/config
@@ -1435,7 +1435,7 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/eventing-kafka v0.33.1-0.20220822070354-97a8afd1af90
+# knative.dev/eventing-kafka v0.34.0
 ## explicit; go 1.16
 knative.dev/eventing-kafka/pkg/apis/bindings
 knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
@@ -1502,7 +1502,7 @@ knative.dev/eventing-kafka/test/rekt/resources/resetoffset
 knative.dev/eventing-kafka/test/upgrade
 knative.dev/eventing-kafka/test/upgrade/continual
 knative.dev/eventing-kafka/test/upgrade/installation
-# knative.dev/hack v0.0.0-20220815132133-e9a8475f4329
+# knative.dev/hack v0.0.0-20220823140917-8d1e4ccf9dc3
 ## explicit; go 1.17
 knative.dev/hack
 knative.dev/hack/shell
