@@ -32,14 +32,14 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )
 
-type BrokerPartial struct {
+type BrokerStub struct {
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Spec defines the desired state of the Broker.
-	Spec BrokerPartialSpec `json:"spec,omitempty"`
+	Spec BrokerStubSpec `json:"spec,omitempty"`
 }
 
-type BrokerPartialSpec struct {
+type BrokerStubSpec struct {
 	// Config is a KReference to the configuration that specifies
 	// configuration options for this Broker. For example, this could be
 	// a pointer to a ConfigMap.
@@ -47,7 +47,7 @@ type BrokerPartialSpec struct {
 	Config *duckv1.KReference `json:"config,omitempty"`
 }
 
-func (b BrokerPartialSpec) Validate(context.Context) error {
+func (b BrokerStubSpec) Validate(context.Context) error {
 	if b.Config == nil {
 		return apis.ErrMissingField("config").ViaField("spec")
 	}
@@ -58,7 +58,7 @@ func (b BrokerPartialSpec) Validate(context.Context) error {
 }
 
 func validateBrokerFromUnstructured(ctx context.Context, unstructured *unstructured.Unstructured) error {
-	broker := BrokerPartial{}
+	broker := BrokerStub{}
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured.UnstructuredContent(), &broker); err != nil {
 		return err
 	}
