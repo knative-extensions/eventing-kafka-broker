@@ -349,7 +349,9 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	}
 
 	if err != nil && !apierrors.IsNotFound(err) {
-		return err
+		// TODO: not sure about what to do here...
+		logger.Error("Error getting broker config map", zap.Error(err))
+		return nil
 	}
 
 	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig, UseNamespaceInConfigmap: false}, r.SecretProviderFunc())
@@ -366,7 +368,9 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		// TODO: refactor
 		topicConfig, _, err := r.topicConfig(logger, broker)
 		if err != nil {
-			return fmt.Errorf("failed to resolve broker config: %w", err)
+			logger.Error("failed to resolve broker config", zap.Error(err))
+			// TODO: returning here messes up the secret finalizer crap
+			return nil
 		}
 
 		if secret != nil {
@@ -405,7 +409,8 @@ func (r *Reconciler) finalizeNonExternalBrokerTopic(broker *eventing.Broker, sec
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
-		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+		logger.Error("cannot obtain Kafka cluster admin", zap.Error(err))
+		return nil
 	}
 	defer kafkaClusterAdminClient.Close()
 
