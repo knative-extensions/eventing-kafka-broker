@@ -22,6 +22,10 @@ package e2e_new
 import (
 	"testing"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/features"
+	"knative.dev/reconciler-test/pkg/feature"
+
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
@@ -36,6 +40,14 @@ import (
 )
 
 func TestBrokerConformance(t *testing.T) {
+	if broker.EnvCfg.BrokerClass == kafka.NamespacedBrokerClass {
+		// TODO
+		// TODO
+		// TODO
+		// TODO
+		t.Skip("Skipping conformance test for namespaced broker")
+	}
+
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
@@ -44,8 +56,18 @@ func TestBrokerConformance(t *testing.T) {
 		environment.Managed(t),
 	)
 
+	configName := feature.MakeRandomK8sName("kafka-broker-config")
+
+	env.Prerequisite(ctx, t, features.BrokerConfigmapCreated(configName))
+
 	// Install and wait for a Ready Broker.
-	env.Prerequisite(ctx, t, brokerfeatures.GoesReady("default", broker.WithBrokerClass(broker.EnvCfg.BrokerClass)))
+	env.Prerequisite(ctx, t,
+		brokerfeatures.GoesReady(
+			"default",
+			broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
+			broker.WithConfig(configName),
+		),
+	)
 
 	env.TestSet(ctx, t, brokerfeatures.ControlPlaneConformance("default"))
 	env.TestSet(ctx, t, brokerfeatures.DataPlaneConformance("default"))
