@@ -26,27 +26,22 @@ import (
 
 	. "github.com/cloudevents/sdk-go/v2/test"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	testlib "knative.dev/eventing/test/lib"
-	"knative.dev/eventing/test/lib/recordevents"
-	"knative.dev/eventing/test/lib/resources"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	brokertest "knative.dev/eventing-kafka-broker/test/pkg/broker"
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/eventing/test/lib/recordevents"
+	"knative.dev/eventing/test/lib/resources"
 )
 
 func TestBrokerTrigger(t *testing.T) {
-	class, err := brokertest.GetKafkaClassFromEnv()
-	if err != nil {
-		t.Fatalf("error getting KafkaBroker class from env '%v'", err)
-	}
-
 	testingpkg.RunMultiple(t, func(t *testing.T) {
 
 		ctx := context.Background()
@@ -73,10 +68,7 @@ func TestBrokerTrigger(t *testing.T) {
 		nonMatchingEventId := uuid.New().String()
 		eventId := uuid.New().String()
 
-		br := client.CreateBrokerOrFail(
-			brokerName,
-			resources.WithBrokerClassForBroker(class),
-		)
+		brokerName := brokertest.Creator(client, "v1")
 
 		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber)
 
@@ -148,7 +140,12 @@ func TestBrokerTrigger(t *testing.T) {
 			BootstrapServers:  testingpkg.BootstrapServersPlaintext,
 			ReplicationFactor: defaultReplicationFactor,
 			NumPartitions:     defaultNumPartitions,
-			Topic:             kafka.BrokerTopic(broker.TopicPrefix, br),
+			Topic: kafka.BrokerTopic(broker.TopicPrefix, &eventing.Broker{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      brokerName,
+					Namespace: client.Namespace,
+				},
+			}),
 		}
 
 		err := kafkatest.VerifyNumPartitionAndReplicationFactor(
@@ -165,11 +162,6 @@ func TestBrokerTrigger(t *testing.T) {
 }
 
 func TestBrokerWithConfig(t *testing.T) {
-	class, err := brokertest.GetKafkaClassFromEnv()
-	if err != nil {
-		t.Fatalf("error getting KafkaBroker class from env '%v'", err)
-	}
-
 	testingpkg.RunMultiple(t, func(t *testing.T) {
 
 		ctx := context.Background()
@@ -196,22 +188,11 @@ func TestBrokerWithConfig(t *testing.T) {
 
 		eventId := uuid.New().String()
 
-		cm := client.CreateConfigMapOrFail(configMapName, client.Namespace, map[string]string{
-			kafka.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
-			kafka.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
-			kafka.BootstrapServersConfigMapKey:              testingpkg.BootstrapServersPlaintext,
+		brokerName := brokertest.CreatorWithConfigOptions(client, "v1", func(data map[string]string) {
+			data[kafka.DefaultTopicNumPartitionConfigMapKey] = fmt.Sprintf("%d", numPartitions)
+			data[kafka.DefaultTopicReplicationFactorConfigMapKey] = fmt.Sprintf("%d", replicationFactor)
+			data[kafka.BootstrapServersConfigMapKey] = testingpkg.BootstrapServersPlaintext
 		})
-
-		br := client.CreateBrokerOrFail(
-			brokerName,
-			resources.WithBrokerClassForBroker(class),
-			resources.WithConfigForBroker(&duckv1.KReference{
-				Kind:       "ConfigMap",
-				Namespace:  cm.Namespace,
-				Name:       cm.Name,
-				APIVersion: "v1",
-			}),
-		)
 
 		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber)
 
@@ -264,7 +245,12 @@ func TestBrokerWithConfig(t *testing.T) {
 			BootstrapServers:  testingpkg.BootstrapServersPlaintext,
 			ReplicationFactor: replicationFactor,
 			NumPartitions:     numPartitions,
-			Topic:             kafka.BrokerTopic(broker.TopicPrefix, br),
+			Topic: kafka.BrokerTopic(broker.TopicPrefix, &eventing.Broker{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      brokerName,
+					Namespace: client.Namespace,
+				},
+			}),
 		}
 
 		err := kafkatest.VerifyNumPartitionAndReplicationFactor(

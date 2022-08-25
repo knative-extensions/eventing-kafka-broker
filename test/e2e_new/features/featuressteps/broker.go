@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 
+	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
+
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
@@ -36,6 +38,7 @@ import (
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
+	"knative.dev/reconciler-test/pkg/manifest"
 	"knative.dev/reconciler-test/resources/svc"
 )
 
@@ -63,9 +66,17 @@ func BrokerSmokeTest(brokerName, triggerName string) feature.StepFn {
 
 	backoffPolicy := eventingduck.BackoffPolicyLinear
 
+	configName := feature.MakeRandomK8sName("config")
+
 	return compose(
 		eventshub.Install(sink, eventshub.StartReceiver),
-		broker.Install(brokerName, broker.WithEnvConfig()...),
+		brokerconfigmap.Install(
+			configName,
+			brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+			brokerconfigmap.WithNumPartitions(1),
+			brokerconfigmap.WithReplicationFactor(1),
+		),
+		broker.Install(brokerName, append([]manifest.CfgFn{broker.WithConfig(configName)}, broker.WithEnvConfig()...)...),
 		broker.IsReady(brokerName),
 		trigger.Install(
 			triggerName,

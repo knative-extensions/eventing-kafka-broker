@@ -20,29 +20,26 @@
 package conformance
 
 import (
-	"fmt"
 	"testing"
 
-	conformance "knative.dev/eventing/test/conformance/helpers"
-	testlib "knative.dev/eventing/test/lib"
-	"knative.dev/eventing/test/lib/resources"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 
 	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg"
-	"knative.dev/eventing-kafka-broker/test/pkg/broker"
+	brokertest "knative.dev/eventing-kafka-broker/test/pkg/broker"
+	conformance "knative.dev/eventing/test/conformance/helpers"
+	testlib "knative.dev/eventing/test/lib"
 )
 
 func brokerCreator(client *testlib.Client, name string) {
-
-	class, err := broker.GetKafkaClassFromEnv()
-	if err != nil {
-		panic(fmt.Sprintf("error getting KafkaBroker class from env '%v'", err))
-	}
-
-	b := client.CreateBrokerOrFail(name,
-		resources.WithBrokerClassForBroker(class),
+	brokertest.CreatorWithBrokerOptions(
+		client,
+		"v1",
+		func(b *eventing.Broker) {
+			b.Name = name
+		},
 	)
 
-	client.WaitForResourceReadyOrFail(b.Name, testlib.BrokerTypeMeta)
+	client.WaitForResourceReadyOrFail(name, testlib.BrokerTypeMeta)
 }
 
 func TestBrokerControlPlane(t *testing.T) {

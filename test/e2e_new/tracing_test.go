@@ -25,6 +25,8 @@ import (
 	"testing"
 	"time"
 
+	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
+
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/openzipkin/zipkin-go/model"
 	tracinghelper "knative.dev/eventing/test/conformance/helpers/tracing"
@@ -67,14 +69,23 @@ func TracingHeadersUsingOrderedDeliveryWithTraceExported() *feature.Feature {
 	sinkName := feature.MakeRandomK8sName("sink")
 	triggerName := feature.MakeRandomK8sName("trigger")
 	brokerName := feature.MakeRandomK8sName("broker")
+	configName := feature.MakeRandomK8sName("config")
 
 	ev := cetest.FullEvent()
 	ev.SetID("full-event-ordered")
 	ev.SetSource(sourceName)
 
+	f.Setup("create broker config", brokerconfigmap.Install(
+		configName,
+		brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+		brokerconfigmap.WithNumPartitions(1),
+		brokerconfigmap.WithReplicationFactor(1),
+	))
+
 	f.Setup("install broker", broker.Install(
 		brokerName,
 		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
+		broker.WithConfig(configName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
@@ -199,13 +210,22 @@ func TracingHeadersUsingUnorderedDelivery() *feature.Feature {
 	sinkName := feature.MakeRandomK8sName("sink")
 	triggerName := feature.MakeRandomK8sName("trigger")
 	brokerName := feature.MakeRandomK8sName("broker")
+	configName := feature.MakeRandomK8sName("config")
 
 	ev := cetest.FullEvent()
 	ev.SetID("full-event-unordered")
 
+	f.Setup("create broker config", brokerconfigmap.Install(
+		configName,
+		brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+		brokerconfigmap.WithNumPartitions(1),
+		brokerconfigmap.WithReplicationFactor(1),
+	))
+
 	f.Setup("install broker", broker.Install(
 		brokerName,
 		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
+		broker.WithConfig(configName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
@@ -245,13 +265,22 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 	triggerAName := feature.MakeRandomK8sName("trigger-a")
 	triggerBName := feature.MakeRandomK8sName("trigger-b")
 	brokerName := feature.MakeRandomK8sName("broker")
+	configName := feature.MakeRandomK8sName("config")
 
 	ev := cetest.FullEvent()
 	ev.SetID("full-event-unordered")
 
+	f.Setup("create broker config", brokerconfigmap.Install(
+		configName,
+		brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+		brokerconfigmap.WithNumPartitions(1),
+		brokerconfigmap.WithReplicationFactor(1),
+	))
+
 	f.Setup("install broker", broker.Install(
 		brokerName,
 		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
+		broker.WithConfig(configName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
