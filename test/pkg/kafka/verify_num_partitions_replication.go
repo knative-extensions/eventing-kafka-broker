@@ -66,9 +66,10 @@ func VerifyNumPartitionAndReplicationFactor(
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:            name,
-							Image:           pkgtest.ImagePath(partitionReplicationVerifierImage),
-							ImagePullPolicy: corev1.PullIfNotPresent,
+							Name:                     name,
+							Image:                    pkgtest.ImagePath(partitionReplicationVerifierImage),
+							ImagePullPolicy:          corev1.PullIfNotPresent,
+							TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "BOOTSTRAP_SERVERS",
