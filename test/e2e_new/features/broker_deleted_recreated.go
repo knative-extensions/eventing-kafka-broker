@@ -30,6 +30,7 @@ import (
 
 	"knative.dev/eventing-kafka-broker/test/e2e_new/features/featuressteps"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap"
+	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
 )
 
 func BrokerDeletedRecreated() *feature.Feature {
@@ -77,6 +78,27 @@ func BrokerConfigMapDoesNotExist() *feature.Feature {
 	brokerName := feature.MakeRandomK8sName("broker")
 
 	f.Setup("install broker", broker.Install(brokerName, append(broker.WithEnvConfig(), broker.WithConfig("doesNotExist"))...))
+
+	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
+
+	return f
+}
+
+// BrokerCannotReachKafkaCluster tests that a broker can be deleted even when KafkaCluster is unreachable.
+func BrokerCannotReachKafkaCluster() *feature.Feature {
+	f := feature.NewFeatureNamed("delete broker with unreachable Kafka cluster")
+
+	brokerName := feature.MakeRandomK8sName("broker")
+	configName := feature.MakeRandomK8sName("config")
+
+	f.Setup("create broker config", brokerconfigmap.Install(
+		configName,
+		brokerconfigmap.WithBootstrapServer("cluster-does-not-exist:9092"),
+		brokerconfigmap.WithNumPartitions(1),
+		brokerconfigmap.WithReplicationFactor(1),
+	))
+
+	f.Setup("install broker", broker.Install(brokerName, append(broker.WithEnvConfig(), broker.WithConfig(configName))...))
 
 	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
 
