@@ -209,6 +209,8 @@ function test_setup() {
   # Apply test configurations, and restart data plane components (we don't have hot reload)
   ko apply ${KO_FLAGS} -f ./test/config/ || fail_test "Failed to apply test configurations"
 
+  create_sasl_secrets || fail_test "Failed to create SASL secrets"
+  create_tls_secrets || fail_test "Failed to create TLS secrets"
   setup_kafka_channel_auth || fail_test "Failed to apply channel auth configuration ${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO}"
 
   kubectl rollout restart statefulset -n knative-eventing kafka-source-dispatcher
@@ -347,6 +349,72 @@ function build_monitoring_artifacts_source() {
 
   ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
     "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+}
+
+function create_tls_secrets() {
+  ca_cert_secret="my-cluster-cluster-ca-cert"
+  tls_user="my-tls-user"
+
+  echo "Waiting until secrets: ${ca_cert_secret}, ${tls_user} exist"
+  wait_until_object_exists secret ${ca_cert_secret} kafka
+  wait_until_object_exists secret ${tls_user} kafka
+
+  echo "Creating TLS Kafka secret"
+
+  STRIMZI_CRT=$(kubectl -n kafka get secret "${ca_cert_secret}" --template='{{index .data "ca.crt"}}' | base64 --decode )
+  TLSUSER_CRT=$(kubectl -n kafka get secret "${tls_user}" --template='{{index .data "user.crt"}}' | base64 --decode )
+  TLSUSER_KEY=$(kubectl -n kafka get secret "${tls_user}" --template='{{index .data "user.key"}}' | base64 --decode )
+
+  kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-tls-secret \
+    --from-literal=ca.crt="$STRIMZI_CRT" \
+    --from-literal=user.crt="$TLSUSER_CRT" \
+    --from-literal=user.key="$TLSUSER_KEY" \
+    --from-literal=protocol="SSL" \
+    --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
+}
+
+function create_sasl_secrets() {
+  ca_cert_secret="my-cluster-cluster-ca-cert"
+  sasl_user="my-sasl-user"
+
+  echo "Waiting until secrets: ${ca_cert_secret}, ${sasl_user} exist"
+  wait_until_object_exists secret ${ca_cert_secret} kafka
+  wait_until_object_exists secret ${sasl_user} kafka
+
+  echo "Creating SASL_SSL and SASL_PLAINTEXT Kafka secrets"
+
+  STRIMZI_CRT=$(kubectl -n kafka get secret ${ca_cert_secret} --template='{{index .data "ca.crt"}}' | base64 --decode )
+  SASL_PASSWD=$(kubectl -n kafka get secret ${sasl_user} --template='{{index .data "password"}}' | base64 --decode )
+
+  kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-sasl-secret \
+    --from-literal=ca.crt="$STRIMZI_CRT" \
+    --from-literal=password="$SASL_PASSWD" \
+    --from-literal=user="my-sasl-user" \
+    --from-literal=protocol="SASL_SSL" \
+    --from-literal=sasl.mechanism="SCRAM-SHA-512" \
+    --from-literal=saslType="SCRAM-SHA-512" \
+    --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
+
+  kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-sasl-secret-legacy \
+    --from-literal=ca.crt="$STRIMZI_CRT" \
+    --from-literal=password="$SASL_PASSWD" \
+    --from-literal=user="my-sasl-user" \
+    --from-literal=saslType="SCRAM-SHA-512" \
+    --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
+
+  kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-sasl-plain-secret \
+    --from-literal=password="$SASL_PASSWD" \
+    --from-literal=user="my-sasl-user" \
+    --from-literal=protocol="SASL_PLAINTEXT" \
+    --from-literal=sasl.mechanism="SCRAM-SHA-512" \
+    --from-literal=saslType="SCRAM-SHA-512" \
+    --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
+
+  kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-sasl-plain-secret-legacy \
+    --from-literal=password="$SASL_PASSWD" \
+    --from-literal=username="my-sasl-user" \
+    --from-literal=saslType="SCRAM-SHA-512" \
+    --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
 }
 
 function setup_kafka_channel_auth() {
