@@ -423,7 +423,7 @@ func (r *Reconciler) brokerNamespace(broker *eventing.Broker) string {
 func (r *Reconciler) brokerConfigMap(logger *zap.Logger, broker *eventing.Broker) (bool, *corev1.ConfigMap, error) {
 	logger.Debug("broker config", zap.Any("broker.spec.config", broker.Spec.Config))
 
-	if strings.ToLower(broker.Spec.Config.Kind) != "configmap" { // TODO: is there any constant?
+	if strings.ToLower(broker.Spec.Config.Kind) != "configmap" {
 		return false, nil, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind)
 	}
 
