@@ -378,10 +378,17 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 		// get security option for Sarama with secret info in it
 		securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
-		if err := r.finalizeNonExternalBrokerTopic(broker, securityOption, topicConfig, logger); err != nil {
+		err = r.finalizeNonExternalBrokerTopic(broker, securityOption, topicConfig, logger)
+
+		// if finalizeNonExternalBrokerTopic returns error that kafka is not reachable,
+		// we return nil, and clean up the broker
+		if err != nil {
+			if strings.Contains(err.Error(), "cannot obtain Kafka") {
+				logger.Error("Error reaching Kafka cluster", zap.Error(err))
+				return nil
+			}
 			return err
 		}
-
 	}
 
 	if err := r.removeFinalizerSecret(ctx, finalizerSecret(broker), secret); err != nil {
