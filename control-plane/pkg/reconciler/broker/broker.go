@@ -442,7 +442,7 @@ func (r *Reconciler) brokerConfigMap(logger *zap.Logger, broker *eventing.Broker
 		return isRebuilt, cm, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, getCmError)
 	}
 	if apierrors.IsNotFound(getCmError) {
-		cm = rebuildCMFromAnnotations(broker)
+		cm = rebuildCMFromStatusAnnotations(broker)
 		isRebuilt = true
 	}
 
@@ -467,19 +467,24 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*
 		return nil, cm, fmt.Errorf("unable to build topic config from configmap: %w - ConfigMap data: %v", err, cm.Data)
 	}
 
-	if broker.Status.Annotations == nil {
-		broker.Status.Annotations = make(map[string]string, len(cm.Data))
-	}
-
-	// Save ConfigMap's data into broker annotations
-	for k, v := range cm.Data {
-		broker.Status.Annotations[k] = v
-	}
+	storeConfigMapAsStatusAnnotation(broker, cm)
 
 	return topicConfig, cm, nil
 }
 
-func rebuildCMFromAnnotations(br *eventing.Broker) *corev1.ConfigMap {
+// Save ConfigMap's data into broker annotations, to prevent issue when the ConfigMap itself is being deleted
+func storeConfigMapAsStatusAnnotation(broker *eventing.Broker, cm *corev1.ConfigMap) {
+	if broker.Status.Annotations == nil {
+		broker.Status.Annotations = make(map[string]string, len(cm.Data))
+	}
+
+	for k, v := range cm.Data {
+		broker.Status.Annotations[k] = v
+	}
+}
+
+// Creates the Broker ConfigMap from the status annotation
+func rebuildCMFromStatusAnnotations(br *eventing.Broker) *corev1.ConfigMap {
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: br.Spec.Config.Namespace,
