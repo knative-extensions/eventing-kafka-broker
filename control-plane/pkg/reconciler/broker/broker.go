@@ -464,7 +464,7 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*
 	topicConfig, err := kafka.TopicConfigFromConfigMap(logger, cm)
 	if err != nil {
 		if isRebuilt {
-			return nil, cm, fmt.Errorf("failed to get configmap %s/%s: %w", r.brokerNamespace(broker), broker.Spec.Config.Name, getCmError)
+			return nil, cm, fmt.Errorf("unable to build topic config, failed to get configmap %s/%s: %w", r.brokerNamespace(broker), broker.Spec.Config.Name, getCmError)
 		}
 		return nil, cm, fmt.Errorf("unable to build topic config from configmap: %w - ConfigMap data: %v", err, cm.Data)
 	}
