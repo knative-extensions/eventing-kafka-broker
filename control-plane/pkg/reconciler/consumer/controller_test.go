@@ -50,7 +50,7 @@ func TestNewController(t *testing.T) {
 
 	dynamicclient.With(ctx, dynamicScheme)
 
-	t.Setenv("CONSUMER_DATA_PLANE_CONFIG_FORMAT", "json")
+	t.Setenv("CONSUMER_CONTRACT_CONFIG_MAP_FORMAT", "json")
 
 	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{

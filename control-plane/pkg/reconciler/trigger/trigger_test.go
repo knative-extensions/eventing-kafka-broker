@@ -57,11 +57,11 @@ import (
 
 var DefaultEnv = &config.Env{
 	DataPlaneConfigMapNamespace: "knative-eventing",
-	DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
+	ContractConfigMapName:       "kafka-broker-brokers-triggers",
 	GeneralConfigMapName:        "kafka-broker-config",
 	IngressName:                 "kafka-broker-ingress",
 	SystemNamespace:             "knative-eventing",
-	DataPlaneConfigFormat:       base.Json,
+	ContractConfigMapFormat:     base.Json,
 	DefaultBackoffDelayMs:       1000,
 }
 
@@ -118,7 +118,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 
 	testKey := fmt.Sprintf("%s/%s", TriggerNamespace, TriggerName)
 
-	env.DataPlaneConfigFormat = format
+	env.ContractConfigMapFormat = format
 
 	table := TableTest{
 		{
@@ -137,7 +137,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -148,7 +148,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -201,7 +201,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -212,7 +212,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -265,7 +265,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -276,7 +276,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -336,7 +336,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -347,7 +347,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -401,7 +401,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -412,7 +412,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -466,7 +466,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -477,7 +477,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -593,7 +593,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						},
 					},
 					Generation: 2,
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -604,7 +604,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID + "z",
@@ -688,7 +688,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			WantErr:                 true,
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
@@ -719,7 +719,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				NewBroker(BrokerReady),
 				newTrigger(),
 				NewService(),
-				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, nil),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -801,7 +801,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				NewDeletedBroker(),
 				NewConfigMapFromContract(&contract.Contract{
 					Generation: 8,
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -831,7 +831,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						},
 					},
 					Generation: 8,
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -874,7 +874,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						},
 					},
 					Generation: 8,
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -885,7 +885,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:    BrokerUUID,
@@ -963,7 +963,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							},
 						},
 					},
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -1133,7 +1133,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							},
 						},
 					},
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -1144,7 +1144,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -1431,7 +1431,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							},
 						},
 					},
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -1442,7 +1442,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID + "a",
@@ -1791,7 +1791,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							},
 						},
 					},
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -1802,7 +1802,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID + "a",
@@ -2053,7 +2053,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 
 	testKey := fmt.Sprintf("%s/%s", TriggerNamespace, TriggerName)
 
-	env.DataPlaneConfigFormat = format
+	env.ContractConfigMapFormat = format
 
 	table := TableTest{
 		{
@@ -2081,7 +2081,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						},
 					},
 					Generation: 8,
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -2092,7 +2092,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				finalizerUpdatedEvent,
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:    BrokerUUID,
@@ -2133,7 +2133,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						},
 					},
 					Generation: 8,
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -2157,7 +2157,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				NewDeletedBroker(),
 				NewConfigMapFromContract(&contract.Contract{
 					Generation: 8,
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
@@ -2251,7 +2251,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							},
 						},
 					},
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -2262,7 +2262,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -2417,7 +2417,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							},
 						},
 					},
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -2428,7 +2428,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID + "a",
@@ -2616,7 +2616,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							},
 						},
 					},
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
 			},
 			Key: testKey,
@@ -2627,7 +2627,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID + "a",
@@ -2759,8 +2759,8 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 				PodLister:                   listers.GetPodLister(),
 				SecretLister:                listers.GetSecretLister(),
 				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
+				DataPlaneConfigMapName:      env.ContractConfigMapName,
+				DataPlaneConfigFormat:       env.ContractConfigMapFormat,
 				DataPlaneNamespace:          env.SystemNamespace,
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,
