@@ -22,6 +22,8 @@ package e2e_new
 import (
 	"testing"
 
+	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
+
 	"knative.dev/reconciler-test/pkg/environment"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
@@ -61,12 +63,21 @@ func SendsEventWithRetries() *feature.Feature {
 	deadLetterSinkName := feature.MakeRandomK8sName("dls")
 	triggerName := feature.MakeRandomK8sName("trigger")
 	brokerName := feature.MakeRandomK8sName("broker")
+	configName := feature.MakeRandomK8sName("config")
 
 	ev := cetest.FullEvent()
+
+	f.Setup("create broker config", brokerconfigmap.Install(
+		configName,
+		brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+		brokerconfigmap.WithNumPartitions(1),
+		brokerconfigmap.WithReplicationFactor(1),
+	))
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
 		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
+		broker.WithConfig(configName),
 	))
 
 	f.Setup("broker is ready", broker.IsReady(brokerName))
@@ -121,12 +132,21 @@ func SendsEventErrorWithoutRetries() *feature.Feature {
 	deadLetterSinkName := feature.MakeRandomK8sName("dls")
 	triggerName := feature.MakeRandomK8sName("trigger")
 	brokerName := feature.MakeRandomK8sName("broker")
+	configName := feature.MakeRandomK8sName("config")
 
 	ev := cetest.FullEvent()
+
+	f.Setup("create broker config", brokerconfigmap.Install(
+		configName,
+		brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+		brokerconfigmap.WithNumPartitions(1),
+		brokerconfigmap.WithReplicationFactor(1),
+	))
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
 		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
+		broker.WithConfig(configName),
 	))
 
 	f.Setup("broker is ready", broker.IsReady(brokerName))
@@ -182,12 +202,21 @@ func SendsEventNoRetries() *feature.Feature {
 	deadLetterSinkName := feature.MakeRandomK8sName("dls")
 	triggerName := feature.MakeRandomK8sName("trigger")
 	brokerName := feature.MakeRandomK8sName("broker")
+	configName := feature.MakeRandomK8sName("config")
 
 	ev := cetest.FullEvent()
+
+	f.Setup("create broker config", brokerconfigmap.Install(
+		configName,
+		brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+		brokerconfigmap.WithNumPartitions(1),
+		brokerconfigmap.WithReplicationFactor(1),
+	))
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
 		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
+		broker.WithConfig(configName),
 	))
 
 	f.Setup("broker is ready", broker.IsReady(brokerName))

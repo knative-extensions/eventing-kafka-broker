@@ -36,7 +36,7 @@ import (
 	eventingv1alpha1clientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/pkg/addressable"
-	"knative.dev/eventing-kafka-broker/test/pkg/broker"
+	brokertest "knative.dev/eventing-kafka-broker/test/pkg/broker"
 	"knative.dev/eventing-kafka-broker/test/pkg/sink"
 )
 
@@ -50,11 +50,6 @@ import (
                 +--------+
 */
 func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
-	class, err := broker.GetKafkaClassFromEnv()
-	if err != nil {
-		t.Fatalf("error getting KafkaBroker class from env '%v'", err)
-	}
-
 	testingpkg.RunMultipleN(t, 10, func(t *testing.T) {
 
 		ctx := context.Background()
@@ -84,10 +79,7 @@ func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
 		client.WaitForResourceReadyOrFail(kafkaSink.Name, &kafkaSink.TypeMeta)
 
 		// Create a Kafka Broker
-		br := client.CreateBrokerOrFail(
-			"broker",
-			resources.WithBrokerClassForBroker(class),
-		)
+		brokerName := brokertest.Creator(client, "v1")
 
 		// Create 2 Triggers with the same subscriber
 
@@ -100,7 +92,7 @@ func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
 
 		client.CreateTriggerOrFail(
 			"trigger-1",
-			resources.WithBroker(br.Name),
+			resources.WithBroker(brokerName),
 			resources.WithAttributesTriggerFilter("", "trigger1", nil),
 			func(trigger *eventing.Trigger) {
 				trigger.Spec.Subscriber.Ref = sinkReference
@@ -109,7 +101,7 @@ func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
 
 		client.CreateTriggerOrFail(
 			"trigger-2",
-			resources.WithBroker(br.Name),
+			resources.WithBroker(brokerName),
 			resources.WithAttributesTriggerFilter("", "trigger2", nil),
 			func(trigger *eventing.Trigger) {
 				trigger.Spec.Subscriber.Ref = sinkReference
@@ -120,8 +112,8 @@ func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
 
 		brokerAddressable := addressable.Addressable{
 			NamespacedName: types.NamespacedName{
-				Namespace: br.Namespace,
-				Name:      br.Name,
+				Namespace: client.Namespace,
+				Name:      brokerName,
 			},
 			TypeMeta: *testlib.BrokerTypeMeta,
 		}

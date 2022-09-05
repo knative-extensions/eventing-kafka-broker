@@ -51,6 +51,20 @@ func GetKafkaClassFromEnv() (string, error) {
 }
 
 func Creator(client *eventingtestlib.Client, version string) string {
+	return CreatorWithConfigOptions(client, version)
+}
+
+type ConfigOptions func(data map[string]string)
+
+func CreatorWithConfigOptions(client *eventingtestlib.Client, version string, configOptions ...ConfigOptions) string {
+	return CreatorWithOptions(client, version, []resources.BrokerOption{}, configOptions)
+}
+
+func CreatorWithBrokerOptions(client *eventingtestlib.Client, version string, brokerOptions ...resources.BrokerOption) string {
+	return CreatorWithOptions(client, version, brokerOptions, []ConfigOptions{})
+}
+
+func CreatorWithOptions(client *eventingtestlib.Client, version string, brokerOptions []resources.BrokerOption, configOptions []ConfigOptions) string {
 	class, err := GetKafkaClassFromEnv()
 	if err != nil {
 		panic(fmt.Sprintf("error getting KafkaBroker class from env '%v'", err))
@@ -63,6 +77,7 @@ func Creator(client *eventingtestlib.Client, version string) string {
 	switch version {
 	case "v1":
 		namespace := client.Namespace
+		// TODO: why the heck we have this name?
 		cmName := "kafka-broker-upgrade-config"
 		// Create Broker's own ConfigMap to prevent using defaults.
 		cm := &corev1.ConfigMap{
@@ -76,12 +91,16 @@ func Creator(client *eventingtestlib.Client, version string) string {
 				kafka.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", testingpkg.ReplicationFactor),
 			},
 		}
+		for _, co := range configOptions {
+			co(cm.Data)
+		}
+
 		cm, err := client.Kube.CoreV1().ConfigMaps(namespace).Create(context.Background(), cm, metav1.CreateOptions{})
 		if err != nil && !apierrors.IsAlreadyExists(err) {
 			client.T.Fatalf("Failed to create ConfigMap %s/%s: %v", namespace, cm.GetName(), err)
 		}
-		client.CreateBrokerOrFail(
-			name,
+
+		brokerOptions = append(brokerOptions,
 			resources.WithBrokerClassForBroker(class),
 			resources.WithConfigForBroker(&duckv1.KReference{
 				Kind:       "ConfigMap",
@@ -89,6 +108,11 @@ func Creator(client *eventingtestlib.Client, version string) string {
 				Name:       cmName,
 				APIVersion: "v1",
 			}),
+		)
+
+		client.CreateBrokerOrFail(
+			name,
+			brokerOptions...,
 		)
 	default:
 		panic(fmt.Sprintf("Unsupported version of Broker: %q", version))
