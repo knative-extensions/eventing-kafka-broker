@@ -37,7 +37,7 @@ import (
 )
 
 type ControllerConfig struct {
-	DataPlaneConfigFormat string `required:"true" split_words:"true"`
+	ContractConfigMapFormat string `required:"true" split_words:"true"`
 }
 
 func NewController(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
@@ -50,7 +50,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	consumerInformer := consumer.Get(ctx)
 
 	r := &Reconciler{
-		SerDe:               formatSerDeFromString(controllerConfig.DataPlaneConfigFormat),
+		SerDe:               formatSerDeFromString(controllerConfig.ContractConfigMapFormat),
 		ConsumerGroupLister: consumergroup.Get(ctx).Lister(),
 		SecretLister:        secretinformer.Get(ctx).Lister(),
 		PodLister:           podinformer.Get(ctx).Lister(),

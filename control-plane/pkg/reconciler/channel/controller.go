@@ -59,8 +59,8 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 			PodLister:                   podinformer.Get(ctx).Lister(),
 			SecretLister:                secretinformer.Get(ctx).Lister(),
 			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
-			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
-			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
+			DataPlaneConfigMapName:      configs.ContractConfigMapName,
+			DataPlaneConfigFormat:       configs.ContractConfigMapFormat,
 			DataPlaneNamespace:          configs.SystemNamespace,
 			DispatcherLabel:             base.ChannelDispatcherLabel,
 			ReceiverLabel:               base.ChannelReceiverLabel,
@@ -104,7 +104,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	})
 
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
+		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.ContractConfigMapName),
 		Handler: cache.ResourceEventHandlerFuncs{
 			AddFunc:    globalResync,
 			DeleteFunc: globalResync,

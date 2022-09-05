@@ -37,9 +37,9 @@ func main() {
 	testobservability.WatchDataPlaneConfigMap(
 		types.NamespacedName{
 			Namespace: envConfig.DataPlaneConfigMapNamespace,
-			Name:      envConfig.DataPlaneConfigMapName,
+			Name:      envConfig.ContractConfigMapName,
 		},
-		envConfig.DataPlaneConfigFormat,
+		envConfig.ContractConfigMapFormat,
 	)
 
 }
