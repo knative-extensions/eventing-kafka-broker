@@ -32,6 +32,9 @@ type Env struct {
 	// and the data plane.
 	ContractConfigMapName string `required:"true" split_words:"true"` // example: kafka-broker-brokers-triggers
 
+	// DataPlaneConfigConfigMapName is the name of the configmap that holds the data plane configurations.
+	DataPlaneConfigConfigMapName string `required:"true" split_words:"true"` // example: config-kafka-broker-data-plane
+
 	// GeneralConfigMapName is the name of the configmap that holds configuration that affects the control plane
 	// and the data plane. For example, Kafka bootstrap server information could be in here for broker configuration.
 	GeneralConfigMapName string `required:"true" split_words:"true"` // example: kafka-broker-config

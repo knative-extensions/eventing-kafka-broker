@@ -78,6 +78,15 @@ spec:
             - name: SOURCE_CONTRACT_CONFIG_MAP_NAME
               value: kafka-source-sources
 
+            - name: BROKER_DATA_PLANE_CONFIG_CONFIG_MAP_NAME
+              value: config-kafka-broker-data-plane
+            - name: SOURCE_DATA_PLANE_CONFIG_CONFIG_MAP_NAME
+              value: config-kafka-source-data-plane
+            - name: SINK_DATA_PLANE_CONFIG_CONFIG_MAP_NAME
+              value: config-kafka-source-data-plane
+            - name: CHANNEL_DATA_PLANE_CONFIG_CONFIG_MAP_NAME
+              value: config-kafka-source-data-plane
+
             - name: BROKER_CONTRACT_CONFIG_MAP_FORMAT
               value: json
             - name: CHANNEL_CONTRACT_CONFIG_MAP_FORMAT

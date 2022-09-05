@@ -375,7 +375,7 @@ func (r *Reconciler) hasRelevantBrokerClass(broker *eventing.Broker) (bool, stri
 }
 
 func (r *Reconciler) reconcileInitialOffset(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (bool, error) {
-	isLatest, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.DataPlaneConfigMapNamespace, r.GeneralConfigMapName, brokerreconciler.ConsumerConfigKey)
+	isLatest, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.DataPlaneConfigMapNamespace, r.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey)
 	if err != nil {
 		return false, err
 	}

@@ -63,14 +63,14 @@ func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, trigger *eventi
 func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *eventing.Trigger) *Reconciler {
 	return &Reconciler{
 		Reconciler: &base.Reconciler{
-			KubeClient:             r.Reconciler.KubeClient,
-			PodLister:              r.Reconciler.PodLister,
-			SecretLister:           r.Reconciler.SecretLister,
-			DataPlaneConfigMapName: r.Reconciler.DataPlaneConfigMapName,
-			DataPlaneConfigFormat:  r.Reconciler.DataPlaneConfigFormat,
-			GeneralConfigMapName:   r.GeneralConfigMapName,
-			DispatcherLabel:        r.DispatcherLabel,
-			ReceiverLabel:          r.ReceiverLabel,
+			KubeClient:                   r.Reconciler.KubeClient,
+			PodLister:                    r.Reconciler.PodLister,
+			SecretLister:                 r.Reconciler.SecretLister,
+			ContractConfigMapName:        r.Reconciler.ContractConfigMapName,
+			ContractConfigMapFormat:      r.Reconciler.ContractConfigMapFormat,
+			DataPlaneConfigConfigMapName: r.DataPlaneConfigConfigMapName,
+			DispatcherLabel:              r.DispatcherLabel,
+			ReceiverLabel:                r.ReceiverLabel,
 
 			// override
 			DataPlaneNamespace:          trigger.Namespace,

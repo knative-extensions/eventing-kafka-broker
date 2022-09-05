@@ -124,8 +124,8 @@ func TestGetDataPlaneConfigMapData(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
 	r := &base.Reconciler{
-		KubeClient:            kubeclient.Get(ctx),
-		DataPlaneConfigFormat: base.Json,
+		KubeClient:              kubeclient.Get(ctx),
+		ContractConfigMapFormat: base.Json,
 	}
 
 	ct := &contract.Contract{}
@@ -170,8 +170,8 @@ func TestUpdateDataPlaneConfigMap(t *testing.T) {
 	require.Nil(t, err)
 
 	r := &base.Reconciler{
-		KubeClient:            kubeclient.Get(ctx),
-		DataPlaneConfigFormat: base.Json,
+		KubeClient:              kubeclient.Get(ctx),
+		ContractConfigMapFormat: base.Json,
 	}
 
 	ct := &contract.Contract{}
@@ -185,8 +185,8 @@ func TestGetDataPlaneConfigMapDataCorrupted(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
 	r := &base.Reconciler{
-		KubeClient:            kubeclient.Get(ctx),
-		DataPlaneConfigFormat: base.Json,
+		KubeClient:              kubeclient.Get(ctx),
+		ContractConfigMapFormat: base.Json,
 	}
 
 	cm := &corev1.ConfigMap{
