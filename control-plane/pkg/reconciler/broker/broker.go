@@ -52,6 +52,9 @@ const (
 
 	// ExternalTopicAnnotation for using external kafka topic for the broker
 	ExternalTopicAnnotation = "kafka.eventing.knative.dev/external.topic"
+
+	// ConsumerConfigKey is the key for Kafka Broker consumer configurations
+	ConsumerConfigKey = "config-kafka-broker-consumer.properties"
 )
 
 type Reconciler struct {
@@ -271,6 +274,9 @@ func (r *Reconciler) reconcileBrokerTopic(broker *eventing.Broker, securityOptio
 
 	statusConditionManager.TopicReady(topicName)
 	logger.Debug("Topic created", zap.Any("topic", topicName))
+
+	broker.Status.Annotations[kafka.TopicAnnotation] = topicName
+
 	return topicName, nil
 }
 

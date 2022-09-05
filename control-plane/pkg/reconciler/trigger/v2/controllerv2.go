@@ -22,6 +22,7 @@ import (
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 
@@ -58,6 +59,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 
 	reconciler := &Reconciler{
 		BrokerLister:        brokerInformer.Lister(),
+		ConfigMapLister:     configmapinformer.Get(ctx).Lister(),
 		EventingClient:      eventingclient.Get(ctx),
 		Env:                 configs,
 		ConsumerGroupLister: consumerGroupInformer.Lister(),

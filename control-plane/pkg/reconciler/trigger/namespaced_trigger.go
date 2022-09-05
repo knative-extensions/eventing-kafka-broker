@@ -19,6 +19,7 @@ package trigger
 import (
 	"context"
 
+	corelisters "k8s.io/client-go/listers/core/v1"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -35,11 +36,16 @@ type NamespacedReconciler struct {
 	*base.Reconciler
 	*FlagsHolder
 
-	BrokerLister   eventinglisters.BrokerLister
-	EventingClient eventingclientset.Interface
-	Resolver       *resolver.URIResolver
+	BrokerLister    eventinglisters.BrokerLister
+	ConfigMapLister corelisters.ConfigMapLister
+	EventingClient  eventingclientset.Interface
+	Resolver        *resolver.URIResolver
 
 	Env *config.Env
+
+	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
+	NewKafkaClient             kafka.NewClientFunc
+	InitOffsetsFunc            kafka.InitOffsetsFunc
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -62,6 +68,7 @@ func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *event
 			SecretLister:           r.Reconciler.SecretLister,
 			DataPlaneConfigMapName: r.Reconciler.DataPlaneConfigMapName,
 			DataPlaneConfigFormat:  r.Reconciler.DataPlaneConfigFormat,
+			GeneralConfigMapName:   r.GeneralConfigMapName,
 			DispatcherLabel:        r.DispatcherLabel,
 			ReceiverLabel:          r.ReceiverLabel,
 
@@ -72,13 +79,16 @@ func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *event
 		FlagsHolder: &FlagsHolder{
 			Flags: r.Flags,
 		},
-		BrokerLister:   r.BrokerLister,
-		EventingClient: r.EventingClient,
-		Env:            r.Env,
-		Resolver:       r.Resolver,
-
+		BrokerLister:    r.BrokerLister,
+		ConfigMapLister: r.ConfigMapLister,
+		EventingClient:  r.EventingClient,
+		Resolver:        r.Resolver,
+		Env:             r.Env,
 		// override
-		BrokerClass:               kafka.NamespacedBrokerClass,
-		DataPlaneConfigMapLabeler: kafka.NamespacedDataplaneLabelConfigmapOption,
+		BrokerClass:                kafka.NamespacedBrokerClass,
+		DataPlaneConfigMapLabeler:  kafka.NamespacedDataplaneLabelConfigmapOption,
+		NewKafkaClusterAdminClient: r.NewKafkaClusterAdminClient,
+		NewKafkaClient:             r.NewKafkaClient,
+		InitOffsetsFunc:            r.InitOffsetsFunc,
 	}
 }

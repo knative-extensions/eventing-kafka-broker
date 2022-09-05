@@ -55,8 +55,7 @@ const (
 )
 
 func BrokerTopic() string {
-	broker := NewBroker().(metav1.Object)
-	return kafka.BrokerTopic(TopicPrefix, broker)
+	return fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName)
 }
 
 // NewBroker creates a new Broker with broker class equals to kafka.BrokerClass.
@@ -169,6 +168,25 @@ func WithExternalTopic(topic string) func(*eventing.Broker) {
 		}
 		annotations[ExternalTopicAnnotation] = topic
 		broker.SetAnnotations(annotations)
+		WithTopicStatusAnnotation(topic)(broker)
+	}
+}
+
+func WithTopicStatusAnnotation(topic string) reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		if broker.Status.Annotations == nil {
+			broker.Status.Annotations = make(map[string]string, 1)
+		}
+		broker.Status.Annotations[kafka.TopicAnnotation] = topic
+	}
+}
+
+func WithBootstrapServerStatusAnnotation(servers string) reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		if broker.Status.Annotations == nil {
+			broker.Status.Annotations = make(map[string]string, 1)
+		}
+		broker.Status.Annotations[kafka.BootstrapServersConfigMapKey] = servers
 	}
 }
 

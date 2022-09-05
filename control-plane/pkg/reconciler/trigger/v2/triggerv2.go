@@ -25,6 +25,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corelisters "k8s.io/client-go/listers/core/v1"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
@@ -47,10 +49,14 @@ const (
 
 type Reconciler struct {
 	BrokerLister        eventinglisters.BrokerLister
+	ConfigMapLister     corelisters.ConfigMapLister
 	EventingClient      eventingclientset.Interface
 	Env                 *config.Env
 	ConsumerGroupLister internalslst.ConsumerGroupLister
 	InternalsClient     internalsclient.Interface
+
+	DataPlaneConfigMapNamespace string
+	DataPlaneConfigMapName      string
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -106,6 +112,15 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 		}
 	}
 
+	offset := sources.OffsetLatest
+	isLatestOffset, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.DataPlaneConfigMapNamespace, r.DataPlaneConfigMapName, "config-kafka-broker-consumer.properties")
+	if err != nil {
+		return nil, fmt.Errorf("failed to determine initial offset: %w", err)
+	}
+	if !isLatestOffset {
+		offset = sources.OffsetEarliest
+	}
+
 	newcg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(trigger.UID),
@@ -128,8 +143,9 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 					Topics:  []string{},                                                                               //todo get topics from broker resource
 					Configs: internalscg.ConsumerConfigs{Configs: map[string]string{"group.id": string(trigger.UID)}}, //todo get bootstrap.servers from broker resource
 					Delivery: &internalscg.DeliverySpec{
-						DeliverySpec: deliverySpec(broker, trigger),
-						Ordering:     deliveryOrdering,
+						DeliverySpec:  deliverySpec(broker, trigger),
+						Ordering:      deliveryOrdering,
+						InitialOffset: offset,
 					},
 					Filters: &internalscg.Filters{
 						Filter:  trigger.Spec.Filter,

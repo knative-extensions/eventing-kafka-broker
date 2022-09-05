@@ -83,6 +83,8 @@ type Reconciler struct {
 	DataPlaneConfigFormat       string
 	DataPlaneNamespace          string
 
+	GeneralConfigMapName string
+
 	DispatcherLabel string
 	ReceiverLabel   string
 

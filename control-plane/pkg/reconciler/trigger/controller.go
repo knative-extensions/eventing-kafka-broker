@@ -19,9 +19,11 @@ package trigger
 import (
 	"context"
 
+	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
 	v1 "knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
@@ -76,11 +78,15 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		FlagsHolder: &FlagsHolder{
 			Flags: feature.Flags{},
 		},
-		BrokerLister:              brokerInformer.Lister(),
-		EventingClient:            eventingclient.Get(ctx),
-		Env:                       configs,
-		BrokerClass:               kafka.BrokerClass,
-		DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
+		BrokerLister:               brokerInformer.Lister(),
+		ConfigMapLister:            configmapInformer.Lister(),
+		EventingClient:             eventingclient.Get(ctx),
+		Env:                        configs,
+		BrokerClass:                kafka.BrokerClass,
+		DataPlaneConfigMapLabeler:  base.NoopConfigmapOption,
+		NewKafkaClient:             sarama.NewClient,
+		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
+		InitOffsetsFunc:            offset.InitOffsets,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {

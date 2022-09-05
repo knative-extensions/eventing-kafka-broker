@@ -25,6 +25,7 @@ import (
 	"go.uber.org/zap"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
@@ -39,8 +40,11 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 const (
@@ -56,15 +60,27 @@ type Reconciler struct {
 	*base.Reconciler
 	*FlagsHolder
 
-	BrokerLister   eventinglisters.BrokerLister
-	EventingClient eventingclientset.Interface
-	Resolver       *resolver.URIResolver
+	BrokerLister    eventinglisters.BrokerLister
+	ConfigMapLister corelisters.ConfigMapLister
+	EventingClient  eventingclientset.Interface
+	Resolver        *resolver.URIResolver
 
 	Env *config.Env
 
 	BrokerClass string
 
 	DataPlaneConfigMapLabeler base.ConfigMapOption
+
+	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// mock the function used during the reconciliation loop.
+	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
+	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
+	// mock the function used during the reconciliation loop.
+	NewKafkaClient kafka.NewClientFunc
+	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
+	// It's convenient to add this as Reconciler field so that we can mock the function used during the
+	// reconciliation loop.
+	InitOffsetsFunc kafka.InitOffsetsFunc
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -119,6 +135,12 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 	if !broker.IsReady() {
 		// Trigger will get re-queued once this broker is ready.
+		return nil
+	}
+
+	if ok, err := r.reconcileInitialOffset(ctx, broker, trigger); err != nil {
+		return statusConditionManager.failedToResolveTriggerConfig(err)
+	} else if !ok {
 		return nil
 	}
 
@@ -350,6 +372,76 @@ func deleteTrigger(egresses []*contract.Egress, index int) []*contract.Egress {
 func (r *Reconciler) hasRelevantBrokerClass(broker *eventing.Broker) (bool, string) {
 	brokerClass := broker.GetAnnotations()[eventing.BrokerClassAnnotationKey]
 	return brokerClass == r.BrokerClass, brokerClass
+}
+
+func (r *Reconciler) reconcileInitialOffset(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (bool, error) {
+	isLatest, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.DataPlaneConfigMapNamespace, r.GeneralConfigMapName, brokerreconciler.ConsumerConfigKey)
+	if err != nil {
+		return false, err
+	}
+	if isLatest {
+		return r.reconcileLatestInitialOffset(ctx, broker, trigger)
+	}
+	return true, nil
+}
+
+func (r *Reconciler) reconcileLatestInitialOffset(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (bool, error) {
+	// Existing Brokers might not yet have this annotation
+	topicName, ok := broker.Status.Annotations[kafka.TopicAnnotation]
+	if !ok {
+		return false, nil
+	}
+	groupID := string(trigger.UID)
+
+	namespace := broker.GetNamespace()
+	if broker.Spec.Config.Namespace != "" {
+		namespace = broker.Spec.Config.Namespace
+	}
+
+	secret, err := security.Secret(ctx, &security.AnnotationsSecretLocator{Annotations: broker.Status.Annotations, Namespace: namespace}, r.SecretProviderFunc())
+	if err != nil {
+		return false, fmt.Errorf("failed to get secret: %w", err)
+	}
+	if err := r.TrackSecret(secret, broker); err != nil {
+		return false, fmt.Errorf("failed to track secret: %w", err)
+	}
+
+	bootstrapServers, ok := broker.Status.Annotations[kafka.BootstrapServersConfigMapKey]
+	if !ok {
+		return false, nil
+	}
+	bootstrapServersArr := kafka.BootstrapServersArray(bootstrapServers)
+
+	saramaConfig, err := kafka.GetSaramaConfig(security.NewSaramaSecurityOptionFromSecret(secret))
+	if err != nil {
+		return false, fmt.Errorf("failed to get sarama config: %w", err)
+	}
+
+	kafkaClient, err := r.NewKafkaClient(bootstrapServersArr, saramaConfig)
+	if err != nil {
+		return false, fmt.Errorf("cannot obtain Kafka client, %w", err)
+	}
+	defer kafkaClient.Close()
+
+	kafkaClusterAdmin, err := r.NewKafkaClusterAdminClient(bootstrapServersArr, saramaConfig)
+	if err != nil {
+		return false, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+	}
+	defer kafkaClusterAdmin.Close()
+
+	isPresentAndValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdmin, topicName)
+	if err != nil {
+		return false, fmt.Errorf("topic %s doesn't exist or is invalid: %w", topicName, err)
+	}
+	if !isPresentAndValid {
+		return false, fmt.Errorf("topic %s is invalid", topicName)
+	}
+
+	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID); err != nil {
+		return false, fmt.Errorf("failed to initialize initial offsets: %w", err)
+	}
+
+	return true, nil
 }
 
 func deliveryOrderFromString(val string) (contract.DeliveryOrder, error) {

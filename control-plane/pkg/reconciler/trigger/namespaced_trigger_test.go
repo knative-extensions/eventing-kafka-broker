@@ -21,9 +21,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Shopify/sarama"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -38,8 +40,10 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 )
 
@@ -65,6 +69,11 @@ func namespacedTriggerReconciliation(t *testing.T, format string, env config.Env
 			Objects: []runtime.Object{
 				NewNamespacedBroker(
 					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				DataPlaneConfigMap(BrokerNamespace, env.GeneralConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(),
 				NewService(),
@@ -145,6 +154,7 @@ func useNamespacedTable(t *testing.T, table TableTest, env *config.Env) {
 				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
 				DataPlaneConfigMapName:      env.ContractConfigMapName,
 				DataPlaneConfigFormat:       env.ContractConfigMapFormat,
+				GeneralConfigMapName:        env.GeneralConfigMapName,
 				DataPlaneNamespace:          env.SystemNamespace,
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,
@@ -152,10 +162,32 @@ func useNamespacedTable(t *testing.T, table TableTest, env *config.Env) {
 			FlagsHolder: &FlagsHolder{
 				Flags: nil,
 			},
-			BrokerLister:   listers.GetBrokerLister(),
-			EventingClient: eventingclient.Get(ctx),
-			Resolver:       nil,
-			Env:            env,
+			BrokerLister:    listers.GetBrokerLister(),
+			ConfigMapLister: listers.GetConfigMapLister(),
+			EventingClient:  eventingclient.Get(ctx),
+			Resolver:        nil,
+			Env:             env,
+			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
+				return 1, nil
+			},
+			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
+				return &kafkatesting.MockKafkaClient{}, nil
+			},
+			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+				return &kafkatesting.MockKafkaClusterAdmin{
+					ExpectedTopicName: BrokerTopic(),
+					ExpectedTopics:    []string{BrokerTopic()},
+					ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
+						{
+							Err:        0,
+							Name:       BrokerTopic(),
+							IsInternal: false,
+							Partitions: []*sarama.PartitionMetadata{{}},
+						},
+					},
+					T: t,
+				}, nil
+			},
 		}
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))
