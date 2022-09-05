@@ -83,6 +83,12 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 		prober.GetIPForService(types.NamespacedName{Namespace: broker.Namespace, Name: r.Env.IngressName}),
 	)
 
+	if broker.Spec.Config != nil && broker.Spec.Config.Namespace != "" && broker.Spec.Config.Namespace != broker.Namespace {
+		return propagateErrorCondition(broker,
+			fmt.Errorf("broker with %q class need the config in the same namespace with the broker. broker.spec.config.namespace=%q, broker.namespace=%q",
+				kafka.NamespacedBrokerClass, broker.Spec.Config.Namespace, broker.Namespace))
+	}
+
 	br := r.createReconcilerForBrokerInstance(broker)
 
 	manifest, err := r.getManifest(ctx, broker)
