@@ -47,6 +47,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Base64;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -291,7 +292,7 @@ public class RecordDispatcherTest {
     assertEquals(record.value().getData(), failedRecord.value().getData());
     assertEquals("testdest", failedRecord.value().getExtension("knativeerrordest"));
     assertEquals(String.valueOf(errorCode), failedRecord.value().getExtension("knativeerrorcode"));
-    assertEquals(errorBody, failedRecord.value().getExtension("knativeerrordata"));
+    assertEquals(Base64.getEncoder().encodeToString(errorBody.getBytes()), failedRecord.value().getExtension("knativeerrordata"));
 
     assertEventDispatchLatency();
     assertEventProcessingLatency();
@@ -352,7 +353,7 @@ public class RecordDispatcherTest {
     assertEquals(record.value().getData(), failedRecord.value().getData());
     assertEquals("testdest", failedRecord.value().getExtension("knativeerrordest"));
     assertEquals(String.valueOf(errorCode), failedRecord.value().getExtension("knativeerrorcode"));
-    assertEquals(errorBody, failedRecord.value().getExtension("knativeerrordata"));
+    assertEquals(Base64.getEncoder().encodeToString(errorBody.getBytes()), failedRecord.value().getExtension("knativeerrordata"));
 
     assertEventDispatchLatency();
     assertEventProcessingLatency();
