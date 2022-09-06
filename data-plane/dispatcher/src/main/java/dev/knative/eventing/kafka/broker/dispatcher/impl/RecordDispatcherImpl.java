@@ -34,6 +34,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -290,12 +292,14 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     extensions.put(KN_ERROR_DEST_EXT_NAME, destination);
     extensions.put(KN_ERROR_CODE_EXT_NAME, String.valueOf(response.statusCode()));
 
-    var data = response.bodyAsString();
+    // we extract the response as byte array as we do not need a string
+    // representation of it
+    var data = response.bodyAsBuffer();
     if (data != null) {
       if (data.length() > KN_ERROR_DATA_MAX_BYTES) {
-        data = data.substring(0, KN_ERROR_DATA_MAX_BYTES);
+        data = Buffer.buffer(data.getBytes(0, KN_ERROR_DATA_MAX_BYTES));
       }
-      extensions.put(KN_ERROR_DATA_EXT_NAME, data);
+      extensions.put(KN_ERROR_DATA_EXT_NAME, Base64.getEncoder().encodeToString(data.getBytes()));
     }
 
     return addExtensions(recordContext, extensions);
