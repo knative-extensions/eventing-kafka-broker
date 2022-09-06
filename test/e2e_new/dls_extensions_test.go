@@ -21,6 +21,7 @@ package e2e_new
 
 import (
 	"context"
+	"encoding/base64"
 	"strings"
 	"testing"
 	"time"
@@ -224,7 +225,7 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 			return cetest.HasExtension("knativeerrorcode", "422")
 		},
 		func(ctx context.Context) cetest.EventMatcher {
-			return cetest.HasExtension("knativeerrordata", errorData)
+			return cetest.HasExtension("knativeerrordata", base64.StdEncoding.EncodeToString([]byte(errorData)))
 		},
 	))
 
@@ -288,7 +289,7 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 			return cetest.HasExtension("knativeerrorcode", "422")
 		},
 		func(ctx context.Context) cetest.EventMatcher {
-			return cetest.HasExtension("knativeerrordata", errorDataTruncated)
+			return cetest.HasExtension("knativeerrordata", base64.StdEncoding.EncodeToString([]byte(errorDataTruncated)))
 		},
 	))
 
