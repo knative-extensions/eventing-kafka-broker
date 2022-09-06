@@ -45,9 +45,10 @@ var (
 func NewSource(options ...KRShapedOption) *sources.KafkaSource {
 	s := &sources.KafkaSource{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: SourceNamespace,
-			Name:      SourceName,
-			UID:       SourceUUID,
+			Namespace:   SourceNamespace,
+			Name:        SourceName,
+			UID:         SourceUUID,
+			Annotations: ConsumerGroupAnnotations,
 		},
 		Spec: sources.KafkaSourceSpec{
 			KafkaAuthSpec: v1beta1.KafkaAuthSpec{
@@ -125,6 +126,13 @@ func WithSourceSink(d duckv1.Destination) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		s := obj.(*sources.KafkaSource)
 		s.Spec.Sink = d
+	}
+}
+
+func WithSourceConsumers(replicas int32) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		s := obj.(*sources.KafkaSource)
+		s.Spec.Consumers = pointer.Int32Ptr(replicas)
 	}
 }
 

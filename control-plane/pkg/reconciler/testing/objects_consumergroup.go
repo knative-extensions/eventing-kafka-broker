@@ -26,6 +26,7 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	"knative.dev/eventing-autoscaler-keda/pkg/reconciler/keda"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 )
 
@@ -66,6 +67,15 @@ var (
 	OwnerAsChannelLabel = map[string]string{
 		kafkainternals.UserFacingResourceLabelSelector: "kafkachannel",
 		kafkainternals.KafkaChannelNameLabel:           ChannelName,
+	}
+
+	ConsumerGroupAnnotations = map[string]string{
+		keda.AutoscalingClassAnnotation:               keda.KEDA,
+		keda.AutoscalingMinScaleAnnotation:            "0",
+		keda.AutoscalingMaxScaleAnnotation:            "5",
+		keda.KedaAutoscalingPollingIntervalAnnotation: "30",
+		keda.KedaAutoscalingCooldownPeriodAnnotation:  "300",
+		keda.KedaAutoscalingKafkaLagThreshold:         "10",
 	}
 )
 
@@ -138,6 +148,12 @@ func WithConsumerGroupNamespace(namespace string) ConsumerGroupOption {
 func WithConsumerGroupOwnerRef(ownerref *metav1.OwnerReference) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
 		cg.ObjectMeta.OwnerReferences = []metav1.OwnerReference{*ownerref}
+	}
+}
+
+func WithConsumerGroupAnnotations(annots map[string]string) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.ObjectMeta.Annotations = annots
 	}
 }
 

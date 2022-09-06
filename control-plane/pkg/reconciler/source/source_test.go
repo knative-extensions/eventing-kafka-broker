@@ -48,6 +48,8 @@ import (
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
+
+	kedaclient "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client/fake"
 )
 
 func TestGetLabels(t *testing.T) {
@@ -100,6 +102,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 					WithConsumerGroupLabels(ConsumerSourceLabel),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -145,6 +148,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 					WithConsumerGroupLabels(ConsumerSourceLabel),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -185,9 +189,10 @@ func TestReconcileKind(t *testing.T) {
 				//NewSourceSASL(),
 				&sources.KafkaSource{
 					ObjectMeta: metav1.ObjectMeta{
-						Namespace: SourceNamespace,
-						Name:      SourceName,
-						UID:       SourceUUID,
+						Namespace:   SourceNamespace,
+						Name:        SourceName,
+						UID:         SourceUUID,
+						Annotations: ConsumerGroupAnnotations,
 					},
 					Spec: sources.KafkaSourceSpec{
 						KafkaAuthSpec: v1beta1.KafkaAuthSpec{
@@ -241,6 +246,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 					WithConsumerGroupLabels(ConsumerSourceLabel),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -313,9 +319,10 @@ func TestReconcileKind(t *testing.T) {
 				//NewSourceSASL(),
 				&sources.KafkaSource{
 					ObjectMeta: metav1.ObjectMeta{
-						Namespace: SourceNamespace,
-						Name:      SourceName,
-						UID:       SourceUUID,
+						Namespace:   SourceNamespace,
+						Name:        SourceName,
+						UID:         SourceUUID,
+						Annotations: ConsumerGroupAnnotations,
 					},
 					Spec: sources.KafkaSourceSpec{
 						KafkaAuthSpec: v1beta1.KafkaAuthSpec{
@@ -361,6 +368,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 					WithConsumerGroupLabels(ConsumerSourceLabel),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -435,6 +443,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 					WithConsumerGroupLabels(ConsumerSourceLabel),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -476,13 +485,17 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - existing cg with sink update",
 			Objects: []runtime.Object{
-				NewSource(WithSourceSink(NewSourceSink2Reference())),
+				NewSource(
+					WithSourceSink(NewSourceSink2Reference()),
+					WithSourceConsumers(1),
+				),
 				NewConsumerGroup(
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 					WithConsumerGroupLabels(ConsumerSourceLabel),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -515,6 +528,7 @@ func TestReconcileKind(t *testing.T) {
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 						WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 						WithConsumerGroupLabels(ConsumerSourceLabel),
+						WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 							ConsumerConfigs(
@@ -534,7 +548,6 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerSubscriber(NewSourceSink2Reference()),
 							ConsumerReply(ConsumerNoReply()),
 						)),
-						ConsumerGroupReplicas(1),
 						ConsumerGroupReady,
 					),
 				},
@@ -543,6 +556,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: NewSource(
 						WithSourceSink(NewSourceSink2Reference()),
+						WithSourceConsumers(1),
 						StatusSourceConsumerGroup(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
@@ -553,13 +567,14 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - existing cg with update",
 			Objects: []runtime.Object{
-				NewSource(),
+				NewSource(WithSourceConsumers(1)),
 				NewConsumerGroup(
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 					WithConsumerGroupLabels(ConsumerSourceLabel),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupReplicas(1),
 					ConsumerGroupReady,
 				),
@@ -573,6 +588,7 @@ func TestReconcileKind(t *testing.T) {
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 						WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 						WithConsumerGroupLabels(ConsumerSourceLabel),
+						WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 							ConsumerConfigs(
@@ -592,7 +608,6 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerSubscriber(NewSourceSinkReference()),
 							ConsumerReply(ConsumerNoReply()),
 						)),
-						ConsumerGroupReplicas(1),
 						ConsumerGroupReady,
 					),
 				},
@@ -600,6 +615,7 @@ func TestReconcileKind(t *testing.T) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
+						WithSourceConsumers(1),
 						StatusSourceConsumerGroup(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
@@ -610,13 +626,14 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - existing cg with update but not ready",
 			Objects: []runtime.Object{
-				NewSource(),
+				NewSource(WithSourceConsumers(1)),
 				NewConsumerGroup(
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 					WithConsumerGroupLabels(ConsumerSourceLabel),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupReplicas(1),
 				),
 			},
@@ -630,6 +647,7 @@ func TestReconcileKind(t *testing.T) {
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 						WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 						WithConsumerGroupLabels(ConsumerSourceLabel),
+						WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 							ConsumerConfigs(
@@ -649,13 +667,13 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerSubscriber(NewSourceSinkReference()),
 							ConsumerReply(ConsumerNoReply()),
 						)),
-						ConsumerGroupReplicas(1),
 					),
 				},
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
+						WithSourceConsumers(1),
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
@@ -673,6 +691,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 					WithConsumerGroupLabels(ConsumerSourceLabel),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -717,6 +736,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 					WithConsumerGroupLabels(ConsumerSourceLabel),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -761,6 +781,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 					WithConsumerGroupLabels(ConsumerSourceLabel),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -806,6 +827,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
 					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
 					WithConsumerGroupLabels(ConsumerSourceLabel),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
@@ -846,10 +868,12 @@ func TestReconcileKind(t *testing.T) {
 	}
 
 	table.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
+		ctx, _ = kedaclient.With(ctx)
 
 		reconciler := &Reconciler{
 			ConsumerGroupLister: listers.GetConsumerGroupLister(),
 			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
+			KedaClient:          kedaclient.Get(ctx),
 		}
 
 		r := eventingkafkasourcereconciler.NewReconciler(
