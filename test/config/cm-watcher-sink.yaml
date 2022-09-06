@@ -46,6 +46,8 @@ spec:
           env:
             - name: DATA_PLANE_CONFIG_MAP_NAMESPACE
               value: knative-eventing
+            - name: DATA_PLANE_CONFIG_CONFIG_MAP_NAME
+              value: config-kafka-broker-data-plane
             - name: CONTRACT_CONFIG_MAP_NAME
               value: kafka-sink-sinks
             - name: CONFIG_LOGGING_NAME

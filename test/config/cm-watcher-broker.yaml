@@ -48,6 +48,8 @@ spec:
               value: knative-eventing
             - name: CONTRACT_CONFIG_MAP_NAME
               value: kafka-broker-brokers-triggers
+            - name: DATA_PLANE_CONFIG_CONFIG_MAP_NAME
+              value: config-kafka-broker-data-plane
             - name: CONFIG_LOGGING_NAME
               value: config-logging
             - name: CONFIG_OBSERVABILITY_NAME
