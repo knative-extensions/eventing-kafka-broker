@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -295,7 +296,8 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       if (data.length() > KN_ERROR_DATA_MAX_BYTES) {
         data = data.substring(0, KN_ERROR_DATA_MAX_BYTES);
       }
-      extensions.put(KN_ERROR_DATA_EXT_NAME, data);
+
+      extensions.put(KN_ERROR_DATA_EXT_NAME, Base64.getEncoder().encodeToString(data.getBytes()));
     }
 
     return addExtensions(recordContext, extensions);
