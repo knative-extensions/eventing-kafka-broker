@@ -36,8 +36,8 @@ type Env struct {
 	// and the data plane. For example, Kafka bootstrap server information could be in here for broker configuration.
 	GeneralConfigMapName string `required:"true" split_words:"true"` // example: kafka-broker-config
 
-	IngressName           string `required:"true" split_words:"true"` // example: kafka-broker-ingress
-	IngressPodPort        string `required:"false" split_words:"true"`
+	IngressName             string `required:"true" split_words:"true"` // example: kafka-broker-ingress
+	IngressPodPort          string `required:"false" split_words:"true"`
 	SystemNamespace         string `required:"true" split_words:"true"`
 	ContractConfigMapFormat string `required:"true" split_words:"true"`
 	DefaultBackoffDelayMs   uint64 `required:"false" split_words:"true"`
