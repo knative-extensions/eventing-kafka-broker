@@ -22,6 +22,7 @@ package e2e_new
 import (
 	"context"
 	"encoding/base64"
+	"html"
 	"strings"
 	"testing"
 	"time"
@@ -297,7 +298,6 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 	return f
 }
 
-
 func SubscriberReturnedHtmlWebpage() *feature.Feature {
 	f := feature.NewFeature()
 
@@ -354,14 +354,12 @@ func SubscriberReturnedHtmlWebpage() *feature.Feature {
 			return cetest.HasExtension("knativeerrorcode", "404")
 		},
 		func(ctx context.Context) cetest.EventMatcher {
-			return cetest.HasExtension("knativeerrordata", base64.StdEncoding.EncodeToString([]byte(errorData)))
+			return cetest.HasExtension("knativeerrordata", html.UnescapeString(base64.StdEncoding.EncodeToString([]byte(errorData))))
 		},
 	))
 
 	return f
 }
-
-
 
 func assertEnhancedWithKnativeErrorExtensions(sinkName string, matcherfns ...func(ctx context.Context) cetest.EventMatcher) feature.StepFn {
 	return func(ctx context.Context, t feature.T) {
