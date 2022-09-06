@@ -65,15 +65,16 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
-			KubeClient:                  kubeclient.Get(ctx),
-			PodLister:                   podinformer.Get(ctx).Lister(),
-			SecretLister:                secretinformer.Get(ctx).Lister(),
-			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
-			ContractConfigMapName:       configs.ContractConfigMapName,
-			ContractConfigMapFormat:     configs.ContractConfigMapFormat,
-			DataPlaneNamespace:          configs.SystemNamespace,
-			DispatcherLabel:             base.BrokerDispatcherLabel,
-			ReceiverLabel:               base.BrokerReceiverLabel,
+			KubeClient:                   kubeclient.Get(ctx),
+			PodLister:                    podinformer.Get(ctx).Lister(),
+			SecretLister:                 secretinformer.Get(ctx).Lister(),
+			DataPlaneConfigMapNamespace:  configs.DataPlaneConfigMapNamespace,
+			DataPlaneConfigConfigMapName: configs.DataPlaneConfigConfigMapName,
+			ContractConfigMapName:        configs.ContractConfigMapName,
+			ContractConfigMapFormat:      configs.ContractConfigMapFormat,
+			DataPlaneNamespace:           configs.SystemNamespace,
+			DispatcherLabel:              base.BrokerDispatcherLabel,
+			ReceiverLabel:                base.BrokerReceiverLabel,
 		},
 		FlagsHolder: &FlagsHolder{
 			Flags: feature.Flags{},

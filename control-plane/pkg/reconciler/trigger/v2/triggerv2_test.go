@@ -667,14 +667,12 @@ func TestReconcileKind(t *testing.T) {
 		logger := logging.FromContext(ctx)
 
 		reconciler := &Reconciler{
-			BrokerLister:                listers.GetBrokerLister(),
-			ConfigMapLister:             listers.GetConfigMapLister(),
-			EventingClient:              eventingclient.Get(ctx),
-			Env:                         env,
-			ConsumerGroupLister:         listers.GetConsumerGroupLister(),
-			InternalsClient:             fakeconsumergroupinformer.Get(ctx),
-			DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
-			DataPlaneConfigMapName:      env.GeneralConfigMapName,
+			BrokerLister:        listers.GetBrokerLister(),
+			ConfigMapLister:     listers.GetConfigMapLister(),
+			EventingClient:      eventingclient.Get(ctx),
+			Env:                 env,
+			ConsumerGroupLister: listers.GetConsumerGroupLister(),
+			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
 		}
 
 		return triggerreconciler.NewReconciler(

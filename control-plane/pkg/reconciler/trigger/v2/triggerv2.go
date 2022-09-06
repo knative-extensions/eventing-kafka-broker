@@ -54,9 +54,6 @@ type Reconciler struct {
 	Env                 *config.Env
 	ConsumerGroupLister internalslst.ConsumerGroupLister
 	InternalsClient     internalsclient.Interface
-
-	DataPlaneConfigMapNamespace string
-	DataPlaneConfigMapName      string
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -113,7 +110,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 	}
 
 	offset := sources.OffsetLatest
-	isLatestOffset, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.DataPlaneConfigMapNamespace, r.DataPlaneConfigMapName, "config-kafka-broker-consumer.properties")
+	isLatestOffset, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.Env.DataPlaneConfigMapNamespace, r.Env.DataPlaneConfigConfigMapName, "config-kafka-broker-consumer.properties")
 	if err != nil {
 		return nil, fmt.Errorf("failed to determine initial offset: %w", err)
 	}
