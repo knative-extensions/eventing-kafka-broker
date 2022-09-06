@@ -28,7 +28,6 @@ if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
   success
 fi
 
-export BROKER_CLASS=Kafka
 if [[ -z "${BROKER_CLASS}" ]]; then
   fail_test "Broker class is not defined. Specify it with 'BROKER_CLASS' env var."
 else
