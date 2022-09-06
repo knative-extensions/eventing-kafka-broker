@@ -57,7 +57,7 @@ func namespacedTriggerReconciliation(t *testing.T, format string, env config.Env
 
 	testKey := fmt.Sprintf("%s/%s", TriggerNamespace, TriggerName)
 
-	env.DataPlaneConfigFormat = format
+	env.ContractConfigMapFormat = format
 
 	table := TableTest{
 		{
@@ -76,7 +76,7 @@ func namespacedTriggerReconciliation(t *testing.T, format string, env config.Env
 							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
-				}, BrokerNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, BrokerNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(BrokerNamespace, nil),
 			},
 			Key: testKey,
@@ -87,7 +87,7 @@ func namespacedTriggerReconciliation(t *testing.T, format string, env config.Env
 				patchFinalizers(),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(BrokerNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(BrokerNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
@@ -143,8 +143,8 @@ func useNamespacedTable(t *testing.T, table TableTest, env *config.Env) {
 				PodLister:                   listers.GetPodLister(),
 				SecretLister:                listers.GetSecretLister(),
 				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
+				DataPlaneConfigMapName:      env.ContractConfigMapName,
+				DataPlaneConfigFormat:       env.ContractConfigMapFormat,
 				DataPlaneNamespace:          env.SystemNamespace,
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,
