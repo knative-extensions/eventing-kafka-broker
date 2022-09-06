@@ -95,19 +95,12 @@ func TracingHeadersUsingOrderedDeliveryWithTraceExported() *feature.Feature {
 		sourceName,
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),
-		eventshub.AddTracing,
-		// Send at least two events to workaround https://github.com/knative/pkg/issues/2475.
-		// There's some time needed for exporting the trace to Zipkin. Sending two events with
-		// some delay gives the exporter time to export the trace for the first event. The sender
-		// is shutdown immediately after sending the last event so the trace for the last
-		// event will probably not be exported.
-		eventshub.SendMultipleEvents(2, 3*time.Second),
 	))
 
 	f.Assert("received event has traceparent header",
 		OnStore(sinkName).
 			Match(MatchKind(EventReceived), hasTraceparentHeader).
-			AtLeast(1),
+			Exact(1),
 	)
 
 	f.Assert("event trace exported", brokerHasMatchingTraceTree(sourceName, sinkName, brokerName, ev.ID()))
@@ -225,7 +218,6 @@ func TracingHeadersUsingUnorderedDelivery() *feature.Feature {
 		sourceName,
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),
-		eventshub.AddTracing,
 	))
 
 	f.Assert("received event has traceparent header",
@@ -276,7 +268,6 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 		sourceName,
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),
-		eventshub.AddTracing,
 		eventshub.SendMultipleEvents(5, time.Millisecond),
 	))
 
