@@ -110,7 +110,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 	}
 
 	offset := sources.OffsetLatest
-	isLatestOffset, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.Env.DataPlaneConfigMapNamespace, r.Env.DataPlaneConfigConfigMapName, "config-kafka-broker-consumer.properties")
+	isLatestOffset, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.Env.DataPlaneConfigMapNamespace, r.Env.ContractConfigMapName, "config-kafka-broker-consumer.properties")
 	if err != nil {
 		return nil, fmt.Errorf("failed to determine initial offset: %w", err)
 	}
