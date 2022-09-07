@@ -1185,7 +1185,7 @@ k8s.io/utils/internal/third_party/forked/golang/net
 k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.34.1-0.20220907090718-fae8544d8568
+# knative.dev/eventing v0.34.1
 ## explicit; go 1.18
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/pkg/apis/config
@@ -1336,6 +1336,11 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
+# knative.dev/eventing-autoscaler-keda v0.34.0
+## explicit; go 1.18
+knative.dev/eventing-autoscaler-keda/pkg/reconciler/keda
+knative.dev/eventing-autoscaler-keda/third_party/pkg/apis/keda/v1alpha1
+# knative.dev/eventing-kafka v0.34.1-0.20220907020318-2f1fbd6dda1b
 ## explicit; go 1.16
 knative.dev/eventing-kafka/pkg/apis/bindings
 knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
@@ -1402,11 +1407,12 @@ knative.dev/eventing-kafka/test/rekt/resources/resetoffset
 knative.dev/eventing-kafka/test/upgrade
 knative.dev/eventing-kafka/test/upgrade/continual
 knative.dev/eventing-kafka/test/upgrade/installation
-<<<<<<< HEAD
+# knative.dev/eventing-redis v0.34.0
+## explicit; go 1.18
+knative.dev/eventing-redis/source/pkg/apis/sources
+knative.dev/eventing-redis/source/pkg/apis/sources/v1alpha1
 # knative.dev/hack v0.0.0-20220907111718-6c301965af4c
 ## explicit; go 1.18
-=======
->>>>>>> 001b4071 (Helper methods for generating KEDA resources for Kafka scaling)
 knative.dev/hack
 knative.dev/hack/shell
 # knative.dev/pkg v0.0.0-20220826162920-93b66e6a8700

@@ -22,8 +22,6 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"knative.dev/eventing/test/rekt/resources/source"
-
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
@@ -61,9 +59,6 @@ func Install(name string, opts ...manifest.CfgFn) feature.StepFn {
 	}
 }
 
-// WithSink adds the sink related config to a ContainerSource spec.
-var WithSink = source.WithSink
-
 // WithExtensions adds the ceOverrides related config to a ContainerSource spec.
 func WithExtensions(extensions map[string]interface{}) manifest.CfgFn {
 	return func(cfg map[string]interface{}) {
@@ -80,15 +75,6 @@ func WithExtensions(extensions map[string]interface{}) manifest.CfgFn {
 			for k, v := range extensions {
 				ceExt[k] = v
 			}
-		}
-	}
-}
-
-// WithArgs add template.spec.containers.args to a ContainerSource spec.
-func WithArgs(args string) manifest.CfgFn {
-	return func(cfg map[string]interface{}) {
-		if args != "" {
-			cfg["args"] = args
 		}
 	}
 }

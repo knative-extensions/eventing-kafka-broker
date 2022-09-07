@@ -1596,15 +1596,16 @@ k8s.io/utils v0.0.0-20210819203725-bdf08cb9a70a/go.mod h1:jPW/WVKK9YHAvNhRxK0md/
 k8s.io/utils v0.0.0-20211116205334-6203023598ed/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 h1:HNSDgDCrr/6Ly3WEGKZftiE7IY19Vz2GdbOCyI4qqhc=
 k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
-<<<<<<< HEAD
 knative.dev/control-protocol v0.0.0-20220905133527-ca2ee058ed65/go.mod h1:kV+UoX4DjjwMlS37wHV1ZC7OL7r5IPAOhUvTHWi347M=
 knative.dev/eventing v0.34.1-0.20220906111743-7f1f49f5b4e0/go.mod h1:6UnNnPrEUNAM9PfCpf7L8N7G/1vq+HQlpOjzndY6ryw=
-knative.dev/eventing v0.34.1-0.20220907090718-fae8544d8568 h1:1Iu5KilKgpyS6iEqNKLlPbotj5i8L9NRCVLNa2GGyM4=
-knative.dev/eventing v0.34.1-0.20220907090718-fae8544d8568/go.mod h1:6UnNnPrEUNAM9PfCpf7L8N7G/1vq+HQlpOjzndY6ryw=
+knative.dev/eventing v0.34.1 h1:r6QuQmDCmmSANdTRLdbKb6YcYaJoeNpEuFfS8Bq0ZgQ=
+knative.dev/eventing v0.34.1/go.mod h1:6UnNnPrEUNAM9PfCpf7L8N7G/1vq+HQlpOjzndY6ryw=
+knative.dev/eventing-autoscaler-keda v0.34.0 h1:/x6BIhCkrmZCvXK6HdGVrgBcXwko1RJ90JIzfD7h79g=
+knative.dev/eventing-autoscaler-keda v0.34.0/go.mod h1:iZGgotD/sgypIvxs9Md0rHezVZY4UuKqD0uQzWBQolE=
 knative.dev/eventing-kafka v0.34.1-0.20220907020318-2f1fbd6dda1b h1:r+411BL8hsD3C52NIS+Yv9WNJIccjxWKTugWlbOFjM4=
 knative.dev/eventing-kafka v0.34.1-0.20220907020318-2f1fbd6dda1b/go.mod h1:ONepeihHUOP1rFaGIJTYYlphtOGQltLa0+WX1UoGds4=
-=======
->>>>>>> 001b4071 (Helper methods for generating KEDA resources for Kafka scaling)
+knative.dev/eventing-redis v0.34.0 h1:EmxFiCI/OCPR/ahF8xgg122J991jlpeKbGDk5uwOAh8=
+knative.dev/eventing-redis v0.34.0/go.mod h1:W3RSNnZhqohaPVHLlJriAexxSs+4Asjf3mLcfQNzbyw=
 knative.dev/hack v0.0.0-20220815132133-e9a8475f4329/go.mod h1:t/azP8I/Cygaw+87O7rkAPrNRjCelmtfSzWzu/9TM7I=
 knative.dev/hack v0.0.0-20220823140917-8d1e4ccf9dc3/go.mod h1:t/azP8I/Cygaw+87O7rkAPrNRjCelmtfSzWzu/9TM7I=
 knative.dev/hack v0.0.0-20220902220419-664eac5c391e/go.mod h1:yk2OjGDsbEnQjfxdm0/HJKS2WqTLEFg/N6nUs6Rqx3Q=

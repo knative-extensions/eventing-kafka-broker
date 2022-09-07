@@ -56,11 +56,11 @@ type triggerCfg struct {
 //                         |
 //                         +--[DLQ]--> "dlq" (optional)
 //
-func createBrokerTriggerTopology(f *feature.Feature, brokerName string, brokerDS *v1.DeliverySpec, triggers []triggerCfg, brokerOpts ...manifest.CfgFn) *eventshub.EventProber {
+func createBrokerTriggerTopology(f *feature.Feature, brokerName string, brokerDS *v1.DeliverySpec, triggers []triggerCfg) *eventshub.EventProber {
 	prober := eventshub.NewProber()
 
 	f.Setup("install recorder for broker dlq", prober.ReceiverInstall("brokerdlq"))
-	brokerOpts = append(brokerOpts, brokerresources.WithEnvConfig()...)
+	brokerOpts := brokerresources.WithEnvConfig()
 
 	if brokerDS != nil {
 		if brokerDS.DeadLetterSink != nil {

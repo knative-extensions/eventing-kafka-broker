@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package kafka
+package keda
 
 import (
 	"fmt"
@@ -23,11 +23,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kedav1alpha1 "knative.dev/eventing-autoscaler-keda/third_party/pkg/apis/keda/v1alpha1"
+	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/reconciler"
 
 	"knative.dev/eventing-autoscaler-keda/pkg/reconciler/keda"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )
 
 const (
@@ -44,8 +46,8 @@ func GenerateScaleTarget(cg *kafkainternals.ConsumerGroup) *kedav1alpha1.ScaleTa
 
 func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthentication *kedav1alpha1.TriggerAuthentication) ([]kedav1alpha1.ScaleTriggers, error) {
 	triggers := []kedav1alpha1.ScaleTriggers{}
-	bootstrapServers := cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"]
-	consumerGroup := cg.Spec.Template.Spec.Configs.Configs["group.id"]
+	bootstrapServers := cg.Spec.Template.Spec.Configs.Configs[kafka.BootstrapServersConfigMapKey]
+	consumerGroup := cg.Spec.Template.Spec.Configs.Configs[kafka.GroupIDConfigMapKey]
 
 	lagThreshold, err := keda.GetInt32ValueFromMap(cg.Annotations, keda.KedaAutoscalingKafkaLagThreshold, defaultKafkaLagThreshold)
 	if err != nil {
@@ -84,18 +86,18 @@ func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthenticati
 
 func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, saslType *string) (*kedav1alpha1.TriggerAuthentication, *corev1.Secret, error) {
 
-	secretTargetRefs := []kedav1alpha1.AuthSecretTargetRef{}
+	secretTargetRefs := make([]kedav1alpha1.AuthSecretTargetRef, 0, 8)
 	var secret corev1.Secret
 
 	triggerAuth := &kedav1alpha1.TriggerAuthentication{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-trigger-auth", cg.Name),
+			Name:      cg.Name,
 			Namespace: cg.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*kmeta.NewControllerRef(cg),
 			},
 			Labels: map[string]string{
-				//TODO
+				//TODO: may need to add labels like eventing-autoscaler-keda/pkg/reconciler/broker/resources/triggerauthentication.go#L39-L40
 			},
 		},
 		Spec: kedav1alpha1.TriggerAuthenticationSpec{
@@ -106,7 +108,7 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, saslType *s
 	if cg.Spec.Template.Spec.Auth.NetSpec != nil {
 		secret = corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      fmt.Sprintf("%s-secret", cg.Name),
+				Name:      cg.Name,
 				Namespace: cg.Namespace,
 				OwnerReferences: []metav1.OwnerReference{
 					*kmeta.NewControllerRef(cg),
@@ -134,19 +136,11 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, saslType *s
 			}
 
 			sasl := kedav1alpha1.AuthSecretTargetRef{Parameter: "sasl", Name: secret.Name, Key: "sasl"}
+			secretTargetRefs = append(secretTargetRefs, sasl)
 
-			username := kedav1alpha1.AuthSecretTargetRef{
-				Parameter: "username",
-				Name:      cg.Spec.Template.Spec.Auth.NetSpec.SASL.User.SecretKeyRef.Name,
-				Key:       cg.Spec.Template.Spec.Auth.NetSpec.SASL.User.SecretKeyRef.Key,
-			}
-			password := kedav1alpha1.AuthSecretTargetRef{
-				Parameter: "password",
-				Name:      cg.Spec.Template.Spec.Auth.NetSpec.SASL.Password.SecretKeyRef.Name,
-				Key:       cg.Spec.Template.Spec.Auth.NetSpec.SASL.Password.SecretKeyRef.Key,
-			}
+			secretTargetRefs = addAuthSecretTargetRef("username", cg.Spec.Template.Spec.Auth.NetSpec.SASL.User, secretTargetRefs)
+			secretTargetRefs = addAuthSecretTargetRef("password", cg.Spec.Template.Spec.Auth.NetSpec.SASL.Password, secretTargetRefs)
 
-			secretTargetRefs = append(secretTargetRefs, sasl, username, password)
 			triggerAuth.Spec.SecretTargetRef = secretTargetRefs
 		}
 
@@ -155,45 +149,23 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, saslType *s
 			tls := kedav1alpha1.AuthSecretTargetRef{Parameter: "tls", Name: secret.Name, Key: "tls"}
 			secretTargetRefs = append(secretTargetRefs, tls)
 
-			if cg.Spec.Template.Spec.Auth.NetSpec.TLS.CACert.SecretKeyRef != nil {
-				ca := kedav1alpha1.AuthSecretTargetRef{
-					Parameter: "ca",
-					Name:      cg.Spec.Template.Spec.Auth.NetSpec.TLS.CACert.SecretKeyRef.Name,
-					Key:       cg.Spec.Template.Spec.Auth.NetSpec.TLS.CACert.SecretKeyRef.Key,
-				}
+			secretTargetRefs = addAuthSecretTargetRef("ca", cg.Spec.Template.Spec.Auth.NetSpec.TLS.CACert, secretTargetRefs)
+			secretTargetRefs = addAuthSecretTargetRef("cert", cg.Spec.Template.Spec.Auth.NetSpec.TLS.Cert, secretTargetRefs)
+			secretTargetRefs = addAuthSecretTargetRef("key", cg.Spec.Template.Spec.Auth.NetSpec.TLS.Key, secretTargetRefs)
 
-				secretTargetRefs = append(secretTargetRefs, ca)
-			}
-
-			if cg.Spec.Template.Spec.Auth.NetSpec.TLS.Cert.SecretKeyRef != nil {
-				cert := kedav1alpha1.AuthSecretTargetRef{
-					Parameter: "cert",
-					Name:      cg.Spec.Template.Spec.Auth.NetSpec.TLS.Cert.SecretKeyRef.Name,
-					Key:       cg.Spec.Template.Spec.Auth.NetSpec.TLS.Cert.SecretKeyRef.Key,
-				}
-				secretTargetRefs = append(secretTargetRefs, cert)
-			}
-
-			if cg.Spec.Template.Spec.Auth.NetSpec.TLS.Key.SecretKeyRef != nil {
-				key := kedav1alpha1.AuthSecretTargetRef{
-					Parameter: "key",
-					Name:      cg.Spec.Template.Spec.Auth.NetSpec.TLS.Key.SecretKeyRef.Name,
-					Key:       cg.Spec.Template.Spec.Auth.NetSpec.TLS.Key.SecretKeyRef.Key,
-				}
-				secretTargetRefs = append(secretTargetRefs, key)
-			}
 			triggerAuth.Spec.SecretTargetRef = secretTargetRefs
 		}
 	}
 
 	if cg.Spec.Template.Spec.Auth.AuthSpec != nil && cg.Spec.Template.Spec.Auth.AuthSpec.Secret.Ref.Name != "" {
 		host := kedav1alpha1.AuthSecretTargetRef{
-			Parameter: "host",
+			Parameter: "host", //TODO: parameter name?
 			Name:      cg.Spec.Template.Spec.Auth.AuthSpec.Secret.Ref.Name,
-			Key:       "", //TODO: add key
+			Key:       "", //TODO: key value?
 		}
 		secretTargetRefs = append(secretTargetRefs, host)
 		triggerAuth.Spec.SecretTargetRef = secretTargetRefs
+
 		return triggerAuth, nil, nil
 	}
 
@@ -212,8 +184,23 @@ func ScaleObjectUpdated(namespace, name string) reconciler.Event {
 	return reconciler.NewEvent(corev1.EventTypeNormal, "ScaledObjectUpdated", "ScaledObject updated: \"%s/%s\"", namespace, name)
 }
 
-// scaleObjectDeploymentFailed makes a new reconciler event with event type Warning, and
-// reason ScaleObjectDeploymentFailed.
-func ScaleObjectDeploymentFailed(namespace, name string, err error) reconciler.Event {
-	return reconciler.NewEvent(corev1.EventTypeWarning, "ScaleObjectDeploymentFailed", "ScaledObject deployment failed to: \"%s/%s\", %w", namespace, name, err)
+// scaleObjectFailed makes a new reconciler event with event type Warning, and
+// reason ScaleObjectFailed.
+func ScaleObjectFailed(namespace, name string, err error) reconciler.Event {
+	return reconciler.NewEvent(corev1.EventTypeWarning, "ScaleObjectFailed", "ScaledObject failed to create: \"%s/%s\", %w", namespace, name, err)
+}
+
+func addAuthSecretTargetRef(parameter string, secretKeyRef v1beta1.SecretValueFromSource, secretTargetRefs []kedav1alpha1.AuthSecretTargetRef) []kedav1alpha1.AuthSecretTargetRef {
+	if secretKeyRef.SecretKeyRef == nil || secretKeyRef.SecretKeyRef.Name == "" || secretKeyRef.SecretKeyRef.Key == "" {
+		return nil
+	}
+
+	ref := kedav1alpha1.AuthSecretTargetRef{
+		Parameter: parameter,
+		Name:      secretKeyRef.SecretKeyRef.Name,
+		Key:       secretKeyRef.SecretKeyRef.Key,
+	}
+
+	secretTargetRefs = append(secretTargetRefs, ref)
+	return secretTargetRefs
 }
