@@ -1562,8 +1562,9 @@ k8s.io/utils v0.0.0-20211116205334-6203023598ed/go.mod h1:jPW/WVKK9YHAvNhRxK0md/
 k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 h1:HNSDgDCrr/6Ly3WEGKZftiE7IY19Vz2GdbOCyI4qqhc=
 k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 knative.dev/control-protocol v0.0.0-20220905133527-ca2ee058ed65/go.mod h1:kV+UoX4DjjwMlS37wHV1ZC7OL7r5IPAOhUvTHWi347M=
-knative.dev/eventing v0.34.1-0.20220906111743-7f1f49f5b4e0 h1:IVLZkOQlBL8MMwSYw28WVMru36UdXTZW+FkKuZACMhs=
 knative.dev/eventing v0.34.1-0.20220906111743-7f1f49f5b4e0/go.mod h1:6UnNnPrEUNAM9PfCpf7L8N7G/1vq+HQlpOjzndY6ryw=
+knative.dev/eventing v0.34.1-0.20220907065118-3acc3ec9efc2 h1:XQq0AGfkV04LjeHEv2ahg66uYkyhbVDxdMH9ROkU8MQ=
+knative.dev/eventing v0.34.1-0.20220907065118-3acc3ec9efc2/go.mod h1:6UnNnPrEUNAM9PfCpf7L8N7G/1vq+HQlpOjzndY6ryw=
 knative.dev/eventing-kafka v0.34.1-0.20220907020318-2f1fbd6dda1b h1:r+411BL8hsD3C52NIS+Yv9WNJIccjxWKTugWlbOFjM4=
 knative.dev/eventing-kafka v0.34.1-0.20220907020318-2f1fbd6dda1b/go.mod h1:ONepeihHUOP1rFaGIJTYYlphtOGQltLa0+WX1UoGds4=
 knative.dev/hack v0.0.0-20220815132133-e9a8475f4329/go.mod h1:t/azP8I/Cygaw+87O7rkAPrNRjCelmtfSzWzu/9TM7I=
