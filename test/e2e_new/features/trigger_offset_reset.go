@@ -69,7 +69,7 @@ func TriggerLatestOffset() *feature.Feature {
 	f.Requirement("send event 1", eventshub.Install(source1, eventshub.InputEvent(event1), eventshub.StartSenderToResource(broker.GVR(), brokerName)))
 	f.Requirement("event 1 received", assert.OnStore(sink1).MatchEvent(test.HasId(eventID1)).Exact(1))
 
-	f.Assert("install trigger 2", trigger.Install(trigger1Name, brokerName, trigger.WithSubscriber(svc.AsKReference(sink2), "")))
+	f.Assert("install trigger 2", trigger.Install(trigger2Name, brokerName, trigger.WithSubscriber(svc.AsKReference(sink2), "")))
 	f.Assert("trigger 2 is ready", trigger.IsReady(trigger2Name))
 
 	// Both triggers receive event 1 and 2.
