@@ -126,6 +126,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		},
 	})
 
+	reconciler.SecretTracker = impl.Tracker
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
+
 	return impl
 }
 

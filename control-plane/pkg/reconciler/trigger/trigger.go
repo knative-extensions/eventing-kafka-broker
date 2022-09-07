@@ -141,7 +141,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	if ok, err := r.reconcileInitialOffset(ctx, broker, trigger); err != nil {
 		return statusConditionManager.failedToResolveTriggerConfig(err)
 	} else if !ok {
-		return statusConditionManager.failedToResolveTriggerConfig(fmt.Errorf("missing broker status annotations"))
+		return statusConditionManager.failedToResolveTriggerConfig(fmt.Errorf("missing broker status annotations, waiting"))
 	}
 
 	// Get data plane config map.
