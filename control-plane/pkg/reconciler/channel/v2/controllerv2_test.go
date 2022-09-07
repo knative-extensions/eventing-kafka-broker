@@ -36,11 +36,13 @@ import (
 
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup/fake"
 
+	kedaclient "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 )
 
 func TestNewController(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
+	ctx, _ = kedaclient.With(ctx)
 
 	configs := &config.Env{
 		SystemNamespace:      "cm",

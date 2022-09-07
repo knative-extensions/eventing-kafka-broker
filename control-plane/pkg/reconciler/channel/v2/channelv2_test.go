@@ -37,6 +37,7 @@ import (
 	"knative.dev/pkg/network"
 	. "knative.dev/pkg/reconciler/testing"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -54,6 +55,8 @@ import (
 	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 
 	"github.com/rickb777/date/period"
+	kedaclient "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client/fake"
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	commonconstants "knative.dev/eventing-kafka/pkg/common/constants"
@@ -665,6 +668,7 @@ func TestReconcileKind(t *testing.T) {
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 						WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 						WithConsumerGroupLabels(ConsumerSubscription1Label),
+						WithConsumerGroupAnnotations(nil),
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(ChannelTopic()),
 							ConsumerConfigs(
@@ -1118,6 +1122,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
@@ -1126,6 +1131,15 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerAuth(&internalscg.Auth{
+							AuthSpec: &v1alpha1.Auth{
+								Secret: &v1alpha1.Secret{
+									Ref: &v1alpha1.SecretReference{
+										Name: "secret-1",
+									},
+								},
+							},
+						}),
 					)),
 					ConsumerGroupReady,
 				),
@@ -1319,6 +1333,7 @@ func TestReconcileKind(t *testing.T) {
 	}
 
 	table.Test(t, NewFactory(&env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
+		ctx, _ = kedaclient.With(ctx)
 
 		proberMock := probertesting.MockProber(prober.StatusReady)
 		if p, ok := row.OtherTestData[testProber]; ok {
@@ -1381,6 +1396,7 @@ func TestReconcileKind(t *testing.T) {
 			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
 			Prober:              proberMock,
 			IngressHost:         network.GetServiceHostname(env.IngressName, env.SystemNamespace),
+			KedaClient:          kedaclient.Get(ctx),
 		}
 		reconciler.ConfigMapTracker = &FakeTracker{}
 		reconciler.SecretTracker = &FakeTracker{}

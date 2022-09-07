@@ -35,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
+	"knative.dev/eventing-autoscaler-keda/pkg/reconciler/keda"
 	"knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
@@ -57,6 +58,8 @@ import (
 	channelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
+	kedaclientset "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
@@ -106,6 +109,7 @@ type Reconciler struct {
 
 	ConsumerGroupLister internalslst.ConsumerGroupLister
 	InternalsClient     internalsclient.Interface
+	KedaClient          kedaclientset.Interface
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
@@ -214,7 +218,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&channel.Status.DeliveryStatus, channelResource.EgressConfig)
 
-	allReady, subscribersError := r.reconcileSubscribers(ctx, channel, topicName, topicConfig.BootstrapServers)
+	allReady, subscribersError := r.reconcileSubscribers(ctx, channel, topicName, topicConfig.BootstrapServers, secret)
 	if subscribersError != nil {
 		channel.GetConditionSet().Manage(&channel.Status).MarkFalse(KafkaChannelConditionSubscribersReady, "failed to reconcile all subscribers", subscribersError.Error())
 		return subscribersError
@@ -463,7 +467,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	return nil
 }
 
-func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagingv1beta1.KafkaChannel, topicName string, bootstrapServers []string) (bool, error) {
+func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagingv1beta1.KafkaChannel, topicName string, bootstrapServers []string, secret *corev1.Secret) (bool, error) {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
 
 	channel.Status.Subscribers = make([]v1.SubscriberStatus, 0)
@@ -473,7 +477,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 	for i := range channel.Spec.Subscribers {
 		s := &channel.Spec.Subscribers[i]
 		logger = logger.With(zap.Any("subscriber", s))
-		cg, err := r.reconcileConsumerGroup(ctx, channel, s, topicName, bootstrapServers)
+		cg, err := r.reconcileConsumerGroup(ctx, channel, s, topicName, bootstrapServers, secret)
 		if err != nil {
 			logger.Error("error reconciling subscriber. marking subscriber as not ready", zap.Error(err))
 			msg := fmt.Sprintf("Subscriber %v not ready: %v", s.UID, err)
@@ -538,8 +542,10 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 	return allReady, globalErr
 }
 
-func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec, topicName string, bootstrapServers []string) (*internalscg.ConsumerGroup, error) {
-	newcg := &internalscg.ConsumerGroup{
+func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec, topicName string, bootstrapServers []string, secret *corev1.Secret) (*internalscg.ConsumerGroup, error) {
+	var secretName string
+
+	expectedCg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(s.UID),
 			Namespace: channel.Namespace,
@@ -576,30 +582,65 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 		},
 	}
 
+	//expectedCg.Spec.Replicas = ptr.Int32(2) //to be removed
+
+	// TODO: make these parameters below configurable and maybe unexposed
+	if channel.Annotations != nil {
+		expectedCg.Annotations = map[string]string{}
+		if channel.GetAnnotations()[keda.AutoscalingClassAnnotation] != "" {
+			expectedCg.Annotations[keda.AutoscalingClassAnnotation] = channel.GetAnnotations()[keda.AutoscalingClassAnnotation]
+		}
+		if channel.GetAnnotations()[keda.AutoscalingMinScaleAnnotation] != "" {
+			expectedCg.Annotations[keda.AutoscalingMinScaleAnnotation] = channel.GetAnnotations()[keda.AutoscalingMinScaleAnnotation]
+		}
+		if channel.GetAnnotations()[keda.AutoscalingMaxScaleAnnotation] != "" {
+			expectedCg.Annotations[keda.AutoscalingMaxScaleAnnotation] = channel.GetAnnotations()[keda.AutoscalingMaxScaleAnnotation]
+		}
+		if channel.GetAnnotations()[keda.KedaAutoscalingPollingIntervalAnnotation] != "" {
+			expectedCg.Annotations[keda.KedaAutoscalingPollingIntervalAnnotation] = channel.GetAnnotations()[keda.KedaAutoscalingPollingIntervalAnnotation]
+		}
+		if channel.GetAnnotations()[keda.KedaAutoscalingCooldownPeriodAnnotation] != "" {
+			expectedCg.Annotations[keda.KedaAutoscalingCooldownPeriodAnnotation] = channel.GetAnnotations()[keda.KedaAutoscalingCooldownPeriodAnnotation]
+		}
+		if channel.GetAnnotations()[keda.KedaAutoscalingKafkaLagThreshold] != "" {
+			expectedCg.Annotations[keda.KedaAutoscalingKafkaLagThreshold] = channel.GetAnnotations()[keda.KedaAutoscalingKafkaLagThreshold]
+		}
+	}
+
+	if secret != nil {
+		secretName = secret.Name
+		//secretNamespace := secret.Namespace
+		expectedCg.Spec.Template.Spec.Auth = &internalscg.Auth{
+			AuthSpec: &v1alpha1.Auth{
+				Secret: &v1alpha1.Secret{
+					Ref: &v1alpha1.SecretReference{
+						Name: secretName,
+					},
+				},
+			},
+		}
+	}
+
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(channel.GetNamespace()).Get(string(s.UID)) // Get by consumer group id
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	}
-
 	if apierrors.IsNotFound(err) {
-		cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(newcg.GetNamespace()).Create(ctx, newcg, metav1.CreateOptions{})
+		cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedCg.GetNamespace()).Create(ctx, expectedCg, metav1.CreateOptions{})
 		if err != nil && !apierrors.IsAlreadyExists(err) {
-			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", newcg.GetNamespace(), newcg.GetName(), err)
-		}
-		if apierrors.IsAlreadyExists(err) {
-			return newcg, nil
+			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", expectedCg.GetNamespace(), expectedCg.GetName(), err)
 		}
 		return cg, nil
 	}
 
-	if equality.Semantic.DeepDerivative(newcg.Spec, cg.Spec) {
+	if equality.Semantic.DeepDerivative(expectedCg.Spec, cg.Spec) {
 		return cg, nil
 	}
 
 	newCg := &internalscg.ConsumerGroup{
 		TypeMeta:   cg.TypeMeta,
 		ObjectMeta: cg.ObjectMeta,
-		Spec:       newcg.Spec,
+		Spec:       expectedCg.Spec,
 		Status:     cg.Status,
 	}
 	if cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
