@@ -36,7 +36,7 @@ import (
 
 // TriggerLatestOffset tests that a Trigger receives only new events.
 func TriggerLatestOffset() *feature.Feature {
-	f := feature.NewFeatureNamed("delete broker ConfigMap first")
+	f := feature.NewFeatureNamed("Consumer latest auto.offset.reset config")
 
 	brokerName := feature.MakeRandomK8sName("broker")
 	cmName := feature.MakeRandomK8sName("cm-config")
