@@ -61,10 +61,10 @@ func TriggerLatestOffset() *feature.Feature {
 	f.Setup("install broker", broker.Install(brokerName, append(broker.WithEnvConfig(), broker.WithConfig(cmName))...))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 
-	f.Setup("install trigger 1", trigger.Install(trigger1Name, brokerName, trigger.WithSubscriber(svc.AsKReference(sink1), "")))
-	f.Setup("trigger 1 is ready", trigger.IsReady(trigger1Name))
 	f.Setup("install sink1", eventshub.Install(sink1, eventshub.StartReceiver))
 	f.Setup("install sink2", eventshub.Install(sink2, eventshub.StartReceiver))
+	f.Setup("install trigger 1", trigger.Install(trigger1Name, brokerName, trigger.WithSubscriber(svc.AsKReference(sink1), "")))
+	f.Setup("trigger 1 is ready", trigger.IsReady(trigger1Name))
 
 	f.Requirement("send event 1", eventshub.Install(source1, eventshub.InputEvent(event1), eventshub.StartSenderToResource(broker.GVR(), brokerName)))
 	f.Requirement("event 1 received", assert.OnStore(sink1).MatchEvent(test.HasId(eventID1)).Exact(1))
