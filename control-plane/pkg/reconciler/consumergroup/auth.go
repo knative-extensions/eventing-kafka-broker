@@ -76,7 +76,9 @@ func hasAuthSpecAuthConfig(auth *kafkainternals.Auth) bool {
 }
 
 func hasNetSpecAuthConfig(auth *kafkainternals.Auth) bool {
-	return auth != nil && (auth.NetSpec.TLS.Enable || auth.NetSpec.SASL.Enable) &&
+	return auth != nil &&
+		auth.NetSpec != nil &&
+		(auth.NetSpec.TLS.Enable || auth.NetSpec.SASL.Enable) &&
 		(auth.NetSpec.TLS.Cert.SecretKeyRef != nil ||
 			auth.NetSpec.TLS.CACert.SecretKeyRef != nil ||
 			auth.NetSpec.TLS.Key.SecretKeyRef != nil ||

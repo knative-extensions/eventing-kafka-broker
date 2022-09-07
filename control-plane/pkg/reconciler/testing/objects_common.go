@@ -315,6 +315,23 @@ func NewSASLSSLSecret(ns, name string) *corev1.Secret {
 	}
 }
 
+func NewKedaSecret(ns, name string) *corev1.Secret {
+
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: ns,
+			Name:      name,
+			OwnerReferences: []metav1.OwnerReference{
+				ConsumerGroupAsOwnerRef(),
+			},
+		},
+		StringData: map[string]string{
+			"sasl": "plaintext",
+			"tls":  "enable",
+		},
+	}
+}
+
 func loadCerts() (ca, userKey, userCert []byte) {
 	ca, err := ioutil.ReadFile("testdata/ca.crt")
 	if err != nil {

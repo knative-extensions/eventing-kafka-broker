@@ -87,6 +87,12 @@ rules:
       - get
       - update
       - watch
+  - apiGroups:
+    - ""
+    resources:
+    - "secrets"
+    verbs:
+    - "*"
 
   # for namespaced brokers, we need to be able to manage additional resources within the user namespaces
   - apiGroups:
@@ -249,3 +255,14 @@ rules:
       - kafkasources/finalizers
     verbs:
       - update
+
+  - apiGroups:
+    - keda.sh
+    resources:
+    - scaledobjects
+    - scaledobjects/finalizers
+    - scaledobjects/status
+    - triggerauthentications
+    - triggerauthentications/status
+    verbs:
+    - '*'

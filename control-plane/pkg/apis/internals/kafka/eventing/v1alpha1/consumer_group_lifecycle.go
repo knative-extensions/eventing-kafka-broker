@@ -25,6 +25,7 @@ import (
 const (
 	ConditionConsumerGroupConsumers          apis.ConditionType = "Consumers"
 	ConditionConsumerGroupConsumersScheduled apis.ConditionType = "ConsumersScheduled"
+	ConditionKedaScaling                     apis.ConditionType = "KedaScaled"
 	// Labels
 	KafkaChannelNameLabel           = "kafkachannel-name"
 	ConsumerLabelSelector           = "kafka.eventing.knative.dev/metadata.uid"
@@ -80,4 +81,14 @@ func (cg *ConsumerGroup) MarkInitializeOffsetFailed(reason string, err error) er
 
 func (cg *ConsumerGroup) MarkScheduleSucceeded() {
 	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionConsumerGroupConsumersScheduled)
+}
+
+func (cg *ConsumerGroup) MarkKedaScalingSucceeded() {
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionKedaScaling)
+}
+
+func (cg *ConsumerGroup) MarkKedaScalingFailed(reason string, err error) error {
+	err = fmt.Errorf("failed to set up KEDA scaling: %w", err)
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionKedaScaling, reason, err.Error())
+	return err
 }
