@@ -26,6 +26,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
+	"knative.dev/eventing-autoscaler-keda/pkg/reconciler/keda"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
@@ -41,10 +42,19 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+
+	kedaclientset "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 )
 
 const (
 	deliveryOrderAnnotation = "kafka.eventing.knative.dev/delivery.order"
+	// TopicPrefix is the Kafka Broker topic prefix - (topic name: knative-broker-<broker-namespace>-<broker-name>).
+	TopicPrefix = "knative-broker-"
+
+	// ExternalTopicAnnotation for using external kafka topic for the broker
+	ExternalTopicAnnotation = "kafka.eventing.knative.dev/external.topic"
 )
 
 type Reconciler struct {
@@ -54,6 +64,7 @@ type Reconciler struct {
 	Env                 *config.Env
 	ConsumerGroupLister internalslst.ConsumerGroupLister
 	InternalsClient     internalsclient.Interface
+	KedaClient          kedaclientset.Interface
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -69,13 +80,16 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 		// Actually check if the broker doesn't exist.
 		// Note: do not introduce another `broker` variable with `:`
 		broker, err = r.EventingClient.EventingV1().Brokers(trigger.Namespace).Get(ctx, trigger.Spec.Broker, metav1.GetOptions{})
+
 		if apierrors.IsNotFound(err) {
+
+			logger.Debug("broker not found", zap.String("finalizeDuringReconcile", "notFound"))
 			return fmt.Errorf("failed to get broker: %w", err)
 		}
 	}
 
 	// Ignore Triggers that are associated with a Broker we don't own.
-	if isKnativeKafkaBroker, brokerClass := isKnativeKafkaBroker(broker); !isKnativeKafkaBroker {
+	if hasRelevantBroker, brokerClass := r.hasRelevantBrokerClass(broker); !hasRelevantBroker {
 		logger.Debug("Ignoring Trigger", zap.String(eventing.BrokerClassAnnotationKey, brokerClass))
 		return nil
 	}
@@ -118,7 +132,15 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 		offset = sources.OffsetEarliest
 	}
 
-	newcg := &internalscg.ConsumerGroup{
+	secretName := broker.Status.Annotations[security.AuthSecretNameKey]
+	//secretNamespace := broker.Status.Annotations[security.AuthSecretNamespaceKey]
+	bootstrapServers := broker.Status.Annotations[kafka.BootstrapServersConfigMapKey]
+	topicName, ok := broker.Annotations[ExternalTopicAnnotation]
+	if !ok {
+		topicName = kafka.BrokerTopic(TopicPrefix, broker)
+	}
+
+	expectedCg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(trigger.UID),
 			Namespace: trigger.Namespace,
@@ -137,8 +159,11 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 					},
 				},
 				Spec: internalscg.ConsumerSpec{
-					Topics:  []string{},                                                                               //todo get topics from broker resource
-					Configs: internalscg.ConsumerConfigs{Configs: map[string]string{"group.id": string(trigger.UID)}}, //todo get bootstrap.servers from broker resource
+					Topics: []string{topicName},
+					Configs: internalscg.ConsumerConfigs{Configs: map[string]string{
+						"group.id":          string(trigger.UID),
+						"bootstrap.servers": bootstrapServers,
+					}},
 					Delivery: &internalscg.DeliverySpec{
 						DeliverySpec:  deliverySpec(broker, trigger),
 						Ordering:      deliveryOrdering,
@@ -155,30 +180,63 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 		},
 	}
 
+	//expectedCg.Spec.Replicas = ptr.Int32(2) //to be removed
+
+	// TODO: make these parameters below configurable and maybe unexposed
+	if broker.Annotations != nil {
+		expectedCg.Annotations = map[string]string{}
+		if broker.GetAnnotations()[keda.AutoscalingClassAnnotation] != "" {
+			expectedCg.Annotations[keda.AutoscalingClassAnnotation] = broker.GetAnnotations()[keda.AutoscalingClassAnnotation]
+		}
+		if broker.GetAnnotations()[keda.AutoscalingMinScaleAnnotation] != "" {
+			expectedCg.Annotations[keda.AutoscalingMinScaleAnnotation] = broker.GetAnnotations()[keda.AutoscalingMinScaleAnnotation]
+		}
+		if broker.GetAnnotations()[keda.AutoscalingMaxScaleAnnotation] != "" {
+			expectedCg.Annotations[keda.AutoscalingMaxScaleAnnotation] = broker.GetAnnotations()[keda.AutoscalingMaxScaleAnnotation]
+		}
+		if broker.GetAnnotations()[keda.KedaAutoscalingPollingIntervalAnnotation] != "" {
+			expectedCg.Annotations[keda.KedaAutoscalingPollingIntervalAnnotation] = broker.GetAnnotations()[keda.KedaAutoscalingPollingIntervalAnnotation]
+		}
+		if broker.GetAnnotations()[keda.KedaAutoscalingCooldownPeriodAnnotation] != "" {
+			expectedCg.Annotations[keda.KedaAutoscalingCooldownPeriodAnnotation] = broker.GetAnnotations()[keda.KedaAutoscalingCooldownPeriodAnnotation]
+		}
+		if broker.GetAnnotations()[keda.KedaAutoscalingKafkaLagThreshold] != "" {
+			expectedCg.Annotations[keda.KedaAutoscalingKafkaLagThreshold] = broker.GetAnnotations()[keda.KedaAutoscalingKafkaLagThreshold]
+		}
+	}
+
+	if secretName != "" {
+		expectedCg.Spec.Template.Spec.Auth = &internalscg.Auth{
+			AuthSpec: &v1alpha1.Auth{
+				Secret: &v1alpha1.Secret{
+					Ref: &v1alpha1.SecretReference{
+						Name: secretName,
+					},
+				},
+			},
+		}
+	}
+
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(string(trigger.UID)) //Get by consumer group name
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	}
-
 	if apierrors.IsNotFound(err) {
-		cg, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(newcg.GetNamespace()).Create(ctx, newcg, metav1.CreateOptions{})
+		cg, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedCg.GetNamespace()).Create(ctx, expectedCg, metav1.CreateOptions{})
 		if err != nil && !apierrors.IsAlreadyExists(err) {
-			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", newcg.GetNamespace(), newcg.GetName(), err)
-		}
-		if apierrors.IsAlreadyExists(err) {
-			return newcg, nil
+			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", expectedCg.GetNamespace(), expectedCg.GetName(), err)
 		}
 		return cg, nil
 	}
 
-	if equality.Semantic.DeepDerivative(newcg.Spec, cg.Spec) {
+	if equality.Semantic.DeepDerivative(expectedCg.Spec, cg.Spec) {
 		return cg, nil
 	}
 
 	newCg := &internalscg.ConsumerGroup{
 		TypeMeta:   cg.TypeMeta,
 		ObjectMeta: cg.ObjectMeta,
-		Spec:       newcg.Spec,
+		Spec:       expectedCg.Spec,
 		Status:     cg.Status,
 	}
 	if cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
@@ -214,7 +272,7 @@ func propagateConsumerGroupStatus(cg *internalscg.ConsumerGroup, trigger *eventi
 	trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
 }
 
-func isKnativeKafkaBroker(broker *eventing.Broker) (bool, string) {
+func (r *Reconciler) hasRelevantBrokerClass(broker *eventing.Broker) (bool, string) {
 	brokerClass := broker.GetAnnotations()[eventing.BrokerClassAnnotationKey]
 	return brokerClass == kafka.BrokerClass, brokerClass
 }

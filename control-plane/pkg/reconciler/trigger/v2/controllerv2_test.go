@@ -28,11 +28,13 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 
+	kedaclient "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 )
 
 func TestNewController(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
+	ctx, _ = kedaclient.With(ctx)
 
 	controller := NewController(ctx, &config.Env{})
 	if controller == nil {

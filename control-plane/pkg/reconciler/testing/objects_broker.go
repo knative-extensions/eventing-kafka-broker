@@ -54,6 +54,10 @@ const (
 	TriggerNamespace = "test-namespace"
 )
 
+var (
+	BrokerTopics = []string{fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName)}
+)
+
 func BrokerTopic() string {
 	return fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName)
 }
