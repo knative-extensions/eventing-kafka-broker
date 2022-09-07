@@ -75,7 +75,7 @@ func TriggerLatestOffset() *feature.Feature {
 
 	f.Assert("send event 2", func(ctx context.Context, t feature.T) {
 		trigger.IsReady(trigger2Name)(ctx, t) // Wait for trigger ready
-		eventshub.Install(source2, eventshub.InputEvent(event2), eventshub.StartSenderToResource(broker.GVR(), brokerName))
+		eventshub.Install(source2, eventshub.InputEvent(event2), eventshub.StartSenderToResource(broker.GVR(), brokerName))(ctx, t)
 	})
 
 	// Both triggers receive event 1 and 2.
