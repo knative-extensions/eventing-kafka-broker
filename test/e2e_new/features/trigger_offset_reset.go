@@ -42,6 +42,7 @@ func TriggerLatestOffset() *feature.Feature {
 	cmName := feature.MakeRandomK8sName("cm-config")
 
 	source1 := feature.MakeRandomK8sName("source1")
+	source2 := feature.MakeRandomK8sName("source2")
 
 	trigger1Name := feature.MakeRandomK8sName("trigger1")
 	sink1 := feature.MakeRandomK8sName("sink1")
@@ -71,6 +72,11 @@ func TriggerLatestOffset() *feature.Feature {
 
 	f.Assert("install trigger 2", trigger.Install(trigger2Name, brokerName, trigger.WithSubscriber(svc.AsKReference(sink2), "")))
 	f.Assert("trigger 2 is ready", trigger.IsReady(trigger2Name))
+
+	f.Assert("send event 2", func(ctx context.Context, t feature.T) {
+		trigger.IsReady(trigger2Name)(ctx, t) // Wait for trigger ready
+		eventshub.Install(source2, eventshub.InputEvent(event2), eventshub.StartSenderToResource(broker.GVR(), brokerName))
+	})
 
 	// Both triggers receive event 1 and 2.
 	f.Assert("event 2 is received by sink 1", assert.OnStore(sink1).MatchEvent(test.HasId(eventID2)).Exact(1))
