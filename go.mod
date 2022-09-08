@@ -8,8 +8,11 @@ require (
 	github.com/cloudevents/sdk-go/v2 v2.10.1
 	github.com/google/go-cmp v0.5.7
 	github.com/google/uuid v1.3.0
+	github.com/hashicorp/errwrap v1.1.0
+	github.com/hashicorp/golang-lru v0.5.4
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/klauspost/compress v1.15.4 // indirect
+	github.com/magiconair/properties v1.8.5
 	github.com/manifestival/client-go-client v0.5.0
 	github.com/manifestival/manifestival v0.7.1
 	github.com/openzipkin/zipkin-go v0.3.0
@@ -29,18 +32,15 @@ require (
 	k8s.io/apiserver v0.23.9
 	k8s.io/client-go v0.23.9
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
-	knative.dev/eventing-kafka v0.34.1-0.20220907020318-2f1fbd6dda1b
-	knative.dev/hack v0.0.0-20220907111718-6c301965af4c
-	knative.dev/pkg v0.0.0-20220826162920-93b66e6a8700
-	knative.dev/reconciler-test v0.0.0-20220907152619-a53370571d5b
 	sigs.k8s.io/yaml v1.3.0
 )
 
 require (
-	github.com/hashicorp/errwrap v1.1.0
-	github.com/hashicorp/golang-lru v0.5.4
-	github.com/magiconair/properties v1.8.5
 	knative.dev/eventing v0.34.1-0.20220907090718-fae8544d8568
+	knative.dev/eventing-kafka v0.34.1-0.20220907020318-2f1fbd6dda1b
+	knative.dev/hack v0.0.0-20220907111718-6c301965af4c
+	knative.dev/pkg v0.0.0-20220826162920-93b66e6a8700
+	knative.dev/reconciler-test v0.0.0-20220907152619-a53370571d5b
 )
 
 require (
