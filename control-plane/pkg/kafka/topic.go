@@ -31,6 +31,7 @@ const (
 	DefaultTopicNumPartitionConfigMapKey      = "default.topic.partitions"
 	DefaultTopicReplicationFactorConfigMapKey = "default.topic.replication.factor"
 	BootstrapServersConfigMapKey              = "bootstrap.servers"
+	GroupIDConfigMapKey                       = "group.id"
 )
 
 // TopicConfig contains configurations for creating a topic.

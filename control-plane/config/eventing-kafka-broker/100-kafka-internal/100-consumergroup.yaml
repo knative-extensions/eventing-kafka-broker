@@ -27,7 +27,7 @@ spec:
       served: true
       storage: true
       subresources:
-        status: { }
+        status: {}
         scale:
           # specReplicasPath defines the JSONPath inside a custom resource that corresponds to Scale.Spec.Replicas.
           specReplicasPath: .spec.replicas

@@ -43,12 +43,10 @@ spec:
       containers:
       - name: heartbeats
         image: ko://knative.dev/eventing/test/test_images/heartbeats
-        imagePullPolicy: IfNotPresent
         args:
-        - {{ .args }}
+        - --period=1
         env:
         - name: POD_NAME
           value: heartbeats
         - name: POD_NAMESPACE
           value: {{ .namespace }}
-
