@@ -35,7 +35,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"knative.dev/eventing-autoscaler-keda/pkg/reconciler/keda"
 	"knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
@@ -66,6 +65,8 @@ import (
 	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+
+	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
 )
 
 const (
@@ -582,30 +583,8 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 		},
 	}
 
-	//expectedCg.Spec.Replicas = ptr.Int32(2) //to be removed
-
-	// TODO: make these parameters below configurable and maybe unexposed
-	if channel.Annotations != nil {
-		expectedCg.Annotations = map[string]string{}
-		if channel.GetAnnotations()[keda.AutoscalingClassAnnotation] != "" {
-			expectedCg.Annotations[keda.AutoscalingClassAnnotation] = channel.GetAnnotations()[keda.AutoscalingClassAnnotation]
-		}
-		if channel.GetAnnotations()[keda.AutoscalingMinScaleAnnotation] != "" {
-			expectedCg.Annotations[keda.AutoscalingMinScaleAnnotation] = channel.GetAnnotations()[keda.AutoscalingMinScaleAnnotation]
-		}
-		if channel.GetAnnotations()[keda.AutoscalingMaxScaleAnnotation] != "" {
-			expectedCg.Annotations[keda.AutoscalingMaxScaleAnnotation] = channel.GetAnnotations()[keda.AutoscalingMaxScaleAnnotation]
-		}
-		if channel.GetAnnotations()[keda.KedaAutoscalingPollingIntervalAnnotation] != "" {
-			expectedCg.Annotations[keda.KedaAutoscalingPollingIntervalAnnotation] = channel.GetAnnotations()[keda.KedaAutoscalingPollingIntervalAnnotation]
-		}
-		if channel.GetAnnotations()[keda.KedaAutoscalingCooldownPeriodAnnotation] != "" {
-			expectedCg.Annotations[keda.KedaAutoscalingCooldownPeriodAnnotation] = channel.GetAnnotations()[keda.KedaAutoscalingCooldownPeriodAnnotation]
-		}
-		if channel.GetAnnotations()[keda.KedaAutoscalingKafkaLagThreshold] != "" {
-			expectedCg.Annotations[keda.KedaAutoscalingKafkaLagThreshold] = channel.GetAnnotations()[keda.KedaAutoscalingKafkaLagThreshold]
-		}
-	}
+	// TODO: make keda annotation values configurable and maybe unexposed
+	expectedCg.Annotations = kedafunc.SetAutoscalingAnnotations(channel.Annotations)
 
 	if secret != nil {
 		secretName = secret.Name
@@ -633,7 +612,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 		return cg, nil
 	}
 
-	if equality.Semantic.DeepDerivative(expectedCg.Spec, cg.Spec) {
+	if equality.Semantic.DeepDerivative(expectedCg.Spec, cg.Spec) && equality.Semantic.DeepDerivative(expectedCg.Annotations, cg.Annotations) {
 		return cg, nil
 	}
 
@@ -643,6 +622,8 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 		Spec:       expectedCg.Spec,
 		Status:     cg.Status,
 	}
+	newCg.Annotations = expectedCg.Annotations
+
 	if cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
 		return nil, fmt.Errorf("failed to update consumer group %s/%s: %w", newCg.GetNamespace(), newCg.GetName(), err)
 	}

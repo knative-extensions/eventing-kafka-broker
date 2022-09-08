@@ -120,6 +120,22 @@ func WithChannelDeadLetterSinkURI(uri string) KRShapedOption {
 	}
 }
 
+func WithAutoscalingAnnotationsChannel() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*messagingv1beta1.KafkaChannel)
+
+		if ch.Annotations == nil {
+			ch.Annotations = make(map[string]string)
+		}
+
+		for k, v := range ConsumerGroupAnnotations {
+			if _, ok := ch.Annotations[k]; !ok {
+				ch.Annotations[k] = v
+			}
+		}
+	}
+}
+
 func ChannelReceiverPod(namespace string, annotations map[string]string) runtime.Object {
 	return &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{
