@@ -124,3 +124,21 @@ func (cmp *MTConfigMapSecretLocator) SecretNamespace() (string, bool) {
 
 	return cmp.Namespace, true
 }
+
+type AnnotationsSecretLocator struct {
+	Annotations map[string]string
+	Namespace   string
+}
+
+func (a *AnnotationsSecretLocator) SecretName() (string, bool) {
+	v, ok := a.Annotations[AuthSecretNameKey]
+	if ok && v != "" {
+		return v, ok
+	}
+	return "", false
+}
+
+func (a *AnnotationsSecretLocator) SecretNamespace() (string, bool) {
+	name, ok := a.SecretName()
+	return a.Namespace, len(a.Namespace) > 0 && ok && len(name) > 0
+}

@@ -99,7 +99,7 @@ func (m *MockKafkaClusterAdmin) ListTopics() (map[string]sarama.TopicDetail, err
 func (m *MockKafkaClusterAdmin) DescribeTopics(topics []string) (metadata []*sarama.TopicMetadata, err error) {
 
 	if !sets.NewString(m.ExpectedTopics...).HasAll(topics...) {
-		m.T.Errorf("unexpected topics %v", topics)
+		m.T.Errorf("unexpected topics %v, expected %v", topics, m.ExpectedTopics)
 	}
 
 	return m.ExpectedTopicsMetadataOnDescribeTopics, m.ExpectedErrorOnDescribeTopics

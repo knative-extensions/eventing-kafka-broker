@@ -21,9 +21,11 @@ import (
 	"io/ioutil"
 	"time"
 
+	"github.com/magiconair/properties"
 	appsv1 "k8s.io/api/apps/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/types"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -564,5 +566,31 @@ func PodRunning() PodOption {
 func PodAnnotations(annotations map[string]string) PodOption {
 	return func(pod *corev1.Pod) {
 		pod.Annotations = annotations
+	}
+}
+
+func DataPlaneConfigMap(namespace, name, key string, options ...base.ConfigMapOption) *corev1.ConfigMap {
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+		},
+		Data: map[string]string{
+			key: "",
+		},
+	}
+
+	for _, opt := range options {
+		opt(cm)
+	}
+
+	return cm
+}
+
+func DataPlaneConfigInitialOffset(key string, offset sources.Offset) base.ConfigMapOption {
+	return func(cm *corev1.ConfigMap) {
+		props := properties.MustLoadString(cm.Data[key])
+		_, _, _ = props.Set("auto.offset.reset", string(offset))
+		cm.Data[key] = props.String()
 	}
 }

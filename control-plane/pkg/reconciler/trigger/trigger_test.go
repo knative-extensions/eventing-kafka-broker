@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
 	corev1 "k8s.io/api/core/v1"
@@ -29,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/utils/pointer"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
@@ -49,6 +51,8 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
+	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -56,13 +60,14 @@ import (
 )
 
 var DefaultEnv = &config.Env{
-	DataPlaneConfigMapNamespace: "knative-eventing",
-	ContractConfigMapName:       "kafka-broker-brokers-triggers",
-	GeneralConfigMapName:        "kafka-broker-config",
-	IngressName:                 "kafka-broker-ingress",
-	SystemNamespace:             "knative-eventing",
-	ContractConfigMapFormat:     base.Json,
-	DefaultBackoffDelayMs:       1000,
+	DataPlaneConfigMapNamespace:  "knative-eventing",
+	ContractConfigMapName:        "kafka-broker-brokers-triggers",
+	GeneralConfigMapName:         "kafka-broker-config",
+	DataPlaneConfigConfigMapName: "config-kafka-broker-data-plane",
+	IngressName:                  "kafka-broker-ingress",
+	SystemNamespace:              "knative-eventing",
+	ContractConfigMapFormat:      base.Json,
+	DefaultBackoffDelayMs:        1000,
 }
 
 var (
@@ -79,6 +84,8 @@ var (
 	}
 
 	exponential = eventingduck.BackoffPolicyExponential
+
+	bootstrapServers = "kafka-1:9092,kafka-2:9093"
 )
 
 type EgressBuilder struct {
@@ -126,6 +133,8 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
 				newTrigger(),
 				NewService(),
@@ -139,6 +148,9 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					},
 				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -190,6 +202,8 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				NewBroker(
 					BrokerReady,
 					WithDelivery(),
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
 				newTrigger(),
 				NewService(),
@@ -203,6 +217,9 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					},
 				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetEarliest),
+				),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -254,6 +271,8 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
 				newTrigger(withDelivery),
 				NewService(),
@@ -267,6 +286,9 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					},
 				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -325,6 +347,8 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
 				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Ordered))),
 				NewService(),
@@ -338,6 +362,9 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					},
 				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -390,6 +417,8 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
 				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Unordered))),
 				NewService(),
@@ -403,6 +432,9 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					},
 				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -455,6 +487,8 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
 				newTrigger(withDelivery),
 				NewService(),
@@ -468,6 +502,9 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					},
 				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -527,6 +564,8 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
 				newTrigger(),
 				NewService(),
@@ -595,6 +634,9 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					Generation: 2,
 				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -677,6 +719,11 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(),
 				NewService(),
@@ -716,7 +763,14 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 		{
 			Name: "Empty data plane config map",
 			Objects: []runtime.Object{
-				NewBroker(BrokerReady),
+				NewBroker(
+					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
 				newTrigger(),
 				NewService(),
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
@@ -918,6 +972,8 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
 				newTrigger(
 					withFilters(
@@ -965,6 +1021,9 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					},
 				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
 				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -1004,6 +1063,8 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
 				newTrigger(
 					withFilters(
@@ -1019,6 +1080,9 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					),
 				),
 				NewService(),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1308,6 +1372,11 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(
 					withFilters(
@@ -1606,6 +1675,11 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(),
 				NewService(),
@@ -2755,25 +2829,48 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
-				KubeClient:                  kubeclient.Get(ctx),
-				PodLister:                   listers.GetPodLister(),
-				SecretLister:                listers.GetSecretLister(),
-				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      env.ContractConfigMapName,
-				DataPlaneConfigFormat:       env.ContractConfigMapFormat,
-				DataPlaneNamespace:          env.SystemNamespace,
-				DispatcherLabel:             base.BrokerDispatcherLabel,
-				ReceiverLabel:               base.BrokerReceiverLabel,
+				KubeClient:                   kubeclient.Get(ctx),
+				PodLister:                    listers.GetPodLister(),
+				SecretLister:                 listers.GetSecretLister(),
+				DataPlaneConfigMapNamespace:  env.DataPlaneConfigMapNamespace,
+				ContractConfigMapName:        env.ContractConfigMapName,
+				ContractConfigMapFormat:      env.ContractConfigMapFormat,
+				DataPlaneConfigConfigMapName: env.DataPlaneConfigConfigMapName,
+				DataPlaneNamespace:           env.SystemNamespace,
+				DispatcherLabel:              base.BrokerDispatcherLabel,
+				ReceiverLabel:                base.BrokerReceiverLabel,
 			},
 			FlagsHolder: &FlagsHolder{
 				Flags: flags,
 			},
 			BrokerLister:              listers.GetBrokerLister(),
+			ConfigMapLister:           listers.GetConfigMapLister(),
 			EventingClient:            eventingclient.Get(ctx),
 			Resolver:                  nil,
 			Env:                       env,
 			BrokerClass:               kafka.BrokerClass,
 			DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
+			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
+				return 1, nil
+			},
+			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
+				return &kafkatesting.MockKafkaClient{}, nil
+			},
+			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+				return &kafkatesting.MockKafkaClusterAdmin{
+					ExpectedTopicName: BrokerTopic(),
+					ExpectedTopics:    []string{BrokerTopic()},
+					ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
+						{
+							Err:        0,
+							Name:       BrokerTopic(),
+							IsInternal: false,
+							Partitions: []*sarama.PartitionMetadata{{}},
+						},
+					},
+					T: t,
+				}, nil
+			},
 		}
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))

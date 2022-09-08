@@ -39,6 +39,7 @@ require (
 require (
 	github.com/hashicorp/errwrap v1.1.0
 	github.com/hashicorp/golang-lru v0.5.4
+	github.com/magiconair/properties v1.8.5
 	knative.dev/eventing v0.34.1
 )
 

@@ -19,9 +19,11 @@ package trigger
 import (
 	"context"
 
+	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
 	v1 "knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
@@ -63,24 +65,29 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
-			KubeClient:                  kubeclient.Get(ctx),
-			PodLister:                   podinformer.Get(ctx).Lister(),
-			SecretLister:                secretinformer.Get(ctx).Lister(),
-			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
-			DataPlaneConfigMapName:      configs.ContractConfigMapName,
-			DataPlaneConfigFormat:       configs.ContractConfigMapFormat,
-			DataPlaneNamespace:          configs.SystemNamespace,
-			DispatcherLabel:             base.BrokerDispatcherLabel,
-			ReceiverLabel:               base.BrokerReceiverLabel,
+			KubeClient:                   kubeclient.Get(ctx),
+			PodLister:                    podinformer.Get(ctx).Lister(),
+			SecretLister:                 secretinformer.Get(ctx).Lister(),
+			DataPlaneConfigMapNamespace:  configs.DataPlaneConfigMapNamespace,
+			DataPlaneConfigConfigMapName: configs.DataPlaneConfigConfigMapName,
+			ContractConfigMapName:        configs.ContractConfigMapName,
+			ContractConfigMapFormat:      configs.ContractConfigMapFormat,
+			DataPlaneNamespace:           configs.SystemNamespace,
+			DispatcherLabel:              base.BrokerDispatcherLabel,
+			ReceiverLabel:                base.BrokerReceiverLabel,
 		},
 		FlagsHolder: &FlagsHolder{
 			Flags: feature.Flags{},
 		},
-		BrokerLister:              brokerInformer.Lister(),
-		EventingClient:            eventingclient.Get(ctx),
-		Env:                       configs,
-		BrokerClass:               kafka.BrokerClass,
-		DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
+		BrokerLister:               brokerInformer.Lister(),
+		ConfigMapLister:            configmapInformer.Lister(),
+		EventingClient:             eventingclient.Get(ctx),
+		Env:                        configs,
+		BrokerClass:                kafka.BrokerClass,
+		DataPlaneConfigMapLabeler:  base.NoopConfigmapOption,
+		NewKafkaClient:             sarama.NewClient,
+		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
+		InitOffsetsFunc:            offset.InitOffsets,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -118,6 +125,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DeleteFunc: globalResync,
 		},
 	})
+
+	reconciler.SecretTracker = impl.Tracker
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
 
 	return impl
 }

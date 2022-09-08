@@ -79,9 +79,11 @@ type Reconciler struct {
 	ConfigMapTracker tracker.Interface
 
 	DataPlaneConfigMapNamespace string
-	DataPlaneConfigMapName      string
-	DataPlaneConfigFormat       string
+	ContractConfigMapName       string
+	ContractConfigMapFormat     string
 	DataPlaneNamespace          string
+
+	DataPlaneConfigConfigMapName string
 
 	DispatcherLabel string
 	ReceiverLabel   string
@@ -125,7 +127,7 @@ func (r *Reconciler) GetOrCreateDataPlaneConfigMap(ctx context.Context) (*corev1
 
 	cm, err := r.KubeClient.CoreV1().
 		ConfigMaps(r.DataPlaneConfigMapNamespace).
-		Get(ctx, r.DataPlaneConfigMapName, metav1.GetOptions{})
+		Get(ctx, r.ContractConfigMapName, metav1.GetOptions{})
 
 	if apierrors.IsNotFound(err) {
 		cm, err = r.createDataPlaneConfigMap(ctx)
@@ -142,7 +144,7 @@ func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context) (*corev1.Conf
 	cm := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.DataPlaneConfigMapName,
+			Name:      r.ContractConfigMapName,
 			Namespace: r.DataPlaneConfigMapNamespace,
 		},
 		BinaryData: map[string][]byte{
@@ -155,7 +157,7 @@ func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context) (*corev1.Conf
 
 // GetDataPlaneConfigMapData extracts contract from the given config map.
 func (r *Reconciler) GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.ConfigMap) (*contract.Contract, error) {
-	return GetDataPlaneConfigMapData(logger, dataPlaneConfigMap, r.DataPlaneConfigFormat)
+	return GetDataPlaneConfigMapData(logger, dataPlaneConfigMap, r.ContractConfigMapFormat)
 }
 
 func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.ConfigMap, format string) (*contract.Contract, error) {
@@ -209,11 +211,13 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *con
 
 	var data []byte
 	var err error
-	switch r.DataPlaneConfigFormat {
+	switch r.ContractConfigMapFormat {
 	case Protobuf:
 		data, err = proto.Marshal(contract)
 	case Json:
 		data, err = protojson.Marshal(contract)
+	default:
+		return fmt.Errorf("unknown contract format %s", r.ContractConfigMapFormat)
 	}
 	if err != nil {
 		return fmt.Errorf("failed to marshal contract: %w", err)
