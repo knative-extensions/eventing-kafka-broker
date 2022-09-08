@@ -20,88 +20,124 @@ import (
 	"context"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"github.com/google/go-cmp/cmp"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
-func TestValidateBrokerFromUnstructured(t *testing.T) {
+func TestValidate(t *testing.T) {
 	tests := []struct {
-		name         string
-		ctx          context.Context
-		unstructured *unstructured.Unstructured
-		wantErr      bool
-	}{
-		{
-			name: "no kafka broker",
-			ctx:  context.Background(),
-			unstructured: &unstructured.Unstructured{
-				Object: map[string]interface{}{"spec": map[string]interface{}{}},
+		name string
+		b    BrokerStub
+		want *apis.FieldError
+	}{{
+		name: "missing annotation",
+		b:    BrokerStub{},
+	}, {
+		name: "empty annotation",
+		b: BrokerStub{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{"eventing.knative.dev/broker.class": ""},
 			},
-			wantErr: false,
 		},
-		{
-			name: "missing config",
-			ctx:  context.Background(),
-			unstructured: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"metadata": map[string]interface{}{
-						"annotations": map[string]string{
-							"eventing.knative.dev/broker.class": "Kafka",
-						},
-					},
-					"spec": map[string]interface{}{},
+	}, {
+		name: "other broker class",
+		b: BrokerStub{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{"eventing.knative.dev/broker.class": "Foo"},
+			},
+		},
+	}, {
+		name: "no spec.config",
+		b: BrokerStub{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{"eventing.knative.dev/broker.class": "Kafka"},
+			},
+		},
+	}, {
+		name: "no spec.config.namespace",
+		b: BrokerStub{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{"eventing.knative.dev/broker.class": "Kafka"},
+			},
+			Spec: eventingv1.BrokerSpec{
+				Config: &duckv1.KReference{
+					Kind: "ConfigMap",
 				},
 			},
-			wantErr: true,
 		},
-		{
-			name: "unknown kind",
-			ctx:  context.Background(),
-			unstructured: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"metadata": map[string]interface{}{
-						"annotations": map[string]string{
-							"eventing.knative.dev/broker.class": "Kafka",
-						},
-					},
-					"spec": map[string]interface{}{
-						"config": map[string]string{
-							"apiVersion": "eventing.knative.dev/v1",
-							"kind":       "Broker",
-							"namespace":  "ns",
-							"name":       "name",
-						},
-					},
+		want: apis.ErrMissingField("", "namespace").ViaField("config").ViaField("spec"),
+	}, {
+		name: "spec.config is not configmap",
+		b: BrokerStub{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{"eventing.knative.dev/broker.class": "Kafka"},
+			},
+			Spec: eventingv1.BrokerSpec{
+				Config: &duckv1.KReference{
+					Kind:      "Service",
+					Namespace: "foo",
 				},
 			},
-			wantErr: true,
 		},
-		{
-			name: "ConfigMap in config",
-			ctx:  context.Background(),
-			unstructured: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"metadata": map[string]interface{}{
-						"annotations": map[string]string{
-							"eventing.knative.dev/broker.class": "Kafka",
-						},
-					},
-					"spec": map[string]interface{}{
-						"config": map[string]string{
-							"apiVersion": "v1",
-							"kind":       "ConfigMap",
-							"namespace":  "ns",
-							"name":       "name",
-						},
-					},
+		want: apis.ErrInvalidValue("Service", "kind", "Expected ConfigMap").ViaField("config").ViaField("spec"),
+		// TODO: uncomment the following check when we backport namespaced broker into 1.6
+		//}, {
+		//	name: "spec.config.namespace is different",
+		//	b: BrokerStub{
+		//		ObjectMeta: metav1.ObjectMeta{
+		//			Namespace:   "my-namespace",
+		//			Annotations: map[string]string{"eventing.knative.dev/broker.class": "KafkaNamespaced"},
+		//		},
+		//		Spec: eventingv1.BrokerSpec{
+		//			Config: &duckv1.KReference{
+		//				Kind:      "ConfigMap",
+		//				Namespace: "foo",
+		//			},
+		//		},
+		//	},
+		//	want: apis.ErrInvalidValue("foo", "namespace", "Expected ConfigMap in same namespace with broker resource").ViaField("config").ViaField("spec"),
+		// TODO: uncomment the following check when we backport namespaced broker into 1.6
+		//}, {
+		//	name: "valid config - namespaced broker",
+		//	b: BrokerStub{
+		//		ObjectMeta: metav1.ObjectMeta{
+		//			Namespace:   "my-namespace",
+		//			Annotations: map[string]string{"eventing.knative.dev/broker.class": "KafkaNamespaced"},
+		//		},
+		//		Spec: eventingv1.BrokerSpec{
+		//			Config: &duckv1.KReference{
+		//				Namespace:  "my-namespace",
+		//				Name:       "name",
+		//				Kind:       "ConfigMap",
+		//				APIVersion: "v1",
+		//			},
+		//		},
+		//	},
+	}, {
+		name: "valid config - regular broker",
+		b: BrokerStub{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace:   "my-namespace",
+				Annotations: map[string]string{"eventing.knative.dev/broker.class": "Kafka"},
+			},
+			Spec: eventingv1.BrokerSpec{
+				Config: &duckv1.KReference{
+					Name:       "name",
+					Namespace:  "my-namespace",
+					Kind:       "ConfigMap",
+					APIVersion: "v1",
 				},
 			},
-			wantErr: false,
 		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := validateBrokerFromUnstructured(tt.ctx, tt.unstructured); (err != nil) != tt.wantErr {
-				t.Errorf("validateBrokerFromUnstructured() error = %v, wantErr %v", err, tt.wantErr)
+	}}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.b.Validate(context.Background())
+			if diff := cmp.Diff(test.want.Error(), got.Error()); diff != "" {
+				t.Error("Broker.Validate (-want, +got) =", diff)
 			}
 		})
 	}
