@@ -45,10 +45,9 @@ var (
 func NewSource(options ...KRShapedOption) *sources.KafkaSource {
 	s := &sources.KafkaSource{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace:   SourceNamespace,
-			Name:        SourceName,
-			UID:         SourceUUID,
-			Annotations: ConsumerGroupAnnotations,
+			Namespace: SourceNamespace,
+			Name:      SourceName,
+			UID:       SourceUUID,
 		},
 		Spec: sources.KafkaSourceSpec{
 			KafkaAuthSpec: v1beta1.KafkaAuthSpec{
@@ -91,6 +90,13 @@ func WithCloudEventOverrides(overrides *duckv1.CloudEventOverrides) KRShapedOpti
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*sources.KafkaSource)
 		ks.Spec.CloudEventOverrides = overrides
+	}
+}
+
+func WithAutoscalingAnnotations() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.Annotations = ConsumerGroupAnnotations
 	}
 }
 

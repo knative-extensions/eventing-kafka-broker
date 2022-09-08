@@ -38,8 +38,8 @@ import (
 	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
 	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 
-	"knative.dev/eventing-autoscaler-keda/pkg/reconciler/keda"
 	kedaclientset "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned"
+	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
 )
 
 const (
@@ -152,28 +152,8 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 		expectedCg.Spec.Template.Spec.Configs.KeyType = &kt
 	}
 
-	// TODO: make these parameters below configurable and maybe unexposed
-	if ks.Annotations != nil {
-		expectedCg.Annotations = map[string]string{}
-		if ks.Annotations[keda.AutoscalingClassAnnotation] != "" {
-			expectedCg.Annotations[keda.AutoscalingClassAnnotation] = ks.Annotations[keda.AutoscalingClassAnnotation]
-		}
-		if ks.Annotations[keda.AutoscalingMinScaleAnnotation] != "" {
-			expectedCg.Annotations[keda.AutoscalingMinScaleAnnotation] = ks.Annotations[keda.AutoscalingMinScaleAnnotation]
-		}
-		if ks.Annotations[keda.AutoscalingMaxScaleAnnotation] != "" {
-			expectedCg.Annotations[keda.AutoscalingMaxScaleAnnotation] = ks.Annotations[keda.AutoscalingMaxScaleAnnotation]
-		}
-		if ks.Annotations[keda.KedaAutoscalingPollingIntervalAnnotation] != "" {
-			expectedCg.Annotations[keda.KedaAutoscalingPollingIntervalAnnotation] = ks.Annotations[keda.KedaAutoscalingPollingIntervalAnnotation]
-		}
-		if ks.Annotations[keda.KedaAutoscalingCooldownPeriodAnnotation] != "" {
-			expectedCg.Annotations[keda.KedaAutoscalingCooldownPeriodAnnotation] = ks.Annotations[keda.KedaAutoscalingCooldownPeriodAnnotation]
-		}
-		if ks.Annotations[keda.KedaAutoscalingKafkaLagThreshold] != "" {
-			expectedCg.Annotations[keda.KedaAutoscalingKafkaLagThreshold] = ks.Annotations[keda.KedaAutoscalingKafkaLagThreshold]
-		}
-	}
+	// TODO: make keda annotation values configurable and maybe unexposed
+	expectedCg.Annotations = kedafunc.SetAutoscalingAnnotations(ks.Annotations)
 
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(ks.GetNamespace()).Get(string(ks.UID)) //Get by consumer group id
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -188,7 +168,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 		return cg, nil
 	}
 
-	if equality.Semantic.DeepDerivative(expectedCg.Spec, cg.Spec) {
+	if equality.Semantic.DeepDerivative(expectedCg.Spec, cg.Spec) && equality.Semantic.DeepDerivative(expectedCg.Annotations, cg.Annotations) {
 		return cg, nil
 	}
 
@@ -198,6 +178,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 		Spec:       expectedCg.Spec,
 		Status:     cg.Status,
 	}
+	newCg.Annotations = expectedCg.Annotations
 
 	// If KEDA is not enabled, then we must update the ConsumerGroup replicas to match KafkaSource consumers
 	// TODO: code below failing unit tests with err: "panic: interface conversion: testing.ActionImpl is not testing.GetAction: missing method GetName"
