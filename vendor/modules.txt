@@ -1188,7 +1188,7 @@ k8s.io/utils/internal/third_party/forked/golang/net
 k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.34.1
+# knative.dev/eventing v0.34.1-0.20220907090718-fae8544d8568
 ## explicit; go 1.18
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/pkg/apis/config
@@ -1339,7 +1339,7 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/eventing-autoscaler-keda v0.34.0
+# knative.dev/eventing-autoscaler-keda v0.34.1-0.20220908101219-86888e1a65b4
 ## explicit; go 1.18
 knative.dev/eventing-autoscaler-keda/pkg/reconciler/keda
 knative.dev/eventing-autoscaler-keda/third_party/pkg/apis/keda/v1alpha1
@@ -1410,7 +1410,7 @@ knative.dev/eventing-kafka/test/rekt/resources/resetoffset
 knative.dev/eventing-kafka/test/upgrade
 knative.dev/eventing-kafka/test/upgrade/continual
 knative.dev/eventing-kafka/test/upgrade/installation
-# knative.dev/eventing-redis v0.34.0
+# knative.dev/eventing-redis v0.33.1-0.20220906142344-2de21240808a
 ## explicit; go 1.18
 knative.dev/eventing-redis/source/pkg/apis/sources
 knative.dev/eventing-redis/source/pkg/apis/sources/v1alpha1
@@ -1525,7 +1525,7 @@ knative.dev/pkg/webhook/json
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20220905144823-18e7400195c1
+# knative.dev/reconciler-test v0.0.0-20220907152619-a53370571d5b
 ## explicit; go 1.18
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment

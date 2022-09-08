@@ -32,7 +32,7 @@ require (
 	knative.dev/eventing-kafka v0.34.1-0.20220907020318-2f1fbd6dda1b
 	knative.dev/hack v0.0.0-20220907111718-6c301965af4c
 	knative.dev/pkg v0.0.0-20220826162920-93b66e6a8700
-	knative.dev/reconciler-test v0.0.0-20220905144823-18e7400195c1
+	knative.dev/reconciler-test v0.0.0-20220907152619-a53370571d5b
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -40,13 +40,13 @@ require (
 	github.com/hashicorp/errwrap v1.1.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/magiconair/properties v1.8.5
-	knative.dev/eventing v0.34.1
+	knative.dev/eventing v0.34.1-0.20220907090718-fae8544d8568
 )
 
 require (
 	cloud.google.com/go/compute v1.5.0 // indirect
 	cloud.google.com/go/iam v0.2.0 // indirect
-	knative.dev/eventing-redis v0.34.0 // indirect
+	knative.dev/eventing-redis v0.33.1-0.20220906142344-2de21240808a // indirect
 )
 
 require (
@@ -154,7 +154,7 @@ require (
 	k8s.io/gengo v0.0.0-20220613173612-397b4ae3bce7 // indirect
 	k8s.io/klog/v2 v2.70.2-0.20220707122935-0990e81f1a8f // indirect
 	k8s.io/kube-openapi v0.0.0-20220124234850-424119656bbf // indirect
-	knative.dev/eventing-autoscaler-keda v0.34.0
+	knative.dev/eventing-autoscaler-keda v0.34.1-0.20220908101219-86888e1a65b4
 	sigs.k8s.io/controller-runtime v0.11.1 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
