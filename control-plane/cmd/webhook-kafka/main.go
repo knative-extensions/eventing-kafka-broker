@@ -32,7 +32,7 @@ import (
 	"knative.dev/pkg/webhook/resourcesemantics/validation"
 
 	sourcesv1beta1 "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
-	eventingcorev1beta1 "knative.dev/eventing/pkg/apis/eventing/v1"
+	eventingcorev1 "knative.dev/eventing/pkg/apis/eventing/v1"
 
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 
@@ -49,10 +49,7 @@ var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 	eventingv1alpha1.SchemeGroupVersion.WithKind("KafkaSink"):    &eventingv1alpha1.KafkaSink{},
 	sourcesv1beta1.SchemeGroupVersion.WithKind("KafkaSource"):    &sourcesv1beta1.KafkaSource{},
 	messagingv1beta1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1beta1.KafkaChannel{},
-}
-
-var validationCallbacks = map[schema.GroupVersionKind]validation.Callback{
-	eventingcorev1beta1.SchemeGroupVersion.WithKind("Broker"): eventingv1.BrokerValidationCallback(),
+	eventingcorev1.SchemeGroupVersion.WithKind("Broker"):         &eventingv1.BrokerStub{},
 }
 
 var defaultingCallbacks = map[schema.GroupVersionKind]defaulting.Callback{
@@ -131,9 +128,6 @@ func NewValidationAdmissionController(ctx context.Context, _ configmap.Watcher) 
 
 		// Whether to disallow unknown fields.
 		true,
-
-		// Extra validating callbacks to be applied to resources.
-		validationCallbacks,
 	)
 }
 
