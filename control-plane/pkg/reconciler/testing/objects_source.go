@@ -93,10 +93,19 @@ func WithCloudEventOverrides(overrides *duckv1.CloudEventOverrides) KRShapedOpti
 	}
 }
 
-func WithAutoscalingAnnotations() KRShapedOption {
+func WithAutoscalingAnnotationsSource() KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*sources.KafkaSource)
-		ks.Annotations = ConsumerGroupAnnotations
+
+		if ks.Annotations == nil {
+			ks.Annotations = make(map[string]string)
+		}
+
+		for k, v := range ConsumerGroupAnnotations {
+			if _, ok := ks.Annotations[k]; !ok {
+				ks.Annotations[k] = v
+			}
+		}
 	}
 }
 

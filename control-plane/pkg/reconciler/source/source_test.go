@@ -478,7 +478,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - with autoscaling annotations",
 			Objects: []runtime.Object{
-				NewSource(WithAutoscalingAnnotations()),
+				NewSource(WithAutoscalingAnnotationsSource()),
 			},
 			Key: testKey,
 			WantCreates: []runtime.Object{
@@ -517,7 +517,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
-						WithAutoscalingAnnotations(),
+						WithAutoscalingAnnotationsSource(),
 					),
 				},
 			},
@@ -662,7 +662,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - existing cg with annotations update",
 			Objects: []runtime.Object{
-				NewSource(WithAutoscalingAnnotations()),
+				NewSource(WithAutoscalingAnnotationsSource()),
 				NewConsumerGroup(
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
@@ -712,7 +712,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroup(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
-						WithAutoscalingAnnotations(),
+						WithAutoscalingAnnotationsSource(),
 					),
 				},
 			},
@@ -776,7 +776,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - existing cg without update",
 			Objects: []runtime.Object{
-				NewSource(WithAutoscalingAnnotations()),
+				NewSource(WithAutoscalingAnnotationsSource()),
 				NewConsumerGroup(
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
@@ -814,7 +814,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroup(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
-						WithAutoscalingAnnotations(),
+						WithAutoscalingAnnotationsSource(),
 					),
 				},
 			},
