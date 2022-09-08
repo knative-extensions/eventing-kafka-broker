@@ -107,8 +107,8 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(bootstrapServers),
 							ConsumerGroupIdConfig(TriggerUUID),
-							ConsumerBootstrapServersConfig(""),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerFilters(NewConsumerSpecFilters()),
@@ -154,7 +154,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
 							ConsumerGroupIdConfig(TriggerUUID),
-							ConsumerBootstrapServersConfig(""),
+							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(
 							internals.Unordered,
@@ -205,7 +205,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
 							ConsumerGroupIdConfig(TriggerUUID),
-							ConsumerBootstrapServersConfig(""),
+							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered, ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerFilters(NewConsumerSpecFilters()),
@@ -251,7 +251,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
 							ConsumerGroupIdConfig(TriggerUUID),
-							ConsumerBootstrapServersConfig(""),
+							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerFilters(NewConsumerSpecFilters()),
@@ -326,7 +326,64 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
 					WithConsumerGroupLabels(ConsumerTriggerLabel),
-					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
+					ConsumerGroupReady,
+				),
+			},
+			Key:         testKey,
+			WantCreates: []runtime.Object{},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewConsumerGroup(
+						WithConsumerGroupName(TriggerUUID),
+						WithConsumerGroupNamespace(triggerNamespace),
+						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+						WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
+						WithConsumerGroupLabels(ConsumerTriggerLabel),
+						ConsumerGroupConsumerSpec(NewConsumerSpec(
+							ConsumerTopics(BrokerTopics[0]),
+							ConsumerConfigs(
+								ConsumerGroupIdConfig(TriggerUUID),
+								ConsumerBootstrapServersConfig(bootstrapServers),
+							),
+							ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
+							ConsumerFilters(NewConsumerSpecFilters()),
+							ConsumerReply(ConsumerTopicReply()),
+						)),
+						ConsumerGroupReady,
+					),
+				},
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(),
+						reconcilertesting.WithTriggerDependencyReady(),
+						withDeadLetterSinkURI(""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - existing cg with autoscaling annotations",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+					WithAutoscalingAnnotationsBroker(),
+				),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
+				newTrigger(),
+				NewConsumerGroup(
+					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupNamespace(triggerNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
 					ConsumerGroupReady,
 				),
 			},
@@ -345,7 +402,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerTopics(BrokerTopics[0]),
 							ConsumerConfigs(
 								ConsumerGroupIdConfig(TriggerUUID),
-								ConsumerBootstrapServersConfig(""),
+								ConsumerBootstrapServersConfig(bootstrapServers),
 							),
 							ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
 							ConsumerFilters(NewConsumerSpecFilters()),
@@ -385,7 +442,6 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
 					WithConsumerGroupLabels(ConsumerTriggerLabel),
-					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 				),
 			},
 			Key:         testKey,
@@ -398,12 +454,11 @@ func TestReconcileKind(t *testing.T) {
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 						WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
 						WithConsumerGroupLabels(ConsumerTriggerLabel),
-						WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(BrokerTopics[0]),
 							ConsumerConfigs(
 								ConsumerGroupIdConfig(TriggerUUID),
-								ConsumerBootstrapServersConfig(""),
+								ConsumerBootstrapServersConfig(bootstrapServers),
 							),
 							ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
 							ConsumerFilters(NewConsumerSpecFilters()),
@@ -447,7 +502,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
 							ConsumerGroupIdConfig(TriggerUUID),
-							ConsumerBootstrapServersConfig(""),
+							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerFilters(NewConsumerSpecFilters()),
@@ -492,7 +547,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
 							ConsumerGroupIdConfig(TriggerUUID),
-							ConsumerBootstrapServersConfig(""),
+							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerFilters(NewConsumerSpecFilters()),
@@ -536,7 +591,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
 							ConsumerGroupIdConfig(TriggerUUID),
-							ConsumerBootstrapServersConfig(""),
+							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerFilters(NewConsumerSpecFilters()),
@@ -576,12 +631,11 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
 					WithConsumerGroupLabels(ConsumerTriggerLabel),
-					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
 							ConsumerGroupIdConfig(TriggerUUID),
-							ConsumerBootstrapServersConfig(""),
+							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerFilters(NewConsumerSpecFilters()),
@@ -683,7 +737,7 @@ func TestReconcileKind(t *testing.T) {
 		},
 	}
 
-	table.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
+	table.Test(t, NewFactory(env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 		ctx, _ = kedaclient.With(ctx)
 		logger := logging.FromContext(ctx)
 

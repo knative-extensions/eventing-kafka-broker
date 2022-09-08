@@ -194,6 +194,20 @@ func WithBootstrapServerStatusAnnotation(servers string) reconcilertesting.Broke
 	}
 }
 
+func WithAutoscalingAnnotationsBroker() reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		if broker.Annotations == nil {
+			broker.Annotations = make(map[string]string)
+		}
+
+		for k, v := range ConsumerGroupAnnotations {
+			if _, ok := broker.Annotations[k]; !ok {
+				broker.Annotations[k] = v
+			}
+		}
+	}
+}
+
 type CMOption func(cm *corev1.ConfigMap)
 
 func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int, options ...CMOption) *corev1.ConfigMap {
