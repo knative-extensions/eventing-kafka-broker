@@ -60,8 +60,8 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 			KubeClient:                   kubeclient.Get(ctx),
 			PodLister:                    podinformer.Get(ctx).Lister(),
 			SecretLister:                 secretinformer.Get(ctx).Lister(),
-			DataPlaneConfigConfigMapName: configs.DataPlaneConfigConfigMapName,
 			DataPlaneConfigMapNamespace:  configs.DataPlaneConfigMapNamespace,
+			DataPlaneConfigConfigMapName: configs.DataPlaneConfigConfigMapName,
 			ContractConfigMapName:        configs.ContractConfigMapName,
 			ContractConfigMapFormat:      configs.ContractConfigMapFormat,
 			DataPlaneNamespace:           configs.SystemNamespace,
@@ -71,10 +71,13 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 		FlagsHolder: &FlagsHolder{
 			Flags: feature.Flags{},
 		},
-		BrokerLister:    brokerInformer.Lister(),
-		ConfigMapLister: configmapInformer.Lister(),
-		EventingClient:  eventingclient.Get(ctx),
-		Env:             configs,
+		BrokerLister:               brokerInformer.Lister(),
+		ConfigMapLister:            configmapInformer.Lister(),
+		EventingClient:             eventingclient.Get(ctx),
+		Env:                        configs,
+		NewKafkaClient:             sarama.NewClient,
+		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
+		InitOffsetsFunc:            offset.InitOffsets,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {

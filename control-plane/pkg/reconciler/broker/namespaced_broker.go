@@ -71,7 +71,8 @@ type NamespacedReconciler struct {
 
 	BootstrapServers string
 
-	Prober prober.Prober
+	Prober  prober.Prober
+	Counter *Counter
 
 	IPsLister          prober.IPListerWithMapping
 	ManifestivalClient mf.Client
@@ -141,7 +142,7 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 		NewKafkaClusterAdminClient: r.NewKafkaClusterAdminClient,
 		BootstrapServers:           r.BootstrapServers,
 		Prober:                     r.Prober,
-		Counter:                    NewCounter(),
+		Counter:                    r.Counter,
 	}
 }
 
