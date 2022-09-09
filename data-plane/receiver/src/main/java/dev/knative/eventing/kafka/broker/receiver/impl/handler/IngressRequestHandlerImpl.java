@@ -15,7 +15,9 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
@@ -44,7 +46,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE
  * <p>
  * Instances of this class can be shared among verticles, given the {@code requestToRecordMapper} provided is shareable among verticles.
  */
-public class IngressRequestHandlerImpl implements IngressRequestHandler {
+public class IngressRequestHandlerImpl implements IngressRequestHandler, IngressReconcilerListener {
 
   static final Tag UNKNOWN_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "unknown");
 
@@ -81,10 +83,7 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
   @Override
   public void handle(final RequestContext requestContext, final IngressProducer producer) {
 
-    final var resourceTags = Tags.of(
-      Tag.of(Metrics.Tags.RESOURCE_NAME, producer.getReference().getName()),
-      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, producer.getReference().getNamespace())
-    );
+    final Tags resourceTags = Metrics.resourceRefTags(producer.getReference());
 
     requestToRecordMapper
       .requestToRecord(requestContext.getRequest(), producer.getTopic())
@@ -171,4 +170,19 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
       });
   }
 
+  @Override
+  public Future<Void> onNewIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress) {
+    return Future.succeededFuture();
+  }
+
+  @Override
+  public Future<Void> onUpdateIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress) {
+    return Future.succeededFuture();
+  }
+
+  @Override
+  public Future<Void> onDeleteIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress) {
+    Metrics.searchResourceMeters(meterRegistry, resource.getReference()).forEach(meterRegistry::remove);
+    return Future.succeededFuture();
+  }
 }
