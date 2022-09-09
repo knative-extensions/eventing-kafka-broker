@@ -204,3 +204,25 @@ func addAuthSecretTargetRef(parameter string, secretKeyRef v1beta1.SecretValueFr
 	secretTargetRefs = append(secretTargetRefs, ref)
 	return secretTargetRefs
 }
+
+func SetAutoscalingAnnotations(objannotations map[string]string) map[string]string {
+	if objannotations != nil {
+		cgannotations := map[string]string{}
+		setAnnotation(objannotations, keda.AutoscalingClassAnnotation, cgannotations)
+		setAnnotation(objannotations, keda.AutoscalingMinScaleAnnotation, cgannotations)
+		setAnnotation(objannotations, keda.AutoscalingMaxScaleAnnotation, cgannotations)
+		setAnnotation(objannotations, keda.KedaAutoscalingPollingIntervalAnnotation, cgannotations)
+		setAnnotation(objannotations, keda.KedaAutoscalingCooldownPeriodAnnotation, cgannotations)
+		setAnnotation(objannotations, keda.KedaAutoscalingKafkaLagThreshold, cgannotations)
+		return cgannotations
+	}
+	return nil
+}
+
+func setAnnotation(objannotations map[string]string, key string, cgannotations map[string]string) {
+	value, ok := objannotations[key]
+	if !ok || value == "" {
+		return
+	}
+	cgannotations[key] = value
+}

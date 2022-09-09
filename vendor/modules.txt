@@ -1343,6 +1343,13 @@ knative.dev/eventing/test/upgrade/prober/wathola/sender
 ## explicit; go 1.18
 knative.dev/eventing-autoscaler-keda/pkg/reconciler/keda
 knative.dev/eventing-autoscaler-keda/third_party/pkg/apis/keda/v1alpha1
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned/fake
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned/scheme
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned/typed/keda/v1alpha1
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned/typed/keda/v1alpha1/fake
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client/fake
 # knative.dev/eventing-kafka v0.34.1-0.20220907020318-2f1fbd6dda1b
 ## explicit; go 1.16
 knative.dev/eventing-kafka/pkg/apis/bindings

@@ -93,6 +93,22 @@ func WithCloudEventOverrides(overrides *duckv1.CloudEventOverrides) KRShapedOpti
 	}
 }
 
+func WithAutoscalingAnnotationsSource() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+
+		if ks.Annotations == nil {
+			ks.Annotations = make(map[string]string)
+		}
+
+		for k, v := range ConsumerGroupAnnotations {
+			if _, ok := ks.Annotations[k]; !ok {
+				ks.Annotations[k] = v
+			}
+		}
+	}
+}
+
 func NewSourceSinkObject() *corev1.Service {
 	return NewService()
 }
@@ -125,6 +141,13 @@ func WithSourceSink(d duckv1.Destination) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		s := obj.(*sources.KafkaSource)
 		s.Spec.Sink = d
+	}
+}
+
+func WithSourceConsumers(replicas int32) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		s := obj.(*sources.KafkaSource)
+		s.Spec.Consumers = pointer.Int32Ptr(replicas)
 	}
 }
 

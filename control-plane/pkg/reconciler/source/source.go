@@ -37,6 +37,9 @@ import (
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
 	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
+
+	kedaclientset "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned"
+	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
 )
 
 const (
@@ -55,6 +58,7 @@ var (
 type Reconciler struct {
 	ConsumerGroupLister internalslst.ConsumerGroupLister
 	InternalsClient     internalsclient.Interface
+	KedaClient          kedaclientset.Interface
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
@@ -135,7 +139,6 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 					Reply:      &internalscg.ReplyStrategy{NoReply: &internalscg.NoReply{Enabled: true}},
 				},
 			},
-			Replicas: ks.Spec.Consumers,
 		},
 	}
 
@@ -144,15 +147,20 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 			Extensions: ks.Spec.CloudEventOverrides.Extensions,
 		}
 	}
+
 	if kt, ok := ks.Labels[sources.KafkaKeyTypeLabel]; ok && len(kt) > 0 {
 		expectedCg.Spec.Template.Spec.Configs.KeyType = &kt
 	}
+
+	// TODO: make keda annotation values configurable and maybe unexposed
+	expectedCg.Annotations = kedafunc.SetAutoscalingAnnotations(ks.Annotations)
 
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(ks.GetNamespace()).Get(string(ks.UID)) //Get by consumer group id
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	}
 	if apierrors.IsNotFound(err) {
+		expectedCg.Spec.Replicas = ks.Spec.Consumers
 		cg, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedCg.GetNamespace()).Create(ctx, expectedCg, metav1.CreateOptions{})
 		if err != nil && !apierrors.IsAlreadyExists(err) {
 			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", expectedCg.GetNamespace(), expectedCg.GetName(), err)
@@ -160,7 +168,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 		return cg, nil
 	}
 
-	if equality.Semantic.DeepDerivative(expectedCg.Spec, cg.Spec) {
+	if equality.Semantic.DeepDerivative(expectedCg.Spec, cg.Spec) && equality.Semantic.DeepDerivative(expectedCg.Annotations, cg.Annotations) {
 		return cg, nil
 	}
 
@@ -170,6 +178,19 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 		Spec:       expectedCg.Spec,
 		Status:     cg.Status,
 	}
+	newCg.Annotations = expectedCg.Annotations
+
+	// If KEDA is not enabled, then we must update the ConsumerGroup replicas to match KafkaSource consumers
+	// TODO: code below failing unit tests with err: "panic: interface conversion: testing.ActionImpl is not testing.GetAction: missing method GetName"
+	/*if err := discovery.ServerSupportsVersion(r.KubeClient.Discovery(), keda.KedaSchemeGroupVersion); err != nil {
+		newCg.Spec.Replicas = ks.Spec.Consumers
+	}*/
+
+	_, err = r.KedaClient.KedaV1alpha1().ScaledObjects(cg.GetNamespace()).List(ctx, metav1.ListOptions{})
+	if err != nil && apierrors.IsNotFound(err) {
+		newCg.Spec.Replicas = ks.Spec.Consumers
+	}
+
 	if cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
 		return nil, fmt.Errorf("failed to update consumer group %s/%s: %w", newCg.GetNamespace(), newCg.GetName(), err)
 	}
