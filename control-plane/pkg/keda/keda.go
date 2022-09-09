@@ -192,7 +192,7 @@ func ScaleObjectFailed(namespace, name string, err error) reconciler.Event {
 
 func addAuthSecretTargetRef(parameter string, secretKeyRef v1beta1.SecretValueFromSource, secretTargetRefs []kedav1alpha1.AuthSecretTargetRef) []kedav1alpha1.AuthSecretTargetRef {
 	if secretKeyRef.SecretKeyRef == nil || secretKeyRef.SecretKeyRef.Name == "" || secretKeyRef.SecretKeyRef.Key == "" {
-		return nil
+		return secretTargetRefs
 	}
 
 	ref := kedav1alpha1.AuthSecretTargetRef{
