@@ -504,6 +504,10 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   public Future<Void> close() {
     this.closed.set(true);
 
+    Metrics
+      .searchEgressMeters(meterRegistry, resourceContext.getEgress().getReference())
+      .forEach(meterRegistry::remove);
+
     if (inFlightEvents.get() == 0) {
       closePromise.tryComplete();
     }
