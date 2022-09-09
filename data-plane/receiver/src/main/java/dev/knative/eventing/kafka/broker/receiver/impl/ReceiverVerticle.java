@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl;
 
+import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
@@ -87,7 +88,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     this.ingressProducerStore = this.ingressProducerStoreFactory.apply(vertx);
     this.messageConsumer = ResourcesReconciler
       .builder()
-      .watchIngress(this.ingressProducerStore)
+      .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
       .buildAndListen(vertx);
 
     this.server = vertx.createHttpServer(httpServerOptions);
