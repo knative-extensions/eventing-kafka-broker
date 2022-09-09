@@ -39,8 +39,11 @@ const (
 	// scales a Deployment down.
 	KedaAutoscalingCooldownPeriodAnnotation = KEDA + "/cooldownPeriod"
 
-	// KedaAutoscalingKafkaLagThreshold is the annotation that refers to the stream is lagging on the current consumer group
+	// KedaAutoscalingKafkaLagThreshold is the annotation that refers to the lag on the current consumer group that's used for scaling (1<->N)
 	KedaAutoscalingKafkaLagThreshold = KEDA + "/kafkaLagThreshold"
+
+	// KedaAutoscalingKafkaActivationLagThreshold is the annotation that refers to the lag on the current consumer group that's used for activation (0<->1)
+	KedaAutoscalingKafkaActivationLagThreshold = KEDA + "/kafkaActivationLagThreshold"
 
 	// KedaAutoscalingRabbitMQQueueLength is the annotation that refers to the target value for number of messages in a RabbitMQ brokers
 	// trigger queue.
