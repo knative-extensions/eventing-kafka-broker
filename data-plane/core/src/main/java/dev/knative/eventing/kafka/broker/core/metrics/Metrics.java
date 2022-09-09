@@ -15,15 +15,18 @@
  */
 package dev.knative.eventing.kafka.broker.core.metrics;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.binder.BaseUnits;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
+import io.micrometer.core.instrument.search.Search;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.Future;
@@ -42,6 +45,7 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -293,6 +297,18 @@ public class Metrics {
       .baseUnit(Metrics.Units.DIMENSIONLESS);
   }
 
+  public static Collection<Meter> searchResourceMeters(final MeterRegistry registry, final DataPlaneContract.Reference ref) {
+    return Search.in(registry)
+      .tags(resourceRefTags(ref))
+      .meters();
+  }
+
+  public static Collection<Meter> searchEgressMeters(final MeterRegistry registry, final DataPlaneContract.Reference ref) {
+    return Search.in(registry)
+      .tags(egressRefTags(ref))
+      .meters();
+  }
+
   public static DistributionSummary.Builder eventDispatchLatency(final io.micrometer.core.instrument.Tags tags) {
     return DistributionSummary
       .builder(EVENT_DISPATCH_LATENCY)
@@ -336,5 +352,19 @@ public class Metrics {
       .description("Number of events in executor queue per partition")
       .tags(tags)
       .baseUnit(Metrics.Units.DIMENSIONLESS);
+  }
+
+  public static io.micrometer.core.instrument.Tags resourceRefTags(final DataPlaneContract.Reference ref) {
+    return io.micrometer.core.instrument.Tags.of(
+      Tag.of(Metrics.Tags.RESOURCE_NAME, ref.getName()),
+      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, ref.getNamespace())
+    );
+  }
+
+  public static io.micrometer.core.instrument.Tags egressRefTags(final DataPlaneContract.Reference ref) {
+    return io.micrometer.core.instrument.Tags.of(
+      Tag.of(Metrics.Tags.CONSUMER_NAME, ref.getName()),
+      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, ref.getNamespace())
+    );
   }
 }
