@@ -38,9 +38,9 @@ require (
 require (
 	knative.dev/eventing v0.34.1-0.20220907090718-fae8544d8568
 	knative.dev/eventing-kafka v0.34.1-0.20220907020318-2f1fbd6dda1b
-	knative.dev/hack v0.0.0-20220907111718-6c301965af4c
+	knative.dev/hack v0.0.0-20220908170219-36b2b3c7a245
 	knative.dev/pkg v0.0.0-20220826162920-93b66e6a8700
-	knative.dev/reconciler-test v0.0.0-20220907152619-a53370571d5b
+	knative.dev/reconciler-test v0.0.0-20220908165920-0cc56d0eebe2
 )
 
 require (
