@@ -64,7 +64,7 @@ type BrokerStubSpec struct {
 func (b *BrokerStub) Validate(context.Context) *apis.FieldError {
 	// TODO: uncomment the following check when we backport namespaced broker into 1.6
 	// if b.Annotations[eventing.BrokerClassAnnotationKey] != kafka.BrokerClass && b.Annotations[eventing.BrokerClassAnnotationKey] != kafka.NamespacedBrokerClass {
-	if b.Annotations[eventing.BrokerClassAnnotationKey] != kafka.BrokerClass{
+	if b.Annotations[eventing.BrokerClassAnnotationKey] != kafka.BrokerClass {
 		// validation for the broker of other classes is done by the other webhooks
 		return nil
 	}
