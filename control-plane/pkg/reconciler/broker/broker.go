@@ -67,7 +67,7 @@ func NewCounter() *Counter {
 	}
 }
 
-func (c Counter) Inc(brokerUUID string) int {
+func (c *Counter) Inc(brokerUUID string) int {
 	c.counterLock.Lock()
 	defer c.counterLock.Unlock()
 	c.counterMap[brokerUUID]++
@@ -75,7 +75,7 @@ func (c Counter) Inc(brokerUUID string) int {
 	return c.counterMap[brokerUUID]
 }
 
-func (c Counter) Del(brokerUUID string) {
+func (c *Counter) Del(brokerUUID string) {
 	c.counterLock.Lock()
 	defer c.counterLock.Unlock()
 	delete(c.counterMap, brokerUUID)
