@@ -224,7 +224,7 @@ func (r *Reconciler) isKEDAEnabled(ctx context.Context, namespace string) bool {
 		return true
 	}*/
 
-	if _, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace).List(ctx, metav1.ListOptions{}); err == nil || !apierrors.IsNotFound(err) {
+	if _, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace).List(ctx, metav1.ListOptions{}); err == nil {
 		return true
 	}
 	return false
