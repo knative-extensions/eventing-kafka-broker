@@ -19,6 +19,9 @@ package trigger
 import (
 	"context"
 
+	"github.com/Shopify/sarama"
+	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
+
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
@@ -119,6 +122,9 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 			},
 		},
 	})
+
+	reconciler.SecretTracker = impl.Tracker
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
 
 	return impl
 }
