@@ -54,7 +54,7 @@ const (
 
 var DefaultEnv = &config.Env{
 	DataPlaneConfigMapNamespace: "knative-eventing",
-	DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
+	ContractConfigMapName:       "kafka-broker-brokers-triggers",
 	GeneralConfigMapName:        "kafka-broker-config",
 	SystemNamespace:             "knative-eventing",
 }
