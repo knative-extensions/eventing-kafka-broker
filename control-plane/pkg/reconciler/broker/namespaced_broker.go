@@ -110,15 +110,16 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 
 	return &Reconciler{
 		Reconciler: &base.Reconciler{
-			KubeClient:              r.Reconciler.KubeClient,
-			PodLister:               r.Reconciler.PodLister,
-			SecretLister:            r.Reconciler.SecretLister,
-			SecretTracker:           r.Reconciler.SecretTracker,
-			ConfigMapTracker:        r.Reconciler.ConfigMapTracker,
-			ContractConfigMapName:   r.Reconciler.ContractConfigMapName,
-			ContractConfigMapFormat: r.Reconciler.ContractConfigMapFormat,
-			DispatcherLabel:         r.Reconciler.DispatcherLabel,
-			ReceiverLabel:           r.Reconciler.ReceiverLabel,
+			KubeClient:                   r.Reconciler.KubeClient,
+			PodLister:                    r.Reconciler.PodLister,
+			SecretLister:                 r.Reconciler.SecretLister,
+			SecretTracker:                r.Reconciler.SecretTracker,
+			ConfigMapTracker:             r.Reconciler.ConfigMapTracker,
+			DataPlaneConfigConfigMapName: r.Reconciler.DataPlaneConfigConfigMapName,
+			ContractConfigMapName:        r.Reconciler.ContractConfigMapName,
+			ContractConfigMapFormat:      r.Reconciler.ContractConfigMapFormat,
+			DispatcherLabel:              r.Reconciler.DispatcherLabel,
+			ReceiverLabel:                r.Reconciler.ReceiverLabel,
 
 			DataPlaneNamespace:          broker.Namespace,
 			DataPlaneConfigMapNamespace: broker.Namespace,
