@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -54,6 +55,32 @@ const (
 	ExternalTopicAnnotation = "kafka.eventing.knative.dev/external.topic"
 )
 
+type Counter struct {
+	counterLock sync.RWMutex
+	counterMap  map[string]int
+}
+
+func NewCounter() *Counter {
+	return &Counter{
+		counterLock: sync.RWMutex{},
+		counterMap:  make(map[string]int),
+	}
+}
+
+func (c *Counter) Inc(brokerUUID string) int {
+	c.counterLock.Lock()
+	defer c.counterLock.Unlock()
+	c.counterMap[brokerUUID]++
+
+	return c.counterMap[brokerUUID]
+}
+
+func (c *Counter) Del(brokerUUID string) {
+	c.counterLock.Lock()
+	defer c.counterLock.Unlock()
+	delete(c.counterMap, brokerUUID)
+}
+
 type Reconciler struct {
 	*base.Reconciler
 	*config.Env
@@ -68,7 +95,8 @@ type Reconciler struct {
 
 	BootstrapServers string
 
-	Prober prober.Prober
+	Prober  prober.Prober
+	Counter *Counter
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -378,10 +406,27 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 		// get security option for Sarama with secret info in it
 		securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
-		if err := r.finalizeNonExternalBrokerTopic(broker, securityOption, topicConfig, logger); err != nil {
+		err = r.finalizeNonExternalBrokerTopic(broker, securityOption, topicConfig, logger)
+
+		// if finalizeNonExternalBrokerTopic returns error that kafka is not reachable!
+		if err != nil {
+			if strings.Contains(err.Error(), "cannot obtain Kafka") {
+
+				// If the kafka cluster is not reachable we give it a few more retries, to see if there was
+				// some temporary network issue and requeue the finalization.
+				// If we tried often enough and the kafka cluster is still not reachable,
+				// we return nil and delete the broker
+				brokerUUID := string(broker.GetUID())
+				if r.Counter.Inc(brokerUUID) <= 5 {
+					return controller.NewRequeueAfter(5 * time.Second)
+				} else {
+					r.Counter.Del(brokerUUID) // clean up the reference from the counter
+					logger.Error("Error reaching Kafka cluster", zap.Error(err))
+					return nil
+				}
+			}
 			return err
 		}
-
 	}
 
 	if err := r.removeFinalizerSecret(ctx, finalizerSecret(broker), secret); err != nil {

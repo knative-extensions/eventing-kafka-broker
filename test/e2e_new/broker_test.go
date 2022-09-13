@@ -71,3 +71,17 @@ func TestBrokerConfigMapDoesNotExist(t *testing.T) {
 
 	env.Test(ctx, t, features.BrokerConfigMapDoesNotExist())
 }
+
+func TestBrokerCannotReachKafkaCluster(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.BrokerCannotReachKafkaCluster())
+}
