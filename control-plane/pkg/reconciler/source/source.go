@@ -181,13 +181,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 	newCg.Annotations = expectedCg.Annotations
 
 	// If KEDA is not enabled, then we must update the ConsumerGroup replicas to match KafkaSource consumers
-	// TODO: code below failing unit tests with err: "panic: interface conversion: testing.ActionImpl is not testing.GetAction: missing method GetName"
-	/*if err := discovery.ServerSupportsVersion(r.KubeClient.Discovery(), keda.KedaSchemeGroupVersion); err != nil {
-		newCg.Spec.Replicas = ks.Spec.Consumers
-	}*/
-
-	_, err = r.KedaClient.KedaV1alpha1().ScaledObjects(cg.GetNamespace()).List(ctx, metav1.ListOptions{})
-	if err != nil && apierrors.IsNotFound(err) {
+	if !r.isKEDAEnabled(ctx, cg.GetNamespace()) {
 		newCg.Spec.Replicas = ks.Spec.Consumers
 	}
 
@@ -222,4 +216,16 @@ func propagateConsumerGroupStatus(cg *internalscg.ConsumerGroup, ks *sources.Kaf
 	if cg.Status.Replicas != nil {
 		ks.Status.Consumers = *cg.Status.Replicas
 	}
+}
+
+func (r *Reconciler) isKEDAEnabled(ctx context.Context, namespace string) bool {
+	// TODO: code below failing unit tests with err: "panic: interface conversion: testing.ActionImpl is not testing.GetAction: missing method GetName"
+	/*if err := discovery.ServerSupportsVersion(r.KubeClient.Discovery(), keda.KedaSchemeGroupVersion); err == nil {
+		return true
+	}*/
+
+	if _, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace).List(ctx, metav1.ListOptions{}); err == nil {
+		return true
+	}
+	return false
 }
