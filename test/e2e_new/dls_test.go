@@ -23,13 +23,17 @@ import (
 	"testing"
 
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
+	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 
 	"knative.dev/reconciler-test/pkg/environment"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
+
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
+
 	"knative.dev/pkg/system"
+
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
@@ -69,7 +73,7 @@ func SendsEventWithRetries() *feature.Feature {
 
 	f.Setup("create broker config", brokerconfigmap.Install(
 		configName,
-		brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
 		brokerconfigmap.WithNumPartitions(1),
 		brokerconfigmap.WithReplicationFactor(1),
 	))
@@ -138,7 +142,7 @@ func SendsEventErrorWithoutRetries() *feature.Feature {
 
 	f.Setup("create broker config", brokerconfigmap.Install(
 		configName,
-		brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
 		brokerconfigmap.WithNumPartitions(1),
 		brokerconfigmap.WithReplicationFactor(1),
 	))
@@ -208,7 +212,7 @@ func SendsEventNoRetries() *feature.Feature {
 
 	f.Setup("create broker config", brokerconfigmap.Install(
 		configName,
-		brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
 		brokerconfigmap.WithNumPartitions(1),
 		brokerconfigmap.WithReplicationFactor(1),
 	))

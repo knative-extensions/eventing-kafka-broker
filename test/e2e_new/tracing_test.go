@@ -26,13 +26,18 @@ import (
 	"time"
 
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
+	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
+	"knative.dev/eventing-kafka-broker/test/pkg/tracing"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/openzipkin/zipkin-go/model"
+
 	tracinghelper "knative.dev/eventing/test/conformance/helpers/tracing"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
+
 	"knative.dev/pkg/system"
+
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
@@ -41,8 +46,6 @@ import (
 	"knative.dev/reconciler-test/resources/svc"
 
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
-
-	"knative.dev/eventing-kafka-broker/test/pkg/tracing"
 )
 
 func TestTracingHeaders(t *testing.T) {
@@ -77,7 +80,7 @@ func TracingHeadersUsingOrderedDeliveryWithTraceExported() *feature.Feature {
 
 	f.Setup("create broker config", brokerconfigmap.Install(
 		configName,
-		brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
 		brokerconfigmap.WithNumPartitions(1),
 		brokerconfigmap.WithReplicationFactor(1),
 	))
@@ -210,7 +213,7 @@ func TracingHeadersUsingUnorderedDelivery() *feature.Feature {
 
 	f.Setup("create broker config", brokerconfigmap.Install(
 		configName,
-		brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
 		brokerconfigmap.WithNumPartitions(1),
 		brokerconfigmap.WithReplicationFactor(1),
 	))
@@ -264,7 +267,7 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 
 	f.Setup("create broker config", brokerconfigmap.Install(
 		configName,
-		brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
 		brokerconfigmap.WithNumPartitions(1),
 		brokerconfigmap.WithReplicationFactor(1),
 	))
