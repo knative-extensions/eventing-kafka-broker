@@ -1986,11 +1986,11 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 						},
 					},
 					Generation: 1,
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, &env),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources:  []*contract.Resource{},
 					Generation: 2,
 				}),
