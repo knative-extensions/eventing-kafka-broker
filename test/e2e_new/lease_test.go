@@ -19,28 +19,28 @@
 
 package e2e_new
 
-import (
-	"testing"
-
-	"knative.dev/pkg/system"
-	"knative.dev/reconciler-test/pkg/environment"
-	"knative.dev/reconciler-test/pkg/k8s"
-	"knative.dev/reconciler-test/pkg/knative"
-
-	"knative.dev/eventing-kafka-broker/test/e2e_new/features"
-)
-
-func TestLeaseAcquired(t *testing.T) {
-	t.Parallel()
-
-	ctx, env := global.Environment(
-		knative.WithKnativeNamespace(system.Namespace()),
-		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
-		k8s.WithEventListener,
-		environment.Managed(t),
-	)
-
-	env.Test(ctx, t, features.KafkaChannelLease())
-	env.Test(ctx, t, features.KafkaSourceLease())
-}
+//import (
+//	"testing"
+//
+//	"knative.dev/pkg/system"
+//	"knative.dev/reconciler-test/pkg/environment"
+//	"knative.dev/reconciler-test/pkg/k8s"
+//	"knative.dev/reconciler-test/pkg/knative"
+//
+//	"knative.dev/eventing-kafka-broker/test/e2e_new/features"
+//)
+//
+//func TestLeaseAcquired(t *testing.T) {
+//	t.Parallel()
+//
+//	ctx, env := global.Environment(
+//		knative.WithKnativeNamespace(system.Namespace()),
+//		knative.WithLoggingConfig,
+//		knative.WithTracingConfig,
+//		k8s.WithEventListener,
+//		environment.Managed(t),
+//	)
+//
+//	env.Test(ctx, t, features.KafkaChannelLease())
+//	env.Test(ctx, t, features.KafkaSourceLease())
+//}
