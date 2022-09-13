@@ -77,8 +77,7 @@ func CreatorWithOptions(client *eventingtestlib.Client, version string, brokerOp
 	switch version {
 	case "v1":
 		namespace := client.Namespace
-		// TODO: why the heck we have this name?
-		cmName := "kafka-broker-upgrade-config"
+		cmName := "kafka-broker-config"
 		// Create Broker's own ConfigMap to prevent using defaults.
 		cm := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
