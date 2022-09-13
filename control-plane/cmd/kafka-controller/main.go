@@ -78,7 +78,7 @@ func main() {
 
 		// Namespaced broker controller
 		injection.NamedControllerConstructor{
-			Name: "broker-namespaced-controller",
+			Name: "namespaced-broker-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 				return broker.NewNamespacedController(ctx, watcher, brokerEnv)
 			},
@@ -86,7 +86,7 @@ func main() {
 
 		// Namespaced trigger controller
 		injection.NamedControllerConstructor{
-			Name: "trigger-namespaced-controller",
+			Name: "namespaced-trigger-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 				return trigger.NewNamespacedController(ctx, watcher, brokerEnv)
 			},
