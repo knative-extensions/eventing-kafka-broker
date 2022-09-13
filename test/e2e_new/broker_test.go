@@ -31,7 +31,8 @@ import (
 )
 
 func TestBrokerDeletedRecreated(t *testing.T) {
-	t.Parallel()
+	// this test is observed to flake more when it is parallel
+	// t.Parallel()
 
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
@@ -45,7 +46,8 @@ func TestBrokerDeletedRecreated(t *testing.T) {
 }
 
 func TestBrokerConfigMapDeletedFirst(t *testing.T) {
-	t.Parallel()
+	// this test is observed to flake more when it is parallel
+	// t.Parallel()
 
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
@@ -59,7 +61,8 @@ func TestBrokerConfigMapDeletedFirst(t *testing.T) {
 }
 
 func TestBrokerConfigMapDoesNotExist(t *testing.T) {
-	t.Parallel()
+	// this test is observed to flake more when it is parallel
+	// t.Parallel()
 
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
@@ -73,7 +76,8 @@ func TestBrokerConfigMapDoesNotExist(t *testing.T) {
 }
 
 func TestTriggerLatestOffset(t *testing.T) {
-	t.Parallel()
+	// this test is observed to flake more when it is parallel
+	// t.Parallel()
 
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
@@ -87,7 +91,8 @@ func TestTriggerLatestOffset(t *testing.T) {
 }
 
 func TestBrokerCannotReachKafkaCluster(t *testing.T) {
-	t.Parallel()
+	// this test is observed to flake more when it is parallel
+	// t.Parallel()
 
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
