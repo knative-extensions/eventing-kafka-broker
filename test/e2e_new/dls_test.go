@@ -71,12 +71,7 @@ func SendsEventWithRetries() *feature.Feature {
 
 	ev := cetest.FullEvent()
 
-	f.Setup("create broker config", brokerconfigmap.Install(
-		configName,
-		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
-		brokerconfigmap.WithNumPartitions(1),
-		brokerconfigmap.WithReplicationFactor(1),
-	))
+	f.Setup("create broker config", createBrokerConfigForDlsTests(configName))
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
@@ -140,12 +135,7 @@ func SendsEventErrorWithoutRetries() *feature.Feature {
 
 	ev := cetest.FullEvent()
 
-	f.Setup("create broker config", brokerconfigmap.Install(
-		configName,
-		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
-		brokerconfigmap.WithNumPartitions(1),
-		brokerconfigmap.WithReplicationFactor(1),
-	))
+	f.Setup("create broker config", createBrokerConfigForDlsTests(configName))
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
@@ -210,12 +200,7 @@ func SendsEventNoRetries() *feature.Feature {
 
 	ev := cetest.FullEvent()
 
-	f.Setup("create broker config", brokerconfigmap.Install(
-		configName,
-		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
-		brokerconfigmap.WithNumPartitions(1),
-		brokerconfigmap.WithReplicationFactor(1),
-	))
+	f.Setup("create broker config", createBrokerConfigForDlsTests(configName))
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
@@ -262,4 +247,13 @@ func SendsEventNoRetries() *feature.Feature {
 	)
 
 	return f
+}
+
+func createBrokerConfigForDlsTests(configName string) feature.StepFn {
+	return brokerconfigmap.Install(
+		configName,
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
+		brokerconfigmap.WithNumPartitions(1),
+		brokerconfigmap.WithReplicationFactor(1),
+	)
 }
