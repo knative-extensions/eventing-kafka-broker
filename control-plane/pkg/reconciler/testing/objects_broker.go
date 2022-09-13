@@ -97,6 +97,17 @@ func NewDeletedBroker(options ...reconcilertesting.BrokerOption) runtime.Object 
 	)
 }
 
+func NewDeletedBrokerWithoutConfigMapAnnotations(options ...reconcilertesting.BrokerOption) runtime.Object {
+	return NewBroker(
+		append(
+			options,
+			func(broker *eventing.Broker) {
+				WithDeletedTimeStamp(broker)
+			},
+		)...,
+	)
+}
+
 func WithDelivery(mutations ...func(spec *eventingduck.DeliverySpec)) func(*eventing.Broker) {
 	service := NewService()
 

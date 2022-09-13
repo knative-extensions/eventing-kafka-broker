@@ -57,3 +57,17 @@ func TestBrokerConfigMapDeletedFirst(t *testing.T) {
 
 	env.Test(ctx, t, features.BrokerConfigMapDeletedFirst())
 }
+
+func TestBrokerConfigMapDoesNotExist(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.BrokerConfigMapDoesNotExist())
+}

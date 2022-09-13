@@ -18,9 +18,12 @@ package features
 
 import (
 	"k8s.io/apimachinery/pkg/types"
+
+	"knative.dev/pkg/system"
+
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
-	"knative.dev/pkg/system"
+
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/resources/svc"
@@ -61,6 +64,19 @@ func BrokerConfigMapDeletedFirst() *feature.Feature {
 	)
 
 	f.Requirement("delete Broker ConfigMap", featuressteps.DeleteConfigMap(cmName))
+
+	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
+
+	return f
+}
+
+// BrokerConfigMapDoesNotExist tests that a broker can be deleted without the ConfigMap existing.
+func BrokerConfigMapDoesNotExist() *feature.Feature {
+	f := feature.NewFeatureNamed("delete broker ConfigMap first")
+
+	brokerName := feature.MakeRandomK8sName("broker")
+
+	f.Setup("install broker", broker.Install(brokerName, append(broker.WithEnvConfig(), broker.WithConfig("doesNotExist"))...))
 
 	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
 

@@ -1974,6 +1974,32 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			},
 		},
 		{
+			Name: "Reconciled normal - no ConfigMap and no annotations",
+			Objects: []runtime.Object{
+				NewDeletedBrokerWithoutConfigMapAnnotations(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+						},
+					},
+					Generation: 1,
+				}, &env),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(&env, &contract.Contract{
+					Resources:  []*contract.Resource{},
+					Generation: 2,
+				}),
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
+			},
+		},
+		{
 			Name: "Reconciled failed - probe not ready",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
