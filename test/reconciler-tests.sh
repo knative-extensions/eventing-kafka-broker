@@ -3,7 +3,7 @@
 source $(dirname $0)/e2e-common.sh
 
 if ! ${SKIP_INITIALIZE}; then
-  initialize $@ --skip-istio-addon
+  initialize $@ --skip-istio-addon --min-nodes=4 --max-nodes=4
   save_release_artifacts || fail_test "Failed to save release artifacts"
 fi
 
