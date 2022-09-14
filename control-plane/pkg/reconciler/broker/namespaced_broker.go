@@ -71,7 +71,8 @@ type NamespacedReconciler struct {
 
 	BootstrapServers string
 
-	Prober prober.Prober
+	Prober  prober.Prober
+	Counter *Counter
 
 	IPsLister          prober.IPListerWithMapping
 	ManifestivalClient mf.Client
@@ -82,6 +83,12 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 		types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name},
 		prober.GetIPForService(types.NamespacedName{Namespace: broker.Namespace, Name: r.Env.IngressName}),
 	)
+
+	if broker.Spec.Config != nil && broker.Spec.Config.Namespace != "" && broker.Spec.Config.Namespace != broker.Namespace {
+		return propagateErrorCondition(broker,
+			fmt.Errorf("broker with %q class need the config in the same namespace with the broker. broker.spec.config.namespace=%q, broker.namespace=%q",
+				kafka.NamespacedBrokerClass, broker.Spec.Config.Namespace, broker.Namespace))
+	}
 
 	br := r.createReconcilerForBrokerInstance(broker)
 
@@ -134,7 +141,7 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 		NewKafkaClusterAdminClient: r.NewKafkaClusterAdminClient,
 		BootstrapServers:           r.BootstrapServers,
 		Prober:                     r.Prober,
-		Counter:                    NewCounter(),
+		Counter:                    r.Counter,
 	}
 }
 

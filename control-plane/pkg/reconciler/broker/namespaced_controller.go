@@ -88,6 +88,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		ClusterRoleBindingLister:   clusterrolebindinginformer.Get(ctx).Lister(),
 		DeploymentLister:           deploymentinformer.Get(ctx).Lister(),
 		Env:                        env,
+		Counter:                    NewCounter(),
 		ManifestivalClient:         mfc,
 	}
 

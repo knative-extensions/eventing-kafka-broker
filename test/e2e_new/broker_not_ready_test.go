@@ -30,6 +30,7 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
+	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 func TestBrokerNotReadyAfterBeingReady(t *testing.T) {
@@ -55,7 +56,7 @@ func BrokerNotReadyAfterBeingReady() *feature.Feature {
 
 	f.Setup("create broker config", brokerconfigmap.Install(
 		configName,
-		brokerconfigmap.WithBootstrapServer("my-cluster-kafka-bootstrap.kafka:9092"),
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
 		brokerconfigmap.WithNumPartitions(1),
 		brokerconfigmap.WithReplicationFactor(1),
 	))
