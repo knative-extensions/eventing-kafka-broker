@@ -111,6 +111,10 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker)
 func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, broker)
 
+	if broker.DeletionTimestamp != nil {
+		logger.Error("AAAAA broker is being deleted!")
+	}
+
 	statusConditionManager := base.StatusConditionManager{
 		Object:     broker,
 		SetAddress: broker.Status.SetAddress,
