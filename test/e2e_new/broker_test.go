@@ -21,6 +21,7 @@ package e2e_new
 
 import (
 	"testing"
+	"time"
 
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
@@ -28,6 +29,11 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 
 	"knative.dev/eventing-kafka-broker/test/e2e_new/features"
+)
+
+const (
+	PollInterval = 3 * time.Second
+	PollTimeout  = 4 * time.Minute
 )
 
 func TestBrokerDeletedRecreated(t *testing.T) {
@@ -39,6 +45,7 @@ func TestBrokerDeletedRecreated(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -54,6 +61,7 @@ func TestBrokerConfigMapDeletedFirst(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -69,6 +77,7 @@ func TestBrokerConfigMapDoesNotExist(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -84,6 +93,7 @@ func TestTriggerLatestOffset(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -99,6 +109,7 @@ func TestBrokerCannotReachKafkaCluster(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
