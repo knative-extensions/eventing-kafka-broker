@@ -21,6 +21,7 @@ package e2e_new
 
 import (
 	"testing"
+	"time"
 
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
@@ -30,14 +31,21 @@ import (
 	"knative.dev/eventing-kafka-broker/test/e2e_new/features"
 )
 
+const (
+	PollInterval = 3 * time.Second
+	PollTimeout  = 4 * time.Minute
+)
+
 func TestBrokerDeletedRecreated(t *testing.T) {
-	t.Parallel()
+	// this test is observed to flake more when it is parallel
+	// t.Parallel()
 
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -45,13 +53,15 @@ func TestBrokerDeletedRecreated(t *testing.T) {
 }
 
 func TestBrokerConfigMapDeletedFirst(t *testing.T) {
-	t.Parallel()
+	// this test is observed to flake more when it is parallel
+	// t.Parallel()
 
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -59,13 +69,15 @@ func TestBrokerConfigMapDeletedFirst(t *testing.T) {
 }
 
 func TestBrokerConfigMapDoesNotExist(t *testing.T) {
-	t.Parallel()
+	// this test is observed to flake more when it is parallel
+	// t.Parallel()
 
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -73,13 +85,15 @@ func TestBrokerConfigMapDoesNotExist(t *testing.T) {
 }
 
 func TestTriggerLatestOffset(t *testing.T) {
-	t.Parallel()
+	// this test is observed to flake more when it is parallel
+	// t.Parallel()
 
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -87,13 +101,15 @@ func TestTriggerLatestOffset(t *testing.T) {
 }
 
 func TestBrokerCannotReachKafkaCluster(t *testing.T) {
-	t.Parallel()
+	// this test is observed to flake more when it is parallel
+	// t.Parallel()
 
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 

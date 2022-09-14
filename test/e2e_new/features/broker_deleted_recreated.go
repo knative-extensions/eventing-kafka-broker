@@ -23,7 +23,6 @@ import (
 
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
-
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/resources/svc"
@@ -31,7 +30,21 @@ import (
 	"knative.dev/eventing-kafka-broker/test/e2e_new/features/featuressteps"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap"
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
+	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 )
+
+func BrokerConfigmapCreated(configName string) *feature.Feature {
+	f := feature.NewFeatureNamed("broker configmap created")
+
+	f.Setup("create broker config", brokerconfigmap.Install(
+		configName,
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
+		brokerconfigmap.WithNumPartitions(1),
+		brokerconfigmap.WithReplicationFactor(1),
+	))
+
+	return f
+}
 
 func BrokerDeletedRecreated() *feature.Feature {
 	f := feature.NewFeatureNamed("broker deleted and recreated")

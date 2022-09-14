@@ -3,7 +3,7 @@
 source $(dirname $0)/e2e-common.sh
 
 if ! ${SKIP_INITIALIZE}; then
-  initialize $@ --skip-istio-addon
+  initialize $@ --skip-istio-addon --min-nodes=4 --max-nodes=4
   save_release_artifacts || fail_test "Failed to save release artifacts"
 fi
 
@@ -28,7 +28,6 @@ if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
   success
 fi
 
-export BROKER_CLASS=Kafka
 if [[ -z "${BROKER_CLASS}" ]]; then
   fail_test "Broker class is not defined. Specify it with 'BROKER_CLASS' env var."
 else
@@ -37,9 +36,8 @@ fi
 
 if [ "${BROKER_CLASS}" == "KafkaNamespaced" ]; then
   # if flag exists, only test tests that are relevant to namespaced KafkaBroker
-  #  echo "BROKER_CLASS is set to 'KafkaNamespaced'. Only running the relevant tests."
-  #  go_test_e2e -timeout=1h ./test/e2e_new/... || fail_test "E2E (new) suite failed"
-  echo "BROKER_CLASS is set to 'KafkaNamespaced'. Skipping tests."
+  echo "BROKER_CLASS is set to 'KafkaNamespaced'. Only running the relevant tests."
+  go_test_e2e -timeout=1h ./test/e2e_new/... || fail_test "E2E (new) suite failed"
   success
 fi
 

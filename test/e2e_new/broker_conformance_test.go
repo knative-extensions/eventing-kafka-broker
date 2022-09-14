@@ -22,6 +22,9 @@ package e2e_new
 import (
 	"testing"
 
+	"knative.dev/eventing-kafka-broker/test/e2e_new/features"
+	"knative.dev/reconciler-test/pkg/feature"
+
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
@@ -44,9 +47,19 @@ func TestBrokerConformance(t *testing.T) {
 		environment.Managed(t),
 	)
 
-	// Install and wait for a Ready Broker.
-	env.Prerequisite(ctx, t, brokerfeatures.GoesReady("default", broker.WithBrokerClass(broker.EnvCfg.BrokerClass)))
+	configName := feature.MakeRandomK8sName("kafka-broker-config")
 
-	env.TestSet(ctx, t, brokerfeatures.ControlPlaneConformance("default"))
+	env.Prerequisite(ctx, t, features.BrokerConfigmapCreated(configName))
+
+	// Install and wait for a Ready Broker.
+	env.Prerequisite(ctx, t,
+		brokerfeatures.GoesReady(
+			"default",
+			broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
+			broker.WithConfig(configName),
+		),
+	)
+
+	env.TestSet(ctx, t, brokerfeatures.ControlPlaneConformance("default", broker.WithConfig(configName)))
 	env.TestSet(ctx, t, brokerfeatures.DataPlaneConformance("default"))
 }

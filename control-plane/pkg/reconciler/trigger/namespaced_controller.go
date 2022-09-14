@@ -19,6 +19,9 @@ package trigger
 import (
 	"context"
 
+	"github.com/Shopify/sarama"
+	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
+
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
@@ -60,8 +63,8 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 			KubeClient:                   kubeclient.Get(ctx),
 			PodLister:                    podinformer.Get(ctx).Lister(),
 			SecretLister:                 secretinformer.Get(ctx).Lister(),
-			DataPlaneConfigConfigMapName: configs.DataPlaneConfigConfigMapName,
 			DataPlaneConfigMapNamespace:  configs.DataPlaneConfigMapNamespace,
+			DataPlaneConfigConfigMapName: configs.DataPlaneConfigConfigMapName,
 			ContractConfigMapName:        configs.ContractConfigMapName,
 			ContractConfigMapFormat:      configs.ContractConfigMapFormat,
 			DataPlaneNamespace:           configs.SystemNamespace,
@@ -71,10 +74,13 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 		FlagsHolder: &FlagsHolder{
 			Flags: feature.Flags{},
 		},
-		BrokerLister:    brokerInformer.Lister(),
-		ConfigMapLister: configmapInformer.Lister(),
-		EventingClient:  eventingclient.Get(ctx),
-		Env:             configs,
+		BrokerLister:               brokerInformer.Lister(),
+		ConfigMapLister:            configmapInformer.Lister(),
+		EventingClient:             eventingclient.Get(ctx),
+		Env:                        configs,
+		NewKafkaClient:             sarama.NewClient,
+		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
+		InitOffsetsFunc:            offset.InitOffsets,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -116,6 +122,9 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 			},
 		},
 	})
+
+	reconciler.SecretTracker = impl.Tracker
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
 
 	return impl
 }

@@ -66,6 +66,8 @@ func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *event
 			KubeClient:                   r.Reconciler.KubeClient,
 			PodLister:                    r.Reconciler.PodLister,
 			SecretLister:                 r.Reconciler.SecretLister,
+			SecretTracker:                r.Reconciler.SecretTracker,
+			ConfigMapTracker:             r.Reconciler.ConfigMapTracker,
 			ContractConfigMapName:        r.Reconciler.ContractConfigMapName,
 			ContractConfigMapFormat:      r.Reconciler.ContractConfigMapFormat,
 			DataPlaneConfigConfigMapName: r.DataPlaneConfigConfigMapName,
