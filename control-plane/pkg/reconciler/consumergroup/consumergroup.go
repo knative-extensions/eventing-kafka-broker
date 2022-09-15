@@ -156,23 +156,34 @@ func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consume
 		}
 	}
 
-	options, err := r.newAuthConfigOption(ctx, cg)
+	saramaSecurityOption, err := r.newAuthConfigOption(ctx, cg)
 	if err != nil {
 		return fmt.Errorf("failed to create config options for Kafka cluster auth: %w", err)
 	}
 
-	saramaConfig, err := kafka.GetSaramaConfig(options)
+	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
-		return fmt.Errorf("failed to get cluster admin sarama config: %w", err)
+		return fmt.Errorf("failed to create Admin client config: %w", err)
 	}
+
+	kafkaClientSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption, kafka.DisableOffsetAutoCommitConfigOption)
+	if err != nil {
+		return fmt.Errorf("error getting client sarama config: %w", err)
+	}
+
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
-	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(bootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(bootstrapServers, kafkaClusterAdminSaramaConfig)
 	if err != nil {
-		logging.FromContext(ctx).Errorw("unable to create a kafka client", zap.Error(err))
-		return err
+		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
 	defer kafkaClusterAdminClient.Close()
+
+	kafkaClient, err := r.NewKafkaClient(bootstrapServers, kafkaClientSaramaConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create Kafka cluster client: %w", err)
+	}
+	defer kafkaClient.Close()
 
 	groupId := cg.Spec.Template.Spec.Configs.Configs["group.id"]
 	if err := kafkaClusterAdminClient.DeleteConsumerGroup(groupId); err != nil && !errors.Is(sarama.ErrGroupIDNotFound, err) {
@@ -402,33 +413,39 @@ func (r Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkainterna
 		return nil
 	}
 
-	options, err := r.newAuthConfigOption(ctx, cg)
+	saramaSecurityOption, err := r.newAuthConfigOption(ctx, cg)
 	if err != nil {
 		return fmt.Errorf("failed to create config options for Kafka cluster auth: %w", err)
 	}
 
-	saramaConfig, err := kafka.GetSaramaConfig(options)
+	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
 		return fmt.Errorf("failed to create Admin client config: %w", err)
 	}
+
+	kafkaClientSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption, kafka.DisableOffsetAutoCommitConfigOption)
+	if err != nil {
+		return fmt.Errorf("error getting client sarama config: %w", err)
+	}
+
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
-	kafkaClient, err := r.NewKafkaClient(bootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(bootstrapServers, kafkaClusterAdminSaramaConfig)
+	if err != nil {
+		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+	}
+	defer kafkaClusterAdminClient.Close()
+
+	kafkaClient, err := r.NewKafkaClient(bootstrapServers, kafkaClientSaramaConfig)
 	if err != nil {
 		return fmt.Errorf("failed to create Kafka cluster client: %w", err)
 	}
 	defer kafkaClient.Close()
 
-	kafkaAdminClient, err := sarama.NewClusterAdminFromClient(kafkaClient)
-	if err != nil {
-		return fmt.Errorf("failed to create Kafka cluster admin client: %w", err)
-	}
-	defer kafkaAdminClient.Close()
-
 	groupId := cg.Spec.Template.Spec.Configs.Configs["group.id"]
 	topics := cg.Spec.Template.Spec.Topics
 
-	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaAdminClient, topics, groupId); err != nil {
+	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdminClient, topics, groupId); err != nil {
 		return fmt.Errorf("failed to initialize offset: %w", err)
 	}
 
@@ -465,6 +482,7 @@ func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals
 	if err != nil {
 		return err
 	}
+
 	scaledObject, err := keda.GenerateScaledObject(cg, cg.GetGroupVersionKind(), kedafunc.GenerateScaleTarget(cg), triggers)
 	if err != nil {
 		return err
