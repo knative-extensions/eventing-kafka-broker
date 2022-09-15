@@ -50,6 +50,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 
+	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 )
 
@@ -1530,7 +1531,8 @@ func TestReconcileKind(t *testing.T) {
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
 			},
-			SystemNamespace: systemNamespace,
+			SystemNamespace:   systemNamespace,
+			KafkaFeatureFlags: configapis.DefaultFeaturesConfig(),
 		}
 
 		return consumergroup.NewReconciler(
@@ -1752,6 +1754,7 @@ func TestFinalizeKind(t *testing.T) {
 					T: t,
 				}, nil
 			},
+			KafkaFeatureFlags: configapis.DefaultFeaturesConfig(),
 		}
 
 		return consumergroup.NewReconciler(

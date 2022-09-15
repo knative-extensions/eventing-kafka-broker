@@ -45,6 +45,7 @@ import (
 
 	statefulsetscheduler "knative.dev/eventing/pkg/scheduler/statefulset"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer"
@@ -111,12 +112,21 @@ func NewController(ctx context.Context) *controller.Impl {
 		InitOffsetsFunc:            offset.InitOffsets,
 		SystemNamespace:            system.Namespace(),
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
+		KafkaFeatureFlags:          config.DefaultFeaturesConfig(),
 	}
 
-	impl := cgreconciler.NewImpl(ctx, r)
 	consumerInformer := consumer.Get(ctx)
 
 	consumerGroupInformer := consumergroup.Get(ctx)
+
+	impl := cgreconciler.NewImpl(ctx, r, func(impl *controller.Impl) controller.Options {
+		return controller.Options{
+			ConfigStore: config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
+				r.KafkaFeatureFlags.Reset(value)
+				impl.GlobalResync(consumerGroupInformer.Informer())
+			}),
+		}
+	})
 
 	consumerGroupInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))

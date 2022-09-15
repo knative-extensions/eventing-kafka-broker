@@ -41,6 +41,7 @@ import (
 
 	"knative.dev/eventing/pkg/scheduler"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
@@ -77,6 +78,8 @@ type Reconciler struct {
 	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
 	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
+
+	KafkaFeatureFlags *config.KafkaFeatureFlags
 }
 
 func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {

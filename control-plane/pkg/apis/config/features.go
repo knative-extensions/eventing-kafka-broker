@@ -34,6 +34,7 @@ const (
 type features struct {
 	DispatcherRateLimiter            feature.Flag
 	DispatcherOrderedExecutorMetrics feature.Flag
+	ControllerAutoscaler             feature.Flag
 }
 
 type KafkaFeatureFlags struct {
@@ -46,6 +47,7 @@ func DefaultFeaturesConfig() *KafkaFeatureFlags {
 		features: features{
 			DispatcherRateLimiter:            feature.Disabled,
 			DispatcherOrderedExecutorMetrics: feature.Disabled,
+			ControllerAutoscaler:             feature.Disabled,
 		},
 	}
 }
@@ -56,6 +58,7 @@ func newFeaturesConfigFromMap(cm *corev1.ConfigMap) (*KafkaFeatureFlags, error) 
 	err := configmap.Parse(cm.Data,
 		asFlag("dispatcher.rate-limiter", &nc.features.DispatcherRateLimiter),
 		asFlag("dispatcher.ordered-executor-metrics", &nc.features.DispatcherOrderedExecutorMetrics),
+		asFlag("controller.autoscaler", &nc.features.ControllerAutoscaler),
 	)
 	return nc, err
 }
@@ -72,6 +75,10 @@ func (f *KafkaFeatureFlags) IsDispatcherRateLimiterEnabled() bool {
 
 func (f *KafkaFeatureFlags) IsDispatcherOrderedExecutorMetricsEnabled() bool {
 	return f.features.DispatcherOrderedExecutorMetrics == feature.Enabled
+}
+
+func (f *KafkaFeatureFlags) IsControllerAutoscalerEnabled() bool {
+	return f.features.ControllerAutoscaler == feature.Enabled
 }
 
 // Store is a typed wrapper around configmap.Untyped store to handle our configmaps.
