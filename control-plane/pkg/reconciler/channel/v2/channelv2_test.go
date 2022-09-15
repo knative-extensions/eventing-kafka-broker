@@ -60,6 +60,7 @@ import (
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	commonconstants "knative.dev/eventing-kafka/pkg/common/constants"
+	eventingrekttesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 )
 
 const (
@@ -452,6 +453,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
+					ConsumerGroupReplicas(1),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -519,6 +521,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
+					ConsumerGroupReplicas(1),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -586,6 +589,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
+					ConsumerGroupReplicas(1),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -677,6 +681,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 							ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						)),
+						ConsumerGroupReplicas(1),
 						ConsumerGroupReady,
 					),
 				},
@@ -725,6 +730,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
+					ConsumerGroupReplicas(1),
 					WithConsumerGroupFailed("failed to reconcile consumer group,", "internal error"),
 				),
 			},
@@ -799,6 +805,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
+					ConsumerGroupReplicas(1),
 				),
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription2UUID),
@@ -815,6 +822,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription2URI)),
 					)),
+					ConsumerGroupReplicas(1),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -900,6 +908,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
+					ConsumerGroupReplicas(1),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -1105,7 +1114,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
-			Name: "Reconciled normal - with single fresh subscriber - with auth - PlainText",
+			Name: "Reconciled normal - with single fresh subscriber - with auth - SASL",
 			Objects: []runtime.Object{
 				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
@@ -1114,7 +1123,7 @@ func TestReconcileKind(t *testing.T) {
 					security.AuthSecretNamespaceKey:    "ns-1",
 				}),
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
-				NewSSLSecret("ns-1", "secret-1"),
+				NewLegacySASLSecret("ns-1", "secret-1"),
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
@@ -1139,6 +1148,7 @@ func TestReconcileKind(t *testing.T) {
 							},
 						}),
 					)),
+					ConsumerGroupReplicas(1),
 					ConsumerGroupReady,
 				),
 			},
@@ -1155,12 +1165,22 @@ func TestReconcileKind(t *testing.T) {
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
-							Auth: &contract.Resource_AuthSecret{
-								AuthSecret: &contract.Reference{
-									Uuid:      SecretUUID,
-									Namespace: "ns-1",
-									Name:      "secret-1",
-									Version:   SecretResourceVersion,
+							Auth: &contract.Resource_MultiAuthSecret{
+								MultiAuthSecret: &contract.MultiSecretReference{
+									Protocol: contract.Protocol_SASL_PLAINTEXT,
+									References: []*contract.SecretReference{{
+										Reference: &contract.Reference{
+											Uuid:      SecretUUID,
+											Namespace: "ns-1",
+											Name:      "secret-1",
+											Version:   SecretResourceVersion,
+										},
+										KeyFieldReferences: []*contract.KeyFieldReference{
+											{SecretKey: "password", Field: contract.SecretField_PASSWORD},
+											{SecretKey: "username", Field: contract.SecretField_USER},
+											{SecretKey: "saslType", Field: contract.SecretField_SASL_MECHANISM},
+										},
+									}},
 								},
 							},
 							Ingress: &contract.Ingress{
@@ -1197,12 +1217,15 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewChannel(
 					WithSubscribers(Subscriber1(WithFreshSubscriber)),
-					WithAutoscalingAnnotationsChannel(),
 				),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				eventingrekttesting.NewSubscription(Subscription1Name, ChannelNamespace,
+					eventingrekttesting.WithSubscriptionUID(Subscription1UUID),
+					WithAutoscalingAnnotationsSubscription(),
+				),
 			},
 			Key: testKey,
 			WantCreates: []runtime.Object{
@@ -1223,6 +1246,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
+					ConsumerGroupReplicas(1),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -1253,7 +1277,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnknownSubscriber)),
 						StatusChannelSubscribersUnknown(),
-						WithAutoscalingAnnotationsChannel(),
 					),
 				},
 			},
@@ -1462,6 +1485,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			ConfigMapLister:     listers.GetConfigMapLister(),
 			ServiceLister:       listers.GetServiceLister(),
+			SubscriptionLister:  listers.GetSubscriptionLister(),
 			ConsumerGroupLister: listers.GetConsumerGroupLister(),
 			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
 			Prober:              proberMock,

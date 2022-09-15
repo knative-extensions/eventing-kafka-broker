@@ -32,6 +32,7 @@ import (
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/network"
 
+	subscriptioninformer "knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
@@ -71,6 +72,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 		Env:                        configs,
 		ConfigMapLister:            configmapInformer.Lister(),
 		ServiceLister:              serviceinformer.Get(ctx).Lister(),
+		SubscriptionLister:         subscriptioninformer.Get(ctx).Lister(),
 		ConsumerGroupLister:        consumerGroupInformer.Lister(),
 		InternalsClient:            consumergroupclient.Get(ctx),
 		KedaClient:                 kedaclient.Get(ctx),

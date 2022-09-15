@@ -23,6 +23,7 @@ metadata:
     app: kafka-channel-dispatcher
     kafka.eventing.knative.dev/release: devel
 spec:
+  replicas: 0
   serviceName: kafka-channel-dispatcher
   podManagementPolicy: "Parallel"
   selector:
@@ -63,6 +64,9 @@ spec:
           volumeMounts:
             - mountPath: /etc/config
               name: config-kafka-channel-data-plane
+              readOnly: true
+            - mountPath: /etc/channels-subscriptions
+              name: kafka-channel-channels-subscriptions
               readOnly: true
             - mountPath: /etc/contract-resources
               name: contract-resources
@@ -160,6 +164,9 @@ spec:
         - name: config-kafka-channel-data-plane
           configMap:
             name: config-kafka-channel-data-plane
+        - name: kafka-channel-channels-subscriptions
+          configMap:
+            name: kafka-channel-channels-subscriptions
         - name: cache
           emptyDir: { }
         - name: kafka-channel-config-logging
