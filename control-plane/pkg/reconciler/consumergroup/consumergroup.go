@@ -100,10 +100,12 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 	}
 	cg.MarkScheduleSucceeded()
 
-	if err := r.reconcileKeda(ctx, cg); err != nil {
-		return cg.MarkKedaScalingFailed("KedaScaling", err)
+	if r.KafkaFeatureFlags.IsControllerAutoscalerEnabled() {
+		if err := r.reconcileKeda(ctx, cg); err != nil {
+			return cg.MarkKedaScalingFailed("KedaScaling", err)
+		}
+		cg.MarkKedaScalingSucceeded()
 	}
-	cg.MarkKedaScalingSucceeded()
 
 	if err := r.reconcileConsumers(ctx, cg); err != nil {
 		return err

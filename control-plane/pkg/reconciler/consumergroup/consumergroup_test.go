@@ -54,6 +54,7 @@ import (
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 
 	kedaclient "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client/fake"
+	cm "knative.dev/pkg/configmap/testing"
 )
 
 type SchedulerFunc func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error)
@@ -1529,6 +1530,10 @@ func TestReconcileKind(t *testing.T) {
 	tt.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		ctx, _ = kedaclient.With(ctx)
+		store := configapis.NewStore(ctx)
+		_, exampleConfig := cm.ConfigMapsFromTestFile(t, configapis.FlagsConfigName)
+		store.OnConfigChanged(exampleConfig)
+
 		r := Reconciler{
 			SchedulerFunc: func(s string) scheduler.Scheduler {
 				return row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
@@ -1550,9 +1555,10 @@ func TestReconcileKind(t *testing.T) {
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
 			},
-			SystemNamespace:   systemNamespace,
-			KafkaFeatureFlags: configapis.DefaultFeaturesConfig(),
+			SystemNamespace: systemNamespace,
 		}
+
+		r.KafkaFeatureFlags = configapis.FromContext(store.ToContext(ctx))
 
 		return consumergroup.NewReconciler(
 			ctx,
