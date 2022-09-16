@@ -490,14 +490,16 @@ func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals
 		return err
 	}
 
-	if triggerAuthentication != nil && secret != nil {
+	if secret != nil {
 		err = r.reconcileSecret(ctx, secret, cg)
 
 		// if the event was wrapped inside an error, consider the reconciliation as failed
 		if _, isEvent := err.(*reconciler.ReconcilerEvent); !isEvent {
 			return err
 		}
+	}
 
+	if triggerAuthentication != nil {
 		err = r.reconcileTriggerAuthentication(ctx, triggerAuthentication, cg)
 
 		// if the event was wrapped inside an error, consider the reconciliation as failed
@@ -621,7 +623,7 @@ func (r *Reconciler) isKEDAEnabled(ctx context.Context, namespace string) bool {
 		return true
 	}*/
 
-	if _, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace).List(ctx, metav1.ListOptions{}); err == nil || !apierrors.IsNotFound(err) {
+	if _, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace).List(ctx, metav1.ListOptions{}); err == nil {
 		return true
 	}
 	return false
