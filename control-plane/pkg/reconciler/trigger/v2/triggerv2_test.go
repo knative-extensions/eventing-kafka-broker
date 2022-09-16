@@ -114,6 +114,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerFilters(NewConsumerSpecFilters()),
 						ConsumerReply(ConsumerTopicReply()),
 					)),
+					ConsumerGroupReplicas(1),
 				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -166,6 +167,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerFilters(NewConsumerSpecFilters()),
 						ConsumerReply(ConsumerTopicReply()),
 					)),
+					ConsumerGroupReplicas(1),
 				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -211,6 +213,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerFilters(NewConsumerSpecFilters()),
 						ConsumerReply(ConsumerTopicReply()),
 					)),
+					ConsumerGroupReplicas(1),
 				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -257,6 +260,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerFilters(NewConsumerSpecFilters()),
 						ConsumerReply(ConsumerTopicReply()),
 					)),
+					ConsumerGroupReplicas(1),
 				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -350,6 +354,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerReply(ConsumerTopicReply()),
 						)),
 						ConsumerGroupReady,
+						ConsumerGroupReplicas(1),
 					),
 				},
 			},
@@ -409,6 +414,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerReply(ConsumerTopicReply()),
 						)),
 						ConsumerGroupReady,
+						ConsumerGroupReplicas(1),
 					),
 				},
 			},
@@ -464,6 +470,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerFilters(NewConsumerSpecFilters()),
 							ConsumerReply(ConsumerTopicReply()),
 						)),
+						ConsumerGroupReplicas(1),
 					),
 				},
 			},
@@ -509,6 +516,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerReply(ConsumerTopicReply()),
 					)),
 					ConsumerGroupReady,
+					ConsumerGroupReplicas(1),
 				),
 			},
 			Key: testKey,
@@ -553,6 +561,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerFilters(NewConsumerSpecFilters()),
 						ConsumerReply(ConsumerTopicReply()),
 					)),
+					ConsumerGroupReplicas(1),
 				),
 			},
 			Key: testKey,
@@ -598,6 +607,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerReply(ConsumerTopicReply()),
 					)),
 					WithConsumerGroupFailed("failed", "failed"),
+					ConsumerGroupReplicas(1),
 				),
 			},
 			Key: testKey,
@@ -642,6 +652,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerReply(ConsumerTopicReply()),
 					)),
 					WithDeadLetterSinkURI(url.String()),
+					ConsumerGroupReplicas(1),
 				),
 			},
 			Key: testKey,
@@ -742,6 +753,7 @@ func TestReconcileKind(t *testing.T) {
 		logger := logging.FromContext(ctx)
 
 		reconciler := &Reconciler{
+			Reconciler:          &base.Reconciler{},
 			BrokerLister:        listers.GetBrokerLister(),
 			ConfigMapLister:     listers.GetConfigMapLister(),
 			EventingClient:      eventingclient.Get(ctx),

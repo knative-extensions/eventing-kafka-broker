@@ -35,6 +35,7 @@ import (
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 
 	kedaclient "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client"
@@ -59,6 +60,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
 
 	reconciler := &Reconciler{
+		Reconciler:          &base.Reconciler{},
 		BrokerLister:        brokerInformer.Lister(),
 		ConfigMapLister:     configmapinformer.Get(ctx).Lister(),
 		EventingClient:      eventingclient.Get(ctx),

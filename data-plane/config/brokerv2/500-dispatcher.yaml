@@ -23,6 +23,7 @@ metadata:
     app: kafka-broker-dispatcher
     kafka.eventing.knative.dev/release: devel
 spec:
+  replicas: 0
   serviceName: kafka-broker-dispatcher
   podManagementPolicy: "Parallel"
   selector:
@@ -63,6 +64,9 @@ spec:
           volumeMounts:
             - mountPath: /etc/config
               name: config-kafka-broker-data-plane
+              readOnly: true
+            - mountPath: /etc/brokers-triggers
+              name: kafka-broker-brokers-triggers
               readOnly: true
             - mountPath: /etc/contract-resources
               name: contract-resources
@@ -155,6 +159,9 @@ spec:
         - name: config-kafka-broker-data-plane
           configMap:
             name: config-kafka-broker-data-plane
+        - name: kafka-broker-brokers-triggers
+          configMap:
+            name: kafka-broker-brokers-triggers
         - name: cache
           emptyDir: { }
         - name: kafka-broker-config-logging
