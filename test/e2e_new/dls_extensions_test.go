@@ -59,6 +59,7 @@ func TestDeadLetterSinkExtensions(t *testing.T) {
 	env.Test(ctx, t, SubscriberReturnedErrorSmallData())
 	env.Test(ctx, t, SubscriberReturnedErrorLargeData())
 	env.Test(ctx, t, SubscriberReturnedHtmlWebpage())
+	env.Test(ctx, t, SubscriberReturnedCustomExtensionHeader())
 }
 
 func SubscriberUnreachable() *feature.Feature {
@@ -355,6 +356,73 @@ func SubscriberReturnedHtmlWebpage() *feature.Feature {
 		},
 		func(ctx context.Context) cetest.EventMatcher {
 			return cetest.HasExtension("knativeerrordata", html.UnescapeString(base64.StdEncoding.EncodeToString([]byte(errorData))))
+		},
+	))
+
+	return f
+}
+
+func SubscriberReturnedCustomExtensionHeader() *feature.Feature {
+	f := feature.NewFeature()
+
+	sourceName := feature.MakeRandomK8sName("source")
+	sinkName := feature.MakeRandomK8sName("sink")
+	deadLetterSinkName := feature.MakeRandomK8sName("dls")
+	triggerName := feature.MakeRandomK8sName("trigger")
+	brokerName := feature.MakeRandomK8sName("broker")
+
+	ev := cetest.FullEvent()
+
+	f.Setup("install one partition configuration", single_partition_config.Install)
+	f.Setup("install broker", broker.Install(
+		brokerName,
+		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithConfig(single_partition_config.ConfigMapName),
+	))
+	f.Setup("broker is ready", broker.IsReady(brokerName))
+	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+
+	errorData := `{ "message": "catastrophic failure" }`
+	f.Setup("install sink", eventshub.Install(
+		sinkName,
+		eventshub.StartReceiver,
+		eventshub.DropFirstN(1),
+		eventshub.DropEventsResponseCode(422),
+		eventshub.DropEventsResponseHeaders(map[string]string{"Kne-Test": "foo"}),
+		eventshub.DropEventsResponseBody(errorData),
+	))
+	f.Setup("install dead letter sink", eventshub.Install(
+		deadLetterSinkName,
+		eventshub.StartReceiver,
+	))
+	f.Setup("install trigger", trigger.Install(
+		triggerName,
+		brokerName,
+		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
+		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+	))
+	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+
+	f.Requirement("install source", eventshub.Install(
+		sourceName,
+		eventshub.StartSenderToResource(broker.GVR(), brokerName),
+		eventshub.InputEvent(ev),
+	))
+
+	f.Assert("knativeerrordest, knativeerrorcode, knativeerrordata and custom extension header added", assertEnhancedWithKnativeErrorExtensions(
+		deadLetterSinkName,
+		func(ctx context.Context) cetest.EventMatcher {
+			sinkAddress, _ := svc.Address(ctx, sinkName)
+			return cetest.HasExtension("knativeerrordest", sinkAddress.String())
+		},
+		func(ctx context.Context) cetest.EventMatcher {
+			return cetest.HasExtension("knativeerrorcode", "422")
+		},
+		func(ctx context.Context) cetest.EventMatcher {
+			return cetest.HasExtension("test", "foo")
+		},
+		func(ctx context.Context) cetest.EventMatcher {
+			return cetest.HasExtension("knativeerrordata", base64.StdEncoding.EncodeToString([]byte(errorData)))
 		},
 	))
 

@@ -77,6 +77,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   private static final String KN_ERROR_DEST_EXT_NAME = "knativeerrordest";
   private static final String KN_ERROR_CODE_EXT_NAME = "knativeerrorcode";
   private static final String KN_ERROR_DATA_EXT_NAME = "knativeerrordata";
+  private static final String EKB_ERROR_PREFIX       = "kne-";
   private static final int KN_ERROR_DATA_MAX_BYTES = 1024;
 
   private final Filter filter;
@@ -291,6 +292,13 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     final var extensions = new HashMap<String, String>();
     extensions.put(KN_ERROR_DEST_EXT_NAME, destination);
     extensions.put(KN_ERROR_CODE_EXT_NAME, String.valueOf(response.statusCode()));
+
+    // match for prefixed headers and put them to our extensions map
+    response.headers().forEach((k, v) -> {
+      if (k.regionMatches(true, 0, EKB_ERROR_PREFIX, 0, EKB_ERROR_PREFIX.length())) { // aka startsWithIgnoreCase
+        extensions.put(k.substring(EKB_ERROR_PREFIX.length()).toLowerCase(), v);
+      }
+    });
 
     // we extract the response as byte array as we do not need a string
     // representation of it
