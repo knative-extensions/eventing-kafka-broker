@@ -39,12 +39,14 @@ import (
 	"knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
 	nodeinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/node"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
+	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/system"
 
 	statefulsetscheduler "knative.dev/eventing/pkg/scheduler/statefulset"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer"
@@ -79,7 +81,7 @@ type SchedulerConfig struct {
 	DeSchedulerPolicy *scheduler.SchedulerPolicy
 }
 
-func NewController(ctx context.Context) *controller.Impl {
+func NewController(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
 	env := &envConfig{}
@@ -111,12 +113,20 @@ func NewController(ctx context.Context) *controller.Impl {
 		InitOffsetsFunc:            offset.InitOffsets,
 		SystemNamespace:            system.Namespace(),
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
+		KafkaFeatureFlags:          config.DefaultFeaturesConfig(),
 	}
 
-	impl := cgreconciler.NewImpl(ctx, r)
 	consumerInformer := consumer.Get(ctx)
 
 	consumerGroupInformer := consumergroup.Get(ctx)
+
+	impl := cgreconciler.NewImpl(ctx, r)
+
+	configStore := config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
+		r.KafkaFeatureFlags.Reset(value)
+		impl.GlobalResync(consumerGroupInformer.Informer())
+	})
+	configStore.WatchConfigs(watcher)
 
 	consumerGroupInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))

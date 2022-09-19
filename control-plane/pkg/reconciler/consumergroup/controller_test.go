@@ -29,6 +29,7 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/node/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
+	"knative.dev/pkg/configmap"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
@@ -91,7 +92,11 @@ func TestNewController(t *testing.T) {
 	t.Setenv("POD_CAPACITY", PodCapacity)
 	t.Setenv("SCHEDULER_CONFIG", ConfigKafkaSchedulerName)
 	t.Setenv("DESCHEDULER_CONFIG", ConfigKafkaDeSchedulerName)
-	controller := NewController(ctx)
+	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "config-kafka-features",
+		},
+	}))
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
 	}
