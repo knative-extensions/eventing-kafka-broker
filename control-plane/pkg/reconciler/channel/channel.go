@@ -26,12 +26,13 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	"knative.dev/pkg/network"
 
 	"github.com/Shopify/sarama"
-
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/labels"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -39,6 +40,7 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
+	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -84,8 +86,9 @@ type Reconciler struct {
 	// reconciliation loop.
 	InitOffsetsFunc kafka.InitOffsetsFunc
 
-	ConfigMapLister corelisters.ConfigMapLister
-	ServiceLister   corelisters.ServiceLister
+	ConfigMapLister    corelisters.ConfigMapLister
+	ServiceLister      corelisters.ServiceLister
+	SubscriptionLister messaginglisters.SubscriptionLister
 
 	Prober prober.Prober
 
@@ -512,6 +515,10 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 	if subscriberURI == "" {
 		return nil, fmt.Errorf("failed to resolve Subscription.Spec.Subscriber: empty subscriber URI")
 	}
+	subscriptionName, err := r.getSubscriptionName(channel, subscriber)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return nil, fmt.Errorf("failed to extract subscription name for subscriber %v: %w", subscriber, err)
+	}
 
 	egress := &contract.Egress{
 		Destination:   subscriberURI,
@@ -519,6 +526,14 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 		DeliveryOrder: DefaultDeliveryOrder,
 		Uid:           string(subscriber.UID),
 		ReplyStrategy: &contract.Egress_DiscardReply{},
+	}
+
+	if subscriptionName != "" {
+		egress.Reference = &contract.Reference{
+			Uuid:      string(subscriber.UID),
+			Namespace: channel.GetNamespace(),
+			Name:      subscriptionName,
+		}
 	}
 
 	if subscriber.ReplyURI != nil {
@@ -639,6 +654,21 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messa
 		return expected, fmt.Errorf("kafkachannel: %s/%s does not own Service: %q", channel.Namespace, channel.Name, svc.Name)
 	}
 	return expected, nil
+}
+
+func (r *Reconciler) getSubscriptionName(channel *messagingv1beta1.KafkaChannel, subscriber *v1.SubscriberSpec) (string, error) {
+	subscriptions, err := r.SubscriptionLister.Subscriptions(channel.GetNamespace()).List(labels.Everything())
+	if err != nil {
+		return "", fmt.Errorf("failed to list subscriptions in namespace %s: %w", channel.GetNamespace(), err)
+	}
+
+	for _, s := range subscriptions {
+		if s.UID == subscriber.UID {
+			return s.Name, nil
+		}
+	}
+
+	return "", apierrors.NewNotFound(messaging.SchemeGroupVersion.WithResource("subscriptions").GroupResource(), string(subscriber.UID))
 }
 
 // consumerGroup returns a consumerGroup name for the given channel and subscription
