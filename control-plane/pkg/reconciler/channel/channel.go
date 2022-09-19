@@ -18,7 +18,6 @@ package channel
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -27,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	"knative.dev/pkg/network"
 
 	"github.com/Shopify/sarama"
@@ -516,7 +516,7 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 		return nil, fmt.Errorf("failed to resolve Subscription.Spec.Subscriber: empty subscriber URI")
 	}
 	subscriptionName, err := r.getSubscriptionName(channel, subscriber)
-	if err != nil {
+	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, fmt.Errorf("failed to extract subscription name for subscriber %v: %w", subscriber, err)
 	}
 
@@ -525,12 +525,15 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 		ConsumerGroup: consumerGroup(channel, subscriber),
 		DeliveryOrder: DefaultDeliveryOrder,
 		Uid:           string(subscriber.UID),
-		Reference: &contract.Reference{
+		ReplyStrategy: &contract.Egress_DiscardReply{},
+	}
+
+	if subscriptionName != "" {
+		egress.Reference = &contract.Reference{
 			Uuid:      string(subscriber.UID),
 			Namespace: channel.GetNamespace(),
 			Name:      subscriptionName,
-		},
-		ReplyStrategy: &contract.Egress_DiscardReply{},
+		}
 	}
 
 	if subscriber.ReplyURI != nil {
@@ -665,7 +668,7 @@ func (r *Reconciler) getSubscriptionName(channel *messagingv1beta1.KafkaChannel,
 		}
 	}
 
-	return "", errors.New(string(metav1.StatusReasonNotFound))
+	return "", apierrors.NewNotFound(messaging.SchemeGroupVersion.WithResource("subscriptions").GroupResource(), string(subscriber.UID))
 }
 
 // consumerGroup returns a consumerGroup name for the given channel and subscription
