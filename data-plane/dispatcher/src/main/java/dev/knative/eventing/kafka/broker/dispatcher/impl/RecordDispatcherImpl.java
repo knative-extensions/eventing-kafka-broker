@@ -293,8 +293,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     extensions.put(KN_ERROR_DEST_EXT_NAME, destination);
     extensions.put(KN_ERROR_CODE_EXT_NAME, String.valueOf(response.statusCode()));
 
-    // transform all headers keys to be lowercase and filter by prefix.
-    // afterwards extract the prefix and add them to the extensions map
+    // match for prefixed headers and put them to our extensions map
     response.headers().forEach((k, v) -> {
       if (k.regionMatches(true, 0, EKB_ERROR_PREFIX, 0, EKB_ERROR_PREFIX.length())) { // aka startsWithIgnoreCase
         extensions.put(k.substring(EKB_ERROR_PREFIX.length()).toLowerCase(), v);
