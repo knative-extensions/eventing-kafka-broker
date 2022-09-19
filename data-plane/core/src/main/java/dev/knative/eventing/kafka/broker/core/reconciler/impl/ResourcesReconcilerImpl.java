@@ -125,14 +125,15 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       final var oldEgress = cachedEgress.getKey();
 
       if (resourceEquals(newResource, oldResource) && egressEquals(newEgress, oldEgress)) {
-        logger.info("Nothing changed for egress {} {} {} {}",
-          keyValue("id", newEgress.getUid()),
-          keyValue("consumerGroup", newEgress.getConsumerGroup()),
-          keyValue("destination", newEgress.getDestination()),
-          keyValue("contractGeneration", generation)
-        );
         return;
       }
+
+      logger.debug("Config changed for egress {} {} {} {}",
+        keyValue("id", newEgress.getUid()),
+        keyValue("consumerGroup", newEgress.getConsumerGroup()),
+        keyValue("destination", newEgress.getDestination()),
+        keyValue("contractGeneration", generation)
+      );
 
       futures.add(
         this.egressReconcilerListener.onUpdateEgress(newResource, newEgress)
