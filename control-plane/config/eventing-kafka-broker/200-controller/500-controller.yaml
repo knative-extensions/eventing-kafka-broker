@@ -179,6 +179,10 @@ spec:
           ports:
             - containerPort: 9090
               name: metrics
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
           terminationMessagePolicy: FallbackToLogsOnError
           terminationMessagePath: /dev/temination-log
           securityContext:
