@@ -115,7 +115,10 @@ spec:
               value: "8"
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:+CrashOnOutOfMemoryError"
-          # TODO set resources (limits and requests)
+          resources:
+            requests:
+              cpu: 200m
+              memory: 300Mi
           livenessProbe:
             failureThreshold: 3
             tcpSocket:
