@@ -327,7 +327,6 @@ public class RecordDispatcherImpl implements RecordDispatcher {
       recordContext.getRecord().record().offset(),
       recordContext.getRecord().record().timestamp(),
       recordContext.getRecord().record().timestampType(),
-      null,
       recordContext.getRecord().record().serializedKeySize(),
       recordContext.getRecord().record().serializedValueSize(),
       recordContext.getRecord().record().key(),
