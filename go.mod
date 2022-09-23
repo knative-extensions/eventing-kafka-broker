@@ -36,6 +36,7 @@ require (
 )
 
 require (
+	gopkg.in/yaml.v3 v3.0.1
 	knative.dev/eventing v0.34.1-0.20220907090718-fae8544d8568
 	knative.dev/eventing-kafka v0.34.1-0.20220907020318-2f1fbd6dda1b
 	knative.dev/hack v0.0.0-20220908170219-36b2b3c7a245
@@ -149,7 +150,6 @@ require (
 	google.golang.org/grpc v1.44.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/code-generator v0.23.9 // indirect
 	k8s.io/gengo v0.0.0-20220613173612-397b4ae3bce7 // indirect
 	k8s.io/klog/v2 v2.70.2-0.20220707122935-0990e81f1a8f // indirect

@@ -61,6 +61,8 @@ readonly SCALE_CHAOSDUCK_TO_ZERO="${SCALE_CHAOSDUCK_TO_ZERO:-0}"
 export SYSTEM_NAMESPACE="knative-eventing"
 export CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}
 
+export REMOVE_RESOURCE_REQUESTS=${REMOVE_RESOURCE_REQUESTS:-false}
+
 function knative_setup() {
   knative_eventing
   return $?
@@ -163,6 +165,13 @@ function install_latest_release() {
 function install_head() {
   echo "Installing head"
 
+  remove_resource_requests "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
+  remove_resource_requests "${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
+  remove_resource_requests "${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
+  remove_resource_requests "${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
+  remove_resource_requests "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
+  remove_resource_requests "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
+
   kubectl apply -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
@@ -257,7 +266,7 @@ function scale_controlplane() {
 
 function apply_chaos() {
   ko apply ${KO_FLAGS} -f ./test/config/chaos || return $?
-  if (( SCALE_CHAOSDUCK_TO_ZERO )); then
+  if ((SCALE_CHAOSDUCK_TO_ZERO)); then
     echo "Scaling chaosduck replicas down to zero"
     kubectl -n knative-eventing scale deployment/chaosduck --replicas=0
   fi
@@ -361,9 +370,9 @@ function create_tls_secrets() {
 
   echo "Creating TLS Kafka secret"
 
-  STRIMZI_CRT=$(kubectl -n kafka get secret "${ca_cert_secret}" --template='{{index .data "ca.crt"}}' | base64 --decode )
-  TLSUSER_CRT=$(kubectl -n kafka get secret "${tls_user}" --template='{{index .data "user.crt"}}' | base64 --decode )
-  TLSUSER_KEY=$(kubectl -n kafka get secret "${tls_user}" --template='{{index .data "user.key"}}' | base64 --decode )
+  STRIMZI_CRT=$(kubectl -n kafka get secret "${ca_cert_secret}" --template='{{index .data "ca.crt"}}' | base64 --decode)
+  TLSUSER_CRT=$(kubectl -n kafka get secret "${tls_user}" --template='{{index .data "user.crt"}}' | base64 --decode)
+  TLSUSER_KEY=$(kubectl -n kafka get secret "${tls_user}" --template='{{index .data "user.key"}}' | base64 --decode)
 
   kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-tls-secret \
     --from-literal=ca.crt="$STRIMZI_CRT" \
@@ -383,8 +392,8 @@ function create_sasl_secrets() {
 
   echo "Creating SASL_SSL and SASL_PLAINTEXT Kafka secrets"
 
-  STRIMZI_CRT=$(kubectl -n kafka get secret ${ca_cert_secret} --template='{{index .data "ca.crt"}}' | base64 --decode )
-  SASL_PASSWD=$(kubectl -n kafka get secret ${sasl_user} --template='{{index .data "password"}}' | base64 --decode )
+  STRIMZI_CRT=$(kubectl -n kafka get secret ${ca_cert_secret} --template='{{index .data "ca.crt"}}' | base64 --decode)
+  SASL_PASSWD=$(kubectl -n kafka get secret ${sasl_user} --template='{{index .data "password"}}' | base64 --decode)
 
   kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-sasl-secret \
     --from-literal=ca.crt="$STRIMZI_CRT" \
@@ -448,5 +457,11 @@ function setup_kafka_channel_auth() {
       -n knative-eventing \
       --type=json \
       -p='[{"op": "remove", "path": "/data/auth.secret.ref.name"}, {"op": "remove", "path": "/data/auth.secret.ref.namespace"}]' || true
+  fi
+}
+
+function remove_resource_requests() {
+  if [[ ${REMOVE_RESOURCE_REQUESTS} == true ]]; then
+    go run test/cmd/remove-resource-requests/main.go -f "${1}" -o "${1}"
   fi
 }

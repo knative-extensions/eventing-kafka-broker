@@ -125,7 +125,7 @@ jobs:
         run: ./hack/run.sh deploy-infra
 
       - name: Install Eventing Kafka Broker
-        run: ./hack/run.sh deploy
+        run: ./hack/run.sh deploy-no-requests
 
       - name: Wait for things to be up
         run: |

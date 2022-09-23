@@ -18,6 +18,7 @@ function usage() {
   echo "   teardown-infra                                          Remove eventing, Kafka (Strimzi)"
   echo "   deploy-kafka                                            Deploy Kafka (Strimzi)"
   echo "   deploy                                                  Deploy eventing-kafka-broker"
+  echo "   deploy-no-requests                                      Deploy eventing-kafka-broker and remove resource requests for lower resource consumption"
   echo "   deploy-source                                           Deploy eventing-kafka-broker source bundle"
   echo "   teardown                                                Remove eventing-kafka-broker"
   echo "   teardown-source                                         Remove eventing-kafka-broker source bundle"
@@ -44,6 +45,9 @@ elif [[ "${action}" == "teardown-infra" ]]; then
 elif [[ "${action}" == "deploy-kafka" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && kafka_setup
 elif [[ "${action}" == "deploy" ]]; then
+  source "${ROOT_DIR}"/test/e2e-common.sh && test_setup
+elif [[ "${action}" == "deploy-no-requests" ]]; then
+  export REMOVE_RESOURCE_REQUESTS=true
   source "${ROOT_DIR}"/test/e2e-common.sh && test_setup
 elif [[ "${action}" == "deploy-source" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && test_source_setup
