@@ -60,6 +60,7 @@
     <kafka.version>3.2.3</kafka.version>
     <debezium.version>1.9.6.Final</debezium.version>
     <jib.version>3.2.1</jib.version>
+    <quarkus.version>2.12.2.Final</quarkus.version>
   </properties>
 
   <modules>
@@ -111,14 +112,11 @@
     <dependencies>
       <!-- Vertx -->
       <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-core</artifactId>
-        <version>${vertx.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-web-client</artifactId>
-        <version>${vertx.version}</version>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-bom</artifactId>
+        <version>${quarkus.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>io.vertx</groupId>
@@ -135,6 +133,7 @@
           </exclusion>
         </exclusions>
       </dependency>
+
       <dependency>
         <groupId>io.vertx</groupId>
         <artifactId>vertx-opentelemetry</artifactId>
@@ -381,6 +380,28 @@
         <groupId>org.apache.kafka</groupId>
         <artifactId>kafka_2.12</artifactId>
         <version>${kafka.version}</version>
+        <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>2.12.15</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-reflect</artifactId>
+        <version>2.12.15</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
