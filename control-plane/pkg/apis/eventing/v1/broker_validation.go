@@ -78,14 +78,14 @@ func (b *BrokerStub) Validate(context.Context) *apis.FieldError {
 		return apis.ErrInvalidValue(b.Spec.Config.Kind, "kind", "Expected ConfigMap").ViaField("config").ViaField("spec")
 	}
 
-	// we specifically expect for our broker classes, that there's a namespace in the config
-	if b.Spec.Config.Namespace == "" {
-		return apis.ErrMissingField(b.Spec.Config.Namespace, "namespace").ViaField("config").ViaField("spec")
-	}
-
 	// for the namespaced broker, we expect the config to be in the same namespace as the broker
-	if b.Annotations[eventing.BrokerClassAnnotationKey] == kafka.NamespacedBrokerClass && b.Spec.Config.Namespace != b.Namespace {
-		return apis.ErrInvalidValue(b.Spec.Config.Namespace, "namespace", "Expected ConfigMap in same namespace with broker resource").ViaField("config").ViaField("spec")
+	if b.Annotations[eventing.BrokerClassAnnotationKey] != kafka.NamespacedBrokerClass {
+		return nil
+	}
+	if b.Spec.Config.Namespace != "" && b.Spec.Config.Namespace != b.Namespace {
+		return apis.ErrInvalidValue(b.Spec.Config.Namespace, "namespace", "Expected ConfigMap in same namespace with broker resource").
+			ViaField("config").
+			ViaField("spec")
 	}
 
 	return nil
