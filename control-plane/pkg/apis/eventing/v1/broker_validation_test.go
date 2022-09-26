@@ -68,7 +68,6 @@ func TestValidate(t *testing.T) {
 				},
 			},
 		},
-		want: apis.ErrMissingField("", "namespace").ViaField("config").ViaField("spec"),
 	}, {
 		name: "spec.config is not configmap",
 		b: BrokerStub{
