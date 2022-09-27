@@ -170,7 +170,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
       .onSuccess(response -> {
 
         if (response.statusCode() >= 300) {
-          logError("Received a non-retryable status code that is not 2xx.", event, response);
+          logError("Received a failure status code that is not 2xx.", event, response);
           breaker.tryFail(new ResponseFailureException(
             response,
             "Received failure response, status code: " + response.statusCode())
