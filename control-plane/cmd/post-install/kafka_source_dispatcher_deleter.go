@@ -19,13 +19,19 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"knative.dev/pkg/system"
 )
 
 func (d *kafkaSourceDeleter) DeleteDispatcher(ctx context.Context) error {
+	if err := d.waitStatefulSetExists(ctx); err != nil {
+		return fmt.Errorf("failed while waiting for statefulset to come up: %w", err)
+	}
+
 	// Delete deployment.apps/kafka-source-dispatcher
 	const sourceDispatcherDeploymentName = "kafka-source-dispatcher"
 	err := d.k8s.
@@ -37,4 +43,18 @@ func (d *kafkaSourceDeleter) DeleteDispatcher(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (d *kafkaSourceDeleter) waitStatefulSetExists(ctx context.Context) error {
+	const sourceDispatcherStatefulSetName = "kafka-source-dispatcher"
+	return wait.Poll(10*time.Second, 10*time.Minute, func() (done bool, err error) {
+		_, err = d.k8s.AppsV1().StatefulSets(system.Namespace()).Get(ctx, sourceDispatcherStatefulSetName, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
+		if err != nil {
+			return false, fmt.Errorf("failed to get statefulset %s/%s: %w", system.Namespace(), sourceDispatcherStatefulSetName, err)
+		}
+		return true, nil
+	})
 }
