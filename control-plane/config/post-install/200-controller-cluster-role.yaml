@@ -29,6 +29,14 @@ rules:
       - delete
       - deletecollection
 
+  - apiGroups:
+      - "apps"
+    resources:
+      - statefulsets
+    verbs:
+      - get
+      - list
+
   # sources.knative.dev resources and finalizers we care about.
   - apiGroups:
       - sources.knative.dev
