@@ -43,3 +43,12 @@ spec:
                   fieldPath: metadata.namespace
             - name: CHANNEL_GENERAL_CONFIG_MAP_NAME
               value: kafka-channel-config
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+              - ALL
+            seccompProfile:
+              type: RuntimeDefault
