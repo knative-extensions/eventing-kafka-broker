@@ -54,7 +54,7 @@
     <net.logstash.logback.encoder.version>7.2</net.logstash.logback.encoder.version>
     <assertj.version>3.22.0</assertj.version>
     <awaitility.version>4.2.0</awaitility.version>
-    <junit.jupiter.version>5.8.2</junit.jupiter.version>
+    <junit.jupiter.version>5.9.1</junit.jupiter.version>
     <mokito.junit.jupiter.version>4.8.0</mokito.junit.jupiter.version>
     <fabric8.kubernetes.version>6.0.0</fabric8.kubernetes.version>
     <kafka.version>3.2.3</kafka.version>
