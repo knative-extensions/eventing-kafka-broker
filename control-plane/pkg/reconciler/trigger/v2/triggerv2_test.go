@@ -38,6 +38,7 @@ import (
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	"knative.dev/pkg/apis"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/logging"
@@ -59,11 +60,11 @@ const (
 )
 
 var DefaultEnv = &config.Env{
-	DataPlaneConfigMapNamespace: "knative-eventing",
-	ContractConfigMapName:       "kafka-broker-brokers-triggers",
-	ContractConfigMapFormat:     base.Json,
-	GeneralConfigMapName:        "kafka-broker-config",
-	SystemNamespace:             "knative-eventing",
+	DataPlaneConfigMapNamespace:  "knative-eventing",
+	DataPlaneConfigConfigMapName: "config-kafka-broker-data-plane",
+	ContractConfigMapFormat:      base.Json,
+	GeneralConfigMapName:         "kafka-broker-config",
+	SystemNamespace:              "knative-eventing",
 }
 
 var (
@@ -92,7 +93,7 @@ func TestReconcileKind(t *testing.T) {
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
 				newTrigger(),
-				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, brokerreconciler.ConsumerConfigKey,
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 			},
@@ -114,7 +115,6 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerFilters(NewConsumerSpecFilters()),
 						ConsumerReply(ConsumerTopicReply()),
 					)),
-					ConsumerGroupReplicas(1),
 				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -138,7 +138,7 @@ func TestReconcileKind(t *testing.T) {
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
-				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, brokerreconciler.ConsumerConfigKey,
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(),
@@ -167,7 +167,6 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerFilters(NewConsumerSpecFilters()),
 						ConsumerReply(ConsumerTopicReply()),
 					)),
-					ConsumerGroupReplicas(1),
 				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -190,7 +189,7 @@ func TestReconcileKind(t *testing.T) {
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
-				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, brokerreconciler.ConsumerConfigKey,
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Ordered))),
@@ -213,7 +212,6 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerFilters(NewConsumerSpecFilters()),
 						ConsumerReply(ConsumerTopicReply()),
 					)),
-					ConsumerGroupReplicas(1),
 				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -237,7 +235,7 @@ func TestReconcileKind(t *testing.T) {
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
-				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, brokerreconciler.ConsumerConfigKey,
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Unordered))),
@@ -260,7 +258,6 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerFilters(NewConsumerSpecFilters()),
 						ConsumerReply(ConsumerTopicReply()),
 					)),
-					ConsumerGroupReplicas(1),
 				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -284,7 +281,7 @@ func TestReconcileKind(t *testing.T) {
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
-				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, brokerreconciler.ConsumerConfigKey,
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, "invalid")),
@@ -320,7 +317,7 @@ func TestReconcileKind(t *testing.T) {
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
-				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, brokerreconciler.ConsumerConfigKey,
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(),
@@ -354,7 +351,6 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerReply(ConsumerTopicReply()),
 						)),
 						ConsumerGroupReady,
-						ConsumerGroupReplicas(1),
 					),
 				},
 			},
@@ -379,7 +375,7 @@ func TestReconcileKind(t *testing.T) {
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 					WithAutoscalingAnnotationsBroker(),
 				),
-				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, brokerreconciler.ConsumerConfigKey,
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(),
@@ -414,7 +410,6 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerReply(ConsumerTopicReply()),
 						)),
 						ConsumerGroupReady,
-						ConsumerGroupReplicas(1),
 					),
 				},
 			},
@@ -438,7 +433,7 @@ func TestReconcileKind(t *testing.T) {
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
-				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, brokerreconciler.ConsumerConfigKey,
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(),
@@ -470,7 +465,6 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerFilters(NewConsumerSpecFilters()),
 							ConsumerReply(ConsumerTopicReply()),
 						)),
-						ConsumerGroupReplicas(1),
 					),
 				},
 			},
@@ -494,7 +488,7 @@ func TestReconcileKind(t *testing.T) {
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
-				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, brokerreconciler.ConsumerConfigKey,
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(),
@@ -540,7 +534,7 @@ func TestReconcileKind(t *testing.T) {
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
-				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, brokerreconciler.ConsumerConfigKey,
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(),
@@ -585,7 +579,7 @@ func TestReconcileKind(t *testing.T) {
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
-				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, brokerreconciler.ConsumerConfigKey,
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(),
@@ -631,7 +625,7 @@ func TestReconcileKind(t *testing.T) {
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
-				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, brokerreconciler.ConsumerConfigKey,
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
 				newTrigger(),
@@ -753,14 +747,14 @@ func TestReconcileKind(t *testing.T) {
 		logger := logging.FromContext(ctx)
 
 		reconciler := &Reconciler{
-			Reconciler:          &base.Reconciler{},
 			BrokerLister:        listers.GetBrokerLister(),
 			ConfigMapLister:     listers.GetConfigMapLister(),
 			EventingClient:      eventingclient.Get(ctx),
 			Env:                 env,
 			ConsumerGroupLister: listers.GetConsumerGroupLister(),
 			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
-			KedaClient:          kedaclient.Get(ctx),
+			SecretLister:        listers.GetSecretLister(),
+			KubeClient:          kubeclient.Get(ctx),
 		}
 
 		return triggerreconciler.NewReconciler(

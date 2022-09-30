@@ -65,16 +65,13 @@ spec:
             - mountPath: /etc/config
               name: config-kafka-broker-data-plane
               readOnly: true
-            - mountPath: /etc/brokers-triggers
-              name: kafka-broker-brokers-triggers
-              readOnly: true
             - mountPath: /etc/contract-resources
               name: contract-resources
               readOnly: true
             - mountPath: /tmp
               name: cache
             - mountPath: /etc/logging
-              name: kafka-broker-config-logging
+              name: kafka-config-logging
               readOnly: true
             - mountPath: /etc/tracing
               name: config-tracing
@@ -97,7 +94,7 @@ spec:
             - name: WEBCLIENT_CONFIG_FILE_PATH
               value: /etc/config/config-kafka-broker-webclient.properties
             - name: DATA_PLANE_CONFIG_FILE_PATH
-              value: /etc/brokers-triggers/data
+              value: /etc/contract-resources/data
             - name: EGRESSES_INITIAL_CAPACITY
               value: "20"
             - name: INSTANCE_ID
@@ -122,6 +119,7 @@ spec:
               value: "8"
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:+CrashOnOutOfMemoryError -XX:InitialRAMPercentage=70.0 -XX:MinRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0"
+          
           resources:
             requests:
               cpu: 1000m
@@ -159,12 +157,9 @@ spec:
         - name: config-kafka-broker-data-plane
           configMap:
             name: config-kafka-broker-data-plane
-        - name: kafka-broker-brokers-triggers
-          configMap:
-            name: kafka-broker-brokers-triggers
         - name: cache
           emptyDir: { }
-        - name: kafka-broker-config-logging
+        - name: kafka-config-logging
           configMap:
             name: kafka-config-logging
         - name: config-tracing

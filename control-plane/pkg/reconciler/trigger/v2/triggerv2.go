@@ -25,15 +25,14 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"k8s.io/client-go/util/retry"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 	"knative.dev/pkg/kmeta"
-	"knative.dev/pkg/ptr"
 	"knative.dev/pkg/reconciler"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
@@ -43,13 +42,12 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
-	kedaclientset "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 
 	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
+	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
 
 const (
@@ -62,23 +60,17 @@ const (
 )
 
 type Reconciler struct {
-	*base.Reconciler
 	BrokerLister        eventinglisters.BrokerLister
 	ConfigMapLister     corelisters.ConfigMapLister
 	EventingClient      eventingclientset.Interface
 	Env                 *config.Env
 	ConsumerGroupLister internalslst.ConsumerGroupLister
 	InternalsClient     internalsclient.Interface
-	KedaClient          kedaclientset.Interface
+	SecretLister        corelisters.SecretLister
+	KubeClient          kubernetes.Interface
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.reconcileKind(ctx, trigger)
-	})
-}
-
-func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
@@ -88,13 +80,12 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 
 	if apierrors.IsNotFound(err) {
+
 		// Actually check if the broker doesn't exist.
 		// Note: do not introduce another `broker` variable with `:`
 		broker, err = r.EventingClient.EventingV1().Brokers(trigger.Namespace).Get(ctx, trigger.Spec.Broker, metav1.GetOptions{})
 
 		if apierrors.IsNotFound(err) {
-
-			logger.Debug("broker not found", zap.String("finalizeDuringReconcile", "notFound"))
 			return fmt.Errorf("failed to get broker: %w", err)
 		}
 	}
@@ -135,7 +126,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 	}
 
 	offset := sources.OffsetLatest
-	isLatestOffset, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.Env.DataPlaneConfigMapNamespace, r.Env.ContractConfigMapName, "config-kafka-broker-consumer.properties")
+	isLatestOffset, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.Env.DataPlaneConfigMapNamespace, r.Env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to determine initial offset: %w", err)
 	}
@@ -143,19 +134,13 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 		offset = sources.OffsetEarliest
 	}
 
-	secret, err := security.Secret(ctx, &security.AnnotationsSecretLocator{Annotations: broker.Status.Annotations, Namespace: trigger.Namespace}, r.SecretProviderFunc())
+	secret, err := security.Secret(ctx, &security.AnnotationsSecretLocator{Annotations: broker.Status.Annotations, Namespace: trigger.Namespace}, security.DefaultSecretProviderFunc(r.SecretLister, r.KubeClient))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get secret: %w", err)
 	}
-	if err := r.TrackSecret(secret, broker); err != nil {
-		return nil, fmt.Errorf("failed to track secret: %w", err)
-	}
 
 	bootstrapServers := broker.Status.Annotations[kafka.BootstrapServersConfigMapKey]
-	topicName, ok := broker.Annotations[ExternalTopicAnnotation]
-	if !ok {
-		topicName = kafka.BrokerTopic(TopicPrefix, broker)
-	}
+	topicName := broker.Status.Annotations[kafka.TopicAnnotation]
 
 	expectedCg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
@@ -196,8 +181,6 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 			},
 		},
 	}
-
-	expectedCg.Spec.Replicas = ptr.Int32(1) //Must be set for Scaled Object ref
 
 	// TODO: make keda annotation values configurable and maybe unexposed
 	expectedCg.Annotations = kedafunc.SetAutoscalingAnnotations(broker.Annotations)

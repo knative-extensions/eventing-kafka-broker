@@ -35,13 +35,14 @@ import (
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 
-	kedaclient "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client"
 	apiseventing "knative.dev/eventing/pkg/apis/eventing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
+
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 )
 
 const (
@@ -60,14 +61,14 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
 
 	reconciler := &Reconciler{
-		Reconciler:          &base.Reconciler{},
 		BrokerLister:        brokerInformer.Lister(),
 		ConfigMapLister:     configmapinformer.Get(ctx).Lister(),
 		EventingClient:      eventingclient.Get(ctx),
 		Env:                 configs,
 		ConsumerGroupLister: consumerGroupInformer.Lister(),
 		InternalsClient:     consumergroupclient.Get(ctx),
-		KedaClient:          kedaclient.Get(ctx),
+		SecretLister:        secretinformer.Get(ctx).Lister(),
+		KubeClient:          kubeclient.Get(ctx),
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
