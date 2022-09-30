@@ -397,7 +397,7 @@
             <!--  KinD e2e tests registry uses HTTP -->
             <allowInsecureRegistries>true</allowInsecureRegistries>
             <from>
-              <image>gcr.io/distroless/java17-debian11:nonroot</image>
+              <image>registry.access.redhat.com/ubi8/openjdk-17</image>
               <platforms>
                 <platform>
                   <architecture>amd64</architecture>
