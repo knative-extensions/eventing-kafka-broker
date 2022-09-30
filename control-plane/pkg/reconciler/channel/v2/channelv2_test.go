@@ -187,10 +187,6 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
-					base.VolumeGenerationAnnotationKey: "0",
-					"annotation_to_preserve":           "value_to_preserve",
-				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -209,10 +205,6 @@ func TestReconcileKind(t *testing.T) {
 					},
 				}),
 				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve":           "value_to_preserve",
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve":           "value_to_preserve",
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
@@ -258,10 +250,6 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
-					base.VolumeGenerationAnnotationKey: "0",
-					"annotation_to_preserve":           "value_to_preserve",
-				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -284,10 +272,6 @@ func TestReconcileKind(t *testing.T) {
 					},
 				}),
 				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve":           "value_to_preserve",
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve":           "value_to_preserve",
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
@@ -453,7 +437,6 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
-					ConsumerGroupReplicas(1),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -521,7 +504,6 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
-					ConsumerGroupReplicas(1),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -589,7 +571,6 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
-					ConsumerGroupReplicas(1),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -681,7 +662,6 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 							ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						)),
-						ConsumerGroupReplicas(1),
 						ConsumerGroupReady,
 					),
 				},
@@ -805,7 +785,6 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
-					ConsumerGroupReplicas(1),
 				),
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription2UUID),
@@ -822,7 +801,6 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription2URI)),
 					)),
-					ConsumerGroupReplicas(1),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -908,7 +886,6 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
-					ConsumerGroupReplicas(1),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -1123,7 +1100,7 @@ func TestReconcileKind(t *testing.T) {
 					security.AuthSecretNamespaceKey:    "ns-1",
 				}),
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
-				NewLegacySASLSecret("ns-1", "secret-1"),
+				NewSSLSecret("ns-1", "secret-1"),
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
@@ -1165,22 +1142,12 @@ func TestReconcileKind(t *testing.T) {
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
-							Auth: &contract.Resource_MultiAuthSecret{
-								MultiAuthSecret: &contract.MultiSecretReference{
-									Protocol: contract.Protocol_SASL_PLAINTEXT,
-									References: []*contract.SecretReference{{
-										Reference: &contract.Reference{
-											Uuid:      SecretUUID,
-											Namespace: "ns-1",
-											Name:      "secret-1",
-											Version:   SecretResourceVersion,
-										},
-										KeyFieldReferences: []*contract.KeyFieldReference{
-											{SecretKey: "password", Field: contract.SecretField_PASSWORD},
-											{SecretKey: "username", Field: contract.SecretField_USER},
-											{SecretKey: "saslType", Field: contract.SecretField_SASL_MECHANISM},
-										},
-									}},
+							Auth: &contract.Resource_AuthSecret{
+								AuthSecret: &contract.Reference{
+									Uuid:      SecretUUID,
+									Namespace: "ns-1",
+									Name:      "secret-1",
+									Version:   SecretResourceVersion,
 								},
 							},
 							Ingress: &contract.Ingress{
@@ -1246,7 +1213,6 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
-					ConsumerGroupReplicas(1),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -1490,7 +1456,6 @@ func TestReconcileKind(t *testing.T) {
 			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
 			Prober:              proberMock,
 			IngressHost:         network.GetServiceHostname(env.IngressName, env.SystemNamespace),
-			KedaClient:          kedaclient.Get(ctx),
 		}
 		reconciler.ConfigMapTracker = &FakeTracker{}
 		reconciler.SecretTracker = &FakeTracker{}

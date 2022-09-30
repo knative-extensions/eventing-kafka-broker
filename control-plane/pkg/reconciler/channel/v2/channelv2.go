@@ -35,10 +35,8 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"k8s.io/client-go/util/retry"
 	"knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources"
 	"knative.dev/pkg/network"
-	"knative.dev/pkg/ptr"
 	"knative.dev/pkg/resolver"
 
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
@@ -60,7 +58,6 @@ import (
 	channelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
-	kedaclientset "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
@@ -115,16 +112,9 @@ type Reconciler struct {
 
 	ConsumerGroupLister internalslst.ConsumerGroupLister
 	InternalsClient     internalsclient.Interface
-	KedaClient          kedaclientset.Interface
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.reconcileKind(ctx, channel)
-	})
-}
-
-func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
 
 	statusConditionManager := base.StatusConditionManager{
@@ -167,17 +157,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		)
 	}
 
-	authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
-	if err != nil {
-		return statusConditionManager.FailedToResolveConfig(fmt.Errorf("failed to resolve auth context: %w", err))
-	}
-
 	// get security option for Sarama with secret info in it
-	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
-
-	if err := r.TrackSecret(secret, channel); err != nil {
-		return fmt.Errorf("failed to track secret: %w", err)
-	}
+	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
 	topicName := kafka.ChannelTopic(TopicPrefix, channel)
 
@@ -215,7 +196,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
 	// Get resource configuration
-	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig)
+	channelResource, err := r.getChannelContractResource(ctx, topic, channel, secret, topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -253,7 +234,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	statusConditionManager.ConfigMapUpdated()
 
-	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
+	// We update receiver pods annotation regardless of our contract changed or not due to the fact
 	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
 	// to anyway update remaining annotations with the contract generation that was saved in the CM.
 
@@ -271,21 +252,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return err
 	}
 	logger.Debug("Updated receiver pod annotation")
-
-	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Channel
-		// ready. So, log out the error and move on to the next step.
-		logger.Warn(
-			"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-			zap.Error(err),
-		)
-
-		statusConditionManager.FailedToUpdateDispatcherPodsAnnotation(err)
-	} else {
-		logger.Debug("Updated dispatcher pod annotation")
-	}
 
 	channelService, err := r.reconcileChannelService(ctx, channel)
 	if err != nil {
@@ -346,12 +312,6 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messa
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.finalizeKind(ctx, channel)
-	})
-}
-
-func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, channel)
 
 	// Get contract config map.
@@ -386,17 +346,13 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 
 	channel.Status.Address = nil
 
-	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
+	// We update receiver annotation regardless of our contract changed or not due to the fact
 	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
 	// to update anyway remaining annotations with the contract generation that was saved in the CM.
 	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
 	// Update volume generation annotation of receiver pods
 	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		return err
-	}
-	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
 		return err
 	}
 
@@ -448,13 +404,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 		)
 	}
 
-	authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
-	if err != nil {
-		return fmt.Errorf("failed to resolve auth context: %w", err)
-	}
-
 	// get security option for Sarama with secret info in it
-	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
+	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
 	saramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
@@ -557,7 +508,6 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 }
 
 func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec, topicName string, bootstrapServers []string, secret *corev1.Secret) (*internalscg.ConsumerGroup, error) {
-	var secretName string
 
 	expectedCg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
@@ -596,23 +546,19 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 		},
 	}
 
-	expectedCg.Spec.Replicas = ptr.Int32(1) //Must be set for Scaled Object ref
-
 	// TODO: make keda annotation values configurable and maybe unexposed
-	subscriptionAnnotations, err := r.getSubscriptionAnnotations(channel.Namespace, s)
+	subscriptionAnnotations, err := r.getSubscriptionAnnotations(channel, s)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, fmt.Errorf("failed to extract subscription annotations for subscriber %v: %w", s, err)
 	}
 	expectedCg.Annotations = kedafunc.SetAutoscalingAnnotations(subscriptionAnnotations)
 
 	if secret != nil {
-		secretName = secret.Name
-		//secretNamespace := secret.Namespace
 		expectedCg.Spec.Template.Spec.Auth = &internalscg.Auth{
 			AuthSpec: &v1alpha1.Auth{
 				Secret: &v1alpha1.Secret{
 					Ref: &v1alpha1.SecretReference{
-						Name: secretName,
+						Name: secret.Name,
 					},
 				},
 			},
@@ -650,7 +596,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 	return cg, nil
 }
 
-func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, auth *security.NetSpecAuthContext, config *kafka.TopicConfig) (*contract.Resource, error) {
+func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
 	resource := &contract.Resource{
 		Uid:    string(channel.UID),
 		Topics: []string{topic},
@@ -665,9 +611,14 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		},
 	}
 
-	if auth != nil && auth.MultiSecretReference != nil {
-		resource.Auth = &contract.Resource_MultiAuthSecret{
-			MultiAuthSecret: auth.MultiSecretReference,
+	if secret != nil {
+		resource.Auth = &contract.Resource_AuthSecret{
+			AuthSecret: &contract.Reference{
+				Uuid:      string(secret.UID),
+				Namespace: secret.Namespace,
+				Name:      secret.Name,
+				Version:   secret.ResourceVersion,
+			},
 		}
 	}
 
@@ -735,10 +686,10 @@ func (r Reconciler) finalizeConsumerGroup(ctx context.Context, cg *internalscg.C
 	return nil
 }
 
-func (r *Reconciler) getSubscriptionAnnotations(namespace string, subscriber *v1.SubscriberSpec) (map[string]string, error) {
-	subscriptions, err := r.SubscriptionLister.Subscriptions(namespace).List(labels.Everything())
+func (r *Reconciler) getSubscriptionAnnotations(channel *messagingv1beta1.KafkaChannel, subscriber *v1.SubscriberSpec) (map[string]string, error) {
+	subscriptions, err := r.SubscriptionLister.Subscriptions(channel.GetNamespace()).List(labels.Everything())
 	if err != nil {
-		return nil, apierrors.NewNotFound(messaging.SchemeGroupVersion.WithResource("subscriptions").GroupResource(), string(subscriber.UID))
+		return nil, fmt.Errorf("failed to list subscriptions in namespace %s: %w", channel.GetNamespace(), err)
 	}
 
 	for _, s := range subscriptions {
