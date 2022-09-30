@@ -39,6 +39,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/core"
 	eventingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 )
 
 const (
@@ -50,6 +51,8 @@ var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 	sourcesv1beta1.SchemeGroupVersion.WithKind("KafkaSource"):    &sourcesv1beta1.KafkaSource{},
 	messagingv1beta1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1beta1.KafkaChannel{},
 	eventingcorev1.SchemeGroupVersion.WithKind("Broker"):         &eventingv1.BrokerStub{},
+	kafkainternals.SchemeGroupVersion.WithKind("ConsumerGroup"):  &kafkainternals.ConsumerGroup{},
+	kafkainternals.SchemeGroupVersion.WithKind("Consumer"):       &kafkainternals.Consumer{},
 }
 
 var defaultingCallbacks = map[schema.GroupVersionKind]defaulting.Callback{

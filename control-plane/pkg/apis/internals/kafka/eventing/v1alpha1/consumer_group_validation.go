@@ -49,10 +49,15 @@ func (cgs *ConsumerGroupSpec) Validate(ctx context.Context) *apis.FieldError {
 
 func (cts *ConsumerTemplateSpec) Validate(ctx context.Context) *apis.FieldError {
 	specCtx := ctx
+	var err *apis.FieldError
 	if apis.IsInUpdate(ctx) {
 		specCtx = apis.WithinUpdate(ctx, apis.GetBaseline(ctx).(*ConsumerGroup).Spec.Template.Spec)
 	}
-	return cts.Spec.Validate(specCtx).ViaField("spec")
+	err = err.Also( // fields with defaults
+		cts.Spec.Delivery.Validate(specCtx).ViaField("delivery"),
+		cts.Spec.Subscriber.Validate(specCtx).ViaField("subscriber"),
+	)
+	return err
 }
 
 func (c *ConsumerGroup) CheckImmutableFields(ctx context.Context, original map[string]string) *apis.FieldError {
