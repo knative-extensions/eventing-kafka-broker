@@ -459,12 +459,11 @@ func DispatcherPodAsOwnerReference(name string) reconcilertesting.ConfigMapOptio
 	d := NewDispatcherPod(name)
 	return func(configMap *corev1.ConfigMap) {
 		configMap.OwnerReferences = append(configMap.OwnerReferences, metav1.OwnerReference{
-			APIVersion:         d.APIVersion,
-			Kind:               d.Kind,
-			Name:               d.Name,
-			UID:                d.UID,
-			Controller:         pointer.Bool(true),
-			BlockOwnerDeletion: pointer.Bool(true),
+			APIVersion: d.APIVersion,
+			Kind:       d.Kind,
+			Name:       d.Name,
+			UID:        d.UID,
+			Controller: pointer.Bool(true),
 		})
 	}
 }
