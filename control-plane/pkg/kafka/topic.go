@@ -155,19 +155,13 @@ func ChannelTopic(prefix string, obj metav1.Object) string {
 // If the topic already exists, it will return no errors.
 // TODO: what happens if the topic exists but it has a different config?
 func CreateTopicIfDoesntExist(admin sarama.ClusterAdmin, logger *zap.Logger, topic string, config *TopicConfig) (string, error) {
-
-	topicDetail := &sarama.TopicDetail{
-		NumPartitions:     config.TopicDetail.NumPartitions,
-		ReplicationFactor: config.TopicDetail.ReplicationFactor,
-	}
-
 	logger.Debug("create topic",
 		zap.String("topic", topic),
-		zap.Int16("replicationFactor", topicDetail.ReplicationFactor),
-		zap.Int32("numPartitions", topicDetail.NumPartitions),
+		zap.Int16("replicationFactor", config.TopicDetail.ReplicationFactor),
+		zap.Int32("numPartitions", config.TopicDetail.NumPartitions),
 	)
 
-	createTopicError := admin.CreateTopic(topic, topicDetail, false)
+	createTopicError := admin.CreateTopic(topic, &config.TopicDetail, false)
 	if err, ok := createTopicError.(*sarama.TopicError); ok && err.Err == sarama.ErrTopicAlreadyExists {
 		return topic, nil
 	}
