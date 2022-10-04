@@ -22,6 +22,7 @@ import (
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -398,15 +399,21 @@ func cmNameFromPod(p *corev1.Pod, c *kafkainternals.Consumer) (string, error) {
 }
 
 func podOwnerReference(p *corev1.Pod) base.ConfigMapOption {
+
+	expected := metav1.OwnerReference{
+		APIVersion: corev1.SchemeGroupVersion.String(),
+		Kind:       "Pod",
+		Name:       p.Name,
+		UID:        p.UID,
+		Controller: pointer.Bool(true),
+	}
 	return func(cm *corev1.ConfigMap) {
-		cm.OwnerReferences = append(cm.OwnerReferences, metav1.OwnerReference{
-			APIVersion:         corev1.SchemeGroupVersion.String(),
-			Kind:               "Pod",
-			Name:               p.Name,
-			UID:                p.UID,
-			Controller:         pointer.Bool(true),
-			BlockOwnerDeletion: pointer.Bool(true),
-		})
+		for _, or := range cm.OwnerReferences {
+			if equality.Semantic.DeepDerivative(expected, or) {
+				return
+			}
+		}
+		cm.OwnerReferences = append(cm.OwnerReferences, expected)
 	}
 }
 
