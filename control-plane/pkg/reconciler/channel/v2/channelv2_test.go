@@ -19,6 +19,7 @@ package v2
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/Shopify/sarama"
@@ -52,8 +53,10 @@ import (
 	fakeeventingkafkaclient "knative.dev/eventing-kafka/pkg/client/injection/client/fake"
 	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 
+	"github.com/rickb777/date/period"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
+	commonconstants "knative.dev/eventing-kafka/pkg/common/constants"
 )
 
 const (
@@ -62,6 +65,7 @@ const (
 	finalizerName                 = "kafkachannels.messaging.knative.dev"
 	TestExpectedDataNumPartitions = "TestExpectedDataNumPartitions"
 	TestExpectedReplicationFactor = "TestExpectedReplicationFactor"
+	TestExpectedRetentionDuration = "TestExpectedRetentionDuration"
 )
 
 var finalizerUpdatedEvent = Eventf(
@@ -1041,7 +1045,7 @@ func TestReconcileKind(t *testing.T) {
 				NewChannel(
 					WithNumPartitions(3),
 					WithReplicationFactor(4),
-					WithRetentionDuration("1000"),
+					WithRetentionDuration("PT10M"),
 				),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
@@ -1050,6 +1054,7 @@ func TestReconcileKind(t *testing.T) {
 			OtherTestData: map[string]interface{}{
 				TestExpectedDataNumPartitions: int32(3),
 				TestExpectedReplicationFactor: int16(4),
+				TestExpectedRetentionDuration: "PT10M",
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -1078,7 +1083,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewChannel(
 						WithNumPartitions(3),
 						WithReplicationFactor(4),
-						WithRetentionDuration("1000"),
+						WithRetentionDuration("PT10M"),
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -1330,6 +1335,17 @@ func TestReconcileKind(t *testing.T) {
 			replicationFactor = v.(int16)
 		}
 
+		retentionDuration := commonconstants.DefaultRetentionDuration
+		if v, ok := row.OtherTestData[TestExpectedRetentionDuration]; ok {
+			retentionPeriod, err := period.Parse(v.(string))
+			if err != nil {
+				t.Errorf("couldn't parse retention duration: %s", err.Error())
+			}
+			retentionDuration, _ = retentionPeriod.Duration()
+		}
+
+		retentionMillisString := strconv.FormatInt(retentionDuration.Milliseconds(), 10)
+
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
@@ -1352,6 +1368,9 @@ func TestReconcileKind(t *testing.T) {
 					ExpectedTopicDetail: sarama.TopicDetail{
 						NumPartitions:     numPartitions,
 						ReplicationFactor: replicationFactor,
+						ConfigEntries: map[string]*string{
+							commonconstants.KafkaTopicConfigRetentionMs: &retentionMillisString,
+						},
 					},
 					T: t,
 				}, nil
