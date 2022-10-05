@@ -25,7 +25,7 @@ import (
 const (
 	ConditionConsumerGroupConsumers          apis.ConditionType = "Consumers"
 	ConditionConsumerGroupConsumersScheduled apis.ConditionType = "ConsumersScheduled"
-	ConditionKedaScaling                     apis.ConditionType = "KedaScaled"
+	ConditionAutoscaling                     apis.ConditionType = "Autoscaler"
 	// Labels
 	KafkaChannelNameLabel           = "kafkachannel-name"
 	ConsumerLabelSelector           = "kafka.eventing.knative.dev/metadata.uid"
@@ -83,12 +83,12 @@ func (cg *ConsumerGroup) MarkScheduleSucceeded() {
 	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionConsumerGroupConsumersScheduled)
 }
 
-func (cg *ConsumerGroup) MarkKedaScalingSucceeded() {
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionKedaScaling)
+func (cg *ConsumerGroup) MarkAutoscalerSucceeded() {
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionAutoscaling)
 }
 
-func (cg *ConsumerGroup) MarkKedaScalingFailed(reason string, err error) error {
-	err = fmt.Errorf("failed to set up KEDA scaling: %w", err)
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionKedaScaling, reason, err.Error())
+func (cg *ConsumerGroup) MarkAutoscalerFailed(reason string, err error) error {
+	err = fmt.Errorf("failed to set up autoscaler: %w", err)
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionAutoscaling, reason, err.Error())
 	return err
 }

@@ -149,7 +149,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkKedaScalingSucceeded()
+						cg.MarkAutoscalerSucceeded()
 						return cg
 					}(),
 				},
@@ -352,7 +352,7 @@ func TestReconcileKind(t *testing.T) {
 							Message: "failed to bind resource to pod: EOF",
 						})
 						cg.MarkScheduleSucceeded()
-						cg.MarkKedaScalingSucceeded()
+						cg.MarkAutoscalerSucceeded()
 						return cg
 					}(),
 				},
@@ -463,7 +463,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkKedaScalingSucceeded()
+						cg.MarkAutoscalerSucceeded()
 						cg.Status.SubscriberURI = ConsumerSubscriberURI
 						return cg
 					}(),
@@ -863,7 +863,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkKedaScalingSucceeded()
+						cg.MarkAutoscalerSucceeded()
 						cg.Status.SubscriberURI = ConsumerSubscriberURI
 						return cg
 					}(),
@@ -950,7 +950,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkKedaScalingSucceeded()
+						cg.MarkAutoscalerSucceeded()
 						return cg
 					}(),
 				},
@@ -1034,7 +1034,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkKedaScalingSucceeded()
+						cg.MarkAutoscalerSucceeded()
 						return cg
 					}(),
 				},
@@ -1119,7 +1119,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkKedaScalingSucceeded()
+						cg.MarkAutoscalerSucceeded()
 						cg.Status.SubscriberURI = ConsumerSubscriberURI
 						return cg
 					}(),
@@ -1245,7 +1245,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkKedaScalingSucceeded()
+						cg.MarkAutoscalerSucceeded()
 						cg.Status.SubscriberURI = ConsumerSubscriberURI
 						cg.Status.DeadLetterSinkURI = ConsumerDeadLetterSinkURI
 						cg.Status.Replicas = pointer.Int32(1)
@@ -1354,7 +1354,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkKedaScalingSucceeded()
+						cg.MarkAutoscalerSucceeded()
 						cg.Status.SubscriberURI = ConsumerSubscriberURI
 						cg.Status.Replicas = pointer.Int32(1)
 						return cg
@@ -1461,7 +1461,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkKedaScalingSucceeded()
+						cg.MarkAutoscalerSucceeded()
 						cg.Status.Replicas = pointer.Int32(0)
 						return cg
 					}(),

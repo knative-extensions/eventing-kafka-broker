@@ -102,9 +102,9 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 
 	if r.KafkaFeatureFlags.IsControllerAutoscalerEnabled() {
 		if err := r.reconcileKeda(ctx, cg); err != nil {
-			return cg.MarkKedaScalingFailed("KedaScaling", err)
+			return cg.MarkAutoscalerFailed("AutoscalerFailed", err)
 		}
-		cg.MarkKedaScalingSucceeded()
+		cg.MarkAutoscalerSucceeded()
 	}
 
 	if err := r.reconcileConsumers(ctx, cg); err != nil {
@@ -168,11 +168,6 @@ func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consume
 		return fmt.Errorf("failed to create Admin client config: %w", err)
 	}
 
-	kafkaClientSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption, kafka.DisableOffsetAutoCommitConfigOption)
-	if err != nil {
-		return fmt.Errorf("error getting client sarama config: %w", err)
-	}
-
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
 	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(bootstrapServers, kafkaClusterAdminSaramaConfig)
@@ -180,12 +175,6 @@ func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consume
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
 	defer kafkaClusterAdminClient.Close()
-
-	kafkaClient, err := r.NewKafkaClient(bootstrapServers, kafkaClientSaramaConfig)
-	if err != nil {
-		return fmt.Errorf("failed to create Kafka cluster client: %w", err)
-	}
-	defer kafkaClient.Close()
 
 	groupId := cg.Spec.Template.Spec.Configs.Configs["group.id"]
 	if err := kafkaClusterAdminClient.DeleteConsumerGroup(groupId); err != nil && !errors.Is(sarama.ErrGroupIDNotFound, err) {
@@ -623,7 +612,7 @@ func (r *Reconciler) isKEDAEnabled(ctx context.Context, namespace string) bool {
 		return true
 	}*/
 
-	if _, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace).List(ctx, metav1.ListOptions{}); err == nil {
+	if _, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace).List(ctx, metav1.ListOptions{}); err == nil && r.KafkaFeatureFlags.IsControllerAutoscalerEnabled() {
 		return true
 	}
 	return false
