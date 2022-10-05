@@ -119,7 +119,7 @@ spec:
               value: "8"
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:+CrashOnOutOfMemoryError -XX:InitialRAMPercentage=70.0 -XX:MinRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0"
-          
+
           resources:
             requests:
               cpu: 1000m
