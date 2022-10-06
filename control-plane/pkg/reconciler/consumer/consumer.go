@@ -400,11 +400,12 @@ func cmNameFromPod(p *corev1.Pod, c *kafkainternals.Consumer) (string, error) {
 func podOwnerReference(p *corev1.Pod) base.ConfigMapOption {
 
 	expected := metav1.OwnerReference{
-		APIVersion: corev1.SchemeGroupVersion.String(),
-		Kind:       "Pod",
-		Name:       p.Name,
-		UID:        p.UID,
-		Controller: pointer.Bool(true),
+		APIVersion:         corev1.SchemeGroupVersion.String(),
+		Kind:               "Pod",
+		Name:               p.Name,
+		UID:                p.UID,
+		Controller:         pointer.Bool(true),
+		BlockOwnerDeletion: pointer.Bool(true),
 	}
 	return func(cm *corev1.ConfigMap) {
 		for _, or := range cm.OwnerReferences {
