@@ -22,12 +22,20 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
+	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
+const (
+	DefaultDeliveryOrder = internals.Ordered
+)
+
 func TestConsumerGroup_Validate(t *testing.T) {
+	backoffPolicy := eventingduck.BackoffPolicyExponential
+
 	tests := []struct {
 		name    string
 		ctx     context.Context
@@ -51,19 +59,18 @@ func TestConsumerGroup_Validate(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "no topics",
+			name: "no consumer template",
 			ctx:  context.Background(),
 			given: &ConsumerGroup{
 				Spec: ConsumerGroupSpec{
 					Replicas: pointer.Int32Ptr(1),
 					Selector: map[string]string{"app": "app"},
-					Template: ConsumerTemplateSpec{},
 				},
 			},
 			wantErr: true,
 		},
 		{
-			name: "missing group.id",
+			name: "no subscriber",
 			ctx:  context.Background(),
 			given: &ConsumerGroup{
 				Spec: ConsumerGroupSpec{
@@ -71,7 +78,58 @@ func TestConsumerGroup_Validate(t *testing.T) {
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{
+									Retry:         pointer.Int32(10),
+									BackoffPolicy: &backoffPolicy,
+									BackoffDelay:  pointer.String("PT0.3S"),
+									Timeout:       pointer.String("PT600S"),
+								},
+								Ordering: DefaultDeliveryOrder,
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "no delivery",
+			ctx:  context.Background(),
+			given: &ConsumerGroup{
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid delivery - timeout feature disabled",
+			ctx:  context.Background(),
+			given: &ConsumerGroup{
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{
+									Retry:   pointer.Int32(-10),
+									Timeout: pointer.String("PT600S"),
+								},
+								Ordering: DefaultDeliveryOrder,
+							},
 							Subscriber: duckv1.Destination{
 								URI: &apis.URL{
 									Scheme: "http",
@@ -83,6 +141,33 @@ func TestConsumerGroup_Validate(t *testing.T) {
 				},
 			},
 			wantErr: true,
+		},
+		{
+			name: "valid delivery - timeout feature enabled",
+			ctx:  feature.ToContext(context.Background(), feature.Flags{feature.DeliveryTimeout: feature.Enabled}),
+			given: &ConsumerGroup{
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{
+									Timeout: pointer.String("PT600S"),
+								},
+								Ordering: DefaultDeliveryOrder,
+							},
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
 		},
 		{
 			name: "valid",
@@ -93,13 +178,6 @@ func TestConsumerGroup_Validate(t *testing.T) {
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
 							Delivery: &DeliverySpec{
 								DeliverySpec: &eventingduck.DeliverySpec{},
 							},
@@ -108,315 +186,12 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Scheme: "http",
 									Host:   "127.0.0.1",
 								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-0",
-								PodNamespace: "ns",
 							},
 						},
 					},
 				},
 			},
 			wantErr: false,
-		},
-		{
-			name: "invalid multiple reply strategies (topic, destination)",
-			ctx:  context.Background(),
-			given: &ConsumerGroup{
-				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
-					Selector: map[string]string{"app": "app"},
-					Template: ConsumerTemplateSpec{
-						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
-							Reply: &ReplyStrategy{
-								TopicReply: &TopicReply{Enabled: true},
-								URLReply:   &DestinationReply{Enabled: true},
-							},
-							Delivery: &DeliverySpec{
-								DeliverySpec: &eventingduck.DeliverySpec{},
-							},
-							Subscriber: duckv1.Destination{
-								URI: &apis.URL{
-									Scheme: "http",
-									Host:   "127.0.0.1",
-								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-0",
-								PodNamespace: "ns",
-							},
-						},
-					},
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "invalid no pod name",
-			ctx:  context.Background(),
-			given: &ConsumerGroup{
-				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
-					Selector: map[string]string{"app": "app"},
-					Template: ConsumerTemplateSpec{
-						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
-							Delivery: &DeliverySpec{
-								DeliverySpec: &eventingduck.DeliverySpec{},
-							},
-							Subscriber: duckv1.Destination{
-								URI: &apis.URL{
-									Scheme: "http",
-									Host:   "127.0.0.1",
-								},
-							},
-							PodBind: &PodBind{
-								PodNamespace: "ns",
-							},
-						},
-					},
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "invalid no pod namespace",
-			ctx:  context.Background(),
-			given: &ConsumerGroup{
-				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
-					Selector: map[string]string{"app": "app"},
-					Template: ConsumerTemplateSpec{
-						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
-							Delivery: &DeliverySpec{
-								DeliverySpec: &eventingduck.DeliverySpec{},
-							},
-							Subscriber: duckv1.Destination{
-								URI: &apis.URL{
-									Scheme: "http",
-									Host:   "127.0.0.1",
-								},
-							},
-							PodBind: &PodBind{
-								PodName: "p-0",
-							},
-						},
-					},
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "valid - no updates",
-			ctx: apis.WithinUpdate(context.Background(), &ConsumerGroup{
-				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
-					Selector: map[string]string{"app": "app"},
-					Template: ConsumerTemplateSpec{
-						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
-							Delivery: &DeliverySpec{
-								DeliverySpec: &eventingduck.DeliverySpec{},
-							},
-							Subscriber: duckv1.Destination{
-								URI: &apis.URL{
-									Scheme: "http",
-									Host:   "127.0.0.1",
-								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-0",
-								PodNamespace: "ns",
-							},
-						},
-					},
-				},
-			}),
-			given: &ConsumerGroup{
-				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
-					Selector: map[string]string{"app": "app"},
-					Template: ConsumerTemplateSpec{
-						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
-							Delivery: &DeliverySpec{
-								DeliverySpec: &eventingduck.DeliverySpec{},
-							},
-							Subscriber: duckv1.Destination{
-								URI: &apis.URL{
-									Scheme: "http",
-									Host:   "127.0.0.1",
-								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-0",
-								PodNamespace: "ns",
-							},
-						},
-					},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "invalid pod name update",
-			ctx: apis.WithinUpdate(context.Background(), &ConsumerGroup{
-				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
-					Selector: map[string]string{"app": "app"},
-					Template: ConsumerTemplateSpec{
-						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
-							Delivery: &DeliverySpec{
-								DeliverySpec: &eventingduck.DeliverySpec{},
-							},
-							Subscriber: duckv1.Destination{
-								URI: &apis.URL{
-									Scheme: "http",
-									Host:   "127.0.0.1",
-								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-1",
-								PodNamespace: "ns",
-							},
-						},
-					},
-				},
-			}),
-			given: &ConsumerGroup{
-				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
-					Selector: map[string]string{"app": "app"},
-					Template: ConsumerTemplateSpec{
-						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
-							Delivery: &DeliverySpec{
-								DeliverySpec: &eventingduck.DeliverySpec{},
-							},
-							Subscriber: duckv1.Destination{
-								URI: &apis.URL{
-									Scheme: "http",
-									Host:   "127.0.0.1",
-								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-0",
-								PodNamespace: "ns",
-							},
-						},
-					},
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "invalid pod name update",
-			ctx: apis.WithinUpdate(context.Background(), &ConsumerGroup{
-				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
-					Selector: map[string]string{"app": "app"},
-					Template: ConsumerTemplateSpec{
-						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
-							Delivery: &DeliverySpec{
-								DeliverySpec: &eventingduck.DeliverySpec{},
-							},
-							Subscriber: duckv1.Destination{
-								URI: &apis.URL{
-									Scheme: "http",
-									Host:   "127.0.0.1",
-								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-0",
-								PodNamespace: "ns-1",
-							},
-						},
-					},
-				},
-			}),
-			given: &ConsumerGroup{
-				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
-					Selector: map[string]string{"app": "app"},
-					Template: ConsumerTemplateSpec{
-						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
-							Delivery: &DeliverySpec{
-								DeliverySpec: &eventingduck.DeliverySpec{},
-							},
-							Subscriber: duckv1.Destination{
-								URI: &apis.URL{
-									Scheme: "http",
-									Host:   "127.0.0.1",
-								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-0",
-								PodNamespace: "ns-2",
-							},
-						},
-					},
-				},
-			},
-			wantErr: true,
 		},
 		{
 			name: "valid with channel label",
@@ -431,13 +206,6 @@ func TestConsumerGroup_Validate(t *testing.T) {
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
 							Delivery: &DeliverySpec{
 								DeliverySpec: &eventingduck.DeliverySpec{},
 							},
@@ -446,10 +214,6 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Scheme: "http",
 									Host:   "127.0.0.1",
 								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-0",
-								PodNamespace: "ns",
 							},
 						},
 					},
@@ -466,13 +230,6 @@ func TestConsumerGroup_Validate(t *testing.T) {
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
 							Delivery: &DeliverySpec{
 								DeliverySpec: &eventingduck.DeliverySpec{},
 							},
@@ -481,10 +238,6 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Scheme: "http",
 									Host:   "127.0.0.1",
 								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-0",
-								PodNamespace: "ns",
 							},
 						},
 					},
@@ -505,13 +258,6 @@ func TestConsumerGroup_Validate(t *testing.T) {
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
 							Delivery: &DeliverySpec{
 								DeliverySpec: &eventingduck.DeliverySpec{},
 							},
@@ -520,10 +266,6 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Scheme: "http",
 									Host:   "127.0.0.1",
 								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-0",
-								PodNamespace: "ns",
 							},
 						},
 					},
@@ -535,13 +277,6 @@ func TestConsumerGroup_Validate(t *testing.T) {
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
 							Delivery: &DeliverySpec{
 								DeliverySpec: &eventingduck.DeliverySpec{},
 							},
@@ -550,10 +285,6 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Scheme: "http",
 									Host:   "127.0.0.1",
 								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-0",
-								PodNamespace: "ns",
 							},
 						},
 					},
@@ -574,13 +305,6 @@ func TestConsumerGroup_Validate(t *testing.T) {
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
 							Delivery: &DeliverySpec{
 								DeliverySpec: &eventingduck.DeliverySpec{},
 							},
@@ -589,10 +313,6 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Scheme: "http",
 									Host:   "127.0.0.1",
 								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-0",
-								PodNamespace: "ns",
 							},
 						},
 					},
@@ -609,13 +329,6 @@ func TestConsumerGroup_Validate(t *testing.T) {
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
-							Topics: []string{"t1"},
-							Configs: ConsumerConfigs{
-								Configs: map[string]string{
-									"group.id":          "g1",
-									"bootstrap.servers": "kafka:9092",
-								},
-							},
 							Delivery: &DeliverySpec{
 								DeliverySpec: &eventingduck.DeliverySpec{},
 							},
@@ -624,10 +337,6 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Scheme: "http",
 									Host:   "127.0.0.1",
 								},
-							},
-							PodBind: &PodBind{
-								PodName:      "p-0",
-								PodNamespace: "ns",
 							},
 						},
 					},

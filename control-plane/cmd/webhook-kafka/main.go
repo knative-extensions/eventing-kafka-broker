@@ -24,6 +24,7 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/sharedmain"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/signals"
 	"knative.dev/pkg/webhook"
 	"knative.dev/pkg/webhook/certificates"
@@ -33,12 +34,14 @@ import (
 
 	sourcesv1beta1 "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	eventingcorev1 "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/apis/feature"
 
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/core"
 	eventingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 )
 
 const (
@@ -50,6 +53,8 @@ var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 	sourcesv1beta1.SchemeGroupVersion.WithKind("KafkaSource"):    &sourcesv1beta1.KafkaSource{},
 	messagingv1beta1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1beta1.KafkaChannel{},
 	eventingcorev1.SchemeGroupVersion.WithKind("Broker"):         &eventingv1.BrokerStub{},
+	kafkainternals.SchemeGroupVersion.WithKind("ConsumerGroup"):  &kafkainternals.ConsumerGroup{},
+	kafkainternals.SchemeGroupVersion.WithKind("Consumer"):       &kafkainternals.Consumer{},
 }
 
 var defaultingCallbacks = map[schema.GroupVersionKind]defaulting.Callback{
@@ -110,7 +115,15 @@ func NewPodDefaultingAdmissionController(ctx context.Context, _ configmap.Watche
 	)
 }
 
-func NewValidationAdmissionController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
+func NewValidationAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"))
+	featureStore.WatchConfigs(cmw)
+
+	// Decorate contexts with the current state of the config.
+	ctxFunc := func(ctx context.Context) context.Context {
+		return featureStore.ToContext(ctx)
+	}
+
 	return validation.NewAdmissionController(ctx,
 		// Name of the resource webhook.
 		"validation.webhook.kafka.eventing.knative.dev",
@@ -122,9 +135,7 @@ func NewValidationAdmissionController(ctx context.Context, _ configmap.Watcher) 
 		types,
 
 		// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
-		func(ctx context.Context) context.Context {
-			return ctx
-		},
+		ctxFunc,
 
 		// Whether to disallow unknown fields.
 		true,
