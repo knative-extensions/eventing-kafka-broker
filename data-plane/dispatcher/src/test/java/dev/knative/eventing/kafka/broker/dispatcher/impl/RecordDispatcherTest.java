@@ -612,9 +612,8 @@ public class RecordDispatcherTest {
           .summaries()
           .stream()
           .reduce((a, b) -> b)
-          .get()
-          .max()
-      ).isGreaterThan(0)
+          .isPresent()
+      ).isTrue()
     );
   }
 
