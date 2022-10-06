@@ -22,12 +22,20 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
+	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
+const (
+	DefaultDeliveryOrder = internals.Ordered
+)
+
 func TestConsumerGroup_Validate(t *testing.T) {
+	backoffPolicy := eventingduck.BackoffPolicyExponential
+
 	tests := []struct {
 		name    string
 		ctx     context.Context
@@ -51,16 +59,115 @@ func TestConsumerGroup_Validate(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "no delivery/subscriber",
+			name: "no consumer template",
 			ctx:  context.Background(),
 			given: &ConsumerGroup{
 				Spec: ConsumerGroupSpec{
 					Replicas: pointer.Int32Ptr(1),
 					Selector: map[string]string{"app": "app"},
-					Template: ConsumerTemplateSpec{},
 				},
 			},
 			wantErr: true,
+		},
+		{
+			name: "no subscriber",
+			ctx:  context.Background(),
+			given: &ConsumerGroup{
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{
+									Retry:         pointer.Int32(10),
+									BackoffPolicy: &backoffPolicy,
+									BackoffDelay:  pointer.String("PT0.3S"),
+									Timeout:       pointer.String("PT600S"),
+								},
+								Ordering: DefaultDeliveryOrder,
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "no delivery",
+			ctx:  context.Background(),
+			given: &ConsumerGroup{
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid delivery - timeout feature disabled",
+			ctx:  context.Background(),
+			given: &ConsumerGroup{
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{
+									Retry:   pointer.Int32(-10),
+									Timeout: pointer.String("PT600S"),
+								},
+								Ordering: DefaultDeliveryOrder,
+							},
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid delivery - timeout feature enabled",
+			ctx:  feature.ToContext(context.Background(), feature.Flags{feature.DeliveryTimeout: feature.Enabled}),
+			given: &ConsumerGroup{
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Delivery: &DeliverySpec{
+								DeliverySpec: &eventingduck.DeliverySpec{
+									Timeout: pointer.String("PT600S"),
+								},
+								Ordering: DefaultDeliveryOrder,
+							},
+							Subscriber: duckv1.Destination{
+								URI: &apis.URL{
+									Scheme: "http",
+									Host:   "127.0.0.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
 		},
 		{
 			name: "valid",

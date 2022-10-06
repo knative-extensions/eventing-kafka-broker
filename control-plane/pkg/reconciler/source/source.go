@@ -131,7 +131,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 							Retry:         pointer.Int32(10),
 							BackoffPolicy: &backoffPolicy,
 							BackoffDelay:  pointer.String("PT0.3S"),
-							//Timeout:       pointer.String("PT600S"), //experimental feature that needs to be enabled
+							Timeout:       pointer.String("PT600S"),
 						},
 						Ordering: DefaultDeliveryOrder,
 					},
