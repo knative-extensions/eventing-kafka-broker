@@ -33,7 +33,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/tools/cache"
-	"knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
 	"knative.dev/eventing/pkg/scheduler"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -55,7 +54,6 @@ import (
 	cgreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
 
 	kedaclient "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client"
-	scaledobjectinformer "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/informers/keda/v1alpha1/scaledobject"
 )
 
 const (
@@ -142,24 +140,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 
 	ResyncOnStatefulSetChange(ctx, globalResync)
 
-	scaledobjectInformer := scaledobjectinformer.Get(ctx)
-
-	scaledobjectInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterController(&v1beta1.KafkaSource{}), //TODO: add other resources (Trigger, Channel)
-		Handler: cache.ResourceEventHandlerFuncs{
-			AddFunc: impl.EnqueueControllerOf,
-			UpdateFunc: func(old, new interface{}) {
-				if mOld, ok := old.(metav1.Object); ok {
-					if mNew, ok := new.(metav1.Object); ok {
-						if mNew.GetGeneration() != mOld.GetGeneration() {
-							impl.EnqueueControllerOf(new)
-						}
-					}
-				}
-			},
-			DeleteFunc: impl.EnqueueControllerOf,
-		},
-	})
+	//Todo: ScaledObject informer when KEDA is installed
 
 	return impl
 }

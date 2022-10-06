@@ -83,16 +83,12 @@ rules:
     resources:
       - secrets
     verbs:
-      - list
       - get
-      - update
+      - list
       - watch
-  - apiGroups:
-    - ""
-    resources:
-    - "secrets"
-    verbs:
-    - "*"
+      - update
+      - create
+      - delete
 
   # for namespaced brokers, we need to be able to manage additional resources within the user namespaces
   - apiGroups:
@@ -265,4 +261,9 @@ rules:
     - triggerauthentications
     - triggerauthentications/status
     verbs:
-    - '*'
+      - get
+      - list
+      - watch
+      - update
+      - create
+      - delete

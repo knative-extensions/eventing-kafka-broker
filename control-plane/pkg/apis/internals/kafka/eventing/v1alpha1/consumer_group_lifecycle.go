@@ -36,6 +36,7 @@ var (
 	conditionSet = apis.NewLivingConditionSet(
 		ConditionConsumerGroupConsumers,
 		ConditionConsumerGroupConsumersScheduled,
+		ConditionAutoscaling,
 	)
 )
 
@@ -85,6 +86,10 @@ func (cg *ConsumerGroup) MarkScheduleSucceeded() {
 
 func (cg *ConsumerGroup) MarkAutoscalerSucceeded() {
 	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionAutoscaling)
+}
+
+func (cg *ConsumerGroup) MarkAutoscalerDisabled() {
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrueWithReason(ConditionAutoscaling, "Autoscaler is disabled", "")
 }
 
 func (cg *ConsumerGroup) MarkAutoscalerFailed(reason string, err error) error {

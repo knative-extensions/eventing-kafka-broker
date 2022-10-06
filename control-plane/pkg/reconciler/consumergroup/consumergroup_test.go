@@ -147,9 +147,9 @@ func TestReconcileKind(t *testing.T) {
 							{PodName: "p1", VReplicas: 1},
 							{PodName: "p2", VReplicas: 1},
 						}
-						cg.MarkReconcileConsumersSucceeded()
+						_ = cg.MarkReconcileConsumersFailed("PropagateSubscriberURI", ErrNoSubscriberURI)
 						cg.MarkScheduleSucceeded()
-						cg.MarkAutoscalerSucceeded()
+						cg.MarkAutoscalerDisabled() // KEDA not installed
 						return cg
 					}(),
 				},
@@ -352,7 +352,7 @@ func TestReconcileKind(t *testing.T) {
 							Message: "failed to bind resource to pod: EOF",
 						})
 						cg.MarkScheduleSucceeded()
-						cg.MarkAutoscalerSucceeded()
+						cg.MarkAutoscalerDisabled() // KEDA not installed
 						return cg
 					}(),
 				},
@@ -463,7 +463,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkAutoscalerSucceeded()
+						cg.MarkAutoscalerDisabled() // KEDA not installed
 						cg.Status.SubscriberURI = ConsumerSubscriberURI
 						return cg
 					}(),
@@ -863,7 +863,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkAutoscalerSucceeded()
+						cg.MarkAutoscalerDisabled() // KEDA not installed
 						cg.Status.SubscriberURI = ConsumerSubscriberURI
 						return cg
 					}(),
@@ -948,9 +948,9 @@ func TestReconcileKind(t *testing.T) {
 						cg.Status.Placements = []eventingduckv1alpha1.Placement{
 							{PodName: "p1", VReplicas: 1},
 						}
-						cg.MarkReconcileConsumersSucceeded()
+						_ = cg.MarkReconcileConsumersFailed("PropagateSubscriberURI", ErrNoSubscriberURI)
 						cg.MarkScheduleSucceeded()
-						cg.MarkAutoscalerSucceeded()
+						cg.MarkAutoscalerDisabled() // KEDA not installed
 						return cg
 					}(),
 				},
@@ -1032,9 +1032,9 @@ func TestReconcileKind(t *testing.T) {
 							{PodName: "p1", VReplicas: 1},
 							{PodName: "p2", VReplicas: 1},
 						}
-						cg.MarkReconcileConsumersSucceeded()
+						_ = cg.MarkReconcileConsumersFailed("PropagateSubscriberURI", ErrNoSubscriberURI)
 						cg.MarkScheduleSucceeded()
-						cg.MarkAutoscalerSucceeded()
+						cg.MarkAutoscalerDisabled() // KEDA not installed
 						return cg
 					}(),
 				},
@@ -1119,7 +1119,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkAutoscalerSucceeded()
+						cg.MarkAutoscalerDisabled() // KEDA not installed
 						cg.Status.SubscriberURI = ConsumerSubscriberURI
 						return cg
 					}(),
@@ -1245,7 +1245,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkAutoscalerSucceeded()
+						cg.MarkAutoscalerDisabled() // KEDA not installed
 						cg.Status.SubscriberURI = ConsumerSubscriberURI
 						cg.Status.DeadLetterSinkURI = ConsumerDeadLetterSinkURI
 						cg.Status.Replicas = pointer.Int32(1)
@@ -1354,7 +1354,7 @@ func TestReconcileKind(t *testing.T) {
 						}
 						cg.MarkReconcileConsumersSucceeded()
 						cg.MarkScheduleSucceeded()
-						cg.MarkAutoscalerSucceeded()
+						cg.MarkAutoscalerDisabled() // KEDA not installed
 						cg.Status.SubscriberURI = ConsumerSubscriberURI
 						cg.Status.Replicas = pointer.Int32(1)
 						return cg
@@ -1459,9 +1459,9 @@ func TestReconcileKind(t *testing.T) {
 							{PodName: "p1", VReplicas: 1},
 							{PodName: "p2", VReplicas: 1},
 						}
-						cg.MarkReconcileConsumersSucceeded()
+						_ = cg.MarkReconcileConsumersFailed("PropagateSubscriberURI", ErrNoSubscriberURI)
 						cg.MarkScheduleSucceeded()
-						cg.MarkAutoscalerSucceeded()
+						cg.MarkAutoscalerDisabled() // KEDA not installed
 						cg.Status.Replicas = pointer.Int32(0)
 						return cg
 					}(),
@@ -1558,6 +1558,139 @@ func TestReconcileKind(t *testing.T) {
 		}
 
 		r.KafkaFeatureFlags = configapis.FromContext(store.ToContext(ctx))
+
+		return consumergroup.NewReconciler(
+			ctx,
+			logging.FromContext(ctx),
+			fakekafkainternalsclient.Get(ctx),
+			listers.GetConsumerGroupLister(),
+			controller.GetEventRecorder(ctx),
+			r,
+		)
+	}))
+
+}
+
+func TestReconcileKindNoAutoscaler(t *testing.T) {
+
+	tt := TableTest{
+		{
+			Name: "Consumers in multiple pods with autoscaler disabled",
+			Objects: []runtime.Object{
+				NewConsumer(2,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{
+							PodName:      "p2",
+							PodNamespace: systemNamespace,
+						}),
+					)),
+					ConsumerReady(),
+				),
+				NewConsumerGroup(
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+					)),
+					ConsumerForTrigger(),
+					ConsumerGroupReplicas(2),
+				),
+			},
+			Key: ConsumerGroupTestKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return []eventingduckv1alpha1.Placement{
+						{PodName: "p1", VReplicas: 1},
+						{PodName: "p2", VReplicas: 1},
+					}, nil
+				}),
+			},
+			WantCreates: []runtime.Object{
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+					)),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						cg := NewConsumerGroup(
+							ConsumerGroupConsumerSpec(NewConsumerSpec(
+								ConsumerTopics("t1", "t2"),
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+									ConsumerGroupIdConfig("my.group.id"),
+								),
+							)),
+							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusReplicas(1),
+							ConsumerForTrigger(),
+						)
+						cg.Status.Placements = []eventingduckv1alpha1.Placement{
+							{PodName: "p1", VReplicas: 1},
+							{PodName: "p2", VReplicas: 1},
+						}
+						cg.MarkReconcileConsumersSucceeded()
+						cg.MarkScheduleSucceeded()
+						cg.MarkAutoscalerDisabled() // autoscaler feature disabled
+						cg.Status.SubscriberURI = ConsumerSubscriberURI
+						return cg
+					}(),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		},
+	}
+
+	tt.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
+
+		ctx, _ = kedaclient.With(ctx)
+
+		r := Reconciler{
+			SchedulerFunc: func(s string) scheduler.Scheduler {
+				return row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
+			},
+			ConsumerLister:  listers.GetConsumerLister(),
+			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
+			SecretLister:    listers.GetSecretLister(),
+			KubeClient:      kubeclient.Get(ctx),
+			KedaClient:      kedaclient.Get(ctx),
+			NameGenerator:   &CounterGenerator{},
+			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
+				return &kafkatesting.MockKafkaClient{}, nil
+			},
+			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+				return &kafkatesting.MockKafkaClusterAdmin{
+					T: t,
+				}, nil
+			},
+			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
+				return 1, nil
+			},
+			SystemNamespace: systemNamespace,
+		}
+
+		r.KafkaFeatureFlags = configapis.DefaultFeaturesConfig()
 
 		return consumergroup.NewReconciler(
 			ctx,
