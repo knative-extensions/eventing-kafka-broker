@@ -23,7 +23,6 @@ metadata:
     app: kafka-channel-dispatcher
     kafka.eventing.knative.dev/release: devel
 spec:
-  replicas: 0
   serviceName: kafka-channel-dispatcher
   podManagementPolicy: "Parallel"
   selector:
