@@ -75,8 +75,6 @@ spec:
               value: kafka-channel-channels-subscriptions
             - name: SINK_CONTRACT_CONFIG_MAP_NAME
               value: kafka-sink-sinks
-            - name: SOURCE_CONTRACT_CONFIG_MAP_NAME
-              value: kafka-source-sources
 
             - name: BROKER_DATA_PLANE_CONFIG_CONFIG_MAP_NAME
               value: config-kafka-broker-data-plane

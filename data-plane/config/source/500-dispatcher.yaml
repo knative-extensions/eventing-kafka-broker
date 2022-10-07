@@ -23,6 +23,7 @@ metadata:
     app: kafka-source-dispatcher
     kafka.eventing.knative.dev/release: devel
 spec:
+  replicas: 0
   serviceName: kafka-source-dispatcher
   podManagementPolicy: "Parallel"
   selector:
