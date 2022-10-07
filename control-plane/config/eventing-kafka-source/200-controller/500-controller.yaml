@@ -62,8 +62,6 @@ spec:
           env:
             - name: SOURCE_DATA_PLANE_CONFIG_MAP_NAMESPACE
               value: knative-eventing
-            - name: SOURCE_CONTRACT_CONFIG_MAP_NAME
-              value: kafka-source-sources
             - name: SOURCE_CONTRACT_CONFIG_MAP_FORMAT
               value: json
             - name: SOURCE_INGRESS_NAME
