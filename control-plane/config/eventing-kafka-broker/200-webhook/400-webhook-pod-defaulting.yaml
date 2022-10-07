@@ -32,7 +32,6 @@ webhooks:
     reinvocationPolicy: IfNeeded
     matchPolicy: Equivalent
     namespaceSelector:
-      matchExpressions: [ ]
       matchLabels:
         app.kubernetes.io/name: knative-eventing
     objectSelector:
