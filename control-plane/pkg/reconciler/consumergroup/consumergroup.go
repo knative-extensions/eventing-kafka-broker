@@ -90,7 +90,6 @@ type Reconciler struct {
 }
 
 func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
-
 	if err := r.reconcileInitialOffset(ctx, cg); err != nil {
 		return cg.MarkInitializeOffsetFailed("InitializeOffset", err)
 	}
@@ -473,25 +472,16 @@ func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals
 	}
 
 	if triggerAuthentication != nil && secret != nil {
-		err = r.reconcileSecret(ctx, secret, cg)
-
-		// if the event was wrapped inside an error, consider the reconciliation as failed
-		if _, isEvent := err.(*reconciler.ReconcilerEvent); !isEvent {
+		if err = r.reconcileSecret(ctx, secret, cg); err != nil {
 			return err
 		}
 
-		err = r.reconcileTriggerAuthentication(ctx, triggerAuthentication, cg)
-
-		// if the event was wrapped inside an error, consider the reconciliation as failed
-		if _, isEvent := err.(*reconciler.ReconcilerEvent); !isEvent {
+		if err = r.reconcileTriggerAuthentication(ctx, triggerAuthentication, cg); err != nil {
 			return err
 		}
 	}
 
-	err = r.reconcileScaledObject(ctx, scaledObject, cg)
-
-	// if the event was wrapped inside an error, consider the reconciliation as failed
-	if _, isEvent := err.(*reconciler.ReconcilerEvent); !isEvent {
+	if err = r.reconcileScaledObject(ctx, scaledObject, cg); err != nil {
 		return err
 	}
 
@@ -516,85 +506,69 @@ func (r *Reconciler) retrieveSaslTypeIfPresent(ctx context.Context, cg *kafkaint
 
 func (r *Reconciler) reconcileScaledObject(ctx context.Context, expectedScaledObject *kedav1alpha1.ScaledObject, obj metav1.Object) error {
 	scaledObject, err := r.KedaClient.KedaV1alpha1().ScaledObjects(expectedScaledObject.Namespace).Get(ctx, expectedScaledObject.Name, metav1.GetOptions{})
-	if apierrors.IsNotFound(err) {
-		scaledObject, err = r.KedaClient.KedaV1alpha1().ScaledObjects(expectedScaledObject.Namespace).Create(ctx, expectedScaledObject, metav1.CreateOptions{})
-		if err != nil {
-			return kedafunc.ScaleObjectFailed(expectedScaledObject.Namespace, expectedScaledObject.Name, err)
-		}
-		return kedafunc.ScaleObjectCreated(scaledObject.Namespace, scaledObject.Name)
-	} else if err != nil {
-		logging.FromContext(ctx).Errorw("Unable to get an existing ScaledObject", zap.Error(err))
-		return err
-	} else if !metav1.IsControlledBy(scaledObject, obj) {
-		return fmt.Errorf("ScaledObject %q is not owned by %q", scaledObject.Name, obj)
-	} else if !equality.Semantic.DeepDerivative(scaledObject.Spec, expectedScaledObject.Spec) {
-		logging.FromContext(ctx).Debug(fmt.Sprintf("ScaledObject changed, found: %#v expected: %#v", scaledObject.Spec, expectedScaledObject.Spec))
-		scaledObject.Spec = expectedScaledObject.Spec
-		if _, err = r.KedaClient.KedaV1alpha1().ScaledObjects(expectedScaledObject.Namespace).Update(ctx, scaledObject, metav1.UpdateOptions{}); err != nil {
-			return err
-		}
-		return kedafunc.ScaleObjectUpdated(scaledObject.Namespace, scaledObject.Name)
-	} else {
-		logging.FromContext(ctx).Debugw("Reusing existing ScaledObject", zap.Any("ScaledObject", scaledObject))
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to get scaledobject %s/%s: %w", expectedScaledObject.Namespace, expectedScaledObject.Name, err)
 	}
-
+	if apierrors.IsNotFound(err) {
+		_, err = r.KedaClient.KedaV1alpha1().ScaledObjects(expectedScaledObject.Namespace).Create(ctx, expectedScaledObject, metav1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to create scaledobject %s/%s: %w", expectedScaledObject.Namespace, expectedScaledObject.Name, err)
+		}
+		return nil
+	}
+	if !metav1.IsControlledBy(scaledObject, obj) {
+		return fmt.Errorf("scaledobject %s/%s is not owned by %s/%s", expectedScaledObject.Namespace, expectedScaledObject.Name, obj.GetNamespace(), obj.GetName())
+	}
+	if !equality.Semantic.DeepDerivative(expectedScaledObject.Spec, scaledObject.Spec) {
+		if _, err = r.KedaClient.KedaV1alpha1().ScaledObjects(expectedScaledObject.Namespace).Update(ctx, expectedScaledObject, metav1.UpdateOptions{}); err != nil {
+			return fmt.Errorf("failed to update scaled object %s/%s: %w", expectedScaledObject.Namespace, expectedScaledObject.Name, err)
+		}
+	}
 	return nil
 }
 
 func (r *Reconciler) reconcileTriggerAuthentication(ctx context.Context, expectedTriggerAuth *kedav1alpha1.TriggerAuthentication, obj metav1.Object) error {
 	triggerAuth, err := r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Get(ctx, expectedTriggerAuth.Name, metav1.GetOptions{})
-	if apierrors.IsNotFound(err) {
-		triggerAuth, err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Create(ctx, expectedTriggerAuth, metav1.CreateOptions{})
-		if err != nil {
-			return reconciler.NewEvent(corev1.EventTypeWarning, "TriggerAuthenticationFailed", "TriggerAuthentication deployment failed to: \"%s/%s\", %w",
-				expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, err)
-		}
-		return reconciler.NewEvent(corev1.EventTypeNormal, "TriggerAuthenticationCreated", "TriggerAuthentication created: \"%s/%s\"",
-			triggerAuth.Namespace, triggerAuth.Name)
-	} else if err != nil {
-		logging.FromContext(ctx).Errorw("Unable to get an existing ScaledObject", zap.Error(err))
-		return err
-	} else if !metav1.IsControlledBy(triggerAuth, obj) {
-		return fmt.Errorf("ScaledObject %q is not owned by %q", triggerAuth.Name, obj)
-	} else if !equality.Semantic.DeepDerivative(triggerAuth.Spec, expectedTriggerAuth.Spec) {
-		logging.FromContext(ctx).Debug(fmt.Sprintf("TriggerAuthentication changed, found: %#v expected: %#v", triggerAuth.Spec, expectedTriggerAuth.Spec))
-		triggerAuth.Spec = expectedTriggerAuth.Spec
-		if _, err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Update(ctx, triggerAuth, metav1.UpdateOptions{}); err != nil {
-			return err
-		}
-		return reconciler.NewEvent(corev1.EventTypeNormal, "TriggerAuthenticationUpdated", "TriggerAuthentication updated: \"%s/%s\"",
-			triggerAuth.Namespace, triggerAuth.Name)
-	} else {
-		logging.FromContext(ctx).Debugw("Reusing existing TriggerAuthentication", zap.Any("TriggerAuthentication", triggerAuth))
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to get triggerauthentication %s/%s: %w", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, err)
 	}
-
+	if apierrors.IsNotFound(err) {
+		_, err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Create(ctx, expectedTriggerAuth, metav1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to create triggerauthentication  object %s/%s: %w", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, err)
+		}
+		return nil
+	}
+	if !metav1.IsControlledBy(triggerAuth, obj) {
+		return fmt.Errorf("triggerauthentication object %s/%s is not owned by %s/%s", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, obj.GetNamespace(), obj.GetName())
+	}
+	if !equality.Semantic.DeepDerivative(expectedTriggerAuth.Spec, triggerAuth.Spec) {
+		if _, err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Update(ctx, triggerAuth, metav1.UpdateOptions{}); err != nil {
+			return fmt.Errorf("failed to update triggerauthentication object %s/%s: %w", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, err)
+		}
+	}
 	return nil
 }
 
 func (r *Reconciler) reconcileSecret(ctx context.Context, expectedSecret *corev1.Secret, obj metav1.Object) error {
 	secret, err := r.KubeClient.CoreV1().Secrets(expectedSecret.Namespace).Get(ctx, expectedSecret.Name, metav1.GetOptions{})
-	if apierrors.IsNotFound(err) {
-		secret, err = r.KubeClient.CoreV1().Secrets(expectedSecret.Namespace).Create(ctx, expectedSecret, metav1.CreateOptions{})
-		if err != nil {
-			logging.FromContext(ctx).Errorw("Unable to create Secret", zap.Error(err))
-			return reconciler.NewEvent(corev1.EventTypeWarning, "SecretDeploymentFailed", "Secret deployment failed to: \"%s/%s\", %w",
-				expectedSecret.Namespace, expectedSecret.Name, err)
-		}
-		return reconciler.NewEvent(corev1.EventTypeNormal, "SecretCreated", "Secret created: \"%s/%s\"", secret.Namespace, secret.Name)
-	} else if err != nil {
-		logging.FromContext(ctx).Errorw("Unable to get an existing Secret", zap.Error(err))
-		return err
-	} else if !metav1.IsControlledBy(secret, obj) {
-		return fmt.Errorf("secret %q is not owned by %q", secret.Name, obj)
-	} else {
-		// StringData is not populated on read so for now always update the secret
-		logging.FromContext(ctx).Debug("Updating secret")
-		secret.StringData = expectedSecret.StringData
-		if _, err = r.KubeClient.CoreV1().Secrets(expectedSecret.Namespace).Update(ctx, secret, metav1.UpdateOptions{}); err != nil {
-			return err
-		}
-		return reconciler.NewEvent(corev1.EventTypeNormal, "SecretUpdated", "Secret updated: \"%s/%s\"", secret.Namespace, secret.Name)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to get secret %s/%s: %w", expectedSecret.Namespace, expectedSecret.Name, err)
 	}
+	if apierrors.IsNotFound(err) {
+		_, err = r.KubeClient.CoreV1().Secrets(expectedSecret.Namespace).Create(ctx, expectedSecret, metav1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to create secret %s/%s: %w", expectedSecret.Namespace, expectedSecret.Name, err)
+		}
+		return nil
+	}
+	if !metav1.IsControlledBy(secret, obj) {
+		return fmt.Errorf("secret object %s/%s is not owned by %s/%s", expectedSecret.Namespace, expectedSecret.Name, obj.GetNamespace(), obj.GetName())
+	}
+	if _, err = r.KubeClient.CoreV1().Secrets(expectedSecret.Namespace).Update(ctx, secret, metav1.UpdateOptions{}); err != nil {
+		return fmt.Errorf("failed to update secret object %s/%s: %w", expectedSecret.Namespace, expectedSecret.Name, err)
+	}
+	return nil
 }
 
 func (r *Reconciler) isKEDAEnabled(ctx context.Context, namespace string) bool {
