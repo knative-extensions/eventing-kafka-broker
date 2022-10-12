@@ -25,6 +25,7 @@ import (
 const (
 	ConditionConsumerGroupConsumers          apis.ConditionType = "Consumers"
 	ConditionConsumerGroupConsumersScheduled apis.ConditionType = "ConsumersScheduled"
+	ConditionAutoscaling                     apis.ConditionType = "Autoscaler"
 	// Labels
 	KafkaChannelNameLabel           = "kafkachannel-name"
 	ConsumerLabelSelector           = "kafka.eventing.knative.dev/metadata.uid"
@@ -35,6 +36,7 @@ var (
 	conditionSet = apis.NewLivingConditionSet(
 		ConditionConsumerGroupConsumers,
 		ConditionConsumerGroupConsumersScheduled,
+		ConditionAutoscaling,
 	)
 )
 
@@ -80,4 +82,18 @@ func (cg *ConsumerGroup) MarkInitializeOffsetFailed(reason string, err error) er
 
 func (cg *ConsumerGroup) MarkScheduleSucceeded() {
 	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionConsumerGroupConsumersScheduled)
+}
+
+func (cg *ConsumerGroup) MarkAutoscalerSucceeded() {
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionAutoscaling)
+}
+
+func (cg *ConsumerGroup) MarkAutoscalerDisabled() {
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrueWithReason(ConditionAutoscaling, "Autoscaler is disabled", "")
+}
+
+func (cg *ConsumerGroup) MarkAutoscalerFailed(reason string, err error) error {
+	err = fmt.Errorf("failed to set up autoscaler: %w", err)
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionAutoscaling, reason, err.Error())
+	return err
 }

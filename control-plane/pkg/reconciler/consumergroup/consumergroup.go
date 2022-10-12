@@ -25,6 +25,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,12 +42,17 @@ import (
 
 	"knative.dev/eventing/pkg/scheduler"
 
+	"knative.dev/eventing-autoscaler-keda/pkg/reconciler/keda"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+
+	kedav1alpha1 "knative.dev/eventing-autoscaler-keda/third_party/pkg/apis/keda/v1alpha1"
+	kedaclientset "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned"
+	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
 )
 
 var (
@@ -80,6 +86,7 @@ type Reconciler struct {
 	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
 
 	KafkaFeatureFlags *config.KafkaFeatureFlags
+	KedaClient        kedaclientset.Interface
 }
 
 func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
@@ -91,6 +98,16 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 		return err
 	}
 	cg.MarkScheduleSucceeded()
+
+	if r.isKEDAEnabled(ctx, cg.GetNamespace()) {
+		if err := r.reconcileKedaObjects(ctx, cg); err != nil {
+			return cg.MarkAutoscalerFailed("AutoscalerFailed", err)
+		}
+		cg.MarkAutoscalerSucceeded()
+	} else {
+		// If KEDA is not installed or autoscaler feature disabled, do nothing
+		cg.MarkAutoscalerDisabled()
+	}
 
 	if err := r.reconcileConsumers(ctx, cg); err != nil {
 		return err
@@ -104,15 +121,16 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 		return cg.MarkReconcileConsumersFailedCondition(errCondition)
 	}
 
-	if cg.Status.SubscriberURI == nil {
-		_ = cg.MarkReconcileConsumersFailed("PropagateSubscriberURI", ErrNoSubscriberURI)
-		return nil
+	if *cg.Spec.Replicas != 0 {
+		if cg.Status.SubscriberURI == nil {
+			_ = cg.MarkReconcileConsumersFailed("PropagateSubscriberURI", ErrNoSubscriberURI)
+			return nil
+		}
+		if cg.HasDeadLetterSink() && cg.Status.DeadLetterSinkURI == nil {
+			_ = cg.MarkReconcileConsumersFailed("PropagateDeadLetterSinkURI", ErrNoDeadLetterSinkURI)
+			return nil
+		}
 	}
-	if cg.HasDeadLetterSink() && cg.Status.DeadLetterSinkURI == nil {
-		_ = cg.MarkReconcileConsumersFailed("PropagateDeadLetterSinkURI", ErrNoDeadLetterSinkURI)
-		return nil
-	}
-
 	cg.MarkReconcileConsumersSucceeded()
 
 	return nil
@@ -142,21 +160,21 @@ func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consume
 		}
 	}
 
-	options, err := r.newAuthConfigOption(ctx, cg)
+	saramaSecurityOption, err := r.newAuthConfigOption(ctx, cg)
 	if err != nil {
 		return fmt.Errorf("failed to create config options for Kafka cluster auth: %w", err)
 	}
 
-	saramaConfig, err := kafka.GetSaramaConfig(options)
+	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
-		return fmt.Errorf("failed to get cluster admin sarama config: %w", err)
+		return fmt.Errorf("failed to create Admin client config: %w", err)
 	}
+
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
-	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(bootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(bootstrapServers, kafkaClusterAdminSaramaConfig)
 	if err != nil {
-		logging.FromContext(ctx).Errorw("unable to create a kafka client", zap.Error(err))
-		return err
+		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
 	defer kafkaClusterAdminClient.Close()
 
@@ -199,10 +217,7 @@ func (r Reconciler) reconcileConsumers(ctx context.Context, cg *kafkainternals.C
 	return nil
 }
 
-func (r Reconciler) reconcileConsumersInPlacement(
-	ctx context.Context,
-	cg *kafkainternals.ConsumerGroup,
-	pc ConsumersPerPlacement) error {
+func (r Reconciler) reconcileConsumersInPlacement(ctx context.Context, cg *kafkainternals.ConsumerGroup, pc ConsumersPerPlacement) error {
 
 	placement := *pc.Placement
 	consumers := pc.Consumers
@@ -391,37 +406,186 @@ func (r Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkainterna
 		return nil
 	}
 
-	options, err := r.newAuthConfigOption(ctx, cg)
+	saramaSecurityOption, err := r.newAuthConfigOption(ctx, cg)
 	if err != nil {
 		return fmt.Errorf("failed to create config options for Kafka cluster auth: %w", err)
 	}
 
-	saramaConfig, err := kafka.GetSaramaConfig(options)
+	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
 		return fmt.Errorf("failed to create Admin client config: %w", err)
 	}
+
+	kafkaClientSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption, kafka.DisableOffsetAutoCommitConfigOption)
+	if err != nil {
+		return fmt.Errorf("error getting client sarama config: %w", err)
+	}
+
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
-	kafkaClient, err := r.NewKafkaClient(bootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(bootstrapServers, kafkaClusterAdminSaramaConfig)
+	if err != nil {
+		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+	}
+	defer kafkaClusterAdminClient.Close()
+
+	kafkaClient, err := r.NewKafkaClient(bootstrapServers, kafkaClientSaramaConfig)
 	if err != nil {
 		return fmt.Errorf("failed to create Kafka cluster client: %w", err)
 	}
 	defer kafkaClient.Close()
 
-	kafkaAdminClient, err := sarama.NewClusterAdminFromClient(kafkaClient)
-	if err != nil {
-		return fmt.Errorf("failed to create Kafka cluster admin client: %w", err)
-	}
-	defer kafkaAdminClient.Close()
-
 	groupId := cg.Spec.Template.Spec.Configs.Configs["group.id"]
 	topics := cg.Spec.Template.Spec.Topics
 
-	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaAdminClient, topics, groupId); err != nil {
+	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdminClient, topics, groupId); err != nil {
 		return fmt.Errorf("failed to initialize offset: %w", err)
 	}
 
 	return nil
+}
+
+func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+	var triggerAuthentication *kedav1alpha1.TriggerAuthentication
+	var secret *corev1.Secret
+
+	if hasAuthSpecAuthConfig(cg.Spec.Template.Spec.Auth) || hasNetSpecAuthConfig(cg.Spec.Template.Spec.Auth) {
+		saslType, err := r.retrieveSaslTypeIfPresent(ctx, cg)
+		if err != nil {
+			return err
+		}
+
+		triggerAuthentication, secret, err = kedafunc.GenerateTriggerAuthentication(cg, saslType)
+		if err != nil {
+			return err
+		}
+	}
+
+	triggers, err := kedafunc.GenerateScaleTriggers(cg, triggerAuthentication)
+	if err != nil {
+		return err
+	}
+
+	scaledObject, err := keda.GenerateScaledObject(cg, cg.GetGroupVersionKind(), kedafunc.GenerateScaleTarget(cg), triggers)
+	if err != nil {
+		return err
+	}
+
+	if triggerAuthentication != nil && secret != nil {
+		if err = r.reconcileSecret(ctx, secret, cg); err != nil {
+			return err
+		}
+
+		if err = r.reconcileTriggerAuthentication(ctx, triggerAuthentication, cg); err != nil {
+			return err
+		}
+	}
+
+	if err = r.reconcileScaledObject(ctx, scaledObject, cg); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Reconciler) retrieveSaslTypeIfPresent(ctx context.Context, cg *kafkainternals.ConsumerGroup) (*string, error) {
+	if hasNetSpecAuthConfig(cg.Spec.Template.Spec.Auth) && cg.Spec.Template.Spec.Auth.NetSpec.SASL.Enable {
+		if cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef != nil {
+			secretKeyRefName := cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef.Name
+			secretKeyRefKey := cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef.Key
+			secret, err := r.KubeClient.CoreV1().Secrets(cg.Namespace).Get(ctx, secretKeyRefName, metav1.GetOptions{})
+			if err != nil {
+				return nil, reconciler.NewEvent(corev1.EventTypeWarning, "SaslTypeSecretUnavailable", "Unable to get SASL type from secret: \"%s/%s\", %w", cg.Namespace, secretKeyRefName, err)
+			}
+			saslTypeValue := string(secret.Data[secretKeyRefKey])
+			return &saslTypeValue, nil
+		}
+	}
+	return nil, nil
+}
+
+func (r *Reconciler) reconcileScaledObject(ctx context.Context, expectedScaledObject *kedav1alpha1.ScaledObject, obj metav1.Object) error {
+	scaledObject, err := r.KedaClient.KedaV1alpha1().ScaledObjects(expectedScaledObject.Namespace).Get(ctx, expectedScaledObject.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to get scaledobject %s/%s: %w", expectedScaledObject.Namespace, expectedScaledObject.Name, err)
+	}
+	if apierrors.IsNotFound(err) {
+		_, err = r.KedaClient.KedaV1alpha1().ScaledObjects(expectedScaledObject.Namespace).Create(ctx, expectedScaledObject, metav1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to create scaledobject %s/%s: %w", expectedScaledObject.Namespace, expectedScaledObject.Name, err)
+		}
+		return nil
+	}
+	if !metav1.IsControlledBy(scaledObject, obj) {
+		return fmt.Errorf("scaledobject %s/%s is not owned by %s/%s", expectedScaledObject.Namespace, expectedScaledObject.Name, obj.GetNamespace(), obj.GetName())
+	}
+	if !equality.Semantic.DeepDerivative(expectedScaledObject.Spec, scaledObject.Spec) {
+		if _, err = r.KedaClient.KedaV1alpha1().ScaledObjects(expectedScaledObject.Namespace).Update(ctx, expectedScaledObject, metav1.UpdateOptions{}); err != nil {
+			return fmt.Errorf("failed to update scaled object %s/%s: %w", expectedScaledObject.Namespace, expectedScaledObject.Name, err)
+		}
+	}
+	return nil
+}
+
+func (r *Reconciler) reconcileTriggerAuthentication(ctx context.Context, expectedTriggerAuth *kedav1alpha1.TriggerAuthentication, obj metav1.Object) error {
+	triggerAuth, err := r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Get(ctx, expectedTriggerAuth.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to get triggerauthentication %s/%s: %w", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, err)
+	}
+	if apierrors.IsNotFound(err) {
+		_, err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Create(ctx, expectedTriggerAuth, metav1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to create triggerauthentication  object %s/%s: %w", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, err)
+		}
+		return nil
+	}
+	if !metav1.IsControlledBy(triggerAuth, obj) {
+		return fmt.Errorf("triggerauthentication object %s/%s is not owned by %s/%s", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, obj.GetNamespace(), obj.GetName())
+	}
+	if !equality.Semantic.DeepDerivative(expectedTriggerAuth.Spec, triggerAuth.Spec) {
+		if _, err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Update(ctx, expectedTriggerAuth, metav1.UpdateOptions{}); err != nil {
+			return fmt.Errorf("failed to update triggerauthentication object %s/%s: %w", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, err)
+		}
+	}
+	return nil
+}
+
+func (r *Reconciler) reconcileSecret(ctx context.Context, expectedSecret *corev1.Secret, obj metav1.Object) error {
+	secret, err := r.KubeClient.CoreV1().Secrets(expectedSecret.Namespace).Get(ctx, expectedSecret.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to get secret %s/%s: %w", expectedSecret.Namespace, expectedSecret.Name, err)
+	}
+	if apierrors.IsNotFound(err) {
+		_, err = r.KubeClient.CoreV1().Secrets(expectedSecret.Namespace).Create(ctx, expectedSecret, metav1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to create secret %s/%s: %w", expectedSecret.Namespace, expectedSecret.Name, err)
+		}
+		return nil
+	}
+	if !metav1.IsControlledBy(secret, obj) {
+		return fmt.Errorf("secret object %s/%s is not owned by %s/%s", expectedSecret.Namespace, expectedSecret.Name, obj.GetNamespace(), obj.GetName())
+	}
+	// StringData is not populated on read so for now always update the secret
+	if _, err = r.KubeClient.CoreV1().Secrets(expectedSecret.Namespace).Update(ctx, expectedSecret, metav1.UpdateOptions{}); err != nil {
+		return fmt.Errorf("failed to update secret object %s/%s: %w", expectedSecret.Namespace, expectedSecret.Name, err)
+	}
+	return nil
+}
+
+func (r *Reconciler) isKEDAEnabled(ctx context.Context, namespace string) bool {
+	// TODO: code below failing unit tests with err: "panic: interface conversion: testing.ActionImpl is not testing.GetAction: missing method GetName"
+	/*if err := discovery.ServerSupportsVersion(r.KubeClient.Discovery(), keda.KedaSchemeGroupVersion); err == nil {
+		return true
+	}*/
+
+	if r.KafkaFeatureFlags.IsControllerAutoscalerEnabled() {
+		if _, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace).List(ctx, metav1.ListOptions{}); err != nil {
+			logging.FromContext(ctx).Debug("KEDA not installed, failed to list ScaledObjects")
+			return false
+		}
+		return true
+	}
+	return false
 }
 
 var (

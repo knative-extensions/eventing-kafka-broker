@@ -29,13 +29,19 @@ import (
 
 func (r Reconciler) newAuthConfigOption(ctx context.Context, cg *kafkainternals.ConsumerGroup) (kafka.ConfigOption, error) {
 	var secret *corev1.Secret
-	var err error
 
 	if hasAuthSpecAuthConfig(cg.Spec.Template.Spec.Auth) {
-		secret, err = security.Secret(ctx, &AuthSpecSecretLocator{cg}, security.DefaultSecretProviderFunc(r.SecretLister, r.KubeClient))
+		secret, err := security.Secret(ctx, &AuthSpecSecretLocator{cg}, security.DefaultSecretProviderFunc(r.SecretLister, r.KubeClient))
 		if err != nil {
 			return nil, err
 		}
+
+		authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
+		if err != nil {
+			return nil, err
+		}
+		return security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret), nil
+
 	} else if hasNetSpecAuthConfig(cg.Spec.Template.Spec.Auth) {
 		auth, err := security.ResolveAuthContextFromNetSpec(r.SecretLister, cg.GetNamespace(), *cg.Spec.Template.Spec.Auth.NetSpec)
 		if err != nil {
@@ -76,7 +82,9 @@ func hasAuthSpecAuthConfig(auth *kafkainternals.Auth) bool {
 }
 
 func hasNetSpecAuthConfig(auth *kafkainternals.Auth) bool {
-	return auth != nil && (auth.NetSpec.TLS.Enable || auth.NetSpec.SASL.Enable) &&
+	return auth != nil &&
+		auth.NetSpec != nil &&
+		(auth.NetSpec.TLS.Enable || auth.NetSpec.SASL.Enable) &&
 		(auth.NetSpec.TLS.Cert.SecretKeyRef != nil ||
 			auth.NetSpec.TLS.CACert.SecretKeyRef != nil ||
 			auth.NetSpec.TLS.Key.SecretKeyRef != nil ||

@@ -52,6 +52,8 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	cgreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
+
+	kedaclient "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client"
 )
 
 const (
@@ -114,6 +116,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		SystemNamespace:            system.Namespace(),
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 		KafkaFeatureFlags:          config.DefaultFeaturesConfig(),
+		KedaClient:                 kedaclient.Get(ctx),
 	}
 
 	consumerInformer := consumer.Get(ctx)
@@ -136,6 +139,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	}
 
 	ResyncOnStatefulSetChange(ctx, globalResync)
+
+	//Todo: ScaledObject informer when KEDA is installed
 
 	return impl
 }

@@ -1350,8 +1350,17 @@ knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned/
 knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned/scheme
 knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned/typed/keda/v1alpha1
 knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned/typed/keda/v1alpha1/fake
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/informers/externalversions
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/informers/externalversions/internalinterfaces
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/informers/externalversions/keda
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/informers/externalversions/keda/v1alpha1
 knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client
 knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client/fake
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/informers/factory
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/informers/factory/fake
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/informers/keda/v1alpha1/scaledobject
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/informers/keda/v1alpha1/scaledobject/fake
+knative.dev/eventing-autoscaler-keda/third_party/pkg/client/listers/keda/v1alpha1
 # knative.dev/eventing-kafka v0.34.1-0.20220907020318-2f1fbd6dda1b
 ## explicit; go 1.16
 knative.dev/eventing-kafka/pkg/apis/bindings
