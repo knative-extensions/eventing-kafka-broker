@@ -397,7 +397,7 @@
             <!--  KinD e2e tests registry uses HTTP -->
             <allowInsecureRegistries>true</allowInsecureRegistries>
             <from>
-              <image>registry.access.redhat.com/ubi8/openjdk-17</image>
+              <image>registry.access.redhat.com/ubi9/openjdk-17</image>
               <platforms>
                 <platform>
                   <architecture>amd64</architecture>
