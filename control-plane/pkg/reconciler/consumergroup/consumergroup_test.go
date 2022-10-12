@@ -77,7 +77,7 @@ var finalizerUpdatedEvent = Eventf(
 )
 
 func TestReconcileKind(t *testing.T) {
-
+	//TODO: Add tests with KEDA installed
 	tt := TableTest{
 		{
 			Name: "Consumers in multiple pods",

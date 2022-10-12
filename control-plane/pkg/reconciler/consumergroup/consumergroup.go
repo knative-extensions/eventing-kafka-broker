@@ -543,7 +543,7 @@ func (r *Reconciler) reconcileTriggerAuthentication(ctx context.Context, expecte
 		return fmt.Errorf("triggerauthentication object %s/%s is not owned by %s/%s", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, obj.GetNamespace(), obj.GetName())
 	}
 	if !equality.Semantic.DeepDerivative(expectedTriggerAuth.Spec, triggerAuth.Spec) {
-		if _, err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Update(ctx, triggerAuth, metav1.UpdateOptions{}); err != nil {
+		if _, err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Update(ctx, expectedTriggerAuth, metav1.UpdateOptions{}); err != nil {
 			return fmt.Errorf("failed to update triggerauthentication object %s/%s: %w", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, err)
 		}
 	}
@@ -565,7 +565,8 @@ func (r *Reconciler) reconcileSecret(ctx context.Context, expectedSecret *corev1
 	if !metav1.IsControlledBy(secret, obj) {
 		return fmt.Errorf("secret object %s/%s is not owned by %s/%s", expectedSecret.Namespace, expectedSecret.Name, obj.GetNamespace(), obj.GetName())
 	}
-	if _, err = r.KubeClient.CoreV1().Secrets(expectedSecret.Namespace).Update(ctx, secret, metav1.UpdateOptions{}); err != nil {
+	// StringData is not populated on read so for now always update the secret
+	if _, err = r.KubeClient.CoreV1().Secrets(expectedSecret.Namespace).Update(ctx, expectedSecret, metav1.UpdateOptions{}); err != nil {
 		return fmt.Errorf("failed to update secret object %s/%s: %w", expectedSecret.Namespace, expectedSecret.Name, err)
 	}
 	return nil
