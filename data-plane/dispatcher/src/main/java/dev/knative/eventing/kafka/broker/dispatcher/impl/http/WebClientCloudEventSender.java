@@ -43,7 +43,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
   private static final Logger logger = LoggerFactory.getLogger(WebClientCloudEventSender.class);
 
-  private static final long DEFAULT_TIMEOUT_MS = 600_000L;
+  public static final long DEFAULT_TIMEOUT_MS = 600_000L;
 
   private final WebClient client;
   private final String target;
