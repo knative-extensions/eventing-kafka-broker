@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,6 +33,7 @@ import (
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
+	"knative.dev/pkg/apis"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/reconciler"
 
@@ -252,6 +254,10 @@ func propagateConsumerGroupStatus(cg *internalscg.ConsumerGroup, trigger *eventi
 
 	trigger.Status.DeadLetterSinkURI = cg.Status.DeadLetterSinkURI
 	trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
+
+	trigger.Status.PropagateSubscriptionCondition(&apis.Condition{
+		Status: corev1.ConditionTrue,
+	})
 }
 
 func (r *Reconciler) hasRelevantBrokerClass(broker *eventing.Broker) (bool, string) {

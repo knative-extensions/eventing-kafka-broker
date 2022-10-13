@@ -46,7 +46,7 @@ import (
 
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 
-	kedaclient "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client/fake"
+	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 )
 
@@ -121,6 +121,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
@@ -173,6 +174,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
@@ -218,6 +220,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
@@ -264,6 +267,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
@@ -358,6 +362,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -417,6 +422,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -472,6 +478,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
@@ -518,6 +525,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -563,6 +571,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
@@ -609,6 +618,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
 						reconcilertesting.WithTriggerDependencyFailed("failed", "failed"),
@@ -654,6 +664,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
