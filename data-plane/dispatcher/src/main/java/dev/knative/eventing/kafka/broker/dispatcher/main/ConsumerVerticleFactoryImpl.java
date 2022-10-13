@@ -147,6 +147,14 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
       consumerConfigs.put(InvalidCloudEventInterceptor.SOURCE_NAMESPACE_CONFIG, resource.getReference().getNamespace());
     }
 
+    final var egressConfig =
+      egress.hasEgressConfig() ?
+        egress.getEgressConfig() :
+        resource.getEgressConfig();
+
+    final var maxProcessingTime = maxProcessingTimeMs(consumerConfigs, egressConfig);
+    consumerConfigs.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxProcessingTime);
+
     final var producerConfigs = new HashMap<>(this.producerConfigs);
     producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
 
@@ -159,14 +167,6 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
        final KafkaConsumer<Object, CloudEvent> consumer = createConsumer(vertx, consumerConfigs);
        final var metricsCloser = Metrics.register(consumer.unwrap());
-
-       final var egressConfig =
-         egress.hasEgressConfig() ?
-           egress.getEgressConfig() :
-           resource.getEgressConfig();
-
-       final var maxProcessingTime = maxProcessingTimeMs(consumerConfigs, egressConfig);
-       consumerConfigs.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxProcessingTime);
 
        final var egressSubscriberSender = createConsumerRecordSender(
          vertx,
@@ -235,7 +235,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
   /**
    * For each handler call partitionRevoked and wait for the future to complete.
    *
-   * @param consumerGroup consumer group id
+   * @param consumerGroup            consumer group id
    * @param partitionRevokedHandlers partition revoked handlers
    * @return a single handler that dispatches the partition revoked event to the given handlers.
    */
@@ -369,14 +369,14 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     return resource != null && !resource.getNamespace().isBlank() && !resource.getName().isBlank();
   }
 
-  private static long maxProcessingTimeMs(final HashMap<String, Object> consumerConfigs, final EgressConfig egressConfig) {
+  private static int maxProcessingTimeMs(final HashMap<String, Object> consumerConfigs, final EgressConfig egressConfig) {
     final var mpr = consumerConfigs.get(ConsumerConfig.MAX_POLL_RECORDS_CONFIG);
     final long maxPollRecords = mpr == null ? /* default max.poll.records */ 500L : Long.parseLong(mpr.toString());
     final var retryPolicy = WebClientCloudEventSender.computeRetryPolicy(egressConfig);
     final var retry = egressConfig.getRetry();
-    final var timeout = egressConfig.getTimeout();
+    final var timeout = egressConfig.getTimeout() > 0 ? egressConfig.getTimeout() : WebClientCloudEventSender.DEFAULT_TIMEOUT_MS;
 
-    long maxProcessingTimeForSingleRecord = 0L;
+    long maxProcessingTimeForSingleRecord = timeout;
     for (int i = 1; i <= retry; i++) {
       maxProcessingTimeForSingleRecord += timeout + retryPolicy.apply(i);
     }
@@ -386,6 +386,13 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     // So far, the max processing time calculated is for one single record,
     // however, we poll records in batches based on the `max.poll.records`
     // configuration, so the total max processing time is:
-    return maxPollRecords * maxProcessingTimeForSingleRecord;
+    //
+    // Times 2 for dead letter sink retries.
+    final var total = 2 * maxPollRecords * maxProcessingTimeForSingleRecord;
+
+    if (total >= Integer.MAX_VALUE) {
+      return Integer.MAX_VALUE;
+    }
+    return (int) total;
   }
 }
