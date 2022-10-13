@@ -39,10 +39,6 @@
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-clients</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-kafka-client</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
@@ -107,24 +103,37 @@
       <groupId>io.smallrye.reactive</groupId>
       <artifactId>smallrye-mutiny-vertx-web-client</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.smallrye.reactive</groupId>
+      <artifactId>smallrye-mutiny-vertx-micrometer-metrics</artifactId>
+    </dependency>
 
     <dependency>
-      <groupId>io.cloudevents</groupId>
-      <artifactId>cloudevents-http-vertx</artifactId>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-kafka-client</artifactId>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
-      <artifactId>vertx-micrometer-metrics</artifactId>
+      <artifactId>vertx-opentelemetry</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.cloudevents</groupId>
+      <artifactId>cloudevents-kafka</artifactId>
       <exclusions>
         <exclusion>
-          <groupId>org.hdrhistogram</groupId>
-          <artifactId>HdrHistogram</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.vertx</groupId>
-          <artifactId>vertx-core</artifactId>
+          <groupId>org.apache.kafka</groupId>
+          <artifactId>kafka-clients</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.cloudevents</groupId>
+      <artifactId>cloudevents-json-jackson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.cloudevents</groupId>
+      <artifactId>cloudevents-http-vertx</artifactId>
     </dependency>
 
     <dependency>
@@ -158,17 +167,6 @@
       <artifactId>protobuf-java-util</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>io.cloudevents</groupId>
-      <artifactId>cloudevents-kafka</artifactId>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.kafka</groupId>
-          <artifactId>kafka-clients</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
