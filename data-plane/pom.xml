@@ -134,7 +134,6 @@
           </exclusion>
         </exclusions>
       </dependency>
-
       <dependency>
         <groupId>io.vertx</groupId>
         <artifactId>vertx-opentelemetry</artifactId>
