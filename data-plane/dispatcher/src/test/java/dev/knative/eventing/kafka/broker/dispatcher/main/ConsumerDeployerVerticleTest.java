@@ -119,7 +119,7 @@ public class ConsumerDeployerVerticleTest {
         assertThat(vertx.deploymentIDs()).hasSize(NUM_SYSTEM_VERTICLES);
         checkpoint.flag();
       }))
-      .onFailure(context::failNow);
+      .onSuccess(v -> context.failNow("Unexpected success"));
   }
 
   @Test
