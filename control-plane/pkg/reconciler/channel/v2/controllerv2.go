@@ -66,7 +66,6 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 			ContractConfigMapFormat:     configs.ContractConfigMapFormat,
 			DataPlaneNamespace:          configs.SystemNamespace,
 		},
-		NewKafkaClient:             sarama.NewClient,
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 		Env:                        configs,
 		ConfigMapLister:            configmapInformer.Lister(),
