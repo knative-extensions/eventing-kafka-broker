@@ -28,6 +28,7 @@ echo "=== Update Codegen for $MODULE_NAME"
 group "Generating checksums for configmap _example keys"
 
 ${REPO_ROOT_DIR}/hack/update-checksums.sh
+cp -R "${REPO_ROOT_DIR}/vendor/github.com/kedacore/keda/v2/apis/keda/v1alpha1" ${REPO_ROOT_DIR}/third_party/pkg/apis/keda/
 
 group "Kubernetes Codegen"
 
@@ -45,6 +46,11 @@ ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
   "eventing:v1alpha1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
 
+${CODEGEN_PKG}/generate-groups.sh "client,informer,lister" \
+  knative.dev/eventing-kafka-broker/third_party/pkg/client knative.dev/eventing-kafka-broker/third_party/pkg/apis \
+  "keda:v1alpha1" \
+  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
+
 group "Knative Codegen"
 
 # Knative Injection
@@ -56,6 +62,11 @@ ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka \
   "eventing:v1alpha1" \
+  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
+
+${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
+  knative.dev/eventing-kafka-broker/third_party/pkg/client knative.dev/eventing-kafka-broker/third_party/pkg/apis \
+  "keda:v1alpha1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
 
 group "Update deps post-codegen"

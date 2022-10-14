@@ -53,7 +53,7 @@ import (
 	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 
-	kedaclient "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client/fake"
+	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
 	cm "knative.dev/pkg/configmap/testing"
 )
 

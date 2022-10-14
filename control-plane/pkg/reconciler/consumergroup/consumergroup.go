@@ -42,17 +42,17 @@ import (
 
 	"knative.dev/eventing/pkg/scheduler"
 
-	"knative.dev/eventing-autoscaler-keda/pkg/reconciler/keda"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
 
-	kedav1alpha1 "knative.dev/eventing-autoscaler-keda/third_party/pkg/apis/keda/v1alpha1"
-	kedaclientset "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/clientset/versioned"
 	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
+	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
+	kedaclientset "knative.dev/eventing-kafka-broker/third_party/pkg/client/clientset/versioned"
 )
 
 var (

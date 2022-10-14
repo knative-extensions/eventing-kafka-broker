@@ -49,7 +49,7 @@ import (
 
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 
-	kedaclient "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client/fake"
+	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
 )
 
 func TestGetLabels(t *testing.T) {

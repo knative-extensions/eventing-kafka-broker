@@ -177,6 +177,10 @@ func (m *MockKafkaClusterAdmin) DescribeLogDirs(brokers []int32) (map[int32][]sa
 	panic("implement me")
 }
 
+func (m *MockKafkaClusterAdmin) RemoveMemberFromConsumerGroup(groupId string, groupInstanceIds []string) (*sarama.LeaveGroupResponse, error) {
+	panic("implement me")
+}
+
 func (m *MockKafkaClusterAdmin) Close() error {
 	m.ExpectedClose = true
 	return m.ExpectedCloseError
