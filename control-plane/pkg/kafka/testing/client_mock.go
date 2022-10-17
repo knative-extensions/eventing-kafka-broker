@@ -97,7 +97,19 @@ func (m MockKafkaClient) RefreshCoordinator(consumerGroup string) error {
 	panic("implement me")
 }
 
+func (m MockKafkaClient) TransactionCoordinator(transactionID string) (*sarama.Broker, error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClient) RefreshTransactionCoordinator(transactionID string) error {
+	panic("implement me")
+}
+
 func (m MockKafkaClient) InitProducerID() (*sarama.InitProducerIDResponse, error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClient) LeastLoadedBroker() *sarama.Broker {
 	panic("implement me")
 }
 

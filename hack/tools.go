@@ -52,4 +52,7 @@ import (
 
 	// Event log utility for e2e channel testing
 	_ "knative.dev/eventing/cmd/event_display"
+
+	// We copy them into third_party, so we need them.
+	_ "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
 )

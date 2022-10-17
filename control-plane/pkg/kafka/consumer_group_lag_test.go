@@ -241,6 +241,22 @@ func (s saramaClientMock) UpsertUserScramCredentials(upsert []sarama.AlterUserSc
 	return nil, nil
 }
 
+func (s saramaClientMock) LeastLoadedBroker() *sarama.Broker {
+	panic("implement me")
+}
+
+func (s saramaClientMock) TransactionCoordinator(transactionID string) (*sarama.Broker, error) {
+	panic("implement me")
+}
+
+func (s saramaClientMock) RefreshTransactionCoordinator(transactionID string) error {
+	panic("implement me")
+}
+
+func (s saramaClientMock) RemoveMemberFromConsumerGroup(groupId string, groupInstanceIds []string) (*sarama.LeaveGroupResponse, error) {
+	panic("implement me")
+}
+
 func (s saramaClientMock) CreateTopic(topic string, _ *sarama.TopicDetail, _ bool) error {
 	s.hasTopic(topic)
 	return nil

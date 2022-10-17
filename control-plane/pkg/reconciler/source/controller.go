@@ -30,8 +30,8 @@ import (
 	kafkainformer "knative.dev/eventing-kafka/pkg/client/injection/informers/sources/v1beta1/kafkasource"
 	"knative.dev/eventing-kafka/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
 
-	kedaclient "knative.dev/eventing-autoscaler-keda/third_party/pkg/client/injection/client"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
+	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client"
 )
 
 func NewController(ctx context.Context) *controller.Impl {

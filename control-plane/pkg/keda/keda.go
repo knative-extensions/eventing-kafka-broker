@@ -22,12 +22,11 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kedav1alpha1 "knative.dev/eventing-autoscaler-keda/third_party/pkg/apis/keda/v1alpha1"
+	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
 	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/reconciler"
 
-	"knative.dev/eventing-autoscaler-keda/pkg/reconciler/keda"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )
@@ -49,7 +48,7 @@ func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthenticati
 	bootstrapServers := cg.Spec.Template.Spec.Configs.Configs[kafka.BootstrapServersConfigMapKey]
 	consumerGroup := cg.Spec.Template.Spec.Configs.Configs[kafka.GroupIDConfigMapKey]
 
-	lagThreshold, err := keda.GetInt32ValueFromMap(cg.Annotations, keda.KedaAutoscalingKafkaLagThreshold, defaultKafkaLagThreshold)
+	lagThreshold, err := GetInt32ValueFromMap(cg.Annotations, KedaAutoscalingKafkaLagThreshold, defaultKafkaLagThreshold)
 	if err != nil {
 		return nil, err
 	}
@@ -208,12 +207,12 @@ func addAuthSecretTargetRef(parameter string, secretKeyRef v1beta1.SecretValueFr
 func SetAutoscalingAnnotations(objannotations map[string]string) map[string]string {
 	if objannotations != nil {
 		cgannotations := map[string]string{}
-		setAnnotation(objannotations, keda.AutoscalingClassAnnotation, cgannotations)
-		setAnnotation(objannotations, keda.AutoscalingMinScaleAnnotation, cgannotations)
-		setAnnotation(objannotations, keda.AutoscalingMaxScaleAnnotation, cgannotations)
-		setAnnotation(objannotations, keda.KedaAutoscalingPollingIntervalAnnotation, cgannotations)
-		setAnnotation(objannotations, keda.KedaAutoscalingCooldownPeriodAnnotation, cgannotations)
-		setAnnotation(objannotations, keda.KedaAutoscalingKafkaLagThreshold, cgannotations)
+		setAnnotation(objannotations, AutoscalingClassAnnotation, cgannotations)
+		setAnnotation(objannotations, AutoscalingMinScaleAnnotation, cgannotations)
+		setAnnotation(objannotations, AutoscalingMaxScaleAnnotation, cgannotations)
+		setAnnotation(objannotations, KedaAutoscalingPollingIntervalAnnotation, cgannotations)
+		setAnnotation(objannotations, KedaAutoscalingCooldownPeriodAnnotation, cgannotations)
+		setAnnotation(objannotations, KedaAutoscalingKafkaLagThreshold, cgannotations)
 		return cgannotations
 	}
 	return nil

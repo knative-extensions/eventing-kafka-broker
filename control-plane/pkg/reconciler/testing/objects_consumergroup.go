@@ -26,8 +26,8 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	"knative.dev/eventing-autoscaler-keda/pkg/reconciler/keda"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
 )
 
 const (
