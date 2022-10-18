@@ -252,6 +252,8 @@ function scale_controlplane() {
     sleep 5
     # Scale up components for HA tests
     kubectl -n knative-eventing scale deployment "$deployment" --replicas="${REPLICAS}" || fail_test "Failed to scale up to ${REPLICAS} ${deployment}"
+    # Wait for the deployment to be available
+    kubectl -n knative-eventing wait deployment "$deployment" --for condition=Available=True --timeout=180s
   done
 }
 
