@@ -16,7 +16,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    kafka.eventing.knative.dev/release: "v20221013-3c7ea5ad4"
+    kafka.eventing.knative.dev/release: "v20221016-e3e35c5f0"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
