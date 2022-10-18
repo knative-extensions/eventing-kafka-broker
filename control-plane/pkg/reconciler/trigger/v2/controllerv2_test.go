@@ -28,8 +28,8 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 
-	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
 )
 
 func TestNewController(t *testing.T) {
