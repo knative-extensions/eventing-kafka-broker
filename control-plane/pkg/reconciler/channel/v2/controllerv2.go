@@ -21,9 +21,11 @@ import (
 	"net/http"
 
 	"github.com/Shopify/sarama"
+	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
@@ -73,6 +75,16 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 		SubscriptionLister:         subscriptioninformer.Get(ctx).Lister(),
 		ConsumerGroupLister:        consumerGroupInformer.Lister(),
 		InternalsClient:            consumergroupclient.Get(ctx),
+	}
+
+	logger := logging.FromContext(ctx)
+
+	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		logger.Fatal("Failed to get or create data plane config map",
+			zap.String("configmap", configs.DataPlaneConfigMapAsString()),
+			zap.Error(err),
+		)
 	}
 
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)
