@@ -185,7 +185,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 	}
 
 	// TODO: make keda annotation values configurable and maybe unexposed
-	expectedCg.Annotations = kedafunc.SetAutoscalingAnnotations(broker.Annotations)
+	expectedCg.Annotations = kedafunc.SetAutoscalingAnnotations(trigger.Annotations)
 
 	if secret != nil {
 		expectedCg.Spec.Template.Spec.Auth = &internalscg.Auth{

@@ -47,7 +47,6 @@ import (
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
-	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
 )
 
 const (
@@ -378,12 +377,13 @@ func TestReconcileKind(t *testing.T) {
 					BrokerReady,
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
-					WithAutoscalingAnnotationsBroker(),
 				),
 				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
 				),
-				newTrigger(),
+				newTrigger(
+					WithAutoscalingAnnotationsTrigger(),
+				),
 				NewConsumerGroup(
 					WithConsumerGroupName(TriggerUUID),
 					WithConsumerGroupNamespace(triggerNamespace),
@@ -427,6 +427,7 @@ func TestReconcileKind(t *testing.T) {
 						withTriggerSubscriberResolvedSucceeded(),
 						reconcilertesting.WithTriggerDependencyReady(),
 						withDeadLetterSinkURI(""),
+						WithAutoscalingAnnotationsTrigger(),
 					),
 				},
 			},
@@ -754,7 +755,6 @@ func TestReconcileKind(t *testing.T) {
 	}
 
 	table.Test(t, NewFactory(env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
-		ctx, _ = kedaclient.With(ctx)
 		logger := logging.FromContext(ctx)
 
 		reconciler := &Reconciler{

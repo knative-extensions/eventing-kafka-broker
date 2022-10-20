@@ -194,15 +194,15 @@ func WithBootstrapServerStatusAnnotation(servers string) reconcilertesting.Broke
 	}
 }
 
-func WithAutoscalingAnnotationsBroker() reconcilertesting.BrokerOption {
-	return func(broker *eventing.Broker) {
-		if broker.Annotations == nil {
-			broker.Annotations = make(map[string]string)
+func WithAutoscalingAnnotationsTrigger() reconcilertesting.TriggerOption {
+	return func(trigger *eventing.Trigger) {
+		if trigger.Annotations == nil {
+			trigger.Annotations = make(map[string]string)
 		}
 
 		for k, v := range ConsumerGroupAnnotations {
-			if _, ok := broker.Annotations[k]; !ok {
-				broker.Annotations[k] = v
+			if _, ok := trigger.Annotations[k]; !ok {
+				trigger.Annotations[k] = v
 			}
 		}
 	}
