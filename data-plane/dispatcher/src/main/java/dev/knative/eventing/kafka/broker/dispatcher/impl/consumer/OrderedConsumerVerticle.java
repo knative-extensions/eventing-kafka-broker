@@ -15,36 +15,32 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.OrderedAsyncExecutor;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
-import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
-public class OrderedConsumerVerticle extends BaseConsumerVerticle {
+public class OrderedConsumerVerticle extends ConsumerVerticle {
 
   private static final Logger logger = LoggerFactory.getLogger(OrderedConsumerVerticle.class);
 
@@ -53,25 +49,19 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
   private final PartitionRevokedHandler partitionRevokedHandler;
-  private final DataPlaneContract.Egress egress;
   private final Bucket bucket;
 
   private final AtomicBoolean closed;
   private final AtomicLong pollTimer;
   private final AtomicBoolean isPollInFlight;
 
-  private final MeterRegistry meterRegistry;
+  public OrderedConsumerVerticle(final ConsumerVerticleContext context,
+                                 final Initializer initializer) {
+    super(context, initializer);
 
-  public OrderedConsumerVerticle(final DataPlaneContract.Egress egress,
-                                 final Initializer initializer,
-                                 final Set<String> topics,
-                                 final int maxPollRecords,
-                                 final MeterRegistry meterRegistry) {
-    super(initializer, topics);
-
-    final var vReplicas = Math.max(1, egress.getVReplicas());
-    final var tokens = maxPollRecords * vReplicas;
-    if (egress.getFeatureFlags().getEnableRateLimiter()) {
+    final var vReplicas = Math.max(1, context.getEgress().getVReplicas());
+    final var tokens = context.getMaxPollRecords() * vReplicas;
+    if (context.getEgress().getFeatureFlags().getEnableRateLimiter()) {
       this.bucket = new LocalBucketBuilder()
         .addLimit(Bandwidth.classic(tokens, Refill.greedy(tokens, Duration.ofSeconds(1))))
         .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
@@ -81,19 +71,20 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       this.bucket = null;
     }
 
-    this.egress = egress;
     this.recordDispatcherExecutors = new ConcurrentHashMap<>();
     this.closed = new AtomicBoolean(false);
     this.isPollInFlight = new AtomicBoolean(false);
     this.pollTimer = new AtomicLong(-1);
-    this.meterRegistry = meterRegistry;
 
     partitionRevokedHandler = partitions -> {
       // Stop executors associated with revoked partitions.
       for (final TopicPartition partition : partitions) {
         final var executor = recordDispatcherExecutors.remove(partition);
         if (executor != null) {
-          logger.info("Stopping executor {}", keyValue("topicPartition", partition));
+          logger.info("Stopping executor {} {}",
+            keyValue("context", context.getLoggingContext()),
+            keyValue("topicPartition", partition)
+          );
           executor.stop();
         }
       }
@@ -104,7 +95,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   @Override
   void startConsumer(Promise<Void> startPromise) {
     // We need to sub first, then we can start the polling loop
-    this.consumer.subscribe(this.topics)
+    this.consumer.subscribe(new HashSet<>(getConsumerVerticleContext().getResource().getTopicsList()))
       .onFailure(startPromise::fail)
       .onSuccess(v -> {
         if (this.pollTimer.compareAndSet(-1, 0)) {
@@ -117,18 +108,16 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private void poll() {
     if (this.closed.get() || this.isPollInFlight.get()) {
-      logger.debug("Consumer closed or poll is in-flight {}", keyValue("topics", topics));
+      logger.debug("Consumer closed or poll is in-flight {}", keyValue("context", getLoggingContext()));
       return;
     }
 
     // When we don't have tokens available, we just wait `POLLING_MS`
     // before trying to poll again.
     if (bucket != null && bucket.getAvailableTokens() <= 0) {
-      logger.info("Rate limiter, tokens unavailable {} {} {} {}",
-        keyValue("resource", egress.getReference()),
-        keyValue(ConsumerConfig.GROUP_ID_CONFIG, egress.getConsumerGroup()),
+      logger.info("Rate limiter, tokens unavailable {} {}",
         keyValue("wait.ms", POLLING_MS),
-        keyValue("topics", topics)
+        keyValue("context", getLoggingContext())
       );
       return;
     }
@@ -136,15 +125,12 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     // Only poll new records when at-least one internal per-partition queue
     // needs more records.
     if (areAllExecutorsBusy()) {
-      logger.debug("all executors are busy {}", keyValue("topics", topics));
+      logger.debug("all executors are busy {}", keyValue("context", getLoggingContext()));
       return;
     }
 
     if (this.isPollInFlight.compareAndSet(false, true)) {
-      logger.debug("Polling for records {} {}",
-        keyValue("topics", topics),
-        keyValue("resource", egress.getReference())
-      );
+      logger.debug("Polling for records {}", getLoggingContext());
 
       this.consumer.poll(POLLING_TIMEOUT)
         .onSuccess(this::recordsHandler)
@@ -199,7 +185,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record) {
     if (this.closed.get()) {
-      return Future.failedFuture("Consumer verticle closed topics=" + topics + " resource=" + egress.getReference());
+      return Future.failedFuture("Consumer verticle closed " + getLoggingContext());
     }
 
     return this.recordDispatcher.dispatch(record);
@@ -210,7 +196,11 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     if (executor != null) {
       return executor;
     }
-    executor = new OrderedAsyncExecutor(topicPartition, meterRegistry, egress);
+    executor = new OrderedAsyncExecutor(
+      topicPartition,
+      getConsumerVerticleContext().getMetricsRegistry(),
+      getConsumerVerticleContext().getEgress()
+    );
     this.recordDispatcherExecutors.put(topicPartition, executor);
     return executor;
   }
