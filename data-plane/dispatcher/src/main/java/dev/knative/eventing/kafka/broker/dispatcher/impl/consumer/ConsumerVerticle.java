@@ -17,6 +17,8 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
+import dev.knative.eventing.kafka.broker.dispatcher.main.LoggingConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -25,7 +27,6 @@ import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.BiFunction;
 
 import org.slf4j.Logger;
@@ -33,25 +34,30 @@ import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
-public abstract class BaseConsumerVerticle extends AbstractVerticle {
+public abstract class ConsumerVerticle extends AbstractVerticle {
 
-  public interface Initializer extends BiFunction<Vertx, BaseConsumerVerticle, Future<Void>> {
+
+  public interface Initializer extends BiFunction<Vertx, ConsumerVerticle, Future<Void>> {
   }
 
-  private static final Logger logger = LoggerFactory.getLogger(BaseConsumerVerticle.class);
+  private static final Logger logger = LoggerFactory.getLogger(ConsumerVerticle.class);
 
   private final Initializer initializer;
-  final Set<String> topics;
+
+  private final ConsumerVerticleContext consumerVerticleContext;
+  private final LoggingConsumerVerticleContext loggingContext;
 
   KafkaConsumer<Object, CloudEvent> consumer;
   RecordDispatcher recordDispatcher;
   private AsyncCloseable closeable;
 
-  public BaseConsumerVerticle(final Initializer initializer, final Set<String> topics) {
-    Objects.requireNonNull(topics);
-    Objects.requireNonNull(initializer);
+  public ConsumerVerticle(final ConsumerVerticleContext consumerVerticleContext,
+                          final Initializer initializer) {
+    Objects.requireNonNull(consumerVerticleContext);
 
-    this.topics = topics;
+    this.consumerVerticleContext = consumerVerticleContext;
+    this.loggingContext = new LoggingConsumerVerticleContext(consumerVerticleContext);
+
     this.initializer = initializer;
   }
 
@@ -70,12 +76,12 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
 
   @Override
   public void stop(Promise<Void> stopPromise) {
-    logger.info("Stopping consumer {}", keyValue("topics", topics));
+    logger.info("Stopping consumer {}", keyValue("context", consumerVerticleContext));
 
     AsyncCloseable
       .compose(this.recordDispatcher, this.closeable, this.consumer::close)
       .close()
-      .onComplete(r -> logger.info("Consumer verticle closed {}", keyValue("topics", topics)));
+      .onComplete(r -> logger.info("Consumer verticle closed {}", keyValue("context", consumerVerticleContext)));
 
     stopPromise.tryComplete();
   }
@@ -93,14 +99,20 @@ public abstract class BaseConsumerVerticle extends AbstractVerticle {
   }
 
   void exceptionHandler(Throwable cause) {
-    // TODO Add context (consumer group, resource id, etc)
-    // TODO Send message on event bus
-    logger.error("Consumer exception {}", keyValue("topics", topics), cause);
+    logger.error("Consumer exception {}", keyValue("context", consumerVerticleContext), cause);
 
     // Propagate exception to the verticle exception handler.
-    if (context.exceptionHandler() != null) {
-      this.context.exceptionHandler().handle(cause);
+    if (super.context.exceptionHandler() != null) {
+      super.context.exceptionHandler().handle(cause);
     }
+  }
+
+  protected ConsumerVerticleContext getConsumerVerticleContext() {
+    return consumerVerticleContext;
+  }
+
+  protected LoggingConsumerVerticleContext getLoggingContext() {
+    return loggingContext;
   }
 
   public abstract PartitionRevokedHandler getPartitionsRevokedHandler();

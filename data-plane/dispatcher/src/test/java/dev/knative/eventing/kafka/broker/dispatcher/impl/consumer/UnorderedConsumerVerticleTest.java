@@ -15,13 +15,15 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
+
 import java.util.Set;
 
 public class UnorderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
 
   @Override
-  BaseConsumerVerticle createConsumerVerticle(
-    BaseConsumerVerticle.Initializer initializer, Set<String> topics) {
-    return new UnorderedConsumerVerticle(initializer, topics, 5);
+  ConsumerVerticle createConsumerVerticle(final ConsumerVerticleContext context,
+                                          final ConsumerVerticle.Initializer initializer) {
+    return new UnorderedConsumerVerticle(context, initializer);
   }
 }
