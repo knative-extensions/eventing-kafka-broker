@@ -40,6 +40,9 @@ import (
 	apiseventing "knative.dev/eventing/pkg/apis/eventing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
+
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 )
 
 const (
@@ -64,6 +67,8 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 		Env:                 configs,
 		ConsumerGroupLister: consumerGroupInformer.Lister(),
 		InternalsClient:     consumergroupclient.Get(ctx),
+		SecretLister:        secretinformer.Get(ctx).Lister(),
+		KubeClient:          kubeclient.Get(ctx),
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {

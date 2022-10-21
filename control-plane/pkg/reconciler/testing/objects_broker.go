@@ -54,6 +54,10 @@ const (
 	TriggerNamespace = "test-namespace"
 )
 
+var (
+	BrokerTopics = []string{fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName)}
+)
+
 func BrokerTopic() string {
 	return fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName)
 }
@@ -187,6 +191,20 @@ func WithBootstrapServerStatusAnnotation(servers string) reconcilertesting.Broke
 			broker.Status.Annotations = make(map[string]string, 1)
 		}
 		broker.Status.Annotations[kafka.BootstrapServersConfigMapKey] = servers
+	}
+}
+
+func WithAutoscalingAnnotationsTrigger() reconcilertesting.TriggerOption {
+	return func(trigger *eventing.Trigger) {
+		if trigger.Annotations == nil {
+			trigger.Annotations = make(map[string]string)
+		}
+
+		for k, v := range ConsumerGroupAnnotations {
+			if _, ok := trigger.Annotations[k]; !ok {
+				trigger.Annotations[k] = v
+			}
+		}
 	}
 }
 
