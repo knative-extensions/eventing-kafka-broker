@@ -62,13 +62,5 @@ spec:
             memory: 6Gi
           requests:
             memory: 256Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          capabilities:
-            drop:
-            - ALL
-          seccompProfile:
-            type: RuntimeDefault
+
 ---
