@@ -37,7 +37,8 @@ type Triggers struct {
 }
 
 type Broker struct {
-	Name string
+	Name  string
+	Class string
 	*eventingkafkaupgrade.ReplicationOptions
 	*eventingkafkaupgrade.RetryOptions
 }

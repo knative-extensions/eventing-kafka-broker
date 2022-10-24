@@ -26,14 +26,14 @@ import (
 	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
 )
 
-func runBrokerSmokeTest(t *testing.T) {
+func runBrokerSmokeTest(t *testing.T, class string) {
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
 		helpers.EventTransformationForTriggerTestHelper(
 			context.Background(),
 			t,
 			/* broker version */ "v1",
 			/* trigger version */ "v1",
-			testbroker.Creator,
+			testbroker.CreatorForClass(class),
 		)
 	})
 }

@@ -54,6 +54,12 @@ func Creator(client *eventingtestlib.Client, version string) string {
 	return CreatorWithConfigOptions(client, version)
 }
 
+func CreatorForClass(class string) func(*eventingtestlib.Client, string) string {
+	return func(client *eventingtestlib.Client, version string) string {
+		return CreatorForClassWithOptions(class, client, version, []resources.BrokerOption{}, []ConfigOptions{})
+	}
+}
+
 type ConfigOptions func(data map[string]string)
 
 func CreatorWithConfigOptions(client *eventingtestlib.Client, version string, configOptions ...ConfigOptions) string {
@@ -70,6 +76,10 @@ func CreatorWithOptions(client *eventingtestlib.Client, version string, brokerOp
 		panic(fmt.Sprintf("error getting KafkaBroker class from env '%v'", err))
 	}
 
+	return CreatorForClassWithOptions(class, client, version, brokerOptions, configOptions)
+}
+
+func CreatorForClassWithOptions(class string, client *eventingtestlib.Client, version string, brokerOptions []resources.BrokerOption, configOptions []ConfigOptions) string {
 	name := "broker"
 
 	version = strings.ToLower(version)
