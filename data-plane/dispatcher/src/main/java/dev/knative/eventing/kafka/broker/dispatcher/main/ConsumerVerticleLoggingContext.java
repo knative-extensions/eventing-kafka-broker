@@ -22,13 +22,13 @@ import java.util.List;
 /**
  * This class holds logging information for a given consumer verticle.
  */
-public class LoggingConsumerVerticleContext {
+public final class ConsumerVerticleLoggingContext {
 
-  public final List<String> topics;
-  public final String consumerGroup;
-  public final DataPlaneContract.Reference reference;
+  private final List<String> topics;
+  private final String consumerGroup;
+  private final DataPlaneContract.Reference reference;
 
-  public LoggingConsumerVerticleContext(final ConsumerVerticleContext context) {
+  public ConsumerVerticleLoggingContext(final ConsumerVerticleContext context) {
     this.topics = context.getResource().getTopicsList();
     this.consumerGroup = context.getEgress().getConsumerGroup();
     this.reference = context.getEgress().getReference();

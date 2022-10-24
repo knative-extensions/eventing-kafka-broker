@@ -18,7 +18,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
-import dev.knative.eventing.kafka.broker.dispatcher.main.LoggingConsumerVerticleContext;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleLoggingContext;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -45,7 +45,7 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
   private final Initializer initializer;
 
   private final ConsumerVerticleContext consumerVerticleContext;
-  private final LoggingConsumerVerticleContext loggingContext;
+  private final ConsumerVerticleLoggingContext loggingContext;
 
   KafkaConsumer<Object, CloudEvent> consumer;
   RecordDispatcher recordDispatcher;
@@ -56,7 +56,7 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
     Objects.requireNonNull(consumerVerticleContext);
 
     this.consumerVerticleContext = consumerVerticleContext;
-    this.loggingContext = new LoggingConsumerVerticleContext(consumerVerticleContext);
+    this.loggingContext = new ConsumerVerticleLoggingContext(consumerVerticleContext);
 
     this.initializer = initializer;
   }
@@ -111,7 +111,7 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
     return consumerVerticleContext;
   }
 
-  protected LoggingConsumerVerticleContext getLoggingContext() {
+  protected ConsumerVerticleLoggingContext getLoggingContext() {
     return loggingContext;
   }
 
