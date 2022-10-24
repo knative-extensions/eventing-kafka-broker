@@ -27,10 +27,12 @@ public final class ConsumerVerticleLoggingContext {
   private final List<String> topics;
   private final String consumerGroup;
   private final DataPlaneContract.Reference reference;
+  private final String destination;
 
   public ConsumerVerticleLoggingContext(final ConsumerVerticleContext context) {
     this.topics = context.getResource().getTopicsList();
     this.consumerGroup = context.getEgress().getConsumerGroup();
+    this.destination = context.getEgress().getDestination();
     this.reference = context.getEgress().getReference();
   }
 
@@ -39,6 +41,7 @@ public final class ConsumerVerticleLoggingContext {
     return "{" +
       "topics=" + topics +
       ", consumerGroup='" + consumerGroup + '\'' +
+      ", destination ='" + destination + '\'' +
       ", reference=" + reference +
       '}';
   }

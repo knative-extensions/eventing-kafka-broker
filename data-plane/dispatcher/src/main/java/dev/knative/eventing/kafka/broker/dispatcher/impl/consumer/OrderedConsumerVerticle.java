@@ -82,7 +82,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
         final var executor = recordDispatcherExecutors.remove(partition);
         if (executor != null) {
           logger.info("Stopping executor {} {}",
-            keyValue("context", context.getLoggingContext()),
+            getConsumerVerticleContext().getLoggingKeyValue(),
             keyValue("topicPartition", partition)
           );
           executor.stop();
@@ -108,7 +108,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
 
   private void poll() {
     if (this.closed.get() || this.isPollInFlight.get()) {
-      logger.debug("Consumer closed or poll is in-flight {}", keyValue("context", getLoggingContext()));
+      logger.debug("Consumer closed or poll is in-flight {}", getConsumerVerticleContext().getLoggingKeyValue());
       return;
     }
 
@@ -117,7 +117,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
     if (bucket != null && bucket.getAvailableTokens() <= 0) {
       logger.info("Rate limiter, tokens unavailable {} {}",
         keyValue("wait.ms", POLLING_MS),
-        keyValue("context", getLoggingContext())
+        getConsumerVerticleContext().getLoggingKeyValue()
       );
       return;
     }
@@ -125,12 +125,12 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
     // Only poll new records when at-least one internal per-partition queue
     // needs more records.
     if (areAllExecutorsBusy()) {
-      logger.debug("all executors are busy {}", keyValue("context", getLoggingContext()));
+      logger.debug("all executors are busy {}", getConsumerVerticleContext().getLoggingKeyValue());
       return;
     }
 
     if (this.isPollInFlight.compareAndSet(false, true)) {
-      logger.debug("Polling for records {}", getLoggingContext());
+      logger.debug("Polling for records {}", getConsumerVerticleContext().getLoggingKeyValue());
 
       this.consumer.poll(POLLING_TIMEOUT)
         .onSuccess(this::recordsHandler)
@@ -185,7 +185,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
 
   private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record) {
     if (this.closed.get()) {
-      return Future.failedFuture("Consumer verticle closed " + getLoggingContext());
+      return Future.failedFuture("Consumer verticle closed " + getConsumerVerticleContext());
     }
 
     return this.recordDispatcher.dispatch(record);

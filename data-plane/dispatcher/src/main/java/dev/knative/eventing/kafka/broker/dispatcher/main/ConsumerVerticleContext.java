@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 public class ConsumerVerticleContext {
 
   public final static Logger logger = LoggerFactory.getLogger(ConsumerVerticleContext.class);
@@ -172,11 +174,15 @@ public class ConsumerVerticleContext {
     return webClientOptions;
   }
 
-  public ConsumerVerticleLoggingContext getLoggingContext() {
+  private synchronized ConsumerVerticleLoggingContext getLoggingContext() {
     if (loggingContext == null) {
       loggingContext = new ConsumerVerticleLoggingContext(this);
     }
     return loggingContext;
+  }
+
+  public Object getLoggingKeyValue() {
+    return keyValue("context", getLoggingContext());
   }
 
   public ConsumerFactory<Object, CloudEvent> getConsumerFactory() {
@@ -218,4 +224,8 @@ public class ConsumerVerticleContext {
     return resource != null && !resource.getNamespace().isBlank() && !resource.getName().isBlank();
   }
 
+  @Override
+  public String toString() {
+    return "ConsumerVerticleContext{" + getLoggingContext() + "}";
+  }
 }
