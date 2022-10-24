@@ -53,7 +53,7 @@ public class ConsumerVerticleContext {
 
   private Integer maxPoolRecords;
 
-  private LoggingConsumerVerticleContext loggingContext;
+  private ConsumerVerticleLoggingContext loggingContext;
 
   public ConsumerVerticleContext withConsumerConfigs(final Map<String, Object> consumerConfigs) {
     this.consumerConfigs = new HashMap<>(consumerConfigs);
@@ -172,9 +172,9 @@ public class ConsumerVerticleContext {
     return webClientOptions;
   }
 
-  public LoggingConsumerVerticleContext getLoggingContext() {
+  public ConsumerVerticleLoggingContext getLoggingContext() {
     if (loggingContext == null) {
-      loggingContext = new LoggingConsumerVerticleContext(this);
+      loggingContext = new ConsumerVerticleLoggingContext(this);
     }
     return loggingContext;
   }
