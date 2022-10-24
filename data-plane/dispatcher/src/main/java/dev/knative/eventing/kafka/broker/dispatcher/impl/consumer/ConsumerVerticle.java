@@ -45,7 +45,6 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
   private final Initializer initializer;
 
   private final ConsumerVerticleContext consumerVerticleContext;
-  private final ConsumerVerticleLoggingContext loggingContext;
 
   KafkaConsumer<Object, CloudEvent> consumer;
   RecordDispatcher recordDispatcher;
@@ -56,8 +55,6 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
     Objects.requireNonNull(consumerVerticleContext);
 
     this.consumerVerticleContext = consumerVerticleContext;
-    this.loggingContext = new ConsumerVerticleLoggingContext(consumerVerticleContext);
-
     this.initializer = initializer;
   }
 
@@ -76,12 +73,12 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
 
   @Override
   public void stop(Promise<Void> stopPromise) {
-    logger.info("Stopping consumer {}", keyValue("context", consumerVerticleContext));
+    logger.info("Stopping consumer {}", consumerVerticleContext.getLoggingKeyValue());
 
     AsyncCloseable
       .compose(this.recordDispatcher, this.closeable, this.consumer::close)
       .close()
-      .onComplete(r -> logger.info("Consumer verticle closed {}", keyValue("context", consumerVerticleContext)));
+      .onComplete(r -> logger.info("Consumer verticle closed {}", consumerVerticleContext.getLoggingKeyValue()));
 
     stopPromise.tryComplete();
   }
@@ -99,7 +96,7 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
   }
 
   void exceptionHandler(Throwable cause) {
-    logger.error("Consumer exception {}", keyValue("context", consumerVerticleContext), cause);
+    logger.error("Consumer exception {}", consumerVerticleContext.getLoggingKeyValue(), cause);
 
     // Propagate exception to the verticle exception handler.
     if (super.context.exceptionHandler() != null) {
@@ -109,10 +106,6 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
 
   protected ConsumerVerticleContext getConsumerVerticleContext() {
     return consumerVerticleContext;
-  }
-
-  protected ConsumerVerticleLoggingContext getLoggingContext() {
-    return loggingContext;
   }
 
   public abstract PartitionRevokedHandler getPartitionsRevokedHandler();

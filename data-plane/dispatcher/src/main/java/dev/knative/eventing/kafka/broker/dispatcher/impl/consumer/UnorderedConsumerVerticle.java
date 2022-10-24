@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -88,7 +87,7 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
           " waiting for response from subscriber before polling for new records {} {} {}",
         keyValue(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, getConsumerVerticleContext().getMaxPollRecords()),
         keyValue("records", inFlightRecords),
-        keyValue("context", getLoggingContext())
+        getConsumerVerticleContext().getLoggingKeyValue()
       );
       return;
     }
@@ -98,7 +97,7 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
         .onSuccess(this::handleRecords)
         .onFailure(cause -> {
           isPollInFlight.set(false);
-          logger.error("Failed to poll messages {}", keyValue("context", getLoggingContext()), cause);
+          logger.error("Failed to poll messages {}", getConsumerVerticleContext().getLoggingKeyValue(), cause);
           // Wait before retrying.
           vertx.setTimer(BACKOFF_DELAY_MS, t -> poll());
         });

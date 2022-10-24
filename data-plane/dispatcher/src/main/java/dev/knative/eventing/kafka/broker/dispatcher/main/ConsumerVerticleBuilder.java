@@ -151,7 +151,7 @@ public class ConsumerVerticleBuilder {
     return partitions -> {
 
       ConsumerVerticleContext.logger.info("Received revoke partitions for consumer {} {}",
-        consumerVerticleContext.getLoggingContext(),
+        consumerVerticleContext.getLoggingKeyValue(),
         keyValue("partitions", partitions)
       );
 
