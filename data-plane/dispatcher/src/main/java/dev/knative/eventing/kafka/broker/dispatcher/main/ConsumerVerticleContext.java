@@ -53,7 +53,8 @@ public class ConsumerVerticleContext {
   private ConsumerFactory<Object, CloudEvent> consumerFactory;
   private ProducerFactory<String, CloudEvent> producerFactory;
 
-  private Integer maxPoolRecords;
+  private Integer maxPollRecords;
+  private static final int DEFAULT_MAX_POLL_RECORDS = 50;
 
   private ConsumerVerticleLoggingContext loggingContext;
 
@@ -141,13 +142,15 @@ public class ConsumerVerticleContext {
   }
 
   public int getMaxPollRecords() {
-    if (maxPoolRecords == null) {
+    if (this.maxPollRecords == null) {
       final var mpr = getConsumerConfigs().get(ConsumerConfig.MAX_POLL_RECORDS_CONFIG);
       if (mpr == null) {
-        maxPoolRecords = 500;
+        this.maxPollRecords = DEFAULT_MAX_POLL_RECORDS;
+      } else {
+        this.maxPollRecords = Integer.parseInt(mpr.toString());
       }
     }
-    return maxPoolRecords;
+    return this.maxPollRecords;
   }
 
   public DataPlaneContract.EgressConfig getEgressConfig() {
