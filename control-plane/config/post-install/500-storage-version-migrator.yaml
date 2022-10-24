@@ -43,3 +43,12 @@ spec:
             - "kafkasources.sources.knative.dev"
             - "kafkachannels.messaging.knative.dev"
             - "kafkasinks.eventing.knative.dev"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+              - ALL
+            seccompProfile:
+              type: RuntimeDefault

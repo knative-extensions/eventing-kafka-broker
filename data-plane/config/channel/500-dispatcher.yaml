@@ -141,8 +141,12 @@ spec:
           terminationMessagePath: /dev/temination-log
           securityContext:
             allowPrivilegeEscalation: false
-            privileged: false
             readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+              - ALL
+            seccompProfile:
+              type: RuntimeDefault
       volumes:
         - name: config-kafka-channel-data-plane
           configMap:
