@@ -206,14 +206,14 @@ public class ConsumerVerticleBuilder {
       ));
     }
 
-    if (consumerVerticleContext.getEgress().hasReplyToOriginalTopic()) {
-      final KafkaProducer<String, CloudEvent> producer = this.consumerVerticleContext
-        .getProducerFactory()
-        .create(vertx, consumerVerticleContext.getProducerConfigs());
-      return new ResponseToKafkaTopicHandler(producer, consumerVerticleContext.getResource().getTopics(0));
+    if (consumerVerticleContext.getEgress().hasDiscardReply()) {
+      return new NoopResponseHandler();
     }
 
-    return new NoopResponseHandler();
+    final KafkaProducer<String, CloudEvent> producer = this.consumerVerticleContext
+      .getProducerFactory()
+      .create(vertx, consumerVerticleContext.getProducerConfigs());
+    return new ResponseToKafkaTopicHandler(producer, consumerVerticleContext.getResource().getTopics(0));
   }
 
   private CloudEventSender createConsumerRecordSender(final Vertx vertx) {
