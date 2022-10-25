@@ -43,6 +43,11 @@ func (in *Auth) DeepCopyInto(out *Auth) {
 		*out = new(SecretSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.SecretSpec != nil {
+		in, out := &in.SecretSpec, &out.SecretSpec
+		*out = new(SecretSpec)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
