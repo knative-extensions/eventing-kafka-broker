@@ -58,6 +58,7 @@ func WithBrokerClassFromEnvVar(b *eventingv1.Broker) {
 	}
 	resources.WithBrokerClassForBroker(class)(b)
 }
+
 // Creator creates a Broker with the class that is specified in an environment variable.
 func Creator(client *eventingtestlib.Client, version string) string {
 	return CreatorWithBrokerOptions(client, version, WithBrokerClassFromEnvVar)
