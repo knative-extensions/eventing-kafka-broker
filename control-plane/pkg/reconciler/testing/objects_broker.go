@@ -194,6 +194,16 @@ func WithBootstrapServerStatusAnnotation(servers string) reconcilertesting.Broke
 	}
 }
 
+func WithSecretStatusAnnotation(name string, namespace string) reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		if broker.Status.Annotations == nil {
+			broker.Status.Annotations = make(map[string]string, 10)
+		}
+		broker.Status.Annotations[security.AuthSecretNameKey] = name
+		broker.Status.Annotations[security.AuthSecretNamespaceKey] = namespace
+	}
+}
+
 func WithAutoscalingAnnotationsTrigger() reconcilertesting.TriggerOption {
 	return func(trigger *eventing.Trigger) {
 		if trigger.Annotations == nil {

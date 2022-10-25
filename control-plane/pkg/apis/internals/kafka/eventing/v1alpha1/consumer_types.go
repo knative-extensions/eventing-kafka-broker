@@ -125,8 +125,19 @@ type DestinationReply struct {
 }
 
 type Auth struct {
-	NetSpec  *bindings.KafkaNetSpec
-	AuthSpec *eventingv1alpha1.Auth
+	NetSpec    *bindings.KafkaNetSpec
+	AuthSpec   *eventingv1alpha1.Auth
+	SecretSpec *SecretSpec
+}
+
+type SecretSpec struct {
+	// Secret reference for SASL and SSL configurations.
+	Ref *SecretReference `json:"ref,omitempty"`
+}
+
+type SecretReference struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
 }
 
 type DeliverySpec struct {

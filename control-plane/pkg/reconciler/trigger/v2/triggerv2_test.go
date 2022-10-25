@@ -26,6 +26,7 @@ import (
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -471,6 +472,88 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
 							ConsumerFilters(NewConsumerSpecFilters()),
 							ConsumerReply(ConsumerTopicReply()),
+						)),
+					),
+				},
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(),
+						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
+						withDeadLetterSinkURI(""),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - with auth - SASL",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+					WithSecretStatusAnnotation("secret-1", ConfigMapNamespace),
+				),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
+				newTrigger(),
+				NewConsumerGroup(
+					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupNamespace(triggerNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(ChannelTopic()),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(TriggerUUID),
+							ConsumerBootstrapServersConfig(bootstrapServers),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerAuth(&internalscg.Auth{
+							SecretSpec: &internalscg.SecretSpec{
+								Ref: &internalscg.SecretReference{
+									Name:      "secret-1",
+									Namespace: ConfigMapNamespace,
+								},
+							},
+						}),
+					)),
+				),
+				NewLegacySASLSecret(ConfigMapNamespace, "secret-1"),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewConsumerGroup(
+						WithConsumerGroupName(TriggerUUID),
+						WithConsumerGroupNamespace(triggerNamespace),
+						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+						WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
+						WithConsumerGroupLabels(ConsumerTriggerLabel),
+						ConsumerGroupConsumerSpec(NewConsumerSpec(
+							ConsumerTopics(BrokerTopics[0]),
+							ConsumerConfigs(
+								ConsumerGroupIdConfig(TriggerUUID),
+								ConsumerBootstrapServersConfig(bootstrapServers),
+							),
+							ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
+							ConsumerFilters(NewConsumerSpecFilters()),
+							ConsumerReply(ConsumerTopicReply()),
+							ConsumerAuth(&internalscg.Auth{
+								SecretSpec: &internalscg.SecretSpec{
+									Ref: &internalscg.SecretReference{
+										Name:      "secret-1",
+										Namespace: ConfigMapNamespace,
+									},
+								},
+							}),
 						)),
 					),
 				},
