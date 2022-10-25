@@ -34,6 +34,7 @@ func brokerCreator(client *testlib.Client, name string) {
 	brokertest.CreatorWithBrokerOptions(
 		client,
 		"v1",
+		brokertest.WithBrokerClassFromEnvVar,
 		func(b *eventing.Broker) {
 			b.Name = name
 		},

@@ -188,11 +188,17 @@ func TestBrokerWithConfig(t *testing.T) {
 
 		eventId := uuid.New().String()
 
-		brokerName := brokertest.CreatorWithConfigOptions(client, "v1", func(data map[string]string) {
-			data[kafka.DefaultTopicNumPartitionConfigMapKey] = fmt.Sprintf("%d", numPartitions)
-			data[kafka.DefaultTopicReplicationFactorConfigMapKey] = fmt.Sprintf("%d", replicationFactor)
-			data[kafka.BootstrapServersConfigMapKey] = testingpkg.BootstrapServersPlaintext
-		})
+		brokerName := brokertest.CreatorWithOptions(client, "v1",
+			[]resources.BrokerOption{
+				brokertest.WithBrokerClassFromEnvVar,
+			},
+			[]brokertest.ConfigOptions{
+				func(data map[string]string) {
+					data[kafka.DefaultTopicNumPartitionConfigMapKey] = fmt.Sprintf("%d", numPartitions)
+					data[kafka.DefaultTopicReplicationFactorConfigMapKey] = fmt.Sprintf("%d", replicationFactor)
+					data[kafka.BootstrapServersConfigMapKey] = testingpkg.BootstrapServersPlaintext
+				},
+			})
 
 		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, subscriber)
 
