@@ -37,7 +37,6 @@ import (
 	"knative.dev/pkg/network"
 	. "knative.dev/pkg/reconciler/testing"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -55,9 +54,9 @@ import (
 	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 
 	"github.com/rickb777/date/period"
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
-	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
 	commonconstants "knative.dev/eventing-kafka/pkg/common/constants"
 	eventingrekttesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 )
@@ -1114,12 +1113,11 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-						ConsumerAuth(&kafkainternals.Auth{
-							AuthSpec: &v1alpha1.Auth{
-								Secret: &v1alpha1.Secret{
-									Ref: &v1alpha1.SecretReference{
-										Name: "secret-1",
-									},
+						ConsumerAuth(&internalscg.Auth{
+							SecretSpec: &internalscg.SecretSpec{
+								Ref: &internalscg.SecretReference{
+									Name:      "secret-1",
+									Namespace: "ns-1",
 								},
 							},
 						}),
@@ -1215,12 +1213,11 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-						ConsumerAuth(&kafkainternals.Auth{
-							AuthSpec: &v1alpha1.Auth{
-								Secret: &v1alpha1.Secret{
-									Ref: &v1alpha1.SecretReference{
-										Name: "secret-1",
-									},
+						ConsumerAuth(&internalscg.Auth{
+							SecretSpec: &internalscg.SecretSpec{
+								Ref: &internalscg.SecretReference{
+									Name:      "secret-1",
+									Namespace: "ns-1",
 								},
 							},
 						}),
@@ -1315,12 +1312,11 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-						ConsumerAuth(&kafkainternals.Auth{
-							AuthSpec: &v1alpha1.Auth{
-								Secret: &v1alpha1.Secret{
-									Ref: &v1alpha1.SecretReference{
-										Name: "secret-1",
-									},
+						ConsumerAuth(&internalscg.Auth{
+							SecretSpec: &internalscg.SecretSpec{
+								Ref: &internalscg.SecretReference{
+									Name:      "secret-1",
+									Namespace: "ns-1",
 								},
 							},
 						}),
@@ -1599,8 +1595,6 @@ func TestReconcileKind(t *testing.T) {
 	}
 
 	table.Test(t, NewFactory(&env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
-		ctx, _ = kedaclient.With(ctx)
-
 		proberMock := probertesting.MockProber(prober.StatusReady)
 		if p, ok := row.OtherTestData[testProber]; ok {
 			proberMock = p.(prober.Prober)

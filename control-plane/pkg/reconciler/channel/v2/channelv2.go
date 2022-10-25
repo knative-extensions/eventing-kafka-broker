@@ -58,7 +58,6 @@ import (
 	channelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
@@ -561,11 +560,10 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 
 	if secret != nil {
 		expectedCg.Spec.Template.Spec.Auth = &internalscg.Auth{
-			AuthSpec: &v1alpha1.Auth{
-				Secret: &v1alpha1.Secret{
-					Ref: &v1alpha1.SecretReference{
-						Name: secret.Name,
-					},
+			SecretSpec: &internalscg.SecretSpec{
+				Ref: &internalscg.SecretReference{
+					Name:      secret.Name,
+					Namespace: secret.Namespace,
 				},
 			},
 		}

@@ -123,22 +123,6 @@ func WithChannelDeadLetterSinkURI(uri string) KRShapedOption {
 	}
 }
 
-func WithAutoscalingAnnotationsChannel() KRShapedOption {
-	return func(obj duckv1.KRShaped) {
-		ch := obj.(*messagingv1beta1.KafkaChannel)
-
-		if ch.Annotations == nil {
-			ch.Annotations = make(map[string]string)
-		}
-
-		for k, v := range ConsumerGroupAnnotations {
-			if _, ok := ch.Annotations[k]; !ok {
-				ch.Annotations[k] = v
-			}
-		}
-	}
-}
-
 func WithAutoscalingAnnotationsSubscription() subscriptionv1.SubscriptionOption {
 	return func(s *v1.Subscription) {
 		if s.Annotations == nil {
