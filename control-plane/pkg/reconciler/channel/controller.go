@@ -24,36 +24,40 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
+	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+	"knative.dev/pkg/logging"
+	"knative.dev/pkg/resolver"
 
 	subscriptioninformer "knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription"
 
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	kafkachannelinformer "knative.dev/eventing-kafka/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
 	kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
-	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
-
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	"knative.dev/pkg/network"
+
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
-	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+
+	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
+	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
-	"knative.dev/pkg/network"
-	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 )
 
 func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 
-	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.IngressConditionSet)
-
 	configmapInformer := configmapinformer.Get(ctx)
-	serviceInformer := serviceinformer.Get(ctx)
+	channelInformer := kafkachannelinformer.Get(ctx)
+	consumerGroupInformer := consumergroupinformer.Get(ctx)
+
+	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(conditionSet)
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
@@ -64,16 +68,14 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 			ContractConfigMapName:       configs.ContractConfigMapName,
 			ContractConfigMapFormat:     configs.ContractConfigMapFormat,
 			DataPlaneNamespace:          configs.SystemNamespace,
-			DispatcherLabel:             base.ChannelDispatcherLabel,
-			ReceiverLabel:               base.ChannelReceiverLabel,
 		},
 		SubscriptionLister:         subscriptioninformer.Get(ctx).Lister(),
-		NewKafkaClient:             sarama.NewClient,
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		InitOffsetsFunc:            offset.InitOffsets,
 		Env:                        configs,
 		ConfigMapLister:            configmapInformer.Lister(),
-		ServiceLister:              serviceInformer.Lister(),
+		ServiceLister:              serviceinformer.Get(ctx).Lister(),
+		ConsumerGroupLister:        consumerGroupInformer.Lister(),
+		InternalsClient:            consumergroupclient.Get(ctx),
 	}
 
 	logger := logging.FromContext(ctx)
@@ -90,29 +92,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	IPsLister := prober.IdentityIPsLister()
 	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, "", IPsLister, impl.EnqueueKey)
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
-
-	channelInformer := kafkachannelinformer.Get(ctx)
-
-	channelInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
-
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
-
-	globalResync := func(_ interface{}) {
-		impl.GlobalResync(channelInformer.Informer())
-	}
-
-	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterController(&messagingv1beta.KafkaChannel{}),
-		Handler:    controller.HandleAll(globalResync),
-	})
-
-	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.ContractConfigMapName),
-		Handler: cache.ResourceEventHandlerFuncs{
-			AddFunc:    globalResync,
-			DeleteFunc: globalResync,
-		},
-	})
 
 	reconciler.SecretTracker = impl.Tracker
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
@@ -127,9 +107,12 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 			corev1.SchemeGroupVersion.WithKind("ConfigMap"),
 		),
 	))
+	channelInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
-	channelInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		DeleteFunc: reconciler.OnDeleteObserver,
+	// ConsumerGroup changes and enqueue associated channel
+	consumerGroupInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: consumergroup.Filter("kafkachannel"),
+		Handler:    controller.HandleAll(consumergroup.Enqueue("kafkachannel", impl.EnqueueKey)),
 	})
 
 	return impl

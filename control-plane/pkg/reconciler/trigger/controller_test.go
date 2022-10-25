@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright 2021 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,33 +20,26 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
-	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
-	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
-	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
-	"knative.dev/pkg/configmap"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup/fake"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker/fake"
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 )
 
 func TestNewController(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
-	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "config-features",
-		},
-	}), &config.Env{})
+	controller := NewController(ctx, &config.Env{})
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
 	}

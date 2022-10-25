@@ -21,7 +21,6 @@ import (
 
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"knative.dev/pkg/reconciler"
-	"knative.dev/pkg/resolver"
 
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
@@ -29,23 +28,14 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
 type NamespacedReconciler struct {
-	*base.Reconciler
-	*FlagsHolder
-
 	BrokerLister    eventinglisters.BrokerLister
 	ConfigMapLister corelisters.ConfigMapLister
 	EventingClient  eventingclientset.Interface
-	Resolver        *resolver.URIResolver
 
 	Env *config.Env
-
-	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
-	NewKafkaClient             kafka.NewClientFunc
-	InitOffsetsFunc            kafka.InitOffsetsFunc
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -54,43 +44,14 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, trigger *event
 	return br.ReconcileKind(ctx, trigger)
 }
 
-func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	br := r.createReconcilerForTriggerInstance(trigger)
-
-	return br.FinalizeKind(ctx, trigger)
-}
-
 func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *eventing.Trigger) *Reconciler {
 	return &Reconciler{
-		Reconciler: &base.Reconciler{
-			KubeClient:                   r.Reconciler.KubeClient,
-			PodLister:                    r.Reconciler.PodLister,
-			SecretLister:                 r.Reconciler.SecretLister,
-			SecretTracker:                r.Reconciler.SecretTracker,
-			ConfigMapTracker:             r.Reconciler.ConfigMapTracker,
-			ContractConfigMapName:        r.Reconciler.ContractConfigMapName,
-			ContractConfigMapFormat:      r.Reconciler.ContractConfigMapFormat,
-			DataPlaneConfigConfigMapName: r.DataPlaneConfigConfigMapName,
-			DispatcherLabel:              r.DispatcherLabel,
-			ReceiverLabel:                r.ReceiverLabel,
-
-			// override
-			DataPlaneNamespace:          trigger.Namespace,
-			DataPlaneConfigMapNamespace: trigger.Namespace,
-		},
-		FlagsHolder: &FlagsHolder{
-			Flags: r.Flags,
-		},
 		BrokerLister:    r.BrokerLister,
 		ConfigMapLister: r.ConfigMapLister,
 		EventingClient:  r.EventingClient,
-		Resolver:        r.Resolver,
 		Env:             r.Env,
 		// override
-		BrokerClass:                kafka.NamespacedBrokerClass,
-		DataPlaneConfigMapLabeler:  kafka.NamespacedDataplaneLabelConfigmapOption,
-		NewKafkaClusterAdminClient: r.NewKafkaClusterAdminClient,
-		NewKafkaClient:             r.NewKafkaClient,
-		InitOffsetsFunc:            r.InitOffsetsFunc,
+		BrokerClass:               kafka.NamespacedBrokerClass,
+		DataPlaneConfigMapLabeler: kafka.NamespacedDataplaneLabelConfigmapOption,
 	}
 }

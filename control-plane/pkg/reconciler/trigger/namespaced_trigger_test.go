@@ -21,27 +21,24 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Shopify/sarama"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
-	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
-	"knative.dev/pkg/resolver"
-	"knative.dev/pkg/tracker"
 
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 
+	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
@@ -62,6 +59,7 @@ func namespacedTriggerReconciliation(t *testing.T, format string, env config.Env
 	testKey := fmt.Sprintf("%s/%s", TriggerNamespace, TriggerName)
 
 	env.ContractConfigMapFormat = format
+	env.DataPlaneConfigMapNamespace = BrokerNamespace
 
 	table := TableTest{
 		{
@@ -77,57 +75,36 @@ func namespacedTriggerReconciliation(t *testing.T, format string, env config.Env
 				),
 				newTrigger(),
 				NewService(),
-				NewConfigMapFromContract(&contract.Contract{
-					Resources: []*contract.Resource{
-						{
-							Uid:     BrokerUUID,
-							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
-						},
-					},
-				}, BrokerNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
-				BrokerDispatcherPod(BrokerNamespace, nil),
 			},
 			Key: testKey,
-			WantEvents: []string{
-				finalizerUpdatedEvent,
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(),
-			},
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(BrokerNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
-					Resources: []*contract.Resource{
-						{
-							Uid:     BrokerUUID,
-							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
-							Egresses: []*contract.Egress{
-								{
-									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
-									Uid:           TriggerUUID,
-									Reference:     TriggerReference(),
-								},
-							},
-						},
-					},
-					Generation: 1,
-				}),
-				BrokerDispatcherPodUpdate(BrokerNamespace, map[string]string{
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
+			WantCreates: []runtime.Object{
+				NewConsumerGroup(
+					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupNamespace(triggerNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(BrokerTopics[0]),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(bootstrapServers),
+							ConsumerGroupIdConfig(TriggerUUID),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerFilters(NewConsumerSpecFilters()),
+						ConsumerReply(ConsumerTopicReply()),
+					)),
+				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerSubscribed(),
-						withSubscriberURI,
-						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
-						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+						withTriggerSubscriberResolvedSucceeded(),
+						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
+						withDeadLetterSinkURI(""),
 					),
 				},
 			},
@@ -146,51 +123,17 @@ func useNamespacedTable(t *testing.T, table TableTest, env *config.Env) {
 
 		logger := logging.FromContext(ctx)
 
-		reconciler := &NamespacedReconciler{
-			Reconciler: &base.Reconciler{
-				KubeClient:                   kubeclient.Get(ctx),
-				PodLister:                    listers.GetPodLister(),
-				SecretLister:                 listers.GetSecretLister(),
-				DataPlaneConfigMapNamespace:  env.DataPlaneConfigMapNamespace,
-				ContractConfigMapName:        env.ContractConfigMapName,
-				ContractConfigMapFormat:      env.ContractConfigMapFormat,
-				DataPlaneConfigConfigMapName: env.DataPlaneConfigConfigMapName,
-				DataPlaneNamespace:           env.SystemNamespace,
-				DispatcherLabel:              base.BrokerDispatcherLabel,
-				ReceiverLabel:                base.BrokerReceiverLabel,
-			},
-			FlagsHolder: &FlagsHolder{
-				Flags: nil,
-			},
-			BrokerLister:    listers.GetBrokerLister(),
-			ConfigMapLister: listers.GetConfigMapLister(),
-			EventingClient:  eventingclient.Get(ctx),
-			Resolver:        nil,
-			Env:             env,
-			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
-				return 1, nil
-			},
-			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
-				return &kafkatesting.MockKafkaClient{}, nil
-			},
-			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
-				return &kafkatesting.MockKafkaClusterAdmin{
-					ExpectedTopicName: BrokerTopic(),
-					ExpectedTopics:    []string{BrokerTopic()},
-					ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
-						{
-							Err:        0,
-							Name:       BrokerTopic(),
-							IsInternal: false,
-							Partitions: []*sarama.PartitionMetadata{{}},
-						},
-					},
-					T: t,
-				}, nil
-			},
+		reconciler := &Reconciler{
+			BrokerLister:        listers.GetBrokerLister(),
+			ConfigMapLister:     listers.GetConfigMapLister(),
+			EventingClient:      eventingclient.Get(ctx),
+			Env:                 env,
+			BrokerClass:         kafka.NamespacedBrokerClass,
+			ConsumerGroupLister: listers.GetConsumerGroupLister(),
+			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
+			SecretLister:        listers.GetSecretLister(),
+			KubeClient:          kubeclient.Get(ctx),
 		}
-
-		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))
 
 		return triggerreconciler.NewReconciler(
 			ctx,

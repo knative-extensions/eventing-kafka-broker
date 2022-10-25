@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright 2021 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,75 +19,57 @@ package trigger
 import (
 	"context"
 
-	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
-	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
-	v1 "knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
-	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
-	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
-	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
-	"knative.dev/pkg/resolver"
 
-	apiseventing "knative.dev/eventing/pkg/apis/eventing"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	"knative.dev/eventing/pkg/apis/feature"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
+	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
+	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
+
+	apiseventing "knative.dev/eventing/pkg/apis/eventing"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
+
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 )
 
 const (
 	ControllerAgentName = "kafka-trigger-controller"
 
-	FinalizerName = "kafka.triggers.eventing.knative.dev"
+	FinalizerName = "triggers.eventing.knative.dev"
 )
 
-func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
+func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 
 	logger := logging.FromContext(ctx).Desugar()
 
-	configmapInformer := configmapinformer.Get(ctx)
 	brokerInformer := brokerinformer.Get(ctx)
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
+	consumerGroupInformer := consumergroupinformer.Get(ctx)
 
 	reconciler := &Reconciler{
-		Reconciler: &base.Reconciler{
-			KubeClient:                   kubeclient.Get(ctx),
-			PodLister:                    podinformer.Get(ctx).Lister(),
-			SecretLister:                 secretinformer.Get(ctx).Lister(),
-			DataPlaneConfigMapNamespace:  configs.DataPlaneConfigMapNamespace,
-			DataPlaneConfigConfigMapName: configs.DataPlaneConfigConfigMapName,
-			ContractConfigMapName:        configs.ContractConfigMapName,
-			ContractConfigMapFormat:      configs.ContractConfigMapFormat,
-			DataPlaneNamespace:           configs.SystemNamespace,
-			DispatcherLabel:              base.BrokerDispatcherLabel,
-			ReceiverLabel:                base.BrokerReceiverLabel,
-		},
-		FlagsHolder: &FlagsHolder{
-			Flags: feature.Flags{},
-		},
-		BrokerLister:               brokerInformer.Lister(),
-		ConfigMapLister:            configmapInformer.Lister(),
-		EventingClient:             eventingclient.Get(ctx),
-		Env:                        configs,
-		BrokerClass:                kafka.BrokerClass,
-		DataPlaneConfigMapLabeler:  base.NoopConfigmapOption,
-		NewKafkaClient:             sarama.NewClient,
-		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		InitOffsetsFunc:            offset.InitOffsets,
+		BrokerLister:        brokerInformer.Lister(),
+		ConfigMapLister:     configmapinformer.Get(ctx).Lister(),
+		EventingClient:      eventingclient.Get(ctx),
+		Env:                 configs,
+		BrokerClass:         kafka.BrokerClass,
+		ConsumerGroupLister: consumerGroupInformer.Lister(),
+		InternalsClient:     consumergroupclient.Get(ctx),
+		SecretLister:        secretinformer.Get(ctx).Lister(),
+		KubeClient:          kubeclient.Get(ctx),
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -98,10 +80,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			PromoteFilterFunc: filterTriggers(reconciler.BrokerLister, kafka.BrokerClass, FinalizerName),
 		}
 	})
-
-	setupFeatureStore(ctx, watcher, reconciler.FlagsHolder, impl, triggerInformer)
-
-	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
 	triggerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: filterTriggers(reconciler.BrokerLister, kafka.BrokerClass, FinalizerName),
@@ -114,20 +92,11 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		Handler:    enqueueTriggers(logger, triggerLister, impl.Enqueue),
 	})
 
-	globalResync := func(_ interface{}) {
-		impl.GlobalResync(triggerInformer.Informer())
-	}
-
-	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.ContractConfigMapName),
-		Handler: cache.ResourceEventHandlerFuncs{
-			AddFunc:    globalResync,
-			DeleteFunc: globalResync,
-		},
+	// ConsumerGroup changes and enqueue associated Trigger
+	consumerGroupInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: consumergroup.Filter("trigger"),
+		Handler:    controller.HandleAll(consumergroup.Enqueue("trigger", impl.EnqueueKey)),
 	})
-
-	reconciler.SecretTracker = impl.Tracker
-	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
 
 	return impl
 }
@@ -139,7 +108,7 @@ func filterTriggers(lister eventinglisters.BrokerLister, brokerClass string, fin
 			return false
 		}
 
-		if hasKafkaBrokerTriggerFinalizer(trigger.Finalizers, finalizer) {
+		if hasKafkaBrokerTriggerFinalizer(trigger.Finalizers, FinalizerName) {
 			return true
 		}
 
@@ -183,23 +152,4 @@ func enqueueTriggers(
 			}
 		}
 	})
-}
-
-func setupFeatureStore(ctx context.Context, watcher configmap.Watcher, flagsHolder *FlagsHolder, impl *controller.Impl, triggerInformer v1.TriggerInformer) {
-	featureStore := feature.NewStore(
-		logging.FromContext(ctx).Named("feature-config-eventing-store"),
-		func(name string, value interface{}) {
-			logger := logging.FromContext(ctx).Desugar()
-			flags, ok := value.(feature.Flags)
-			if !ok {
-				logger.Warn("Features ConfigMap " + name + " updated but we didn't get expected flags. Skipping updating cached features")
-			}
-			logger.Debug("Features ConfigMap " + name + " updated. Updating cached features.")
-			flagsHolder.FlagsLock.Lock()
-			defer flagsHolder.FlagsLock.Unlock()
-			flagsHolder.Flags = flags
-			impl.GlobalResync(triggerInformer.Informer())
-		},
-	)
-	featureStore.WatchConfigs(watcher)
 }
