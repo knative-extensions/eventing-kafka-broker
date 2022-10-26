@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -95,7 +96,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
   @Override
   void startConsumer(Promise<Void> startPromise) {
     // We need to sub first, then we can start the polling loop
-    this.consumer.subscribe(new HashSet<>(getConsumerVerticleContext().getResource().getTopicsList()))
+    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()))
       .onFailure(startPromise::fail)
       .onSuccess(v -> {
         if (this.pollTimer.compareAndSet(-1, 0)) {
