@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
@@ -58,7 +59,8 @@ public class WebClientCloudEventSenderTest {
 
     final var consumerRecordSender = new WebClientCloudEventSender(
       vertx, webClient, "http://localhost:12345",
-      DataPlaneContract.EgressConfig.getDefaultInstance());
+      FakeConsumerVerticleContext.get()
+    );
 
     consumerRecordSender.close()
       .onFailure(context::failNow)
@@ -102,12 +104,19 @@ public class WebClientCloudEventSenderTest {
       vertx,
       WebClient.create(vertx),
       "http://localhost:" + port,
-      DataPlaneContract.EgressConfig.newBuilder()
-        .setBackoffDelay(100L)
-        .setTimeout(1000L)
-        .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
-        .setRetry(retry)
-        .build()
+      FakeConsumerVerticleContext.get(
+        FakeConsumerVerticleContext.get().getResource(),
+        DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
+          .setEgressConfig(
+            DataPlaneContract.EgressConfig.newBuilder()
+              .setBackoffDelay(100L)
+              .setTimeout(1000L)
+              .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+              .setRetry(retry)
+              .build()
+          )
+          .build()
+      )
     );
 
     final var success = new AtomicBoolean(false);
@@ -145,7 +154,7 @@ public class WebClientCloudEventSenderTest {
         if (r.getHeader("Ce-Id").equalsIgnoreCase(event.getId())) {
           counter.increment();
         }
-        if (counter.intValue() > retry+1) {
+        if (counter.intValue() > retry + 1) {
           r.response().setStatusCode(200).end();
         } else {
           r.response().setStatusCode(500).end();
@@ -160,12 +169,19 @@ public class WebClientCloudEventSenderTest {
       vertx,
       WebClient.create(vertx),
       "http://localhost:" + port,
-      DataPlaneContract.EgressConfig.newBuilder()
-        .setBackoffDelay(100L)
-        .setTimeout(100L)
-        .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
-        .setRetry(retry)
-        .build()
+      FakeConsumerVerticleContext.get(
+        FakeConsumerVerticleContext.get().getResource(),
+        DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
+          .setEgressConfig(
+            DataPlaneContract.EgressConfig.newBuilder()
+              .setBackoffDelay(100L)
+              .setTimeout(100L)
+              .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+              .setRetry(retry)
+              .build()
+          )
+          .build()
+      )
     );
 
     final var success = new AtomicBoolean(true);
@@ -212,12 +228,19 @@ public class WebClientCloudEventSenderTest {
       vertx,
       WebClient.create(vertx),
       "http://localhost:" + port,
-      DataPlaneContract.EgressConfig.newBuilder()
-        .setBackoffDelay(100L)
-        .setTimeout(100L)
-        .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
-        .setRetry(retry)
-        .build()
+      FakeConsumerVerticleContext.get(
+        FakeConsumerVerticleContext.get().getResource(),
+        DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
+          .setEgressConfig(
+            DataPlaneContract.EgressConfig.newBuilder()
+              .setBackoffDelay(100L)
+              .setTimeout(100L)
+              .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+              .setRetry(retry)
+              .build()
+          )
+          .build()
+      )
     );
 
     final var success = new AtomicBoolean(true);
@@ -271,12 +294,19 @@ public class WebClientCloudEventSenderTest {
       vertx,
       WebClient.create(vertx),
       "http://localhost:" + port,
-      DataPlaneContract.EgressConfig.newBuilder()
-        .setBackoffDelay(100L)
-        .setTimeout(100L)
-        .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
-        .setRetry(retry)
-        .build()
+      FakeConsumerVerticleContext.get(
+        FakeConsumerVerticleContext.get().getResource(),
+        DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
+          .setEgressConfig(
+            DataPlaneContract.EgressConfig.newBuilder()
+              .setBackoffDelay(100L)
+              .setTimeout(100L)
+              .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+              .setRetry(retry)
+              .build()
+          )
+          .build()
+      )
     );
 
     final var success = new AtomicBoolean(true);
@@ -286,11 +316,11 @@ public class WebClientCloudEventSenderTest {
       .onSuccess(v -> success.set(true));
 
     await().untilFalse(success);
-    await().untilAdder(counter, is(equalTo(retry+1L)));
+    await().untilAdder(counter, is(equalTo(retry + 1L)));
 
     // Verify that after some time counter is still equal to 6.
     Thread.sleep(10000L);
-    await().untilAdder(counter, is(equalTo(retry+1L)));
+    await().untilAdder(counter, is(equalTo(retry + 1L)));
 
     sender.close().onSuccess(v -> context.completeNow());
   }

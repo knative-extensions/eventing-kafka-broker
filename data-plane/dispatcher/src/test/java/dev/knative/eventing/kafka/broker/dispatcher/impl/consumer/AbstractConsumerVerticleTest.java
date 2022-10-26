@@ -17,13 +17,11 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
-import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSenderMock;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandlerMock;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherTest;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.ResourceContext;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
@@ -63,10 +61,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(VertxExtension.class)
 public abstract class AbstractConsumerVerticleTest {
 
-  private static final ResourceContext resourceContext = new ResourceContext(
-    DataPlaneContract.Resource.newBuilder().build(),
-    DataPlaneContract.Egress.newBuilder().build()
-  );
+  private static final ConsumerVerticleContext resourceContext = FakeConsumerVerticleContext.get();
 
   static {
     BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
