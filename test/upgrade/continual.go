@@ -21,11 +21,14 @@ import (
 
 	"knative.dev/eventing-kafka-broker/test/upgrade/continual"
 	eventingkafkacontinual "knative.dev/eventing-kafka/test/upgrade/continual"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )
 
 // ContinualTests returns all continual tests.
 func ContinualTests() []pkgupgrade.BackgroundOperation {
 	c := BrokerContinualTests()
+	c = append(c, NamespacedBrokerContinualTests()...)
 	c = append(c, ChannelContinualTests()...)
 	c = append(c, SinkContinualTests()...)
 	return c
@@ -36,7 +39,29 @@ func ContinualTests() []pkgupgrade.BackgroundOperation {
 // process asserting that all events are propagated.
 func BrokerContinualTests() []pkgupgrade.BackgroundOperation {
 	return []pkgupgrade.BackgroundOperation{
-		continual.BrokerTest(continual.KafkaBrokerTestOptions{}),
+		continual.BrokerTest(continual.KafkaBrokerTestOptions{
+			Broker: &continual.Broker{
+				Name:  "broker-upgrade",
+				Class: kafka.BrokerClass,
+			},
+			Triggers: &continual.Triggers{
+				Prefix: "trigger-upgrade",
+			},
+		}),
+	}
+}
+
+func NamespacedBrokerContinualTests() []pkgupgrade.BackgroundOperation {
+	return []pkgupgrade.BackgroundOperation{
+		continual.BrokerTest(continual.KafkaBrokerTestOptions{
+			Broker: &continual.Broker{
+				Name:  "namespaced-broker-upgrade",
+				Class: kafka.NamespacedBrokerClass,
+			},
+			Triggers: &continual.Triggers{
+				Prefix: "namespaced-trigger-upgrade",
+			},
+		}),
 	}
 }
 

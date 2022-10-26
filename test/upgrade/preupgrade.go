@@ -20,6 +20,7 @@ import (
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_sink"
 	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade"
 )
@@ -27,7 +28,14 @@ import (
 // BrokerPreUpgradeTest tests broker basic operations before upgrade.
 func BrokerPreUpgradeTest() pkgupgrade.Operation {
 	return pkgupgrade.NewOperation("BrokerPreUpgradeTest", func(c pkgupgrade.Context) {
-		runBrokerSmokeTest(c.T)
+		runBrokerSmokeTest(c.T, kafka.BrokerClass)
+	})
+}
+
+// NamespacedBrokerPreUpgradeTest tests broker basic operations before upgrade.
+func NamespacedBrokerPreUpgradeTest() pkgupgrade.Operation {
+	return pkgupgrade.NewOperation("NamespacedBrokerPreUpgradeTest", func(c pkgupgrade.Context) {
+		runBrokerSmokeTest(c.T, kafka.NamespacedBrokerClass)
 	})
 }
 

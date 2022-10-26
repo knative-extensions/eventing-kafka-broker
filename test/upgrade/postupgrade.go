@@ -31,6 +31,7 @@ import (
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_sink"
 	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade"
 )
@@ -43,7 +44,20 @@ func BrokerPostUpgradeTest() pkgupgrade.Operation {
 			verifyPostInstall(t)
 		})
 		c.T.Run("tests", func(t *testing.T) {
-			runBrokerSmokeTest(t)
+			runBrokerSmokeTest(t, kafka.BrokerClass)
+		})
+	})
+}
+
+// NamespacedBrokerPostUpgradeTest tests channel operations after upgrade.
+func NamespacedBrokerPostUpgradeTest() pkgupgrade.Operation {
+	return pkgupgrade.NewOperation("NamespacedBrokerPostUpgradeTest", func(c pkgupgrade.Context) {
+		c.T.Parallel()
+		c.T.Run("Verify post-install", func(t *testing.T) {
+			verifyPostInstall(t)
+		})
+		c.T.Run("tests", func(t *testing.T) {
+			runBrokerSmokeTest(t, kafka.NamespacedBrokerClass)
 		})
 	})
 }

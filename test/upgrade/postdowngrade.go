@@ -21,6 +21,7 @@ import (
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_sink"
 )
 
@@ -28,7 +29,15 @@ import (
 // downgrade.
 func BrokerPostDowngradeTest() pkgupgrade.Operation {
 	return pkgupgrade.NewOperation("BrokerPostDowngradeTest", func(c pkgupgrade.Context) {
-		runBrokerSmokeTest(c.T)
+		runBrokerSmokeTest(c.T, kafka.BrokerClass)
+	})
+}
+
+// NamespacedBrokerPostDowngradeTest tests basic namespaced broker operations after
+// downgrade.
+func NamespacedBrokerPostDowngradeTest() pkgupgrade.Operation {
+	return pkgupgrade.NewOperation("NamespacedBrokerPostDowngradeTest", func(c pkgupgrade.Context) {
+		runBrokerSmokeTest(c.T, kafka.NamespacedBrokerClass)
 	})
 }
 

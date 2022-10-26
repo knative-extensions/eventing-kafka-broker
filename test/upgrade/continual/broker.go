@@ -60,18 +60,26 @@ func (o *KafkaBrokerTestOptions) setDefaults() {
 	}
 	if o.Broker == nil {
 		o.Broker = &Broker{
-			Name:               "broker-upgrade",
-			ReplicationOptions: defaultReplicationOptions(),
-			RetryOptions:       defaultRetryOptions(),
+			Name:  "broker-upgrade",
+			Class: kafka.BrokerClass,
 		}
+	}
+	if o.Broker.ReplicationOptions == nil {
+		o.Broker.ReplicationOptions = defaultReplicationOptions()
+	}
+	if o.RetryOptions == nil {
+		o.Broker.RetryOptions = defaultRetryOptions()
 	}
 	if o.Triggers == nil {
 		o.Triggers = &Triggers{
-			Prefix: "trigger-upgrade",
-			Triggers: sut.Triggers{
-				Types: eventTypes,
-			},
+			Triggers: sut.Triggers{},
 		}
+	}
+	if o.Triggers.Prefix == "" {
+		o.Triggers.Prefix = "trigger-upgrade"
+	}
+	if o.Triggers.Types == nil {
+		o.Triggers.Types = eventTypes
 	}
 }
 
@@ -140,7 +148,7 @@ func (k kafkaBrokerSut) deployBroker(ctx sut.Context) {
 			Name:       cm.GetName(),
 			APIVersion: "v1",
 		}),
-		resources.WithBrokerClassForBroker(kafka.BrokerClass),
+		resources.WithBrokerClassForBroker(k.Broker.Class),
 		resources.WithDeliveryForBroker(&eventingduckv1.DeliverySpec{
 			Retry:         pointer.Int32Ptr(int32(k.RetryCount)),
 			BackoffPolicy: &k.BackoffPolicy,

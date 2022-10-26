@@ -47,6 +47,7 @@ func TestBrokerRedeliveryBrokerV1BackoffLinear(t *testing.T) {
 			brokertest.CreatorWithBrokerOptions(
 				client,
 				"v1",
+				brokertest.WithBrokerClassFromEnvVar,
 				resources.WithDeliveryForBroker(&eventingduck.DeliverySpec{
 					Retry:         &numRetries,
 					BackoffPolicy: &backoff,
@@ -69,6 +70,7 @@ func TestBrokerRedeliveryBrokerV1BackoffExponential(t *testing.T) {
 			brokertest.CreatorWithBrokerOptions(
 				client,
 				"v1",
+				brokertest.WithBrokerClassFromEnvVar,
 				resources.WithDeliveryForBroker(&eventingduck.DeliverySpec{
 					Retry:         &numRetries,
 					BackoffPolicy: &backoff,

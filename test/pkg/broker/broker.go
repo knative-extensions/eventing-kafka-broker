@@ -25,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingtestlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -50,26 +51,33 @@ func GetKafkaClassFromEnv() (string, error) {
 	return val, nil
 }
 
+func WithBrokerClassFromEnvVar(b *eventingv1.Broker) {
+	class, err := GetKafkaClassFromEnv()
+	if err != nil {
+		panic(fmt.Sprintf("error getting KafkaBroker class from env '%v'", err))
+	}
+	resources.WithBrokerClassForBroker(class)(b)
+}
+
+// Creator creates a Broker with the class that is specified in an environment variable.
 func Creator(client *eventingtestlib.Client, version string) string {
-	return CreatorWithConfigOptions(client, version)
+	return CreatorWithBrokerOptions(client, version, WithBrokerClassFromEnvVar)
+}
+
+// CreatorForClass creates a Broker with the given class.
+func CreatorForClass(class string) func(*eventingtestlib.Client, string) string {
+	return func(client *eventingtestlib.Client, version string) string {
+		return CreatorWithBrokerOptions(client, version, resources.WithBrokerClassForBroker(class))
+	}
 }
 
 type ConfigOptions func(data map[string]string)
-
-func CreatorWithConfigOptions(client *eventingtestlib.Client, version string, configOptions ...ConfigOptions) string {
-	return CreatorWithOptions(client, version, []resources.BrokerOption{}, configOptions)
-}
 
 func CreatorWithBrokerOptions(client *eventingtestlib.Client, version string, brokerOptions ...resources.BrokerOption) string {
 	return CreatorWithOptions(client, version, brokerOptions, []ConfigOptions{})
 }
 
 func CreatorWithOptions(client *eventingtestlib.Client, version string, brokerOptions []resources.BrokerOption, configOptions []ConfigOptions) string {
-	class, err := GetKafkaClassFromEnv()
-	if err != nil {
-		panic(fmt.Sprintf("error getting KafkaBroker class from env '%v'", err))
-	}
-
 	name := "broker"
 
 	version = strings.ToLower(version)
@@ -100,7 +108,6 @@ func CreatorWithOptions(client *eventingtestlib.Client, version string, brokerOp
 		}
 
 		brokerOptions = append(brokerOptions,
-			resources.WithBrokerClassForBroker(class),
 			resources.WithConfigForBroker(&duckv1.KReference{
 				Kind:       "ConfigMap",
 				Namespace:  namespace,

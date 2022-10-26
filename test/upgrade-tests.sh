@@ -42,9 +42,6 @@ set -Eeuo pipefail
 TIMEOUT=${TIMEOUT:-100m}
 GO_TEST_VERBOSITY="${GO_TEST_VERBOSITY:-standard-verbose}"
 
-# TODO: we don't support upgrade tests for namespaced KafkaBroker right now
-export BROKER_CLASS="Kafka"
-
 EVENTING_KAFKA_BROKER_UPGRADE_TESTS_FINISHEDSLEEP="5m" \
 go_test_e2e -v \
   -tags=upgrade \
