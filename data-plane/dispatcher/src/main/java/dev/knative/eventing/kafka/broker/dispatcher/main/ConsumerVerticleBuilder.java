@@ -164,6 +164,10 @@ public class ConsumerVerticleBuilder {
         try {
           future.toCompletionStage().toCompletableFuture().get(1, TimeUnit.SECONDS);
         } catch (final Exception ignored) {
+          ConsumerVerticleContext.logger.warn("Partition revoked handler failed {} {}",
+            consumerVerticleContext.getLoggingKeyValue(),
+            keyValue("partitions", partitions)
+          );
         }
       }
     };
