@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -58,8 +58,7 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
 
   @Override
   void startConsumer(final Promise<Void> startPromise) {
-    final var topics = new HashSet<>(getConsumerVerticleContext().getResource().getTopicsList());
-    this.consumer.subscribe(topics, startPromise);
+    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()), startPromise);
     startPromise.future()
       .onSuccess(v -> poll());
   }
