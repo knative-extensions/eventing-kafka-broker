@@ -19,6 +19,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseFailureException;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.rw.CloudEventRWException;
@@ -47,10 +48,10 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
   private final WebClient client;
   private final String target;
+  private final ConsumerVerticleContext consumerVerticleContext;
 
   private final Promise<Void> closePromise = Promise.promise();
   private final Function<Integer, Long> retryPolicyFunc;
-  private final DataPlaneContract.EgressConfig egress;
   private final Vertx vertx;
 
   private final AtomicBoolean closed = new AtomicBoolean(false);
@@ -59,15 +60,15 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   /**
    * All args constructor.
    *
-   * @param vertx  Vertx context instance
-   * @param client http client.
-   * @param target subscriber URI
-   * @param egress egress configuration
+   * @param vertx                   Vertx context instance
+   * @param client                  http client.
+   * @param target                  subscriber URI
+   * @param consumerVerticleContext consumer verticle context
    */
   public WebClientCloudEventSender(final Vertx vertx,
                                    final WebClient client,
                                    final String target,
-                                   final DataPlaneContract.EgressConfig egress) {
+                                   final ConsumerVerticleContext consumerVerticleContext) {
     Objects.requireNonNull(vertx);
     Objects.requireNonNull(client, "provide client");
     if (target == null || target.equals("")) {
@@ -80,8 +81,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     this.vertx = vertx;
     this.client = client;
     this.target = target;
-    this.egress = egress;
-    this.retryPolicyFunc = computeRetryPolicy(egress);
+    this.consumerVerticleContext = consumerVerticleContext;
+    this.retryPolicyFunc = computeRetryPolicy(consumerVerticleContext.getEgressConfig());
   }
 
   public Future<HttpResponse<Buffer>> send(final CloudEvent event) {
@@ -108,7 +109,11 @@ public final class WebClientCloudEventSender implements CloudEventSender {
         send(event, promise).
           onComplete(v -> requestCompleted());
       } catch (CloudEventRWException e) {
-        logger.error("failed to write event to the request {}", keyValue("subscriberURI", target), e);
+        logger.error("failed to write event to the request {} {}",
+          consumerVerticleContext.getLoggingKeyValue(),
+          keyValue("target", target),
+          e
+        );
         promise.tryFail(e);
       }
     }
@@ -125,12 +130,12 @@ public final class WebClientCloudEventSender implements CloudEventSender {
       cause -> {
         if (cause instanceof ResponseFailureException) {
           final var response = ((ResponseFailureException) cause).getResponse();
-          if (isRetryableStatusCode(response.statusCode()) && retryCounter < egress.getRetry()) {
+          if (isRetryableStatusCode(response.statusCode()) && retryCounter < consumerVerticleContext.getEgressConfig().getRetry()) {
             return retry(retryCounter, event);
           }
         }
 
-        if (retryCounter < egress.getRetry()) {
+        if (retryCounter < consumerVerticleContext.getEgressConfig().getRetry()) {
           return retry(retryCounter, event);
         }
 
@@ -160,7 +165,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   private Future<?> send(final CloudEvent event, final Promise<HttpResponse<Buffer>> breaker) {
     return VertxMessageFactory
       .createWriter(client.postAbs(target)
-        .timeout(this.egress.getTimeout() <= 0 ? DEFAULT_TIMEOUT_MS : this.egress.getTimeout())
+        .timeout(this.consumerVerticleContext.getEgressConfig().getTimeout() <= 0 ? DEFAULT_TIMEOUT_MS : this.consumerVerticleContext.getEgressConfig().getTimeout())
         .putHeader("Prefer", "reply"))
       .writeBinary(event)
       .onFailure(ex -> {
@@ -184,28 +189,35 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
   private void logError(final String prefix, final CloudEvent event, final HttpResponse<Buffer> response) {
     if (logger.isDebugEnabled()) {
-      logger.error(prefix + "failed to send event to subscriber {} {} {}",
+      logger.error(prefix + "failed to send event to subscriber {} {} {} {}",
+        consumerVerticleContext.getLoggingKeyValue(),
         keyValue("target", target),
         keyValue("statusCode", response.statusCode()),
         keyValue("event", event)
       );
     } else {
-      logger.error(prefix + " failed to send event to subscriber {} {}",
+      logger.error(prefix + " failed to send event to subscriber {} {} {}",
+        consumerVerticleContext.getLoggingKeyValue(),
         keyValue("target", target),
         keyValue("statusCode", response.statusCode())
       );
     }
   }
 
-  private void logError(final CloudEvent event, final HttpResponse<Buffer> response) {
-    logError("", event, response);
-  }
-
   private void logError(final CloudEvent event, Throwable ex) {
     if (logger.isDebugEnabled()) {
-      logger.error("failed to send event to subscriber {} {}", keyValue("target", target), keyValue("event", event), ex);
+      logger.error("failed to send event to subscriber {} {} {}",
+        consumerVerticleContext.getLoggingKeyValue(),
+        keyValue("target", target),
+        keyValue("event", event),
+        ex
+      );
     } else {
-      logger.error("failed to send event to subscriber {}", keyValue("target", target), ex);
+      logger.error("failed to send event to subscriber {} {}",
+        consumerVerticleContext.getLoggingKeyValue(),
+        keyValue("target", target),
+        ex
+      );
     }
   }
 
@@ -213,9 +225,10 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   public Future<Void> close() {
     this.closed.set(true);
 
-    logger.info("Close {} {}",
+    logger.info("Close {} {} {}",
+      consumerVerticleContext.getLoggingKeyValue(),
       keyValue("target", target),
-      keyValue("inFlightRequests", inFlightRequests)
+      keyValue("inFlightRequests", inFlightRequests.get())
     );
 
     if (inFlightRequests.get() == 0) {
