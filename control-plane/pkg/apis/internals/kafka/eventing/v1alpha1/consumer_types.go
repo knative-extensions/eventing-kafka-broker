@@ -27,7 +27,6 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 )
 
@@ -126,7 +125,6 @@ type DestinationReply struct {
 
 type Auth struct {
 	NetSpec    *bindings.KafkaNetSpec
-	AuthSpec   *eventingv1alpha1.Auth
 	SecretSpec *SecretSpec
 }
 
@@ -138,6 +136,11 @@ type SecretSpec struct {
 type SecretReference struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
+}
+
+func (a *SecretSpec) HasSecret() bool {
+	return a != nil && a.Ref != nil &&
+		a.Ref.Name != "" && a.Ref.Namespace != ""
 }
 
 type DeliverySpec struct {

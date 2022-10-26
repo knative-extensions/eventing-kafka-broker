@@ -496,7 +496,7 @@ func TestReconcileKind(t *testing.T) {
 					BrokerReady,
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
-					WithSecretStatusAnnotation("secret-1", ConfigMapNamespace),
+					WithSecretStatusAnnotation("secret-1"),
 				),
 				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),

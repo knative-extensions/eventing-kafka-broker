@@ -41,7 +41,6 @@ import (
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/scheduler"
 
-	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
@@ -172,9 +171,11 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig("my.group.id"),
 						),
 						ConsumerAuth(&kafkainternals.Auth{
-							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
-								Name: "non-existing secret",
-							}}},
+							SecretSpec: &kafkainternals.SecretSpec{
+								Ref: &kafkainternals.SecretReference{
+									Name:      "non-existing secret",
+									Namespace: "non-existing secret",
+								}},
 						}),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerVReplicas(1),
@@ -194,9 +195,11 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
-							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
-								Name: "non-existing secret",
-							}}},
+							SecretSpec: &kafkainternals.SecretSpec{
+								Ref: &kafkainternals.SecretReference{
+									Name:      "non-existing secret",
+									Namespace: "non-existing secret",
+								}},
 						}),
 					)),
 					ConsumerForTrigger(),
@@ -218,7 +221,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				"Warning InternalError failed to initialize consumer group offset: failed to create config options for Kafka cluster auth: failed to get secret test-cg-ns/non-existing secret: secrets \"non-existing secret\" not found",
+				"Warning InternalError failed to initialize consumer group offset: failed to create config options for Kafka cluster auth: failed to get secret non-existing secret/non-existing secret: secrets \"non-existing secret\" not found",
 			},
 			WantCreates: []runtime.Object{},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -233,16 +236,18 @@ func TestReconcileKind(t *testing.T) {
 								),
 								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
 								ConsumerAuth(&kafkainternals.Auth{
-									AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
-										Name: "non-existing secret",
-									}}},
+									SecretSpec: &kafkainternals.SecretSpec{
+										Ref: &kafkainternals.SecretReference{
+											Name:      "non-existing secret",
+											Namespace: "non-existing secret",
+										}},
 								}),
 							)),
 							ConsumerGroupReplicas(2),
 							ConsumerForTrigger(),
 						)
 						cg.InitializeConditions()
-						_ = cg.MarkInitializeOffsetFailed("InitializeOffset", errors.New("failed to create config options for Kafka cluster auth: failed to get secret test-cg-ns/non-existing secret: secrets \"non-existing secret\" not found"))
+						_ = cg.MarkInitializeOffsetFailed("InitializeOffset", errors.New("failed to create config options for Kafka cluster auth: failed to get secret non-existing secret/non-existing secret: secrets \"non-existing secret\" not found"))
 						return cg
 					}(),
 				},
@@ -251,7 +256,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Consumers in multiple pods, propagate consumer not ready condition",
 			Objects: []runtime.Object{
-				NewSSLSecret(ConsumerGroupNamespace, SecretName),
+				NewSSLSecret(SecretNamespace, SecretName),
 				NewConsumer(2,
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
@@ -261,9 +266,11 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
-							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
-								Name: SecretName,
-							}}},
+							SecretSpec: &kafkainternals.SecretSpec{
+								Ref: &kafkainternals.SecretReference{
+									Name:      SecretName,
+									Namespace: SecretNamespace,
+								}},
 						}),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{
@@ -282,9 +289,11 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
-							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
-								Name: SecretName,
-							}}},
+							SecretSpec: &kafkainternals.SecretSpec{
+								Ref: &kafkainternals.SecretReference{
+									Name:      SecretName,
+									Namespace: SecretNamespace,
+								}},
 						}),
 					)),
 					ConsumerForTrigger(),
@@ -311,9 +320,11 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
-							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
-								Name: SecretName,
-							}}},
+							SecretSpec: &kafkainternals.SecretSpec{
+								Ref: &kafkainternals.SecretReference{
+									Name:      SecretName,
+									Namespace: SecretNamespace,
+								}},
 						}),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -332,9 +343,11 @@ func TestReconcileKind(t *testing.T) {
 								),
 								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
 								ConsumerAuth(&kafkainternals.Auth{
-									AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
-										Name: SecretName,
-									}}},
+									SecretSpec: &kafkainternals.SecretSpec{
+										Ref: &kafkainternals.SecretReference{
+											Name:      SecretName,
+											Namespace: SecretNamespace,
+										}},
 								}),
 							)),
 							ConsumerGroupReplicas(2),
@@ -368,7 +381,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Consumers in multiple pods, with auth spec, one exists - ready",
 			Objects: []runtime.Object{
-				NewSSLSecret(ConsumerGroupNamespace, SecretName),
+				NewSSLSecret(SecretNamespace, SecretName),
 				NewConsumer(2,
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
@@ -378,9 +391,11 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
-							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
-								Name: SecretName,
-							}}},
+							SecretSpec: &kafkainternals.SecretSpec{
+								Ref: &kafkainternals.SecretReference{
+									Name:      SecretName,
+									Namespace: SecretNamespace,
+								}},
 						}),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{
@@ -399,9 +414,11 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
-							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
-								Name: SecretName,
-							}}},
+							SecretSpec: &kafkainternals.SecretSpec{
+								Ref: &kafkainternals.SecretReference{
+									Name:      SecretName,
+									Namespace: SecretNamespace,
+								}},
 						}),
 					)),
 					ConsumerForTrigger(),
@@ -427,9 +444,11 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
-							AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
-								Name: SecretName,
-							}}},
+							SecretSpec: &kafkainternals.SecretSpec{
+								Ref: &kafkainternals.SecretReference{
+									Name:      SecretName,
+									Namespace: SecretNamespace,
+								}},
 						}),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -448,9 +467,11 @@ func TestReconcileKind(t *testing.T) {
 								),
 								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
 								ConsumerAuth(&kafkainternals.Auth{
-									AuthSpec: &eventing.Auth{Secret: &eventing.Secret{Ref: &eventing.SecretReference{
-										Name: SecretName,
-									}}},
+									SecretSpec: &kafkainternals.SecretSpec{
+										Ref: &kafkainternals.SecretReference{
+											Name:      SecretName,
+											Namespace: SecretNamespace,
+										}},
 								}),
 							)),
 							ConsumerGroupReplicas(2),
