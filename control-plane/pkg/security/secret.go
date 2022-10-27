@@ -39,6 +39,8 @@ const (
 	SaslMechanismKey = "sasl.mechanism"
 	SaslUserKey      = "user"
 	SaslPasswordKey  = "password"
+	SaslType         = "saslType" // legacy secrets
+	SaslUsernameKey  = "username" // legacy secrets
 
 	ProtocolPlaintext     = "PLAINTEXT"
 	ProtocolSASLPlaintext = "SASL_PLAINTEXT"

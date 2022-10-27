@@ -461,7 +461,12 @@ func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals
 			return err
 		}
 
-		triggerAuthentication, secret, err = kedafunc.GenerateTriggerAuthentication(cg, saslType, protocol)
+		caCert, err := r.retrieveTlsCertAuthIfPresent(ctx, cg)
+		if err != nil {
+			return err
+		}
+
+		triggerAuthentication, secret, err = kedafunc.GenerateTriggerAuthentication(cg, saslType, protocol, caCert)
 		if err != nil {
 			return err
 		}
@@ -512,8 +517,10 @@ func (r *Reconciler) retrieveSaslTypeIfPresent(ctx context.Context, cg *kafkaint
 		if err != nil {
 			return nil, fmt.Errorf("unable to get SASL type from secret: \"%s/%s\", %w", secretKeyRefNamespace, secretKeyRefName, err)
 		}
-		saslTypeValue := string(secret.Data["saslType"])
-		return &saslTypeValue, nil
+		if saslTypeValue, ok := secret.Data[security.SaslType]; ok {
+			saslType := string(saslTypeValue)
+			return &saslType, nil
+		}
 	}
 	return nil, nil
 }
@@ -529,6 +536,22 @@ func (r *Reconciler) retrieveProtocolIfPresent(ctx context.Context, cg *kafkaint
 		if protocolValue, ok := secret.Data[security.ProtocolKey]; ok {
 			protocol := string(protocolValue)
 			return &protocol, nil
+		}
+	}
+	return nil, nil
+}
+
+func (r *Reconciler) retrieveTlsCertAuthIfPresent(ctx context.Context, cg *kafkainternals.ConsumerGroup) (*string, error) {
+	if hasSecretSpecConfig(cg.Spec.Template.Spec.Auth) && cg.Spec.Template.Spec.Auth.SecretSpec.Ref != nil {
+		secretKeyRefName := cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name
+		secretKeyRefNamespace := cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Namespace
+		secret, err := r.KubeClient.CoreV1().Secrets(secretKeyRefNamespace).Get(ctx, secretKeyRefName, metav1.GetOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("unable to get TLS certificate from secret: \"%s/%s\", %w", secretKeyRefNamespace, secretKeyRefName, err)
+		}
+		if caCertValue, ok := secret.Data[security.CaCertificateKey]; ok {
+			caCert := string(caCertValue)
+			return &caCert, nil
 		}
 	}
 	return nil, nil
