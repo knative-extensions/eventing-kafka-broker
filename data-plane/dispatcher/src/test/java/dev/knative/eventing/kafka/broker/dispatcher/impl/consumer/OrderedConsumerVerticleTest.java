@@ -16,9 +16,11 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
+import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
-import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -40,7 +42,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -107,19 +108,17 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
     when(recordDispatcher.close()).thenReturn(Future.succeededFuture());
 
     final var verticle = createConsumerVerticle(
-      DataPlaneContract.Egress.newBuilder()
-        .setFeatureFlags(DataPlaneContract.EgressFeatureFlags.newBuilder()
-          .setEnableRateLimiter(rateLimiterEnabled)
-          .build())
-        .build(),
+      FakeConsumerVerticleContext.get(
+        DataPlaneContract.Resource.newBuilder(CoreObjects.resource1()).clearTopics().addTopics(topic).build(),
+        CoreObjects.egress1()
+      ),
       (vx, consumerVerticle) -> {
         consumerVerticle.setConsumer(KafkaConsumer.create(vx, consumer));
         consumerVerticle.setRecordDispatcher(recordDispatcher);
         consumerVerticle.setCloser(Future::succeededFuture);
 
         return Future.succeededFuture();
-      }, Set.of(topic),
-      null
+      }
     );
 
     // Deploy the verticle
@@ -183,17 +182,9 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
     ).isEqualTo(tasks);
   }
 
-  @Override
-  BaseConsumerVerticle createConsumerVerticle(final BaseConsumerVerticle.Initializer initializer,
-                                              final Set<String> topics) {
-    return createConsumerVerticle(DataPlaneContract.Egress.newBuilder().build(), initializer, topics, null);
-  }
-
-  BaseConsumerVerticle createConsumerVerticle(final DataPlaneContract.Egress egress,
-                                              final BaseConsumerVerticle.Initializer initializer,
-                                              final Set<String> topics,
-                                              final MeterRegistry meterRegistry) {
-    return new OrderedConsumerVerticle(egress, initializer, topics, 2, meterRegistry);
+  ConsumerVerticle createConsumerVerticle(final ConsumerVerticleContext context,
+                                          final ConsumerVerticle.Initializer initializer) {
+    return new OrderedConsumerVerticle(context, initializer);
   }
 
   protected static ConsumerRecord<Object, CloudEvent> record(String topic, int partition, long offset) {

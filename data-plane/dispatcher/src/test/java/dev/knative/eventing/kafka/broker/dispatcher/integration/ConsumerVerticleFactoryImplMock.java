@@ -15,15 +15,24 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
+import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleBuilder;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
+import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ProducerFactory;
 import io.cloudevents.CloudEvent;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -40,7 +49,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 
 import static org.mockito.Mockito.mock;
 
-public class ConsumerVerticleFactoryImplMock extends ConsumerVerticleFactoryImpl {
+public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory {
 
   // trigger.id() -> Mock*er
   private final Map<String, MockProducer<String, CloudEvent>> mockProducer;
@@ -48,23 +57,13 @@ public class ConsumerVerticleFactoryImplMock extends ConsumerVerticleFactoryImpl
 
   private List<ConsumerRecord<String, CloudEvent>> records;
 
-  public ConsumerVerticleFactoryImplMock(
-    final Properties consumerConfigs,
-    final Properties producerConfigs) {
-    super(
-      consumerConfigs,
-      new WebClientOptions(),
-      producerConfigs,
-      AuthProvider.noAuth(),
-      Metrics.getRegistry()
-    );
+  public ConsumerVerticleFactoryImplMock() {
     mockProducer = new ConcurrentHashMap<>();
     mockConsumer = new ConcurrentHashMap<>();
   }
 
-  @Override
-  protected KafkaProducer<String, CloudEvent> createProducer(Vertx vertx,
-                                                             Map<String, Object> producerConfigs) {
+  private KafkaProducer<String, CloudEvent> createProducer(Vertx vertx,
+                                                           Map<String, Object> producerConfigs) {
     return KafkaProducer.create(vertx, new MockProducer<>(
       true,
       new StringSerializer(),
@@ -72,9 +71,8 @@ public class ConsumerVerticleFactoryImplMock extends ConsumerVerticleFactoryImpl
     ));
   }
 
-  @Override
-  protected KafkaConsumer<Object, CloudEvent> createConsumer(Vertx vertx,
-                                                             Map<String, Object> consumerConfigs) {
+  private KafkaConsumer<Object, CloudEvent> createConsumer(Vertx vertx,
+                                                           Map<String, Object> consumerConfigs) {
     final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
 
     consumer.schedulePollTask(() -> {
@@ -116,5 +114,15 @@ public class ConsumerVerticleFactoryImplMock extends ConsumerVerticleFactoryImpl
 
   Map<String, MockConsumer<String, CloudEvent>> consumers() {
     return mockConsumer;
+  }
+
+  @Override
+  public AbstractVerticle get(DataPlaneContract.Resource resource, DataPlaneContract.Egress egress) {
+    return new ConsumerVerticleBuilder(
+      FakeConsumerVerticleContext.get(resource, egress)
+        .withConsumerFactory(this::createConsumer)
+        .withProducerFactory(this::createProducer)
+    )
+      .build();
   }
 }
