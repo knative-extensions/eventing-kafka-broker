@@ -49,6 +49,7 @@ import (
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
 	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
@@ -525,8 +526,10 @@ func (r *Reconciler) retrieveProtocolIfPresent(ctx context.Context, cg *kafkaint
 		if err != nil {
 			return nil, fmt.Errorf("unable to get Protocol from secret: \"%s/%s\", %w", secretKeyRefNamespace, secretKeyRefName, err)
 		}
-		protocolValue := string(secret.Data["protocol"])
-		return &protocolValue, nil
+		if protocolValue, ok := secret.Data[security.ProtocolKey]; ok {
+			protocol := string(protocolValue)
+			return &protocol, nil
+		}
 	}
 	return nil, nil
 }
