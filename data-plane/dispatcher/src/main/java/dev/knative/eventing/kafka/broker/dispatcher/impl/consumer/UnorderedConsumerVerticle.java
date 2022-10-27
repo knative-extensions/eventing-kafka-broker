@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -34,7 +35,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 /**
  * This {@link io.vertx.core.Verticle} implements an unordered consumer logic, as described in {@link DeliveryOrder#UNORDERED}.
  */
-public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
+public final class UnorderedConsumerVerticle extends ConsumerVerticle {
 
   private static final Logger logger = LoggerFactory.getLogger(UnorderedConsumerVerticle.class);
 
@@ -43,30 +44,21 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
   // to block a verticle thread.
   private static final Duration POLL_TIMEOUT = Duration.ofMillis(500);
 
-  private final int maxPollRecords;
-
   private final AtomicBoolean closed;
   private final AtomicInteger inFlightRecords;
   private final AtomicBoolean isPollInFlight;
 
-  public UnorderedConsumerVerticle(final Initializer initializer,
-                                   final Set<String> topics,
-                                   final int maxPollRecords) {
-    super(initializer, topics);
-    if (maxPollRecords <= 0) {
-      this.maxPollRecords = 500;
-    } else {
-      this.maxPollRecords = maxPollRecords;
-    }
+  public UnorderedConsumerVerticle(final ConsumerVerticleContext context,
+                                   final Initializer initializer) {
+    super(context, initializer);
     this.inFlightRecords = new AtomicInteger(0);
     this.closed = new AtomicBoolean(false);
     this.isPollInFlight = new AtomicBoolean(false);
   }
 
   @Override
-  void startConsumer(Promise<Void> startPromise) {
-    this.consumer.subscribe(this.topics, startPromise);
-
+  void startConsumer(final Promise<Void> startPromise) {
+    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()), startPromise);
     startPromise.future()
       .onSuccess(v -> poll());
   }
@@ -88,13 +80,13 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
     if (closed.get() || isPollInFlight.get()) {
       return;
     }
-    if (inFlightRecords.get() >= maxPollRecords) {
+    if (inFlightRecords.get() >= getConsumerVerticleContext().getMaxPollRecords()) {
       logger.info(
         "In flight records exceeds " + ConsumerConfig.MAX_POLL_RECORDS_CONFIG +
           " waiting for response from subscriber before polling for new records {} {} {}",
-        keyValue(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords),
+        keyValue(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, getConsumerVerticleContext().getMaxPollRecords()),
         keyValue("records", inFlightRecords),
-        keyValue("topics", topics)
+        getConsumerVerticleContext().getLoggingKeyValue()
       );
       return;
     }
@@ -104,7 +96,7 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
         .onSuccess(this::handleRecords)
         .onFailure(cause -> {
           isPollInFlight.set(false);
-          logger.error("Failed to poll messages {}", keyValue("topics", topics), cause);
+          logger.error("Failed to poll messages {}", getConsumerVerticleContext().getLoggingKeyValue(), cause);
           // Wait before retrying.
           vertx.setTimer(BACKOFF_DELAY_MS, t -> poll());
         });

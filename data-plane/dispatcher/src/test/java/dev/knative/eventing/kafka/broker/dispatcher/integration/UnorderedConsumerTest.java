@@ -32,18 +32,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-import java.net.URI;
-import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.StickyAssignor;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
@@ -51,6 +40,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.URI;
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
 import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.contract;
@@ -73,15 +70,7 @@ public class UnorderedConsumerTest {
   public void testUnorderedConsumer(final Vertx vertx) throws Exception {
     ContractMessageCodec.register(vertx.eventBus());
 
-    final var producerConfigs = new Properties();
-    final var consumerConfigs = new Properties();
-    consumerConfigs.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 100L);
-    consumerConfigs.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, StickyAssignor.class.getName());
-
-    final var consumerVerticleFactoryMock = new ConsumerVerticleFactoryImplMock(
-      consumerConfigs,
-      producerConfigs
-    );
+    final var consumerVerticleFactoryMock = new ConsumerVerticleFactoryImplMock();
 
     final var event = new CloudEventBuilder()
       .withType("dev.knative")

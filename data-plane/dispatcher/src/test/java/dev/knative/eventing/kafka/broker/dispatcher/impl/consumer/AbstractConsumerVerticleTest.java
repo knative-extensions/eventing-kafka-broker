@@ -17,12 +17,15 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSenderMock;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandlerMock;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherTest;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResourceContext;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
+import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -47,6 +50,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.*;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
@@ -82,14 +87,20 @@ public abstract class AbstractConsumerVerticleTest {
     );
     final var topic = "topic1";
 
+    final var consumerVerticleContext = FakeConsumerVerticleContext.get(
+      DataPlaneContract.Resource.newBuilder(resource1()).clearTopics().addTopics(topic).build(),
+      egress1()
+    );
+
     final var verticle = createConsumerVerticle(
+      consumerVerticleContext,
       (vx, consumerVerticle) -> {
         consumerVerticle.setConsumer(KafkaConsumer.create(vx, consumer));
         consumerVerticle.setRecordDispatcher(recordDispatcher);
         consumerVerticle.setCloser(Future::succeededFuture);
 
         return Future.succeededFuture();
-      }, Set.of(topic)
+      }
     );
 
     final Promise<String> promise = Promise.promise();
@@ -120,13 +131,17 @@ public abstract class AbstractConsumerVerticleTest {
     final var topic = "topic1";
 
     final var verticle = createConsumerVerticle(
+      FakeConsumerVerticleContext.get(
+        DataPlaneContract.Resource.newBuilder(resource1()).clearTopics().addTopics(topic).build(),
+        egress1()
+      ),
       (vx, consumerVerticle) -> {
         consumerVerticle.setConsumer(KafkaConsumer.create(vx, consumer));
         consumerVerticle.setRecordDispatcher(recordDispatcher);
         consumerVerticle.setCloser(Future::succeededFuture);
 
         return Future.succeededFuture();
-      }, Set.of(topic)
+      }
     );
 
     final Promise<String> deployPromise = Promise.promise();
@@ -139,7 +154,8 @@ public abstract class AbstractConsumerVerticleTest {
       .onFailure(context::failNow);
 
     undeployPromise.future()
-      .onSuccess(ignored -> {})
+      .onSuccess(ignored -> {
+      })
       .onFailure(context::failNow);
 
     await().untilAsserted(() -> assertThat(consumer.closed()).isTrue());
@@ -212,13 +228,14 @@ public abstract class AbstractConsumerVerticleTest {
     );
 
     final var verticle = createConsumerVerticle(
+      FakeConsumerVerticleContext.get(),
       (vx, consumerVerticle) -> {
         consumerVerticle.setConsumer(consumer);
         consumerVerticle.setRecordDispatcher(recordDispatcher);
         consumerVerticle.setCloser(Future::succeededFuture);
 
         return Future.succeededFuture();
-      }, Set.of(topics)
+      }
     );
 
     vertx.deployVerticle(verticle)
@@ -238,7 +255,7 @@ public abstract class AbstractConsumerVerticleTest {
     checkpoints.flag();
   }
 
-  abstract BaseConsumerVerticle createConsumerVerticle(BaseConsumerVerticle.Initializer initializer,
-                                                       Set<String> topics);
+  abstract ConsumerVerticle createConsumerVerticle(final ConsumerVerticleContext context,
+                                                   final ConsumerVerticle.Initializer initializer);
 
 }
