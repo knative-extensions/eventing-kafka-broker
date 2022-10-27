@@ -29,6 +29,7 @@ import (
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	"knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
+	v1 "knative.dev/eventing/pkg/apis/messaging/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
@@ -38,6 +39,8 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
+
+	subscriptionv1 "knative.dev/eventing/pkg/reconciler/testing/v1"
 )
 
 const (
@@ -117,6 +120,20 @@ func WithChannelDeadLetterSinkURI(uri string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ch := obj.(*messagingv1beta1.KafkaChannel)
 		ch.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(uri)
+	}
+}
+
+func WithAutoscalingAnnotationsSubscription() subscriptionv1.SubscriptionOption {
+	return func(s *v1.Subscription) {
+		if s.Annotations == nil {
+			s.Annotations = make(map[string]string)
+		}
+
+		for k, v := range ConsumerGroupAnnotations {
+			if _, ok := s.Annotations[k]; !ok {
+				s.Annotations[k] = v
+			}
+		}
 	}
 }
 

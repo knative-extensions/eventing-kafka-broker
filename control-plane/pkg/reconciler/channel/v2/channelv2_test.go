@@ -54,9 +54,11 @@ import (
 	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 
 	"github.com/rickb777/date/period"
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	commonconstants "knative.dev/eventing-kafka/pkg/common/constants"
+	eventingrekttesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 )
 
 const (
@@ -183,10 +185,6 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
-					base.VolumeGenerationAnnotationKey: "0",
-					"annotation_to_preserve":           "value_to_preserve",
-				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -205,10 +203,6 @@ func TestReconcileKind(t *testing.T) {
 					},
 				}),
 				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve":           "value_to_preserve",
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve":           "value_to_preserve",
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
@@ -254,10 +248,6 @@ func TestReconcileKind(t *testing.T) {
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
-					base.VolumeGenerationAnnotationKey: "0",
-					"annotation_to_preserve":           "value_to_preserve",
-				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -280,10 +270,6 @@ func TestReconcileKind(t *testing.T) {
 					},
 				}),
 				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve":           "value_to_preserve",
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve":           "value_to_preserve",
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
@@ -722,6 +708,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
+					ConsumerGroupReplicas(1),
 					WithConsumerGroupFailed("failed to reconcile consumer group,", "internal error"),
 				),
 			},
@@ -1102,7 +1089,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
-			Name: "Reconciled normal - with single fresh subscriber - with auth - PlainText",
+			Name: "Reconciled normal - with single fresh subscriber - with auth - SSL",
 			Objects: []runtime.Object{
 				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
@@ -1111,7 +1098,7 @@ func TestReconcileKind(t *testing.T) {
 					security.AuthSecretNamespaceKey:    "ns-1",
 				}),
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
-				NewSSLSecret("ns-1", "secret-1"),
+				NewLegacySSLSecret("ns-1", "secret-1"),
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
@@ -1126,7 +1113,16 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerAuth(&internalscg.Auth{
+							SecretSpec: &internalscg.SecretSpec{
+								Ref: &internalscg.SecretReference{
+									Name:      "secret-1",
+									Namespace: "ns-1",
+								},
+							},
+						}),
 					)),
+					ConsumerGroupReplicas(1),
 					ConsumerGroupReady,
 				),
 			},
@@ -1143,12 +1139,22 @@ func TestReconcileKind(t *testing.T) {
 							Topics:           []string{ChannelTopic()},
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
-							Auth: &contract.Resource_AuthSecret{
-								AuthSecret: &contract.Reference{
-									Uuid:      SecretUUID,
-									Namespace: "ns-1",
-									Name:      "secret-1",
-									Version:   SecretResourceVersion,
+							Auth: &contract.Resource_MultiAuthSecret{
+								MultiAuthSecret: &contract.MultiSecretReference{
+									Protocol: contract.Protocol_SSL,
+									References: []*contract.SecretReference{{
+										Reference: &contract.Reference{
+											Uuid:      SecretUUID,
+											Namespace: "ns-1",
+											Name:      "secret-1",
+											Version:   SecretResourceVersion,
+										},
+										KeyFieldReferences: []*contract.KeyFieldReference{
+											{SecretKey: "user.key", Field: contract.SecretField_USER_KEY},
+											{SecretKey: "user.crt", Field: contract.SecretField_USER_CRT},
+											{SecretKey: "ca.crt", Field: contract.SecretField_CA_CRT},
+										},
+									}},
 								},
 							},
 							Ingress: &contract.Ingress{
@@ -1170,6 +1176,276 @@ func TestReconcileKind(t *testing.T) {
 						WithSubscribers(Subscriber1(WithFreshSubscriber)),
 						StatusProbeSucceeded,
 						StatusChannelSubscribers(),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		},
+		{
+			Name: "Reconciled normal - with single fresh subscriber - with auth - SASL SSL",
+			Objects: []runtime.Object{
+				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
+				//NewService(),
+				NewPerChannelService(DefaultEnv),
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+					security.AuthSecretNameKey:         "secret-1",
+					security.AuthSecretNamespaceKey:    "ns-1",
+				}),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewLegacySASLSSLSecret("ns-1", "secret-1"),
+				NewConsumerGroup(
+					WithConsumerGroupName(Subscription1UUID),
+					WithConsumerGroupNamespace(ChannelNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
+					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
+					WithConsumerGroupLabels(ConsumerSubscription1Label),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(ChannelTopic()),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerAuth(&internalscg.Auth{
+							SecretSpec: &internalscg.SecretSpec{
+								Ref: &internalscg.SecretReference{
+									Name:      "secret-1",
+									Namespace: "ns-1",
+								},
+							},
+						}),
+					)),
+					ConsumerGroupReplicas(1),
+					ConsumerGroupReady,
+				),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Auth: &contract.Resource_MultiAuthSecret{
+								MultiAuthSecret: &contract.MultiSecretReference{
+									Protocol: contract.Protocol_SASL_SSL,
+									References: []*contract.SecretReference{{
+										Reference: &contract.Reference{
+											Uuid:      SecretUUID,
+											Namespace: "ns-1",
+											Name:      "secret-1",
+											Version:   SecretResourceVersion,
+										},
+										KeyFieldReferences: []*contract.KeyFieldReference{
+											{SecretKey: "user.key", Field: contract.SecretField_USER_KEY},
+											{SecretKey: "user.crt", Field: contract.SecretField_USER_CRT},
+											{SecretKey: "ca.crt", Field: contract.SecretField_CA_CRT},
+											{SecretKey: "password", Field: contract.SecretField_PASSWORD},
+											{SecretKey: "username", Field: contract.SecretField_USER},
+											{SecretKey: "saslType", Field: contract.SecretField_SASL_MECHANISM},
+										},
+									}},
+								},
+							},
+							Ingress: &contract.Ingress{
+								Host: receiver.Host(ChannelNamespace, ChannelName),
+							},
+						},
+					},
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						WithSubscribers(Subscriber1(WithFreshSubscriber)),
+						StatusProbeSucceeded,
+						StatusChannelSubscribers(),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		},
+		{
+			Name: "Reconciled normal - with single fresh subscriber - with auth - SASL",
+			Objects: []runtime.Object{
+				NewChannel(WithSubscribers(Subscriber1(WithFreshSubscriber))),
+				NewPerChannelService(DefaultEnv),
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+					security.AuthSecretNameKey:         "secret-1",
+					security.AuthSecretNamespaceKey:    "ns-1",
+				}),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewLegacySASLSecret("ns-1", "secret-1"),
+				NewConsumerGroup(
+					WithConsumerGroupName(Subscription1UUID),
+					WithConsumerGroupNamespace(ChannelNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
+					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
+					WithConsumerGroupLabels(ConsumerSubscription1Label),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(ChannelTopic()),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerAuth(&internalscg.Auth{
+							SecretSpec: &internalscg.SecretSpec{
+								Ref: &internalscg.SecretReference{
+									Name:      "secret-1",
+									Namespace: "ns-1",
+								},
+							},
+						}),
+					)),
+					ConsumerGroupReplicas(1),
+					ConsumerGroupReady,
+				),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Auth: &contract.Resource_MultiAuthSecret{
+								MultiAuthSecret: &contract.MultiSecretReference{
+									Protocol: contract.Protocol_SASL_PLAINTEXT,
+									References: []*contract.SecretReference{{
+										Reference: &contract.Reference{
+											Uuid:      SecretUUID,
+											Namespace: "ns-1",
+											Name:      "secret-1",
+											Version:   SecretResourceVersion,
+										},
+										KeyFieldReferences: []*contract.KeyFieldReference{
+											{SecretKey: "password", Field: contract.SecretField_PASSWORD},
+											{SecretKey: "username", Field: contract.SecretField_USER},
+											{SecretKey: "saslType", Field: contract.SecretField_SASL_MECHANISM},
+										},
+									}},
+								},
+							},
+							Ingress: &contract.Ingress{
+								Host: receiver.Host(ChannelNamespace, ChannelName),
+							},
+						},
+					},
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						WithSubscribers(Subscriber1(WithFreshSubscriber)),
+						StatusProbeSucceeded,
+						StatusChannelSubscribers(),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		},
+		{
+			Name: "Reconciled normal - with single fresh subscriber - with autoscaling annotations",
+			Objects: []runtime.Object{
+				NewChannel(
+					WithSubscribers(Subscriber1(WithFreshSubscriber)),
+				),
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				eventingrekttesting.NewSubscription(Subscription1Name, ChannelNamespace,
+					eventingrekttesting.WithSubscriptionUID(Subscription1UUID),
+					WithAutoscalingAnnotationsSubscription(),
+				),
+			},
+			Key: testKey,
+			WantCreates: []runtime.Object{
+				NewPerChannelService(&env),
+				NewConsumerGroup(
+					WithConsumerGroupName(Subscription1UUID),
+					WithConsumerGroupNamespace(ChannelNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
+					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
+					WithConsumerGroupLabels(ConsumerSubscription1Label),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(ChannelTopic()),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+					)),
+				),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								Host: receiver.Host(ChannelNamespace, ChannelName),
+							},
+						},
+					},
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
+						WithSubscribers(Subscriber1(WithUnknownSubscriber)),
+						StatusChannelSubscribersUnknown(),
 					),
 				},
 			},
@@ -1319,7 +1595,6 @@ func TestReconcileKind(t *testing.T) {
 	}
 
 	table.Test(t, NewFactory(&env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
-
 		proberMock := probertesting.MockProber(prober.StatusReady)
 		if p, ok := row.OtherTestData[testProber]; ok {
 			proberMock = p.(prober.Prober)
@@ -1359,9 +1634,6 @@ func TestReconcileKind(t *testing.T) {
 				ReceiverLabel:               base.ChannelReceiverLabel,
 			},
 			Env: env,
-			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
-				return &kafkatesting.MockKafkaClient{}, nil
-			},
 			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName: ChannelTopic(),
@@ -1377,6 +1649,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			ConfigMapLister:     listers.GetConfigMapLister(),
 			ServiceLister:       listers.GetServiceLister(),
+			SubscriptionLister:  listers.GetSubscriptionLister(),
 			ConsumerGroupLister: listers.GetConsumerGroupLister(),
 			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
 			Prober:              proberMock,

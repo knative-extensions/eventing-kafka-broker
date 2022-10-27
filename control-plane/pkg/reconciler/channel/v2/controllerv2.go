@@ -21,9 +21,11 @@ import (
 	"net/http"
 
 	"github.com/Shopify/sarama"
+	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
@@ -32,6 +34,7 @@ import (
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/network"
 
+	subscriptioninformer "knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
@@ -65,13 +68,23 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 			ContractConfigMapFormat:     configs.ContractConfigMapFormat,
 			DataPlaneNamespace:          configs.SystemNamespace,
 		},
-		NewKafkaClient:             sarama.NewClient,
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 		Env:                        configs,
 		ConfigMapLister:            configmapInformer.Lister(),
 		ServiceLister:              serviceinformer.Get(ctx).Lister(),
+		SubscriptionLister:         subscriptioninformer.Get(ctx).Lister(),
 		ConsumerGroupLister:        consumerGroupInformer.Lister(),
 		InternalsClient:            consumergroupclient.Get(ctx),
+	}
+
+	logger := logging.FromContext(ctx)
+
+	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		logger.Fatal("Failed to get or create data plane config map",
+			zap.String("configmap", configs.DataPlaneConfigMapAsString()),
+			zap.Error(err),
+		)
 	}
 
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)

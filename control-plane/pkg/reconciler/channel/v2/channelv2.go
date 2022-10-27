@@ -42,6 +42,7 @@ import (
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	"knative.dev/eventing-kafka/pkg/common/constants"
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
+	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
@@ -63,6 +64,9 @@ import (
 	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+
+	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
+	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1"
 )
 
 const (
@@ -93,12 +97,9 @@ type Reconciler struct {
 	// mock the function used during the reconciliation loop.
 	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
 
-	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
-	// mock the function used during the reconciliation loop.
-	NewKafkaClient kafka.NewClientFunc
-
-	ConfigMapLister corelisters.ConfigMapLister
-	ServiceLister   corelisters.ServiceLister
+	ConfigMapLister    corelisters.ConfigMapLister
+	ServiceLister      corelisters.ServiceLister
+	SubscriptionLister messaginglisters.SubscriptionLister
 
 	Prober prober.Prober
 
@@ -151,24 +152,17 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		)
 	}
 
-	// get security option for Sarama with secret info in it
-	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(secret)
-
-	if err := r.TrackSecret(secret, channel); err != nil {
-		return fmt.Errorf("failed to track secret: %w", err)
+	authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
+	if err != nil {
+		return statusConditionManager.FailedToResolveConfig(fmt.Errorf("failed to resolve auth context: %w", err))
 	}
+
+	// get security option for Sarama with secret info in it
+	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
 
 	topicName := kafka.ChannelTopic(TopicPrefix, channel)
 
 	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
-	if err != nil {
-		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
-	}
-
-	// Manually commit the offsets in KafkaChannel controller.
-	// That's because we want to make sure we initialize the offsets within the controller
-	// before dispatcher actually starts consuming messages.
-	kafkaClientSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption, kafka.DisableOffsetAutoCommitConfigOption)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
 	}
@@ -178,12 +172,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
 	}
 	defer kafkaClusterAdminClient.Close()
-
-	kafkaClient, err := r.NewKafkaClient(topicConfig.BootstrapServers, kafkaClientSaramaConfig)
-	if err != nil {
-		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting sarama config: %w", err))
-	}
-	defer kafkaClient.Close()
 
 	// create the topic
 	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
@@ -208,13 +196,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
 	// Get resource configuration
-	channelResource, err := r.getChannelContractResource(ctx, topic, channel, secret, topicConfig)
+	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&channel.Status.DeliveryStatus, channelResource.EgressConfig)
 
-	allReady, subscribersError := r.reconcileSubscribers(ctx, channel, topicName, topicConfig.BootstrapServers)
+	allReady, subscribersError := r.reconcileSubscribers(ctx, channel, topicName, topicConfig.BootstrapServers, secret)
 	if subscribersError != nil {
 		channel.GetConditionSet().Manage(&channel.Status).MarkFalse(KafkaChannelConditionSubscribersReady, "failed to reconcile all subscribers", subscribersError.Error())
 		return subscribersError
@@ -246,7 +234,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	statusConditionManager.ConfigMapUpdated()
 
-	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
+	// We update receiver pods annotation regardless of our contract changed or not due to the fact
 	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
 	// to anyway update remaining annotations with the contract generation that was saved in the CM.
 
@@ -264,21 +252,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		return err
 	}
 	logger.Debug("Updated receiver pod annotation")
-
-	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Channel
-		// ready. So, log out the error and move on to the next step.
-		logger.Warn(
-			"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-			zap.Error(err),
-		)
-
-		statusConditionManager.FailedToUpdateDispatcherPodsAnnotation(err)
-	} else {
-		logger.Debug("Updated dispatcher pod annotation")
-	}
 
 	channelService, err := r.reconcileChannelService(ctx, channel)
 	if err != nil {
@@ -373,17 +346,13 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 
 	channel.Status.Address = nil
 
-	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
+	// We update receiver annotation regardless of our contract changed or not due to the fact
 	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
 	// to update anyway remaining annotations with the contract generation that was saved in the CM.
 	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
 	// Update volume generation annotation of receiver pods
 	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		return err
-	}
-	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
 		return err
 	}
 
@@ -435,8 +404,13 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 		)
 	}
 
+	authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
+	if err != nil {
+		return fmt.Errorf("failed to resolve auth context: %w", err)
+	}
+
 	// get security option for Sarama with secret info in it
-	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(secret)
+	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
 
 	saramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
@@ -463,7 +437,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	return nil
 }
 
-func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagingv1beta1.KafkaChannel, topicName string, bootstrapServers []string) (bool, error) {
+func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagingv1beta1.KafkaChannel, topicName string, bootstrapServers []string, secret *corev1.Secret) (bool, error) {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
 
 	channel.Status.Subscribers = make([]v1.SubscriberStatus, 0)
@@ -473,7 +447,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 	for i := range channel.Spec.Subscribers {
 		s := &channel.Spec.Subscribers[i]
 		logger = logger.With(zap.Any("subscriber", s))
-		cg, err := r.reconcileConsumerGroup(ctx, channel, s, topicName, bootstrapServers)
+		cg, err := r.reconcileConsumerGroup(ctx, channel, s, topicName, bootstrapServers, secret)
 		if err != nil {
 			logger.Error("error reconciling subscriber. marking subscriber as not ready", zap.Error(err))
 			msg := fmt.Sprintf("Subscriber %v not ready: %v", s.UID, err)
@@ -538,8 +512,9 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 	return allReady, globalErr
 }
 
-func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec, topicName string, bootstrapServers []string) (*internalscg.ConsumerGroup, error) {
-	newcg := &internalscg.ConsumerGroup{
+func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec, topicName string, bootstrapServers []string, secret *corev1.Secret) (*internalscg.ConsumerGroup, error) {
+
+	expectedCg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(s.UID),
 			Namespace: channel.Namespace,
@@ -576,32 +551,48 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 		},
 	}
 
+	// TODO: make keda annotation values configurable and maybe unexposed
+	subscriptionAnnotations, err := r.getSubscriptionAnnotations(channel, s)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return nil, fmt.Errorf("failed to extract subscription annotations for subscriber %v: %w", s, err)
+	}
+	expectedCg.Annotations = kedafunc.SetAutoscalingAnnotations(subscriptionAnnotations)
+
+	if secret != nil {
+		expectedCg.Spec.Template.Spec.Auth = &internalscg.Auth{
+			SecretSpec: &internalscg.SecretSpec{
+				Ref: &internalscg.SecretReference{
+					Name:      secret.Name,
+					Namespace: secret.Namespace,
+				},
+			},
+		}
+	}
+
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(channel.GetNamespace()).Get(string(s.UID)) // Get by consumer group id
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	}
-
 	if apierrors.IsNotFound(err) {
-		cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(newcg.GetNamespace()).Create(ctx, newcg, metav1.CreateOptions{})
+		cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedCg.GetNamespace()).Create(ctx, expectedCg, metav1.CreateOptions{})
 		if err != nil && !apierrors.IsAlreadyExists(err) {
-			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", newcg.GetNamespace(), newcg.GetName(), err)
-		}
-		if apierrors.IsAlreadyExists(err) {
-			return newcg, nil
+			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", expectedCg.GetNamespace(), expectedCg.GetName(), err)
 		}
 		return cg, nil
 	}
 
-	if equality.Semantic.DeepDerivative(newcg.Spec, cg.Spec) {
+	if equality.Semantic.DeepDerivative(expectedCg.Spec, cg.Spec) && equality.Semantic.DeepDerivative(expectedCg.Annotations, cg.Annotations) {
 		return cg, nil
 	}
 
 	newCg := &internalscg.ConsumerGroup{
 		TypeMeta:   cg.TypeMeta,
 		ObjectMeta: cg.ObjectMeta,
-		Spec:       newcg.Spec,
+		Spec:       expectedCg.Spec,
 		Status:     cg.Status,
 	}
+	newCg.Annotations = expectedCg.Annotations
+
 	if cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
 		return nil, fmt.Errorf("failed to update consumer group %s/%s: %w", newCg.GetNamespace(), newCg.GetName(), err)
 	}
@@ -609,7 +600,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagi
 	return cg, nil
 }
 
-func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
+func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, auth *security.NetSpecAuthContext, config *kafka.TopicConfig) (*contract.Resource, error) {
 	resource := &contract.Resource{
 		Uid:    string(channel.UID),
 		Topics: []string{topic},
@@ -624,14 +615,9 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		},
 	}
 
-	if secret != nil {
-		resource.Auth = &contract.Resource_AuthSecret{
-			AuthSecret: &contract.Reference{
-				Uuid:      string(secret.UID),
-				Namespace: secret.Namespace,
-				Name:      secret.Name,
-				Version:   secret.ResourceVersion,
-			},
+	if auth != nil && auth.MultiSecretReference != nil {
+		resource.Auth = &contract.Resource_MultiAuthSecret{
+			MultiAuthSecret: auth.MultiSecretReference,
 		}
 	}
 
@@ -697,4 +683,19 @@ func (r Reconciler) finalizeConsumerGroup(ctx context.Context, cg *internalscg.C
 		return fmt.Errorf("failed to remove consumer group %s/%s: %w", cg.GetNamespace(), cg.GetName(), err)
 	}
 	return nil
+}
+
+func (r *Reconciler) getSubscriptionAnnotations(channel *messagingv1beta1.KafkaChannel, subscriber *v1.SubscriberSpec) (map[string]string, error) {
+	subscriptions, err := r.SubscriptionLister.Subscriptions(channel.GetNamespace()).List(labels.Everything())
+	if err != nil {
+		return nil, fmt.Errorf("failed to list subscriptions in namespace %s: %w", channel.GetNamespace(), err)
+	}
+
+	for _, s := range subscriptions {
+		if s.UID == subscriber.UID {
+			return s.Annotations, nil
+		}
+	}
+
+	return nil, apierrors.NewNotFound(messaging.SchemeGroupVersion.WithResource("subscriptions").GroupResource(), string(subscriber.UID))
 }

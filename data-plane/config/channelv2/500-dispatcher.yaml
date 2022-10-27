@@ -70,7 +70,7 @@ spec:
             - mountPath: /tmp
               name: cache
             - mountPath: /etc/logging
-              name: kafka-channel-config-logging
+              name: kafka-config-logging
               readOnly: true
             - mountPath: /etc/tracing
               name: config-tracing
@@ -93,7 +93,7 @@ spec:
             - name: WEBCLIENT_CONFIG_FILE_PATH
               value: /etc/config/config-kafka-channel-webclient.properties
             - name: DATA_PLANE_CONFIG_FILE_PATH
-              value: /etc/channels-subscriptions/data
+              value: /etc/contract-resources/data
             - name: EGRESSES_INITIAL_CAPACITY
               value: "20"
             - name: INSTANCE_ID
@@ -162,7 +162,7 @@ spec:
             name: config-kafka-channel-data-plane
         - name: cache
           emptyDir: { }
-        - name: kafka-channel-config-logging
+        - name: kafka-config-logging
           configMap:
             name: kafka-config-logging
         - name: config-tracing
