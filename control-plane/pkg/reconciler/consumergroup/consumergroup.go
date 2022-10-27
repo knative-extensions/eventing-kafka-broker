@@ -449,7 +449,7 @@ func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals
 	var triggerAuthentication *kedav1alpha1.TriggerAuthentication
 	var secret *corev1.Secret
 
-	if hasAuthSpecAuthConfig(cg.Spec.Template.Spec.Auth) || hasNetSpecAuthConfig(cg.Spec.Template.Spec.Auth) {
+	if hasSecretSpecConfig(cg.Spec.Template.Spec.Auth) || hasNetSpecAuthConfig(cg.Spec.Template.Spec.Auth) {
 		saslType, err := r.retrieveSaslTypeIfPresent(ctx, cg)
 		if err != nil {
 			return err

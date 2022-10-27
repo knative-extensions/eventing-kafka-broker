@@ -156,10 +156,10 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, saslType *s
 		}
 	}
 
-	if cg.Spec.Template.Spec.Auth.AuthSpec != nil && cg.Spec.Template.Spec.Auth.AuthSpec.Secret.Ref.Name != "" {
+	if cg.Spec.Template.Spec.Auth.SecretSpec != nil && cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name != "" {
 		host := kedav1alpha1.AuthSecretTargetRef{
 			Parameter: "host", //TODO: parameter name?
-			Name:      cg.Spec.Template.Spec.Auth.AuthSpec.Secret.Ref.Name,
+			Name:      cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name,
 			Key:       "", //TODO: key value?
 		}
 		secretTargetRefs = append(secretTargetRefs, host)

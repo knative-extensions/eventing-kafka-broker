@@ -30,8 +30,8 @@ import (
 func (r Reconciler) newAuthConfigOption(ctx context.Context, cg *kafkainternals.ConsumerGroup) (kafka.ConfigOption, error) {
 	var secret *corev1.Secret
 
-	if hasAuthSpecAuthConfig(cg.Spec.Template.Spec.Auth) {
-		secret, err := security.Secret(ctx, &AuthSpecSecretLocator{cg}, security.DefaultSecretProviderFunc(r.SecretLister, r.KubeClient))
+	if hasSecretSpecConfig(cg.Spec.Template.Spec.Auth) {
+		secret, err := security.Secret(ctx, &SecretSpecSecretLocator{cg}, security.DefaultSecretProviderFunc(r.SecretLister, r.KubeClient))
 		if err != nil {
 			return nil, err
 		}
@@ -73,12 +73,12 @@ func (sl *NetSpecSecretLocator) SecretNamespace() (string, bool) {
 	return sl.Namespace, hasNetSpecAuthConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth)
 }
 
-func hasAuthSpecAuthConfig(auth *kafkainternals.Auth) bool {
+func hasSecretSpecConfig(auth *kafkainternals.Auth) bool {
 	return auth != nil &&
-		auth.AuthSpec != nil &&
-		auth.AuthSpec.Secret != nil &&
-		auth.AuthSpec.Secret.Ref != nil &&
-		auth.AuthSpec.Secret.Ref.Name != ""
+		auth.SecretSpec != nil &&
+		auth.SecretSpec.Ref != nil &&
+		auth.SecretSpec.Ref.Name != "" &&
+		auth.SecretSpec.Ref.Namespace != ""
 }
 
 func hasNetSpecAuthConfig(auth *kafkainternals.Auth) bool {
@@ -93,21 +93,22 @@ func hasNetSpecAuthConfig(auth *kafkainternals.Auth) bool {
 			auth.NetSpec.SASL.Type.SecretKeyRef != nil)
 }
 
-type AuthSpecSecretLocator struct {
+type SecretSpecSecretLocator struct {
 	*kafkainternals.ConsumerGroup
 }
 
-func (sl *AuthSpecSecretLocator) SecretNamespace() (string, bool) {
-	if !hasAuthSpecAuthConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth) {
+func (sl *SecretSpecSecretLocator) SecretNamespace() (string, bool) {
+	if !hasSecretSpecConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth) {
 		return "", false
 	}
-	return sl.ConsumerGroup.GetNamespace(), hasAuthSpecAuthConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth)
+	namespace := sl.ConsumerGroup.Spec.Template.Spec.Auth.SecretSpec.Ref.Namespace
+	return namespace, hasSecretSpecConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth)
 }
 
-func (sl *AuthSpecSecretLocator) SecretName() (string, bool) {
-	if !hasAuthSpecAuthConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth) {
+func (sl *SecretSpecSecretLocator) SecretName() (string, bool) {
+	if !hasSecretSpecConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth) {
 		return "", false
 	}
-	name := sl.ConsumerGroup.Spec.Template.Spec.Auth.AuthSpec.Secret.Ref.Name
-	return name, hasAuthSpecAuthConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth)
+	name := sl.ConsumerGroup.Spec.Template.Spec.Auth.SecretSpec.Ref.Name
+	return name, hasSecretSpecConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth)
 }

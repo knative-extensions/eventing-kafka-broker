@@ -25,20 +25,23 @@ type SecretLocator struct {
 }
 
 func (s *SecretLocator) SecretName() (string, bool) {
-	if s.hasNoAuth() {
+	if s.hasNoSecret() {
 		return "", false
 	}
-	return s.Consumer.Spec.Auth.AuthSpec.Secret.Ref.Name, true
+	return s.Consumer.Spec.Auth.SecretSpec.Ref.Name, true
 }
 
-func (s *SecretLocator) hasNoAuth() bool {
+func (s *SecretLocator) hasNoSecret() bool {
 	return s.Consumer.Spec.Auth == nil ||
-		s.Consumer.Spec.Auth.AuthSpec == nil ||
-		s.Consumer.Spec.Auth.AuthSpec.Secret == nil ||
-		s.Consumer.Spec.Auth.AuthSpec.Secret.Ref == nil ||
-		s.Consumer.Spec.Auth.AuthSpec.Secret.Ref.Name == ""
+		s.Consumer.Spec.Auth.SecretSpec == nil ||
+		s.Consumer.Spec.Auth.SecretSpec.Ref == nil ||
+		s.Consumer.Spec.Auth.SecretSpec.Ref.Name == "" ||
+		s.Consumer.Spec.Auth.SecretSpec.Ref.Namespace == ""
 }
 
 func (s *SecretLocator) SecretNamespace() (string, bool) {
-	return s.GetNamespace(), !s.hasNoAuth()
+	if s.hasNoSecret() {
+		return "", false
+	}
+	return s.Consumer.Spec.Auth.SecretSpec.Ref.Namespace, true
 }

@@ -199,7 +199,7 @@ func (r Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consume
 		return nil
 	}
 
-	if c.Spec.Auth.AuthSpec != nil {
+	if c.Spec.Auth.SecretSpec != nil {
 		secret, err := security.Secret(ctx, &SecretLocator{Consumer: c}, r.SecretProviderFunc())
 		if err != nil {
 			return fmt.Errorf("failed to get secret: %w", err)
@@ -426,12 +426,12 @@ func (r *Reconciler) trackAuthContext(c *kafkainternals.Consumer, auth *kafkaint
 		return nil
 	}
 
-	if auth.AuthSpec.HasAuth() {
+	if auth.SecretSpec.HasSecret() {
 		ref := tracker.Reference{
 			APIVersion: "v1",
 			Kind:       "Secret",
-			Namespace:  c.GetNamespace(),
-			Name:       auth.AuthSpec.Secret.Ref.Name,
+			Namespace:  auth.SecretSpec.Ref.Namespace,
+			Name:       auth.SecretSpec.Ref.Name,
 		}
 		if err := r.Tracker.TrackReference(ref, c); err != nil {
 			return fmt.Errorf("failed to track secret for rotation %s/%s: %w", ref.Namespace, ref.Name, err)

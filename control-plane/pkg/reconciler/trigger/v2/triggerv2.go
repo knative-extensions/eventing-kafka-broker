@@ -46,8 +46,6 @@ import (
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
-
 	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
@@ -136,7 +134,12 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 		offset = sources.OffsetEarliest
 	}
 
-	secret, err := security.Secret(ctx, &security.AnnotationsSecretLocator{Annotations: broker.Status.Annotations, Namespace: trigger.Namespace}, security.DefaultSecretProviderFunc(r.SecretLister, r.KubeClient))
+	namespace := broker.GetNamespace()
+	if broker.Spec.Config.Namespace != "" {
+		namespace = broker.Spec.Config.Namespace
+	}
+
+	secret, err := security.Secret(ctx, &security.AnnotationsSecretLocator{Annotations: broker.Status.Annotations, Namespace: namespace}, security.DefaultSecretProviderFunc(r.SecretLister, r.KubeClient))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -189,11 +192,10 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 
 	if secret != nil {
 		expectedCg.Spec.Template.Spec.Auth = &internalscg.Auth{
-			AuthSpec: &v1alpha1.Auth{
-				Secret: &v1alpha1.Secret{
-					Ref: &v1alpha1.SecretReference{
-						Name: secret.Name,
-					},
+			SecretSpec: &internalscg.SecretSpec{
+				Ref: &internalscg.SecretReference{
+					Name:      secret.Name,
+					Namespace: secret.Namespace,
 				},
 			},
 		}

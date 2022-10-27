@@ -39,7 +39,8 @@ const (
 	ConsumerNamePrefix = "test-cg"
 	ConsumerNamespace  = "test-cg-ns"
 
-	SecretName = "secret-name"
+	SecretName      = "secret-name"
+	SecretNamespace = SystemNamespace
 )
 
 var (
