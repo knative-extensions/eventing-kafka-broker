@@ -28,6 +28,7 @@ import (
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 const (
@@ -89,7 +90,7 @@ func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthenticati
 	return triggers, nil
 }
 
-func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, saslType *string, protocol *string) (*kedav1alpha1.TriggerAuthentication, *corev1.Secret, error) {
+func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, saslType *string, protocol *string, caCert *string) (*kedav1alpha1.TriggerAuthentication, *corev1.Secret, error) {
 
 	secretTargetRefs := make([]kedav1alpha1.AuthSecretTargetRef, 0, 8)
 
@@ -162,21 +163,37 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, saslType *s
 	}
 
 	if cg.Spec.Template.Spec.Auth.SecretSpec != nil && cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name != "" {
-		sasl := kedav1alpha1.AuthSecretTargetRef{Parameter: "sasl", Name: secret.Name, Key: "sasl"}
-		secretTargetRefs = append(secretTargetRefs, sasl)
 
-		if protocol != nil {
-			user := kedav1alpha1.AuthSecretTargetRef{Parameter: "username", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: "user"}
-			secretTargetRefs = append(secretTargetRefs, user)
-		} else {
-			username := kedav1alpha1.AuthSecretTargetRef{Parameter: "username", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: "username"}
-			secretTargetRefs = append(secretTargetRefs, username)
+		if saslType != nil { //SASL enabled
+			sasl := kedav1alpha1.AuthSecretTargetRef{Parameter: "sasl", Name: secret.Name, Key: "sasl"}
+			secretTargetRefs = append(secretTargetRefs, sasl)
+
+			if protocol != nil {
+				user := kedav1alpha1.AuthSecretTargetRef{Parameter: "username", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: security.SaslUserKey}
+				secretTargetRefs = append(secretTargetRefs, user)
+			} else {
+				username := kedav1alpha1.AuthSecretTargetRef{Parameter: "username", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: security.SaslUsernameKey}
+				secretTargetRefs = append(secretTargetRefs, username)
+			}
+
+			password := kedav1alpha1.AuthSecretTargetRef{Parameter: "password", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: security.SaslPasswordKey}
+			secretTargetRefs = append(secretTargetRefs, password)
 		}
 
-		password := kedav1alpha1.AuthSecretTargetRef{Parameter: "password", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: "password"}
-		secretTargetRefs = append(secretTargetRefs, password)
+		if caCert != nil { // TLS enabled
+			secret.StringData["tls"] = "enable"
+			tls := kedav1alpha1.AuthSecretTargetRef{Parameter: "tls", Name: secret.Name, Key: "tls"}
+			secretTargetRefs = append(secretTargetRefs, tls)
 
-		//TODO: TLS support to be added
+			ca := kedav1alpha1.AuthSecretTargetRef{Parameter: "ca", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: security.CaCertificateKey}
+			secretTargetRefs = append(secretTargetRefs, ca)
+
+			cert := kedav1alpha1.AuthSecretTargetRef{Parameter: "cert", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: security.UserCertificate}
+			secretTargetRefs = append(secretTargetRefs, cert)
+
+			key := kedav1alpha1.AuthSecretTargetRef{Parameter: "key", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: security.UserKey}
+			secretTargetRefs = append(secretTargetRefs, key)
+		}
 
 		triggerAuth.Spec.SecretTargetRef = secretTargetRefs
 	}
