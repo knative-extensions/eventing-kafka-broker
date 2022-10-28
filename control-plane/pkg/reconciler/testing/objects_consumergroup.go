@@ -70,12 +70,13 @@ var (
 	}
 
 	ConsumerGroupAnnotations = map[string]string{
-		keda.AutoscalingClassAnnotation:               keda.KEDA,
-		keda.AutoscalingMinScaleAnnotation:            "0",
-		keda.AutoscalingMaxScaleAnnotation:            "5",
-		keda.KedaAutoscalingPollingIntervalAnnotation: "30",
-		keda.KedaAutoscalingCooldownPeriodAnnotation:  "300",
-		keda.KedaAutoscalingKafkaLagThreshold:         "10",
+		keda.AutoscalingClassAnnotation:                 keda.KEDA,
+		keda.AutoscalingMinScaleAnnotation:              "0",
+		keda.AutoscalingMaxScaleAnnotation:              "5",
+		keda.KedaAutoscalingPollingIntervalAnnotation:   "30",
+		keda.KedaAutoscalingCooldownPeriodAnnotation:    "300",
+		keda.KedaAutoscalingKafkaLagThreshold:           "10",
+		keda.KedaAutoscalingKafkaActivationLagThreshold: "1",
 	}
 )
 

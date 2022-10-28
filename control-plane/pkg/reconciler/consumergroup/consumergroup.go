@@ -49,6 +49,7 @@ import (
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
 	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
@@ -455,7 +456,12 @@ func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals
 			return err
 		}
 
-		triggerAuthentication, secret, err = kedafunc.GenerateTriggerAuthentication(cg, saslType)
+		protocol, err := r.retrieveProtocolIfPresent(ctx, cg)
+		if err != nil {
+			return err
+		}
+
+		triggerAuthentication, secret, err = kedafunc.GenerateTriggerAuthentication(cg, saslType, protocol)
 		if err != nil {
 			return err
 		}
@@ -489,16 +495,40 @@ func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals
 }
 
 func (r *Reconciler) retrieveSaslTypeIfPresent(ctx context.Context, cg *kafkainternals.ConsumerGroup) (*string, error) {
-	if hasNetSpecAuthConfig(cg.Spec.Template.Spec.Auth) && cg.Spec.Template.Spec.Auth.NetSpec.SASL.Enable {
-		if cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef != nil {
-			secretKeyRefName := cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef.Name
-			secretKeyRefKey := cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef.Key
-			secret, err := r.KubeClient.CoreV1().Secrets(cg.Namespace).Get(ctx, secretKeyRefName, metav1.GetOptions{})
-			if err != nil {
-				return nil, reconciler.NewEvent(corev1.EventTypeWarning, "SaslTypeSecretUnavailable", "Unable to get SASL type from secret: \"%s/%s\", %w", cg.Namespace, secretKeyRefName, err)
-			}
-			saslTypeValue := string(secret.Data[secretKeyRefKey])
-			return &saslTypeValue, nil
+	if hasNetSpecAuthConfig(cg.Spec.Template.Spec.Auth) && cg.Spec.Template.Spec.Auth.NetSpec.SASL.Enable && cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef != nil {
+		secretKeyRefName := cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef.Name
+		secretKeyRefKey := cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef.Key
+		secret, err := r.KubeClient.CoreV1().Secrets(cg.Namespace).Get(ctx, secretKeyRefName, metav1.GetOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("unable to get SASL type from secret: \"%s/%s\", %w", cg.Namespace, secretKeyRefName, err)
+		}
+		saslTypeValue := string(secret.Data[secretKeyRefKey])
+		return &saslTypeValue, nil
+	}
+	if hasSecretSpecConfig(cg.Spec.Template.Spec.Auth) && cg.Spec.Template.Spec.Auth.SecretSpec.Ref != nil {
+		secretKeyRefName := cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name
+		secretKeyRefNamespace := cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Namespace
+		secret, err := r.KubeClient.CoreV1().Secrets(secretKeyRefNamespace).Get(ctx, secretKeyRefName, metav1.GetOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("unable to get SASL type from secret: \"%s/%s\", %w", secretKeyRefNamespace, secretKeyRefName, err)
+		}
+		saslTypeValue := string(secret.Data["saslType"])
+		return &saslTypeValue, nil
+	}
+	return nil, nil
+}
+
+func (r *Reconciler) retrieveProtocolIfPresent(ctx context.Context, cg *kafkainternals.ConsumerGroup) (*string, error) {
+	if hasSecretSpecConfig(cg.Spec.Template.Spec.Auth) && cg.Spec.Template.Spec.Auth.SecretSpec.Ref != nil {
+		secretKeyRefName := cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name
+		secretKeyRefNamespace := cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Namespace
+		secret, err := r.KubeClient.CoreV1().Secrets(secretKeyRefNamespace).Get(ctx, secretKeyRefName, metav1.GetOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("unable to get Protocol from secret: \"%s/%s\", %w", secretKeyRefNamespace, secretKeyRefName, err)
+		}
+		if protocolValue, ok := secret.Data[security.ProtocolKey]; ok {
+			protocol := string(protocolValue)
+			return &protocol, nil
 		}
 	}
 	return nil, nil
@@ -575,8 +605,8 @@ func (r *Reconciler) reconcileSecret(ctx context.Context, expectedSecret *corev1
 func (r *Reconciler) isKEDAEnabled(ctx context.Context, namespace string) bool {
 	// TODO: code below failing unit tests with err: "panic: interface conversion: testing.ActionImpl is not testing.GetAction: missing method GetName"
 	/*if err := discovery.ServerSupportsVersion(r.KubeClient.Discovery(), keda.KedaSchemeGroupVersion); err == nil {
-		return true
-	}*/
+		 return true
+	 }*/
 
 	if r.KafkaFeatureFlags.IsControllerAutoscalerEnabled() {
 		if _, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace).List(ctx, metav1.ListOptions{}); err != nil {
