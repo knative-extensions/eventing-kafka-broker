@@ -16,12 +16,15 @@
 package dev.knative.eventing.kafka.broker.dispatcher.main;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 import io.vertx.ext.web.client.WebClientOptions;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -58,6 +61,8 @@ public class ConsumerVerticleContext {
 
   private ConsumerVerticleLoggingContext loggingContext;
 
+  private Tags tags;
+
   public ConsumerVerticleContext withConsumerConfigs(final Map<String, Object> consumerConfigs) {
     this.consumerConfigs = new HashMap<>(consumerConfigs);
     return this;
@@ -88,6 +93,15 @@ public class ConsumerVerticleContext {
       consumerConfigs.put(InvalidCloudEventInterceptor.SOURCE_NAME_CONFIG, resource.getReference().getName());
       consumerConfigs.put(InvalidCloudEventInterceptor.SOURCE_NAMESPACE_CONFIG, resource.getReference().getNamespace());
     }
+
+    this.tags = Tags.of(
+      // Resource tags
+      Tag.of(Metrics.Tags.RESOURCE_NAME, resource.getReference().getName()),
+      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, resource.getReference().getNamespace()),
+      // Egress tags
+      Tag.of(Metrics.Tags.CONSUMER_NAME, egress.getReference().getName())
+    );
+
     return this;
   }
 
@@ -194,6 +208,10 @@ public class ConsumerVerticleContext {
 
   public ProducerFactory<String, CloudEvent> getProducerFactory() {
     return this.producerFactory;
+  }
+
+  public Tags getTags() {
+    return tags;
   }
 
   private static int maxProcessingTimeMs(final Map<String, Object> consumerConfigs, final DataPlaneContract.EgressConfig egressConfig) {

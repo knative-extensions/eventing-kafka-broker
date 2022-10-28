@@ -26,7 +26,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherMutatorChain;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.ResourceContext;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseToHttpEndpointHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseToKafkaTopicHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventOverridesMutator;
@@ -112,7 +111,7 @@ public class ConsumerVerticleBuilder {
 
     final var recordDispatcher = new RecordDispatcherMutatorChain(
       new RecordDispatcherImpl(
-        new ResourceContext(consumerVerticleContext.getResource(), consumerVerticleContext.getEgress()),
+        consumerVerticleContext,
         getFilter(),
         egressSubscriberSender,
         egressDeadLetterSender,
@@ -206,7 +205,7 @@ public class ConsumerVerticleBuilder {
         vertx,
         WebClient.create(vertx, consumerVerticleContext.getWebClientOptions()),
         consumerVerticleContext.getEgress().getReplyUrl(),
-        consumerVerticleContext.getEgressConfig()
+        consumerVerticleContext
       ));
     }
 
@@ -225,7 +224,7 @@ public class ConsumerVerticleBuilder {
       vertx,
       WebClient.create(vertx, consumerVerticleContext.getWebClientOptions()),
       consumerVerticleContext.getEgress().getDestination(),
-      consumerVerticleContext.getEgressConfig()
+      consumerVerticleContext
     );
   }
 
@@ -241,7 +240,7 @@ public class ConsumerVerticleBuilder {
         vertx,
         WebClient.create(vertx, webClientOptions),
         consumerVerticleContext.getEgressConfig().getDeadLetter(),
-        consumerVerticleContext.getEgressConfig()
+        consumerVerticleContext
       );
     }
 

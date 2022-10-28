@@ -25,6 +25,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEvent;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KafkaConsumerRecordUtils;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -77,7 +78,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   private static final String KN_ERROR_DEST_EXT_NAME = "knativeerrordest";
   private static final String KN_ERROR_CODE_EXT_NAME = "knativeerrorcode";
   private static final String KN_ERROR_DATA_EXT_NAME = "knativeerrordata";
-  private static final String EKB_ERROR_PREFIX       = "kne-";
+  private static final String EKB_ERROR_PREFIX = "kne-";
   private static final int KN_ERROR_DATA_MAX_BYTES = 1024;
 
   private final Filter filter;
@@ -87,7 +88,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   private final AsyncCloseable closeable;
   private final ConsumerTracer consumerTracer;
   private final MeterRegistry meterRegistry;
-  private final ResourceContext resourceContext;
+  private final ConsumerVerticleContext consumerVerticleContext;
 
   private final Tags noResponseResourceTags;
 
@@ -106,7 +107,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
    * @param consumerTracer           consumer tracer
    */
   public RecordDispatcherImpl(
-    final ResourceContext resourceContext,
+    final ConsumerVerticleContext consumerVerticleContext,
     final Filter filter,
     final CloudEventSender subscriberSender,
     final CloudEventSender deadLetterSinkSender,
@@ -114,14 +115,14 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     final RecordDispatcherListener recordDispatcherListener,
     final ConsumerTracer consumerTracer,
     final MeterRegistry meterRegistry) {
-    Objects.requireNonNull(resourceContext, "provide resourceContext");
+    Objects.requireNonNull(consumerVerticleContext, "provide consumerVerticleContext");
     Objects.requireNonNull(filter, "provide filter");
     Objects.requireNonNull(subscriberSender, "provide subscriberSender");
     Objects.requireNonNull(deadLetterSinkSender, "provide deadLetterSinkSender");
     Objects.requireNonNull(recordDispatcherListener, "provide offsetStrategy");
     Objects.requireNonNull(responseHandler, "provide sinkResponseHandler");
 
-    this.resourceContext = resourceContext;
+    this.consumerVerticleContext = consumerVerticleContext;
     this.filter = filter;
     this.subscriberSender = composeSenderAndSinkHandler(subscriberSender, responseHandler, "subscriber");
     this.dlsSender = composeSenderAndSinkHandler(deadLetterSinkSender, responseHandler, "dead letter sink");
@@ -130,7 +131,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     this.consumerTracer = consumerTracer;
     this.meterRegistry = meterRegistry;
 
-    this.noResponseResourceTags = resourceContext.getTags().and(NO_RESPONSE_CODE_CLASS_TAG);
+    this.noResponseResourceTags = this.consumerVerticleContext.getTags().and(NO_RESPONSE_CODE_CLASS_TAG);
   }
 
   /**
@@ -283,7 +284,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   }
 
   private ConsumerRecordContext errorTransform(final ConsumerRecordContext recordContext, @Nullable final HttpResponse<?> response) {
-    final var destination = resourceContext.getEgress().getDestination();
+    final var destination = consumerVerticleContext.getEgress().getDestination();
     if (response == null) {
       // if response is null we still want to add destination
       return addExtensions(recordContext, Map.of(KN_ERROR_DEST_EXT_NAME, destination));
@@ -355,7 +356,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     finalProm.complete();
   }
 
-  private static ConsumerRecordContext maybeDeserializeValueFromHeaders(ConsumerRecordContext recordContext) {
+  private ConsumerRecordContext maybeDeserializeValueFromHeaders(ConsumerRecordContext recordContext) {
     if (recordContext.getRecord().value() != null) {
       return recordContext;
     }
@@ -373,7 +374,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     return recordContext;
   }
 
-  private static Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> composeSenderAndSinkHandler(
+  private Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> composeSenderAndSinkHandler(
     CloudEventSender sender, ResponseHandler sinkHandler, String senderType) {
     return rec -> sender.send(rec.value())
       .onFailure(ex -> logError("Failed to send event to " + senderType, rec, ex))
@@ -406,7 +407,10 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   private void recordDispatchLatency(final HttpResponse<?> response,
                                      final ConsumerRecordContext recordContext) {
     final var latency = recordContext.performLatency();
-    logger.debug("Dispatch latency {}", keyValue("latency", latency));
+    logger.debug("Dispatch latency {} {}",
+      consumerVerticleContext.getLoggingKeyValue(),
+      keyValue("latency", latency)
+    );
 
     if (meterRegistry != null) {
       Metrics
@@ -432,7 +436,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
         Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType())
       );
     } else {
-      tags = this.resourceContext.getTags().and(
+      tags = this.consumerVerticleContext.getTags().and(
         Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, response.statusCode() / 100 + "xx"),
         Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(response.statusCode())),
         Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType())
@@ -443,29 +447,31 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private Tags getTags(final ConsumerRecordContext recordContext) {
     if (recordContext.getRecord().record().value() instanceof InvalidCloudEvent) {
-      return this.resourceContext.getTags().and(INVALID_EVENT_TYPE_TAG);
+      return this.consumerVerticleContext.getTags().and(INVALID_EVENT_TYPE_TAG);
     }
-    return this.resourceContext.getTags().and(
+    return this.consumerVerticleContext.getTags().and(
       Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType())
     );
   }
 
-  private static void logError(
+  private void logError(
     final String msg,
     final KafkaConsumerRecord<Object, CloudEvent> record,
     final Throwable cause) {
 
     if (logger.isDebugEnabled()) {
-      logger.error(msg + " {} {} {} {} {}",
+      logger.error(msg + " {} {} {} {} {} {} {}",
+        consumerVerticleContext.getLoggingKeyValue(),
         keyValue("topic", record.topic()),
         keyValue("partition", record.partition()),
-        keyValue("headers", record.headers()),
         keyValue("offset", record.offset()),
+        keyValue("headers", record.headers()),
         keyValue("event", record.value()),
         cause
       );
     } else {
-      logger.error(msg + " {} {} {}",
+      logger.error(msg + " {} {} {} {}",
+        consumerVerticleContext.getLoggingKeyValue(),
         keyValue("topic", record.topic()),
         keyValue("partition", record.partition()),
         keyValue("offset", record.offset()),
@@ -474,11 +480,12 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     }
   }
 
-  private static void logDebug(
+  private void logDebug(
     final String msg,
     final KafkaConsumerRecord<Object, CloudEvent> record) {
 
-    logger.debug(msg + " {} {} {} {} {} {}",
+    logger.debug(msg + " {} {} {} {} {} {} {}",
+      consumerVerticleContext.getLoggingKeyValue(),
       keyValue("topic", record.topic()),
       keyValue("partition", record.partition()),
       keyValue("headers", record.headers()),
@@ -512,7 +519,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     this.closed.set(true);
 
     Metrics
-      .searchEgressMeters(meterRegistry, resourceContext.getEgress().getReference())
+      .searchEgressMeters(meterRegistry, consumerVerticleContext.getEgress().getReference())
       .forEach(meterRegistry::remove);
 
     if (inFlightEvents.get() == 0) {
@@ -524,6 +531,6 @@ public class RecordDispatcherImpl implements RecordDispatcher {
         v -> this.closeable.close(),
         v -> this.closeable.close()
       )
-      .onComplete(r -> logger.info("Record dispatcher closed {}", keyValue("resource", resourceContext.getResource())));
+      .onComplete(r -> logger.info("Record dispatcher closed {}", consumerVerticleContext.getLoggingKeyValue()));
   }
 }

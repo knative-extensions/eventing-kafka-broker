@@ -18,21 +18,17 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
-import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleLoggingContext;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
-
-import java.util.Objects;
-import java.util.function.BiFunction;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import java.util.Objects;
+import java.util.function.BiFunction;
 
 public abstract class ConsumerVerticle extends AbstractVerticle {
 
