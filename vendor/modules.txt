@@ -1374,7 +1374,7 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/eventing-kafka v0.35.0
+# knative.dev/eventing-kafka v0.35.1-0.20221018081310-cbcf8a7c8112
 ## explicit; go 1.18
 knative.dev/eventing-kafka/pkg/apis/bindings
 knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
@@ -1552,7 +1552,7 @@ knative.dev/pkg/webhook/json
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20221017014457-090970c9ca3c
+# knative.dev/reconciler-test v0.0.0-20221028112809-f3175ad3554d
 ## explicit; go 1.18
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment
