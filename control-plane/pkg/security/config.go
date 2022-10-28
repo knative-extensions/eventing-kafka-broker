@@ -131,14 +131,21 @@ type AnnotationsSecretLocator struct {
 }
 
 func (a *AnnotationsSecretLocator) SecretName() (string, bool) {
-	v, ok := a.Annotations[AuthSecretNameKey]
-	if ok && v != "" {
-		return v, ok
+	name, ok := a.Annotations[AuthSecretNameKey]
+	if ok && name != "" {
+		return name, ok
 	}
 	return "", false
 }
 
 func (a *AnnotationsSecretLocator) SecretNamespace() (string, bool) {
 	name, ok := a.SecretName()
-	return a.Namespace, len(a.Namespace) > 0 && ok && len(name) > 0
+	if a.Namespace != "" {
+		return a.Namespace, len(a.Namespace) > 0 && ok && len(name) > 0
+	}
+	namespace, ok := a.Annotations[AuthSecretNamespaceKey]
+	if ok && namespace != "" {
+		return namespace, ok
+	}
+	return "", false
 }
