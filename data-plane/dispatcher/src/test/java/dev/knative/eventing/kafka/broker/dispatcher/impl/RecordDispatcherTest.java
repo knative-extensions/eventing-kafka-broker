@@ -26,6 +26,8 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandlerMock;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEvent;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
+import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.prometheus.PrometheusConfig;
@@ -53,16 +55,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class RecordDispatcherTest {
 
-  private static final ResourceContext resourceContext = new ResourceContext(
-    DataPlaneContract.Resource.newBuilder().build(),
-    DataPlaneContract.Egress.newBuilder().setDestination("testdest").build()
+  private static final ConsumerVerticleContext resourceContext = FakeConsumerVerticleContext.get(
+    FakeConsumerVerticleContext.get().getResource(),
+    DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress()).setDestination("testdest").build()
   );
 
   static {
@@ -311,7 +319,7 @@ public class RecordDispatcherTest {
     String errorBody = "{ \"message\": \"bad bad things happened\" }";
     String validErrorKey = "kne-testerror";
     String invalidErrorKey = "something";
-    MultiMap headerMap = MultiMap.caseInsensitiveMultiMap().add(validErrorKey, "hello").add(invalidErrorKey,"nope");
+    MultiMap headerMap = MultiMap.caseInsensitiveMultiMap().add(validErrorKey, "hello").add(invalidErrorKey, "nope");
 
     final var dispatcherHandler = new RecordDispatcherImpl(
       resourceContext,
