@@ -115,7 +115,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     final RecordDispatcherListener recordDispatcherListener,
     final ConsumerTracer consumerTracer,
     final MeterRegistry meterRegistry) {
-    Objects.requireNonNull(consumerVerticleContext, "provide resourceContext");
+    Objects.requireNonNull(consumerVerticleContext, "provide consumerVerticleContext");
     Objects.requireNonNull(filter, "provide filter");
     Objects.requireNonNull(subscriberSender, "provide subscriberSender");
     Objects.requireNonNull(deadLetterSinkSender, "provide deadLetterSinkSender");
