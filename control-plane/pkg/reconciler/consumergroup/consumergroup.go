@@ -573,7 +573,8 @@ func (r *Reconciler) reconcileScaledObject(ctx context.Context, expectedScaledOb
 		return fmt.Errorf("scaledobject %s/%s is not owned by %s/%s", expectedScaledObject.Namespace, expectedScaledObject.Name, obj.GetNamespace(), obj.GetName())
 	}
 	if !equality.Semantic.DeepDerivative(expectedScaledObject.Spec, scaledObject.Spec) {
-		if _, err = r.KedaClient.KedaV1alpha1().ScaledObjects(expectedScaledObject.Namespace).Update(ctx, expectedScaledObject, metav1.UpdateOptions{}); err != nil {
+		scaledObject.Spec = expectedScaledObject.Spec
+		if _, err = r.KedaClient.KedaV1alpha1().ScaledObjects(expectedScaledObject.Namespace).Update(ctx, scaledObject, metav1.UpdateOptions{}); err != nil {
 			return fmt.Errorf("failed to update scaled object %s/%s: %w", expectedScaledObject.Namespace, expectedScaledObject.Name, err)
 		}
 	}
@@ -596,7 +597,8 @@ func (r *Reconciler) reconcileTriggerAuthentication(ctx context.Context, expecte
 		return fmt.Errorf("triggerauthentication object %s/%s is not owned by %s/%s", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, obj.GetNamespace(), obj.GetName())
 	}
 	if !equality.Semantic.DeepDerivative(expectedTriggerAuth.Spec, triggerAuth.Spec) {
-		if _, err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Update(ctx, expectedTriggerAuth, metav1.UpdateOptions{}); err != nil {
+		triggerAuth.Spec = expectedTriggerAuth.Spec
+		if _, err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Update(ctx, triggerAuth, metav1.UpdateOptions{}); err != nil {
 			return fmt.Errorf("failed to update triggerauthentication object %s/%s: %w", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, err)
 		}
 	}
@@ -619,7 +621,8 @@ func (r *Reconciler) reconcileSecret(ctx context.Context, expectedSecret *corev1
 		return fmt.Errorf("secret object %s/%s is not owned by %s/%s", expectedSecret.Namespace, expectedSecret.Name, obj.GetNamespace(), obj.GetName())
 	}
 	// StringData is not populated on read so for now always update the secret
-	if _, err = r.KubeClient.CoreV1().Secrets(expectedSecret.Namespace).Update(ctx, expectedSecret, metav1.UpdateOptions{}); err != nil {
+	secret.StringData = expectedSecret.StringData
+	if _, err = r.KubeClient.CoreV1().Secrets(expectedSecret.Namespace).Update(ctx, secret, metav1.UpdateOptions{}); err != nil {
 		return fmt.Errorf("failed to update secret object %s/%s: %w", expectedSecret.Namespace, expectedSecret.Name, err)
 	}
 	return nil
