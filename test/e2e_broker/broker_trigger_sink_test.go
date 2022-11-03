@@ -44,10 +44,11 @@ import (
 +---------+     +--------+     +---------+   +---------------------------+
 |  Broker +---->+ Trigger+---->+KafkaSink+-->+kafka consumer (test image)|
 +----+----+     +--------+     +----+----+   +---------------------------+
-     |                              ^
-     |          +--------+          |
-     +--------->+ Trigger+----------+
-                +--------+
+
+	|                              ^
+	|          +--------+          |
+	+--------->+ Trigger+----------+
+	           +--------+
 */
 func TestBrokerV1TriggersV1SinkV1Alpha1(t *testing.T) {
 	testingpkg.RunMultipleN(t, 10, func(t *testing.T) {
