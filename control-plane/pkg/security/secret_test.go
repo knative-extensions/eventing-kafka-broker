@@ -17,7 +17,7 @@
 package security
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/Shopify/sarama"
@@ -192,7 +192,6 @@ func TestSSL(t *testing.T) {
 	assert.True(t, config.Net.TLS.Enable)
 	assert.Greater(t, len(config.Net.TLS.Config.Certificates), 0)
 	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
-	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
 }
 
 func TestSSLNoUserKey(t *testing.T) {
@@ -256,7 +255,6 @@ func TestSSLNoClientAuth(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, config.Net.TLS.Enable)
 	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
-	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
 }
 
 func TestSSLNoClientAuthInvalidFlag(t *testing.T) {
@@ -294,7 +292,6 @@ func TestSASLPLainSSL(t *testing.T) {
 	assert.True(t, config.Net.TLS.Enable)
 	assert.Equal(t, len(config.Net.TLS.Config.Certificates), 0)
 	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
-	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
 	assert.True(t, config.Net.SASL.Enable)
 	assert.True(t, config.Net.SASL.Handshake)
 	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypePlaintext), config.Net.SASL.Mechanism)
@@ -322,7 +319,6 @@ func TestSASLSCRAM256SSL(t *testing.T) {
 	assert.True(t, config.Net.TLS.Enable)
 	assert.Equal(t, len(config.Net.TLS.Config.Certificates), 0)
 	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
-	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
 	assert.True(t, config.Net.SASL.Enable)
 	assert.True(t, config.Net.SASL.Handshake)
 	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeSCRAMSHA256), config.Net.SASL.Mechanism)
@@ -350,7 +346,6 @@ func TestSASLSCRAM512SSL(t *testing.T) {
 	assert.True(t, config.Net.TLS.Enable)
 	assert.Equal(t, len(config.Net.TLS.Config.Certificates), 0)
 	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
-	assert.Greater(t, len(config.Net.TLS.Config.RootCAs.Subjects()), 0)
 	assert.True(t, config.Net.SASL.Enable)
 	assert.True(t, config.Net.SASL.Handshake)
 	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeSCRAMSHA512), config.Net.SASL.Mechanism)
@@ -378,13 +373,13 @@ func TestSASLSCRAM512SSLInvalidCaCert(t *testing.T) {
 }
 
 func loadCerts(t *testing.T) (ca, userKey, userCert []byte) {
-	ca, err := ioutil.ReadFile("testdata/ca.crt")
+	ca, err := os.ReadFile("testdata/ca.crt")
 	assert.Nil(t, err)
 
-	userKey, err = ioutil.ReadFile("testdata/user.key")
+	userKey, err = os.ReadFile("testdata/user.key")
 	assert.Nil(t, err)
 
-	userCert, err = ioutil.ReadFile("testdata/user.crt")
+	userCert, err = os.ReadFile("testdata/user.crt")
 	assert.Nil(t, err)
 
 	return ca, userKey, userCert
