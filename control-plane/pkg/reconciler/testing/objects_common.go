@@ -18,7 +18,7 @@ package testing
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/magiconair/properties"
@@ -333,17 +333,17 @@ func NewKedaSecret(ns, name string) *corev1.Secret {
 }
 
 func loadCerts() (ca, userKey, userCert []byte) {
-	ca, err := ioutil.ReadFile("testdata/ca.crt")
+	ca, err := os.ReadFile("testdata/ca.crt")
 	if err != nil {
 		panic(err)
 	}
 
-	userKey, err = ioutil.ReadFile("testdata/user.key")
+	userKey, err = os.ReadFile("testdata/user.key")
 	if err != nil {
 		panic(err)
 	}
 
-	userCert, err = ioutil.ReadFile("testdata/user.crt")
+	userCert, err = os.ReadFile("testdata/user.crt")
 	if err != nil {
 		panic(err)
 	}

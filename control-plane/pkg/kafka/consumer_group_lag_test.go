@@ -18,7 +18,6 @@ package kafka
 
 import (
 	"io"
-	"io/ioutil"
 	"math"
 	"net"
 	"testing"
@@ -524,7 +523,7 @@ func fakeKafkaBrokerListener(t *testing.T, addr string) (*sarama.Broker, func())
 		if err != nil {
 			return
 		}
-		_, _ = io.Copy(ioutil.Discard, conn)
+		_, _ = io.Copy(io.Discard, conn)
 	}()
 
 	broker := sarama.NewBroker(addr)

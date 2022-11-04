@@ -162,7 +162,6 @@ EventSource ---> (Channel ---> Subscription) x 10 ---> Sink
 It uses Subscription's spec.reply as spec.subscriber.
 
 This test should fail with https://github.com/knative/eventing/issues/5756 done.
-
 */
 func TestChannelChainByUsingReplyAsSubscriber(t *testing.T) {
 	// This test fails with our KafkaChannel here since the test assumes it is ok to leave Subscription's `spec.subscriber` empty.
@@ -191,7 +190,6 @@ func TestChannelChainByUsingReplyAsSubscriber(t *testing.T) {
 TestChannelChain tests the following scenario:
 
 EventSource ---> (Channel ---> Subscription) x 10 ---> Sink
-
 */
 func TestChannelChain(t *testing.T) {
 	t.Parallel()
@@ -267,13 +265,15 @@ func TestChannelDeadLetterSinkByUsingReplyAsSubscriber(t *testing.T) {
 /*
 TestEventTransformationForSubscription tests the following scenario:
 
-             1            2                 5            6                  7
+	1            2                 5            6                  7
+
 EventSource ---> Channel ---> Subscription ---> Channel ---> Subscription ----> Service(Logger)
-                                   |  ^
-                                 3 |  | 4
-                                   |  |
-                                   |  ---------
-                                   -----------> Service(Transformation)
+
+	  |  ^
+	3 |  | 4
+	  |  |
+	  |  ---------
+	  -----------> Service(Transformation)
 */
 func TestEventTransformationForSubscriptionV1(t *testing.T) {
 	t.Parallel()
@@ -293,7 +293,6 @@ func TestEventTransformationForSubscriptionV1(t *testing.T) {
 TestBinaryEventForChannel tests the following scenario:
 
 EventSource (binary-encoded messages) ---> Channel ---> Subscription ---> Service(Logger)
-
 */
 func TestBinaryEventForChannel(t *testing.T) {
 	t.Parallel()
@@ -313,7 +312,6 @@ func TestBinaryEventForChannel(t *testing.T) {
 TestStructuredEventForChannel tests the following scenario:
 
 EventSource (structured-encoded messages) ---> Channel ---> Subscription ---> Service(Logger)
-
 */
 func TestStructuredEventForChannel(t *testing.T) {
 	t.Parallel()
