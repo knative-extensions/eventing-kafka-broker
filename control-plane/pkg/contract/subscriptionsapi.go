@@ -132,7 +132,7 @@ func newNotFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 // newCESQLFilter converts the SubscriptionsAPIFilter into the sql dialect of the
 // DialectedFilter as defined in CloudEvents Subscriptions API.
 //
-// CESOL filter is a Cloud Events SQL Expression
+// # CESOL filter is a Cloud Events SQL Expression
 //
 // See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
 // https://github.com/cloudevents/spec/blob/main/subscriptions/sql.md#any-filter-dialect
