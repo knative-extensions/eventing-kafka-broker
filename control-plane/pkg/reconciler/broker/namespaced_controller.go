@@ -56,6 +56,12 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
+const (
+	// NamespacedBrokerAdditionalResourcesConfigMapName is the ConfigMap name for the ConfigMap that holds additional
+	// resources to be propagated to the target namespace like Prometheus ServiceMonitors, etc.
+	NamespacedBrokerAdditionalResourcesConfigMapName = "config-namespaced-broker-resources"
+)
+
 func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env *config.Env) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
@@ -128,6 +134,10 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 				globalResync(obj)
 			},
 		},
+	})
+
+	watcher.Watch(NamespacedBrokerAdditionalResourcesConfigMapName, func(configMap *corev1.ConfigMap) {
+		globalResync(configMap)
 	})
 
 	deploymentinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
