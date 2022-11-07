@@ -90,7 +90,7 @@ func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthenticati
 	return triggers, nil
 }
 
-func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, saslType *string, protocol *string, caCert *string) (*kedav1alpha1.TriggerAuthentication, *corev1.Secret, error) {
+func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, secretData map[string][]byte) (*kedav1alpha1.TriggerAuthentication, *corev1.Secret, error) {
 
 	secretTargetRefs := make([]kedav1alpha1.AuthSecretTargetRef, 0, 8)
 
@@ -102,9 +102,11 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, saslType *s
 				*kmeta.NewControllerRef(cg),
 			},
 		},
-		Data:       make(map[string][]byte),
+		Data:       secretData,
 		StringData: make(map[string]string),
 	}
+
+	saslType := retrieveSaslTypeIfPresent(cg, secret)
 
 	if saslType != nil {
 		switch *saslType {
@@ -168,30 +170,30 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, saslType *s
 			sasl := kedav1alpha1.AuthSecretTargetRef{Parameter: "sasl", Name: secret.Name, Key: "sasl"}
 			secretTargetRefs = append(secretTargetRefs, sasl)
 
-			if protocol != nil {
-				user := kedav1alpha1.AuthSecretTargetRef{Parameter: "username", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: security.SaslUserKey}
+			if protocolValue, ok := secret.Data[security.ProtocolKey]; ok && string(protocolValue) != "" {
+				user := kedav1alpha1.AuthSecretTargetRef{Parameter: "username", Name: secret.Name, Key: security.SaslUserKey}
 				secretTargetRefs = append(secretTargetRefs, user)
 			} else {
-				username := kedav1alpha1.AuthSecretTargetRef{Parameter: "username", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: security.SaslUsernameKey}
+				username := kedav1alpha1.AuthSecretTargetRef{Parameter: "username", Name: secret.Name, Key: security.SaslUsernameKey}
 				secretTargetRefs = append(secretTargetRefs, username)
 			}
 
-			password := kedav1alpha1.AuthSecretTargetRef{Parameter: "password", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: security.SaslPasswordKey}
+			password := kedav1alpha1.AuthSecretTargetRef{Parameter: "password", Name: secret.Name, Key: security.SaslPasswordKey}
 			secretTargetRefs = append(secretTargetRefs, password)
 		}
 
-		if caCert != nil { // TLS enabled
+		if caCertValue, ok := secret.Data[security.CaCertificateKey]; ok && string(caCertValue) != "" { // TLS enabled
 			secret.StringData["tls"] = "enable"
 			tls := kedav1alpha1.AuthSecretTargetRef{Parameter: "tls", Name: secret.Name, Key: "tls"}
 			secretTargetRefs = append(secretTargetRefs, tls)
 
-			ca := kedav1alpha1.AuthSecretTargetRef{Parameter: "ca", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: security.CaCertificateKey}
+			ca := kedav1alpha1.AuthSecretTargetRef{Parameter: "ca", Name: secret.Name, Key: security.CaCertificateKey}
 			secretTargetRefs = append(secretTargetRefs, ca)
 
-			cert := kedav1alpha1.AuthSecretTargetRef{Parameter: "cert", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: security.UserCertificate}
+			cert := kedav1alpha1.AuthSecretTargetRef{Parameter: "cert", Name: secret.Name, Key: security.UserCertificate}
 			secretTargetRefs = append(secretTargetRefs, cert)
 
-			key := kedav1alpha1.AuthSecretTargetRef{Parameter: "key", Name: cg.Spec.Template.Spec.Auth.SecretSpec.Ref.Name, Key: security.UserKey}
+			key := kedav1alpha1.AuthSecretTargetRef{Parameter: "key", Name: secret.Name, Key: security.UserKey}
 			secretTargetRefs = append(secretTargetRefs, key)
 		}
 
@@ -199,6 +201,24 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, saslType *s
 	}
 
 	return triggerAuth, &secret, nil
+}
+
+func retrieveSaslTypeIfPresent(cg *kafkainternals.ConsumerGroup, secret corev1.Secret) *string {
+	var saslType string
+
+	if cg.Spec.Template.Spec.Auth.NetSpec != nil && cg.Spec.Template.Spec.Auth.NetSpec.SASL.Enable && cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef != nil {
+		secretKeyRefKey := cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef.Key
+		if saslTypeValue, ok := secret.Data[secretKeyRefKey]; ok {
+			saslType = string(saslTypeValue)
+		}
+	}
+
+	if cg.Spec.Template.Spec.Auth.SecretSpec != nil && cg.Spec.Template.Spec.Auth.SecretSpec.Ref != nil {
+		if saslTypeValue, ok := secret.Data[security.SaslType]; ok {
+			saslType = string(saslTypeValue)
+		}
+	}
+	return &saslType
 }
 
 func addAuthSecretTargetRef(parameter string, secretKeyRef v1beta1.SecretValueFromSource, secretTargetRefs []kedav1alpha1.AuthSecretTargetRef) []kedav1alpha1.AuthSecretTargetRef {

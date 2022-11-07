@@ -496,7 +496,7 @@ func TestReconcileKind(t *testing.T) {
 					BrokerReady,
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
-					WithSecretStatusAnnotation("secret-1"),
+					WithSecretStatusAnnotation("secret-1", SystemNamespace),
 				),
 				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
 					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
@@ -520,13 +520,13 @@ func TestReconcileKind(t *testing.T) {
 							SecretSpec: &internalscg.SecretSpec{
 								Ref: &internalscg.SecretReference{
 									Name:      "secret-1",
-									Namespace: ConfigMapNamespace,
+									Namespace: SystemNamespace,
 								},
 							},
 						}),
 					)),
 				),
-				NewLegacySASLSecret(ConfigMapNamespace, "secret-1"),
+				NewLegacySASLSecret(SystemNamespace, "secret-1"),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -550,7 +550,7 @@ func TestReconcileKind(t *testing.T) {
 								SecretSpec: &internalscg.SecretSpec{
 									Ref: &internalscg.SecretReference{
 										Name:      "secret-1",
-										Namespace: ConfigMapNamespace,
+										Namespace: SystemNamespace,
 									},
 								},
 							}),
