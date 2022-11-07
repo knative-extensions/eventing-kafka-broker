@@ -32,7 +32,7 @@ type Resources struct {
 	Resources []unstructured.Unstructured
 }
 
-func Propagate(cm *corev1.ConfigMap) (Resources, error) {
+func Unmarshal(cm *corev1.ConfigMap) (Resources, error) {
 	data, ok := cm.Data[configMapKey]
 	if !ok {
 		return Resources{}, nil
@@ -50,4 +50,19 @@ func Propagate(cm *corev1.ConfigMap) (Resources, error) {
 	}
 
 	return ret, nil
+}
+
+func Marshal(resources Resources) (string, error) {
+
+	res := make([]map[string]interface{}, 0, len(resources.Resources))
+	for _, r := range resources.Resources {
+		res = append(res, r.Object)
+	}
+
+	bytes, err := yaml.Marshal(res)
+	if err != nil {
+		return "", fmt.Errorf("failed to Marhsal additional resources: %w", err)
+	}
+
+	return string(bytes), nil
 }

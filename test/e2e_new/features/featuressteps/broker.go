@@ -20,6 +20,11 @@ import (
 	"context"
 	"encoding/json"
 
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"knative.dev/pkg/system"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/propagator"
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 
@@ -149,5 +154,39 @@ func DeleteBroker(name string) feature.StepFn {
 			return false, nil
 		})
 		require.Nil(t, err)
+	}
+}
+
+func AddAdditionalResourcesToPropagationConfigMap(cmName string, additionalResources ...unstructured.Unstructured) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		cm, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ctx, cmName, metav1.GetOptions{})
+		if err != nil {
+			t.Errorf("Failed to get ConfigMap %s/%s: %w", system.Namespace(), cmName, err)
+		}
+
+		resources, err := propagator.Unmarshal(cm)
+		if err != nil {
+			t.Fatal("Failed to unmarshal resources from ConfigMap %s/%s: %w\n%s", system.Namespace(), cmName, err, cm.Data["resources"])
+		}
+
+		resources.Resources = append(resources.Resources, additionalResources...)
+
+		value, err := propagator.Marshal(resources)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		cm = &corev1.ConfigMap{
+			TypeMeta:   cm.TypeMeta,
+			ObjectMeta: cm.ObjectMeta,
+			Data: map[string]string{
+				"resources": value,
+			},
+		}
+
+		_, err = kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Update(ctx, cm, metav1.UpdateOptions{})
+		if err != nil {
+			t.Fatal("Failed to update ConfigMap %s/%s: %w", cm.GetNamespace(), cm.GetName(), err)
+		}
 	}
 }

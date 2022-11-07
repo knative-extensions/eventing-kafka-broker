@@ -418,7 +418,7 @@ func (r *NamespacedReconciler) resourcesFromConfigMap(name string) ([]unstructur
 		return nil, fmt.Errorf("failed to get ConfigMap %s/%s: %w", r.SystemNamespace, name, err)
 	}
 
-	resources, err := propagator.Propagate(cm)
+	resources, err := propagator.Unmarshal(cm)
 	if err != nil {
 		return nil, err
 	}

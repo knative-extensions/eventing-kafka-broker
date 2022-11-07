@@ -24,6 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
@@ -53,5 +54,12 @@ func Exists(name string, namespace string) feature.StepFn {
 		if err != nil {
 			t.Fatal("Error while checking if the config map %s/%s exists: %v", name, namespace, err)
 		}
+	}
+}
+
+func ExistsInTestNamespace(name string) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		ns := environment.FromContext(ctx).Namespace()
+		Exists(name, ns)(ctx, t)
 	}
 }
