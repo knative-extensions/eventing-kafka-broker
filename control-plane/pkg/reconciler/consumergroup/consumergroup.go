@@ -43,13 +43,14 @@ import (
 	"knative.dev/eventing/pkg/scheduler"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
 	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
 	kedaclientset "knative.dev/eventing-kafka-broker/third_party/pkg/client/clientset/versioned"
 )
@@ -59,13 +60,20 @@ var (
 	ErrNoDeadLetterSinkURI = errors.New("no dead letter sink URI resolved")
 )
 
-type schedulerFunc func(s string) scheduler.Scheduler
+type Scheduler struct {
+	scheduler.Scheduler
+	SchedulerConfig
+}
+
+type schedulerFunc func(s string) Scheduler
 
 type Reconciler struct {
 	SchedulerFunc   schedulerFunc
 	ConsumerLister  kafkainternalslisters.ConsumerLister
 	InternalsClient internalv1alpha1.InternalV1alpha1Interface
 	SecretLister    corelisters.SecretLister
+	ConfigMapLister corelisters.ConfigMapLister
+	PodLister       corelisters.PodLister
 	KubeClient      kubernetes.Interface
 
 	NameGenerator names.NameGenerator
@@ -93,7 +101,7 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 		return cg.MarkInitializeOffsetFailed("InitializeOffset", err)
 	}
 
-	if err := r.schedule(cg); err != nil {
+	if err := r.schedule(ctx, cg); err != nil {
 		return err
 	}
 	cg.MarkScheduleSucceeded()
@@ -138,7 +146,7 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
 
 	cg.Spec.Replicas = pointer.Int32(0)
-	err := r.schedule(cg) //de-schedule placements
+	err := r.schedule(ctx, cg) //de-schedule placements
 
 	if err != nil {
 		cg.Status.Placements = nil
@@ -295,8 +303,17 @@ func (r Reconciler) finalizeConsumer(ctx context.Context, consumer *kafkainterna
 	return nil
 }
 
-func (r Reconciler) schedule(cg *kafkainternals.ConsumerGroup) error {
-	placements, err := r.SchedulerFunc(cg.GetUserFacingResourceRef().Kind).Schedule(cg)
+func (r Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+	statefulSetScheduler := r.SchedulerFunc(cg.GetUserFacingResourceRef().Kind)
+
+	// Ensure Contract configmaps are created before scheduling to avoid having pending pods due to missing
+	// volumes.
+	// See https://github.com/knative-sandbox/eventing-kafka-broker/issues/2750#issuecomment-1304244017
+	if err := r.ensureContractConfigmapsExist(ctx, statefulSetScheduler); err != nil {
+		return cg.MarkScheduleConsumerFailed("Schedule", err)
+	}
+
+	placements, err := statefulSetScheduler.Schedule(cg)
 	if err != nil {
 		return cg.MarkScheduleConsumerFailed("Schedule", err)
 	}
@@ -594,6 +611,54 @@ func (r *Reconciler) isKEDAEnabled(ctx context.Context, cg *kafkainternals.Consu
 		return true
 	}
 	return false
+}
+
+func (r Reconciler) ensureContractConfigmapsExist(ctx context.Context, scheduler Scheduler) error {
+	selector := labels.SelectorFromSet(map[string]string{"app": scheduler.StatefulSetName})
+	pods, err := r.PodLister.
+		Pods(r.SystemNamespace).
+		List(selector)
+	if err != nil {
+		return fmt.Errorf("failed to list statefulset pods with selector %v: %w", selector.String(), err)
+	}
+
+	for _, p := range pods {
+		cmName, err := eventing.ConfigMapNameFromPod(p)
+		if err != nil {
+			return err
+		}
+		if err := r.ensureContractConfigMapExists(ctx, p, cmName); err != nil {
+			return fmt.Errorf("failed to get ConfigMap %s/%s: %w", r.SystemNamespace, cmName, err)
+		}
+	}
+
+	return nil
+}
+
+func (r Reconciler) ensureContractConfigMapExists(ctx context.Context, p *corev1.Pod, name string) error {
+	// Check if ConfigMap exists in lister cache
+	_, err := r.ConfigMapLister.ConfigMaps(r.SystemNamespace).Get(name)
+	// ConfigMap already exists, return
+	if err == nil {
+		return nil
+	}
+
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to get ConfigMap %s/%s: %w", r.SystemNamespace, name, err)
+	}
+
+	b := base.Reconciler{
+		KubeClient:                    r.KubeClient,
+		DataPlaneConfigMapNamespace:   r.SystemNamespace,
+		ContractConfigMapName:         name,
+		DataPlaneNamespace:            r.SystemNamespace,
+		DataPlaneConfigMapTransformer: base.PodOwnerReference(p),
+	}
+
+	if _, err := b.GetOrCreateDataPlaneConfigMap(ctx); err != nil && apierrors.IsAlreadyExists(err) {
+		return fmt.Errorf("failed to create ConfigMap %s/%s: %w", r.SystemNamespace, name, err)
+	}
+	return nil
 }
 
 var (

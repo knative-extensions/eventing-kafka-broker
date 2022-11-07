@@ -52,8 +52,9 @@ import (
 	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 
-	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
 	cm "knative.dev/pkg/configmap/testing"
+
+	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
 )
 
 type SchedulerFunc func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error)
@@ -159,6 +160,93 @@ func TestReconcileKind(t *testing.T) {
 			WantEvents: []string{
 				finalizerUpdatedEvent,
 			},
+		},
+		{
+			Name: "Consumers in multiple pods, with pods pending and unknown phase",
+			Objects: []runtime.Object{
+				NewService(),
+				NewDispatcherPod("p1", PodLabel(kafkainternals.SourceStatefulSetName), PodPending()),
+				NewDispatcherPod("p2", PodLabel(kafkainternals.SourceStatefulSetName)),
+				NewConsumerGroup(
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+					)),
+					ConsumerGroupReplicas(2),
+					ConsumerForTrigger(),
+				),
+			},
+			Key: ConsumerGroupTestKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return []eventingduckv1alpha1.Placement{
+						{PodName: "p1", VReplicas: 1},
+						{PodName: "p2", VReplicas: 1},
+					}, nil
+				}),
+			},
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(systemNamespace, "p1", nil),
+				NewConfigMapWithBinaryData(systemNamespace, "p2", nil),
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+					)),
+				),
+				NewConsumer(2,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p2", PodNamespace: systemNamespace}),
+					)),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						cg := NewConsumerGroup(
+							ConsumerGroupConsumerSpec(NewConsumerSpec(
+								ConsumerTopics("t1", "t2"),
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+									ConsumerGroupIdConfig("my.group.id"),
+								),
+							)),
+							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusReplicas(0),
+							ConsumerForTrigger(),
+						)
+						cg.Status.Placements = []eventingduckv1alpha1.Placement{
+							{PodName: "p1", VReplicas: 1},
+							{PodName: "p2", VReplicas: 1},
+						}
+						_ = cg.MarkReconcileConsumersFailed("PropagateSubscriberURI", ErrNoSubscriberURI)
+						cg.MarkScheduleSucceeded()
+						cg.MarkAutoscalerDisabled() // KEDA not installed
+						return cg
+					}(),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			SkipNamespaceValidation: true,
 		},
 		{
 			Name: "Consumers in multiple pods, with auth spec, one exists - secret not found",
@@ -1555,12 +1643,20 @@ func TestReconcileKind(t *testing.T) {
 		store.OnConfigChanged(exampleConfig)
 
 		r := Reconciler{
-			SchedulerFunc: func(s string) scheduler.Scheduler {
-				return row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
+			SchedulerFunc: func(s string) Scheduler {
+				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
+				return Scheduler{
+					Scheduler: ss,
+					SchedulerConfig: SchedulerConfig{
+						StatefulSetName: kafkainternals.SourceStatefulSetName,
+					},
+				}
 			},
 			ConsumerLister:  listers.GetConsumerLister(),
 			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
 			SecretLister:    listers.GetSecretLister(),
+			ConfigMapLister: listers.GetConfigMapLister(),
+			PodLister:       listers.GetPodLister(),
 			KubeClient:      kubeclient.Get(ctx),
 			KedaClient:      kedaclient.Get(ctx),
 			NameGenerator:   &CounterGenerator{},
@@ -1688,12 +1784,17 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 		ctx, _ = kedaclient.With(ctx)
 
 		r := Reconciler{
-			SchedulerFunc: func(s string) scheduler.Scheduler {
-				return row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
+			SchedulerFunc: func(s string) Scheduler {
+				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
+				return Scheduler{
+					Scheduler: ss,
+				}
 			},
 			ConsumerLister:  listers.GetConsumerLister(),
 			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
 			SecretLister:    listers.GetSecretLister(),
+			ConfigMapLister: listers.GetConfigMapLister(),
+			PodLister:       listers.GetPodLister(),
 			KubeClient:      kubeclient.Get(ctx),
 			KedaClient:      kedaclient.Get(ctx),
 			NameGenerator:   &CounterGenerator{},
@@ -1921,12 +2022,17 @@ func TestFinalizeKind(t *testing.T) {
 	table.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		r := &Reconciler{
-			SchedulerFunc: func(s string) scheduler.Scheduler {
-				return row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
+			SchedulerFunc: func(s string) Scheduler {
+				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
+				return Scheduler{
+					Scheduler: ss,
+				}
 			},
 			ConsumerLister:  listers.GetConsumerLister(),
 			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
 			SecretLister:    listers.GetSecretLister(),
+			ConfigMapLister: listers.GetConfigMapLister(),
+			PodLister:       listers.GetPodLister(),
 			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
 				return &kafkatesting.MockKafkaClient{}, nil
 			},
