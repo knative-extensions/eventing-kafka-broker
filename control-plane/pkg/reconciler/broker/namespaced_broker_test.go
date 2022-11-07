@@ -48,13 +48,14 @@ import (
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
 
+	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
+	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
+	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
-	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
-	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
-	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 )
 
 func TestNamespacedBrokerReconciler(t *testing.T) {
@@ -330,6 +331,7 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 				DataPlaneNamespace:          env.SystemNamespace,
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,
+				Tracker:                     &FakeTracker{},
 			},
 			ConfigMapLister:          listers.GetConfigMapLister(),
 			DeploymentLister:         listers.GetDeploymentLister(),
@@ -351,9 +353,6 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 			Prober:             proberMock,
 			ManifestivalClient: mfcMockClient,
 		}
-
-		reconciler.ConfigMapTracker = &FakeTracker{}
-		reconciler.SecretTracker = &FakeTracker{}
 
 		r := brokerreconciler.NewReconciler(
 			ctx,

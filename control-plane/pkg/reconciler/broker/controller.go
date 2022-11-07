@@ -115,16 +115,15 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		},
 	})
 
-	reconciler.SecretTracker = impl.Tracker
-	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
+	reconciler.Tracker = impl.Tracker
 
-	reconciler.ConfigMapTracker = impl.Tracker
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
 	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects
 		// coming through this path missing TypeMeta, so ensure it is properly
 		// populated.
 		controller.EnsureTypeMeta(
-			reconciler.ConfigMapTracker.OnChanged,
+			reconciler.Tracker.OnChanged,
 			corev1.SchemeGroupVersion.WithKind("ConfigMap"),
 		),
 	))

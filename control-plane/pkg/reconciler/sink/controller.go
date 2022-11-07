@@ -33,7 +33,6 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
-	"knative.dev/pkg/tracker"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	sinkinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/eventing/v1alpha1/kafkasink"
@@ -100,13 +99,14 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 		},
 	})
 
-	reconciler.SecretTracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
+	reconciler.Tracker = impl.Tracker
+
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects
 		// coming through this path missing TypeMeta, so ensure it is properly
 		// populated.
 		controller.EnsureTypeMeta(
-			reconciler.SecretTracker.OnChanged,
+			reconciler.Tracker.OnChanged,
 			corev1.SchemeGroupVersion.WithKind("Secret"),
 		),
 	))

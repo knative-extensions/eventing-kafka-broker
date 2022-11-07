@@ -1655,8 +1655,8 @@ func TestReconcileKind(t *testing.T) {
 			Prober:              proberMock,
 			IngressHost:         network.GetServiceHostname(env.IngressName, env.SystemNamespace),
 		}
-		reconciler.ConfigMapTracker = &FakeTracker{}
-		reconciler.SecretTracker = &FakeTracker{}
+		reconciler.Tracker = &FakeTracker{}
+		reconciler.Tracker = &FakeTracker{}
 
 		r := messagingv1beta1kafkachannelreconciler.NewReconciler(
 			ctx,

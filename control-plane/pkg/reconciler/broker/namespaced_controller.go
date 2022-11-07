@@ -114,9 +114,9 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 
-	reconciler.SecretTracker = impl.Tracker
+	reconciler.Tracker = impl.Tracker
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(controller.EnsureTypeMeta(
-		reconciler.SecretTracker.OnChanged,
+		reconciler.Tracker.OnChanged,
 		corev1.SchemeGroupVersion.WithKind("Secret"),
 	)))
 
@@ -182,13 +182,13 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		)),
 	})
 
-	reconciler.ConfigMapTracker = impl.Tracker
+	reconciler.Tracker = impl.Tracker
 	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects
 		// coming through this path missing TypeMeta, so ensure it is properly
 		// populated.
 		controller.EnsureTypeMeta(
-			reconciler.ConfigMapTracker.OnChanged,
+			reconciler.Tracker.OnChanged,
 			corev1.SchemeGroupVersion.WithKind("ConfigMap"),
 		),
 	))

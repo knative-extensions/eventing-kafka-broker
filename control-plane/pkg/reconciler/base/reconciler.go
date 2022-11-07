@@ -77,8 +77,7 @@ type Reconciler struct {
 	PodLister    corelisters.PodLister
 	SecretLister corelisters.SecretLister
 
-	SecretTracker    tracker.Interface
-	ConfigMapTracker tracker.Interface
+	Tracker tracker.Interface
 
 	DataPlaneConfigMapNamespace string
 	ContractConfigMapName       string
@@ -338,7 +337,7 @@ func (r *Reconciler) TrackSecret(secret *corev1.Secret, parent metav1.Object) er
 		Namespace:  secret.Namespace,
 		Name:       secret.Name,
 	}
-	return r.SecretTracker.TrackReference(ref, parent)
+	return r.Tracker.TrackReference(ref, parent)
 }
 
 func (r *Reconciler) TrackConfigMap(cm *corev1.ConfigMap, parent metav1.Object) error {
@@ -352,15 +351,15 @@ func (r *Reconciler) TrackConfigMap(cm *corev1.ConfigMap, parent metav1.Object) 
 		Namespace:  cm.Namespace,
 		Name:       cm.Name,
 	}
-	return r.ConfigMapTracker.TrackReference(ref, parent)
+	return r.Tracker.TrackReference(ref, parent)
 }
 
 func (r *Reconciler) OnDeleteObserver(obj interface{}) {
-	if r.ConfigMapTracker != nil {
-		r.ConfigMapTracker.OnDeletedObserver(obj)
+	if r.Tracker != nil {
+		r.Tracker.OnDeletedObserver(obj)
 	}
-	if r.SecretTracker != nil {
-		r.SecretTracker.OnDeletedObserver(obj)
+	if r.Tracker != nil {
+		r.Tracker.OnDeletedObserver(obj)
 	}
 }
 
