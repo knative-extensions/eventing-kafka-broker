@@ -134,7 +134,12 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 		offset = sources.OffsetEarliest
 	}
 
-	secret, err := security.Secret(ctx, &security.AnnotationsSecretLocator{Annotations: broker.Status.Annotations}, security.DefaultSecretProviderFunc(r.SecretLister, r.KubeClient))
+	namespace := broker.GetNamespace()
+	if broker.Spec.Config.Namespace != "" {
+		namespace = broker.Spec.Config.Namespace
+	}
+
+	secret, err := security.Secret(ctx, &security.AnnotationsSecretLocator{Annotations: broker.Status.Annotations, Namespace: namespace}, security.DefaultSecretProviderFunc(r.SecretLister, r.KubeClient))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get secret: %w", err)
 	}

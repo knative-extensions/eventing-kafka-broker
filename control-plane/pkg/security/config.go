@@ -140,12 +140,5 @@ func (a *AnnotationsSecretLocator) SecretName() (string, bool) {
 
 func (a *AnnotationsSecretLocator) SecretNamespace() (string, bool) {
 	name, ok := a.SecretName()
-	if a.Namespace != "" {
-		return a.Namespace, len(a.Namespace) > 0 && ok && len(name) > 0
-	}
-	namespace, ok := a.Annotations[AuthSecretNamespaceKey]
-	if ok && namespace != "" {
-		return namespace, ok
-	}
-	return "", false
+	return a.Namespace, len(a.Namespace) > 0 && ok && len(name) > 0
 }
