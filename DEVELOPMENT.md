@@ -19,6 +19,12 @@ _Note: If you're not using `KinD`, you can skip this step._
 kind create cluster
 ```
 
+Alternatively you can use [./hack/create-kind-cluster.sh](hack/create-kind-cluster.sh) to setup a kind cluster with a local registry. This local registry will then be available by default at `localhost:5001`.
+
+```shell
+./hack/create-kind-cluster.sh
+```
+
 ## Installation
 
 This guide assumes you have a Kubernetes cluster up and running and reachable via `kubectl`.
@@ -42,6 +48,12 @@ If you're using `KinD`, you can use its local registry by setting the variable `
 
 ```shell
 export KO_DOCKER_REPO=kind.local
+```
+
+In case you setup `KinD` via [./hack/create-kind-cluster.sh](hack/create-kind-cluster.sh), the local registry is available at `localhost:5001`:
+
+```shell
+export KO_DOCKER_REPO=localhost:5001
 ```
 
 ### Install dependencies (Eventing and Kafka) and publish test images
