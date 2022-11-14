@@ -20,7 +20,9 @@ import (
 	"context"
 
 	"k8s.io/client-go/tools/cache"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
+	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -30,6 +32,7 @@ import (
 	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 
+	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -52,10 +55,14 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
 
 	reconciler := &NamespacedReconciler{
-		BrokerLister:    brokerInformer.Lister(),
-		ConfigMapLister: configmapinformer.Get(ctx).Lister(),
-		EventingClient:  eventingclient.Get(ctx),
-		Env:             configs,
+		BrokerLister:        brokerInformer.Lister(),
+		ConfigMapLister:     configmapinformer.Get(ctx).Lister(),
+		EventingClient:      eventingclient.Get(ctx),
+		ConsumerGroupLister: consumergroupinformer.Get(ctx).Lister(),
+		InternalsClient:     consumergroupclient.Get(ctx),
+		SecretLister:        secretinformer.Get(ctx).Lister(),
+		KubeClient:          kubeclient.Get(ctx),
+		Env:                 configs,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
