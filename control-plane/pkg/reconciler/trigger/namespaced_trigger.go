@@ -19,6 +19,7 @@ package trigger
 import (
 	"context"
 
+	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -27,6 +28,8 @@ import (
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
+	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
+	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -34,7 +37,6 @@ import (
 
 type NamespacedReconciler struct {
 	*base.Reconciler
-	*FlagsHolder
 
 	BrokerLister    eventinglisters.BrokerLister
 	ConfigMapLister corelisters.ConfigMapLister
@@ -43,21 +45,16 @@ type NamespacedReconciler struct {
 
 	Env *config.Env
 
-	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
-	NewKafkaClient             kafka.NewClientFunc
-	InitOffsetsFunc            kafka.InitOffsetsFunc
+	ConsumerGroupLister internalslst.ConsumerGroupLister
+	InternalsClient     internalsclient.Interface
+	SecretLister        corelisters.SecretLister
+	KubeClient          kubernetes.Interface
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	br := r.createReconcilerForTriggerInstance(trigger)
 
 	return br.ReconcileKind(ctx, trigger)
-}
-
-func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	br := r.createReconcilerForTriggerInstance(trigger)
-
-	return br.FinalizeKind(ctx, trigger)
 }
 
 func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *eventing.Trigger) *Reconciler {
@@ -78,19 +75,17 @@ func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *event
 			DataPlaneNamespace:          trigger.Namespace,
 			DataPlaneConfigMapNamespace: trigger.Namespace,
 		},
-		FlagsHolder: &FlagsHolder{
-			Flags: r.Flags,
-		},
-		BrokerLister:    r.BrokerLister,
-		ConfigMapLister: r.ConfigMapLister,
-		EventingClient:  r.EventingClient,
-		Resolver:        r.Resolver,
-		Env:             r.Env,
+		BrokerLister:        r.BrokerLister,
+		ConfigMapLister:     r.ConfigMapLister,
+		EventingClient:      r.EventingClient,
+		Resolver:            r.Resolver,
+		Env:                 r.Env,
+		ConsumerGroupLister: r.ConsumerGroupLister,
+		InternalsClient:     r.InternalsClient,
+		SecretLister:        r.SecretLister,
+		KubeClient:          r.KubeClient,
 		// override
-		BrokerClass:                kafka.NamespacedBrokerClass,
-		DataPlaneConfigMapLabeler:  kafka.NamespacedDataplaneLabelConfigmapOption,
-		NewKafkaClusterAdminClient: r.NewKafkaClusterAdminClient,
-		NewKafkaClient:             r.NewKafkaClient,
-		InitOffsetsFunc:            r.InitOffsetsFunc,
+		BrokerClass:               kafka.NamespacedBrokerClass,
+		DataPlaneConfigMapLabeler: kafka.NamespacedDataplaneLabelConfigmapOption,
 	}
 }

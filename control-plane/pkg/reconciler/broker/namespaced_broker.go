@@ -222,7 +222,6 @@ func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing
 func (r *NamespacedReconciler) deploymentsFromSystemNamespace(broker *eventing.Broker) ([]unstructured.Unstructured, error) {
 	deployments := []string{
 		"kafka-broker-receiver",
-		"kafka-broker-dispatcher",
 	}
 	resources := make([]unstructured.Unstructured, 0, len(deployments))
 	for _, name := range deployments {

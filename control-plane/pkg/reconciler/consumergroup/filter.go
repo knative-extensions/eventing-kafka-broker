@@ -22,6 +22,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	apiseventing "knative.dev/eventing/pkg/apis/eventing"
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 )
 
 // Filter returns a filter function based on the user-facing resource that a controller is tracking.
@@ -37,6 +39,38 @@ func Filter(userFacingResource string) func(obj interface{}) bool {
 		for _, or := range cg.OwnerReferences {
 			if strings.ToLower(or.Kind) == userFacingResource {
 				return true
+			}
+		}
+
+		return false
+	}
+}
+
+// Filter returns a filter function based on the user-facing resource that a controller is tracking.
+// Usable by FilteringResourceEventHandler.
+func FilterByBrokerClass(userFacingResource string, triggerLister eventinglisters.TriggerLister, lister eventinglisters.BrokerLister, brokerClass string) func(obj interface{}) bool {
+	userFacingResource = strings.ToLower(userFacingResource)
+	return func(obj interface{}) bool {
+		cg, ok := obj.(*kafkainternals.ConsumerGroup)
+		if !ok {
+			return false
+		}
+
+		for _, or := range cg.OwnerReferences {
+			if strings.ToLower(or.Kind) == userFacingResource {
+
+				trigger, err := triggerLister.Triggers(cg.Namespace).Get(or.Name)
+				if err != nil {
+					return false
+				}
+
+				broker, err := lister.Brokers(cg.Namespace).Get(trigger.Spec.Broker)
+				if err != nil {
+					return false
+				}
+
+				value, ok := broker.GetAnnotations()[apiseventing.BrokerClassKey]
+				return ok && value == brokerClass
 			}
 		}
 

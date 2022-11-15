@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright 2021 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,28 +20,33 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync"
 
 	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"k8s.io/client-go/util/retry"
-	"knative.dev/pkg/controller"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
+	"knative.dev/pkg/apis"
+	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	"knative.dev/eventing/pkg/apis/feature"
-	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
-
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
+	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
+	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
@@ -51,56 +56,28 @@ const (
 	deliveryOrderAnnotation = "kafka.eventing.knative.dev/delivery.order"
 )
 
-type FlagsHolder struct {
-	Flags     feature.Flags
-	FlagsLock sync.RWMutex
-}
-
 type Reconciler struct {
 	*base.Reconciler
-	*FlagsHolder
-
-	BrokerLister    eventinglisters.BrokerLister
-	ConfigMapLister corelisters.ConfigMapLister
-	EventingClient  eventingclientset.Interface
-	Resolver        *resolver.URIResolver
-
-	Env *config.Env
-
-	BrokerClass string
-
+	BrokerLister              eventinglisters.BrokerLister
+	ConfigMapLister           corelisters.ConfigMapLister
+	EventingClient            eventingclientset.Interface
+	Env                       *config.Env
+	Resolver                  *resolver.URIResolver
+	ConsumerGroupLister       internalslst.ConsumerGroupLister
+	InternalsClient           internalsclient.Interface
+	SecretLister              corelisters.SecretLister
+	KubeClient                kubernetes.Interface
+	BrokerClass               string
 	DataPlaneConfigMapLabeler base.ConfigMapOption
-
-	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
-	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
-	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
-	// mock the function used during the reconciliation loop.
-	NewKafkaClient kafka.NewClientFunc
-	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
-	// It's convenient to add this as Reconciler field so that we can mock the function used during the
-	// reconciliation loop.
-	InitOffsetsFunc kafka.InitOffsetsFunc
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.reconcileKind(ctx, trigger)
-	})
-}
-
-func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
-
-	statusConditionManager := statusConditionManager{
-		Trigger:  trigger,
-		Configs:  r.Env,
-		Recorder: controller.GetEventRecorder(ctx),
-	}
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
 	if err != nil && !apierrors.IsNotFound(err) {
-		return statusConditionManager.failedToGetBroker(err)
+		trigger.Status.MarkBrokerFailed("Failed to get broker", "%v", err)
+		return fmt.Errorf("failed to get broker: %w", err)
 	}
 
 	if apierrors.IsNotFound(err) {
@@ -110,10 +87,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		broker, err = r.EventingClient.EventingV1().Brokers(trigger.Namespace).Get(ctx, trigger.Spec.Broker, metav1.GetOptions{})
 
 		if apierrors.IsNotFound(err) {
-
-			logger.Debug("broker not found", zap.String("finalizeDuringReconcile", "notFound"))
-			// The associated broker doesn't exist anymore, so clean up Trigger resources.
-			return r.FinalizeKind(ctx, trigger)
+			return fmt.Errorf("failed to get broker: %w", err)
 		}
 	}
 
@@ -123,250 +97,170 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		return nil
 	}
 
-	if !broker.GetDeletionTimestamp().IsZero() {
-
-		logger.Debug("broker deleted", zap.String("finalizeDuringReconcile", "deleted"))
-
-		// The associated broker doesn't exist anymore, so clean up Trigger resources and owning consumer group resource.
-		return r.FinalizeKind(ctx, trigger)
-	}
-
-	statusConditionManager.propagateBrokerCondition(broker)
+	trigger.Status.PropagateBrokerCondition(broker.Status.GetTopLevelCondition())
 
 	if !broker.IsReady() {
 		// Trigger will get re-queued once this broker is ready.
 		return nil
 	}
 
-	if ok, err := r.reconcileInitialOffset(ctx, broker, trigger); err != nil {
-		return statusConditionManager.failedToResolveTriggerConfig(err)
-	} else if !ok {
-		return statusConditionManager.failedToResolveTriggerConfig(fmt.Errorf("missing broker status annotations, waiting"))
-	}
-
-	// Get data plane config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	cg, err := r.reconcileConsumerGroup(ctx, broker, trigger)
 	if err != nil {
-		return statusConditionManager.failedToGetDataPlaneConfigMap(err)
-	}
-
-	logger.Debug("Got contract config map")
-
-	// Get data plane config data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
-	if err != nil || ct == nil {
-		return statusConditionManager.failedToGetDataPlaneConfigFromConfigMap(err)
-	}
-
-	logger.Debug(
-		"Got contract data from config map",
-		zap.Any(base.ContractLogKey, ct),
-	)
-
-	brokerIndex := coreconfig.FindResource(ct, broker.UID)
-	if brokerIndex == coreconfig.NoResource {
-		return statusConditionManager.brokerNotFoundInDataPlaneConfigMap()
-	}
-	triggerIndex := coreconfig.FindEgress(ct.Resources[brokerIndex].Egresses, trigger.UID)
-
-	triggerConfig, err := r.reconcileTriggerEgress(ctx, broker, trigger)
-	if err != nil {
-		return statusConditionManager.failedToResolveTriggerConfig(err)
-	}
-	statusConditionManager.subscriberResolved(triggerConfig)
-
-	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&trigger.Status.DeliveryStatus, triggerConfig.EgressConfig)
-
-	changed := coreconfig.AddOrUpdateEgressConfig(ct, brokerIndex, triggerConfig, triggerIndex)
-
-	coreconfig.IncrementContractGeneration(ct)
-
-	logger.Debug("Egress changes", zap.Int("changed", changed))
-
-	if changed == coreconfig.EgressChanged {
-		// Update the configuration map with the new dataPlaneConfig data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-			trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
-			return err
-		}
-
-		// Update volume generation annotation of dispatcher pods
-		if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-			// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-			// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
-			// ready. So, log out the error and move on to the next step.
-			logger.Warn(
-				"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-				zap.Error(err),
-			)
-
-			statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
-		} else {
-			logger.Debug("Updated dispatcher pod annotation")
-		}
-	}
-
-	logger.Debug("Contract config map updated")
-
-	return statusConditionManager.reconciled()
-}
-
-func (r *Reconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.finalizeKind(ctx, trigger)
-	})
-}
-
-func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, trigger)
-
-	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
-	if err != nil && !apierrors.IsNotFound(err) {
-		return fmt.Errorf("failed to get broker from lister: %w", err)
-	}
-
-	if apierrors.IsNotFound(err) {
-		// If the broker is deleted, resources associated with the Trigger will be deleted.
-		return nil
-	}
-
-	// Get data plane config map.
-	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get data plane config map %s: %w", r.Env.DataPlaneConfigMapAsString(), err)
-	}
-
-	logger.Debug("Got data plane config map")
-
-	// Get contract data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, dataPlaneConfigMap)
-	if err != nil {
-		return fmt.Errorf("failed to get contract: %w", err)
-	}
-
-	logger.Debug(
-		"Got contract data from data plane config map",
-		zap.Any(base.ContractLogKey, ct),
-	)
-
-	brokerIndex := coreconfig.FindResource(ct, broker.UID)
-	if brokerIndex == coreconfig.NoResource {
-		// If the broker is not there, resources associated with the Trigger are deleted accordingly.
-		return nil
-	}
-
-	logger.Debug("Found Broker", zap.Int("brokerIndex", brokerIndex))
-
-	egresses := ct.Resources[brokerIndex].Egresses
-	triggerIndex := coreconfig.FindEgress(egresses, trigger.UID)
-	if triggerIndex == coreconfig.NoEgress {
-		// The trigger is not there, resources associated with the Trigger are deleted accordingly.
-		logger.Debug("trigger not found in config map")
-
-		return nil
-	}
-
-	logger.Debug("Found Trigger", zap.Int("triggerIndex", brokerIndex))
-
-	// Delete the Trigger from the config map data.
-	ct.Resources[brokerIndex].Egresses = deleteTrigger(egresses, triggerIndex)
-
-	// Increment volume generation
-	coreconfig.IncrementContractGeneration(ct)
-
-	// Update data plane config map.
-	err = r.UpdateDataPlaneConfigMap(ctx, ct, dataPlaneConfigMap)
-	if err != nil {
+		trigger.Status.MarkDependencyFailed("failed to reconcile consumer group", err.Error())
 		return err
 	}
-
-	logger.Debug("Updated data plane config map", zap.String("configmap", r.Env.DataPlaneConfigMapAsString()))
-
-	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-		// The delete trigger will eventually be seen by the data plane pods, so log out the error and move on to the
-		// next step.
-		logger.Warn(
-			"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-			zap.Error(err),
-		)
-	} else {
-		logger.Debug("Updated dispatcher pod annotation successfully")
-	}
+	propagateConsumerGroupStatus(cg, trigger)
 
 	return nil
 }
 
-func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*contract.Egress, error) {
-	destination, err := r.Resolver.URIFromDestinationV1(ctx, trigger.Spec.Subscriber, trigger)
-	if err != nil {
-		return nil, fmt.Errorf("failed to resolve Trigger.Spec.Subscriber: %w", err)
-	}
-	trigger.Status.SubscriberURI = destination
+func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
 
-	egress := &contract.Egress{
-		Destination:   destination.String(),
-		ConsumerGroup: string(trigger.UID),
-		Uid:           string(trigger.UID),
-		Reference: &contract.Reference{
-			Uuid:      string(trigger.GetUID()),
-			Namespace: trigger.GetNamespace(),
-			Name:      trigger.GetName(),
-		},
-	}
-	newFiltersEnabled := func() bool {
-		r.FlagsLock.RLock()
-		defer r.FlagsLock.RUnlock()
-		return r.Flags.IsEnabled(feature.NewTriggerFilters)
-	}()
-
-	if newFiltersEnabled && len(trigger.Spec.Filters) > 0 {
-		dialectedFilters := make([]*contract.DialectedFilter, 0, len(trigger.Spec.Filters))
-		for _, f := range trigger.Spec.Filters {
-			dialectedFilters = append(dialectedFilters, contract.FromSubscriptionFilter(f))
-		}
-		egress.DialectedFilter = dialectedFilters
-	} else {
-		if trigger.Spec.Filter != nil && trigger.Spec.Filter.Attributes != nil {
-			egress.Filter = &contract.Filter{
-				Attributes: trigger.Spec.Filter.Attributes,
-			}
-		}
-	}
-
-	triggerEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, trigger, trigger.Spec.Delivery, r.Env.DefaultBackoffDelayMs)
-	if err != nil {
-		return nil, fmt.Errorf("[trigger] %w", err)
-	}
-	brokerEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, broker, broker.Spec.Delivery, r.Env.DefaultBackoffDelayMs)
-	if err != nil {
-		return nil, fmt.Errorf("[broker] %w", err)
-	}
-	// Merge Broker and Trigger egress configuration prioritizing the Trigger configuration.
-	egress.EgressConfig = coreconfig.MergeEgressConfig(triggerEgressConfig, brokerEgressConfig)
-
-	deliveryOrderAnnotationValue, ok := trigger.Annotations[deliveryOrderAnnotation]
+	var deliveryOrdering = internals.Unordered
+	var err error
+	deliveryOrderingAnnotationValue, ok := trigger.Annotations[deliveryOrderAnnotation]
 	if ok {
-		deliveryOrder, err := deliveryOrderFromString(deliveryOrderAnnotationValue)
+		deliveryOrdering, err = deliveryOrderingFromString(deliveryOrderingAnnotationValue)
 		if err != nil {
 			return nil, err
 		}
-		egress.DeliveryOrder = deliveryOrder
 	}
 
-	return egress, nil
+	offset := sources.OffsetLatest
+	isLatestOffset, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.Env.DataPlaneConfigMapNamespace, r.Env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to determine initial offset: %w", err)
+	}
+	if !isLatestOffset {
+		offset = sources.OffsetEarliest
+	}
+
+	namespace := broker.GetNamespace()
+	if broker.Spec.Config.Namespace != "" {
+		namespace = broker.Spec.Config.Namespace
+	}
+
+	secret, err := security.Secret(ctx, &security.AnnotationsSecretLocator{Annotations: broker.Status.Annotations, Namespace: namespace}, security.DefaultSecretProviderFunc(r.SecretLister, r.KubeClient))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get secret: %w", err)
+	}
+
+	bootstrapServers := broker.Status.Annotations[kafka.BootstrapServersConfigMapKey]
+	topicName := broker.Status.Annotations[kafka.TopicAnnotation]
+
+	expectedCg := &internalscg.ConsumerGroup{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      string(trigger.UID),
+			Namespace: trigger.Namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				*kmeta.NewControllerRef(trigger),
+			},
+			Labels: map[string]string{
+				internalscg.UserFacingResourceLabelSelector: strings.ToLower(trigger.GetGroupVersionKind().Kind),
+			},
+		},
+		Spec: internalscg.ConsumerGroupSpec{
+			Template: internalscg.ConsumerTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						internalscg.ConsumerLabelSelector: string(trigger.UID),
+					},
+				},
+				Spec: internalscg.ConsumerSpec{
+					Topics: []string{topicName},
+					Configs: internalscg.ConsumerConfigs{Configs: map[string]string{
+						"group.id":          string(trigger.UID),
+						"bootstrap.servers": bootstrapServers,
+					}},
+					Delivery: &internalscg.DeliverySpec{
+						DeliverySpec:  deliverySpec(broker, trigger),
+						Ordering:      deliveryOrdering,
+						InitialOffset: offset,
+					},
+					Filters: &internalscg.Filters{
+						Filter:  trigger.Spec.Filter,
+						Filters: trigger.Spec.Filters,
+					},
+					Subscriber: trigger.Spec.Subscriber,
+					Reply:      &internalscg.ReplyStrategy{TopicReply: &internalscg.TopicReply{Enabled: true}},
+				},
+			},
+		},
+	}
+
+	// TODO: make keda annotation values configurable and maybe unexposed
+	expectedCg.Annotations = kedafunc.SetAutoscalingAnnotations(trigger.Annotations)
+
+	if secret != nil {
+		expectedCg.Spec.Template.Spec.Auth = &internalscg.Auth{
+			SecretSpec: &internalscg.SecretSpec{
+				Ref: &internalscg.SecretReference{
+					Name:      secret.Name,
+					Namespace: secret.Namespace,
+				},
+			},
+		}
+	}
+
+	cg, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(string(trigger.UID)) //Get by consumer group name
+	if err != nil && !apierrors.IsNotFound(err) {
+		return nil, err
+	}
+	if apierrors.IsNotFound(err) {
+		cg, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedCg.GetNamespace()).Create(ctx, expectedCg, metav1.CreateOptions{})
+		if err != nil && !apierrors.IsAlreadyExists(err) {
+			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", expectedCg.GetNamespace(), expectedCg.GetName(), err)
+		}
+		return cg, nil
+	}
+
+	if equality.Semantic.DeepDerivative(expectedCg.Spec, cg.Spec) && equality.Semantic.DeepDerivative(expectedCg.Annotations, cg.Annotations) {
+		return cg, nil
+	}
+
+	newCg := &internalscg.ConsumerGroup{
+		TypeMeta:   cg.TypeMeta,
+		ObjectMeta: cg.ObjectMeta,
+		Spec:       expectedCg.Spec,
+		Status:     cg.Status,
+	}
+	newCg.Annotations = expectedCg.Annotations
+
+	if cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
+		return nil, fmt.Errorf("failed to update consumer group %s/%s: %w", newCg.GetNamespace(), newCg.GetName(), err)
+	}
+
+	return cg, nil
 }
 
-func deleteTrigger(egresses []*contract.Egress, index int) []*contract.Egress {
-	if len(egresses) == 1 {
-		return nil
+func deliverySpec(broker *eventing.Broker, trigger *eventing.Trigger) *eventingduck.DeliverySpec {
+	// TODO(pierDipi) use `Merge` in https://github.com/knative/eventing/pull/6277/files
+	if trigger.Spec.Delivery != nil {
+		return trigger.Spec.Delivery
 	}
+	return broker.Spec.Delivery
+}
 
-	// replace the trigger to be deleted with the last one.
-	egresses[index] = egresses[len(egresses)-1]
-	// truncate the array.
-	return egresses[:len(egresses)-1]
+func propagateConsumerGroupStatus(cg *internalscg.ConsumerGroup, trigger *eventing.Trigger) {
+	if cg.IsReady() {
+		trigger.Status.MarkDependencySucceeded()
+	} else {
+		topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
+		if topLevelCondition == nil {
+			trigger.Status.MarkDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready")
+		} else {
+			trigger.Status.MarkDependencyFailed(topLevelCondition.Reason, topLevelCondition.Message)
+		}
+	}
+	trigger.Status.SubscriberURI = cg.Status.SubscriberURI
+	trigger.Status.MarkSubscriberResolvedSucceeded()
+
+	trigger.Status.DeadLetterSinkURI = cg.Status.DeadLetterSinkURI
+	trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
+
+	trigger.Status.PropagateSubscriptionCondition(&apis.Condition{
+		Status: corev1.ConditionTrue,
+	})
 }
 
 func (r *Reconciler) hasRelevantBrokerClass(broker *eventing.Broker) (bool, string) {
@@ -374,83 +268,13 @@ func (r *Reconciler) hasRelevantBrokerClass(broker *eventing.Broker) (bool, stri
 	return brokerClass == r.BrokerClass, brokerClass
 }
 
-func (r *Reconciler) reconcileInitialOffset(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (bool, error) {
-	isLatest, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.DataPlaneConfigMapNamespace, r.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey)
-	if err != nil {
-		return false, err
-	}
-	if isLatest {
-		return r.reconcileLatestInitialOffset(ctx, broker, trigger)
-	}
-	return true, nil
-}
-
-func (r *Reconciler) reconcileLatestInitialOffset(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (bool, error) {
-	// Existing Brokers might not yet have this annotation
-	topicName, ok := broker.Status.Annotations[kafka.TopicAnnotation]
-	if !ok {
-		return false, nil
-	}
-	groupID := string(trigger.UID)
-
-	namespace := broker.GetNamespace()
-	if broker.Spec.Config.Namespace != "" {
-		namespace = broker.Spec.Config.Namespace
-	}
-
-	secret, err := security.Secret(ctx, &security.AnnotationsSecretLocator{Annotations: broker.Status.Annotations, Namespace: namespace}, r.SecretProviderFunc())
-	if err != nil {
-		return false, fmt.Errorf("failed to get secret: %w", err)
-	}
-	if err := r.TrackSecret(secret, broker); err != nil {
-		return false, fmt.Errorf("failed to track secret: %w", err)
-	}
-
-	bootstrapServers, ok := broker.Status.Annotations[kafka.BootstrapServersConfigMapKey]
-	if !ok {
-		return false, nil
-	}
-	bootstrapServersArr := kafka.BootstrapServersArray(bootstrapServers)
-
-	saramaConfig, err := kafka.GetSaramaConfig(security.NewSaramaSecurityOptionFromSecret(secret))
-	if err != nil {
-		return false, fmt.Errorf("failed to get sarama config: %w", err)
-	}
-
-	kafkaClient, err := r.NewKafkaClient(bootstrapServersArr, saramaConfig)
-	if err != nil {
-		return false, fmt.Errorf("cannot obtain Kafka client, %w", err)
-	}
-	defer kafkaClient.Close()
-
-	kafkaClusterAdmin, err := r.NewKafkaClusterAdminClient(bootstrapServersArr, saramaConfig)
-	if err != nil {
-		return false, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
-	}
-	defer kafkaClusterAdmin.Close()
-
-	isPresentAndValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdmin, topicName)
-	if err != nil {
-		return false, fmt.Errorf("topic %s doesn't exist or is invalid: %w", topicName, err)
-	}
-	if !isPresentAndValid {
-		return false, fmt.Errorf("topic %s is invalid", topicName)
-	}
-
-	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID); err != nil {
-		return false, fmt.Errorf("failed to initialize initial offsets: %w", err)
-	}
-
-	return true, nil
-}
-
-func deliveryOrderFromString(val string) (contract.DeliveryOrder, error) {
+func deliveryOrderingFromString(val string) (internals.DeliveryOrdering, error) {
 	switch strings.ToLower(val) {
 	case string(internals.Ordered):
-		return contract.DeliveryOrder_ORDERED, nil
+		return internals.Ordered, nil
 	case string(internals.Unordered):
-		return contract.DeliveryOrder_UNORDERED, nil
+		return internals.Unordered, nil
 	default:
-		return contract.DeliveryOrder_UNORDERED, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, internals.Ordered, internals.Unordered)
+		return internals.Unordered, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, internals.Ordered, internals.Unordered)
 	}
 }
