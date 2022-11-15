@@ -66,8 +66,6 @@ spec:
               value: knative-eventing
             - name: SINK_DATA_PLANE_CONFIG_MAP_NAMESPACE
               value: knative-eventing
-            - name: SOURCE_DATA_PLANE_CONFIG_MAP_NAMESPACE
-              value: knative-eventing
 
             - name: BROKER_CONTRACT_CONFIG_MAP_NAME
               value: kafka-broker-brokers-triggers
@@ -78,20 +76,16 @@ spec:
 
             - name: BROKER_DATA_PLANE_CONFIG_CONFIG_MAP_NAME
               value: config-kafka-broker-data-plane
-            - name: SOURCE_DATA_PLANE_CONFIG_CONFIG_MAP_NAME
-              value: config-kafka-source-data-plane
             - name: SINK_DATA_PLANE_CONFIG_CONFIG_MAP_NAME
-              value: config-kafka-source-data-plane
+              value: config-kafka-sink-data-plane
             - name: CHANNEL_DATA_PLANE_CONFIG_CONFIG_MAP_NAME
-              value: config-kafka-source-data-plane
+              value: config-kafka-channel-data-plane
 
             - name: BROKER_CONTRACT_CONFIG_MAP_FORMAT
               value: json
             - name: CHANNEL_CONTRACT_CONFIG_MAP_FORMAT
               value: json
             - name: SINK_CONTRACT_CONFIG_MAP_FORMAT
-              value: json
-            - name: SOURCE_CONTRACT_CONFIG_MAP_FORMAT
               value: json
             - name: CONSUMER_CONTRACT_CONFIG_MAP_FORMAT
               value: json
@@ -102,16 +96,12 @@ spec:
               value: kafka-channel-ingress
             - name: SINK_INGRESS_NAME
               value: kafka-sink-ingress
-            - name: SOURCE_INGRESS_NAME
-              value: kafka-source-ingress
 
             - name: BROKER_GENERAL_CONFIG_MAP_NAME
               value: kafka-broker-config
             - name: CHANNEL_GENERAL_CONFIG_MAP_NAME
               value: kafka-channel-config
             - name: SINK_GENERAL_CONFIG_MAP_NAME
-              value: kafka-broker-config
-            - name: SOURCE_GENERAL_CONFIG_MAP_NAME
               value: kafka-broker-config
 
             - name: BROKER_INGRESS_POD_PORT
@@ -130,10 +120,6 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: SINK_SYSTEM_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: SOURCE_SYSTEM_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
