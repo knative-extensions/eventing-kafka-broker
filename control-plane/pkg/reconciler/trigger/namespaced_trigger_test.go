@@ -38,7 +38,6 @@ import (
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
@@ -123,12 +122,11 @@ func useNamespacedTable(t *testing.T, table TableTest, env *config.Env) {
 
 		logger := logging.FromContext(ctx)
 
-		reconciler := &Reconciler{
+		reconciler := &NamespacedReconciler{
 			BrokerLister:        listers.GetBrokerLister(),
 			ConfigMapLister:     listers.GetConfigMapLister(),
 			EventingClient:      eventingclient.Get(ctx),
 			Env:                 env,
-			BrokerClass:         kafka.NamespacedBrokerClass,
 			ConsumerGroupLister: listers.GetConsumerGroupLister(),
 			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
 			SecretLister:        listers.GetSecretLister(),

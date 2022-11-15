@@ -87,7 +87,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 
 	// ConsumerGroup changes and enqueue associated Trigger
 	consumerGroupInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: consumergroup.Filter("trigger"),
+		FilterFunc: consumergroup.FilterByBrokerClass("trigger", triggerLister, reconciler.BrokerLister, kafka.NamespacedBrokerClass),
 		Handler:    controller.HandleAll(consumergroup.Enqueue("trigger", impl.EnqueueKey)),
 	})
 
