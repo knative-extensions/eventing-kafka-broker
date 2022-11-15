@@ -24,11 +24,12 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
 	"knative.dev/pkg/system"
 )
 
 func (d *kafkaSourceDeleter) DeleteDispatcher(ctx context.Context) error {
-	if err := d.waitStatefulSetExists(ctx); err != nil {
+	if err := waitStatefulSetExists(ctx, d.k8s); err != nil {
 		return fmt.Errorf("failed while waiting for statefulset to come up: %w", err)
 	}
 
@@ -45,10 +46,10 @@ func (d *kafkaSourceDeleter) DeleteDispatcher(ctx context.Context) error {
 	return nil
 }
 
-func (d *kafkaSourceDeleter) waitStatefulSetExists(ctx context.Context) error {
+func waitStatefulSetExists(ctx context.Context, k8s kubernetes.Interface) error {
 	const sourceDispatcherStatefulSetName = "kafka-source-dispatcher"
 	return wait.Poll(10*time.Second, 10*time.Minute, func() (done bool, err error) {
-		_, err = d.k8s.AppsV1().StatefulSets(system.Namespace()).Get(ctx, sourceDispatcherStatefulSetName, metav1.GetOptions{})
+		_, err = k8s.AppsV1().StatefulSets(system.Namespace()).Get(ctx, sourceDispatcherStatefulSetName, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return false, nil
 		}
@@ -57,4 +58,40 @@ func (d *kafkaSourceDeleter) waitStatefulSetExists(ctx context.Context) error {
 		}
 		return true, nil
 	})
+}
+
+func (d *kafkaChannelPostMigrationDeleter) DeleteDispatcher(ctx context.Context) error {
+	if err := waitStatefulSetExists(ctx, d.k8s); err != nil {
+		return fmt.Errorf("failed while waiting for statefulset to come up: %w", err)
+	}
+
+	// Delete deployment.apps/kafka-channel-dispatcher
+	const channelDispatcherDeploymentName = "kafka-channel-dispatcher"
+	err := d.k8s.
+		AppsV1().
+		Deployments(system.Namespace()).
+		Delete(ctx, channelDispatcherDeploymentName, metav1.DeleteOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete deployment %s/%s: %w", system.Namespace(), channelDispatcherDeploymentName, err)
+	}
+
+	return nil
+}
+
+func (d *kafkaBrokerDeleter) DeleteDispatcher(ctx context.Context) error {
+	if err := waitStatefulSetExists(ctx, d.k8s); err != nil {
+		return fmt.Errorf("failed while waiting for statefulset to come up: %w", err)
+	}
+
+	// Delete deployment.apps/kafka-broker-dispatcher
+	const brokerDispatcherDeploymentName = "kafka-broker-dispatcher"
+	err := d.k8s.
+		AppsV1().
+		Deployments(system.Namespace()).
+		Delete(ctx, brokerDispatcherDeploymentName, metav1.DeleteOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete deployment %s/%s: %w", system.Namespace(), brokerDispatcherDeploymentName, err)
+	}
+
+	return nil
 }

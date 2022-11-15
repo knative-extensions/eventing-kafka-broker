@@ -102,5 +102,19 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("channel post-deletion failed: %w", err)
 	}
 
+	channelDispatcherDeleter := &kafkaChannelPostMigrationDeleter{
+		k8s: kubernetes.NewForConfigOrDie(config),
+	}
+	if err := channelDispatcherDeleter.DeleteDispatcher(ctx); err != nil {
+		return fmt.Errorf("channel dispatcher deletion failed: %w", err)
+	}
+
+	brokerDispatcherDeleter := &kafkaBrokerDeleter{
+		k8s: kubernetes.NewForConfigOrDie(config),
+	}
+	if err := brokerDispatcherDeleter.DeleteDispatcher(ctx); err != nil {
+		return fmt.Errorf("broker dispatcher deletion failed: %w", err)
+	}
+
 	return nil
 }
