@@ -15,7 +15,7 @@
 # limitations under the License.
 
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: kafka-channel-dispatcher
   namespace: knative-eventing
@@ -23,6 +23,8 @@ metadata:
     app: kafka-channel-dispatcher
     kafka.eventing.knative.dev/release: devel
 spec:
+  serviceName: kafka-channel-dispatcher
+  podManagementPolicy: "Parallel"
   selector:
     matchLabels:
       app: kafka-channel-dispatcher
@@ -31,6 +33,7 @@ spec:
       name: kafka-channel-dispatcher
       labels:
         app: kafka-channel-dispatcher
+        app.kubernetes.io/component: kafka-dispatcher
         kafka.eventing.knative.dev/release: devel
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
@@ -61,13 +64,13 @@ spec:
             - mountPath: /etc/config
               name: config-kafka-channel-data-plane
               readOnly: true
-            - mountPath: /etc/channels-subscriptions
-              name: kafka-channel-channels-subscriptions
+            - mountPath: /etc/contract-resources
+              name: contract-resources
               readOnly: true
             - mountPath: /tmp
               name: cache
             - mountPath: /etc/logging
-              name: kafka-channel-config-logging
+              name: kafka-config-logging
               readOnly: true
             - mountPath: /etc/tracing
               name: config-tracing
@@ -90,7 +93,7 @@ spec:
             - name: WEBCLIENT_CONFIG_FILE_PATH
               value: /etc/config/config-kafka-channel-webclient.properties
             - name: DATA_PLANE_CONFIG_FILE_PATH
-              value: /etc/channels-subscriptions/data
+              value: /etc/contract-resources/data
             - name: EGRESSES_INITIAL_CAPACITY
               value: "20"
             - name: INSTANCE_ID
@@ -114,11 +117,17 @@ spec:
             - name: WAIT_STARTUP_SECONDS
               value: "8"
             - name: JAVA_TOOL_OPTIONS
-              value: "-XX:+CrashOnOutOfMemoryError"
+              value: "-XX:+CrashOnOutOfMemoryError -XX:InitialRAMPercentage=70.0 -XX:MinRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0"
+
           resources:
             requests:
-              cpu: 200m
-              memory: 300Mi
+              cpu: 1000m
+              # 600Mi for virtual replicas + 100Mi overhead
+              memory: 700Mi
+            limits:
+              cpu: 2000m
+              memory: 1000Mi
+
           livenessProbe:
             failureThreshold: 3
             tcpSocket:
@@ -151,12 +160,9 @@ spec:
         - name: config-kafka-channel-data-plane
           configMap:
             name: config-kafka-channel-data-plane
-        - name: kafka-channel-channels-subscriptions
-          configMap:
-            name: kafka-channel-channels-subscriptions
         - name: cache
           emptyDir: { }
-        - name: kafka-channel-config-logging
+        - name: kafka-config-logging
           configMap:
             name: kafka-config-logging
         - name: config-tracing

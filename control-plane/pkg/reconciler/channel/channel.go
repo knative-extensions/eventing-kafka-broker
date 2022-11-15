@@ -18,53 +18,73 @@ package channel
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
-
-	"k8s.io/apimachinery/pkg/api/equality"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
-	"knative.dev/pkg/network"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
-	"k8s.io/apimachinery/pkg/labels"
-
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"k8s.io/client-go/util/retry"
-
-	v1 "knative.dev/eventing/pkg/apis/duck/v1"
-	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1"
-	"knative.dev/pkg/controller"
-	"knative.dev/pkg/reconciler"
+	"knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources"
+	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
-	"knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources"
 	"knative.dev/eventing-kafka/pkg/common/constants"
+	v1 "knative.dev/eventing/pkg/apis/duck/v1"
+	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/reconciler"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+
+	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
+	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
+	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
+	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+
+	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
+	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1"
 )
 
 const (
 	// TopicPrefix is the Kafka Channel topic prefix - (topic name: knative-messaging-kafka.<channel-namespace>.<channel-name>).
 	TopicPrefix                  = "knative-messaging-kafka"
-	DefaultDeliveryOrder         = contract.DeliveryOrder_ORDERED
+	DefaultDeliveryOrder         = internals.Ordered
 	NewChannelIngressServiceName = "kafka-channel-ingress"
+
+	KafkaChannelConditionSubscribersReady apis.ConditionType = "Subscribers" // condition is registered by controller
+)
+
+var (
+	conditionSet = apis.NewLivingConditionSet(
+		KafkaChannelConditionSubscribersReady,
+		base.ConditionTopicReady,
+		base.ConditionConfigMapUpdated,
+		base.ConditionConfigParsed,
+		base.ConditionProbeSucceeded,
+	)
 )
 
 type Reconciler struct {
@@ -77,15 +97,6 @@ type Reconciler struct {
 	// mock the function used during the reconciliation loop.
 	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
 
-	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
-	// mock the function used during the reconciliation loop.
-	NewKafkaClient kafka.NewClientFunc
-
-	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
-	// It's convenient to add this as Reconciler field so that we can mock the function used during the
-	// reconciliation loop.
-	InitOffsetsFunc kafka.InitOffsetsFunc
-
 	ConfigMapLister    corelisters.ConfigMapLister
 	ServiceLister      corelisters.ServiceLister
 	SubscriptionLister messaginglisters.SubscriptionLister
@@ -93,15 +104,12 @@ type Reconciler struct {
 	Prober prober.Prober
 
 	IngressHost string
+
+	ConsumerGroupLister internalslst.ConsumerGroupLister
+	InternalsClient     internalsclient.Interface
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.reconcileKind(ctx, channel)
-	})
-}
-
-func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
 
 	statusConditionManager := base.StatusConditionManager{
@@ -111,13 +119,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
-	// do not proceed, if data plane is not available
-	if !r.IsReceiverRunning() || !r.IsDispatcherRunning() {
-		return statusConditionManager.DataPlaneNotAvailable()
-	}
-	statusConditionManager.DataPlaneAvailable()
-
-	// get the channel configmap
+	// Get the channel configmap
 	channelConfigMap, err := r.channelConfigMap()
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
@@ -158,21 +160,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	// get security option for Sarama with secret info in it
 	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
 
-	if err := r.TrackSecret(secret, channel); err != nil {
-		return fmt.Errorf("failed to track secret: %w", err)
-	}
-
 	topicName := kafka.ChannelTopic(TopicPrefix, channel)
 
 	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
-	if err != nil {
-		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
-	}
-
-	// Manually commit the offsets in KafkaChannel controller.
-	// That's because we want to make sure we initialize the offsets within the controller
-	// before dispatcher actually starts consuming messages.
-	kafkaClientSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption, kafka.DisableOffsetAutoCommitConfigOption)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
 	}
@@ -182,12 +172,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin: %w", err))
 	}
 	defer kafkaClusterAdminClient.Close()
-
-	kafkaClient, err := r.NewKafkaClient(topicConfig.BootstrapServers, kafkaClientSaramaConfig)
-	if err != nil {
-		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka client: %w", err))
-	}
-	defer kafkaClient.Close()
 
 	// create the topic
 	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
@@ -218,18 +202,26 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&channel.Status.DeliveryStatus, channelResource.EgressConfig)
 
-	// we still update the contract configMap even though there's an error.
-	// however, we record this error to make the reconciler try again.
-	subscribersChanged, subscriptionError := r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdminClient, channel, channelResource)
+	allReady, subscribersError := r.reconcileSubscribers(ctx, channel, topicName, topicConfig.BootstrapServers, secret)
+	if subscribersError != nil {
+		channel.GetConditionSet().Manage(&channel.Status).MarkFalse(KafkaChannelConditionSubscribersReady, "failed to reconcile all subscribers", subscribersError.Error())
+		return subscribersError
+	}
+	if !allReady { //no need to return error. Not ready because of consumer group status. Will be ok once consumer group is reconciled
+		channel.GetConditionSet().Manage(&channel.Status).MarkUnknown(KafkaChannelConditionSubscribersReady, "all subscribers not ready", "failed to reconcile consumer group")
+	} else {
+		channel.GetConditionSet().Manage(&channel.Status).MarkTrue(KafkaChannelConditionSubscribersReady)
+	}
 
 	// Update contract data with the new contract configuration (add/update channel resource)
 	channelIndex := coreconfig.FindResource(ct, channel.UID)
 	changed := coreconfig.AddOrUpdateResourceConfig(ct, channelResource, channelIndex, logger)
 	logger.Debug("Change detector", zap.Int("changed", changed))
 
-	if changed == coreconfig.ResourceChanged || subscribersChanged == coreconfig.EgressChanged {
-		// Resource changed, increment contract generation.
-		coreconfig.IncrementContractGeneration(ct)
+	if changed == coreconfig.ResourceChanged {
+		logger.Debug("Contract changed", zap.Int("changed", changed))
+
+		ct.IncrementGeneration()
 
 		// Update the configuration map with the new contract data.
 		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
@@ -242,7 +234,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	statusConditionManager.ConfigMapUpdated()
 
-	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
+	// We update receiver pods annotation regardless of our contract changed or not due to the fact
 	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
 	// to anyway update remaining annotations with the contract generation that was saved in the CM.
 
@@ -260,26 +252,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return err
 	}
 	logger.Debug("Updated receiver pod annotation")
-
-	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Channel
-		// ready. So, log out the error and move on to the next step.
-		logger.Warn(
-			"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-			zap.Error(err),
-		)
-
-		statusConditionManager.FailedToUpdateDispatcherPodsAnnotation(err)
-	} else {
-		logger.Debug("Updated dispatcher pod annotation")
-	}
-
-	if subscriptionError != nil {
-		logger.Error("Error reconciling subscriptions. Going to try again.", zap.Error(subscriptionError))
-		return subscriptionError
-	}
 
 	channelService, err := r.reconcileChannelService(ctx, channel)
 	if err != nil {
@@ -307,13 +279,39 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	return nil
 }
 
-func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return r.finalizeKind(ctx, channel)
-	})
+func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messagingv1beta1.KafkaChannel) (*corev1.Service, error) {
+	expected, err := resources.MakeK8sService(channel, resources.ExternalService(r.DataPlaneNamespace, NewChannelIngressServiceName))
+	if err != nil {
+		return expected, fmt.Errorf("failed to create the channel service object: %w", err)
+	}
+
+	svc, err := r.ServiceLister.Services(channel.Namespace).Get(resources.MakeChannelServiceName(channel.Name))
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Create(ctx, expected, metav1.CreateOptions{})
+			if err != nil {
+				return expected, fmt.Errorf("failed to create the channel service object: %w", err)
+			}
+			return expected, nil
+		}
+		return expected, err
+	} else if !equality.Semantic.DeepEqual(svc.Spec, expected.Spec) {
+		svc = svc.DeepCopy()
+		svc.Spec = expected.Spec
+
+		_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Update(ctx, svc, metav1.UpdateOptions{})
+		if err != nil {
+			return expected, fmt.Errorf("failed to update the channel service: %w", err)
+		}
+	}
+	// Check to make sure that the KafkaChannel owns this service and if not, complain.
+	if !metav1.IsControlledBy(svc, channel) {
+		return expected, fmt.Errorf("kafkachannel: %s/%s does not own Service: %q", channel.Namespace, channel.Name, svc.Name)
+	}
+	return expected, nil
 }
 
-func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
+func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, channel)
 
 	// Get contract config map.
@@ -337,7 +335,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 		logger.Debug("Channel deleted", zap.Int("index", channelIndex))
 
 		// Resource changed, increment contract generation.
-		coreconfig.IncrementContractGeneration(ct)
+		ct.IncrementGeneration()
 
 		// Update the configuration map with the new contract data.
 		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
@@ -348,17 +346,13 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 
 	channel.Status.Address = nil
 
-	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
+	// We update receiver annotation regardless of our contract changed or not due to the fact
 	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
 	// to update anyway remaining annotations with the contract generation that was saved in the CM.
 	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
 	// Update volume generation annotation of receiver pods
 	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		return err
-	}
-	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
 		return err
 	}
 
@@ -443,155 +437,167 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	return nil
 }
 
-func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, channelContractResource *contract.Resource) (int, error) {
+func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagingv1beta1.KafkaChannel, topicName string, bootstrapServers []string, secret *corev1.Secret) (bool, error) {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
 
 	channel.Status.Subscribers = make([]v1.SubscriberStatus, 0)
 	var globalErr error
-	globalChanged := coreconfig.EgressUnchanged
+	currentCgs := make(map[string]*internalscg.ConsumerGroup, len(channel.Spec.Subscribers))
+	allReady := true
 	for i := range channel.Spec.Subscribers {
 		s := &channel.Spec.Subscribers[i]
-		logger = logger.With(zap.Any("subscription", s))
-		changed, err := r.reconcileSubscriber(ctx, kafkaClient, kafkaClusterAdmin, channel, s, channelContractResource)
+		logger = logger.With(zap.Any("subscriber", s))
+		cg, err := r.reconcileConsumerGroup(ctx, channel, s, topicName, bootstrapServers, secret)
 		if err != nil {
-			logger.Error("error reconciling subscription. marking subscription as not ready", zap.Error(err))
+			logger.Error("error reconciling subscriber. marking subscriber as not ready", zap.Error(err))
+			msg := fmt.Sprintf("Subscriber %v not ready: %v", s.UID, err)
 			channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
 				UID:                s.UID,
 				ObservedGeneration: s.Generation,
 				Ready:              corev1.ConditionFalse,
-				Message:            fmt.Sprintf("Subscription not ready: %v", err),
+				Message:            msg,
 			})
-			globalErr = multierr.Append(globalErr, err)
+			allReady = false
+			globalErr = multierr.Append(globalErr, errors.New(msg))
 		} else {
-			logger.Debug("marking subscription as ready")
-			channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
-				UID:                s.UID,
-				ObservedGeneration: s.Generation,
-				Ready:              corev1.ConditionTrue,
-			})
-		}
-		if globalChanged == coreconfig.EgressUnchanged {
-			globalChanged = changed
-		}
-	}
-	return globalChanged, globalErr
-}
-
-func (r *Reconciler) reconcileSubscriber(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, subscriberSpec *v1.SubscriberSpec, channelContractResource *contract.Resource) (int, error) {
-	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
-
-	logger.Debug("Reconciling initial offset for subscription", zap.Any("subscription", subscriberSpec), zap.Any("channel", channel))
-	err := r.reconcileInitialOffset(ctx, channel, subscriberSpec, kafkaClient, kafkaClusterAdmin)
-	if err != nil {
-		return coreconfig.EgressUnchanged, fmt.Errorf("initial offset cannot be committed: %v", err)
-	}
-	logger.Debug("Reconciled initial offset for subscription. ", zap.Any("subscription", subscriberSpec))
-
-	subscriberIndex := coreconfig.FindEgress(channelContractResource.Egresses, subscriberSpec.UID)
-	subscriberConfig, err := r.getSubscriberConfig(ctx, channel, subscriberSpec)
-	if err != nil {
-		return coreconfig.EgressUnchanged, fmt.Errorf("failed to resolve subscriber config: %w", err)
-	}
-
-	changed := coreconfig.AddOrUpdateEgressConfigForResource(channelContractResource, subscriberConfig, subscriberIndex)
-	return changed, nil
-}
-
-func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messagingv1beta1.KafkaChannel, sub *v1.SubscriberSpec, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin) error {
-	subscriptionStatus := findSubscriptionStatus(channel, sub.UID)
-	if subscriptionStatus != nil && subscriptionStatus.Ready == corev1.ConditionTrue {
-		// subscription is ready, the offsets must have been initialized already
-		return nil
-	}
-
-	topicName := kafka.ChannelTopic(TopicPrefix, channel)
-	groupID := consumerGroup(channel, sub)
-	_, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID)
-	return err
-}
-
-func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messagingv1beta1.KafkaChannel, subscriber *v1.SubscriberSpec) (*contract.Egress, error) {
-	subscriberURI := subscriber.SubscriberURI.String()
-	if subscriberURI == "" {
-		return nil, fmt.Errorf("failed to resolve Subscription.Spec.Subscriber: empty subscriber URI")
-	}
-	subscriptionName, err := r.getSubscriptionName(channel, subscriber)
-	if err != nil && !apierrors.IsNotFound(err) {
-		return nil, fmt.Errorf("failed to extract subscription name for subscriber %v: %w", subscriber, err)
-	}
-
-	egress := &contract.Egress{
-		Destination:   subscriberURI,
-		ConsumerGroup: consumerGroup(channel, subscriber),
-		DeliveryOrder: DefaultDeliveryOrder,
-		Uid:           string(subscriber.UID),
-		ReplyStrategy: &contract.Egress_DiscardReply{},
-	}
-
-	if subscriptionName != "" {
-		egress.Reference = &contract.Reference{
-			Uuid:      string(subscriber.UID),
-			Namespace: channel.GetNamespace(),
-			Name:      subscriptionName,
+			currentCgs[cg.Name] = cg // Adding reconciled consumer group to map
+			if cg.IsReady() {
+				logger.Debug("marking subscriber as ready")
+				channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
+					UID:                s.UID,
+					ObservedGeneration: s.Generation,
+					Ready:              corev1.ConditionTrue,
+				})
+			} else {
+				topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
+				if topLevelCondition == nil {
+					msg := fmt.Sprintf("Subscriber %v not ready: %v", s.UID, "consumer group status unknown")
+					channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
+						UID:                s.UID,
+						ObservedGeneration: s.Generation,
+						Ready:              corev1.ConditionUnknown,
+						Message:            msg,
+					})
+					allReady = false
+				} else {
+					msg := fmt.Sprintf("Subscriber %v not ready: %v %v", s.UID, topLevelCondition.Reason, topLevelCondition.Message)
+					channel.Status.Subscribers = append(channel.Status.Subscribers, v1.SubscriberStatus{
+						UID:                s.UID,
+						ObservedGeneration: s.Generation,
+						Ready:              corev1.ConditionFalse,
+						Message:            msg,
+					})
+					allReady = false
+				}
+			}
 		}
 	}
 
-	if subscriber.ReplyURI != nil {
-		egress.ReplyStrategy = &contract.Egress_ReplyUrl{
-			ReplyUrl: subscriber.ReplyURI.String(),
+	// Get all consumer groups associated with this Channel
+	selector := labels.SelectorFromSet(map[string]string{internalscg.KafkaChannelNameLabel: channel.Name})
+	channelCgs, err := r.ConsumerGroupLister.ConsumerGroups(channel.GetNamespace()).List(selector)
+	if err != nil {
+		globalErr = multierr.Append(globalErr, err)
+	}
+	for _, cg := range channelCgs {
+		_, found := currentCgs[cg.Name]
+		if !found { // ConsumerGroup needs to be deleted since it isn't associated with an existing subscriber (subscriber may have been deleted)
+			err := r.finalizeConsumerGroup(ctx, cg)
+			if err != nil {
+				globalErr = multierr.Append(globalErr, err)
+			}
 		}
 	}
 
-	subscriptionEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, subscriber.Delivery, r.DefaultBackoffDelayMs)
-	if err != nil {
-		return nil, err
-	}
-	channelEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.DefaultBackoffDelayMs)
-	if err != nil {
-		return nil, err
-	}
-
-	// Merge Channel and Subscription egress configuration prioritizing the Subscription configuration.
-	egress.EgressConfig = coreconfig.MergeEgressConfig(subscriptionEgressConfig, channelEgressConfig)
-
-	return egress, nil
+	return allReady, globalErr
 }
 
-func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
-	namespace := r.DataPlaneNamespace
-	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(r.Env.GeneralConfigMapName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, r.Env.GeneralConfigMapName, err)
-	}
+func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec, topicName string, bootstrapServers []string, secret *corev1.Secret) (*internalscg.ConsumerGroup, error) {
 
-	return cm, nil
-}
-
-func (r *Reconciler) topicConfig(logger *zap.Logger, cm *corev1.ConfigMap, channel *messagingv1beta1.KafkaChannel) (*kafka.TopicConfig, error) {
-	bootstrapServers, err := kafka.BootstrapServersFromConfigMap(logger, cm)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get bootstrapServers from configmap: %w - ConfigMap data: %v", err, cm.Data)
-	}
-
-	// Parse & Format the RetentionDuration into Sarama retention.ms string
-	retentionDuration, err := channel.Spec.ParseRetentionDuration()
-	if err != nil {
-		// Should never happen with webhook defaulting and validation in place.
-		logger.Debug("Error parsing RetentionDuration, using default instead", zap.String("RetentionDuration", channel.Spec.RetentionDuration), zap.Error(err))
-		retentionDuration = constants.DefaultRetentionDuration
-	}
-	retentionMillisString := strconv.FormatInt(retentionDuration.Milliseconds(), 10)
-
-	return &kafka.TopicConfig{
-		TopicDetail: sarama.TopicDetail{
-			NumPartitions:     channel.Spec.NumPartitions,
-			ReplicationFactor: channel.Spec.ReplicationFactor,
-			ConfigEntries: map[string]*string{
-				constants.KafkaTopicConfigRetentionMs: &retentionMillisString,
+	expectedCg := &internalscg.ConsumerGroup{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      string(s.UID),
+			Namespace: channel.Namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				*kmeta.NewControllerRef(channel),
+			},
+			Labels: map[string]string{
+				internalscg.KafkaChannelNameLabel:           channel.Name, // Identifies the new ConsumerGroup as associated with this channel (same namespace)
+				internalscg.UserFacingResourceLabelSelector: strings.ToLower(channel.GetGroupVersionKind().Kind),
 			},
 		},
-		BootstrapServers: bootstrapServers,
-	}, nil
+		Spec: internalscg.ConsumerGroupSpec{
+			Template: internalscg.ConsumerTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						internalscg.ConsumerLabelSelector: string(s.UID),
+					},
+				},
+				Spec: internalscg.ConsumerSpec{
+					Topics: []string{topicName},
+					Configs: internalscg.ConsumerConfigs{Configs: map[string]string{
+						"group.id":          consumerGroup(channel, s),
+						"bootstrap.servers": strings.Join(bootstrapServers, ","),
+					}},
+					Delivery: &internalscg.DeliverySpec{
+						DeliverySpec: channel.Spec.Delivery,
+						Ordering:     DefaultDeliveryOrder,
+					},
+					Subscriber: duckv1.Destination{
+						URI: s.SubscriberURI,
+					},
+				},
+			},
+		},
+	}
+
+	// TODO: make keda annotation values configurable and maybe unexposed
+	subscriptionAnnotations, err := r.getSubscriptionAnnotations(channel, s)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return nil, fmt.Errorf("failed to extract subscription annotations for subscriber %v: %w", s, err)
+	}
+	expectedCg.Annotations = kedafunc.SetAutoscalingAnnotations(subscriptionAnnotations)
+
+	if secret != nil {
+		expectedCg.Spec.Template.Spec.Auth = &internalscg.Auth{
+			SecretSpec: &internalscg.SecretSpec{
+				Ref: &internalscg.SecretReference{
+					Name:      secret.Name,
+					Namespace: secret.Namespace,
+				},
+			},
+		}
+	}
+
+	cg, err := r.ConsumerGroupLister.ConsumerGroups(channel.GetNamespace()).Get(string(s.UID)) // Get by consumer group id
+	if err != nil && !apierrors.IsNotFound(err) {
+		return nil, err
+	}
+	if apierrors.IsNotFound(err) {
+		cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedCg.GetNamespace()).Create(ctx, expectedCg, metav1.CreateOptions{})
+		if err != nil && !apierrors.IsAlreadyExists(err) {
+			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", expectedCg.GetNamespace(), expectedCg.GetName(), err)
+		}
+		return cg, nil
+	}
+
+	if equality.Semantic.DeepDerivative(expectedCg.Spec, cg.Spec) && equality.Semantic.DeepDerivative(expectedCg.Annotations, cg.Annotations) {
+		return cg, nil
+	}
+
+	newCg := &internalscg.ConsumerGroup{
+		TypeMeta:   cg.TypeMeta,
+		ObjectMeta: cg.ObjectMeta,
+		Spec:       expectedCg.Spec,
+		Status:     cg.Status,
+	}
+	newCg.Annotations = expectedCg.Annotations
+
+	if cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
+		return nil, fmt.Errorf("failed to update consumer group %s/%s: %w", newCg.GetNamespace(), newCg.GetName(), err)
+	}
+
+	return cg, nil
 }
 
 func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, auth *security.NetSpecAuthContext, config *kafka.TopicConfig) (*contract.Resource, error) {
@@ -624,63 +630,72 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 	return resource, nil
 }
 
-func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messagingv1beta1.KafkaChannel) (*corev1.Service, error) {
-	expected, err := resources.MakeK8sService(channel, resources.ExternalService(r.DataPlaneNamespace, NewChannelIngressServiceName))
-	if err != nil {
-		return expected, fmt.Errorf("failed to create the channel service object: %w", err)
-	}
-
-	svc, err := r.ServiceLister.Services(channel.Namespace).Get(resources.MakeChannelServiceName(channel.Name))
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Create(ctx, expected, metav1.CreateOptions{})
-			if err != nil {
-				return expected, fmt.Errorf("failed to create the channel service object: %w", err)
-			}
-			return expected, nil
-		}
-		return expected, err
-	} else if !equality.Semantic.DeepEqual(svc.Spec, expected.Spec) {
-		svc = svc.DeepCopy()
-		svc.Spec = expected.Spec
-
-		_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Update(ctx, svc, metav1.UpdateOptions{})
-		if err != nil {
-			return expected, fmt.Errorf("failed to update the channel service: %w", err)
-		}
-	}
-	// Check to make sure that the KafkaChannel owns this service and if not, complain.
-	if !metav1.IsControlledBy(svc, channel) {
-		return expected, fmt.Errorf("kafkachannel: %s/%s does not own Service: %q", channel.Namespace, channel.Name, svc.Name)
-	}
-	return expected, nil
+// consumerGroup returns a consumerGroup name for the given channel and subscription
+func consumerGroup(channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec) string {
+	return fmt.Sprintf("kafka.%s.%s.%s", channel.Namespace, channel.Name, string(s.UID))
 }
 
-func (r *Reconciler) getSubscriptionName(channel *messagingv1beta1.KafkaChannel, subscriber *v1.SubscriberSpec) (string, error) {
+func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
+	// TODO: do we want to support namespaced channels? they're not supported at the moment.
+
+	namespace := r.DataPlaneNamespace
+	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(r.Env.GeneralConfigMapName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, r.Env.GeneralConfigMapName, err)
+	}
+
+	return cm, nil
+}
+
+func (r *Reconciler) topicConfig(logger *zap.Logger, cm *corev1.ConfigMap, channel *messagingv1beta1.KafkaChannel) (*kafka.TopicConfig, error) {
+	bootstrapServers, err := kafka.BootstrapServersFromConfigMap(logger, cm)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get bootstrapServers from configmap: %w - ConfigMap data: %v", err, cm.Data)
+	}
+
+	// Parse & Format the RetentionDuration into Sarama retention.ms string
+	retentionDuration, err := channel.Spec.ParseRetentionDuration()
+	if err != nil {
+		// Should never happen with webhook defaulting and validation in place.
+		logger.Error("Error parsing RetentionDuration, using default instead", zap.String("RetentionDuration", channel.Spec.RetentionDuration), zap.Error(err))
+		retentionDuration = constants.DefaultRetentionDuration
+	}
+	retentionMillisString := strconv.FormatInt(retentionDuration.Milliseconds(), 10)
+
+	return &kafka.TopicConfig{
+		TopicDetail: sarama.TopicDetail{
+			NumPartitions:     channel.Spec.NumPartitions,
+			ReplicationFactor: channel.Spec.ReplicationFactor,
+			ConfigEntries: map[string]*string{
+				constants.KafkaTopicConfigRetentionMs: &retentionMillisString,
+			},
+		},
+		BootstrapServers: bootstrapServers,
+	}, nil
+}
+
+func (r Reconciler) finalizeConsumerGroup(ctx context.Context, cg *internalscg.ConsumerGroup) error {
+	dOpts := metav1.DeleteOptions{
+		Preconditions: &metav1.Preconditions{UID: &cg.UID},
+	}
+	err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Delete(ctx, cg.GetName(), dOpts)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to remove consumer group %s/%s: %w", cg.GetNamespace(), cg.GetName(), err)
+	}
+	return nil
+}
+
+func (r *Reconciler) getSubscriptionAnnotations(channel *messagingv1beta1.KafkaChannel, subscriber *v1.SubscriberSpec) (map[string]string, error) {
 	subscriptions, err := r.SubscriptionLister.Subscriptions(channel.GetNamespace()).List(labels.Everything())
 	if err != nil {
-		return "", fmt.Errorf("failed to list subscriptions in namespace %s: %w", channel.GetNamespace(), err)
+		return nil, fmt.Errorf("failed to list subscriptions in namespace %s: %w", channel.GetNamespace(), err)
 	}
 
 	for _, s := range subscriptions {
 		if s.UID == subscriber.UID {
-			return s.Name, nil
+			return s.Annotations, nil
 		}
 	}
 
-	return "", apierrors.NewNotFound(messaging.SchemeGroupVersion.WithResource("subscriptions").GroupResource(), string(subscriber.UID))
-}
-
-// consumerGroup returns a consumerGroup name for the given channel and subscription
-func consumerGroup(channel *messagingv1beta1.KafkaChannel, sub *v1.SubscriberSpec) string {
-	return fmt.Sprintf("kafka.%s.%s.%s", channel.Namespace, channel.Name, string(sub.UID))
-}
-
-func findSubscriptionStatus(kc *messagingv1beta1.KafkaChannel, subUID types.UID) *v1.SubscriberStatus {
-	for _, subStatus := range kc.Status.Subscribers {
-		if subStatus.UID == subUID {
-			return &subStatus
-		}
-	}
-	return nil
+	return nil, apierrors.NewNotFound(messaging.SchemeGroupVersion.WithResource("subscriptions").GroupResource(), string(subscriber.UID))
 }
