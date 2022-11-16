@@ -4,7 +4,7 @@ metadata:
   name: config-kafka-features
   namespace: knative-eventing
   annotations:
-    knative.dev/example-checksum: "76de22c2"
+    knative.dev/example-checksum: "b72f1c08"
 data:
   _example: |-
     ################################
@@ -32,7 +32,7 @@ data:
     # Controls whether the controller should autoscale consumer resources with KEDA
     # 1. Enabled: KEDA autoscaling of consumers will be setup.
     # 2. Disabled: KEDA autoscaling of consumers will not be setup.
-    controller.autoscale: "disabled"
+    controller.autoscaler: "disabled"
   dispatcher.rate-limiter: "disabled"
   dispatcher.ordered-executor-metrics: "disabled"
   controller.autoscaler: "disabled"
