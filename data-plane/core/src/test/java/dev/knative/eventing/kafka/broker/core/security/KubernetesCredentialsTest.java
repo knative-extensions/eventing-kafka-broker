@@ -32,31 +32,21 @@ public class KubernetesCredentialsTest {
 
   @Test
   public void getKubernetesCredentialsFromSecretSaslPlain() {
-    getKubernetesCredentialsFromSecret("PLAIN");
+    getKubernetesCredentialsFromSecretWithSaslMechanism("PLAIN");
   }
 
   @Test
   public void getKubernetesCredentialsFromSecretSaslScram256() {
-    getKubernetesCredentialsFromSecret("SCRAM-SHA-256");
+    getKubernetesCredentialsFromSecretWithSaslMechanism("SCRAM-SHA-256");
   }
 
   @Test
   public void getKubernetesCredentialsFromSecretSaslScram512() {
-    getKubernetesCredentialsFromSecret("SCRAM-SHA-512");
+    getKubernetesCredentialsFromSecretWithSaslMechanism("SCRAM-SHA-512");
   }
 
-  private static void getKubernetesCredentialsFromSecret(final String saslMechanism) {
-    final var data = Map.of(
-      KubernetesCredentials.CA_CERTIFICATE_KEY, "CA_CERT",
-      KubernetesCredentials.USER_CERTIFICATE_KEY, "USER_CERT",
-      KubernetesCredentials.USER_KEY_KEY, "USER_KEY",
-      KubernetesCredentials.SASL_MECHANISM, saslMechanism,
-      KubernetesCredentials.SECURITY_PROTOCOL, SecurityProtocol.SASL_SSL.name,
-      KubernetesCredentials.USERNAME_KEY, "USERNAME",
-      KubernetesCredentials.PASSWORD_KEY, "PASSWORD"
-    );
-
-    final var credentials = new KubernetesCredentials(
+  private static KubernetesCredentials getKubernetesCredentialsFromSecretData(Map<String, String> data) {
+    return new KubernetesCredentials(
       new SecretBuilder()
         .withNewMetadata()
         .withNamespace("ns1")
@@ -67,6 +57,20 @@ public class KubernetesCredentialsTest {
         )
         .build()
     );
+  }
+
+  private static void getKubernetesCredentialsFromSecretWithSaslMechanism(final String saslMechanism) {
+    final var data = Map.of(
+      KubernetesCredentials.CA_CERTIFICATE_KEY, "CA_CERT",
+      KubernetesCredentials.USER_CERTIFICATE_KEY, "USER_CERT",
+      KubernetesCredentials.USER_KEY_KEY, "USER_KEY",
+      KubernetesCredentials.SASL_MECHANISM, saslMechanism,
+      KubernetesCredentials.SECURITY_PROTOCOL, SecurityProtocol.SASL_SSL.name,
+      KubernetesCredentials.USERNAME_KEY, "USERNAME",
+      KubernetesCredentials.PASSWORD_KEY, "PASSWORD"
+    );
+
+    final var credentials = getKubernetesCredentialsFromSecretData(data);
 
     for (int i = 0; i < 2; i++) {
       assertThat(credentials.securityProtocol()).isEqualTo(SecurityProtocol.forName(data.get(KubernetesCredentials.SECURITY_PROTOCOL)));
@@ -75,16 +79,39 @@ public class KubernetesCredentialsTest {
   }
 
   @Test
-  public void getKubernetesCredentialsFromEmptySecret() {
-    kubernetesCredentialsFromInvalidSecret(
-      new SecretBuilder()
-        .withNewMetadata()
-        .withNamespace("ns1")
-        .withName("name1")
-        .endMetadata()
-        .withData(new HashMap<>())
-        .build()
+  public void getKubernetesCredentialsFromSecretTestSkipUserTrue() {
+    final var credentials = getKubernetesCredentialsFromSecretWithSkipUser("true");
+
+    assertThat(credentials.skipClientAuth()).isEqualTo(true);
+  }
+
+  @Test
+  public void getKubernetesCredentialsFromSecretTestSkipUserFalse() {
+    final var credentials = getKubernetesCredentialsFromSecretWithSkipUser("false");
+
+    assertThat(credentials.skipClientAuth()).isEqualTo(false);
+  }
+
+  @Test
+  public void getKubernetesCredentialsFromSecretTestSkipUserEmpty() {
+    final var credentials = getKubernetesCredentialsFromSecretWithSkipUser("");
+
+    assertThat(credentials.skipClientAuth()).isEqualTo(false);
+  }
+
+  private static KubernetesCredentials getKubernetesCredentialsFromSecretWithSkipUser(String skipUser) {
+    final var data = Map.of(
+      KubernetesCredentials.CA_CERTIFICATE_KEY, "CA_CERT",
+      KubernetesCredentials.USER_CERTIFICATE_KEY, "USER_CERT",
+      KubernetesCredentials.USER_KEY_KEY, "USER_KEY",
+      KubernetesCredentials.SASL_MECHANISM, "PLAIN",
+      KubernetesCredentials.SECURITY_PROTOCOL, SecurityProtocol.SASL_SSL.name,
+      KubernetesCredentials.USERNAME_KEY, "USERNAME",
+      KubernetesCredentials.PASSWORD_KEY, "PASSWORD",
+      KubernetesCredentials.USER_SKIP_KEY, skipUser
     );
+
+    return getKubernetesCredentialsFromSecretData(data);
   }
 
   @Test
