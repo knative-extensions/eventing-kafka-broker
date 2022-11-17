@@ -172,19 +172,19 @@ func WithConsumerGroupLabels(labels map[string]string) ConsumerGroupOption {
 
 func ConsumerGroupReplicas(replicas int32) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
-		cg.Spec.Replicas = pointer.Int32Ptr(replicas)
+		cg.Spec.Replicas = pointer.Int32(replicas)
 	}
 }
 
 func ConsumerGroupStatusReplicas(replicas int32) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
-		cg.Status.Replicas = pointer.Int32Ptr(replicas)
+		cg.Status.Replicas = pointer.Int32(replicas)
 	}
 }
 
 func ConsumerGroupReplicasStatus(replicas int32) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
-		cg.Status.Replicas = pointer.Int32Ptr(replicas)
+		cg.Status.Replicas = pointer.Int32(replicas)
 	}
 }
 

@@ -79,14 +79,14 @@ type SacuraTestConfig struct {
 func TestSacuraSinkSourceJob(t *testing.T) {
 	runSacuraTest(t, SacuraTestConfig{
 		Namespace:   "sacura-sink-source",
-		SourceTopic: pointer.StringPtr("sacura-sink-source-topic"),
+		SourceTopic: pointer.String("sacura-sink-source-topic"),
 	})
 }
 
 func TestSacuraBrokerJob(t *testing.T) {
 	runSacuraTest(t, SacuraTestConfig{
 		Namespace:   "sacura",
-		BrokerTopic: pointer.StringPtr("knative-broker-sacura-sink-source-broker"),
+		BrokerTopic: pointer.String("knative-broker-sacura-sink-source-broker"),
 	})
 }
 

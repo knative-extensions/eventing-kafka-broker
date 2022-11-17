@@ -53,7 +53,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 			ctx:  context.Background(),
 			given: &ConsumerGroup{
 				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
+					Replicas: pointer.Int32(1),
 				},
 			},
 			wantErr: true,
@@ -63,7 +63,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 			ctx:  context.Background(),
 			given: &ConsumerGroup{
 				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
+					Replicas: pointer.Int32(1),
 					Selector: map[string]string{"app": "app"},
 				},
 			},
@@ -74,7 +74,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 			ctx:  context.Background(),
 			given: &ConsumerGroup{
 				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
+					Replicas: pointer.Int32(1),
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
@@ -98,7 +98,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 			ctx:  context.Background(),
 			given: &ConsumerGroup{
 				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
+					Replicas: pointer.Int32(1),
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
@@ -119,7 +119,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 			ctx:  context.Background(),
 			given: &ConsumerGroup{
 				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
+					Replicas: pointer.Int32(1),
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
@@ -147,7 +147,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 			ctx:  feature.ToContext(context.Background(), feature.Flags{feature.DeliveryTimeout: feature.Enabled}),
 			given: &ConsumerGroup{
 				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
+					Replicas: pointer.Int32(1),
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
@@ -174,7 +174,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 			ctx:  context.Background(),
 			given: &ConsumerGroup{
 				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
+					Replicas: pointer.Int32(1),
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
@@ -202,7 +202,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 					},
 				},
 				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
+					Replicas: pointer.Int32(1),
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
@@ -226,7 +226,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 					},
 				},
 				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
+					Replicas: pointer.Int32(1),
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
@@ -254,7 +254,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 					},
 				},
 				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
+					Replicas: pointer.Int32(1),
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
@@ -273,7 +273,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 			}),
 			given: &ConsumerGroup{
 				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
+					Replicas: pointer.Int32(1),
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
@@ -301,7 +301,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 					},
 				},
 				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
+					Replicas: pointer.Int32(1),
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{
@@ -325,7 +325,7 @@ func TestConsumerGroup_Validate(t *testing.T) {
 					},
 				},
 				Spec: ConsumerGroupSpec{
-					Replicas: pointer.Int32Ptr(1),
+					Replicas: pointer.Int32(1),
 					Selector: map[string]string{"app": "app"},
 					Template: ConsumerTemplateSpec{
 						Spec: ConsumerSpec{

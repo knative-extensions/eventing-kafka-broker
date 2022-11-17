@@ -126,43 +126,43 @@ func TestDurationMillisFromISO8601String(t *testing.T) {
 	}{
 		{
 			name:         "happy case",
-			backoffDelay: pointer.StringPtr("PT2S"),
+			backoffDelay: pointer.String("PT2S"),
 			defaultDelay: 1000,
 			want:         2000,
 		},
 		{
 			name:         "happy case fractional",
-			backoffDelay: pointer.StringPtr("PT0.2S"),
+			backoffDelay: pointer.String("PT0.2S"),
 			defaultDelay: 1000,
 			want:         200,
 		},
 		{
 			name:         "happy case fractional - 2 decimals",
-			backoffDelay: pointer.StringPtr("PT0.25S"),
+			backoffDelay: pointer.String("PT0.25S"),
 			defaultDelay: 1000,
 			want:         200, // The library we use don't support more than one decimal, it should be 250 though.
 		},
 		{
 			name:         "happy case fractional minutes",
-			backoffDelay: pointer.StringPtr("PT1M0.2S"),
+			backoffDelay: pointer.String("PT1M0.2S"),
 			defaultDelay: 1000,
 			want:         1*60*1000 + 200,
 		},
 		{
 			name:         "milliseconds",
-			backoffDelay: pointer.StringPtr("PT0.001S"),
+			backoffDelay: pointer.String("PT0.001S"),
 			defaultDelay: 1000,
 			want:         0,
 		},
 		{
 			name:         "microseconds",
-			backoffDelay: pointer.StringPtr("PT0.000001S"),
+			backoffDelay: pointer.String("PT0.000001S"),
 			defaultDelay: 1000,
 			want:         0,
 		},
 		{
 			name:         "65 seconds",
-			backoffDelay: pointer.StringPtr("PT65S"),
+			backoffDelay: pointer.String("PT65S"),
 			defaultDelay: 1000,
 			want:         1 * 65 * 1000,
 		},
@@ -276,10 +276,10 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 			parent:   &eventing.KafkaSink{},
 			delivery: &eventingduck.DeliverySpec{
 				DeadLetterSink: &duckv1.Destination{URI: url},
-				Retry:          pointer.Int32Ptr(3),
+				Retry:          pointer.Int32(3),
 				BackoffPolicy:  &exponential,
-				BackoffDelay:   pointer.StringPtr("PT1S"),
-				Timeout:        pointer.StringPtr("PT2S"),
+				BackoffDelay:   pointer.String("PT1S"),
+				Timeout:        pointer.String("PT2S"),
 			},
 			defaultBackoffDelayMs: 0,
 			want: &contract.EgressConfig{
@@ -311,7 +311,7 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 			resolver: resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0)),
 			parent:   &eventing.KafkaSink{},
 			delivery: &eventingduck.DeliverySpec{
-				Timeout: pointer.StringPtr("PT2S"),
+				Timeout: pointer.String("PT2S"),
 			},
 			defaultBackoffDelayMs: 0,
 			want: &contract.EgressConfig{
@@ -325,7 +325,7 @@ func TestEgressConfigFromDelivery(t *testing.T) {
 			resolver: resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0)),
 			parent:   &eventing.KafkaSink{},
 			delivery: &eventingduck.DeliverySpec{
-				Retry:         pointer.Int32Ptr(3),
+				Retry:         pointer.Int32(3),
 				BackoffPolicy: &exponential,
 			},
 			defaultBackoffDelayMs: 100,

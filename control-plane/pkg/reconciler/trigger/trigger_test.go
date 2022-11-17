@@ -2106,10 +2106,10 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 func withDelivery(trigger *eventing.Trigger) {
 	trigger.Spec.Delivery = &eventingduck.DeliverySpec{
 		DeadLetterSink: &duckv1.Destination{URI: url},
-		Retry:          pointer.Int32Ptr(3),
+		Retry:          pointer.Int32(3),
 		BackoffPolicy:  &exponential,
-		BackoffDelay:   pointer.StringPtr("PT1S"),
-		Timeout:        pointer.StringPtr("PT2S"),
+		BackoffDelay:   pointer.String("PT1S"),
+		Timeout:        pointer.String("PT2S"),
 	}
 }
 

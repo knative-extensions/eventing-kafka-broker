@@ -34,7 +34,7 @@ func (cg *ConsumerGroup) SetDefaults(ctx context.Context) {
 	// Replicas is the number of Consumers for this ConsumerGroup.
 	// When unset, set it to 1.
 	if cg.Spec.Replicas == nil {
-		cg.Spec.Replicas = pointer.Int32Ptr(1)
+		cg.Spec.Replicas = pointer.Int32(1)
 	}
 	// Selector is a label query over consumers that should match the Replicas count.
 	// If Selector is empty, it is defaulted to the labels present on the template.

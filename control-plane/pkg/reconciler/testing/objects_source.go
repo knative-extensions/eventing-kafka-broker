@@ -147,7 +147,7 @@ func WithSourceSink(d duckv1.Destination) KRShapedOption {
 func WithSourceConsumers(replicas int32) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		s := obj.(*sources.KafkaSource)
-		s.Spec.Consumers = pointer.Int32Ptr(replicas)
+		s.Spec.Consumers = pointer.Int32(replicas)
 	}
 }
 

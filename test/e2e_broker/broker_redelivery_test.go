@@ -51,7 +51,7 @@ func TestBrokerRedeliveryBrokerV1BackoffLinear(t *testing.T) {
 				resources.WithDeliveryForBroker(&eventingduck.DeliverySpec{
 					Retry:         &numRetries,
 					BackoffPolicy: &backoff,
-					BackoffDelay:  pointer.StringPtr("PT0.2S"),
+					BackoffDelay:  pointer.String("PT0.2S"),
 				}),
 			)
 
@@ -74,7 +74,7 @@ func TestBrokerRedeliveryBrokerV1BackoffExponential(t *testing.T) {
 				resources.WithDeliveryForBroker(&eventingduck.DeliverySpec{
 					Retry:         &numRetries,
 					BackoffPolicy: &backoff,
-					BackoffDelay:  pointer.StringPtr("PT0.2S"),
+					BackoffDelay:  pointer.String("PT0.2S"),
 				}),
 			)
 

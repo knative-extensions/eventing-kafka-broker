@@ -1550,7 +1550,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			Objects: []runtime.Object{
 				NewBroker(
 					WithDelivery(),
-					WithRetry(pointer.Int32Ptr(10), &exponential, pointer.StringPtr("PT2S")),
+					WithRetry(pointer.Int32(10), &exponential, pointer.String("PT2S")),
 				),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
@@ -1597,7 +1597,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				{
 					Object: NewBroker(
 						WithDelivery(),
-						WithRetry(pointer.Int32Ptr(10), &exponential, pointer.StringPtr("PT2S")),
+						WithRetry(pointer.Int32(10), &exponential, pointer.String("PT2S")),
 						reconcilertesting.WithInitBrokerConditions,
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerDataPlaneAvailable,
@@ -1617,7 +1617,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			Objects: []runtime.Object{
 				NewBroker(
 					WithDelivery(),
-					WithRetry(pointer.Int32Ptr(10), &linear, pointer.StringPtr("PT2S")),
+					WithRetry(pointer.Int32(10), &linear, pointer.String("PT2S")),
 				),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
@@ -1664,7 +1664,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				{
 					Object: NewBroker(
 						WithDelivery(),
-						WithRetry(pointer.Int32Ptr(10), &linear, pointer.StringPtr("PT2S")),
+						WithRetry(pointer.Int32(10), &linear, pointer.String("PT2S")),
 						reconcilertesting.WithInitBrokerConditions,
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerDataPlaneAvailable,
@@ -1684,7 +1684,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			Objects: []runtime.Object{
 				NewBroker(
 					WithDelivery(),
-					WithRetry(nil, &linear, pointer.StringPtr("PT2S")),
+					WithRetry(nil, &linear, pointer.String("PT2S")),
 				),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
@@ -1728,7 +1728,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				{
 					Object: NewBroker(
 						WithDelivery(),
-						WithRetry(nil, &linear, pointer.StringPtr("PT2S")),
+						WithRetry(nil, &linear, pointer.String("PT2S")),
 						reconcilertesting.WithInitBrokerConditions,
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerDataPlaneAvailable,
@@ -1748,7 +1748,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			Objects: []runtime.Object{
 				NewBroker(
 					WithDelivery(),
-					WithRetry(pointer.Int32Ptr(10), &linear, nil),
+					WithRetry(pointer.Int32(10), &linear, nil),
 				),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
@@ -1795,7 +1795,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				{
 					Object: NewBroker(
 						WithDelivery(),
-						WithRetry(pointer.Int32Ptr(10), &linear, nil),
+						WithRetry(pointer.Int32(10), &linear, nil),
 						reconcilertesting.WithInitBrokerConditions,
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerDataPlaneAvailable,

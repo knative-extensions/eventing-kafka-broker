@@ -135,7 +135,7 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewBroker(
 					BrokerReady,
-					WithRetry(pointer.Int32Ptr(10), &exponential, pointer.StringPtr("PT2S")),
+					WithRetry(pointer.Int32(10), &exponential, pointer.String("PT2S")),
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
