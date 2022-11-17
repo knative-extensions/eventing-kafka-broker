@@ -87,7 +87,8 @@ class KubernetesCredentials implements Credentials {
         this.skipUser = false;
       } else {
         try {
-          this.skipUser = Boolean.parseBoolean(skip);
+          final var skipAsString = new String(Base64.getDecoder().decode(skip));
+          this.skipUser = Boolean.parseBoolean(skipAsString);
         } catch (final Exception ex) {
           this.skipUser = false;
         }
