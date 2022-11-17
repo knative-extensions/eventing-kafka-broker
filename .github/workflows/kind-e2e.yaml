@@ -41,7 +41,7 @@ jobs:
         # See: https://github.com/kubernetes-sigs/kind/releases/tag/v0.9.0
         include:
           - k8s-version: v1.25.3
-            kind-version: v0.11.1
+            kind-version: v0.17.0
             kind-image-sha: sha256:cd248d1438192f7814fbca8fede13cfe5b9918746dfa12583976158a834fd5c5
           - test-suite: ./test/e2e_channel
             extra-test-flags: -channels=messaging.knative.dev/v1beta1:KafkaChannel
