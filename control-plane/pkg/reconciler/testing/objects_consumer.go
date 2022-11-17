@@ -66,8 +66,8 @@ func NewConsumer(ordinal int, opts ...ConsumerOption) *kafkainternals.Consumer {
 					APIVersion:         kafkainternals.SchemeGroupVersion.String(),
 					Kind:               kafkainternals.ConsumerGroupGroupVersionKind.Kind,
 					Name:               ConsumerGroupName,
-					Controller:         pointer.BoolPtr(true),
-					BlockOwnerDeletion: pointer.BoolPtr(true),
+					Controller:         pointer.Bool(true),
+					BlockOwnerDeletion: pointer.Bool(true),
 				},
 			},
 			Labels: ConsumerLabels,
@@ -341,7 +341,7 @@ func ConsumerGroupAsOwnerRef() metav1.OwnerReference {
 		APIVersion:         kafkainternals.SchemeGroupVersion.String(),
 		Kind:               kafkainternals.ConsumerGroupGroupVersionKind.Kind,
 		Name:               ConsumerGroupName,
-		Controller:         pointer.BoolPtr(true),
-		BlockOwnerDeletion: pointer.BoolPtr(true),
+		Controller:         pointer.Bool(true),
+		BlockOwnerDeletion: pointer.Bool(true),
 	}
 }

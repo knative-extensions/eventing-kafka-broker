@@ -59,10 +59,10 @@ func RunTestKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func
 
 		kss := eventingv1alpha1.KafkaSinkSpec{
 			Topic:             "kafka-sink-" + client.Namespace,
-			NumPartitions:     pointer.Int32Ptr(10),
+			NumPartitions:     pointer.Int32(10),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
 			BootstrapServers:  BootstrapServersPlaintextArr,
-			ContentMode:       pointer.StringPtr(mode),
+			ContentMode:       pointer.String(mode),
 		}
 		for _, opt := range opts {
 			require.Nil(t, opt(&kss))

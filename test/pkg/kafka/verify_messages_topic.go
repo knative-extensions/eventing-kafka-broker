@@ -54,7 +54,7 @@ func VerifyMessagesInTopic(
 			Name:      namespacedName.Name,
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit: pointer.Int32Ptr(2),
+			BackoffLimit: pointer.Int32(2),
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{

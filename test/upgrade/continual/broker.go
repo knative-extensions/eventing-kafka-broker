@@ -150,7 +150,7 @@ func (k kafkaBrokerSut) deployBroker(ctx sut.Context) {
 		}),
 		resources.WithBrokerClassForBroker(k.Broker.Class),
 		resources.WithDeliveryForBroker(&eventingduckv1.DeliverySpec{
-			Retry:         pointer.Int32Ptr(int32(k.RetryCount)),
+			Retry:         pointer.Int32(int32(k.RetryCount)),
 			BackoffPolicy: &k.BackoffPolicy,
 			BackoffDelay:  &k.BackoffDelay,
 		}),

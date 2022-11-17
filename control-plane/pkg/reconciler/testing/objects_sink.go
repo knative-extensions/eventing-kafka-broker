@@ -60,7 +60,7 @@ func NewSink(options ...KRShapedOption) runtime.Object {
 		},
 		Spec: eventing.KafkaSinkSpec{
 			Topic:             SinkTopic(),
-			NumPartitions:     pointer.Int32Ptr(SinkNumPartitions),
+			NumPartitions:     pointer.Int32(SinkNumPartitions),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(SinkReplicationFactor),
 			BootstrapServers:  bootstrapServers,
 		},

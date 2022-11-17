@@ -86,7 +86,7 @@ func BrokerSmokeTest(brokerName, triggerName string) feature.StepFn {
 		trigger.Install(
 			triggerName,
 			brokerName,
-			trigger.WithRetry(3, &backoffPolicy, pointer.StringPtr("PT1S")),
+			trigger.WithRetry(3, &backoffPolicy, pointer.String("PT1S")),
 			trigger.WithSubscriber(svc.AsKReference(sink), ""),
 		),
 		trigger.IsReady(triggerName),

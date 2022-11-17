@@ -56,7 +56,7 @@ func VerifyCommittedOffset(
 			},
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit: pointer.Int32Ptr(2),
+			BackoffLimit: pointer.Int32(2),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{

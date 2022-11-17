@@ -138,7 +138,7 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 
 func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
 
-	cg.Spec.Replicas = pointer.Int32Ptr(0)
+	cg.Spec.Replicas = pointer.Int32(0)
 	err := r.schedule(cg) //de-schedule placements
 
 	if err != nil {
@@ -244,7 +244,7 @@ func (r Reconciler) reconcileConsumersInPlacement(ctx context.Context, cg *kafka
 	expectedSpec := kafkainternals.ConsumerSpec{}
 	cg.Spec.Template.Spec.DeepCopyInto(&expectedSpec)
 
-	expectedSpec.VReplicas = pointer.Int32Ptr(placement.VReplicas)
+	expectedSpec.VReplicas = pointer.Int32(placement.VReplicas)
 
 	if equality.Semantic.DeepDerivative(expectedSpec, c.Spec) {
 		// Consumer is equal to the template.
@@ -276,7 +276,7 @@ func (r Reconciler) createConsumer(ctx context.Context, cg *kafkainternals.Consu
 	c := cg.ConsumerFromTemplate()
 
 	c.Name = r.NameGenerator.GenerateName(cg.GetName() + "-")
-	c.Spec.VReplicas = pointer.Int32Ptr(placement.VReplicas)
+	c.Spec.VReplicas = pointer.Int32(placement.VReplicas)
 	c.Spec.PodBind = &kafkainternals.PodBind{PodName: placement.PodName, PodNamespace: r.SystemNamespace}
 
 	if _, err := r.InternalsClient.Consumers(cg.GetNamespace()).Create(ctx, c, metav1.CreateOptions{}); err != nil {
