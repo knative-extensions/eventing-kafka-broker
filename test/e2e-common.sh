@@ -270,21 +270,21 @@ function delete_chaos() {
 }
 
 function apply_sacura() {
-  ko apply ${KO_FLAGS} -Rf ./test/config/sacura/resources || return $?
+  kubectl apply -Rf ./test/config/sacura/resources || return $?
 
   kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || return $?
   kubectl wait --for=condition=ready --timeout=3m -n sacura trigger/trigger || return $?
 
-  ko apply ${KO_FLAGS} -Rf ./test/config/sacura || return $?
+  kubectl apply -Rf ./test/config/sacura || return $?
 }
 
 function apply_sacura_sink_source() {
-  ko apply ${KO_FLAGS} -Rf ./test/config/sacura-sink-source/resources || return $?
+  kubectl apply -Rf ./test/config/sacura-sink-source/resources || return $?
 
   kubectl wait --for=condition=ready --timeout=3m -n sacura-sink-source kafkasink/sink || return $?
   kubectl wait --for=condition=ready --timeout=3m -n sacura-sink-source kafkasource/source || return $?
 
-  ko apply ${KO_FLAGS} -Rf ./test/config/sacura-sink-source || return $?
+  kubectl apply -Rf ./test/config/sacura-sink-source || return $?
 }
 
 function delete_sacura() {
