@@ -133,6 +133,11 @@ public final class WebClientCloudEventSender implements CloudEventSender {
           if (isRetryableStatusCode(response.statusCode()) && retryCounter < consumerVerticleContext.getEgressConfig().getRetry()) {
             return retry(retryCounter, event);
           }
+          return Future.failedFuture(cause);
+        }
+
+        if (retryCounter < consumerVerticleContext.getEgressConfig().getRetry()) {
+          return retry(retryCounter, event);
         }
 
         return Future.failedFuture(cause);
