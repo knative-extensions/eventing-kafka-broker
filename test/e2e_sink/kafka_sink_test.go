@@ -52,6 +52,10 @@ func TestKafkaSinkV1Alpha1AuthSsl(t *testing.T) {
 	RunTestKafkaSink(t, eventingv1alpha1.ModeStructured, Ssl, withBootstrap(BootstrapServersSslArr), withSecret)
 }
 
+func TestKafkaSinkV1Alpha1AuthTlsNoAuth(t *testing.T) {
+	RunTestKafkaSink(t, eventingv1alpha1.ModeStructured, TlsNoAuth, withBootstrap(BootstrapServersTlsNoAuthArr), withSecret)
+}
+
 func TestKafkaSinkV1Alpha1AuthSaslPlaintextScram512(t *testing.T) {
 	RunTestKafkaSink(t, eventingv1alpha1.ModeStructured, SaslPlaintextScram512, withBootstrap(BootstrapServersSaslPlaintextArr), withSecret)
 }

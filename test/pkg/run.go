@@ -28,6 +28,7 @@ const (
 	// Kafka bootstrap server.
 	BootstrapServersPlaintext     = "my-cluster-kafka-bootstrap.kafka:9092"
 	BootstrapServersSsl           = "my-cluster-kafka-bootstrap.kafka:9093"
+	BootstrapServersTlsNoAuth     = "my-cluster-kafka-bootstrap.kafka:9096"
 	BootstrapServersSaslPlaintext = "my-cluster-kafka-bootstrap.kafka:9095"
 	BootstrapServersSslSaslScram  = "my-cluster-kafka-bootstrap.kafka:9094"
 
@@ -44,6 +45,7 @@ var (
 	// Kafka bootstrap server as array.
 	BootstrapServersPlaintextArr     = []string{BootstrapServersPlaintext}
 	BootstrapServersSslArr           = []string{BootstrapServersSsl}
+	BootstrapServersTlsNoAuthArr     = []string{BootstrapServersTlsNoAuth}
 	BootstrapServersSaslPlaintextArr = []string{BootstrapServersSaslPlaintext}
 	BootstrapServersSslSaslScramArr  = []string{BootstrapServersSslSaslScram}
 )
