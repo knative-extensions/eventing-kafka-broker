@@ -24,13 +24,14 @@ const (
 	// scaler that a particular resource has opted into.
 	AutoscalingClassAnnotation = Autoscaling + "/class"
 
+	// AutoscalingClassDisabledAnnotationValue is the value of the AutoscalingClassAnnotation with
+	// disabled autoscaling.
+	AutoscalingClassDisabledAnnotationValue = "disabled"
+
 	// AutoscalingMinScaleAnnotation is the annotation to specify the minimum number of replicas to scale down to.
 	AutoscalingMinScaleAnnotation = Autoscaling + "/min-scale"
 	// AutoscalingMaxScaleAnnotation is the annotation to specify the maximum number of replicas to scale out to.
 	AutoscalingMaxScaleAnnotation = Autoscaling + "/max-scale"
-
-	// KEDA is Keda autoscaler.
-	KEDA = "keda.autoscaling.knative.dev"
 
 	// AutoscalingPollingIntervalAnnotation is the annotation that refers to the interval in seconds the autoscaler
 	// uses to poll metrics in order to inform its scaling decisions.

@@ -44,7 +44,7 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
+	keda "knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
 	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
@@ -98,7 +98,7 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 	}
 	cg.MarkScheduleSucceeded()
 
-	if r.isKEDAEnabled(ctx, cg.GetNamespace()) {
+	if r.isKEDAEnabled(ctx, cg) {
 		if err := r.reconcileKedaObjects(ctx, cg); err != nil {
 			return cg.MarkAutoscalerFailed("AutoscalerFailed", err)
 		}
@@ -454,18 +454,18 @@ func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals
 			return err
 		}
 
-		triggerAuthentication, secret, err = kedafunc.GenerateTriggerAuthentication(cg, secretData)
+		triggerAuthentication, secret, err = keda.GenerateTriggerAuthentication(cg, secretData)
 		if err != nil {
 			return err
 		}
 	}
 
-	triggers, err := kedafunc.GenerateScaleTriggers(cg, triggerAuthentication)
+	triggers, err := keda.GenerateScaleTriggers(cg, triggerAuthentication)
 	if err != nil {
 		return err
 	}
 
-	scaledObject, err := kedafunc.GenerateScaledObject(cg, cg.GetGroupVersionKind(), kedafunc.GenerateScaleTarget(cg), triggers)
+	scaledObject, err := keda.GenerateScaledObject(cg, cg.GetGroupVersionKind(), keda.GenerateScaleTarget(cg), triggers)
 	if err != nil {
 		return err
 	}
@@ -580,14 +580,14 @@ func (r *Reconciler) reconcileSecret(ctx context.Context, expectedSecret *corev1
 	return nil
 }
 
-func (r *Reconciler) isKEDAEnabled(ctx context.Context, namespace string) bool {
+func (r *Reconciler) isKEDAEnabled(ctx context.Context, cg *kafkainternals.ConsumerGroup) bool {
 	// TODO: code below failing unit tests with err: "panic: interface conversion: testing.ActionImpl is not testing.GetAction: missing method GetName"
 	/*if err := discovery.ServerSupportsVersion(r.KubeClient.Discovery(), keda.KedaSchemeGroupVersion); err == nil {
 		 return true
 	 }*/
 
-	if r.KafkaFeatureFlags.IsControllerAutoscalerEnabled() {
-		if _, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace).List(ctx, metav1.ListOptions{}); err != nil {
+	if r.KafkaFeatureFlags.IsControllerAutoscalerEnabled() && keda.IsEnabled(cg) {
+		if _, err := r.KedaClient.KedaV1alpha1().ScaledObjects(cg.GetNamespace()).List(ctx, metav1.ListOptions{}); err != nil {
 			logging.FromContext(ctx).Debug("KEDA not installed, failed to list ScaledObjects")
 			return false
 		}
@@ -598,4 +598,5 @@ func (r *Reconciler) isKEDAEnabled(ctx context.Context, namespace string) bool {
 
 var (
 	_ consumergroup.Interface = &Reconciler{}
+	_ consumergroup.Finalizer = &Reconciler{}
 )
