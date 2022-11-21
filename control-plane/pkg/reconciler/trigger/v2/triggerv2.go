@@ -39,15 +39,14 @@ import (
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
 	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
 	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-
-	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 const (
