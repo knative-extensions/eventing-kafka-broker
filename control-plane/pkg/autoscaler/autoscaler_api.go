@@ -49,10 +49,16 @@ const (
 	// current consumer group that's used for activation (0<->1)
 	AutoscalingActivationLagThreshold = Autoscaling + "/activation-lag-threshold"
 
+	// DefaultPollingInterval is the default value for AutoscalingPollingIntervalAnnotation.
 	DefaultPollingInterval        = 30
+	// DefaultCooldownPeriod is the default value for AutoscalingCooldownPeriodAnnotation.
 	DefaultCooldownPeriod         = 300
+	// DefaultMinReplicaCount is the default value for AutoscalingMinScaleAnnotation
 	DefaultMinReplicaCount        = 0
+	// DefaultMaxReplicaCount is the default value for AutoscalingMaxScaleAnnotation.
 	DefaultMaxReplicaCount        = 50
+	// DefaultLagThreshold is the default value for AutoscalingLagThreshold.
 	DefaultLagThreshold           = 10
+	// DefaultActivationLagThreshold is the default value for AutoscalingActivationLagThreshold.
 	DefaultActivationLagThreshold = 1
 )
