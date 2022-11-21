@@ -262,11 +262,11 @@ func setAnnotation(objAnnotations map[string]string, key string, cgAnnotations m
 }
 
 func IsEnabled(cg *kafkainternals.ConsumerGroup) bool {
-	v, _ := cg.GetAnnotations()[autoscaler.AutoscalingClassAnnotation]
-	if v == autoscaler.AutoscalingClassDisabledAnnotationValue {
+	v, ok := cg.GetAnnotations()[autoscaler.AutoscalingClassAnnotation]
+	if ok && v == autoscaler.AutoscalingClassDisabledAnnotationValue {
 		return false
 	}
-	if len(v) > 0 && v != AutoscalerClass {
+	if ok && len(v) > 0 && v != AutoscalerClass {
 		return false
 	}
 	return true
