@@ -134,6 +134,68 @@ public class WebClientCloudEventSenderTest {
 
     sender.close().onSuccess(v -> context.completeNow());
   }
+  
+  @Test
+  @Timeout(value = 20000)
+  public void shouldNotRetry(final Vertx vertx, final VertxTestContext context) throws ExecutionException, InterruptedException {
+
+    final var port = 12345;
+    final var retry = 5;
+    final var event = CloudEventBuilder.v1()
+      .withId(UUID.randomUUID().toString())
+      .withSource(URI.create("/api/v1/orders"))
+      .withType("dev.knative.eventing.created")
+      .build();
+
+    final var counter = new LongAdder();
+
+    vertx.createHttpServer()
+      .requestHandler(r -> {
+        if (r.getHeader("Ce-Id").equalsIgnoreCase(event.getId())) {
+          counter.increment();
+        }
+
+        r.response().setStatusCode(400).end();
+      })
+      .listen(port, "localhost")
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get();
+
+    final var sender = new WebClientCloudEventSender(
+      vertx,
+      WebClient.create(vertx),
+      "http://localhost:" + port,
+      FakeConsumerVerticleContext.get(
+        FakeConsumerVerticleContext.get().getResource(),
+        DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
+          .setEgressConfig(
+            DataPlaneContract.EgressConfig.newBuilder()
+              .setBackoffDelay(100L)
+              .setTimeout(1000L)
+              .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+              .setRetry(retry)
+              .build()
+          )
+          .build()
+      )
+    );
+
+    final var success = new AtomicBoolean(true);
+
+    sender.send(event)
+      .onFailure(t -> success.set(false))
+      .onSuccess(v -> success.set(true));
+
+    await().untilFalse(success);
+    await().untilAdder(counter, is(equalTo(1L)));
+
+    // Verify that after some time counter is still equal to 1.
+    Thread.sleep(10000L);
+    await().untilAdder(counter, is(equalTo(1L)));
+
+    sender.close().onSuccess(v -> context.completeNow());
+  }
 
   @Test
   @Timeout(value = 20000)
