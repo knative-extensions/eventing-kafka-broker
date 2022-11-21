@@ -39,6 +39,7 @@ import (
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
+	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing/pkg/scheduler"
 
@@ -75,6 +76,7 @@ type Reconciler struct {
 	ConfigMapLister corelisters.ConfigMapLister
 	PodLister       corelisters.PodLister
 	KubeClient      kubernetes.Interface
+	Resolver        *resolver.URIResolver
 
 	NameGenerator names.NameGenerator
 
@@ -120,7 +122,7 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 		return err
 	}
 
-	errCondition, err := r.propagateStatus(cg)
+	errCondition, err := r.propagateStatus(ctx, cg)
 	if err != nil {
 		return cg.MarkReconcileConsumersFailed("PropagateConsumerStatus", err)
 	}
@@ -385,7 +387,7 @@ func (r Reconciler) joinConsumersByPlacement(placements []eventingduckv1alpha1.P
 	return placementConsumers
 }
 
-func (r Reconciler) propagateStatus(cg *kafkainternals.ConsumerGroup) (*apis.Condition, error) {
+func (r Reconciler) propagateStatus(ctx context.Context, cg *kafkainternals.ConsumerGroup) (*apis.Condition, error) {
 	consumers, err := r.ConsumerLister.Consumers(cg.GetNamespace()).List(labels.SelectorFromSet(cg.Spec.Selector))
 	if err != nil {
 		return nil, fmt.Errorf("failed to list consumers for selector %+v: %w", cg.Spec.Selector, err)
@@ -413,6 +415,14 @@ func (r Reconciler) propagateStatus(cg *kafkainternals.ConsumerGroup) (*apis.Con
 		}
 	}
 	cg.Status.Replicas = pointer.Int32(count)
+
+	if cg.Spec.Replicas != nil && *cg.Spec.Replicas == 0 {
+		subscriber, err := r.Resolver.URIFromDestinationV1(ctx, cg.Spec.Template.Spec.Subscriber, cg)
+		if err != nil {
+			return condition, fmt.Errorf("failed to resolve subscriber URI: %w", err)
+		}
+		cg.Status.SubscriberURI = subscriber
+	}
 
 	return condition, nil
 }

@@ -44,6 +44,7 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
 
 	statefulsetscheduler "knative.dev/eventing/pkg/scheduler/statefulset"
@@ -128,6 +129,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	consumerGroupInformer := consumergroup.Get(ctx)
 
 	impl := cgreconciler.NewImpl(ctx, r)
+
+	r.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
 	configStore := config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
 		r.KafkaFeatureFlags.Reset(value)
