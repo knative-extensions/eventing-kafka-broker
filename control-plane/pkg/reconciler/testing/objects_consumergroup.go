@@ -27,7 +27,8 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
 )
 
 const (
@@ -70,13 +71,13 @@ var (
 	}
 
 	ConsumerGroupAnnotations = map[string]string{
-		keda.AutoscalingClassAnnotation:                 keda.KEDA,
-		keda.AutoscalingMinScaleAnnotation:              "0",
-		keda.AutoscalingMaxScaleAnnotation:              "5",
-		keda.KedaAutoscalingPollingIntervalAnnotation:   "30",
-		keda.KedaAutoscalingCooldownPeriodAnnotation:    "300",
-		keda.KedaAutoscalingKafkaLagThreshold:           "10",
-		keda.KedaAutoscalingKafkaActivationLagThreshold: "1",
+		autoscaler.AutoscalingClassAnnotation:           keda.AutoscalerClass,
+		autoscaler.AutoscalingMinScaleAnnotation:        "0",
+		autoscaler.AutoscalingMaxScaleAnnotation:        "5",
+		autoscaler.AutoscalingPollingIntervalAnnotation: "30",
+		autoscaler.AutoscalingCooldownPeriodAnnotation:  "300",
+		autoscaler.AutoscalingLagThreshold:              "10",
+		autoscaler.AutoscalingActivationLagThreshold:    "1",
 	}
 )
 

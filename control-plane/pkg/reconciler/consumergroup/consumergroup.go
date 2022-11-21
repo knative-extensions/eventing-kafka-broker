@@ -44,13 +44,12 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
 	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/typed/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
 
-	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
 	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
 	kedaclientset "knative.dev/eventing-kafka-broker/third_party/pkg/client/clientset/versioned"
 )
@@ -466,7 +465,7 @@ func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals
 		return err
 	}
 
-	scaledObject, err := keda.GenerateScaledObject(cg, cg.GetGroupVersionKind(), kedafunc.GenerateScaleTarget(cg), triggers)
+	scaledObject, err := kedafunc.GenerateScaledObject(cg, cg.GetGroupVersionKind(), kedafunc.GenerateScaleTarget(cg), triggers)
 	if err != nil {
 		return err
 	}

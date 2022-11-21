@@ -22,9 +22,11 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
 	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	"knative.dev/pkg/kmeta"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler"
+	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -32,8 +34,8 @@ import (
 )
 
 const (
-	defaultKafkaLagThreshold           = 10
-	defaultKafkaActivationLagThreshold = 0
+	// AutoscalerClass is the KEDA autoscaler class.
+	AutoscalerClass = "keda.autoscaling.knative.dev"
 )
 
 func GenerateScaleTarget(cg *kafkainternals.ConsumerGroup) *kedav1alpha1.ScaleTarget {
@@ -45,16 +47,16 @@ func GenerateScaleTarget(cg *kafkainternals.ConsumerGroup) *kedav1alpha1.ScaleTa
 }
 
 func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthentication *kedav1alpha1.TriggerAuthentication) ([]kedav1alpha1.ScaleTriggers, error) {
-	triggers := []kedav1alpha1.ScaleTriggers{}
+	triggers := make([]kedav1alpha1.ScaleTriggers, 0, len(cg.Spec.Template.Spec.Topics))
 	bootstrapServers := cg.Spec.Template.Spec.Configs.Configs[kafka.BootstrapServersConfigMapKey]
 	consumerGroup := cg.Spec.Template.Spec.Configs.Configs[kafka.GroupIDConfigMapKey]
 
-	lagThreshold, err := GetInt32ValueFromMap(cg.Annotations, KedaAutoscalingKafkaLagThreshold, defaultKafkaLagThreshold)
+	lagThreshold, err := GetInt32ValueFromMap(cg.Annotations, autoscaler.AutoscalingLagThreshold, autoscaler.DefaultLagThreshold)
 	if err != nil {
 		return nil, err
 	}
 
-	activationLagThreshold, err := GetInt32ValueFromMap(cg.Annotations, KedaAutoscalingKafkaActivationLagThreshold, defaultKafkaActivationLagThreshold)
+	activationLagThreshold, err := GetInt32ValueFromMap(cg.Annotations, autoscaler.AutoscalingActivationLagThreshold, autoscaler.DefaultActivationLagThreshold)
 	if err != nil {
 		return nil, err
 	}
@@ -236,25 +238,25 @@ func addAuthSecretTargetRef(parameter string, secretKeyRef v1beta1.SecretValueFr
 	return secretTargetRefs
 }
 
-func SetAutoscalingAnnotations(objannotations map[string]string) map[string]string {
-	if objannotations != nil {
-		cgannotations := map[string]string{}
-		setAnnotation(objannotations, AutoscalingClassAnnotation, cgannotations)
-		setAnnotation(objannotations, AutoscalingMinScaleAnnotation, cgannotations)
-		setAnnotation(objannotations, AutoscalingMaxScaleAnnotation, cgannotations)
-		setAnnotation(objannotations, KedaAutoscalingPollingIntervalAnnotation, cgannotations)
-		setAnnotation(objannotations, KedaAutoscalingCooldownPeriodAnnotation, cgannotations)
-		setAnnotation(objannotations, KedaAutoscalingKafkaLagThreshold, cgannotations)
-		setAnnotation(objannotations, KedaAutoscalingKafkaActivationLagThreshold, cgannotations)
-		return cgannotations
+func SetAutoscalingAnnotations(objAnnotations map[string]string) map[string]string {
+	if objAnnotations != nil {
+		cgAnnotations := make(map[string]string, len(objAnnotations))
+		setAnnotation(objAnnotations, autoscaler.AutoscalingClassAnnotation, cgAnnotations)
+		setAnnotation(objAnnotations, autoscaler.AutoscalingMinScaleAnnotation, cgAnnotations)
+		setAnnotation(objAnnotations, autoscaler.AutoscalingMaxScaleAnnotation, cgAnnotations)
+		setAnnotation(objAnnotations, autoscaler.AutoscalingPollingIntervalAnnotation, cgAnnotations)
+		setAnnotation(objAnnotations, autoscaler.AutoscalingCooldownPeriodAnnotation, cgAnnotations)
+		setAnnotation(objAnnotations, autoscaler.AutoscalingLagThreshold, cgAnnotations)
+		setAnnotation(objAnnotations, autoscaler.AutoscalingActivationLagThreshold, cgAnnotations)
+		return cgAnnotations
 	}
 	return nil
 }
 
-func setAnnotation(objannotations map[string]string, key string, cgannotations map[string]string) {
-	value, ok := objannotations[key]
+func setAnnotation(objAnnotations map[string]string, key string, cgAnnotations map[string]string) {
+	value, ok := objAnnotations[key]
 	if !ok || value == "" {
 		return
 	}
-	cgannotations[key] = value
+	cgAnnotations[key] = value
 }

@@ -49,6 +49,7 @@ import (
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/reconciler"
 
+	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -65,7 +66,6 @@ import (
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 
-	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/keda"
 	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1"
 )
 

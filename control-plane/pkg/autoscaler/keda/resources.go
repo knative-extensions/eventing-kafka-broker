@@ -22,14 +22,9 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
-)
 
-const (
-	defaultPollingInterval = 30
-	defaultCooldownPeriod  = 300
-	defaultMinReplicaCount = 0
-	defaultMaxReplicaCount = 50
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler"
+	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
 )
 
 var (
@@ -38,26 +33,26 @@ var (
 
 func GenerateScaledObject(obj metav1.Object, gvk schema.GroupVersionKind, scaleTarget *kedav1alpha1.ScaleTarget, triggers []kedav1alpha1.ScaleTriggers) (*kedav1alpha1.ScaledObject, error) {
 
-	cooldownPeriod, err := GetInt32ValueFromMap(obj.GetAnnotations(), KedaAutoscalingCooldownPeriodAnnotation, defaultCooldownPeriod)
+	cooldownPeriod, err := GetInt32ValueFromMap(obj.GetAnnotations(), autoscaler.AutoscalingCooldownPeriodAnnotation, autoscaler.DefaultCooldownPeriod)
 	if err != nil {
 		return nil, err
 	}
-	pollingInterval, err := GetInt32ValueFromMap(obj.GetAnnotations(), KedaAutoscalingPollingIntervalAnnotation, defaultPollingInterval)
+	pollingInterval, err := GetInt32ValueFromMap(obj.GetAnnotations(), autoscaler.AutoscalingPollingIntervalAnnotation, autoscaler.DefaultPollingInterval)
 	if err != nil {
 		return nil, err
 	}
-	minReplicaCount, err := GetInt32ValueFromMap(obj.GetAnnotations(), AutoscalingMinScaleAnnotation, defaultMinReplicaCount)
+	minReplicaCount, err := GetInt32ValueFromMap(obj.GetAnnotations(), autoscaler.AutoscalingMinScaleAnnotation, autoscaler.DefaultMinReplicaCount)
 	if err != nil {
 		return nil, err
 	}
-	maxReplicaCount, err := GetInt32ValueFromMap(obj.GetAnnotations(), AutoscalingMaxScaleAnnotation, defaultMaxReplicaCount)
+	maxReplicaCount, err := GetInt32ValueFromMap(obj.GetAnnotations(), autoscaler.AutoscalingMaxScaleAnnotation, autoscaler.DefaultMaxReplicaCount)
 	if err != nil {
 		return nil, err
 	}
 
 	return &kedav1alpha1.ScaledObject{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      generateScaledObjectName(obj),
+			Name:      GenerateScaledObjectName(obj),
 			Namespace: obj.GetNamespace(),
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(obj, gvk),
@@ -74,7 +69,7 @@ func GenerateScaledObject(obj metav1.Object, gvk schema.GroupVersionKind, scaleT
 	}, nil
 }
 
-func generateScaledObjectName(obj metav1.Object) string {
+func GenerateScaledObjectName(obj metav1.Object) string {
 	return fmt.Sprintf("so-%s", string(obj.GetUID()))
 }
 
