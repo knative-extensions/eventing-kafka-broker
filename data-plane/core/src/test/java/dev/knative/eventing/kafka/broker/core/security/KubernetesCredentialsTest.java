@@ -31,75 +31,58 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class KubernetesCredentialsTest {
 
   @Test
-  public void getKubernetesCredentialsFromSecretSaslPlain() {
-    getKubernetesCredentialsFromSecret("PLAIN");
+  public void getKubernetesCredentialsSaslMechanismPlain() {
+    testGetKubernetesCredentialsForSaslMechanism("PLAIN");
   }
 
   @Test
-  public void getKubernetesCredentialsFromSecretSaslScram256() {
-    getKubernetesCredentialsFromSecret("SCRAM-SHA-256");
+  public void getKubernetesCredentialsSaslMechanismScram256() {
+    testGetKubernetesCredentialsForSaslMechanism("SCRAM-SHA-256");
   }
 
   @Test
-  public void getKubernetesCredentialsFromSecretSaslScram512() {
-    getKubernetesCredentialsFromSecret("SCRAM-SHA-512");
+  public void getKubernetesCredentialsSaslMechanismScram512() {
+    testGetKubernetesCredentialsForSaslMechanism("SCRAM-SHA-512");
   }
 
-  private static void getKubernetesCredentialsFromSecret(final String saslMechanism) {
-    final var data = Map.of(
-      KubernetesCredentials.CA_CERTIFICATE_KEY, "CA_CERT",
-      KubernetesCredentials.USER_CERTIFICATE_KEY, "USER_CERT",
-      KubernetesCredentials.USER_KEY_KEY, "USER_KEY",
-      KubernetesCredentials.SASL_MECHANISM, saslMechanism,
-      KubernetesCredentials.SECURITY_PROTOCOL, SecurityProtocol.SASL_SSL.name,
-      KubernetesCredentials.USERNAME_KEY, "USERNAME",
-      KubernetesCredentials.PASSWORD_KEY, "PASSWORD"
-    );
+  @Test
+  public void getKubernetesCredentialsSkipUserTrue() {
+    final var credentials = getKubernetesCredentialsFromSecretWithSkipUser("true");
 
-    final var credentials = new KubernetesCredentials(
-      new SecretBuilder()
-        .withNewMetadata()
-        .withNamespace("ns1")
-        .withName("name1")
-        .endMetadata()
-        .withData(
-          base64(data)
-        )
-        .build()
-    );
+    assertThat(credentials.skipClientAuth()).isEqualTo(true);
+  }
 
-    for (int i = 0; i < 2; i++) {
-      assertThat(credentials.securityProtocol()).isEqualTo(SecurityProtocol.forName(data.get(KubernetesCredentials.SECURITY_PROTOCOL)));
-      assertAll(data, credentials);
-    }
+  @Test
+  public void getKubernetesCredentialsSkipUserFalse() {
+    final var credentials = getKubernetesCredentialsFromSecretWithSkipUser("false");
+
+    assertThat(credentials.skipClientAuth()).isEqualTo(false);
+  }
+
+  @Test
+  public void getKubernetesCredentialsSkipUserEmpty() {
+    final var credentials = getKubernetesCredentialsFromSecretWithSkipUser("");
+
+    assertThat(credentials.skipClientAuth()).isEqualTo(false);
   }
 
   @Test
   public void getKubernetesCredentialsFromEmptySecret() {
-    kubernetesCredentialsFromInvalidSecret(
-      new SecretBuilder()
-        .withNewMetadata()
-        .withNamespace("ns1")
-        .withName("name1")
-        .endMetadata()
-        .withData(new HashMap<>())
-        .build()
-    );
+    final var credentials = getKubernetesCredentialsFromSecretData(new HashMap<>());
+
+    assertThat(credentials.securityProtocol()).isNull();
+    assertAll(new HashMap<>(), credentials);
   }
 
   @Test
   public void getKubernetesCredentialsFromNullSecret() {
-    kubernetesCredentialsFromInvalidSecret(null);
+    Secret secret = null;
+    final var credentials = new KubernetesCredentials(secret);;
+
+    assertThat(credentials.securityProtocol()).isNull();
+    assertAll(new HashMap<>(), credentials);
   }
 
-  private static void kubernetesCredentialsFromInvalidSecret(final Secret secret) {
-    final var credentials = new KubernetesCredentials(secret);
-
-    for (int i = 0; i < 2; i++) {
-      assertThat(credentials.securityProtocol()).isNull();
-      assertAll(new HashMap<>(), credentials);
-    }
-  }
 
   @Test
   public void getKubernetesCredentialsFromNullSecretData() {
@@ -112,29 +95,23 @@ public class KubernetesCredentialsTest {
         .build()
     );
 
-    for (int i = 0; i < 2; i++) {
-      assertThat(credentials.securityProtocol()).isNull();
-      assertAll(new HashMap<>(), credentials);
-    }
-  }
-
-  private static void assertAll(final Map<String, String> data, final KubernetesCredentials credentials) {
-    assertThat(credentials.SASLMechanism()).isEqualTo(data.get(KubernetesCredentials.SASL_MECHANISM));
-    assertThat(credentials.caCertificates()).isEqualTo(data.get(KubernetesCredentials.CA_CERTIFICATE_KEY));
-    assertThat(credentials.userCertificate()).isEqualTo(data.get(KubernetesCredentials.USER_CERTIFICATE_KEY));
-    assertThat(credentials.userKey()).isEqualTo(data.get(KubernetesCredentials.USER_KEY_KEY));
-    assertThat(credentials.SASLUsername()).isEqualTo(data.get(KubernetesCredentials.USERNAME_KEY));
-    assertThat(credentials.SASLPassword()).isEqualTo(data.get(KubernetesCredentials.PASSWORD_KEY));
+    assertThat(credentials.securityProtocol()).isNull();
+    assertAll(new HashMap<>(), credentials);
   }
 
   @Test
   public void unknownSecurityProtocolReturnsNull() {
-
     final var data = Map.of(
       KubernetesCredentials.SECURITY_PROTOCOL, "SASSO_PLAINTEXT"
     );
 
-    final var credentials = new KubernetesCredentials(
+    final var credentials = getKubernetesCredentialsFromSecretData(data);
+
+    assertThat(credentials.securityProtocol()).isNull();
+  }
+
+  private static KubernetesCredentials getKubernetesCredentialsFromSecretData(Map<String, String> data) {
+    return new KubernetesCredentials(
       new SecretBuilder()
         .withNewMetadata()
         .withNamespace("ns1")
@@ -145,10 +122,43 @@ public class KubernetesCredentialsTest {
         )
         .build()
     );
+  }
 
-    for (int i = 0; i < 2; i++) {
-      assertThat(credentials.securityProtocol()).isNull();
-    }
+  private static Map<String, String> getKubernetesCredentialsSecretDataForSaslMechanism(final String saslMechanism) {
+    return Map.of(
+      KubernetesCredentials.SASL_MECHANISM, saslMechanism
+    );
+  }
+
+  private static void testGetKubernetesCredentialsForSaslMechanism(final String saslMechanism) {
+    final var data = getKubernetesCredentialsSecretDataForSaslMechanism(saslMechanism);
+    final var credentials = getKubernetesCredentialsFromSecretData(data);
+
+    assertThat(credentials.SASLMechanism()).isEqualTo(saslMechanism);
+  }
+
+  private static KubernetesCredentials getKubernetesCredentialsFromSecretWithSkipUser(String skipUser) {
+    final var data = Map.of(
+      KubernetesCredentials.CA_CERTIFICATE_KEY, "CA_CERT",
+      KubernetesCredentials.USER_CERTIFICATE_KEY, "USER_CERT",
+      KubernetesCredentials.USER_KEY_KEY, "USER_KEY",
+      KubernetesCredentials.SASL_MECHANISM, "PLAIN",
+      KubernetesCredentials.SECURITY_PROTOCOL, SecurityProtocol.SASL_SSL.name,
+      KubernetesCredentials.USERNAME_KEY, "USERNAME",
+      KubernetesCredentials.PASSWORD_KEY, "PASSWORD",
+      KubernetesCredentials.USER_SKIP_KEY, skipUser
+    );
+
+    return getKubernetesCredentialsFromSecretData(data);
+  }
+
+  private static void assertAll(final Map<String, String> data, final KubernetesCredentials credentials) {
+    assertThat(credentials.SASLMechanism()).isEqualTo(data.get(KubernetesCredentials.SASL_MECHANISM));
+    assertThat(credentials.caCertificates()).isEqualTo(data.get(KubernetesCredentials.CA_CERTIFICATE_KEY));
+    assertThat(credentials.userCertificate()).isEqualTo(data.get(KubernetesCredentials.USER_CERTIFICATE_KEY));
+    assertThat(credentials.userKey()).isEqualTo(data.get(KubernetesCredentials.USER_KEY_KEY));
+    assertThat(credentials.SASLUsername()).isEqualTo(data.get(KubernetesCredentials.USERNAME_KEY));
+    assertThat(credentials.SASLPassword()).isEqualTo(data.get(KubernetesCredentials.PASSWORD_KEY));
   }
 
   private static Map<String, String> base64(Map<String, String> data) {
