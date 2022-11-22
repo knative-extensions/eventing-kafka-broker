@@ -58,7 +58,7 @@ const (
 	// DefaultMaxReplicaCount is the default value for AutoscalingMaxScaleAnnotation.
 	DefaultMaxReplicaCount = 50
 	// DefaultLagThreshold is the default value for AutoscalingLagThreshold.
-	DefaultLagThreshold = 10
+	DefaultLagThreshold = 100
 	// DefaultActivationLagThreshold is the default value for AutoscalingActivationLagThreshold.
 	DefaultActivationLagThreshold = 1
 )
