@@ -50,7 +50,7 @@ const (
 	AutoscalingActivationLagThreshold = Autoscaling + "/activation-lag-threshold"
 
 	// DefaultPollingInterval is the default value for AutoscalingPollingIntervalAnnotation.
-	DefaultPollingInterval = 30
+	DefaultPollingInterval = 10
 	// DefaultCooldownPeriod is the default value for AutoscalingCooldownPeriodAnnotation.
 	DefaultCooldownPeriod = 300
 	// DefaultMinReplicaCount is the default value for AutoscalingMinScaleAnnotation
