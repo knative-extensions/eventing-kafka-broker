@@ -206,21 +206,21 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, secretData 
 }
 
 func retrieveSaslTypeIfPresent(cg *kafkainternals.ConsumerGroup, secret corev1.Secret) *string {
-	var saslType string
-
 	if cg.Spec.Template.Spec.Auth.NetSpec != nil && cg.Spec.Template.Spec.Auth.NetSpec.SASL.Enable && cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef != nil {
 		secretKeyRefKey := cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef.Key
 		if saslTypeValue, ok := secret.Data[secretKeyRefKey]; ok {
-			saslType = string(saslTypeValue)
+			saslType := string(saslTypeValue)
+			return &saslType
 		}
 	}
 
 	if cg.Spec.Template.Spec.Auth.SecretSpec != nil && cg.Spec.Template.Spec.Auth.SecretSpec.Ref != nil {
 		if saslTypeValue, ok := secret.Data[security.SaslType]; ok {
-			saslType = string(saslTypeValue)
+			saslType := string(saslTypeValue)
+			return &saslType
 		}
 	}
-	return &saslType
+	return nil
 }
 
 func addAuthSecretTargetRef(parameter string, secretKeyRef v1beta1.SecretValueFromSource, secretTargetRefs []kedav1alpha1.AuthSecretTargetRef) []kedav1alpha1.AuthSecretTargetRef {
