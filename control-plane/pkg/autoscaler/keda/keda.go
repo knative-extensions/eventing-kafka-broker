@@ -210,8 +210,7 @@ func retrieveSaslTypeIfPresent(cg *kafkainternals.ConsumerGroup, secret corev1.S
 	if cg.Spec.Template.Spec.Auth.NetSpec != nil && cg.Spec.Template.Spec.Auth.NetSpec.SASL.Enable && cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef != nil {
 		secretKeyRefKey := cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type.SecretKeyRef.Key
 		if saslTypeValue, ok := secret.Data[secretKeyRefKey]; ok {
-			saslType := string(saslTypeValue)
-			return pointer.String(saslType)
+			return pointer.String(string(saslTypeValue))
 		}
 	}
 
