@@ -37,7 +37,9 @@ import (
 	"knative.dev/eventing/pkg/scheduler"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	nodeinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/node"
+	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -98,17 +100,19 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		DeSchedulerPolicy: schedulerPolicyFromConfigMapOrFail(ctx, env.DeSchedulerPolicyConfigMap),
 	}
 
-	schedulers := map[string]scheduler.Scheduler{
+	schedulers := map[string]Scheduler{
 		KafkaSourceScheduler: createKafkaScheduler(ctx, c, kafkainternals.SourceStatefulSetName),
 		//KafkaTriggerScheduler: createKafkaScheduler(ctx, c, kafkainternals.BrokerStatefulSetName), //To be added with trigger/v2 reconciler version only
 		//KafkaChannelScheduler: createKafkaScheduler(ctx, c, kafkainternals.ChannelStatefulSetName), //To be added with channel/v2 reconciler version only
 	}
 
 	r := &Reconciler{
-		SchedulerFunc:              func(s string) scheduler.Scheduler { return schedulers[strings.ToLower(s)] },
+		SchedulerFunc:              func(s string) Scheduler { return schedulers[strings.ToLower(s)] },
 		ConsumerLister:             consumer.Get(ctx).Lister(),
 		InternalsClient:            internalsclient.Get(ctx).InternalV1alpha1(),
 		SecretLister:               secretinformer.Get(ctx).Lister(),
+		ConfigMapLister:            configmapinformer.Get(ctx).Lister(),
+		PodLister:                  podinformer.Get(ctx).Lister(),
 		KubeClient:                 kubeclient.Get(ctx),
 		NameGenerator:              names.SimpleNameGenerator,
 		NewKafkaClient:             sarama.NewClient,
@@ -167,7 +171,7 @@ func enqueueConsumerGroupFromConsumer(enqueue func(name types.NamespacedName)) f
 	}
 }
 
-func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string) scheduler.Scheduler {
+func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string) Scheduler {
 	lister := consumergroup.Get(ctx).Lister()
 	return createStatefulSetScheduler(
 		ctx,
@@ -212,8 +216,8 @@ func getSelectorLabel(ssName string) map[string]string {
 	return selectorLabel
 }
 
-func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister scheduler.VPodLister) scheduler.Scheduler {
-	return statefulsetscheduler.NewScheduler(
+func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister scheduler.VPodLister) Scheduler {
+	ss := statefulsetscheduler.NewScheduler(
 		ctx,
 		system.Namespace(),
 		c.StatefulSetName,
@@ -226,6 +230,11 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 		c.SchedulerPolicy,
 		c.DeSchedulerPolicy,
 	)
+
+	return Scheduler{
+		Scheduler:       ss,
+		SchedulerConfig: c,
+	}
 }
 
 // schedulerPolicyFromConfigMapOrFail reads predicates and priorities data from configMap
