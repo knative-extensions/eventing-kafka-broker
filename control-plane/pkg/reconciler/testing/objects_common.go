@@ -40,7 +40,7 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kafkaeventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
@@ -497,7 +497,7 @@ func NewDispatcherPod(name string, options ...PodOption) *corev1.Pod {
 		},
 		Spec: corev1.PodSpec{
 			Volumes: []corev1.Volume{{
-				Name: kafkainternals.DispatcherVolumeName,
+				Name: kafkaeventing.DispatcherVolumeName,
 				VolumeSource: corev1.VolumeSource{
 					ConfigMap: &corev1.ConfigMapVolumeSource{
 						LocalObjectReference: corev1.LocalObjectReference{
@@ -514,6 +514,21 @@ func NewDispatcherPod(name string, options ...PodOption) *corev1.Pod {
 	}
 
 	return p
+}
+
+func PodLabel(value string) PodOption {
+	return func(pod *corev1.Pod) {
+		if pod.Labels == nil {
+			pod.Labels = make(map[string]string, 2)
+		}
+		pod.Labels["app"] = value
+	}
+}
+
+func PodPending() PodOption {
+	return func(pod *corev1.Pod) {
+		pod.Status.Phase = corev1.PodPending
+	}
 }
 
 func DispatcherPodAsOwnerReference(name string) reconcilertesting.ConfigMapOption {

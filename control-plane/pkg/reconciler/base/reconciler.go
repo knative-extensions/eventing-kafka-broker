@@ -25,12 +25,14 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
+	"k8s.io/utils/pointer"
 	"knative.dev/pkg/tracker"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -153,6 +155,25 @@ func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context) (*corev1.Conf
 	}
 
 	return r.KubeClient.CoreV1().ConfigMaps(r.DataPlaneConfigMapNamespace).Create(ctx, cm, metav1.CreateOptions{})
+}
+
+func PodOwnerReference(p *corev1.Pod) ConfigMapOption {
+	expected := metav1.OwnerReference{
+		APIVersion:         corev1.SchemeGroupVersion.String(),
+		Kind:               "Pod",
+		Name:               p.Name,
+		UID:                p.UID,
+		Controller:         pointer.Bool(true),
+		BlockOwnerDeletion: pointer.Bool(true),
+	}
+	return func(cm *corev1.ConfigMap) {
+		for _, or := range cm.OwnerReferences {
+			if equality.Semantic.DeepDerivative(expected, or) {
+				return
+			}
+		}
+		cm.OwnerReferences = append(cm.OwnerReferences, expected)
+	}
 }
 
 // GetDataPlaneConfigMapData extracts contract from the given config map.
