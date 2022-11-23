@@ -23,6 +23,7 @@ package v1alpha1
 
 import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	v1beta1 "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	duckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
@@ -36,6 +37,11 @@ func (in *Auth) DeepCopyInto(out *Auth) {
 	if in.NetSpec != nil {
 		in, out := &in.NetSpec, &out.NetSpec
 		*out = new(v1beta1.KafkaNetSpec)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.AuthSpec != nil {
+		in, out := &in.AuthSpec, &out.AuthSpec
+		*out = new(eventingv1alpha1.Auth)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.SecretSpec != nil {
