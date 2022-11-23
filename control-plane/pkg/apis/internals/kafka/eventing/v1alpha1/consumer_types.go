@@ -27,6 +27,7 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 )
 
@@ -124,7 +125,9 @@ type DestinationReply struct {
 }
 
 type Auth struct {
-	NetSpec    *bindings.KafkaNetSpec
+	NetSpec *bindings.KafkaNetSpec
+	// Deprecated, use secret spec
+	AuthSpec   *eventingv1alpha1.Auth `json:"AuthSpec,omitempty"`
 	SecretSpec *SecretSpec
 }
 
