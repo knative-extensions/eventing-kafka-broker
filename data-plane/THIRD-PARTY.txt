@@ -1,5 +1,5 @@
 
-Lists of 217 third-party dependencies.
+Lists of 216 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.2.11 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.2.11 - http://logback.qos.ch/logback-core)
      (Apache License 2.0) brotli4j (com.aayushatharva.brotli4j:brotli4j:1.7.1 - https://github.com/hyperxpro/Brotli4j/brotli4j)
@@ -135,7 +135,6 @@ Lists of 217 third-party dependencies.
      (Apache License, Version 2.0) SmallRye Mutiny - Integration with SmallRye Context Propagation (io.smallrye.reactive:mutiny-smallrye-context-propagation:1.7.0 - https://smallrye.io/smallrye-mutiny/mutiny-smallrye-context-propagation)
      (The Apache Software License, Version 2.0) SmallRye Mutiny - Vert.x Auth Common (io.smallrye.reactive:smallrye-mutiny-vertx-auth-common:2.25.0 - https://smallrye.io/smallrye-mutiny-vertx-bindings/vertx-mutiny-clients/smallrye-mutiny-vertx-auth-common)
      (The Apache Software License, Version 2.0) SmallRye Mutiny - Vert.x Core (io.smallrye.reactive:smallrye-mutiny-vertx-core:2.25.0 - https://smallrye.io/smallrye-mutiny-vertx-bindings/vertx-mutiny-clients/smallrye-mutiny-vertx-core)
-     (The Apache Software License, Version 2.0) SmallRye Mutiny - Vert.x Micrometer Metrics (io.smallrye.reactive:smallrye-mutiny-vertx-micrometer-metrics:2.25.0 - https://smallrye.io/smallrye-mutiny-vertx-bindings/vertx-mutiny-clients/smallrye-mutiny-vertx-micrometer-metrics)
      (The Apache Software License, Version 2.0) SmallRye Mutiny - Runtime Helpers (io.smallrye.reactive:smallrye-mutiny-vertx-runtime:2.25.0 - https://smallrye.io/smallrye-mutiny-vertx-bindings/vertx-mutiny-clients/smallrye-mutiny-vertx-runtime)
      (The Apache Software License, Version 2.0) SmallRye Mutiny - Vert.x URI Template (io.smallrye.reactive:smallrye-mutiny-vertx-uri-template:2.25.0 - https://smallrye.io/smallrye-mutiny-vertx-bindings/vertx-mutiny-clients/smallrye-mutiny-vertx-uri-template)
      (The Apache Software License, Version 2.0) SmallRye Mutiny - Vert.x Web Client (io.smallrye.reactive:smallrye-mutiny-vertx-web-client:2.25.0 - https://smallrye.io/smallrye-mutiny-vertx-bindings/vertx-mutiny-clients/smallrye-mutiny-vertx-web-client)
