@@ -22,7 +22,7 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.vertx.core.Future;
-import io.vertx.kafka.client.common.TopicPartition;
+import dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition;
 
 import java.util.ArrayDeque;
 import java.util.Queue;

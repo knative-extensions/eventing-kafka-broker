@@ -15,19 +15,20 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecord;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.kafka.client.common.PartitionInfo;
-import io.vertx.kafka.client.common.TopicPartition;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
-import io.vertx.kafka.client.consumer.KafkaReadStream;
-import io.vertx.kafka.client.consumer.OffsetAndMetadata;
-import io.vertx.kafka.client.consumer.OffsetAndTimestamp;
-import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
+import dev.knative.eventing.kafka.broker.vertx.kafka.common.PartitionInfo;
+import dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecord;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecords;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaReadStream;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.OffsetAndMetadata;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.OffsetAndTimestamp;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.impl.KafkaConsumerRecordImpl;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -140,36 +141,36 @@ public class UnorderedOffsetManagerBenchmark {
     }
   }
 
-  static class MockKafkaConsumer implements io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> {
+  static class MockKafkaConsumer implements dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> {
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> exceptionHandler(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> exceptionHandler(
       Handler<Throwable> handler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> handler(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> handler(
       Handler<KafkaConsumerRecord<String, CloudEvent>> handler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> pause() {
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> pause() {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> resume() {
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> resume() {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> fetch(long amount) {
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> fetch(long amount) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> endHandler(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> endHandler(
       Handler<Void> endHandler) {
       return null;
     }
@@ -190,14 +191,14 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> subscribe(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> subscribe(
       String topic,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> subscribe(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> subscribe(
       Set<String> topics,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
@@ -209,7 +210,7 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> subscribe(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> subscribe(
       Pattern pattern,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
@@ -227,21 +228,21 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> assign(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> assign(
       TopicPartition topicPartition,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> assign(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> assign(
       Set<TopicPartition> topicPartitions,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> assignment(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> assignment(
       Handler<AsyncResult<Set<TopicPartition>>> handler) {
       return null;
     }
@@ -252,7 +253,7 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> listTopics(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> listTopics(
       Handler<AsyncResult<Map<String, List<PartitionInfo>>>> handler) {
       return null;
     }
@@ -268,13 +269,13 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> unsubscribe(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> unsubscribe(
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> subscription(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> subscription(
       Handler<AsyncResult<Set<String>>> handler) {
       return null;
     }
@@ -296,14 +297,14 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> pause(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> pause(
       TopicPartition topicPartition,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> pause(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> pause(
       Set<TopicPartition> topicPartitions,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
@@ -332,27 +333,27 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> resume(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> resume(
       TopicPartition topicPartition,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> resume(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> resume(
       Set<TopicPartition> topicPartitions,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> partitionsRevokedHandler(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> partitionsRevokedHandler(
       Handler<Set<TopicPartition>> handler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> partitionsAssignedHandler(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> partitionsAssignedHandler(
       Handler<Set<TopicPartition>> handler) {
       return null;
     }
@@ -363,7 +364,7 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> seek(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> seek(
       TopicPartition topicPartition, long offset,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
@@ -381,14 +382,14 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> seekToBeginning(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> seekToBeginning(
       TopicPartition topicPartition,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> seekToBeginning(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> seekToBeginning(
       Set<TopicPartition> topicPartitions,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
@@ -406,14 +407,14 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> seekToEnd(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> seekToEnd(
       TopicPartition topicPartition,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> seekToEnd(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> seekToEnd(
       Set<TopicPartition> topicPartitions,
       Handler<AsyncResult<Void>> completionHandler) {
       return null;
@@ -456,7 +457,7 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> partitionsFor(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> partitionsFor(
       String topic,
       Handler<AsyncResult<List<PartitionInfo>>> handler) {
       return null;
@@ -468,7 +469,7 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> batchHandler(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> batchHandler(
       Handler<KafkaConsumerRecords<String, CloudEvent>> handler) {
       return null;
     }
@@ -578,7 +579,7 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> pollTimeout(
+    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> pollTimeout(
       Duration timeout) {
       return null;
     }

@@ -29,8 +29,8 @@ import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
-import io.vertx.kafka.client.producer.KafkaProducer;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer;
+import dev.knative.eventing.kafka.broker.vertx.kafka.producer.KafkaProducer;
 
 import java.util.HashMap;
 import java.util.List;

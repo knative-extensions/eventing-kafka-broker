@@ -29,7 +29,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.Verticle;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.kafka.client.producer.KafkaProducer;
+import dev.knative.eventing.kafka.broker.vertx.kafka.producer.KafkaProducer;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Supplier;

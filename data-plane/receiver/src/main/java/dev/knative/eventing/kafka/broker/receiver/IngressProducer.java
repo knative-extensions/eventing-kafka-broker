@@ -18,9 +18,9 @@ package dev.knative.eventing.kafka.broker.receiver;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
-import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import io.vertx.kafka.client.producer.RecordMetadata;
+import dev.knative.eventing.kafka.broker.vertx.kafka.producer.KafkaProducer;
+import dev.knative.eventing.kafka.broker.vertx.kafka.producer.KafkaProducerRecord;
+import dev.knative.eventing.kafka.broker.vertx.kafka.producer.RecordMetadata;
 
 /**
  * This interface wraps a {@link KafkaProducer} together with the topic where the ingress should produce to.
