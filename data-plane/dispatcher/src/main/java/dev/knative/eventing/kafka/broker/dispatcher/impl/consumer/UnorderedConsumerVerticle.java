@@ -58,7 +58,12 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
 
   @Override
   void startConsumer(final Promise<Void> startPromise) {
-    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()), startPromise);
+    final var topics = Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList());
+
+    this.consumer.subscribe(topics)
+      .onSuccess(startPromise::tryComplete)
+      .onFailure(startPromise::tryFail);
+
     startPromise.future()
       .onSuccess(v -> poll());
   }

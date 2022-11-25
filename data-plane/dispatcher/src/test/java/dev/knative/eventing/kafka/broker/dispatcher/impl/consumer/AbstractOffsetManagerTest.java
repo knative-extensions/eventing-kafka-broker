@@ -121,18 +121,11 @@ public abstract class AbstractOffsetManagerTest {
 
   @SuppressWarnings("unchecked")
   protected void shouldNeverCommit(final KafkaConsumer<String, CloudEvent> consumer) {
-    verify(consumer, never()).commit();
-    verify(consumer, never()).commit(any(Handler.class));
     verify(consumer, never()).commit(any(Map.class));
-    verify(consumer, never()).commit(any(), any());
   }
 
   @SuppressWarnings("unchecked")
   protected void shouldNeverPause(final KafkaConsumer<String, CloudEvent> consumer) {
-    verify(consumer, never()).pause();
-    verify(consumer, never()).pause(any(dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition.class));
     verify(consumer, never()).pause(any(Set.class));
-    verify(consumer, never()).pause(any(dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition.class), any());
-    verify(consumer, never()).pause(any(Set.class), any());
   }
 }

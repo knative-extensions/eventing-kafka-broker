@@ -38,7 +38,6 @@ import io.vertx.core.Closeable;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.impl.ContextInternal;
-import io.vertx.core.impl.VertxInternal;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -56,10 +55,6 @@ public class CloseHandler {
 
   public CloseHandler(BiConsumer<Long, Handler<AsyncResult<Void>>> close) {
     this.close = close;
-  }
-
-  public void registerCloseHook(VertxInternal vertx) {
-    registerCloseHook(vertx::addCloseHook, vertx::removeCloseHook);
   }
 
   public void registerCloseHook(ContextInternal context) {
@@ -90,24 +85,14 @@ public class CloseHandler {
     }
   }
 
-  public synchronized void unregisterCloseHook() {
+  private synchronized void unregisterCloseHook() {
     if (closeableHookCleanup != null) {
       closeableHookCleanup.run();
     }
   }
 
-  public void close() {
-    unregisterCloseHook();
-    close.accept(0L, ar -> {});
-  }
-
   public void close(Handler<AsyncResult<Void>> completionHandler) {
     unregisterCloseHook();
     close.accept(0L, completionHandler);
-  }
-
-  public void close(long timeout, Handler<AsyncResult<Void>> completionHandler) {
-    unregisterCloseHook();
-    close.accept(timeout, completionHandler);
   }
 }

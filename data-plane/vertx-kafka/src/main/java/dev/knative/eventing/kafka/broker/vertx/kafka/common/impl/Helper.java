@@ -33,17 +33,13 @@
  */
 package dev.knative.eventing.kafka.broker.vertx.kafka.common.impl;
 
-import dev.knative.eventing.kafka.broker.vertx.kafka.common.ConfigResource;
-import dev.knative.eventing.kafka.broker.vertx.kafka.common.Node;
 import dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition;
 import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.OffsetAndMetadata;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.OffsetAndTimestamp;
 import dev.knative.eventing.kafka.broker.vertx.kafka.producer.RecordMetadata;
 import io.vertx.core.Handler;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -102,11 +98,6 @@ public class Helper {
     }
   }
 
-  public static Node from(org.apache.kafka.common.Node node) {
-    return new Node(node.hasRack(), node.host(), node.id(), node.idString(),
-      node.isEmpty(), node.port(), node.rack());
-  }
-
   public static RecordMetadata from(org.apache.kafka.clients.producer.RecordMetadata metadata) {
     return new RecordMetadata(metadata.offset(),
       metadata.partition(), metadata.timestamp(), metadata.topic());
@@ -122,44 +113,5 @@ public class Helper {
 
   public static org.apache.kafka.clients.consumer.OffsetAndMetadata to(OffsetAndMetadata offsetAndMetadata) {
     return new org.apache.kafka.clients.consumer.OffsetAndMetadata(offsetAndMetadata.getOffset(), offsetAndMetadata.getMetadata());
-  }
-
-  public static Map<TopicPartition, Long> fromTopicPartitionOffsets(Map<org.apache.kafka.common.TopicPartition, Long> offsets) {
-    return offsets.entrySet().stream().collect(Collectors.toMap(
-      e -> new TopicPartition(e.getKey().topic(), e.getKey().partition()),
-      Map.Entry::getValue)
-    );
-  }
-
-  public static Map<org.apache.kafka.common.TopicPartition, Long> toTopicPartitionTimes(Map<TopicPartition, Long> topicPartitionTimes) {
-    return topicPartitionTimes.entrySet().stream().collect(Collectors.toMap(
-      e -> new org.apache.kafka.common.TopicPartition(e.getKey().getTopic(), e.getKey().getPartition()),
-      Map.Entry::getValue)
-    );
-  }
-
-  public static Map<TopicPartition, OffsetAndTimestamp> fromTopicPartitionOffsetAndTimestamp(Map<org.apache.kafka.common.TopicPartition, org.apache.kafka.clients.consumer.OffsetAndTimestamp> topicPartitionOffsetAndTimestamps) {
-    return topicPartitionOffsetAndTimestamps.entrySet().stream()
-      .filter(e -> e.getValue() != null)
-      .collect(Collectors.toMap(
-        e -> new TopicPartition(e.getKey().topic(), e.getKey().partition()),
-        e -> new OffsetAndTimestamp(e.getValue().offset(), e.getValue().timestamp()))
-      );
-  }
-
-  public static org.apache.kafka.common.config.ConfigResource to(ConfigResource configResource) {
-    return new org.apache.kafka.common.config.ConfigResource(configResource.getType(), configResource.getName());
-  }
-
-  public static ConfigResource from(org.apache.kafka.common.config.ConfigResource configResource) {
-    return new ConfigResource(configResource.type(), configResource.name());
-  }
-
-  public static List<org.apache.kafka.common.config.ConfigResource> toConfigResourceList(List<ConfigResource> configResources) {
-    return configResources.stream().map(Helper::to).collect(Collectors.toList());
-  }
-
-  public static Set<org.apache.kafka.common.TopicPartition> toTopicPartitionSet(Set<TopicPartition> partitions) {
-    return partitions.stream().map(Helper::to).collect(Collectors.toSet());
   }
 }

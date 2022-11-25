@@ -166,11 +166,6 @@ public abstract class AbstractConsumerVerticleTest {
     final var checkpoints = context.checkpoint(2);
 
     when(consumer.close()).thenReturn(Future.succeededFuture());
-    when(consumer.subscribe((Set<String>) any(), any())).then(answer -> {
-      final Handler<AsyncResult<Void>> callback = answer.getArgument(1);
-      callback.handle(Future.succeededFuture());
-      return consumer;
-    });
     when(consumer.subscribe(any(Set.class))).thenReturn(Future.succeededFuture());
     when(consumer.poll(any()))
       .then(answer -> {

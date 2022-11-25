@@ -15,20 +15,15 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecord;
-import io.cloudevents.CloudEvent;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import dev.knative.eventing.kafka.broker.vertx.kafka.common.PartitionInfo;
 import dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition;
 import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecord;
 import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecords;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaReadStream;
 import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.OffsetAndMetadata;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.OffsetAndTimestamp;
 import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.impl.KafkaConsumerRecordImpl;
+import io.cloudevents.CloudEvent;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -39,10 +34,8 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 public class UnorderedOffsetManagerBenchmark {
 
@@ -149,144 +142,7 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> handler(
-      Handler<KafkaConsumerRecord<String, CloudEvent>> handler) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> pause() {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> resume() {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> fetch(long amount) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> endHandler(
-      Handler<Void> endHandler) {
-      return null;
-    }
-
-    @Override
-    public long demand() {
-      return 0;
-    }
-
-    @Override
-    public Future<Void> subscribe(String topic) {
-      return null;
-    }
-
-    @Override
     public Future<Void> subscribe(Set<String> topics) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> subscribe(
-      String topic,
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> subscribe(
-      Set<String> topics,
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public Future<Void> subscribe(Pattern pattern) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> subscribe(
-      Pattern pattern,
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public Future<Void> assign(TopicPartition topicPartition) {
-      return null;
-    }
-
-    @Override
-    public Future<Void> assign(
-      Set<TopicPartition> topicPartitions) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> assign(
-      TopicPartition topicPartition,
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> assign(
-      Set<TopicPartition> topicPartitions,
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> assignment(
-      Handler<AsyncResult<Set<TopicPartition>>> handler) {
-      return null;
-    }
-
-    @Override
-    public Future<Set<TopicPartition>> assignment() {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> listTopics(
-      Handler<AsyncResult<Map<String, List<PartitionInfo>>>> handler) {
-      return null;
-    }
-
-    @Override
-    public Future<Map<String, List<PartitionInfo>>> listTopics() {
-      return null;
-    }
-
-    @Override
-    public Future<Void> unsubscribe() {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> unsubscribe(
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> subscription(
-      Handler<AsyncResult<Set<String>>> handler) {
-      return null;
-    }
-
-    @Override
-    public Future<Set<String>> subscription() {
-      return null;
-    }
-
-    @Override
-    public Future<Void> pause(TopicPartition topicPartition) {
       return null;
     }
 
@@ -297,52 +153,8 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> pause(
-      TopicPartition topicPartition,
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> pause(
-      Set<TopicPartition> topicPartitions,
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public void paused(
-      Handler<AsyncResult<Set<TopicPartition>>> handler) {
-
-    }
-
-    @Override
-    public Future<Set<TopicPartition>> paused() {
-      return null;
-    }
-
-    @Override
-    public Future<Void> resume(TopicPartition topicPartition) {
-      return null;
-    }
-
-    @Override
     public Future<Void> resume(
       Set<TopicPartition> topicPartitions) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> resume(
-      TopicPartition topicPartition,
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> resume(
-      Set<TopicPartition> topicPartitions,
-      Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
@@ -359,119 +171,9 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public Future<Void> seek(TopicPartition topicPartition, long offset) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> seek(
-      TopicPartition topicPartition, long offset,
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public Future<Void> seekToBeginning(TopicPartition topicPartition) {
-      return null;
-    }
-
-    @Override
-    public Future<Void> seekToBeginning(
-      Set<TopicPartition> topicPartitions) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> seekToBeginning(
-      TopicPartition topicPartition,
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> seekToBeginning(
-      Set<TopicPartition> topicPartitions,
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public Future<Void> seekToEnd(TopicPartition topicPartition) {
-      return null;
-    }
-
-    @Override
-    public Future<Void> seekToEnd(
-      Set<TopicPartition> topicPartitions) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> seekToEnd(
-      TopicPartition topicPartition,
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> seekToEnd(
-      Set<TopicPartition> topicPartitions,
-      Handler<AsyncResult<Void>> completionHandler) {
-      return null;
-    }
-
-    @Override
-    public Future<Void> commit() {
-      return null;
-    }
-
-    @Override
-    public void commit(
-      Handler<AsyncResult<Void>> completionHandler) {
-
-    }
-
-    @Override
     public Future<Map<TopicPartition, OffsetAndMetadata>> commit(
       Map<TopicPartition, OffsetAndMetadata> offsets) {
       return Future.succeededFuture(offsets);
-    }
-
-    @Override
-    public void commit(
-      Map<TopicPartition, OffsetAndMetadata> offsets,
-      Handler<AsyncResult<Map<TopicPartition, OffsetAndMetadata>>> completionHandler) {
-      completionHandler.handle(Future.succeededFuture(offsets));
-    }
-
-    @Override
-    public void committed(TopicPartition topicPartition,
-                          Handler<AsyncResult<OffsetAndMetadata>> handler) {
-
-    }
-
-    @Override
-    public Future<OffsetAndMetadata> committed(
-      TopicPartition topicPartition) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> partitionsFor(
-      String topic,
-      Handler<AsyncResult<List<PartitionInfo>>> handler) {
-      return null;
-    }
-
-    @Override
-    public Future<List<PartitionInfo>> partitionsFor(String topic) {
-      return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> batchHandler(
-      Handler<KafkaConsumerRecords<String, CloudEvent>> handler) {
-      return null;
     }
 
     @Override
@@ -480,114 +182,8 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public void close(
-      Handler<AsyncResult<Void>> completionHandler) {
-
-    }
-
-    @Override
-    public void position(TopicPartition partition,
-                         Handler<AsyncResult<Long>> handler) {
-
-    }
-
-    @Override
-    public Future<Long> position(TopicPartition partition) {
-      return null;
-    }
-
-    @Override
-    public void offsetsForTimes(
-      Map<TopicPartition, Long> topicPartitionTimestamps,
-      Handler<AsyncResult<Map<TopicPartition, OffsetAndTimestamp>>> handler) {
-
-    }
-
-    @Override
-    public Future<Map<TopicPartition, OffsetAndTimestamp>> offsetsForTimes(
-      Map<TopicPartition, Long> topicPartitionTimestamps) {
-      return null;
-    }
-
-    @Override
-    public void offsetsForTimes(TopicPartition topicPartition, Long timestamp,
-                                Handler<AsyncResult<OffsetAndTimestamp>> handler) {
-
-    }
-
-    @Override
-    public Future<OffsetAndTimestamp> offsetsForTimes(
-      TopicPartition topicPartition, Long timestamp) {
-      return null;
-    }
-
-    @Override
-    public void beginningOffsets(
-      Set<TopicPartition> topicPartitions,
-      Handler<AsyncResult<Map<TopicPartition, Long>>> handler) {
-
-    }
-
-    @Override
-    public Future<Map<TopicPartition, Long>> beginningOffsets(
-      Set<TopicPartition> topicPartitions) {
-      return null;
-    }
-
-    @Override
-    public void beginningOffsets(TopicPartition topicPartition,
-                                 Handler<AsyncResult<Long>> handler) {
-
-    }
-
-    @Override
-    public Future<Long> beginningOffsets(TopicPartition topicPartition) {
-      return null;
-    }
-
-    @Override
-    public void endOffsets(Set<TopicPartition> topicPartitions,
-                           Handler<AsyncResult<Map<TopicPartition, Long>>> handler) {
-
-    }
-
-    @Override
-    public Future<Map<TopicPartition, Long>> endOffsets(
-      Set<TopicPartition> topicPartitions) {
-      return null;
-    }
-
-    @Override
-    public void endOffsets(TopicPartition topicPartition,
-                           Handler<AsyncResult<Long>> handler) {
-
-    }
-
-    @Override
-    public Future<Long> endOffsets(TopicPartition topicPartition) {
-      return null;
-    }
-
-    @Override
-    public KafkaReadStream<String, CloudEvent> asStream() {
-      return null;
-    }
-
-    @Override
     public Consumer<String, CloudEvent> unwrap() {
       return null;
-    }
-
-    @Override
-    public dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer<String, CloudEvent> pollTimeout(
-      Duration timeout) {
-      return null;
-    }
-
-    @Override
-    public void poll(Duration timeout,
-                     Handler<AsyncResult<KafkaConsumerRecords<String, CloudEvent>>> handler) {
-
     }
 
     @Override
