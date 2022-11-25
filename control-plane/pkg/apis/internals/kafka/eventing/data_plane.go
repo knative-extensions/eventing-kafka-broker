@@ -16,7 +16,29 @@
 
 package eventing
 
+import (
+	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
+)
+
 const (
 	// ConfigMapVolumeName is the volume name of the data plane ConfigMap
 	ConfigMapVolumeName = "kafka-resources"
+
+	DispatcherVolumeName = "contract-resources"
 )
+
+func ConfigMapNameFromPod(p *corev1.Pod) (string, error) {
+	var vDp *corev1.Volume
+	for i, v := range p.Spec.Volumes {
+		if v.Name == DispatcherVolumeName && v.ConfigMap != nil && v.ConfigMap.Name != "" {
+			vDp = &p.Spec.Volumes[i]
+			break
+		}
+	}
+	if vDp == nil {
+		return "", fmt.Errorf("failed to get data plane volume %s in pod %s/%s", ConfigMapVolumeName, p.GetNamespace(), p.GetName())
+	}
+	return vDp.ConfigMap.Name, nil
+}
