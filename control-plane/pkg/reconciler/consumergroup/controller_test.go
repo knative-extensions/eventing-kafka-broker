@@ -48,6 +48,8 @@ const (
 	ConfigKafkaSchedulerName = "config-kafka-scheduler"
 	// ConfigKafkaDeSchedulerName is the name of the ConfigMap to configure the descheduler.
 	ConfigKafkaDeSchedulerName = "config-kafka-descheduler"
+	// ConfigKafkaAutoscalerName is the name of the ConfigMap to configure the autoscaler.
+	ConfigKafkaAutoscalerName = "config-kafka-autoscaler"
 )
 
 func TestNewController(t *testing.T) {
@@ -97,6 +99,7 @@ func TestNewController(t *testing.T) {
 	t.Setenv("POD_CAPACITY", PodCapacity)
 	t.Setenv("SCHEDULER_CONFIG", ConfigKafkaSchedulerName)
 	t.Setenv("DESCHEDULER_CONFIG", ConfigKafkaDeSchedulerName)
+	t.Setenv("AUTOSCALER_CONFIG", ConfigKafkaAutoscalerName)
 	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "config-kafka-features",

@@ -31,21 +31,21 @@ var (
 	KedaSchemeGroupVersion = schema.GroupVersion{Group: "keda.sh", Version: "v1alpha1"}
 )
 
-func GenerateScaledObject(obj metav1.Object, gvk schema.GroupVersionKind, scaleTarget *kedav1alpha1.ScaleTarget, triggers []kedav1alpha1.ScaleTriggers) (*kedav1alpha1.ScaledObject, error) {
+func GenerateScaledObject(obj metav1.Object, gvk schema.GroupVersionKind, scaleTarget *kedav1alpha1.ScaleTarget, triggers []kedav1alpha1.ScaleTriggers, aconfig autoscaler.AutoscalerConfig) (*kedav1alpha1.ScaledObject, error) {
 
-	cooldownPeriod, err := GetInt32ValueFromMap(obj.GetAnnotations(), autoscaler.AutoscalingCooldownPeriodAnnotation, autoscaler.DefaultCooldownPeriod)
+	cooldownPeriod, err := GetInt32ValueFromMap(obj.GetAnnotations(), autoscaler.AutoscalingCooldownPeriodAnnotation, aconfig.AutoscalerDefaults[autoscaler.AutoscalingCooldownPeriodAnnotation])
 	if err != nil {
 		return nil, err
 	}
-	pollingInterval, err := GetInt32ValueFromMap(obj.GetAnnotations(), autoscaler.AutoscalingPollingIntervalAnnotation, autoscaler.DefaultPollingInterval)
+	pollingInterval, err := GetInt32ValueFromMap(obj.GetAnnotations(), autoscaler.AutoscalingPollingIntervalAnnotation, aconfig.AutoscalerDefaults[autoscaler.AutoscalingPollingIntervalAnnotation])
 	if err != nil {
 		return nil, err
 	}
-	minReplicaCount, err := GetInt32ValueFromMap(obj.GetAnnotations(), autoscaler.AutoscalingMinScaleAnnotation, autoscaler.DefaultMinReplicaCount)
+	minReplicaCount, err := GetInt32ValueFromMap(obj.GetAnnotations(), autoscaler.AutoscalingMinScaleAnnotation, aconfig.AutoscalerDefaults[autoscaler.AutoscalingMinScaleAnnotation])
 	if err != nil {
 		return nil, err
 	}
-	maxReplicaCount, err := GetInt32ValueFromMap(obj.GetAnnotations(), autoscaler.AutoscalingMaxScaleAnnotation, autoscaler.DefaultMaxReplicaCount)
+	maxReplicaCount, err := GetInt32ValueFromMap(obj.GetAnnotations(), autoscaler.AutoscalingMaxScaleAnnotation, aconfig.AutoscalerDefaults[autoscaler.AutoscalingMaxScaleAnnotation])
 	if err != nil {
 		return nil, err
 	}
