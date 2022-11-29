@@ -47,17 +47,17 @@ func GenerateScaleTarget(cg *kafkainternals.ConsumerGroup) *kedav1alpha1.ScaleTa
 	}
 }
 
-func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthentication *kedav1alpha1.TriggerAuthentication) ([]kedav1alpha1.ScaleTriggers, error) {
+func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthentication *kedav1alpha1.TriggerAuthentication, aconfig autoscaler.AutoscalerConfig) ([]kedav1alpha1.ScaleTriggers, error) {
 	triggers := make([]kedav1alpha1.ScaleTriggers, 0, len(cg.Spec.Template.Spec.Topics))
 	bootstrapServers := cg.Spec.Template.Spec.Configs.Configs[kafka.BootstrapServersConfigMapKey]
 	consumerGroup := cg.Spec.Template.Spec.Configs.Configs[kafka.GroupIDConfigMapKey]
 
-	lagThreshold, err := GetInt32ValueFromMap(cg.Annotations, autoscaler.AutoscalingLagThreshold, autoscaler.DefaultLagThreshold)
+	lagThreshold, err := GetInt32ValueFromMap(cg.Annotations, autoscaler.AutoscalingLagThreshold, aconfig.AutoscalerDefaults[autoscaler.AutoscalingLagThreshold])
 	if err != nil {
 		return nil, err
 	}
 
-	activationLagThreshold, err := GetInt32ValueFromMap(cg.Annotations, autoscaler.AutoscalingActivationLagThreshold, autoscaler.DefaultActivationLagThreshold)
+	activationLagThreshold, err := GetInt32ValueFromMap(cg.Annotations, autoscaler.AutoscalingActivationLagThreshold, aconfig.AutoscalerDefaults[autoscaler.AutoscalingActivationLagThreshold])
 	if err != nil {
 		return nil, err
 	}

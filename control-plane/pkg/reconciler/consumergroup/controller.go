@@ -75,6 +75,7 @@ type envConfig struct {
 	PodCapacity                int32  `envconfig:"POD_CAPACITY" required:"true"`
 	SchedulerPolicyConfigMap   string `envconfig:"SCHEDULER_CONFIG" required:"true"`
 	DeSchedulerPolicyConfigMap string `envconfig:"DESCHEDULER_CONFIG" required:"true"`
+	AutoscalerConfigMap        string `envconfig:"AUTOSCALER_CONFIG" required:"true"`
 }
 
 type SchedulerConfig struct {
@@ -121,6 +122,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 		KafkaFeatureFlags:          config.DefaultFeaturesConfig(),
 		KedaClient:                 kedaclient.Get(ctx),
+		AutoscalerConfig:           env.AutoscalerConfigMap,
 	}
 
 	consumerInformer := consumer.Get(ctx)

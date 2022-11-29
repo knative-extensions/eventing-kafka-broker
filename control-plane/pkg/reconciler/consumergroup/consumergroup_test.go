@@ -1671,7 +1671,8 @@ func TestReconcileKind(t *testing.T) {
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
 			},
-			SystemNamespace: systemNamespace,
+			SystemNamespace:  systemNamespace,
+			AutoscalerConfig: "",
 		}
 
 		r.KafkaFeatureFlags = configapis.FromContext(store.ToContext(ctx))

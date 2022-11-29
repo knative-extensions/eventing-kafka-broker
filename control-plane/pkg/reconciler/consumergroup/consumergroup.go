@@ -94,6 +94,7 @@ type Reconciler struct {
 
 	KafkaFeatureFlags *config.KafkaFeatureFlags
 	KedaClient        kedaclientset.Interface
+	AutoscalerConfig  string
 }
 
 func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
@@ -465,6 +466,11 @@ func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals
 	var triggerAuthentication *kedav1alpha1.TriggerAuthentication
 	var secret *corev1.Secret
 
+	autoscalerDefaults, err := r.autoscalerDefaultsFromConfigMap(ctx, r.AutoscalerConfig)
+	if err != nil {
+		return err
+	}
+
 	if hasSecretSpecConfig(cg.Spec.Template.Spec.Auth) || hasNetSpecAuthConfig(cg.Spec.Template.Spec.Auth) {
 		secretData, err := r.retrieveSecretData(ctx, cg)
 		if err != nil {
@@ -477,12 +483,12 @@ func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals
 		}
 	}
 
-	triggers, err := keda.GenerateScaleTriggers(cg, triggerAuthentication)
+	triggers, err := keda.GenerateScaleTriggers(cg, triggerAuthentication, *autoscalerDefaults)
 	if err != nil {
 		return err
 	}
 
-	scaledObject, err := keda.GenerateScaledObject(cg, cg.GetGroupVersionKind(), keda.GenerateScaleTarget(cg), triggers)
+	scaledObject, err := keda.GenerateScaledObject(cg, cg.GetGroupVersionKind(), keda.GenerateScaleTarget(cg), triggers, *autoscalerDefaults)
 	if err != nil {
 		return err
 	}
@@ -541,7 +547,7 @@ func (r *Reconciler) reconcileScaledObject(ctx context.Context, expectedScaledOb
 	if !metav1.IsControlledBy(scaledObject, obj) {
 		return fmt.Errorf("scaledobject %s/%s is not owned by %s/%s", expectedScaledObject.Namespace, expectedScaledObject.Name, obj.GetNamespace(), obj.GetName())
 	}
-	if !equality.Semantic.DeepDerivative(expectedScaledObject.Spec, scaledObject.Spec) {
+	if !equality.Semantic.DeepDerivative(scaledObject.Spec, expectedScaledObject.Spec) {
 		scaledObject.Spec = expectedScaledObject.Spec
 		if _, err = r.KedaClient.KedaV1alpha1().ScaledObjects(expectedScaledObject.Namespace).Update(ctx, scaledObject, metav1.UpdateOptions{}); err != nil {
 			return fmt.Errorf("failed to update scaled object %s/%s: %w", expectedScaledObject.Namespace, expectedScaledObject.Name, err)
@@ -565,7 +571,7 @@ func (r *Reconciler) reconcileTriggerAuthentication(ctx context.Context, expecte
 	if !metav1.IsControlledBy(triggerAuth, obj) {
 		return fmt.Errorf("triggerauthentication object %s/%s is not owned by %s/%s", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, obj.GetNamespace(), obj.GetName())
 	}
-	if !equality.Semantic.DeepDerivative(expectedTriggerAuth.Spec, triggerAuth.Spec) {
+	if !equality.Semantic.DeepDerivative(triggerAuth.Spec, expectedTriggerAuth.Spec) {
 		triggerAuth.Spec = expectedTriggerAuth.Spec
 		if _, err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Update(ctx, triggerAuth, metav1.UpdateOptions{}); err != nil {
 			return fmt.Errorf("failed to update triggerauthentication object %s/%s: %w", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, err)
