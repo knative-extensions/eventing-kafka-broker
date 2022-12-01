@@ -192,6 +192,12 @@ func WithBootstrapServerStatusAnnotation(servers string) reconcilertesting.Broke
 
 type CMOption func(cm *corev1.ConfigMap)
 
+func WithConfigMapNamespace(namespace string) CMOption {
+	return func(cm *corev1.ConfigMap) {
+		cm.ObjectMeta.Namespace = namespace
+	}
+}
+
 func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int, options ...CMOption) *corev1.ConfigMap {
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -272,17 +278,25 @@ func StatusBrokerConfigNotParsed(reason string) func(broker *eventing.Broker) {
 }
 
 func BrokerAddressable(env *config.Env) func(broker *eventing.Broker) {
-
 	return func(broker *eventing.Broker) {
-
-		broker.Status.Address.URL = &apis.URL{
-			Scheme: "http",
-			Host:   network.GetServiceHostname(env.IngressName, env.SystemNamespace),
-			Path:   fmt.Sprintf("/%s/%s", broker.Namespace, broker.Name),
-		}
-
-		broker.GetConditionSet().Manage(&broker.Status).MarkTrue(base.ConditionAddressable)
+		brokerAddressable(broker, env.IngressName, env.SystemNamespace)
 	}
+}
+
+func NamespacedBrokerAddressable(env *config.Env) func(broker *eventing.Broker) {
+	return func(broker *eventing.Broker) {
+		brokerAddressable(broker, env.IngressName, broker.Namespace)
+	}
+}
+
+func brokerAddressable(broker *eventing.Broker, serviceName, serviceNamespace string) {
+	broker.Status.Address.URL = &apis.URL{
+		Scheme: "http",
+		Host:   network.GetServiceHostname(serviceName, serviceNamespace),
+		Path:   fmt.Sprintf("/%s/%s", broker.Namespace, broker.Name),
+	}
+
+	broker.GetConditionSet().Manage(&broker.Status).MarkTrue(base.ConditionAddressable)
 }
 
 func BrokerReference() *contract.Reference {

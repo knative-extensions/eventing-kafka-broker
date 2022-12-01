@@ -17,11 +17,15 @@
 package testing
 
 import (
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	fakeapiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
+	appslisters "k8s.io/client-go/listers/apps/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
+	rbaclisters "k8s.io/client-go/listers/rbac/v1"
 	"k8s.io/client-go/tools/cache"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
@@ -114,6 +118,10 @@ func (l *Listers) GetPodLister() corelisters.PodLister {
 	return corelisters.NewPodLister(l.indexerFor(&corev1.Pod{}))
 }
 
+func (l *Listers) GetDeploymentLister() appslisters.DeploymentLister {
+	return appslisters.NewDeploymentLister(l.indexerFor(&appsv1.Deployment{}))
+}
+
 func (l *Listers) GetSecretLister() corelisters.SecretLister {
 	return corelisters.NewSecretLister(l.indexerFor(&corev1.Secret{}))
 }
@@ -134,6 +142,10 @@ func (l *Listers) GetServiceLister() corelisters.ServiceLister {
 	return corelisters.NewServiceLister(l.indexerFor(&corev1.Service{}))
 }
 
+func (l *Listers) GetServiceAccountLister() corelisters.ServiceAccountLister {
+	return corelisters.NewServiceAccountLister(l.indexerFor(&corev1.ServiceAccount{}))
+}
+
 func (l *Listers) GetKafkaSinkLister() eventingkafkabrokerlisters.KafkaSinkLister {
 	return eventingkafkabrokerlisters.NewKafkaSinkLister(l.indexerFor(&eventingkafkabroker.KafkaSink{}))
 }
@@ -152,6 +164,10 @@ func (l *Listers) GetConsumerGroupLister() consumerlisters.ConsumerGroupLister {
 
 func (l *Listers) GetConsumerLister() consumerlisters.ConsumerLister {
 	return consumerlisters.NewConsumerLister(l.indexerFor(&eventingkafkabrokerconsumer.Consumer{}))
+}
+
+func (l *Listers) GetClusterRoleBindingLister() rbaclisters.ClusterRoleBindingLister {
+	return rbaclisters.NewClusterRoleBindingLister(l.indexerFor(&rbacv1.ClusterRoleBinding{}))
 }
 
 func (l *Listers) indexerFor(obj runtime.Object) cache.Indexer {
