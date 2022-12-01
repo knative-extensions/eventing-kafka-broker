@@ -90,13 +90,14 @@ var (
 )
 
 var DefaultEnv = &config.Env{
-	DataPlaneConfigMapNamespace: "knative-eventing",
-	ContractConfigMapName:       "kafka-broker-brokers-triggers",
-	GeneralConfigMapName:        "kafka-broker-config",
-	IngressName:                 "kafka-broker-ingress",
-	SystemNamespace:             "knative-eventing",
-	ContractConfigMapFormat:     base.Json,
-	DefaultBackoffDelayMs:       1000,
+	DataPlaneConfigMapNamespace:  "knative-eventing",
+	DataPlaneConfigConfigMapName: "config-kafka-broker-data-plane",
+	ContractConfigMapName:        "kafka-broker-brokers-triggers",
+	GeneralConfigMapName:         "kafka-broker-config",
+	IngressName:                  "kafka-broker-ingress",
+	SystemNamespace:              "knative-eventing",
+	ContractConfigMapFormat:      base.Json,
+	DefaultBackoffDelayMs:        1000,
 }
 
 func TestBrokerReconciler(t *testing.T) {
