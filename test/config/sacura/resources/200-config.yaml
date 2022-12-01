@@ -13,5 +13,6 @@ data:
     receiver:
       port: 8080
       timeout: 5m
+      maxDuplicatesPercentage: 0.1
     duration: 10m
     timeout: 5m
