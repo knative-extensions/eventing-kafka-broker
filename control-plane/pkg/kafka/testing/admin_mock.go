@@ -26,6 +26,10 @@ import (
 
 var _ sarama.ClusterAdmin = &MockKafkaClusterAdmin{}
 
+const (
+	ErrorOnDeleteConsumerGroupTestKey = "error-on-delete-consumer-group"
+)
+
 type MockKafkaClusterAdmin struct {
 	// (Create|Delete)Topic
 	ExpectedTopicName string
@@ -44,6 +48,8 @@ type MockKafkaClusterAdmin struct {
 	ExpectedTopics                         []string
 	ExpectedErrorOnDescribeTopics          error
 	ExpectedTopicsMetadataOnDescribeTopics []*sarama.TopicMetadata
+
+	ErrorOnDeleteConsumerGroup error
 
 	T *testing.T
 }
@@ -166,7 +172,7 @@ func (m *MockKafkaClusterAdmin) ListConsumerGroupOffsets(group string, topicPart
 }
 
 func (m *MockKafkaClusterAdmin) DeleteConsumerGroup(group string) error {
-	return nil
+	return m.ErrorOnDeleteConsumerGroup
 }
 
 func (m *MockKafkaClusterAdmin) DescribeCluster() (brokers []*sarama.Broker, controllerID int32, err error) {
