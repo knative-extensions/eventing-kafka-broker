@@ -66,7 +66,7 @@ func NewFactory(env *config.Env, ctor Ctor) Factory {
 
 		ctx, dynamicClient := fakedynamicclient.With(ctx,
 			newScheme(),
-			ToUnstructured(t, row.Objects)...,
+			ToUnstructuredList(t, row.Objects)...,
 		)
 
 		dynamicScheme := runtime.NewScheme()
@@ -118,36 +118,48 @@ func NewFactory(env *config.Env, ctor Ctor) Factory {
 	}
 }
 
-// ToUnstructured takes a list of k8s resources and converts them to
+// ToUnstructuredList takes a list of k8s resources and converts them to
 // Unstructured objects.
 // We must pass objects as Unstructured to the dynamic client fake, or it
 // won't handle them properly.
-func ToUnstructured(t *testing.T, objs []runtime.Object) (us []runtime.Object) {
-	sch := newScheme()
+func ToUnstructuredList(t *testing.T, objs []runtime.Object) (us []runtime.Object) {
 	for _, obj := range objs {
-		obj = obj.DeepCopyObject() // Don't mess with the primary copy
-		// Determine and set the TypeMeta for this object based on our test scheme.
-		gvks, _, err := sch.ObjectKinds(obj)
-		if err != nil {
-			t.Fatalf("Unable to determine kind for type: %v", err)
-		}
-		apiv, k := gvks[0].ToAPIVersionAndKind()
-		ta, err := meta.TypeAccessor(obj)
-		if err != nil {
-			t.Fatalf("Unable to create type accessor: %v", err)
-		}
-		ta.SetAPIVersion(apiv)
-		ta.SetKind(k)
-
-		b, err := json.Marshal(obj)
-		if err != nil {
-			t.Fatalf("Unable to marshal: %v", err)
-		}
-		u := &unstructured.Unstructured{}
-		if err := json.Unmarshal(b, u); err != nil {
-			t.Fatalf("Unable to unmarshal: %v", err)
-		}
+		u := ToUnstructured(t, obj)
 		us = append(us, u)
 	}
 	return
+}
+
+type UnstructuredMutator func(u *unstructured.Unstructured)
+
+// ToUnstructured takes a single k8s resource and converts it to
+// Unstructured object.
+func ToUnstructured(t *testing.T, obj runtime.Object, mutators ...UnstructuredMutator) runtime.Object {
+	sch := newScheme()
+	obj = obj.DeepCopyObject() // Don't mess with the primary copy
+	// Determine and set the TypeMeta for this object based on our test scheme.
+	gvks, _, err := sch.ObjectKinds(obj)
+	if err != nil {
+		t.Fatalf("Unable to determine kind for type: %v", err)
+	}
+	apiv, k := gvks[0].ToAPIVersionAndKind()
+	ta, err := meta.TypeAccessor(obj)
+	if err != nil {
+		t.Fatalf("Unable to create type accessor: %v", err)
+	}
+	ta.SetAPIVersion(apiv)
+	ta.SetKind(k)
+
+	b, err := json.Marshal(obj)
+	if err != nil {
+		t.Fatalf("Unable to marshal: %v", err)
+	}
+	u := &unstructured.Unstructured{}
+	if err := json.Unmarshal(b, u); err != nil {
+		t.Fatalf("Unable to unmarshal: %v", err)
+	}
+	for _, m := range mutators {
+		m(u)
+	}
+	return u
 }
