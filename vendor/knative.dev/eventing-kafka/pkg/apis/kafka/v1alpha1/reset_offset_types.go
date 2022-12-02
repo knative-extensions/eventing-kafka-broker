@@ -87,7 +87,8 @@ type ResetOffsetSpec struct {
 
 // OffsetSpec defines the intended values to move the offsets to.
 // Note: This simple wrapper might seem unnecessary, but is provided to allow future extension
-//       in order to support specifying explicit offset (int64) values for each Partition.
+//
+//	in order to support specifying explicit offset (int64) values for each Partition.
 type OffsetSpec struct {
 
 	// Time is a string representing the desired offset position to which all partitions

@@ -37,11 +37,11 @@ require (
 
 require (
 	github.com/kedacore/keda/v2 v2.8.1
-	knative.dev/eventing v0.35.1-0.20221117013641-00a31f23ed30
-	knative.dev/eventing-kafka v0.35.1-0.20221102062409-3992a225fc57
-	knative.dev/hack v0.0.0-20221117013839-2e610ce611f8
-	knative.dev/pkg v0.0.0-20221117013641-f5c1a03ab4f1
-	knative.dev/reconciler-test v0.0.0-20221116134639-8ddc2b3d5b3a
+	knative.dev/eventing v0.35.1-0.20221202062718-c4da68a6d55a
+	knative.dev/eventing-kafka v0.35.1-0.20221121134143-b819e4d6aed2
+	knative.dev/hack v0.0.0-20221201154717-7233e77996f1
+	knative.dev/pkg v0.0.0-20221123154742-05b694ec4d3a
+	knative.dev/reconciler-test v0.0.0-20221123133142-3efdfe891855
 	sigs.k8s.io/controller-runtime v0.12.3
 )
 
