@@ -19,6 +19,8 @@ package testing
 import (
 	"time"
 
+	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -228,4 +230,10 @@ func NewDeletedConsumeGroup(opts ...ConsumerGroupOption) runtime.Object {
 
 func WithDeletedTimeStampConsumeGroup(cg *kafkainternals.ConsumerGroup) {
 	cg.GetObjectMeta().SetDeletionTimestamp(&metav1.Time{Time: time.Now()})
+}
+
+func WithConfigmapOwnerRef(ownerref *metav1.OwnerReference) reconcilertesting.ConfigMapOption {
+	return func(cg *corev1.ConfigMap) {
+		cg.ObjectMeta.OwnerReferences = []metav1.OwnerReference{*ownerref}
+	}
 }

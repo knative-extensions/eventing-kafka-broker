@@ -158,6 +158,39 @@ func NewRoleBinding(namespace string, name string, mutations ...func(account *rb
 	return s
 }
 
+func WithSubjectServiceAccount(saNamespace, saName, roleName string) func(account *rbacv1.ClusterRoleBinding) {
+	return func(cb *rbacv1.ClusterRoleBinding) {
+		cb.Subjects = []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Namespace: saNamespace,
+				Name:      saName,
+			},
+		}
+		cb.RoleRef = rbacv1.RoleRef{
+			Kind:     "ClusterRole",
+			Name:     roleName,
+			APIGroup: "rbac.authorization.k8s.io",
+		}
+	}
+}
+
+func NewClusterRoleBinding(name string, mutations ...func(account *rbacv1.ClusterRoleBinding)) *rbacv1.ClusterRoleBinding {
+	s := &rbacv1.ClusterRoleBinding{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ClusterRoleBinding",
+			APIVersion: rbacv1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	}
+	for _, mut := range mutations {
+		mut(s)
+	}
+	return s
+}
+
 func NewConfigMapWithBinaryData(namespace string, name string, data []byte, options ...reconcilertesting.ConfigMapOption) runtime.Object {
 	return reconcilertesting.NewConfigMap(
 		name,
