@@ -21,7 +21,9 @@ import (
 	"fmt"
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/utils/pointer"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 
@@ -32,15 +34,15 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober/probertesting"
 
-	mffake "github.com/manifestival/manifestival/fake"
-
 	"github.com/Shopify/sarama"
+	"github.com/manifestival/client-go-client"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
+	dynamicclientfake "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/resolver"
@@ -101,7 +103,8 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 				NewServiceAccount(SystemNamespace, "knative-kafka-broker-data-plane"),
 				reconcilertesting.NewService("kafka-broker-ingress", SystemNamespace),
 				NewClusterRoleBinding("knative-kafka-broker-data-plane",
-					WithSubjectServiceAccount(SystemNamespace, "knative-kafka-broker-data-plane", "knative-kafka-broker-data-plane"),
+					WithClusterRoleBindingSubjectServiceAccount(SystemNamespace, "knative-kafka-broker-data-plane"),
+					WithClusterRoleBindingRoleRef("knative-kafka-broker-data-plane"),
 				),
 			},
 			Key: testKey,
@@ -109,6 +112,56 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 				finalizerUpdatedEvent,
 			},
 			WantCreates: []runtime.Object{
+				ToManifestivalResource(t,
+					DataPlaneConfigMap(BrokerNamespace, env.DataPlaneConfigConfigMapName, ConsumerConfigKey,
+						DataPlaneConfigInitialOffset(ConsumerConfigKey, sources.OffsetLatest),
+					),
+					WithNamespacedBrokerOwnerRef,
+					WithNamespacedLabel,
+				),
+				ToManifestivalResource(t,
+					reconcilertesting.NewConfigMap(
+						"config-tracing",
+						BrokerNamespace,
+					),
+					WithNamespacedBrokerOwnerRef,
+					WithNamespacedLabel,
+				),
+				ToManifestivalResource(t,
+					reconcilertesting.NewConfigMap(
+						"kafka-config-logging",
+						BrokerNamespace,
+					),
+					WithNamespacedBrokerOwnerRef,
+					WithNamespacedLabel,
+				),
+				ToManifestivalResource(t,
+					reconcilertesting.NewDeployment("kafka-broker-receiver", BrokerNamespace),
+					WithNamespacedBrokerOwnerRef,
+					WithNamespacedLabel,
+				),
+				ToManifestivalResource(t,
+					reconcilertesting.NewDeployment("kafka-broker-dispatcher", BrokerNamespace),
+					WithNamespacedBrokerOwnerRef,
+					WithNamespacedLabel,
+				),
+				ToManifestivalResource(t,
+					NewServiceAccount(BrokerNamespace, "knative-kafka-broker-data-plane"),
+					WithNamespacedBrokerOwnerRef,
+					WithNamespacedLabel,
+				),
+				ToManifestivalResource(t,
+					reconcilertesting.NewService("kafka-broker-ingress", BrokerNamespace),
+					WithNamespacedBrokerOwnerRef,
+					WithNamespacedLabel,
+				),
+				ToManifestivalResource(t, NewRoleBinding(BrokerNamespace, "knative-kafka-broker-data-plane",
+					WithRoleBindingSubjectServiceAccount(BrokerNamespace, "knative-kafka-broker-data-plane"),
+					WithRoleBindingClusterRoleRef("knative-kafka-broker-data-plane"),
+				),
+					WithNamespacedBrokerOwnerRef,
+					WithNamespacedLabel,
+				),
 				NewConfigMapWithBinaryData(BrokerNamespace, env.ContractConfigMapName, nil),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -264,7 +317,7 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 			proberMock = p.(prober.Prober)
 		}
 
-		mfcMockClient := mffake.New()
+		mfcMockClient, _ := client.NewUnsafeDynamicClient(dynamicclientfake.Get(ctx))
 
 		reconciler := &NamespacedReconciler{
 			Reconciler: &base.Reconciler{
@@ -317,4 +370,56 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 
 		return r
 	}))
+}
+
+func WithNamespacedBrokerOwnerRef(u *unstructured.Unstructured) {
+	refs := u.GetOwnerReferences()
+	if refs == nil {
+		refs = []metav1.OwnerReference{}
+	}
+	refs = append(refs, metav1.OwnerReference{
+		APIVersion:         eventing.SchemeGroupVersion.String(),
+		Kind:               "Broker",
+		Name:               BrokerName,
+		UID:                BrokerUUID,
+		Controller:         pointer.Bool(false),
+		BlockOwnerDeletion: pointer.Bool(true),
+	})
+	u.SetOwnerReferences(refs)
+}
+
+func WithNamespacedLabel(u *unstructured.Unstructured) {
+	labels := u.GetLabels()
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+	labels[kafka.NamespacedBrokerDataplaneLabelKey] = kafka.NamespacedBrokerDataplaneLabelValue
+	u.SetLabels(labels)
+}
+
+func ToManifestivalResource(t *testing.T, obj runtime.Object, mutators ...UnstructuredMutator) runtime.Object {
+	m := func(u *unstructured.Unstructured) {
+		annotations := u.GetAnnotations()
+		if annotations == nil {
+			annotations = make(map[string]string)
+		}
+		annotations["manifestival"] = "new"
+		u.SetAnnotations(annotations)
+
+		annotations[corev1.LastAppliedConfigAnnotation] = lastApplied(u)
+		u.SetAnnotations(annotations)
+	}
+	mutators = append(mutators, m)
+	return ToUnstructured(t, obj, mutators...)
+}
+
+// lastApplied returns a JSON string denoting the resource's state
+func lastApplied(obj *unstructured.Unstructured) string {
+	ann := obj.GetAnnotations()
+	if len(ann) > 0 {
+		delete(ann, corev1.LastAppliedConfigAnnotation)
+		obj.SetAnnotations(ann)
+	}
+	bytes, _ := obj.MarshalJSON()
+	return string(bytes)
 }
