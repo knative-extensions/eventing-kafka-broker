@@ -158,7 +158,29 @@ func NewRoleBinding(namespace string, name string, mutations ...func(account *rb
 	return s
 }
 
-func WithSubjectServiceAccount(saNamespace, saName, roleName string) func(account *rbacv1.ClusterRoleBinding) {
+func WithRoleBindingSubjectServiceAccount(saNamespace, saName string) func(account *rbacv1.RoleBinding) {
+	return func(cb *rbacv1.RoleBinding) {
+		cb.Subjects = []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Namespace: saNamespace,
+				Name:      saName,
+			},
+		}
+	}
+}
+
+func WithRoleBindingClusterRoleRef(roleName string) func(account *rbacv1.RoleBinding) {
+	return func(cb *rbacv1.RoleBinding) {
+		cb.RoleRef = rbacv1.RoleRef{
+			Kind:     "ClusterRole",
+			Name:     roleName,
+			APIGroup: "rbac.authorization.k8s.io",
+		}
+	}
+}
+
+func WithClusterRoleBindingSubjectServiceAccount(saNamespace, saName string) func(account *rbacv1.ClusterRoleBinding) {
 	return func(cb *rbacv1.ClusterRoleBinding) {
 		cb.Subjects = []rbacv1.Subject{
 			{
@@ -167,6 +189,11 @@ func WithSubjectServiceAccount(saNamespace, saName, roleName string) func(accoun
 				Name:      saName,
 			},
 		}
+	}
+}
+
+func WithClusterRoleBindingRoleRef(roleName string) func(account *rbacv1.ClusterRoleBinding) {
+	return func(cb *rbacv1.ClusterRoleBinding) {
 		cb.RoleRef = rbacv1.RoleRef{
 			Kind:     "ClusterRole",
 			Name:     roleName,
@@ -634,7 +661,7 @@ func PodAnnotations(annotations map[string]string) PodOption {
 	}
 }
 
-func DataPlaneConfigMap(namespace, name, key string, options ...base.ConfigMapOption) *corev1.ConfigMap {
+func DataPlaneConfigMap(namespace, name, key string, options ...reconcilertesting.ConfigMapOption) *corev1.ConfigMap {
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -652,7 +679,7 @@ func DataPlaneConfigMap(namespace, name, key string, options ...base.ConfigMapOp
 	return cm
 }
 
-func DataPlaneConfigInitialOffset(key string, offset sources.Offset) base.ConfigMapOption {
+func DataPlaneConfigInitialOffset(key string, offset sources.Offset) reconcilertesting.ConfigMapOption {
 	return func(cm *corev1.ConfigMap) {
 		props := properties.MustLoadString(cm.Data[key])
 		_, _, _ = props.Set("auto.offset.reset", string(offset))
