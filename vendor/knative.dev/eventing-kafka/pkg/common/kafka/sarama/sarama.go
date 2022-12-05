@@ -19,7 +19,7 @@ package sarama
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 
@@ -40,7 +40,7 @@ func EnableSaramaLogging(enable bool) {
 	if enable {
 		sarama.Logger = log.New(os.Stdout, "[sarama] ", log.LstdFlags)
 	} else {
-		sarama.Logger = log.New(ioutil.Discard, "[Sarama] ", log.LstdFlags)
+		sarama.Logger = log.New(io.Discard, "[Sarama] ", log.LstdFlags)
 	}
 }
 

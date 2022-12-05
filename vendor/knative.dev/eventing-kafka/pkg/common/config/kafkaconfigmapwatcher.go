@@ -31,10 +31,8 @@ import (
 // This function type is for a shim so that we can pass our own logger to the Observer function
 type LoggingObserver func(ctx context.Context, configMap *corev1.ConfigMap)
 
-//
 // Initialize The Specified Context With A ConfigMap Watcher
 // Much Of This Function Is Taken From The knative.dev sharedmain Package
-//
 func InitializeKafkaConfigMapWatcher(ctx context.Context, watcher configmap.Watcher, logger *zap.SugaredLogger, handler LoggingObserver, namespace string) error {
 	// Start The ConfigMap Watcher
 	// Taken from knative.dev/pkg/injection/sharedmain/main.go::WatchObservabilityConfigOrDie

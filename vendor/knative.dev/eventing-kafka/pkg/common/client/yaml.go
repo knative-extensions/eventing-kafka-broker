@@ -28,7 +28,6 @@ import (
 // Regular Expression To Find All Certificates In Net.TLS.Config.RootPEMs Field
 var regexRootPEMs = regexp.MustCompile(`(?s)\s*RootPEMs:.*-----END CERTIFICATE-----`)
 
-//
 // Extract (Parse & Remove) Top Level Kafka Version From Specified Sarama Confirm YAML String
 //
 // The Sarama.Config struct contains a top-level 'Version' field of type sarama.KafkaVersion.
@@ -38,7 +37,6 @@ var regexRootPEMs = regexp.MustCompile(`(?s)\s*RootPEMs:.*-----END CERTIFICATE--
 // and return as an actual sarama.KafkaVersion.
 //
 // In the case where the user has NOT specified, nil will be returned.
-//
 func extractKafkaVersion(saramaConfigYamlString string) (string, *sarama.KafkaVersion, error) {
 
 	// Define Inline Struct To Marshall The Top Level Sarama Config "Kafka" Version Into
@@ -74,7 +72,8 @@ func extractKafkaVersion(saramaConfigYamlString string) (string, *sarama.KafkaVe
 	}
 }
 
-/* Extract (Parse & Remove) TLS.Config Level RootPEMs From Specified Sarama Confirm YAML String
+/*
+	Extract (Parse & Remove) TLS.Config Level RootPEMs From Specified Sarama Confirm YAML String
 
 The Sarama.Config struct contains Net.TLS.Config which is a *tls.Config which cannot be parsed.
 due to it being from another package and containing lots of func()s.  We do need the ability
@@ -92,27 +91,30 @@ The following shows an example of the expected usage...
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: config-kafka
-  namespace: knative-eventing
+
+	name: config-kafka
+	namespace: knative-eventing
+
 data:
-  sarama: |
-    Admin:
-      Timeout: 10000000000
-    Net:
-      KeepAlive: 30000000000
-      TLS:
-        Enable: true
-        Config:
-          RootCaPems:
-          - |-
-            -----BEGIN CERTIFICATE-----
-            MIIGBDCCA+ygAwIBAgIJAKi1aEV58cQ1MA0GCSqGSIb3DQEBCwUAMIGOMQswCQYD
-            ...
-            2wk9rLRZaQnhspt6MhlmU0qkaEZpYND3emR2XZ07m51jXqDUgTjXYCSggImUsARs
-            NAehp9bMeco=
-            -----END CERTIFICATE-----
-      SASL:
-        Enable: true
+
+	sarama: |
+	  Admin:
+	    Timeout: 10000000000
+	  Net:
+	    KeepAlive: 30000000000
+	    TLS:
+	      Enable: true
+	      Config:
+	        RootCaPems:
+	        - |-
+	          -----BEGIN CERTIFICATE-----
+	          MIIGBDCCA+ygAwIBAgIJAKi1aEV58cQ1MA0GCSqGSIb3DQEBCwUAMIGOMQswCQYD
+	          ...
+	          2wk9rLRZaQnhspt6MhlmU0qkaEZpYND3emR2XZ07m51jXqDUgTjXYCSggImUsARs
+	          NAehp9bMeco=
+	          -----END CERTIFICATE-----
+	    SASL:
+	      Enable: true
 
 ...where you should make sure to use the YAML string syntax of "|-" in order to
 prevent trailing linefeed. The indentation of the PEM content is also important

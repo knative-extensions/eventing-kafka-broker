@@ -27,10 +27,11 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
-	"knative.dev/eventing-kafka/pkg/channel/distributed/common/kafka/constants"
 	"knative.dev/pkg/logging"
 	"sigs.k8s.io/yaml"
+
+	"knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	"knative.dev/eventing-kafka/pkg/channel/distributed/common/kafka/constants"
 )
 
 type KafkaAuthConfig struct {
@@ -226,7 +227,7 @@ func (b *configBuilder) Build(ctx context.Context) (*sarama.Config, error) {
 		}
 
 		// Override Any Custom Parsed TLS.Config.RootCAs
-		if certPool != nil && len(certPool.Subjects()) > 0 {
+		if certPool != nil {
 			config.Net.TLS.Config = &tls.Config{RootCAs: certPool}
 		}
 	}
