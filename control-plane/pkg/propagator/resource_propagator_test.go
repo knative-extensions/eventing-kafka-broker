@@ -79,7 +79,7 @@ func TestUnmarshal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := Unmarshal(&tt.cm)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Propagate() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Unmarshal() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
