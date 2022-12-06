@@ -93,16 +93,16 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
-	reconciler.SecretTracker = impl.Tracker
-	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))
+	reconciler.Tracker = impl.Tracker
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
 
-	reconciler.ConfigMapTracker = impl.Tracker
+	reconciler.Tracker = impl.Tracker
 	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects
 		// coming through this path missing TypeMeta, so ensure it is properly
 		// populated.
 		controller.EnsureTypeMeta(
-			reconciler.ConfigMapTracker.OnChanged,
+			reconciler.Tracker.OnChanged,
 			corev1.SchemeGroupVersion.WithKind("ConfigMap"),
 		),
 	))

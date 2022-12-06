@@ -235,7 +235,7 @@ func TestUpdateDispatcherPodAnnotation(t *testing.T) {
 func TestTrackConfigMap(t *testing.T) {
 
 	r := &base.Reconciler{
-		ConfigMapTracker: tracker.New(func(name types.NamespacedName) {}, time.Second),
+		Tracker: tracker.New(func(name types.NamespacedName) {}, time.Second),
 	}
 
 	cm := &corev1.ConfigMap{
@@ -255,7 +255,7 @@ func TestTrackConfigMap(t *testing.T) {
 func TestTrackSecret(t *testing.T) {
 
 	r := &base.Reconciler{
-		SecretTracker: tracker.New(func(name types.NamespacedName) {}, time.Second),
+		Tracker: tracker.New(func(name types.NamespacedName) {}, time.Second),
 	}
 
 	cm := &corev1.Secret{

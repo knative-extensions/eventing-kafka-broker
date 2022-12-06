@@ -1811,8 +1811,8 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 			IngressHost: network.GetServiceHostname(env.IngressName, env.SystemNamespace),
 		}
 
-		reconciler.ConfigMapTracker = &FakeTracker{}
-		reconciler.SecretTracker = &FakeTracker{}
+		reconciler.Tracker = &FakeTracker{}
+		reconciler.Tracker = &FakeTracker{}
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))
 

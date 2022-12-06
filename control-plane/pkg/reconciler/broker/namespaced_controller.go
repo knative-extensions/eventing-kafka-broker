@@ -56,6 +56,12 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
+const (
+	// NamespacedBrokerAdditionalResourcesConfigMapName is the ConfigMap name for the ConfigMap that holds additional
+	// resources to be propagated to the target namespace like Prometheus ServiceMonitors, etc.
+	NamespacedBrokerAdditionalResourcesConfigMapName = "config-namespaced-broker-resources"
+)
+
 func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env *config.Env) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
@@ -108,9 +114,9 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 
-	reconciler.SecretTracker = impl.Tracker
+	reconciler.Tracker = impl.Tracker
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(controller.EnsureTypeMeta(
-		reconciler.SecretTracker.OnChanged,
+		reconciler.Tracker.OnChanged,
 		corev1.SchemeGroupVersion.WithKind("Secret"),
 	)))
 
@@ -128,6 +134,10 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 				globalResync(obj)
 			},
 		},
+	})
+
+	watcher.Watch(NamespacedBrokerAdditionalResourcesConfigMapName, func(configMap *corev1.ConfigMap) {
+		globalResync(configMap)
 	})
 
 	deploymentinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
@@ -172,13 +182,13 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		)),
 	})
 
-	reconciler.ConfigMapTracker = impl.Tracker
+	reconciler.Tracker = impl.Tracker
 	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects
 		// coming through this path missing TypeMeta, so ensure it is properly
 		// populated.
 		controller.EnsureTypeMeta(
-			reconciler.ConfigMapTracker.OnChanged,
+			reconciler.Tracker.OnChanged,
 			corev1.SchemeGroupVersion.WithKind("ConfigMap"),
 		),
 	))

@@ -1400,7 +1400,7 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			IngressHost: network.GetServiceHostname(env.IngressName, env.SystemNamespace),
 		}
 
-		reconciler.SecretTracker = &FakeTracker{}
+		reconciler.Tracker = &FakeTracker{}
 
 		return sinkreconciler.NewReconciler(
 			ctx,

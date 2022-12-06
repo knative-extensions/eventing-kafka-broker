@@ -2383,8 +2383,8 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			Prober: proberMock,
 		}
 
-		reconciler.ConfigMapTracker = &FakeTracker{}
-		reconciler.SecretTracker = &FakeTracker{}
+		reconciler.Tracker = &FakeTracker{}
+		reconciler.Tracker = &FakeTracker{}
 
 		r := brokerreconciler.NewReconciler(
 			ctx,

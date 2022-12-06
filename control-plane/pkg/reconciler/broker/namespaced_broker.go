@@ -27,15 +27,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
-
 	appslisters "k8s.io/client-go/listers/apps/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	rbaclisters "k8s.io/client-go/listers/rbac/v1"
+	"k8s.io/utils/pointer"
 
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
@@ -46,6 +46,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/propagator"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
@@ -120,8 +121,7 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 			KubeClient:                   r.Reconciler.KubeClient,
 			PodLister:                    r.Reconciler.PodLister,
 			SecretLister:                 r.Reconciler.SecretLister,
-			SecretTracker:                r.Reconciler.SecretTracker,
-			ConfigMapTracker:             r.Reconciler.ConfigMapTracker,
+			Tracker:                      r.Reconciler.Tracker,
 			DataPlaneConfigConfigMapName: r.Reconciler.DataPlaneConfigConfigMapName,
 			ContractConfigMapName:        r.Reconciler.ContractConfigMapName,
 			ContractConfigMapFormat:      r.Reconciler.ContractConfigMapFormat,
@@ -180,6 +180,12 @@ func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing
 		return mf.Manifest{}, err
 	}
 	resources = append(resources, additionalRoleBindings...)
+
+	additionalResources, err := r.resourcesFromConfigMap(NamespacedBrokerAdditionalResourcesConfigMapName)
+	if err != nil {
+		return mf.Manifest{}, err
+	}
+	resources = append(resources, additionalResources...)
 
 	manifest, err := mf.ManifestFrom(mf.Slice(resources), mf.UseClient(r.ManifestivalClient))
 	if err != nil {
@@ -400,6 +406,22 @@ func (r *NamespacedReconciler) createManifestFromClusterRoleBinding(broker *even
 		RoleRef:  sysClusterRoleBinding.RoleRef,
 	}
 	return unstructuredFromObject(cm)
+}
+
+func (r *NamespacedReconciler) resourcesFromConfigMap(name string) ([]unstructured.Unstructured, error) {
+	cm, err := r.ConfigMapLister.ConfigMaps(r.SystemNamespace).Get(name)
+	if apierrors.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ConfigMap %s/%s: %w", r.SystemNamespace, name, err)
+	}
+
+	resources, err := propagator.Unmarshal(cm)
+	if err != nil {
+		return nil, err
+	}
+	return resources.Resources, nil
 }
 
 func unstructuredFromObject(obj runtime.Object) (unstructured.Unstructured, error) {
