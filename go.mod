@@ -37,6 +37,7 @@ require (
 
 require (
 	github.com/kedacore/keda/v2 v2.8.1
+	gopkg.in/yaml.v3 v3.0.1
 	knative.dev/eventing v0.35.1-0.20221202062718-c4da68a6d55a
 	knative.dev/eventing-kafka v0.35.1-0.20221205102520-313e3b60d37d
 	knative.dev/hack v0.0.0-20221201154717-7233e77996f1
@@ -152,7 +153,6 @@ require (
 	google.golang.org/grpc v1.49.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/code-generator v0.25.4 // indirect
 	k8s.io/gengo v0.0.0-20221011193443-fad74ee6edd9 // indirect
 	k8s.io/klog/v2 v2.80.2-0.20221028030830-9ae4992afb54 // indirect
