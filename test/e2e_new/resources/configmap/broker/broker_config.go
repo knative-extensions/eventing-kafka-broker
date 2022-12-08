@@ -61,3 +61,9 @@ func WithBootstrapServer(bootstrapServer string) manifest.CfgFn {
 		cfg["bootstrapServer"] = bootstrapServer
 	}
 }
+
+func WithAuthSecret(authSecret string) manifest.CfgFn {
+	return func(cfg map[string]interface{}) {
+		cfg["authSecret"] = authSecret
+	}
+}

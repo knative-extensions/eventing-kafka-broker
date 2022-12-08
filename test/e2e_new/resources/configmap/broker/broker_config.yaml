@@ -27,3 +27,6 @@ data:
   {{ if .replicationFactor }}
   default.topic.replication.factor: "{{ .replicationFactor }}"
   {{ end }}
+  {{ if .authSecret }}
+  auth.secret.ref.name: "{{ .authSecret }}"
+  {{ end }}
