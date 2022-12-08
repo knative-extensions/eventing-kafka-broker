@@ -186,12 +186,11 @@ func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consume
 	defer kafkaClusterAdminClient.Close()
 
 	groupId := cg.Spec.Template.Spec.Configs.Configs["group.id"]
-	if err := kafkaClusterAdminClient.DeleteConsumerGroup(groupId); err != nil && !errors.Is(sarama.ErrGroupIDNotFound, err) {
-		logging.FromContext(ctx).Errorw("unable to delete the consumer group", zap.String("id", groupId), zap.Error(err))
-		return err
+	if err = kafkaClusterAdminClient.DeleteConsumerGroup(groupId); err != nil && !errorIsOneOf(err, sarama.ErrUnknownTopicOrPartition, sarama.ErrGroupIDNotFound) {
+		return fmt.Errorf("unable to delete the consumer group %s: %w", groupId, err)
 	}
 
-	logging.FromContext(ctx).Infow("consumer group deleted", zap.String("id", groupId))
+	logging.FromContext(ctx).Debug("consumer group deleted", zap.String("id", groupId))
 	return nil
 }
 
@@ -650,6 +649,16 @@ func (r Reconciler) ensureContractConfigMapExists(ctx context.Context, p *corev1
 		return fmt.Errorf("failed to create ConfigMap %s/%s: %w", r.SystemNamespace, name, err)
 	}
 	return nil
+}
+
+func errorIsOneOf(err error, errs ...error) bool {
+	for _, e := range errs {
+		if errors.Is(err, e) {
+			return true
+		}
+	}
+
+	return false
 }
 
 var (

@@ -433,7 +433,7 @@ func TestReconcileKind(t *testing.T) {
 							{PodName: "p1", VReplicas: 1},
 							{PodName: "p2", VReplicas: 1},
 						}
-						cg.MarkReconcileConsumersFailedCondition(&apis.Condition{
+						_ = cg.MarkReconcileConsumersFailedCondition(&apis.Condition{
 							Type:    kafkainternals.ConsumerConditionBind,
 							Status:  corev1.ConditionFalse,
 							Reason:  "ConsumerBinding",
@@ -1995,10 +1995,160 @@ func TestFinalizeKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
 		},
-		//need to add support for DeleteConsumerGroup in admin_mock.go before adding more testcases
+		{
+			Name: "Finalize normal - failed consumer group deletion with " + sarama.ErrUnknownTopicOrPartition.Error(),
+			Objects: []runtime.Object{
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+						ConsumerSubscriber(NewSourceSinkReference()),
+					)),
+				),
+				NewDeletedConsumeGroup(
+					ConsumerGroupOwnerRef(SourceAsOwnerReference()),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+					)),
+				),
+			},
+			Key: testKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return nil, nil
+				}),
+				kafkatesting.ErrorOnDeleteConsumerGroupTestKey: sarama.ErrUnknownTopicOrPartition,
+			},
+			WantDeletes: []clientgotesting.DeleteActionImpl{
+				{
+					ActionImpl: clientgotesting.ActionImpl{
+						Namespace: ConsumerGroupNamespace,
+						Resource: schema.GroupVersionResource{
+							Group:    kafkainternals.SchemeGroupVersion.Group,
+							Version:  kafkainternals.SchemeGroupVersion.Version,
+							Resource: "consumers",
+						},
+					},
+					Name: fmt.Sprintf("%s-%d", ConsumerNamePrefix, 1),
+				},
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
+		},
+		{
+			Name: "Finalize normal - failed consumer group deletion with " + sarama.ErrGroupIDNotFound.Error(),
+			Objects: []runtime.Object{
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+						ConsumerSubscriber(NewSourceSinkReference()),
+					)),
+				),
+				NewDeletedConsumeGroup(
+					ConsumerGroupOwnerRef(SourceAsOwnerReference()),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+					)),
+				),
+			},
+			Key: testKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return nil, nil
+				}),
+				kafkatesting.ErrorOnDeleteConsumerGroupTestKey: sarama.ErrGroupIDNotFound,
+			},
+			WantDeletes: []clientgotesting.DeleteActionImpl{
+				{
+					ActionImpl: clientgotesting.ActionImpl{
+						Namespace: ConsumerGroupNamespace,
+						Resource: schema.GroupVersionResource{
+							Group:    kafkainternals.SchemeGroupVersion.Group,
+							Version:  kafkainternals.SchemeGroupVersion.Version,
+							Resource: "consumers",
+						},
+					},
+					Name: fmt.Sprintf("%s-%d", ConsumerNamePrefix, 1),
+				},
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
+		},
+		{
+			Name: "Finalize error - failed consumer group deletion with " + sarama.ErrClusterAuthorizationFailed.Error(),
+			Objects: []runtime.Object{
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+						ConsumerSubscriber(NewSourceSinkReference()),
+					)),
+				),
+				NewDeletedConsumeGroup(
+					ConsumerGroupOwnerRef(SourceAsOwnerReference()),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+					)),
+				),
+			},
+			WantErr: true,
+			Key:     testKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return nil, nil
+				}),
+				kafkatesting.ErrorOnDeleteConsumerGroupTestKey: sarama.ErrClusterAuthorizationFailed,
+			},
+			WantDeletes: []clientgotesting.DeleteActionImpl{
+				{
+					ActionImpl: clientgotesting.ActionImpl{
+						Namespace: ConsumerGroupNamespace,
+						Resource: schema.GroupVersionResource{
+							Group:    kafkainternals.SchemeGroupVersion.Group,
+							Version:  kafkainternals.SchemeGroupVersion.Version,
+							Resource: "consumers",
+						},
+					},
+					Name: fmt.Sprintf("%s-%d", ConsumerNamePrefix, 1),
+				},
+			},
+			WantEvents: []string{
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					"unable to delete the consumer group my.group.id: "+sarama.ErrClusterAuthorizationFailed.Error(),
+				),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
+		},
 	}
 
 	table.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
+
+		errorOnDeleteKafkaCG := row.OtherTestData[kafkatesting.ErrorOnDeleteConsumerGroupTestKey]
 
 		r := &Reconciler{
 			SchedulerFunc: func(s string) Scheduler {
@@ -2017,7 +2167,8 @@ func TestFinalizeKind(t *testing.T) {
 			},
 			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
-					T: t,
+					T:                          t,
+					ErrorOnDeleteConsumerGroup: ErrorAssertOrNil(errorOnDeleteKafkaCG),
 				}, nil
 			},
 			KafkaFeatureFlags: configapis.DefaultFeaturesConfig(),
