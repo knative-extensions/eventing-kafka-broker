@@ -101,7 +101,9 @@ func TracingHeadersUsingOrderedDeliveryWithTraceExported() *feature.Feature {
 		triggerName,
 		brokerName,
 		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
-		trigger.WithAnnotation("kafka.eventing.knative.dev/delivery.order", "ordered"),
+		trigger.WithAnnotations(map[string]interface{}{
+			"kafka.eventing.knative.dev/delivery.order": "ordered",
+		}),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
