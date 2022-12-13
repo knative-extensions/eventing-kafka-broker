@@ -121,7 +121,7 @@ func BrokerAuthSecretDoesNotExist() *feature.Feature {
 			broker.WithConfig(configName),
 			broker.WithAnnotations(
 				map[string]interface{}{
-					kafkabroker.ExternalTopicAnnotation : "my-topic",
+					kafkabroker.ExternalTopicAnnotation: "my-topic",
 				}))...))
 
 	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
