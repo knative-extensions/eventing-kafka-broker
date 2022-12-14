@@ -38,7 +38,7 @@ require (
 require (
 	github.com/kedacore/keda/v2 v2.8.1
 	gopkg.in/yaml.v3 v3.0.1
-	knative.dev/eventing v0.35.1-0.20221213063748-661fd01ebfa0
+	knative.dev/eventing v0.35.1-0.20221214083955-1048c6cfe143
 	knative.dev/eventing-kafka v0.35.1-0.20221209060617-bdb5df2114f2
 	knative.dev/hack v0.0.0-20221209013717-b9801b4f5a4d
 	knative.dev/pkg v0.0.0-20221209013515-911b435f02a1
