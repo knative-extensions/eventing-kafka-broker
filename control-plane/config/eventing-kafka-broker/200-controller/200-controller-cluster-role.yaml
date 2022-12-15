@@ -22,13 +22,13 @@ metadata:
     kafka.eventing.knative.dev/release: devel
 rules:
   - apiGroups:
-      - "*"
+      - ""
     resources:
       - configmaps
     verbs:
       - delete
   - apiGroups:
-      - "*"
+      - ""
     resources:
       - configmaps
       - services
@@ -40,7 +40,7 @@ rules:
       - create
       - delete
   - apiGroups:
-      - "*"
+      - ""
     resources:
       - pods
     verbs:
@@ -49,7 +49,7 @@ rules:
       - get
       - watch
   - apiGroups:
-      - "*"
+      - ""
     resources:
       - pods/finalizers
     verbs:
@@ -59,7 +59,7 @@ rules:
       - update
       - delete
   - apiGroups:
-      - "*"
+      - ""
     resources:
       - events
     verbs:
@@ -79,7 +79,7 @@ rules:
       - watch
 
   - apiGroups:
-      - "*"
+      - ""
     resources:
       - secrets
     verbs:
@@ -111,7 +111,7 @@ rules:
       - list
       - watch
   - apiGroups:
-    - "*"
+    - ""
     resources:
       - serviceaccounts
     verbs:
@@ -135,7 +135,7 @@ rules:
 
   # Scheduler permissions
   - apiGroups:
-      - "*"
+      - ""
     resources:
       - nodes
     verbs:

@@ -22,7 +22,7 @@ metadata:
     kafka.eventing.knative.dev/release: devel
 rules:
   - apiGroups:
-      - "*"
+      - ""
     resources:
       - secrets
     verbs:
