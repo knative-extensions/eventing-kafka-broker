@@ -31,6 +31,7 @@ import (
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	v1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
@@ -351,7 +352,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return err
 	}
 
-	broker.Status.Address.URL = nil
+	broker.Status.AddressStatus = v1.AddressStatus{}
 
 	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.Reconciler.DataPlaneNamespace)
 
