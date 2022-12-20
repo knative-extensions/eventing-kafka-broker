@@ -401,7 +401,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 	// External topics are not managed by the broker,
 	// therefore we do not delete them
-	//	_, externalTopic := isExternalTopic(broker)
 	if !externalTopic {
 
 		// I do not like the use of `_`
