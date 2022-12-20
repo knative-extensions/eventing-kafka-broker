@@ -117,3 +117,21 @@ func BrokerCannotReachKafkaCluster() *feature.Feature {
 
 	return f
 }
+
+func BrokerWithBogusConfig() *feature.Feature {
+	f := feature.NewFeatureNamed("delete broker with unreachable Kafka cluster")
+
+	brokerName := feature.MakeRandomK8sName("broker")
+	configName := feature.MakeRandomK8sName("config")
+
+	f.Setup("create broker config", brokerconfigmap.Install(
+		configName,
+		brokerconfigmap.WithBogusData("foo", "bar"),
+	))
+
+	f.Setup("install broker", broker.Install(brokerName, append(broker.WithEnvConfig(), broker.WithConfig(configName))...))
+
+	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
+
+	return f
+}

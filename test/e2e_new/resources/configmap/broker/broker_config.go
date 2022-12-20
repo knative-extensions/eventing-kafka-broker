@@ -61,3 +61,9 @@ func WithBootstrapServer(bootstrapServer string) manifest.CfgFn {
 		cfg["bootstrapServer"] = bootstrapServer
 	}
 }
+
+func WithBogusData(key, value string) manifest.CfgFn {
+	return func(cfg map[string]interface{}) {
+		cfg[key] = value
+	}
+}
