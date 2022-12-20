@@ -2150,6 +2150,54 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				testProber: probertesting.MockProber(prober.StatusNotReady),
 			},
 		},
+		{
+			Name: "Reconciled normal - with missing auth secret",
+			Objects: []runtime.Object{
+				NewDeletedBroker(
+					WithExternalTopic(ExternalTopicName),
+					WithBrokerConfig(KReference(BrokerConfig(bootstrapServers, 20, 5,
+						BrokerAuthConfig("secret-not-present-1"),
+					))),
+					BrokerConfigMapSecretAnnotation("secret-not-present-1"),
+				),
+				BrokerConfig(bootstrapServers, 20, 5, BrokerAuthConfig("secret-not-present-1")),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+						},
+					},
+					Generation: 1,
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources:  []*contract.Resource{},
+					Generation: 2,
+				}),
+				BrokerReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
+			},
+		},
 
 		{
 			Name: "Failed to delete topic",
