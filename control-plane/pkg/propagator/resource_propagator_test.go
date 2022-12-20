@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -33,6 +33,7 @@ var (
 			"spec": map[string]interface{}{
 				"targetLabels": "x",
 			},
+			"metadata": map[string]any{"namespace": "my-ns"},
 		},
 	}
 	serviceMonitorY = unstructured.Unstructured{
@@ -42,15 +43,34 @@ var (
 			"spec": map[string]interface{}{
 				"targetLabels": "y",
 			},
+			"metadata": map[string]any{"namespace": "my-ns"},
 		},
 	}
 
-	resources = `- apiVersion: monitoring.coreos.com/v1
+	resourcesTemplate = `- apiVersion: monitoring.coreos.com/v1
   kind: ServiceMonitor
+  metadata:
+    namespace: {{.Namespace}}
   spec:
     targetLabels: x
 - apiVersion: monitoring.coreos.com/v1
   kind: ServiceMonitor
+  metadata:
+    namespace: {{.Namespace}}
+  spec:
+    targetLabels: "y"
+`
+
+	resources = `- apiVersion: monitoring.coreos.com/v1
+  kind: ServiceMonitor
+  metadata:
+    namespace: my-ns
+  spec:
+    targetLabels: x
+- apiVersion: monitoring.coreos.com/v1
+  kind: ServiceMonitor
+  metadata:
+    namespace: my-ns
   spec:
     targetLabels: "y"
 `
@@ -60,16 +80,20 @@ func TestUnmarshal(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		cm      v1.ConfigMap
+		cm      corev1.ConfigMap
+		data    TemplateData
 		want    Resources
 		wantErr bool
 	}{
 		{
 			name: "Unmarshal ServiceMonitors",
-			cm: v1.ConfigMap{
+			cm: corev1.ConfigMap{
 				Data: map[string]string{
-					"resources": resources,
+					"resources": resourcesTemplate,
 				},
+			},
+			data: TemplateData{
+				Namespace: "my-ns",
 			},
 			want:    Resources{Resources: []unstructured.Unstructured{serviceMonitorX, serviceMonitorY}},
 			wantErr: false,
@@ -77,7 +101,7 @@ func TestUnmarshal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Unmarshal(&tt.cm)
+			got, err := Unmarshal(&tt.cm, tt.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Unmarshal() error = %v, wantErr %v", err, tt.wantErr)
 				return

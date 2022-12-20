@@ -181,7 +181,7 @@ func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing
 	}
 	resources = append(resources, additionalRoleBindings...)
 
-	additionalResources, err := r.resourcesFromConfigMap(NamespacedBrokerAdditionalResourcesConfigMapName)
+	additionalResources, err := r.resourcesFromConfigMap(NamespacedBrokerAdditionalResourcesConfigMapName, broker.Namespace)
 	if err != nil {
 		return mf.Manifest{}, err
 	}
@@ -408,7 +408,7 @@ func (r *NamespacedReconciler) createManifestFromClusterRoleBinding(broker *even
 	return unstructuredFromObject(cm)
 }
 
-func (r *NamespacedReconciler) resourcesFromConfigMap(name string) ([]unstructured.Unstructured, error) {
+func (r *NamespacedReconciler) resourcesFromConfigMap(name string, renderNamespace string) ([]unstructured.Unstructured, error) {
 	cm, err := r.ConfigMapLister.ConfigMaps(r.SystemNamespace).Get(name)
 	if apierrors.IsNotFound(err) {
 		return nil, nil
@@ -417,7 +417,7 @@ func (r *NamespacedReconciler) resourcesFromConfigMap(name string) ([]unstructur
 		return nil, fmt.Errorf("failed to get ConfigMap %s/%s: %w", r.SystemNamespace, name, err)
 	}
 
-	resources, err := propagator.Unmarshal(cm)
+	resources, err := propagator.Unmarshal(cm, propagator.TemplateData{Namespace: renderNamespace})
 	if err != nil {
 		return nil, err
 	}

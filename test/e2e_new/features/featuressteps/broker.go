@@ -164,7 +164,7 @@ func AddAdditionalResourcesToPropagationConfigMap(cmName string, additionalResou
 			t.Errorf("Failed to get ConfigMap %s/%s: %w", system.Namespace(), cmName, err)
 		}
 
-		resources, err := propagator.Unmarshal(cm)
+		resources, err := propagator.UnmarshalTemplate(cm)
 		if err != nil {
 			t.Fatal("Failed to unmarshal resources from ConfigMap %s/%s: %w\n%s", system.Namespace(), cmName, err, cm.Data["resources"])
 		}
