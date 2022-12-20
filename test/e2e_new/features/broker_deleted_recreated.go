@@ -27,6 +27,8 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/resources/svc"
 
+	kafkabroker "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+
 	"knative.dev/eventing-kafka-broker/test/e2e_new/features/featuressteps"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap"
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
@@ -91,6 +93,36 @@ func BrokerConfigMapDoesNotExist() *feature.Feature {
 	brokerName := feature.MakeRandomK8sName("broker")
 
 	f.Setup("install broker", broker.Install(brokerName, append(broker.WithEnvConfig(), broker.WithConfig("doesNotExist"))...))
+
+	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
+
+	return f
+}
+
+// BrokerAuthSecretDoesNotExist tests that a broker can be deleted without the Secret existing.
+func BrokerAuthSecretDoesNotExist() *feature.Feature {
+	f := feature.NewFeatureNamed("delete broker with non existing Secret")
+
+	brokerName := feature.MakeRandomK8sName("broker")
+	configName := feature.MakeRandomK8sName("config")
+
+	f.Setup("create broker config", brokerconfigmap.Install(
+		configName,
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
+		brokerconfigmap.WithNumPartitions(1),
+		brokerconfigmap.WithReplicationFactor(1),
+		brokerconfigmap.WithAuthSecret("does-not-exist"),
+	))
+
+	f.Setup("install broker", broker.Install(
+		brokerName,
+		append(
+			broker.WithEnvConfig(),
+			broker.WithConfig(configName),
+			broker.WithAnnotations(
+				map[string]interface{}{
+					kafkabroker.ExternalTopicAnnotation: "my-topic",
+				}))...))
 
 	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
 
