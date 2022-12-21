@@ -43,6 +43,11 @@ spec:
           patternType: literal
         operation: Read
         host: "*"
+      - resource:
+          type: group
+          name: "*"
+        operation: Delete
+        host: "*"
       # Example ACL rules for producing to topic knative-messaging-kafka
       - resource:
           type: topic
