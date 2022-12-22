@@ -100,6 +100,22 @@ func TestBrokerAuthSecretDoesNotExist(t *testing.T) {
 	env.Test(ctx, t, features.BrokerAuthSecretDoesNotExist())
 }
 
+func TestBrokerWithBogusConfig(t *testing.T) {
+	// this test is observed to flake more when it is parallel
+	// t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.BrokerWithBogusConfig())
+}
+
 func TestTriggerLatestOffset(t *testing.T) {
 	// this test is observed to flake more when it is parallel
 	// t.Parallel()

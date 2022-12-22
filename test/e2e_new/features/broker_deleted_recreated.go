@@ -18,7 +18,6 @@ package features
 
 import (
 	"k8s.io/apimachinery/pkg/types"
-
 	"knative.dev/pkg/system"
 
 	"knative.dev/eventing/test/rekt/resources/broker"
@@ -119,6 +118,27 @@ func BrokerAuthSecretDoesNotExist() *feature.Feature {
 		append(
 			broker.WithEnvConfig(),
 			broker.WithConfig(configName),
+			broker.WithAnnotations(
+				map[string]interface{}{
+					kafkabroker.ExternalTopicAnnotation: "my-topic",
+				}))...))
+
+	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
+
+	return f
+}
+
+func BrokerWithBogusConfig() *feature.Feature {
+	f := feature.NewFeatureNamed("delete broker with non existing Secret")
+
+	brokerName := feature.MakeRandomK8sName("broker")
+
+	f.Setup("install broker", broker.Install(
+		brokerName,
+		append(
+			broker.WithEnvConfig(),
+			broker.WithConfigNamespace("knative-eventing"),
+			broker.WithConfig("config-br-default-channel"),
 			broker.WithAnnotations(
 				map[string]interface{}{
 					kafkabroker.ExternalTopicAnnotation: "my-topic",
