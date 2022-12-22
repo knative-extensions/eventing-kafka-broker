@@ -434,6 +434,10 @@ func unstructuredFromObject(obj runtime.Object) (unstructured.Unstructured, erro
 
 func appendNewOwnerRefsToPersisted(client mf.Client, broker *eventing.Broker) mf.Transformer {
 	return func(resource *unstructured.Unstructured) error {
+		if resource.GetKind() == "Namespace" {
+			return nil
+		}
+
 		existingRefs, err := getPersistedOwnerRefs(client, resource)
 		if err != nil {
 			return err
@@ -504,7 +508,7 @@ func setLabel(u *unstructured.Unstructured) error {
 func filterMetadataMap(metadata map[string]string) map[string]string {
 	r := make(map[string]string, len(metadata))
 	for k, v := range metadata {
-		if strings.Contains(k, "knative") || strings.Contains(k, "cert") || k == "app" || k == "name" {
+		if strings.Contains(k, "knative") || strings.Contains(k, "cert") || strings.Contains(k, "monitoring") || k == "app" || k == "name" {
 			r[k] = v
 		}
 	}
