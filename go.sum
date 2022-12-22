@@ -1520,8 +1520,8 @@ knative.dev/eventing-kafka v0.35.1-0.20221219133153-20e1b33541bc h1:di4Ayw59srC4
 knative.dev/eventing-kafka v0.35.1-0.20221219133153-20e1b33541bc/go.mod h1:KllJmRMFymCnJ7wyITn2Fokb/6R/2JiuMfd7oTCWZeM=
 knative.dev/hack v0.0.0-20221209013717-b9801b4f5a4d h1:nMp1GE3iwrJzABi4xP0xSVOwaaZMJ8loT9S42d54wFM=
 knative.dev/hack v0.0.0-20221209013717-b9801b4f5a4d/go.mod h1:yk2OjGDsbEnQjfxdm0/HJKS2WqTLEFg/N6nUs6Rqx3Q=
-knative.dev/pkg v0.0.0-20221209013515-911b435f02a1 h1:CqZicZHNls+v1vs/BvGIzgLbJGN4XxT0TjcIFje0uyM=
-knative.dev/pkg v0.0.0-20221209013515-911b435f02a1/go.mod h1:IeUSNPPUpQnM35SjpnfCx0w5/V2RpEc+nmke6oPwpD0=
+knative.dev/pkg v0.0.0-20221221230956-4fd6eb8652b7 h1:YaO4KgF1Kp8BTi1hxMXDRnvsxCFq/wpotOD3jzrHmzw=
+knative.dev/pkg v0.0.0-20221221230956-4fd6eb8652b7/go.mod h1:IeUSNPPUpQnM35SjpnfCx0w5/V2RpEc+nmke6oPwpD0=
 knative.dev/reconciler-test v0.0.0-20221216013452-b9ed31373dcc h1:TsC12GD3wSsybkfbxuCsca78xBhHLZGgZuSL6Byyocc=
 knative.dev/reconciler-test v0.0.0-20221216013452-b9ed31373dcc/go.mod h1:Lr0DNmdAl34DdfapBRhzF04P0zMKntIE1Jsx8BmlIzM=
 pgregory.net/rapid v0.3.3 h1:jCjBsY4ln4Atz78QoBWxUEvAHaFyNDQg9+WU62aCn1U=

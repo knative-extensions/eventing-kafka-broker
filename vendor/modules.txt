@@ -1445,7 +1445,7 @@ knative.dev/eventing-kafka/test/upgrade/installation
 ## explicit; go 1.18
 knative.dev/hack
 knative.dev/hack/shell
-# knative.dev/pkg v0.0.0-20221209013515-911b435f02a1
+# knative.dev/pkg v0.0.0-20221221230956-4fd6eb8652b7
 ## explicit; go 1.18
 knative.dev/pkg/apiextensions/storageversion
 knative.dev/pkg/apiextensions/storageversion/cmd/migrate
