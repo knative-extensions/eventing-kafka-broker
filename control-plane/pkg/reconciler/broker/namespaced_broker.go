@@ -181,7 +181,7 @@ func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing
 	}
 	resources = append(resources, additionalRoleBindings...)
 
-	additionalResources, err := r.resourcesFromConfigMap(NamespacedBrokerAdditionalResourcesConfigMapName)
+	additionalResources, err := r.resourcesFromConfigMap(NamespacedBrokerAdditionalResourcesConfigMapName, broker.Namespace)
 	if err != nil {
 		return mf.Manifest{}, err
 	}
@@ -202,12 +202,12 @@ func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing
 		return mf.Manifest{}, fmt.Errorf("unable to append owner ref: %w", err)
 	}
 
-	manifest, err = manifest.Transform(filterMetadata())
+	manifest, err = manifest.Transform(filterMetadata)
 	if err != nil {
 		return mf.Manifest{}, fmt.Errorf("unable to filter metadata: %w", err)
 	}
 
-	manifest, err = manifest.Transform(setLabel())
+	manifest, err = manifest.Transform(setLabel)
 	if err != nil {
 		return mf.Manifest{}, fmt.Errorf("unable to set label: %w", err)
 	}
@@ -408,7 +408,7 @@ func (r *NamespacedReconciler) createManifestFromClusterRoleBinding(broker *even
 	return unstructuredFromObject(cm)
 }
 
-func (r *NamespacedReconciler) resourcesFromConfigMap(name string) ([]unstructured.Unstructured, error) {
+func (r *NamespacedReconciler) resourcesFromConfigMap(name string, renderNamespace string) ([]unstructured.Unstructured, error) {
 	cm, err := r.ConfigMapLister.ConfigMaps(r.SystemNamespace).Get(name)
 	if apierrors.IsNotFound(err) {
 		return nil, nil
@@ -417,7 +417,7 @@ func (r *NamespacedReconciler) resourcesFromConfigMap(name string) ([]unstructur
 		return nil, fmt.Errorf("failed to get ConfigMap %s/%s: %w", r.SystemNamespace, name, err)
 	}
 
-	resources, err := propagator.Unmarshal(cm)
+	resources, err := propagator.Unmarshal(cm, propagator.TemplateData{Namespace: renderNamespace})
 	if err != nil {
 		return nil, err
 	}
@@ -434,6 +434,10 @@ func unstructuredFromObject(obj runtime.Object) (unstructured.Unstructured, erro
 
 func appendNewOwnerRefsToPersisted(client mf.Client, broker *eventing.Broker) mf.Transformer {
 	return func(resource *unstructured.Unstructured) error {
+		if resource.GetKind() == "Namespace" {
+			return nil
+		}
+
 		existingRefs, err := getPersistedOwnerRefs(client, resource)
 		if err != nil {
 			return err
@@ -488,27 +492,23 @@ func appendOwnerRef(refs []metav1.OwnerReference, broker *eventing.Broker) ([]me
 	return append(refs, newRef), true
 }
 
-func filterMetadata() mf.Transformer {
-	return func(u *unstructured.Unstructured) error {
-		u.SetLabels(filterMetadataMap(u.GetLabels()))
-		u.SetAnnotations(filterMetadataMap(u.GetAnnotations()))
-		return nil
-	}
+func filterMetadata(u *unstructured.Unstructured) error {
+	u.SetLabels(filterMetadataMap(u.GetLabels()))
+	u.SetAnnotations(filterMetadataMap(u.GetAnnotations()))
+	return nil
 }
 
-func setLabel() mf.Transformer {
-	return func(u *unstructured.Unstructured) error {
-		labels := u.GetLabels()
-		labels[kafka.NamespacedBrokerDataplaneLabelKey] = kafka.NamespacedBrokerDataplaneLabelValue
-		u.SetLabels(labels)
-		return nil
-	}
+func setLabel(u *unstructured.Unstructured) error {
+	labels := u.GetLabels()
+	labels[kafka.NamespacedBrokerDataplaneLabelKey] = kafka.NamespacedBrokerDataplaneLabelValue
+	u.SetLabels(labels)
+	return nil
 }
 
 func filterMetadataMap(metadata map[string]string) map[string]string {
 	r := make(map[string]string, len(metadata))
 	for k, v := range metadata {
-		if strings.Contains(k, "knative") || k == "app" {
+		if strings.Contains(k, "knative") || strings.Contains(k, "cert") || strings.Contains(k, "monitoring") || k == "app" || k == "name" {
 			r[k] = v
 		}
 	}

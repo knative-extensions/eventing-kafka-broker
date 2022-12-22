@@ -46,7 +46,8 @@ func NamespacedBrokerResourcesPropagation() *feature.Feature {
 				"namespace": system.Namespace(),
 			},
 			"data": map[string]string{
-				"config": "x-unknown-config",
+				"config":           "x-unknown-config",
+				"dataFromTemplate": "{{.Namespace}}",
 			},
 		},
 	}
