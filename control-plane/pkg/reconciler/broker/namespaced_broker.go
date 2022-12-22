@@ -202,12 +202,12 @@ func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing
 		return mf.Manifest{}, fmt.Errorf("unable to append owner ref: %w", err)
 	}
 
-	manifest, err = manifest.Transform(filterMetadata())
+	manifest, err = manifest.Transform(filterMetadata)
 	if err != nil {
 		return mf.Manifest{}, fmt.Errorf("unable to filter metadata: %w", err)
 	}
 
-	manifest, err = manifest.Transform(setLabel())
+	manifest, err = manifest.Transform(setLabel)
 	if err != nil {
 		return mf.Manifest{}, fmt.Errorf("unable to set label: %w", err)
 	}
@@ -488,21 +488,17 @@ func appendOwnerRef(refs []metav1.OwnerReference, broker *eventing.Broker) ([]me
 	return append(refs, newRef), true
 }
 
-func filterMetadata() mf.Transformer {
-	return func(u *unstructured.Unstructured) error {
-		u.SetLabels(filterMetadataMap(u.GetLabels()))
-		u.SetAnnotations(filterMetadataMap(u.GetAnnotations()))
-		return nil
-	}
+func filterMetadata(u *unstructured.Unstructured) error {
+	u.SetLabels(filterMetadataMap(u.GetLabels()))
+	u.SetAnnotations(filterMetadataMap(u.GetAnnotations()))
+	return nil
 }
 
-func setLabel() mf.Transformer {
-	return func(u *unstructured.Unstructured) error {
-		labels := u.GetLabels()
-		labels[kafka.NamespacedBrokerDataplaneLabelKey] = kafka.NamespacedBrokerDataplaneLabelValue
-		u.SetLabels(labels)
-		return nil
-	}
+func setLabel(u *unstructured.Unstructured) error {
+	labels := u.GetLabels()
+	labels[kafka.NamespacedBrokerDataplaneLabelKey] = kafka.NamespacedBrokerDataplaneLabelValue
+	u.SetLabels(labels)
+	return nil
 }
 
 func filterMetadataMap(metadata map[string]string) map[string]string {
