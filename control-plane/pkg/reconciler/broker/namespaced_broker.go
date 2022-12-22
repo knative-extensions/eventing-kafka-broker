@@ -504,7 +504,7 @@ func setLabel(u *unstructured.Unstructured) error {
 func filterMetadataMap(metadata map[string]string) map[string]string {
 	r := make(map[string]string, len(metadata))
 	for k, v := range metadata {
-		if strings.Contains(k, "knative") || k == "app" {
+		if strings.Contains(k, "knative") || strings.Contains(k, "cert") || k == "app" || k == "name" {
 			r[k] = v
 		}
 	}
