@@ -20,7 +20,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecords;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

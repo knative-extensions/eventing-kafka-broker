@@ -18,7 +18,7 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecord;
 
 /**
  * This interface performs the dispatch of consumed records.

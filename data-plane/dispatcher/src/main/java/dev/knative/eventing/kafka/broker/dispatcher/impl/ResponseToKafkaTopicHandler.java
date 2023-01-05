@@ -22,8 +22,8 @@ import io.cloudevents.CloudEvent;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
+import dev.knative.eventing.kafka.broker.vertx.kafka.producer.KafkaProducer;
+import dev.knative.eventing.kafka.broker.vertx.kafka.producer.KafkaProducerRecord;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;

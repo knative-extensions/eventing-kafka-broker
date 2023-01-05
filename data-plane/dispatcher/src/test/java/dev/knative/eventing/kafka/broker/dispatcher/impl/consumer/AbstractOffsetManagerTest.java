@@ -20,10 +20,10 @@ import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.kafka.client.consumer.OffsetAndMetadata;
-import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecord;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.OffsetAndMetadata;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.impl.KafkaConsumerRecordImpl;
 
 import java.util.Collection;
 import java.util.Map;
@@ -84,7 +84,7 @@ public abstract class AbstractOffsetManagerTest {
         return Future.failedFuture("some failure");
       }
       // If you don't want to lose hours in debugging, please don't remove this FQCNs :)
-      final Map<io.vertx.kafka.client.common.TopicPartition, OffsetAndMetadata>
+      final Map<dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition, OffsetAndMetadata>
         topicsPartitions = invocation.getArgument(0);
       mockConsumer.commitSync(
         topicsPartitions.entrySet()
@@ -130,9 +130,9 @@ public abstract class AbstractOffsetManagerTest {
   @SuppressWarnings("unchecked")
   protected void shouldNeverPause(final KafkaConsumer<String, CloudEvent> consumer) {
     verify(consumer, never()).pause();
-    verify(consumer, never()).pause(any(io.vertx.kafka.client.common.TopicPartition.class));
+    verify(consumer, never()).pause(any(dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition.class));
     verify(consumer, never()).pause(any(Set.class));
-    verify(consumer, never()).pause(any(io.vertx.kafka.client.common.TopicPartition.class), any());
+    verify(consumer, never()).pause(any(dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition.class), any());
     verify(consumer, never()).pause(any(Set.class), any());
   }
 }

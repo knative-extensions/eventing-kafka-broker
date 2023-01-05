@@ -32,7 +32,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
+import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import org.apache.kafka.clients.consumer.MockConsumer;

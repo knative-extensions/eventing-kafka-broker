@@ -31,8 +31,8 @@ import io.micrometer.core.instrument.Tags;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.vertx.core.Future;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import io.vertx.kafka.client.producer.RecordMetadata;
+import dev.knative.eventing.kafka.broker.vertx.kafka.producer.KafkaProducerRecord;
+import dev.knative.eventing.kafka.broker.vertx.kafka.producer.RecordMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

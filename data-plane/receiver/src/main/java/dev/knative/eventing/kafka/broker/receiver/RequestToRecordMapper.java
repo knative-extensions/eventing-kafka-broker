@@ -18,7 +18,7 @@ package dev.knative.eventing.kafka.broker.receiver;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
+import dev.knative.eventing.kafka.broker.vertx.kafka.producer.KafkaProducerRecord;
 
 @FunctionalInterface
 public interface RequestToRecordMapper {

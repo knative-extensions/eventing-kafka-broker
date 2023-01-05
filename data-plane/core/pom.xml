@@ -34,6 +34,11 @@
       <artifactId>contract</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>dev.knative.eventing.kafka.broker</groupId>
+      <artifactId>vertx-kafka</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.kafka</groupId>
@@ -110,10 +115,6 @@
 
     <dependency>
       <groupId>io.vertx</groupId>
-      <artifactId>vertx-kafka-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
       <artifactId>vertx-opentelemetry</artifactId>
     </dependency>
 
@@ -124,6 +125,10 @@
         <exclusion>
           <groupId>org.apache.kafka</groupId>
           <artifactId>kafka-clients</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.vertx</groupId>
+          <artifactId>vertx-core</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
