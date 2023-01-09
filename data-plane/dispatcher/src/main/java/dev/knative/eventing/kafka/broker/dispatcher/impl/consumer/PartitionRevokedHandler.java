@@ -16,7 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import io.vertx.core.Future;
-import dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition;
+import io.vertx.kafka.client.common.TopicPartition;
 
 import java.util.Set;
 

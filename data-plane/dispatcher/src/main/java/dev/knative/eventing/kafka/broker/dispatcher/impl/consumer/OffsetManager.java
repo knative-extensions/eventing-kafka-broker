@@ -19,10 +19,10 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecord;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.OffsetAndMetadata;
+import io.vertx.kafka.client.common.TopicPartition;
+import io.vertx.kafka.client.consumer.KafkaConsumer;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.kafka.client.consumer.OffsetAndMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

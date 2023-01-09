@@ -16,7 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
 import io.cloudevents.CloudEvent;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecord;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
 class ConsumerRecordContext {
 
