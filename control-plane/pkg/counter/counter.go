@@ -18,16 +18,12 @@ package counter
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 )
 
 type Counter struct {
-	counterLock sync.RWMutex
-	counterMap  map[string]int
-
 	cache prober.Cache
 }
 
