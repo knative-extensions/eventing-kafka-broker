@@ -53,6 +53,8 @@ type Cache interface {
 	// UpsertStatus add or updates the status associated with the given key.
 	// Once the given key expires the onExpired callback will be called passing the arg parameter.
 	UpsertStatus(key string, status Status, arg interface{}, onExpired ExpirationFunc)
+	// Expire will expire the given key.
+	Expire(key string)
 }
 
 // ExpirationFunc is a callback called once an entry in the cache is expired.
@@ -123,6 +125,18 @@ func (c *localExpiringCache) UpsertStatus(key string, status Status, arg interfa
 	value := &value{status: status, lastUpsert: time.Now(), key: key, arg: arg, onExpired: onExpired}
 	element := c.entries.PushBack(value)
 	c.targets[key] = element
+}
+
+func (c *localExpiringCache) Expire(key string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	element, ok := c.targets[key]
+	if !ok {
+		return
+	}
+	c.entries.Remove(element)
+	delete(c.targets, key)
 }
 
 func (c *localExpiringCache) removeExpiredEntries(now time.Time) {

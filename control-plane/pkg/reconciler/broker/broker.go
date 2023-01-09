@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -40,6 +39,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
@@ -59,32 +59,6 @@ const (
 	ConsumerConfigKey = "config-kafka-broker-consumer.properties"
 )
 
-type Counter struct {
-	counterLock sync.RWMutex
-	counterMap  map[string]int
-}
-
-func NewCounter() *Counter {
-	return &Counter{
-		counterLock: sync.RWMutex{},
-		counterMap:  make(map[string]int),
-	}
-}
-
-func (c *Counter) Inc(brokerUUID string) int {
-	c.counterLock.Lock()
-	defer c.counterLock.Unlock()
-	c.counterMap[brokerUUID]++
-
-	return c.counterMap[brokerUUID]
-}
-
-func (c *Counter) Del(brokerUUID string) {
-	c.counterLock.Lock()
-	defer c.counterLock.Unlock()
-	delete(c.counterMap, brokerUUID)
-}
-
 type Reconciler struct {
 	*base.Reconciler
 	*config.Env
@@ -100,7 +74,7 @@ type Reconciler struct {
 	BootstrapServers string
 
 	Prober  prober.Prober
-	Counter *Counter
+	Counter *counter.Counter
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
