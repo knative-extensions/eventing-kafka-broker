@@ -68,7 +68,6 @@
     <module>core</module>
     <module>receiver</module>
     <module>dispatcher</module>
-    <module>vertx-kafka</module>
   </modules>
 
   <profiles>
@@ -120,6 +119,21 @@
         <scope>import</scope>
       </dependency>
 
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-kafka-client</artifactId>
+        <version>${vertx.kafka.clients.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-core</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
       <dependency>
         <groupId>io.vertx</groupId>
         <artifactId>vertx-opentelemetry</artifactId>
@@ -483,11 +497,6 @@
                   <excludes>dev.knative.eventing.kafka.broker:*</excludes>
                   <failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
                 </requireReleaseDeps>
-                <bannedDependencies>
-                  <excludes>
-                    <exclude>io.vertx:vertx-kafka-client</exclude>
-                  </excludes>
-                </bannedDependencies>
               </rules>
             </configuration>
           </execution>

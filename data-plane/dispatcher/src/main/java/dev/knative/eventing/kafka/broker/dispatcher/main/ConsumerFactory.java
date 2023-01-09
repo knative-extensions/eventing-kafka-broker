@@ -17,8 +17,8 @@ package dev.knative.eventing.kafka.broker.dispatcher.main;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.tracing.TracingPolicy;
-import dev.knative.eventing.kafka.broker.vertx.kafka.common.KafkaClientOptions;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer;
+import io.vertx.kafka.client.common.KafkaClientOptions;
+import io.vertx.kafka.client.consumer.KafkaConsumer;
 
 import java.util.Map;
 

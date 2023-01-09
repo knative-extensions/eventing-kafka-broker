@@ -19,8 +19,8 @@ import dev.knative.eventing.kafka.broker.dispatcher.CloudEventMutator;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecord;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.impl.KafkaConsumerRecordImpl;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 /**

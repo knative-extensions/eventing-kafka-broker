@@ -23,7 +23,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer;
+import io.vertx.kafka.client.consumer.KafkaConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

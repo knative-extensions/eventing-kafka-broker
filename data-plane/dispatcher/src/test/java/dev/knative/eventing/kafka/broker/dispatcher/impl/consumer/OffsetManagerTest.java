@@ -20,7 +20,7 @@ import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer;
+import io.vertx.kafka.client.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;

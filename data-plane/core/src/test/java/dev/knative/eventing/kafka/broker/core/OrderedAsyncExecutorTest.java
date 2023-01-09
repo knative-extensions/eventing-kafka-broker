@@ -30,7 +30,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition;
+import io.vertx.kafka.client.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;

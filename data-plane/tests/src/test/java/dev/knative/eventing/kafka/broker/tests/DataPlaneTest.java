@@ -43,7 +43,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import dev.knative.eventing.kafka.broker.vertx.kafka.producer.KafkaProducer;
+import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import org.apache.kafka.clients.consumer.ConsumerConfig;

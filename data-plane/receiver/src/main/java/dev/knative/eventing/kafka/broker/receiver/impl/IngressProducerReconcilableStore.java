@@ -29,7 +29,7 @@ import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Future;
-import dev.knative.eventing.kafka.broker.vertx.kafka.producer.KafkaProducer;
+import io.vertx.kafka.client.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

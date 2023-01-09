@@ -42,7 +42,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.PrefixFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.SuffixFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
-import dev.knative.eventing.kafka.broker.vertx.kafka.common.ConsumerTracer;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -50,10 +49,11 @@ import io.vertx.core.Vertx;
 import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClient;
-import dev.knative.eventing.kafka.broker.vertx.kafka.common.KafkaClientOptions;
-import dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumer;
-import dev.knative.eventing.kafka.broker.vertx.kafka.producer.KafkaProducer;
+import io.vertx.kafka.client.common.KafkaClientOptions;
+import io.vertx.kafka.client.common.TopicPartition;
+import io.vertx.kafka.client.common.tracing.ConsumerTracer;
+import io.vertx.kafka.client.consumer.KafkaConsumer;
+import io.vertx.kafka.client.producer.KafkaProducer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 
 import java.util.ArrayList;

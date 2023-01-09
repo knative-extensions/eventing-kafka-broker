@@ -21,7 +21,7 @@ import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
-import dev.knative.eventing.kafka.broker.vertx.kafka.producer.KafkaProducerRecord;
+import io.vertx.kafka.client.producer.KafkaProducerRecord;
 
 /**
  * This class implements a strict {@link HttpServerRequest} to {@link KafkaProducerRecord} mapper.

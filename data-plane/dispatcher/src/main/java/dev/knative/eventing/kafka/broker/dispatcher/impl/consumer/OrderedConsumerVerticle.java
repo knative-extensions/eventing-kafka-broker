@@ -25,9 +25,9 @@ import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import dev.knative.eventing.kafka.broker.vertx.kafka.common.TopicPartition;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecord;
-import dev.knative.eventing.kafka.broker.vertx.kafka.consumer.KafkaConsumerRecords;
+import io.vertx.kafka.client.common.TopicPartition;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
