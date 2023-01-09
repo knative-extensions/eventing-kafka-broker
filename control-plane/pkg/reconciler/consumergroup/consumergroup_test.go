@@ -45,6 +45,7 @@ import (
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
@@ -1671,8 +1672,9 @@ func TestReconcileKind(t *testing.T) {
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
 			},
-			SystemNamespace:  systemNamespace,
-			AutoscalerConfig: "",
+			SystemNamespace:                    systemNamespace,
+			AutoscalerConfig:                   "",
+			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
 		}
 
 		r.KafkaFeatureFlags = configapis.FromContext(store.ToContext(ctx))
@@ -1810,7 +1812,8 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
 			},
-			SystemNamespace: systemNamespace,
+			SystemNamespace:                    systemNamespace,
+			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
 		}
 
 		r.KafkaFeatureFlags = configapis.DefaultFeaturesConfig()
@@ -2193,7 +2196,8 @@ func TestFinalizeKind(t *testing.T) {
 					ErrorOnDeleteConsumerGroup: ErrorAssertOrNil(errorOnDeleteKafkaCG),
 				}, nil
 			},
-			KafkaFeatureFlags: configapis.DefaultFeaturesConfig(),
+			KafkaFeatureFlags:                  configapis.DefaultFeaturesConfig(),
+			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
 		}
 
 		return consumergroup.NewReconciler(

@@ -37,6 +37,7 @@ import (
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -95,7 +96,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		ClusterRoleBindingLister:   clusterrolebindinginformer.Get(ctx).Lister(),
 		DeploymentLister:           deploymentinformer.Get(ctx).Lister(),
 		Env:                        env,
-		Counter:                    NewCounter(),
+		Counter:                    counter.NewExpiringCounter(ctx),
 		ManifestivalClient:         mfc,
 	}
 

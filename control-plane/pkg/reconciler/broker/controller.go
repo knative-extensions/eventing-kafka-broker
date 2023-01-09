@@ -40,6 +40,7 @@ import (
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -71,7 +72,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
 		ConfigMapLister:            configmapInformer.Lister(),
 		Env:                        env,
-		Counter:                    NewCounter(),
+		Counter:                    counter.NewExpiringCounter(ctx),
 	}
 
 	logger := logging.FromContext(ctx)

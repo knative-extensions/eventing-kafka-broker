@@ -54,6 +54,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	cgreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client"
 )
@@ -108,21 +109,22 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	}
 
 	r := &Reconciler{
-		SchedulerFunc:              func(s string) Scheduler { return schedulers[strings.ToLower(s)] },
-		ConsumerLister:             consumer.Get(ctx).Lister(),
-		InternalsClient:            internalsclient.Get(ctx).InternalV1alpha1(),
-		SecretLister:               secretinformer.Get(ctx).Lister(),
-		ConfigMapLister:            configmapinformer.Get(ctx).Lister(),
-		PodLister:                  podinformer.Get(ctx).Lister(),
-		KubeClient:                 kubeclient.Get(ctx),
-		NameGenerator:              names.SimpleNameGenerator,
-		NewKafkaClient:             sarama.NewClient,
-		InitOffsetsFunc:            offset.InitOffsets,
-		SystemNamespace:            system.Namespace(),
-		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		KafkaFeatureFlags:          config.DefaultFeaturesConfig(),
-		KedaClient:                 kedaclient.Get(ctx),
-		AutoscalerConfig:           env.AutoscalerConfigMap,
+		SchedulerFunc:                      func(s string) Scheduler { return schedulers[strings.ToLower(s)] },
+		ConsumerLister:                     consumer.Get(ctx).Lister(),
+		InternalsClient:                    internalsclient.Get(ctx).InternalV1alpha1(),
+		SecretLister:                       secretinformer.Get(ctx).Lister(),
+		ConfigMapLister:                    configmapinformer.Get(ctx).Lister(),
+		PodLister:                          podinformer.Get(ctx).Lister(),
+		KubeClient:                         kubeclient.Get(ctx),
+		NameGenerator:                      names.SimpleNameGenerator,
+		NewKafkaClient:                     sarama.NewClient,
+		InitOffsetsFunc:                    offset.InitOffsets,
+		SystemNamespace:                    system.Namespace(),
+		NewKafkaClusterAdminClient:         sarama.NewClusterAdmin,
+		KafkaFeatureFlags:                  config.DefaultFeaturesConfig(),
+		KedaClient:                         kedaclient.Get(ctx),
+		AutoscalerConfig:                   env.AutoscalerConfigMap,
+		DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
 	}
 
 	consumerInformer := consumer.Get(ctx)

@@ -44,6 +44,7 @@ import (
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/propagator"
@@ -73,7 +74,7 @@ type NamespacedReconciler struct {
 	BootstrapServers string
 
 	Prober  prober.Prober
-	Counter *Counter
+	Counter *counter.Counter
 
 	IPsLister          prober.IPListerWithMapping
 	ManifestivalClient mf.Client
