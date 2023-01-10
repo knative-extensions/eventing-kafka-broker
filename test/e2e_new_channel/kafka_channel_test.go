@@ -33,7 +33,7 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/pkg/state"
 
-	"knative.dev/eventing-kafka/test/rekt/features/kafkachannel"
+	"knative.dev/eventing-kafka-broker/test/rekt/features/kafkachannel"
 )
 
 const kafkaChannelTestPrefix = "kc-rekt-test-"

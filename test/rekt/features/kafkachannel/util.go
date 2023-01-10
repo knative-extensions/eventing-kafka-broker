@@ -32,8 +32,8 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/state"
 
-	kafkachannelresources "knative.dev/eventing-kafka/test/rekt/resources/kafkachannel"
-	resetoffsetresources "knative.dev/eventing-kafka/test/rekt/resources/resetoffset"
+	kafkachannelresources "knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
+	resetoffsetresources "knative.dev/eventing-kafka-broker/test/rekt/resources/resetoffset"
 )
 
 const (
