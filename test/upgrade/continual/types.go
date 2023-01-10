@@ -18,17 +18,39 @@ package continual
 
 import (
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
-	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade/continual"
 	"knative.dev/eventing/test/upgrade/prober"
 	"knative.dev/eventing/test/upgrade/prober/sut"
 	"knative.dev/eventing/test/upgrade/prober/wathola/event"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 )
+
+const (
+	defaultRetryCount    = 12
+	defaultBackoffPolicy = eventingduckv1.BackoffPolicyExponential
+	defaultBackoffDelay  = "PT1S"
+)
+
+func defaultRetryOptions() *RetryOptions {
+	return &RetryOptions{
+		RetryCount:    defaultRetryCount,
+		BackoffPolicy: defaultBackoffPolicy,
+		BackoffDelay:  defaultBackoffDelay,
+	}
+}
+
+func defaultReplicationOptions() *ReplicationOptions {
+	return &ReplicationOptions{
+		NumPartitions:     6,
+		ReplicationFactor: 3,
+	}
+}
 
 // TestOptions holds options for EventingKafka continual tests.
 type TestOptions struct {
 	prober.ContinualVerificationOptions
+	SUTs map[string]sut.SystemUnderTest
 }
 
 type Triggers struct {
@@ -39,8 +61,8 @@ type Triggers struct {
 type Broker struct {
 	Name  string
 	Class string
-	*eventingkafkaupgrade.ReplicationOptions
-	*eventingkafkaupgrade.RetryOptions
+	*ReplicationOptions
+	*RetryOptions
 }
 
 type Sink struct {
@@ -56,4 +78,17 @@ type Source struct {
 var eventTypes = []string{
 	event.Step{}.Type(),
 	event.Finished{}.Type(),
+}
+
+// ReplicationOptions hold options for replication.
+type ReplicationOptions struct {
+	NumPartitions     int
+	ReplicationFactor int
+}
+
+// RetryOptions holds options for retries.
+type RetryOptions struct {
+	RetryCount    int
+	BackoffPolicy eventingduckv1.BackoffPolicyType
+	BackoffDelay  string
 }

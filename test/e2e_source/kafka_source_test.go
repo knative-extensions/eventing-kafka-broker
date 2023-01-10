@@ -22,17 +22,17 @@ package e2e_source
 import (
 	"testing"
 
-	eventingkafkahelpers "knative.dev/eventing-kafka/test/e2e/helpers"
+	"knative.dev/eventing-kafka-broker/test/e2e_source/helpers"
 
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 func TestKafkaSourceUpdate(t *testing.T) {
-	testingpkg.RunMultiple(t, eventingkafkahelpers.TestKafkaSourceUpdate)
+	testingpkg.RunMultiple(t, helpers.TestKafkaSourceUpdate)
 }
 
 func TestKafkaSourceAssureIsOperational(t *testing.T) {
 	testingpkg.RunMultiple(t, func(t *testing.T) {
-		eventingkafkahelpers.AssureKafkaSourceIsOperational(t, func(auth, testCase, version string) bool { return true })
+		helpers.AssureKafkaSourceIsOperational(t, func(auth, testCase, version string) bool { return true })
 	})
 }

@@ -25,7 +25,6 @@ import (
 	"k8s.io/utils/pointer"
 	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
-	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade/continual"
 	"knative.dev/eventing/test/upgrade/prober/sut"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -46,14 +45,14 @@ const (
 )
 
 type KafkaSinkSourceTestOptions struct {
-	*eventingkafkaupgrade.TestOptions
+	*TestOptions
 	*Sink
 	*Source
 }
 
 func (o *KafkaSinkSourceTestOptions) setDefaults() {
 	if o.TestOptions == nil {
-		o.TestOptions = &eventingkafkaupgrade.TestOptions{}
+		o.TestOptions = &TestOptions{}
 	}
 	if o.Sink == nil {
 		rf := int16(3)

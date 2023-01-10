@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/kelseyhightower/envconfig"
-	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade/continual"
 	"knative.dev/eventing/test/upgrade/prober"
 	"knative.dev/eventing/test/upgrade/prober/sut"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
@@ -28,7 +27,7 @@ import (
 
 func continualVerification(
 	testName string,
-	opts *eventingkafkaupgrade.TestOptions,
+	opts *TestOptions,
 	defaultSut sut.SystemUnderTest,
 	configTemplate string,
 ) pkgupgrade.BackgroundOperation {
@@ -44,7 +43,7 @@ func continualVerification(
 
 func resolveSut(
 	testName string,
-	opts *eventingkafkaupgrade.TestOptions,
+	opts *TestOptions,
 	defaultSut sut.SystemUnderTest,
 ) sut.SystemUnderTest {
 	var resolved sut.SystemUnderTest
@@ -58,7 +57,7 @@ func resolveSut(
 }
 
 func verificationOptions(
-	opts *eventingkafkaupgrade.TestOptions,
+	opts *TestOptions,
 	theSut sut.SystemUnderTest,
 	configTemplate string,
 ) prober.ContinualVerificationOptions {

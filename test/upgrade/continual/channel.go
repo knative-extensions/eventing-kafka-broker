@@ -36,9 +36,6 @@ import (
 
 const (
 	channelConfigTemplatePath = "test/upgrade/continual/channel-config.toml"
-	defaultRetryCount         = 12
-	defaultBackoffPolicy      = eventingduckv1.BackoffPolicyExponential
-	defaultBackoffDelay       = "PT1S"
 )
 
 var (
@@ -104,21 +101,6 @@ func channelSut(opts ChannelTestOptions) sut.SystemUnderTest {
 		channelTypeMeta:    opts.TypeMeta,
 		ReplicationOptions: opts.ReplicationOptions,
 		RetryOptions:       opts.RetryOptions,
-	}
-}
-
-func defaultReplicationOptions() *ReplicationOptions {
-	return &ReplicationOptions{
-		NumPartitions:     6,
-		ReplicationFactor: 3,
-	}
-}
-
-func defaultRetryOptions() *RetryOptions {
-	return &RetryOptions{
-		RetryCount:    defaultRetryCount,
-		BackoffPolicy: defaultBackoffPolicy,
-		BackoffDelay:  defaultBackoffDelay,
 	}
 }
 
