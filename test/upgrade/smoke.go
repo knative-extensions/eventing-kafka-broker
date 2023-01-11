@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"knative.dev/eventing-kafka-broker/test/e2e_source/helpers"
 	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg"
 	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
 	eventinghelpers "knative.dev/eventing/test/e2e/helpers"
@@ -55,6 +56,12 @@ func runChannelSmokeTest(t *testing.T) {
 			)
 		})
 	}
+}
+
+func runSourceSmokeTest(t *testing.T) {
+	helpers.AssureKafkaSourceIsOperational(t, func(auth, testCase, version string) bool {
+		return auth == "plain" && (testCase == "structured" || testCase == "binary")
+	})
 }
 
 type smokeTestCase struct {

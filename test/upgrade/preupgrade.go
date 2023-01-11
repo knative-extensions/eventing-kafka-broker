@@ -52,3 +52,11 @@ func SinkPreUpgradeTest() pkgupgrade.Operation {
 		e2e_sink.RunTestKafkaSink(c.T, eventing.ModeBinary, nil)
 	})
 }
+
+// SourcePreUpgradeTest tests source operations before upgrade.
+func SourcePreUpgradeTest() pkgupgrade.Operation {
+	return pkgupgrade.NewOperation("SourcePreUpgradeTest",
+		func(c pkgupgrade.Context) {
+			runSourceSmokeTest(c.T)
+		})
+}
