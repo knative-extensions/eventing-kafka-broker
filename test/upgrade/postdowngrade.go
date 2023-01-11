@@ -55,3 +55,11 @@ func SinkPostDowngradeTest() pkgupgrade.Operation {
 		e2e_sink.RunTestKafkaSink(c.T, eventing.ModeBinary, nil)
 	})
 }
+
+// SourcePostDowngradeTest tests source operations after downgrade.
+func SourcePostDowngradeTest() pkgupgrade.Operation {
+	return pkgupgrade.NewOperation("SourcePostDowngradeTest",
+		func(c pkgupgrade.Context) {
+			runSourceSmokeTest(c.T)
+		})
+}

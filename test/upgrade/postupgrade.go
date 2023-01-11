@@ -82,6 +82,14 @@ func SinkPostUpgradeTest() pkgupgrade.Operation {
 	})
 }
 
+// SourcePostUpgradeTest tests source operations after upgrade.
+func SourcePostUpgradeTest() pkgupgrade.Operation {
+	return pkgupgrade.NewOperation("SourcePostUpgradeTest",
+		func(c pkgupgrade.Context) {
+			runSourceSmokeTest(c.T)
+		})
+}
+
 func verifyPostInstall(t *testing.T) {
 	t.Parallel()
 
