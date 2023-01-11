@@ -23,8 +23,8 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/resources/svc"
 
-	"knative.dev/eventing-kafka/test/rekt/resources/kafkasource"
-	"knative.dev/eventing-kafka/test/rekt/resources/kafkatopic"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasource"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 
 	"knative.dev/eventing-kafka-broker/test/e2e_new/features/featuressteps"
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
