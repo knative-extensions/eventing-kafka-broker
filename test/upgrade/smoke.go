@@ -20,15 +20,20 @@ import (
 	"context"
 	"testing"
 
-	"knative.dev/eventing/test/e2e/helpers"
-
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg"
 	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
+	eventinghelpers "knative.dev/eventing/test/e2e/helpers"
+	testlib "knative.dev/eventing/test/lib"
+)
+
+var (
+	channelTestRunner testlib.ComponentsTestRunner
 )
 
 func runBrokerSmokeTest(t *testing.T, class string) {
 	pkgtesting.RunMultiple(t, func(t *testing.T) {
-		helpers.EventTransformationForTriggerTestHelper(
+		eventinghelpers.EventTransformationForTriggerTestHelper(
 			context.Background(),
 			t,
 			/* broker version */ "v1",
@@ -36,4 +41,36 @@ func runBrokerSmokeTest(t *testing.T, class string) {
 			testbroker.CreatorForClass(class),
 		)
 	})
+}
+
+func runChannelSmokeTest(t *testing.T) {
+	cases := smokeTestCases()
+	ctx := context.Background()
+	for i := range cases {
+		tt := cases[i]
+		t.Run(tt.name, func(t *testing.T) {
+			eventinghelpers.SingleEventForChannelTestHelper(
+				ctx, t, tt.encoding, tt.version,
+				"", channelTestRunner,
+			)
+		})
+	}
+}
+
+type smokeTestCase struct {
+	name     string
+	encoding cloudevents.Encoding
+	version  eventinghelpers.SubscriptionVersion
+}
+
+func smokeTestCases() []smokeTestCase {
+	return []smokeTestCase{{
+		name:     "BinaryV1",
+		encoding: cloudevents.EncodingBinary,
+		version:  eventinghelpers.SubscriptionV1,
+	}, {
+		name:     "StructuredV1",
+		encoding: cloudevents.EncodingStructured,
+		version:  eventinghelpers.SubscriptionV1,
+	}}
 }

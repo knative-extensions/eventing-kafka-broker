@@ -36,6 +36,7 @@ require (
 )
 
 require (
+	github.com/davecgh/go-spew v1.1.1
 	github.com/kedacore/keda/v2 v2.8.1
 	knative.dev/eventing v0.35.1-0.20230110013451-6ef3f1dfd05d
 	knative.dev/eventing-kafka v0.35.1-0.20221219133153-20e1b33541bc
@@ -71,7 +72,6 @@ require (
 	github.com/cloudevents/conformance v0.2.0 // indirect
 	github.com/cloudevents/sdk-go/observability/opencensus/v2 v2.12.0 // indirect
 	github.com/cloudevents/sdk-go/sql/v2 v2.8.0 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eapache/go-resiliency v1.3.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
 	github.com/eapache/queue v1.1.0 // indirect

@@ -1428,14 +1428,9 @@ knative.dev/eventing-kafka/pkg/common/config
 knative.dev/eventing-kafka/pkg/common/constants
 knative.dev/eventing-kafka/pkg/common/kafka/offset
 knative.dev/eventing-kafka/pkg/common/kafka/sarama
-knative.dev/eventing-kafka/pkg/common/tracing
 knative.dev/eventing-kafka/test
-knative.dev/eventing-kafka/test/e2e/helpers
 knative.dev/eventing-kafka/test/lib
 knative.dev/eventing-kafka/test/lib/resources
-knative.dev/eventing-kafka/test/upgrade
-knative.dev/eventing-kafka/test/upgrade/continual
-knative.dev/eventing-kafka/test/upgrade/installation
 # knative.dev/hack v0.0.0-20230110013548-af8745e34e08
 ## explicit; go 1.18
 knative.dev/hack

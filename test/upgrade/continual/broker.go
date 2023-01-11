@@ -33,30 +33,24 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
-	eventingkafkaupgrade "knative.dev/eventing-kafka/test/upgrade/continual"
-
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 const (
 	kafkaBrokerConfigTemplatePath = "test/upgrade/continual/kafka-broker-config.toml"
-
-	defaultRetryCount    = 12
-	defaultBackoffPolicy = eventingduckv1.BackoffPolicyExponential
-	defaultBackoffDelay  = "PT1S"
 )
 
 // KafkaBrokerTestOptions holds test options for Kafka Broker tests.
 type KafkaBrokerTestOptions struct {
-	*eventingkafkaupgrade.TestOptions
+	*TestOptions
 	*Broker
 	*Triggers
 }
 
 func (o *KafkaBrokerTestOptions) setDefaults() {
 	if o.TestOptions == nil {
-		o.TestOptions = &eventingkafkaupgrade.TestOptions{}
+		o.TestOptions = &TestOptions{}
 	}
 	if o.Broker == nil {
 		o.Broker = &Broker{
@@ -80,21 +74,6 @@ func (o *KafkaBrokerTestOptions) setDefaults() {
 	}
 	if o.Triggers.Types == nil {
 		o.Triggers.Types = eventTypes
-	}
-}
-
-func defaultRetryOptions() *eventingkafkaupgrade.RetryOptions {
-	return &eventingkafkaupgrade.RetryOptions{
-		RetryCount:    defaultRetryCount,
-		BackoffPolicy: defaultBackoffPolicy,
-		BackoffDelay:  defaultBackoffDelay,
-	}
-}
-
-func defaultReplicationOptions() *eventingkafkaupgrade.ReplicationOptions {
-	return &eventingkafkaupgrade.ReplicationOptions{
-		NumPartitions:     6,
-		ReplicationFactor: 3,
 	}
 }
 

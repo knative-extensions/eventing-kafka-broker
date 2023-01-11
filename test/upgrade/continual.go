@@ -20,7 +20,6 @@ import (
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
 	"knative.dev/eventing-kafka-broker/test/upgrade/continual"
-	eventingkafkacontinual "knative.dev/eventing-kafka/test/upgrade/continual"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )
@@ -70,8 +69,8 @@ func NamespacedBrokerContinualTests() []pkgupgrade.BackgroundOperation {
 // process asserting that all events are propagated.
 func ChannelContinualTests() []pkgupgrade.BackgroundOperation {
 	return []pkgupgrade.BackgroundOperation{
-		eventingkafkacontinual.ChannelTest(eventingkafkacontinual.ChannelTestOptions{}),
-		eventingkafkacontinual.BrokerBackedByChannelTest(eventingkafkacontinual.ChannelTestOptions{}),
+		continual.ChannelTest(continual.ChannelTestOptions{}),
+		continual.BrokerBackedByChannelTest(continual.ChannelTestOptions{}),
 	}
 }
 
