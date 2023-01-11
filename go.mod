@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/Shopify/sarama v1.37.0
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.4.1
-	github.com/cloudevents/sdk-go/v2 v2.12.0
+	github.com/cloudevents/sdk-go/v2 v2.13.0
 	github.com/google/go-cmp v0.5.8
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/errwrap v1.1.0
@@ -37,11 +37,11 @@ require (
 
 require (
 	github.com/kedacore/keda/v2 v2.8.1
-	knative.dev/eventing v0.35.1-0.20230110013451-6ef3f1dfd05d
+	knative.dev/eventing v0.35.1-0.20230110064347-d4184192c6a7
 	knative.dev/eventing-kafka v0.35.1-0.20221219133153-20e1b33541bc
 	knative.dev/hack v0.0.0-20230110013548-af8745e34e08
-	knative.dev/pkg v0.0.0-20230110013450-dc20e472128f
-	knative.dev/reconciler-test v0.0.0-20221222133658-cf080d097e77
+	knative.dev/pkg v0.0.0-20230110144649-ecf386394194
+	knative.dev/reconciler-test v0.0.0-20230110131949-7f7a35e0744a
 	sigs.k8s.io/controller-runtime v0.12.3
 )
 
@@ -69,8 +69,8 @@ require (
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cloudevents/conformance v0.2.0 // indirect
-	github.com/cloudevents/sdk-go/observability/opencensus/v2 v2.12.0 // indirect
-	github.com/cloudevents/sdk-go/sql/v2 v2.8.0 // indirect
+	github.com/cloudevents/sdk-go/observability/opencensus/v2 v2.13.0 // indirect
+	github.com/cloudevents/sdk-go/sql/v2 v2.13.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eapache/go-resiliency v1.3.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
