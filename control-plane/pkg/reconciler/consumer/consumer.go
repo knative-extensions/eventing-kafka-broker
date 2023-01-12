@@ -71,7 +71,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, c *kafkainternals.Consum
 		return nil // Resource will get queued once we have all resources to build the contract.
 	}
 
-	bound, err := r.schedule(ctx, logger, c, addResource(resourceCt))
+	bound, err := r.schedule(ctx, logger, c, addResource(resourceCt), IsPodNotRunning)
 	if err != nil {
 		return c.MarkBindFailed(err)
 	}
@@ -89,14 +89,14 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, c *kafkainternals.Consume
 
 	logger := logging.FromContext(ctx).Desugar()
 
-	if _, err := r.schedule(ctx, logger, c, removeResource); err != nil {
+	if _, err := r.schedule(ctx, logger, c, removeResource, FalseAnyStatus); err != nil {
 		return c.MarkBindFailed(err)
 	}
 
 	return nil
 }
 
-func (r Reconciler) reconcileContractResource(ctx context.Context, c *kafkainternals.Consumer) (*contract.Resource, error) {
+func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainternals.Consumer) (*contract.Resource, error) {
 	egress, err := r.reconcileContractEgress(ctx, c)
 	if err != nil {
 		return nil, fmt.Errorf("failed to reconcile egress: %w", err)
@@ -131,7 +131,7 @@ func (r Reconciler) reconcileContractResource(ctx context.Context, c *kafkainter
 	return resource, nil
 }
 
-func (r Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainternals.Consumer) (*contract.Egress, error) {
+func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainternals.Consumer) (*contract.Egress, error) {
 	destination, err := r.Resolver.URIFromDestinationV1(ctx, c.Spec.Subscriber, c)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve subscriber: %w", err)
@@ -176,7 +176,7 @@ func (r Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainterna
 	return egress, nil
 }
 
-func (r Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consumer, resource *contract.Resource) error {
+func (r *Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consumer, resource *contract.Resource) error {
 	if c.Spec.Auth == nil {
 		return nil
 	}
@@ -216,7 +216,7 @@ func (r Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consume
 	return nil
 }
 
-func (r Reconciler) SecretProviderFunc() security.SecretProviderFunc {
+func (r *Reconciler) SecretProviderFunc() security.SecretProviderFunc {
 	return security.DefaultSecretProviderFunc(r.SecretLister, r.KubeClient)
 }
 
@@ -227,7 +227,7 @@ func reconcileCEOverrides(c *kafkainternals.Consumer) *contract.CloudEventOverri
 	return &contract.CloudEventOverrides{Extensions: c.Spec.CloudEventOverrides.Extensions}
 }
 
-func (r Reconciler) reconcileUserFacingResourceRef(c *kafkainternals.Consumer) (*contract.Reference, error) {
+func (r *Reconciler) reconcileUserFacingResourceRef(c *kafkainternals.Consumer) (*contract.Reference, error) {
 
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(c.GetNamespace()).Get(c.GetConsumerGroup().Name)
 	if apierrors.IsNotFound(err) {
@@ -259,7 +259,7 @@ func reconcileDeliveryOrder(c *kafkainternals.Consumer) contract.DeliveryOrder {
 	return contract.DeliveryOrder_UNORDERED
 }
 
-func (r Reconciler) reconcileReplyStrategy(ctx context.Context, c *kafkainternals.Consumer, egress *contract.Egress) error {
+func (r *Reconciler) reconcileReplyStrategy(ctx context.Context, c *kafkainternals.Consumer, egress *contract.Egress) error {
 	if c.Spec.Reply == nil {
 		return nil
 	}
@@ -307,16 +307,16 @@ func addResource(resource *contract.Resource) contractMutatorFunc {
 func removeResource(_ *zap.Logger, ct *contract.Contract, c *kafkainternals.Consumer) int {
 	idx := coreconfig.FindResource(ct, c.GetUID())
 	if idx == coreconfig.NoResource {
-		return coreconfig.NoResource
+		return coreconfig.ResourceUnchanged
 	}
 	coreconfig.DeleteResource(ct, idx)
-	return idx
+	return coreconfig.ResourceChanged
 }
 
 // schedule mutates the ConfigMap associated with the pod specified by Consumer.Spec.PodBind.
 //
 // The actual mutation is done by calling the provided contractMutatorFunc.
-func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkainternals.Consumer, mutatorFunc contractMutatorFunc) (bool, error) {
+func (r *Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkainternals.Consumer, mutatorFunc contractMutatorFunc, shouldWait PodStatusWaitFunc) (bool, error) {
 	// Get the data plane pod when the Consumer should be scheduled.
 	p, err := r.PodLister.Pods(c.Spec.PodBind.PodNamespace).Get(c.Spec.PodBind.PodName)
 	if apierrors.IsNotFound(err) {
@@ -345,7 +345,7 @@ func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkain
 	// get or create the associated ConfigMap, since
 	// it won't become ready until we have created the
 	// ConfigMap
-	if p.Status.Phase != corev1.PodRunning {
+	if shouldWait(p) {
 		return false, nil
 	}
 
@@ -367,7 +367,7 @@ func (r Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkain
 	return true, b.UpdatePodsAnnotation(ctx, logger, "dispatcher" /* component, for logging */, ct.Generation, []*corev1.Pod{p})
 }
 
-func (r Reconciler) commonReconciler(p *corev1.Pod, cmName string) base.Reconciler {
+func (r *Reconciler) commonReconciler(p *corev1.Pod, cmName string) base.Reconciler {
 	return base.Reconciler{
 		KubeClient:                    r.KubeClient,
 		PodLister:                     r.PodLister,
@@ -402,4 +402,14 @@ func (r *Reconciler) trackAuthContext(c *kafkainternals.Consumer, auth *kafkaint
 	}
 
 	return security.TrackNetSpecSecrets(r.Tracker, auth.NetSpec, c)
+}
+
+type PodStatusWaitFunc func(p *corev1.Pod) bool
+
+func IsPodNotRunning(p *corev1.Pod) bool {
+	return p.Status.Phase != corev1.PodRunning
+}
+
+func FalseAnyStatus(*corev1.Pod) bool {
+	return false
 }
