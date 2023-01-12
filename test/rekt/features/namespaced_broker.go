@@ -25,10 +25,10 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/features/featuressteps"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap"
-	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
+	"knative.dev/eventing-kafka-broker/test/rekt/features/featuressteps"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/configmap"
+	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
 )
 
 func NamespacedBrokerResourcesPropagation() *feature.Feature {

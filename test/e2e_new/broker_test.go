@@ -28,7 +28,7 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
-	"knative.dev/eventing-kafka-broker/test/e2e_new/features"
+	"knative.dev/eventing-kafka-broker/test/rekt/features"
 )
 
 const (

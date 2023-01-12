@@ -22,7 +22,7 @@ package e2e_new
 import (
 	"testing"
 
-	"knative.dev/eventing-kafka-broker/test/e2e_new/features"
+	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/reconciler-test/pkg/feature"
 
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
