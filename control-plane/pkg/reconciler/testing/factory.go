@@ -35,7 +35,7 @@ import (
 	"knative.dev/pkg/reconciler"
 	. "knative.dev/pkg/reconciler/testing"
 
-	fakeeventingkafkakafkaclient "knative.dev/eventing-kafka/pkg/client/injection/client/fake"
+	fakeeventingkafkakafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 
 	fakeeventingkafkabrokerclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"

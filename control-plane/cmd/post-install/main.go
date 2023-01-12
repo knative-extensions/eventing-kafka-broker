@@ -23,6 +23,7 @@ import (
 	"log"
 
 	"k8s.io/client-go/kubernetes"
+	kbcs "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	kcs "knative.dev/eventing-kafka/pkg/client/clientset/versioned"
 	"knative.dev/pkg/environment"
 	"knative.dev/pkg/logging"
@@ -88,7 +89,7 @@ func run(ctx context.Context) error {
 	}
 
 	channelMigrator := &kafkaChannelMigrator{
-		kcs: kcs.NewForConfigOrDie(config),
+		kcs: kbcs.NewForConfigOrDie(config),
 		k8s: kubernetes.NewForConfigOrDie(config),
 	}
 	if err := channelMigrator.Migrate(ctx); err != nil {

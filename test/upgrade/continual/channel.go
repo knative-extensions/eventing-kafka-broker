@@ -21,9 +21,9 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
-	reconcilertesting "knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/testing"
-	testlib "knative.dev/eventing-kafka/test/lib"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	testlib "knative.dev/eventing-kafka-broker/test/lib"
+	testlibresources "knative.dev/eventing-kafka-broker/test/lib/resources"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	messagingv1 "knative.dev/eventing/pkg/apis/messaging/v1"
 	"knative.dev/eventing/test/lib/duck"
@@ -121,7 +121,7 @@ type kafkaChannelSut struct {
 func (k kafkaChannelSut) Deploy(ctx sut.Context, destination duckv1.Destination) interface{} {
 	c := ctx.Client
 	name := "sut"
-	ch := reconcilertesting.NewKafkaChannel(
+	ch := testlibresources.NewKafkaChannel(
 		name,
 		c.Namespace,
 		k.RetryOptions.channelOption(),
@@ -168,7 +168,7 @@ func (ro RetryOptions) subscriptionOption() resources.SubscriptionOption {
 	}
 }
 
-func (ro RetryOptions) channelOption() reconcilertesting.KafkaChannelOption {
+func (ro RetryOptions) channelOption() testlibresources.KafkaChannelOption {
 	return func(channel *v1beta1.KafkaChannel) {
 		ensureChannelHasDelivery(channel)
 		r := int32(ro.RetryCount)
@@ -178,7 +178,7 @@ func (ro RetryOptions) channelOption() reconcilertesting.KafkaChannelOption {
 	}
 }
 
-func (ro ReplicationOptions) channelOption() reconcilertesting.KafkaChannelOption {
+func (ro ReplicationOptions) channelOption() testlibresources.KafkaChannelOption {
 	return func(channel *v1beta1.KafkaChannel) {
 		channel.Spec.ReplicationFactor = int16(ro.ReplicationFactor)
 		channel.Spec.NumPartitions = int32(ro.NumPartitions)

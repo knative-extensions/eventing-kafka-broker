@@ -33,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	kcs "knative.dev/eventing-kafka/pkg/client/clientset/versioned"
+	kbcs "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	"knative.dev/eventing-kafka/pkg/common/config"
 	"knative.dev/eventing-kafka/pkg/common/constants"
 	"knative.dev/pkg/logging"
@@ -43,7 +43,7 @@ import (
 )
 
 type kafkaChannelMigrator struct {
-	kcs kcs.Interface
+	kcs kbcs.Interface
 	k8s kubernetes.Interface
 }
 
