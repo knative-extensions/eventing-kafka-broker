@@ -25,9 +25,9 @@ import (
 	"testing"
 	"time"
 
-	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/pkg/tracing"
+	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/openzipkin/zipkin-go/model"

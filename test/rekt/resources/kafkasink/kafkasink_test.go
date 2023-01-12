@@ -21,7 +21,7 @@ import (
 	"os"
 
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/kafkasink"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
 
 	testlog "knative.dev/reconciler-test/pkg/logging"
 	"knative.dev/reconciler-test/pkg/manifest"

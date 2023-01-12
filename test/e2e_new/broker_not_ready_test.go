@@ -29,8 +29,8 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
-	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
+	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
 )
 
 func TestBrokerNotReadyAfterBeingReady(t *testing.T) {

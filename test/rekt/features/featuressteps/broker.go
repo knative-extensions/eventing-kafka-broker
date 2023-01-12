@@ -25,8 +25,8 @@ import (
 	"knative.dev/pkg/system"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/propagator"
-	brokerconfigmap "knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap/broker"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
+	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"

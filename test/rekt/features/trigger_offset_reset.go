@@ -31,7 +31,7 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/resources/svc"
 
-	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/configmap"
 )
 
 // TriggerLatestOffset tests that a Trigger receives only new events.

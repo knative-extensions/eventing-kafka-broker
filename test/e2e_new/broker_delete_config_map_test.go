@@ -34,7 +34,7 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/resources/svc"
 
-	"knative.dev/eventing-kafka-broker/test/e2e_new/resources/configmap"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/configmap"
 )
 
 func TestBrokerDeleteContractConfigMap(t *testing.T) {
