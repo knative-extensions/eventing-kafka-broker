@@ -331,3 +331,9 @@ func ConsumerGroupAsOwnerRef() metav1.OwnerReference {
 		BlockOwnerDeletion: pointer.BoolPtr(true),
 	}
 }
+
+func ConsumerDeletedTimeStamp() ConsumerOption {
+	return func(c *kafkainternals.Consumer) {
+		WithDeletedTimeStamp(c)
+	}
+}
