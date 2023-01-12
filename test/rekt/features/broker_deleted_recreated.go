@@ -18,6 +18,8 @@ package features
 
 import (
 	"k8s.io/apimachinery/pkg/types"
+	kafkabroker "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 
 	"knative.dev/pkg/system"
 
@@ -26,8 +28,6 @@ import (
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/resources/svc"
-
-	kafkabroker "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/rekt/features/featuressteps"
@@ -105,7 +105,9 @@ func BrokerAuthSecretDoesNotExist() *feature.Feature {
 
 	brokerName := feature.MakeRandomK8sName("broker")
 	configName := feature.MakeRandomK8sName("config")
+	topicName := feature.MakeRandomK8sName("topic") // A k8s name is also a valid topic name.
 
+	f.Setup("install kafka topic", kafkatopic.Install(topicName))
 	f.Setup("create broker config", brokerconfigmap.Install(
 		configName,
 		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
@@ -121,7 +123,7 @@ func BrokerAuthSecretDoesNotExist() *feature.Feature {
 			broker.WithConfig(configName),
 			broker.WithAnnotations(
 				map[string]interface{}{
-					kafkabroker.ExternalTopicAnnotation: "my-topic",
+					kafkabroker.ExternalTopicAnnotation: topicName,
 				}))...))
 
 	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
