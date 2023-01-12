@@ -44,3 +44,21 @@ func TestKafkaSourceCreateSecretsAfterKafkaSource(t *testing.T) {
 
 	env.Test(ctx, t, features.CreateSecretsAfterKafkaSource())
 }
+
+func TestKafkaSourceDeletedFromContractConfigMaps(t *testing.T) {
+
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+	t.Cleanup(env.Finish)
+
+	env.Test(ctx, t, features.SetupKafkaSources("permanent-kafka-source-", 21))
+	env.Test(ctx, t, features.SetupAndCleanupKafkaSources("x-kafka-source-", 42))
+	env.Test(ctx, t, features.KafkaSourcesAreNotPresentInContractConfigMaps("x-kafka-source-"))
+}
