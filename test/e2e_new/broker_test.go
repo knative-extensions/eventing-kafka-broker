@@ -25,6 +25,7 @@ import (
 
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
@@ -175,4 +176,24 @@ func TestNamespacedBrokerResourcesPropagation(t *testing.T) {
 	)
 
 	env.Test(ctx, t, features.NamespacedBrokerResourcesPropagation())
+}
+
+func TestNamespacedBrokerNamespaceDeletion(t *testing.T) {
+
+	name := "broker"
+	namespace := feature.MakeRandomK8sName("test-namespaced-broker")
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
+		environment.WithTestLogger(t),
+		environment.InNamespace(namespace),
+	)
+
+	env.Test(ctx, t, features.SetupNamespace(namespace))
+	env.Test(ctx, t, features.SetupNamespacedBroker(name))
+	env.Test(ctx, t, features.CleanupNamespace(namespace))
 }

@@ -292,37 +292,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) 
 func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, broker)
 
-	// Get contract config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get contract config map %s: %w", r.DataPlaneConfigMapAsString(), err)
-	}
-
-	logger.Debug("Got contract config map")
-
-	// Get contract data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
-	if err != nil {
-		return fmt.Errorf("failed to get contract: %w", err)
-	}
-
-	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
-
-	if err := r.DeleteResource(ctx, logger, broker.GetUID(), ct, contractConfigMap); err != nil {
-		return err
-	}
-
-	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
-	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
-	// to update anyway remaining annotations with the contract generation that was saved in the CM.
-	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
-
-	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		return err
-	}
-	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.deleteResourceFromContractConfigMap(ctx, logger, broker); err != nil {
 		return err
 	}
 
@@ -343,7 +313,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 			Name:      broker.GetName(),
 		},
 	}
-	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusNotReady); status != prober.StatusNotReady {
+	status := r.Prober.Probe(ctx, proberAddressable, prober.StatusNotReady)
+	if status != prober.StatusNotReady && status != prober.StatusUnknownErr {
 		// Return a requeueKeyError that doesn't generate an event and it re-queues the object
 		// for a new reconciliation.
 		return controller.NewRequeueAfter(5 * time.Second)
@@ -419,6 +390,51 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	}
 
 	if err := r.removeFinalizerSecret(ctx, finalizerSecret(broker), secret); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Reconciler) deleteResourceFromContractConfigMap(ctx context.Context, logger *zap.Logger, broker *eventing.Broker) error {
+	// Get contract config map.
+	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
+	// Handles https://github.com/knative-sandbox/eventing-kafka-broker/issues/2893
+	// When the system namespace is deleted while we're running there is no point in
+	// trying to delete the resource from the ConfigMap since the entire ConfigMap
+	// is gone.
+	if apierrors.IsForbidden(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("failed to get contract config map %s: %w", r.DataPlaneConfigMapAsString(), err)
+	}
+
+	logger.Debug("Got contract config map")
+
+	// Get contract data.
+	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
+	if err != nil {
+		return fmt.Errorf("failed to get contract: %w", err)
+	}
+
+	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
+
+	if err := r.DeleteResource(ctx, logger, broker.GetUID(), ct, contractConfigMap); err != nil {
+		return err
+	}
+
+	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
+	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
+	// to update anyway remaining annotations with the contract generation that was saved in the CM.
+	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
+
+	// Update volume generation annotation of receiver pods
+	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+		return err
+	}
+	// Update volume generation annotation of dispatcher pods
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
 		return err
 	}
 
