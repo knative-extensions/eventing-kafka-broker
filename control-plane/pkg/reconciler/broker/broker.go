@@ -349,6 +349,10 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return controller.NewRequeueAfter(5 * time.Second)
 	}
 
+	return r.finalizeBrokerResources(ctx, broker, err, logger)
+}
+
+func (r *Reconciler) finalizeBrokerResources(ctx context.Context, broker *eventing.Broker, err error, logger *zap.Logger) reconciler.Event {
 	_, brokerConfig, err := r.brokerConfigMap(logger, broker)
 
 	// If the broker config data is empty we simply return,
