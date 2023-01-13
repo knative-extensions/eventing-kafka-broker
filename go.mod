@@ -37,6 +37,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1
+	github.com/google/gofuzz v1.2.0
 	github.com/kedacore/keda/v2 v2.8.1
 	knative.dev/eventing v0.35.1-0.20230110013451-6ef3f1dfd05d
 	knative.dev/eventing-kafka v0.35.1-0.20221219133153-20e1b33541bc
@@ -91,7 +92,6 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-github/v27 v27.0.6 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/mako v0.0.0-20190821191249-122f8dcef9e3 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.1.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.4.0 // indirect

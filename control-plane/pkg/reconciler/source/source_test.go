@@ -41,9 +41,9 @@ import (
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
 
-	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
-	fakeeventingkafkaclient "knative.dev/eventing-kafka/pkg/client/injection/client/fake"
-	eventingkafkasourcereconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
+	eventingkafkasourcereconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
 
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 

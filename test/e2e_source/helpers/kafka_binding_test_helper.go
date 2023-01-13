@@ -28,8 +28,8 @@ import (
 	"knative.dev/eventing/test/lib/resources"
 	"knative.dev/pkg/tracker"
 
-	contribtestlib "knative.dev/eventing-kafka/test/lib"
-	contribresources "knative.dev/eventing-kafka/test/lib/resources"
+	contribtestlib "knative.dev/eventing-kafka-broker/test/lib"
+	contribresources "knative.dev/eventing-kafka-broker/test/lib/resources"
 )
 
 func testKafkaBinding(t *testing.T, version string, messageKey string, messageHeaders map[string]string, messagePayload string, expectedData string) {

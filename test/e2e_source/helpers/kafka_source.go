@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	sourcesv1beta1 "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	. "github.com/cloudevents/sdk-go/v2/test"

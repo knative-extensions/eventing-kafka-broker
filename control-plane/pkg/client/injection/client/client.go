@@ -24,6 +24,7 @@ import (
 	errors "errors"
 	fmt "fmt"
 
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	unstructured "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -35,9 +36,11 @@ import (
 	rest "k8s.io/client-go/rest"
 	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	versioned "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	typedeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
 	typedmessagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1beta1"
+	typedsourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/sources/v1beta1"
 	injection "knative.dev/pkg/injection"
 	dynamicclient "knative.dev/pkg/injection/clients/dynamicclient"
 	logging "knative.dev/pkg/logging"
@@ -388,4 +391,154 @@ func (w *wrapMessagingV1beta1KafkaChannelImpl) UpdateStatus(ctx context.Context,
 
 func (w *wrapMessagingV1beta1KafkaChannelImpl) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return nil, errors.New("NYI: Watch")
+}
+
+// SourcesV1beta1 retrieves the SourcesV1beta1Client
+func (w *wrapClient) SourcesV1beta1() typedsourcesv1beta1.SourcesV1beta1Interface {
+	return &wrapSourcesV1beta1{
+		dyn: w.dyn,
+	}
+}
+
+type wrapSourcesV1beta1 struct {
+	dyn dynamic.Interface
+}
+
+func (w *wrapSourcesV1beta1) RESTClient() rest.Interface {
+	panic("RESTClient called on dynamic client!")
+}
+
+func (w *wrapSourcesV1beta1) KafkaSources(namespace string) typedsourcesv1beta1.KafkaSourceInterface {
+	return &wrapSourcesV1beta1KafkaSourceImpl{
+		dyn: w.dyn.Resource(schema.GroupVersionResource{
+			Group:    "sources.knative.dev",
+			Version:  "v1beta1",
+			Resource: "kafkasources",
+		}),
+
+		namespace: namespace,
+	}
+}
+
+type wrapSourcesV1beta1KafkaSourceImpl struct {
+	dyn dynamic.NamespaceableResourceInterface
+
+	namespace string
+}
+
+var _ typedsourcesv1beta1.KafkaSourceInterface = (*wrapSourcesV1beta1KafkaSourceImpl)(nil)
+
+func (w *wrapSourcesV1beta1KafkaSourceImpl) Create(ctx context.Context, in *sourcesv1beta1.KafkaSource, opts v1.CreateOptions) (*sourcesv1beta1.KafkaSource, error) {
+	in.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "sources.knative.dev",
+		Version: "v1beta1",
+		Kind:    "KafkaSource",
+	})
+	uo := &unstructured.Unstructured{}
+	if err := convert(in, uo); err != nil {
+		return nil, err
+	}
+	uo, err := w.dyn.Namespace(w.namespace).Create(ctx, uo, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &sourcesv1beta1.KafkaSource{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapSourcesV1beta1KafkaSourceImpl) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+	return w.dyn.Namespace(w.namespace).Delete(ctx, name, opts)
+}
+
+func (w *wrapSourcesV1beta1KafkaSourceImpl) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	return w.dyn.Namespace(w.namespace).DeleteCollection(ctx, opts, listOpts)
+}
+
+func (w *wrapSourcesV1beta1KafkaSourceImpl) Get(ctx context.Context, name string, opts v1.GetOptions) (*sourcesv1beta1.KafkaSource, error) {
+	uo, err := w.dyn.Namespace(w.namespace).Get(ctx, name, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &sourcesv1beta1.KafkaSource{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapSourcesV1beta1KafkaSourceImpl) List(ctx context.Context, opts v1.ListOptions) (*sourcesv1beta1.KafkaSourceList, error) {
+	uo, err := w.dyn.Namespace(w.namespace).List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &sourcesv1beta1.KafkaSourceList{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapSourcesV1beta1KafkaSourceImpl) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *sourcesv1beta1.KafkaSource, err error) {
+	uo, err := w.dyn.Namespace(w.namespace).Patch(ctx, name, pt, data, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &sourcesv1beta1.KafkaSource{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapSourcesV1beta1KafkaSourceImpl) Update(ctx context.Context, in *sourcesv1beta1.KafkaSource, opts v1.UpdateOptions) (*sourcesv1beta1.KafkaSource, error) {
+	in.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "sources.knative.dev",
+		Version: "v1beta1",
+		Kind:    "KafkaSource",
+	})
+	uo := &unstructured.Unstructured{}
+	if err := convert(in, uo); err != nil {
+		return nil, err
+	}
+	uo, err := w.dyn.Namespace(w.namespace).Update(ctx, uo, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &sourcesv1beta1.KafkaSource{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapSourcesV1beta1KafkaSourceImpl) UpdateStatus(ctx context.Context, in *sourcesv1beta1.KafkaSource, opts v1.UpdateOptions) (*sourcesv1beta1.KafkaSource, error) {
+	in.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "sources.knative.dev",
+		Version: "v1beta1",
+		Kind:    "KafkaSource",
+	})
+	uo := &unstructured.Unstructured{}
+	if err := convert(in, uo); err != nil {
+		return nil, err
+	}
+	uo, err := w.dyn.Namespace(w.namespace).UpdateStatus(ctx, uo, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &sourcesv1beta1.KafkaSource{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapSourcesV1beta1KafkaSourceImpl) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+	return nil, errors.New("NYI: Watch")
+}
+
+func (w *wrapSourcesV1beta1KafkaSourceImpl) GetScale(ctx context.Context, name string, opts v1.GetOptions) (*autoscalingv1.Scale, error) {
+	panic("NYI")
 }

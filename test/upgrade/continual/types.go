@@ -17,7 +17,7 @@
 package continual
 
 import (
-	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing/test/upgrade/prober"
 	"knative.dev/eventing/test/upgrade/prober/sut"
 	"knative.dev/eventing/test/upgrade/prober/wathola/event"
