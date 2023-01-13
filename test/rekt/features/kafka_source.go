@@ -33,8 +33,8 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/resources/svc"
 
-	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasource"
-	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
+	"knative.dev/eventing-kafka/test/rekt/resources/kafkasource"
+	"knative.dev/eventing-kafka/test/rekt/resources/kafkatopic"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
