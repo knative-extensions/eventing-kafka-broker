@@ -28,6 +28,9 @@ const (
 	StatusReady Status = iota
 	// StatusUnknown signals that a given object is not ready and its state is unknown.
 	StatusUnknown
+	// StatusUnknownErr signals that a given object is not ready and its state is unknown due to
+	// networking problems between control plane and data plane.
+	StatusUnknownErr
 	// StatusNotReady signals that a given object is not ready.
 	StatusNotReady
 )
