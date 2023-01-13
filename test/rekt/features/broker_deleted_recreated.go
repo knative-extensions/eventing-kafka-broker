@@ -188,6 +188,32 @@ func BrokerExternalTopicAuthSecretDoesNotExist() *feature.Feature {
 	return f
 }
 
+// BrokerAuthSecretForInternalTopicDoesNotExist tests that a broker can be deleted without the Secret.
+func BrokerAuthSecretForInternalTopicDoesNotExist() *feature.Feature {
+	f := feature.NewFeatureNamed("delete broker with non existing Secret or Topic")
+
+	brokerName := feature.MakeRandomK8sName("broker")
+	configName := feature.MakeRandomK8sName("config")
+
+	f.Setup("create broker config", brokerconfigmap.Install(
+		configName,
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersSsl),
+		brokerconfigmap.WithAuthSecret("does-not-exist"),
+		brokerconfigmap.WithNumPartitions(1),
+		brokerconfigmap.WithReplicationFactor(1),
+	))
+
+	f.Setup("install broker", broker.Install(
+		brokerName,
+		append(
+			broker.WithEnvConfig(),
+			broker.WithConfig(configName))...))
+
+	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
+
+	return f
+}
+
 // BrokerCannotReachKafkaCluster tests that a broker can be deleted even when KafkaCluster is unreachable.
 func BrokerCannotReachKafkaCluster() *feature.Feature {
 	f := feature.NewFeatureNamed("delete broker with unreachable Kafka cluster")
