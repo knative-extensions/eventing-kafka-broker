@@ -36,8 +36,8 @@ import (
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 
-	contribtestlib "knative.dev/eventing-kafka/test/lib"
-	contribresources "knative.dev/eventing-kafka/test/lib/resources"
+	contribtestlib "knative.dev/eventing-kafka-broker/test/lib"
+	contribresources "knative.dev/eventing-kafka-broker/test/lib/resources"
 )
 
 const (

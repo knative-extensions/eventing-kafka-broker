@@ -34,10 +34,12 @@ import (
 	discovery "k8s.io/client-go/discovery"
 	dynamic "k8s.io/client-go/dynamic"
 	rest "k8s.io/client-go/rest"
+	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
-	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	versioned "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
+	typedbindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1beta1"
 	typedeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
 	typedmessagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1beta1"
 	typedsourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/sources/v1beta1"
@@ -99,6 +101,152 @@ func convert(from interface{}, to runtime.Object) error {
 		return fmt.Errorf("Unmarshal() = %w", err)
 	}
 	return nil
+}
+
+// BindingsV1beta1 retrieves the BindingsV1beta1Client
+func (w *wrapClient) BindingsV1beta1() typedbindingsv1beta1.BindingsV1beta1Interface {
+	return &wrapBindingsV1beta1{
+		dyn: w.dyn,
+	}
+}
+
+type wrapBindingsV1beta1 struct {
+	dyn dynamic.Interface
+}
+
+func (w *wrapBindingsV1beta1) RESTClient() rest.Interface {
+	panic("RESTClient called on dynamic client!")
+}
+
+func (w *wrapBindingsV1beta1) KafkaBindings(namespace string) typedbindingsv1beta1.KafkaBindingInterface {
+	return &wrapBindingsV1beta1KafkaBindingImpl{
+		dyn: w.dyn.Resource(schema.GroupVersionResource{
+			Group:    "bindings.knative.dev",
+			Version:  "v1beta1",
+			Resource: "kafkabindings",
+		}),
+
+		namespace: namespace,
+	}
+}
+
+type wrapBindingsV1beta1KafkaBindingImpl struct {
+	dyn dynamic.NamespaceableResourceInterface
+
+	namespace string
+}
+
+var _ typedbindingsv1beta1.KafkaBindingInterface = (*wrapBindingsV1beta1KafkaBindingImpl)(nil)
+
+func (w *wrapBindingsV1beta1KafkaBindingImpl) Create(ctx context.Context, in *v1beta1.KafkaBinding, opts v1.CreateOptions) (*v1beta1.KafkaBinding, error) {
+	in.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "bindings.knative.dev",
+		Version: "v1beta1",
+		Kind:    "KafkaBinding",
+	})
+	uo := &unstructured.Unstructured{}
+	if err := convert(in, uo); err != nil {
+		return nil, err
+	}
+	uo, err := w.dyn.Namespace(w.namespace).Create(ctx, uo, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &v1beta1.KafkaBinding{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapBindingsV1beta1KafkaBindingImpl) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+	return w.dyn.Namespace(w.namespace).Delete(ctx, name, opts)
+}
+
+func (w *wrapBindingsV1beta1KafkaBindingImpl) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	return w.dyn.Namespace(w.namespace).DeleteCollection(ctx, opts, listOpts)
+}
+
+func (w *wrapBindingsV1beta1KafkaBindingImpl) Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.KafkaBinding, error) {
+	uo, err := w.dyn.Namespace(w.namespace).Get(ctx, name, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &v1beta1.KafkaBinding{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapBindingsV1beta1KafkaBindingImpl) List(ctx context.Context, opts v1.ListOptions) (*v1beta1.KafkaBindingList, error) {
+	uo, err := w.dyn.Namespace(w.namespace).List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &v1beta1.KafkaBindingList{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapBindingsV1beta1KafkaBindingImpl) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.KafkaBinding, err error) {
+	uo, err := w.dyn.Namespace(w.namespace).Patch(ctx, name, pt, data, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &v1beta1.KafkaBinding{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapBindingsV1beta1KafkaBindingImpl) Update(ctx context.Context, in *v1beta1.KafkaBinding, opts v1.UpdateOptions) (*v1beta1.KafkaBinding, error) {
+	in.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "bindings.knative.dev",
+		Version: "v1beta1",
+		Kind:    "KafkaBinding",
+	})
+	uo := &unstructured.Unstructured{}
+	if err := convert(in, uo); err != nil {
+		return nil, err
+	}
+	uo, err := w.dyn.Namespace(w.namespace).Update(ctx, uo, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &v1beta1.KafkaBinding{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapBindingsV1beta1KafkaBindingImpl) UpdateStatus(ctx context.Context, in *v1beta1.KafkaBinding, opts v1.UpdateOptions) (*v1beta1.KafkaBinding, error) {
+	in.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "bindings.knative.dev",
+		Version: "v1beta1",
+		Kind:    "KafkaBinding",
+	})
+	uo := &unstructured.Unstructured{}
+	if err := convert(in, uo); err != nil {
+		return nil, err
+	}
+	uo, err := w.dyn.Namespace(w.namespace).UpdateStatus(ctx, uo, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &v1beta1.KafkaBinding{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapBindingsV1beta1KafkaBindingImpl) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+	return nil, errors.New("NYI: Watch")
 }
 
 // EventingV1alpha1 retrieves the EventingV1alpha1Client
@@ -282,7 +430,7 @@ type wrapMessagingV1beta1KafkaChannelImpl struct {
 
 var _ typedmessagingv1beta1.KafkaChannelInterface = (*wrapMessagingV1beta1KafkaChannelImpl)(nil)
 
-func (w *wrapMessagingV1beta1KafkaChannelImpl) Create(ctx context.Context, in *v1beta1.KafkaChannel, opts v1.CreateOptions) (*v1beta1.KafkaChannel, error) {
+func (w *wrapMessagingV1beta1KafkaChannelImpl) Create(ctx context.Context, in *messagingv1beta1.KafkaChannel, opts v1.CreateOptions) (*messagingv1beta1.KafkaChannel, error) {
 	in.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   "messaging.knative.dev",
 		Version: "v1beta1",
@@ -296,7 +444,7 @@ func (w *wrapMessagingV1beta1KafkaChannelImpl) Create(ctx context.Context, in *v
 	if err != nil {
 		return nil, err
 	}
-	out := &v1beta1.KafkaChannel{}
+	out := &messagingv1beta1.KafkaChannel{}
 	if err := convert(uo, out); err != nil {
 		return nil, err
 	}
@@ -311,43 +459,43 @@ func (w *wrapMessagingV1beta1KafkaChannelImpl) DeleteCollection(ctx context.Cont
 	return w.dyn.Namespace(w.namespace).DeleteCollection(ctx, opts, listOpts)
 }
 
-func (w *wrapMessagingV1beta1KafkaChannelImpl) Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.KafkaChannel, error) {
+func (w *wrapMessagingV1beta1KafkaChannelImpl) Get(ctx context.Context, name string, opts v1.GetOptions) (*messagingv1beta1.KafkaChannel, error) {
 	uo, err := w.dyn.Namespace(w.namespace).Get(ctx, name, opts)
 	if err != nil {
 		return nil, err
 	}
-	out := &v1beta1.KafkaChannel{}
+	out := &messagingv1beta1.KafkaChannel{}
 	if err := convert(uo, out); err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (w *wrapMessagingV1beta1KafkaChannelImpl) List(ctx context.Context, opts v1.ListOptions) (*v1beta1.KafkaChannelList, error) {
+func (w *wrapMessagingV1beta1KafkaChannelImpl) List(ctx context.Context, opts v1.ListOptions) (*messagingv1beta1.KafkaChannelList, error) {
 	uo, err := w.dyn.Namespace(w.namespace).List(ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	out := &v1beta1.KafkaChannelList{}
+	out := &messagingv1beta1.KafkaChannelList{}
 	if err := convert(uo, out); err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (w *wrapMessagingV1beta1KafkaChannelImpl) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.KafkaChannel, err error) {
+func (w *wrapMessagingV1beta1KafkaChannelImpl) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *messagingv1beta1.KafkaChannel, err error) {
 	uo, err := w.dyn.Namespace(w.namespace).Patch(ctx, name, pt, data, opts)
 	if err != nil {
 		return nil, err
 	}
-	out := &v1beta1.KafkaChannel{}
+	out := &messagingv1beta1.KafkaChannel{}
 	if err := convert(uo, out); err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (w *wrapMessagingV1beta1KafkaChannelImpl) Update(ctx context.Context, in *v1beta1.KafkaChannel, opts v1.UpdateOptions) (*v1beta1.KafkaChannel, error) {
+func (w *wrapMessagingV1beta1KafkaChannelImpl) Update(ctx context.Context, in *messagingv1beta1.KafkaChannel, opts v1.UpdateOptions) (*messagingv1beta1.KafkaChannel, error) {
 	in.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   "messaging.knative.dev",
 		Version: "v1beta1",
@@ -361,14 +509,14 @@ func (w *wrapMessagingV1beta1KafkaChannelImpl) Update(ctx context.Context, in *v
 	if err != nil {
 		return nil, err
 	}
-	out := &v1beta1.KafkaChannel{}
+	out := &messagingv1beta1.KafkaChannel{}
 	if err := convert(uo, out); err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (w *wrapMessagingV1beta1KafkaChannelImpl) UpdateStatus(ctx context.Context, in *v1beta1.KafkaChannel, opts v1.UpdateOptions) (*v1beta1.KafkaChannel, error) {
+func (w *wrapMessagingV1beta1KafkaChannelImpl) UpdateStatus(ctx context.Context, in *messagingv1beta1.KafkaChannel, opts v1.UpdateOptions) (*messagingv1beta1.KafkaChannel, error) {
 	in.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   "messaging.knative.dev",
 		Version: "v1beta1",
@@ -382,7 +530,7 @@ func (w *wrapMessagingV1beta1KafkaChannelImpl) UpdateStatus(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	out := &v1beta1.KafkaChannel{}
+	out := &messagingv1beta1.KafkaChannel{}
 	if err := convert(uo, out); err != nil {
 		return nil, err
 	}
